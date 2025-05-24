@@ -3060,12 +3060,36 @@ function findPronunciationsInAllData(searchText) {
   const normalizedSearchText = searchText.trim();
 
   allKnownDataVars.forEach(dataVarName => {
+    // dataVarName is like '四基', '海初'
     const dataObject = window[dataVarName];
-    if (dataObject && dataObject.content) {
+    if (dataObject && dataObject.content && dataObject.name) {
       try {
+        // 1. Construct dialectInfoForLevel for this dataVarName
+        const 腔 = dataObject.name.substring(0, 1);
+        const 級 = dataObject.name.substring(1);
+        let selected例外音檔;
+        switch (級) {
+          case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
+          case '初': selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : []; break;
+          case '中': selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : []; break;
+          case '中高': selected例外音檔 = typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : []; break;
+          case '高': selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : []; break;
+          default: selected例外音檔 = [];
+        }
+        let 檔腔 = '', 檔級 = '', 目錄級 = '', 目錄另級 = undefined;
+        // Simplified from generate()
+        if (腔 === '四') { 檔腔 = 'si'; } else if (腔 === '海') { 檔腔 = 'ha'; } else if (腔 === '大') { 檔腔 = 'da'; } else if (腔 === '平') { 檔腔 = 'rh'; } else if (腔 === '安') { 檔腔 = 'zh'; }
+        if (級 === '基') { 目錄級 = '5'; 目錄另級 = '1'; } else if (級 === '初') { 目錄級 = '1'; } else if (級 === '中') { 目錄級 = '2'; 檔級 = '1'; } else if (級 === '中高') { 目錄級 = '3'; 檔級 = '2'; } else if (級 === '高') { 目錄級 = '4'; 檔級 = '3'; }
+
+        const dialectInfoForLevel = {
+          腔, 級, selected例外音檔,
+          generalMediaYr: '112', // Assuming constant
+          目錄級, 目錄另級, 檔腔, 檔級,
+          fullLvlName: getFullLevelName(dataObject.name)
+        };
+
         const vocabularyArray = csvToArray(dataObject.content);
         const sourceName = getFullLevelName(dataObject.name);
-
         vocabularyArray.forEach(line => {
           if (line.客家語 && line.客語標音) { // 確保客家語和標音都存在
             const isExact = line.客家語 === normalizedSearchText;
@@ -3078,7 +3102,9 @@ function findPronunciationsInAllData(searchText) {
                   pronunciation: line.客語標音,
                   source: sourceName,
                   isExactMatch: true,
-                  originalTerm: line.客家語
+                  originalTerm: line.客家語,
+                  mandarinMeaning: line.華語詞義,
+                  audioDetails: { lineData: { ...line }, dialectInfo: dialectInfoForLevel } // Store line data and dialect info
                 });
                 uniqueEntries.add(entryKey);
               }
@@ -3090,7 +3116,9 @@ function findPronunciationsInAllData(searchText) {
                   pronunciation: line.客語標音,
                   source: sourceName,
                   isExactMatch: false,
-                  originalTerm: line.客家語
+                  originalTerm: line.客家語,
+                  mandarinMeaning: line.華語詞義,
+                  audioDetails: { lineData: { ...line }, dialectInfo: dialectInfoForLevel } // Store line data and dialect info
                 });
                 uniqueEntries.add(entryKey);
               }
@@ -3107,6 +3135,68 @@ function findPronunciationsInAllData(searchText) {
 }
 
 /**
+ * Helper function to construct audio URL for a term in the popup.
+ * @param {object} lineData - The specific line data for the term (must include '編號').
+ * @param {object} dialectInfo - Dialect and level specific info (腔, 級, selected例外音檔, etc.).
+ * @returns {string|null} The audio URL or null if not constructible.
+ */
+function constructAudioUrlForPopup(lineData, dialectInfo) {
+  if (!lineData || !lineData.編號 || !dialectInfo) return null;
+
+  let mediaYr = dialectInfo.generalMediaYr || '112';
+  let pre112Insertion詞 = '';
+  let current目錄級 = dialectInfo.目錄級;
+  // no[0] and no[1] from lineData.編號
+  const noParts = lineData.編號.split('-');
+  if (noParts.length < 2) return null;
+
+  let no_0 = noParts[0]; // Original first part from CSV, e.g., "1", "12"
+
+  // Step 1: General padding for single digit (applies to all before specific '初' logic)
+  // This ensures "X" becomes "0X". "XX" remains "XX".
+  if (no_0.length === 1 && !isNaN(parseInt(no_0))) {
+    no_0 = '0' + no_0;
+  }
+  // Now no_0 is "0X" if original was "X", or "XX" if original was "XX".
+
+  // Step 2: Specific padding for '初級' to make it three digits if it's two (e.g., "0X" -> "00X", "XX" -> "0XX")
+  if (dialectInfo.級 === '初') {
+    no_0 = '0' + no_0; // "01" -> "001", "12" -> "012"
+  }
+
+  let mediaNo = noParts[1]; // Default mediaNo from 編號
+  if (mediaNo.length < 2 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add leading zero if single digit
+  if (mediaNo.length < 3 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add second leading zero if two digits
+
+
+  // Exception handling (simplified from buildTableAndSetupPlayback)
+  const exceptionList = dialectInfo.selected例外音檔 || [];
+  const exceptionIndex = exceptionList.findIndex(([編號]) => 編號 === lineData.編號);
+
+  if (exceptionIndex !== -1) {
+    const matchedElement = exceptionList[exceptionIndex];
+    mediaYr = matchedElement[1] || mediaYr;
+    mediaNo = matchedElement[2] || mediaNo;
+    pre112Insertion詞 = 'w/'; // Assuming 'w/' for word exceptions
+    if (dialectInfo.目錄另級 !== undefined) {
+      current目錄級 = dialectInfo.目錄另級;
+    }
+  }
+
+  const 詞目錄 = `${current目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+  
+  let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
+
+  // Specific override for 海陸中高級 4-261 (word audio)
+  if (dialectInfo.fullLvlName === '海陸中高級' && lineData.編號 === '4-261') {
+    audioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+  }
+
+  return audioSrc;
+}
+
+
+/**
  * 顯示選詞發音 Popup。
  * @param {string} selectedText - 被選取的文字。
  * @param {Array<object>} readings - 搜尋到的發音陣列。
@@ -3121,6 +3211,12 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
   // 1. 設定 Popup 標題
   if (popupTitleElement) {
     popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
+  }
+
+  // --- 新增：預設關閉「顯示其他腔頭」開關 ---
+  if (showOtherAccentsToggle) {
+    showOtherAccentsToggle.checked = false;
+    console.log('Reset "Show other accents" toggle to unchecked.'); // DEBUG_MSG
   }
 
   // 內部函式，用來實際產生列表
@@ -3160,23 +3256,54 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
     });
 
     if (displayReadings.length > 0) {
-      const ul = document.createElement('ul');
+      const accordionContainer = document.createElement('div');
+      accordionContainer.className = 'accordion-container'; // You might want to style this container
+
       displayReadings.forEach(reading => {
-        const li = document.createElement('li');
-        let displayText = reading.pronunciation;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item';
+
+        const headerBtn = document.createElement('button');
+        headerBtn.className = 'accordion-header';
+        let headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
         if (!reading.isExactMatch) {
-          // 只在部分符合時顯示原詞目
-          displayText += ` (詞目: ${reading.originalTerm})`;
+          // If not an exact match, show the original term it was found in
+          headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
         }
-        li.textContent = displayText;
+        headerBtn.innerHTML = `${headerText}<span class="pronunciation-source">(${reading.source})</span><span class="indicator">+</span>`;
+
+        const panelDiv = document.createElement('div');
+        panelDiv.className = 'accordion-panel';
         
-        const sourceSpan = document.createElement('span');
-        sourceSpan.className = 'pronunciation-source';
-        sourceSpan.textContent = `(${reading.source})`;
-        li.appendChild(sourceSpan);
-        ul.appendChild(li);
+        let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
+        
+        // Construct audio URL using the new helper function
+        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
+        if (audioUrl) {
+          panelContent += `<audio controls src="${audioUrl}" style="width: 100%;"><a href="${audioUrl}">下載音檔</a></audio>`;
+        } else {
+          panelContent += `<p><em>(無音檔資訊)</em></p>`;
+        }
+        panelDiv.innerHTML = panelContent;
+
+        itemDiv.appendChild(headerBtn);
+        itemDiv.appendChild(panelDiv);
+        accordionContainer.appendChild(itemDiv);
+
+        // Add click event listener to the header button
+        headerBtn.addEventListener('click', () => {
+          headerBtn.classList.toggle('active');
+          const indicator = headerBtn.querySelector('.indicator');
+          if (panelDiv.style.maxHeight) {
+            panelDiv.style.maxHeight = null;
+            if (indicator) indicator.textContent = '+';
+          } else {
+            panelDiv.style.maxHeight = panelDiv.scrollHeight + "px";
+            if (indicator) indicator.textContent = '−';
+          }
+        });
       });
-      contentEl.appendChild(ul);
+      contentEl.appendChild(accordionContainer);
     } else {
       // 根據開關狀態和原始搜尋結果來決定提示訊息
       if (showAllAccents) { // 開關打開，但所有腔調都尋無
