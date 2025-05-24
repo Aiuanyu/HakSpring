@@ -549,9 +549,20 @@ function buildTableAndSetupPlayback(
   for (const line of filteredItems) {
     // --- 內部建立 tr, td, audio, button 的邏輯基本不變 ---
     // --- 但需要使用傳入的 dialectInfo 物件來獲取變數 ---
+
+    // --- 新增：在處理每一行詞彙前，先取得音檔缺失資訊 ---
+    const missingAudioInfo = typeof getMissingAudioInfo === 'function' ?
+                           getMissingAudioInfo(dialectInfo.fullLvlName, category, line.編號) :
+                           null;
+    // if (missingAudioInfo) { // Debug log
+    //   console.log(`音檔缺失資訊 for ${dialectInfo.fullLvlName} - ${category} - ${line.編號}:`, missingAudioInfo);
+    // }
+
+    // --- 但需要使用傳入的 dialectInfo 物件來獲取變數 ---
     let mediaYr = dialectInfo.generalMediaYr;
     let pre112Insertion詞 = '';
     let pre112Insertion句 = '';
+    let 詞目錄級 = dialectInfo.目錄級;
     let 句目錄級 = dialectInfo.目錄級;
     let mediaNo = ''; // 在迴圈內計算
 
@@ -583,12 +594,13 @@ function buildTableAndSetupPlayback(
       pre112Insertion詞 = 'w/';
       pre112Insertion句 = 's/';
       if (dialectInfo.目錄另級 !== undefined) { // 只在目錄另級有定義時才更新句目錄級
+        詞目錄級 = dialectInfo.目錄另級; // GHSRobert：自家加个
         句目錄級 = dialectInfo.目錄另級;
       }
     }
 
     const 詞目錄 =
-      dialectInfo.目錄級 +
+      詞目錄級 +
       '/' +
       dialectInfo.檔腔 +
       '/' +
@@ -644,17 +656,50 @@ function buildTableAndSetupPlayback(
     ruby.appendChild(rt);
     td2.appendChild(ruby);
     td2.appendChild(document.createElement('br'));
-    const audio1 = document.createElement('audio');
-    audio1.className = 'media';
-    audio1.controls = true;
-    audio1.preload = 'none';
-    const source1 = document.createElement('source');
-    // *** 注意路徑組合 ***
-    source1.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`; // 使用 mediaYr 和 mediaNo
-    source1.type = 'audio/mpeg';
-    audio1.appendChild(source1);
-    td2.appendChild(audio1);
-    audioElementsList.push(audio1); // 收集音檔
+
+    // --- 修改：處理詞彙音檔 (audio1) ---
+    let wordAudioActuallyMissing = false;
+    if (missingAudioInfo && missingAudioInfo.word === false) {
+      wordAudioActuallyMissing = true;
+    }
+
+    if (wordAudioActuallyMissing) {
+      const noWordAudioMsg = document.createElement('span');
+      noWordAudioMsg.textContent = '（無詞彙音檔，敗勢）';
+      noWordAudioMsg.style.color = 'red'; // 用紅色標示詞彙音檔缺失
+      td2.appendChild(noWordAudioMsg);
+
+      const dummyAudioForMissingWord = document.createElement('audio');
+      dummyAudioForMissingWord.className = 'media';
+      dummyAudioForMissingWord.dataset.skip = 'true';
+      dummyAudioForMissingWord.controls = false;
+      dummyAudioForMissingWord.preload = 'none';
+      dummyAudioForMissingWord.style.display = 'none'; // 隱藏假音檔
+      audioElementsList.push(dummyAudioForMissingWord); // 收集假音檔
+    } else {
+      // 詞彙音檔存在或無特定缺失資訊，照常建立
+      const audio1 = document.createElement('audio');
+      audio1.className = 'media';
+      audio1.controls = true;
+      audio1.preload = 'none';
+      const source1 = document.createElement('source');
+      let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+      // 特定 URL 覆蓋 (例如 海陸中高級 4-261 的詞彙音檔有替代來源)
+      if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
+        wordAudioSrc =
+          'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+        console.log(
+          `[main.js OVERRIDE] Using special URL for 海陸中高級 4-261 詞彙: ${wordAudioSrc}`
+        );
+      }
+      source1.src = wordAudioSrc;
+      source1.type = 'audio/mpeg';
+      audio1.appendChild(source1);
+      td2.appendChild(audio1);
+      audioElementsList.push(audio1); // 收集音檔
+    }
+    // --- 詞彙音檔處理結束 ---
+
     td2.appendChild(document.createElement('br'));
     const meaningText = document.createTextNode(
       line.華語詞義.replace(/"/g, '')
@@ -683,7 +728,13 @@ function buildTableAndSetupPlayback(
       td3.appendChild(sentenceSpan);
       td3.appendChild(document.createElement('br'));
 
-      // --- 修改：根據係無係「高級」來決定愛用實際音檔還係假音檔 ---
+      // --- 修改：處理例句音檔 (audio2) ---
+      let sentenceAudioActuallyMissing = false;
+      // 檢查 NAmedias.js 是否標記例句音檔缺失 (且非 'na')
+      if (missingAudioInfo && missingAudioInfo.sentence === false) {
+        sentenceAudioActuallyMissing = true;
+      }
+
       if (dialectInfo.級名 === '高級') {
         // 「高級」級別：就算有例句文字，也加入一個跳過的假音檔
         const dummyAudioForAdvanced = document.createElement('audio');
@@ -691,11 +742,26 @@ function buildTableAndSetupPlayback(
         dummyAudioForAdvanced.dataset.skip = 'true';
         dummyAudioForAdvanced.controls = false;
         dummyAudioForAdvanced.preload = 'none';
-        dummyAudioForAdvanced.style.display = 'none'; // 確保隱藏
+        dummyAudioForAdvanced.style.display = 'none';
         td3.appendChild(dummyAudioForAdvanced);
         audioElementsList.push(dummyAudioForAdvanced); // 收集假音檔
+      } else if (sentenceAudioActuallyMissing) {
+        // 非「高級」，但 NAmedias.js 指出例句音檔缺失
+        const noSentenceAudioMsg = document.createElement('span');
+        noSentenceAudioMsg.textContent = '（無例句音檔，敗勢）';
+        noSentenceAudioMsg.style.color = 'magenta'; // 用洋紅色標示例句音檔缺失
+        td3.appendChild(noSentenceAudioMsg);
+
+        const dummyAudioForMissingSentence = document.createElement('audio');
+        dummyAudioForMissingSentence.className = 'media';
+        dummyAudioForMissingSentence.dataset.skip = 'true';
+        dummyAudioForMissingSentence.controls = false;
+        dummyAudioForMissingSentence.preload = 'none';
+        dummyAudioForMissingSentence.style.display = 'none';
+        td3.appendChild(dummyAudioForMissingSentence);
+        audioElementsList.push(dummyAudioForMissingSentence); // 收集假音檔
       } else {
-        // 非「高級」級別：若有例句文字，則加入實際个 audio2
+        // 非「高級」級別，且音檔應存在 (或無特定缺失資訊)：加入實際个 audio2
         const audio2 = document.createElement('audio');
         audio2.className = 'media';
         audio2.controls = true;
@@ -707,7 +773,7 @@ function buildTableAndSetupPlayback(
         td3.appendChild(audio2);
         audioElementsList.push(audio2); // 收集音檔
       }
-      // --- 修改結束 ---
+      // --- 例句音檔處理結束 ---
 
       td3.appendChild(document.createElement('br'));
       const translationText = document.createElement('span');
@@ -742,9 +808,10 @@ function buildTableAndSetupPlayback(
   }
 
   console.log('Table generated, calling handleResizeActions initially.'); // 加一條 log
-  handleResizeActions(); // 產生表格後黏時先做一擺調整 ruby 字體大細
+  // 產生表格後黏時先做一擺調整 ruby 字體大細
+  // 使用 setTimeout 確保 DOM 渲染完成後再執行，以便獲取正確的元素尺寸
+  setTimeout(() => handleResizeActions(), 50); // 延遲 50 毫秒，分瀏覽器時間處理版面
 
-  // --- 將原本在 generate 內部 radio change listener 中的播放/書籤設定邏輯搬移至此 ---
   // --- 並將其包裝以便重複使用和觸發 ---
 
   const audioElements = audioElementsList; // 使用收集到的元素 (保持局部，因為每個類別不同)
@@ -793,6 +860,17 @@ function buildTableAndSetupPlayback(
   // --- 抽離結束 ---
 
   function playAudio(index) {
+    // --- 新增：播放狀態保護 ---
+    // 若 isPlaying 係 false (例如使用者已經按下停止鈕)，就直接結束函式，毋使做任何播放動作。
+    // 這做得防止在狀態快速變化時 (例如連續跳過音檔時按下停止)，意外重新開始播放。
+    if (!isPlaying) {
+      console.warn(
+        `playAudio(${index}) 被呼叫，但 isPlaying 係 false。中止播放程序。`
+      );
+      return;
+    }
+    // --- 新增結束 ---
+
     // 獲取類別列表和目前索引，並將其設為 currentCategoryIndex
     const radioButtons = document.querySelectorAll('input[name="category"]');
     categoryList = Array.from(radioButtons).map((radio) => radio.value);
@@ -864,6 +942,8 @@ function buildTableAndSetupPlayback(
 
     // 使用當前類別的音檔列表
     currentAudio = currentCategoryAudioElements[index];
+    const sourceUrlForErrorLog = currentAudio.src; // 在 play 前擷取 src，避免 currentAudio 之後變 null
+
     if (currentAudio.dataset.skip === 'true') {
       console.log('Skipping audio index:', index);
       currentAudioIndex++;
@@ -880,6 +960,15 @@ function buildTableAndSetupPlayback(
         currentAudio.addEventListener('ended', handleAudioEnded, {
           once: true,
         });
+
+        isPlaying = true; // 確保成功播放時設定狀態
+        isPaused = false;
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton) {
+          pauseResumeButton.innerHTML = '<i class="fas fa-pause"></i>';
+          pauseResumeButton.classList.remove('ended');
+          pauseResumeButton.classList.add('ongoing');
+        }
 
         // 尋找 audio 元素个父層 tr 同 td
         const rowElement = currentAudio.closest('tr');
@@ -930,13 +1019,24 @@ function buildTableAndSetupPlayback(
         }
       })
       .catch((error) => {
+        // 使用先前儲存的 sourceUrlForErrorLog，避免 currentAudio 變 null 時出錯
         console.error(
-          `播放音訊失敗 (索引 ${index}, src: ${currentAudio.src}):`,
+          `播放音訊失敗 (索引 ${index}, src: ${sourceUrlForErrorLog}): ${error.name} - ${error.message}`,
           error
         );
         // 播放失敗，自動跳到下一個
         currentAudioIndex++;
         playAudio(currentAudioIndex);
+
+        // 只有在 isPlaying 係 true，而且出錯个音檔確實係目前个 currentAudio 時，正繼續播放下一個
+        // 這樣做得避免在使用者按下停止鈕後，舊个錯誤訊息又意外觸發新个播放
+        if (isPlaying && currentAudio === currentCategoryAudioElements[index]) {
+          console.log(`[main.js DEBUG] Error playing ${sourceUrlForErrorLog}. Advancing to next audio.`);
+          currentAudioIndex++;
+          playAudio(currentAudioIndex);
+        } else {
+          console.log(`[main.js DEBUG] Error playing ${sourceUrlForErrorLog}, but playback state is no longer active for this audio (isPlaying: ${isPlaying}, currentAudio.src: ${currentAudio ? currentAudio.src : 'null'}, expected index: ${index}). Not advancing from this catch.`);
+        }
       });
   }
   function handleAudioEnded() {
@@ -1403,9 +1503,8 @@ function buildTableAndSetupPlayback(
     }
     // --- 新增結束 ---
 
-    // --- 新增：在 Firefox 中調整 Ruby 字體大小 ---
-    adjustAllRubyFontSizes(contentContainer);
-    // --- 新增結束 ---
+    // Firefox 中 Ruby 字體大小的調整已由上方延遲呼叫的 handleResizeActions() 處理，
+    // 這邊毋使再重複呼叫，避免用著無準个尺寸。
   } // --- autoPlayTargetRowId 處理結束 ---
 
   // --- 在函式最尾項，確保 DOM 都更新後 ---
@@ -1527,7 +1626,7 @@ document.addEventListener('DOMContentLoaded', function () {
     progressDropdown.addEventListener('change', function (event) {
       const selectedValue = this.value;
 
-      if (selectedValue && selectedValue !== '學習進度') {
+      if (selectedValue && selectedValue !== '擇進前个進度') {
         const bookmarks =
           JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
         const selectedBookmark = bookmarks.find(
@@ -1883,102 +1982,6 @@ document.addEventListener('DOMContentLoaded', function () {
   // 或者直接放在最尾項
   setTimeout(adjustHeaderFontSizeOnOverflow, 50); // 稍微延遲
 });
-
-document.addEventListener('keydown', function(event) {
-  // 這個監聽器會被新的 globalKeydownHandler 取代
-  // 保留這段程式碼的註解或將其內容合併到新的處理函式中
-  // --- 空白鍵：暫停/繼續播放 ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 加上 !activeSelectionPopup 條件
-    const activeElement = document.activeElement;
-    // 檢查目前 focus 个元素係無係輸入框、選擇單、按鈕這兜
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (!isInteractiveElementFocused) {
-      if (isPlaying) {
-        event.preventDefault(); // 避免頁面捲動
-        const pauseResumeButton = document.getElementById('pauseResumeBtn');
-        if (pauseResumeButton) {
-          console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
-          pauseResumeButton.click();
-        }
-      } else { // !isPlaying: 載入並播放第一筆書籤
-        const progressDropdown = document.getElementById('progressDropdown');
-        if (progressDropdown && progressDropdown.options.length > 1) {
-          // 取得下拉選單中第一筆實際書籤个 value (索引 1，因為索引 0 係 "學習進度")
-          const selectedValue = progressDropdown.options[1].value;
-          const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-          // 根據 value 尋著對應个書籤物件
-          const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
-
-          if (firstBookmark) {
-            const targetTableName = firstBookmark.tableName;
-            const targetCategory = firstBookmark.cat;
-            const targetRowIdToGo = firstBookmark.rowId;
-            const dataVarName = mapTableNameToDataVar(targetTableName);
-
-            if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-              event.preventDefault(); // 處理了事件，避免頁面捲動
-              const dataObject = window[dataVarName];
-              console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
-
-              // 1. 更新腔調級別連結个 active 狀態
-              document.querySelectorAll('span[data-varname]').forEach(span => {
-                span.classList.remove('active-dialect-level');
-              });
-              const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
-              if (activeDialectSpan) {
-                activeDialectSpan.classList.add('active-dialect-level');
-              }
-
-              // 2. 呼叫 generate 函式，佢會處理類別選擇、表格建立同開始播放
-              //    因為無透過 URL 參數，所以毋會觸發 modal
-              generate(dataObject, targetCategory, targetRowIdToGo);
-
-              // 3. 確保下拉選單視覺上也選到第一筆 (雖然 saveBookmark 會再處理一次，但係先設定較好)
-              progressDropdown.selectedIndex = 1;
-
-              // 註：progressDetailsSpan 个內容會在 saveBookmark 函式中更新
-            }
-          }
-          // 若尋無書籤或相關資料，空白鍵在這情況下就無作用
-        }
-      }
-    }
-  }
-  // --- Esc 鍵：停止播放 ---
-  if (event.key === 'Escape' || event.code === 'Escape') { // Popup 的 Esc 處理會在新的 globalKeydownHandler
-    const activeElement = document.activeElement;
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (isInteractiveElementFocused) {
-      // 如果有互動元素係 focus 狀態，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault(); // 避免 Esc 觸發元素本身个其他預設行為 (例如關閉下拉選單)
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
-    } else if (isPlaying) {
-      // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
-      const stopButton = document.getElementById('stopBtn');
-      if (stopButton) {
-        console.log('Global hotkey: Escape pressed (no interactive focus), stopping playback.');
-        stopButton.click();
-      }
-    }
-    // 如果無互動元素 focus，也無音樂在播，Esc 就無作用
-  }
-});
-
 
 // --- 新增：全域鍵盤事件處理 (取代舊的) ---
 function globalKeydownHandler(event) {
@@ -2363,7 +2366,7 @@ function updateProgressDropdown() {
   const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
 
   // 清空現有選項 (保留第一個預設選項)
-  progressDropdown.innerHTML = '<option selected disabled>學習進度</option>';
+  progressDropdown.innerHTML = '<option selected disabled>擇進前个進度</option>';
   // --- 新增：如果沒有書籤，確保 details 是空的 ---
   if (bookmarks.length === 0 && progressDetailsSpan) {
     progressDetailsSpan.textContent = '';
@@ -2374,7 +2377,7 @@ function updateProgressDropdown() {
   bookmarks.forEach((bookmark, index) => {
     const option = document.createElement('option');
     // 格式化顯示文字
-    option.textContent = `${index + 1}. ${bookmark.tableName} - ${
+    option.textContent = `${bookmark.tableName} - ${
       bookmark.cat
     } - #${bookmark.rowId} (${bookmark.percentage}%)`;
     // 可以設定 value 屬性，方便未來擴充點選跳轉功能
@@ -2384,7 +2387,7 @@ function updateProgressDropdown() {
   });
 
   // --- 新增：嘗試恢復之前的選中狀態 ---
-  if (previousValue && previousValue !== '學習進度') {
+  if (previousValue && previousValue !== '擇進前个進度') {
     // 尋找具有相同 value 的新選項
     const newOptionToSelect = progressDropdown.querySelector(
       `option[value="${previousValue}"]`
