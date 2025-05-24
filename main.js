@@ -1983,141 +1983,51 @@ document.addEventListener('DOMContentLoaded', function () {
   setTimeout(adjustHeaderFontSizeOnOverflow, 50); // 稍微延遲
 });
 
-document.addEventListener('keydown', function(event) {
-  // 這個監聽器會被新的 globalKeydownHandler 取代
-  // 保留這段程式碼的註解或將其內容合併到新的處理函式中
-  // --- 空白鍵：暫停/繼續播放 ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 加上 !activeSelectionPopup 條件
-    const activeElement = document.activeElement;
-    // 檢查目前 focus 个元素係無係輸入框、選擇單、按鈕這兜
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (!isInteractiveElementFocused) {
-      if (isPlaying) {
-        event.preventDefault(); // 避免頁面捲動
-        const pauseResumeButton = document.getElementById('pauseResumeBtn');
-        if (pauseResumeButton) {
-          console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
-          pauseResumeButton.click();
-        }
-      } else { // !isPlaying: 載入並播放第一筆書籤
-        const progressDropdown = document.getElementById('progressDropdown');
-        if (progressDropdown && progressDropdown.options.length > 1) {
-          // 取得下拉選單中第一筆實際書籤个 value (索引 1，因為索引 0 係 "擇進前个進度")
-          const selectedValue = progressDropdown.options[1].value;
-          const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-          // 根據 value 尋著對應个書籤物件
-          const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
-
-          if (firstBookmark) {
-            const targetTableName = firstBookmark.tableName;
-            const targetCategory = firstBookmark.cat;
-            const targetRowIdToGo = firstBookmark.rowId;
-            const dataVarName = mapTableNameToDataVar(targetTableName);
-
-            if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-              event.preventDefault(); // 處理了事件，避免頁面捲動
-              const dataObject = window[dataVarName];
-              console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
-
-              // 1. 更新腔調級別連結个 active 狀態
-              document.querySelectorAll('span[data-varname]').forEach(span => {
-                span.classList.remove('active-dialect-level');
-              });
-              const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
-              if (activeDialectSpan) {
-                activeDialectSpan.classList.add('active-dialect-level');
-              }
-
-              // 2. 呼叫 generate 函式，佢會處理類別選擇、表格建立同開始播放
-              //    因為無透過 URL 參數，所以毋會觸發 modal
-              generate(dataObject, targetCategory, targetRowIdToGo);
-
-              // 3. 確保下拉選單視覺上也選到第一筆 (雖然 saveBookmark 會再處理一次，但係先設定較好)
-              progressDropdown.selectedIndex = 1;
-
-              // 註：progressDetailsSpan 个內容會在 saveBookmark 函式中更新
-            }
-          }
-          // 若尋無書籤或相關資料，空白鍵在這情況下就無作用
-        }
-      }
-    }
-  }
-  // --- Esc 鍵：停止播放 ---
-  if (event.key === 'Escape' || event.code === 'Escape') { // Popup 的 Esc 處理會在新的 globalKeydownHandler
-    const activeElement = document.activeElement;
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (isInteractiveElementFocused) {
-      // 如果有互動元素係 focus 狀態，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault(); // 避免 Esc 觸發元素本身个其他預設行為 (例如關閉下拉選單)
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
-    } else if (isPlaying) {
-      // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
-      const stopButton = document.getElementById('stopBtn');
-      if (stopButton) {
-        console.log('Global hotkey: Escape pressed (no interactive focus), stopping playback.');
-        stopButton.click();
-      }
-    }
-    // 如果無互動元素 focus，也無音樂在播，Esc 就無作用
-  }
-});
-
-
 // --- 新增：全域鍵盤事件處理 (取代舊的) ---
 function globalKeydownHandler(event) {
-  const activeElement = document.activeElement;
-  const isInteractiveElementFocused = activeElement && (
+  const activeElement = document.activeElement; // Can be null
+
+  // 判斷一般个互動元素 (輸入框、按鈕等) 係無係 focus 狀態
+  // 這隻判斷毋包含 popup 本身个 focus 狀態 (分 !activeSelectionPopup 時節用)
+  const isGeneralInputLikeFocused = activeElement && (
     activeElement.tagName === 'INPUT' ||
     activeElement.tagName === 'TEXTAREA' ||
     activeElement.tagName === 'SELECT' ||
-    activeElement.tagName === 'BUTTON' ||
-    activeElement.isContentEditable ||
-    activeElement.closest('#selectionPopup') // 如果焦點在 popup 內，也算互動
+    activeElement.tagName === 'BUTTON' || // 這包含頁面上一般个按鈕
+    activeElement.isContentEditable
   );
 
   // --- Esc 鍵：優先關閉 Popup，然後才停止播放 ---
   if (event.key === 'Escape' || event.code === 'Escape') {
     if (activeSelectionPopup) {
       event.preventDefault(); // 避免其他 Esc 行為
-      const selectionPopup = document.getElementById('selectionPopup');
-      const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-      hidePronunciationPopup(selectionPopup, selectionPopupBackdrop);
+      const popupEl = document.getElementById('selectionPopup');
+      const backdropEl = document.getElementById('selectionPopupBackdrop');
+      hidePronunciationPopup(popupEl, backdropEl);
       console.log('Global hotkey: Escape pressed, closing selection popup.');
-    } else if (isInteractiveElementFocused && activeElement.tagName !== 'BODY' && !activeElement.closest('#selectionPopup')) {
-      // 如果有互動元素係 focus 狀態 (且非 popup)，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault();
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+    } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
+      // 若 popup 未開啟，但係有一般互動元素 focus 中 (且非 body)，就 blur 該元素
+      // 這確保毋會 blur 到 (已隱藏) popup 內部个元素
+      if (activeElement) { // 再次確認 activeElement 存在
+        activeElement.blur();
+        event.preventDefault();
+        console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+      }
     } else if (isPlaying) {
       // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
       const stopButton = document.getElementById('stopBtn');
       if (stopButton) {
         stopButton.click();
-        console.log('Global hotkey: Escape pressed (no interactive focus, no popup), stopping playback.');
+        console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
       }
     }
     return; // Esc 鍵處理完畢
   }
 
   // --- 空白鍵：暫停/繼續播放 (僅在 Popup 未開啟且非互動元素 focus 時) ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
-    if (!isInteractiveElementFocused || activeElement.tagName === 'BODY') { // 確保不是在輸入框等地方按空白
+  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 檢查 popup 係無係開啟
+    // 若 popup 未開啟，而且無一般互動元素 focus 中，正處理播放/暫停
+    if (!isGeneralInputLikeFocused) {
       if (isPlaying) {
         event.preventDefault(); // 避免頁面捲動
         const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -3204,14 +3114,20 @@ function findPronunciationsInAllData(searchText) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl) {
+function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, selectionRect) {
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
+  const popupTitleElement = document.getElementById('selectionPopupTitle');
+
+  // 1. 設定 Popup 標題
+  if (popupTitleElement) {
+    popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
+  }
 
   // 內部函式，用來實際產生列表
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
-    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`);
+    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
     let displayReadings = [...readings]; // 複製一份來操作
 
@@ -3267,7 +3183,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
         contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
       } else { // 開關關閉
         if (readings.some(r => !r.source.startsWith(currentActiveMainDialectName))) { // 目前主要腔調尋無，但其他主要腔調有結果
-          contentEl.innerHTML = `<p class="popup-not-found">在這隻【${currentActiveMainDialectName}】腔頭尋無讀音。試看啊打開「顯示其他腔頭」？</p>`;
+          contentEl.innerHTML = `<p class="popup-not-found">在${currentActiveMainDialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
         } else { // 所有腔調都尋無，或者其他腔調也尋無
           contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
         }
@@ -3284,8 +3200,57 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
 
   renderPronunciationList(); // 第一次顯示時呼叫
 
+  // --- 定位邏輯 ---
+  if (selectionRect) {
+    // 先隱藏 popup，設定 display:block 來取得尺寸，然後再定位
+    popupEl.style.visibility = 'hidden';
+    popupEl.style.display = 'block';
+
+    const popupWidth = popupEl.offsetWidth;
+    const popupHeight = popupEl.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+
+    let popupTop = scrollY + selectionRect.bottom + 5; // 預設在選取區下方 5px
+    let popupLeft = scrollX + selectionRect.left;
+
+    // 檢查右邊界
+    if (popupLeft + popupWidth > scrollX + viewportWidth - 10) {
+      popupLeft = scrollX + viewportWidth - popupWidth - 10;
+    }
+    // 檢查左邊界
+    if (popupLeft < scrollX + 10) {
+      popupLeft = scrollX + 10;
+    }
+
+    // 檢查下邊界，若超出，嘗試移到選取區上方
+    if (popupTop + popupHeight > scrollY + viewportHeight - 10) {
+      let topAbove = scrollY + selectionRect.top - popupHeight - 5;
+      if (topAbove > scrollY + 10) { // 檢查上方是否有足夠空間
+        popupTop = topAbove;
+      }
+      // 若上方空間也不足，popup 可能還是會部分超出，或需要頁面捲動
+    }
+    // 檢查上邊界 (主要用在移到上方後)
+    if (popupTop < scrollY + 10) {
+      popupTop = scrollY + 10;
+    }
+
+    popupEl.style.left = `${popupLeft}px`;
+    popupEl.style.top = `${popupTop}px`;
+    popupEl.style.visibility = 'visible'; // 定位完成後再顯示
+  } else {
+    // 若無 selectionRect (理論上不應發生)，退回原本置中方式
+    popupEl.style.left = '50%';
+    popupEl.style.top = '50%';
+    popupEl.style.transform = 'translate(-50%, -50%)';
+    popupEl.style.display = 'block'; // 確保顯示
+    console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
+  }
+
   backdropEl.style.display = 'block';
-  popupEl.style.display = 'block';
   popupEl.focus(); // 將焦點移到 popup，方便鍵盤操作 (例如 Esc 關閉)
   activeSelectionPopup = true;
 }
@@ -3296,6 +3261,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
 function hidePronunciationPopup(popupEl, backdropEl) {
+  if (popupEl) popupEl.style.transform = ''; // 清除可能存在的 transform
   if (popupEl) popupEl.style.display = 'none';
   if (backdropEl) backdropEl.style.display = 'none';
   activeSelectionPopup = false;
@@ -3308,11 +3274,16 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
 
   if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return; // *** MODIFIED: Use generatedArea ***
 
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制，避免選太長
-    console.log('選中例句文字:', selectedText);
-    const readings = findPronunciationsInAllData(selectedText);
-    showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl);
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const selectedText = selection.toString().trim();
+    if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制
+      console.log('選中例句文字:', selectedText); // DEBUG_MSG
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const readings = findPronunciationsInAllData(selectedText);
+      showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+    }
   }
 }
 // --- 選詞發音 Popup 相關函式結束 ---

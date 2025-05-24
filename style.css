@@ -489,10 +489,8 @@ span[data-varname].active-dialect-level {
 }
 
 #selectionPopup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute; /* 改做絕對定位 */
+  /* top, left 會由 JavaScript 動態設定 */
   background-color: #fff; /* 日間模式背景 */
   color: var(--main-text-color); /* 日間模式文字 */
   padding: 20px;
@@ -820,7 +818,6 @@ input:checked + .slider:before {
 
   #selectionPopup {
     background-color: var(--dark-surface-color, #2c2c2c); /* 暗夜模式背景 */
-    color: var(--main-text-color); /* 暗夜模式文字 (已在 :root 設定) */
     box-shadow: 0 6px 25px rgba(0,0,0,0.4);
   }
 
