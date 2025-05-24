@@ -1982,43 +1982,49 @@ document.addEventListener('keydown', function(event) {
 
 // --- 新增：全域鍵盤事件處理 (取代舊的) ---
 function globalKeydownHandler(event) {
-  const activeElement = document.activeElement;
-  const isInteractiveElementFocused = activeElement && (
+  const activeElement = document.activeElement; // Can be null
+
+  // 判斷一般个互動元素 (輸入框、按鈕等) 係無係 focus 狀態
+  // 這隻判斷毋包含 popup 本身个 focus 狀態 (分 !activeSelectionPopup 時節用)
+  const isGeneralInputLikeFocused = activeElement && (
     activeElement.tagName === 'INPUT' ||
     activeElement.tagName === 'TEXTAREA' ||
     activeElement.tagName === 'SELECT' ||
-    activeElement.tagName === 'BUTTON' ||
-    activeElement.isContentEditable ||
-    activeElement.closest('#selectionPopup') // 如果焦點在 popup 內，也算互動
+    activeElement.tagName === 'BUTTON' || // 這包含頁面上一般个按鈕
+    activeElement.isContentEditable
   );
 
   // --- Esc 鍵：優先關閉 Popup，然後才停止播放 ---
   if (event.key === 'Escape' || event.code === 'Escape') {
     if (activeSelectionPopup) {
       event.preventDefault(); // 避免其他 Esc 行為
-      const selectionPopup = document.getElementById('selectionPopup');
-      const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-      hidePronunciationPopup(selectionPopup, selectionPopupBackdrop);
+      const popupEl = document.getElementById('selectionPopup');
+      const backdropEl = document.getElementById('selectionPopupBackdrop');
+      hidePronunciationPopup(popupEl, backdropEl);
       console.log('Global hotkey: Escape pressed, closing selection popup.');
-    } else if (isInteractiveElementFocused && activeElement.tagName !== 'BODY' && !activeElement.closest('#selectionPopup')) {
-      // 如果有互動元素係 focus 狀態 (且非 popup)，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault();
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+    } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
+      // 若 popup 未開啟，但係有一般互動元素 focus 中 (且非 body)，就 blur 該元素
+      // 這確保毋會 blur 到 (已隱藏) popup 內部个元素
+      if (activeElement) { // 再次確認 activeElement 存在
+        activeElement.blur();
+        event.preventDefault();
+        console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+      }
     } else if (isPlaying) {
       // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
       const stopButton = document.getElementById('stopBtn');
       if (stopButton) {
         stopButton.click();
-        console.log('Global hotkey: Escape pressed (no interactive focus, no popup), stopping playback.');
+        console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
       }
     }
     return; // Esc 鍵處理完畢
   }
 
   // --- 空白鍵：暫停/繼續播放 (僅在 Popup 未開啟且非互動元素 focus 時) ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
-    if (!isInteractiveElementFocused || activeElement.tagName === 'BODY') { // 確保不是在輸入框等地方按空白
+  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 檢查 popup 係無係開啟
+    // 若 popup 未開啟，而且無一般互動元素 focus 中，正處理播放/暫停
+    if (!isGeneralInputLikeFocused) {
       if (isPlaying) {
         event.preventDefault(); // 避免頁面捲動
         const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -3105,14 +3111,20 @@ function findPronunciationsInAllData(searchText) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl) {
+function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, selectionRect) {
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
+  const popupTitleElement = document.getElementById('selectionPopupTitle');
+
+  // 1. 設定 Popup 標題
+  if (popupTitleElement) {
+    popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
+  }
 
   // 內部函式，用來實際產生列表
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
-    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`);
+    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
     let displayReadings = [...readings]; // 複製一份來操作
 
@@ -3185,8 +3197,57 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
 
   renderPronunciationList(); // 第一次顯示時呼叫
 
+  // --- 定位邏輯 ---
+  if (selectionRect) {
+    // 先隱藏 popup，設定 display:block 來取得尺寸，然後再定位
+    popupEl.style.visibility = 'hidden';
+    popupEl.style.display = 'block';
+
+    const popupWidth = popupEl.offsetWidth;
+    const popupHeight = popupEl.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+
+    let popupTop = scrollY + selectionRect.bottom + 5; // 預設在選取區下方 5px
+    let popupLeft = scrollX + selectionRect.left;
+
+    // 檢查右邊界
+    if (popupLeft + popupWidth > scrollX + viewportWidth - 10) {
+      popupLeft = scrollX + viewportWidth - popupWidth - 10;
+    }
+    // 檢查左邊界
+    if (popupLeft < scrollX + 10) {
+      popupLeft = scrollX + 10;
+    }
+
+    // 檢查下邊界，若超出，嘗試移到選取區上方
+    if (popupTop + popupHeight > scrollY + viewportHeight - 10) {
+      let topAbove = scrollY + selectionRect.top - popupHeight - 5;
+      if (topAbove > scrollY + 10) { // 檢查上方是否有足夠空間
+        popupTop = topAbove;
+      }
+      // 若上方空間也不足，popup 可能還是會部分超出，或需要頁面捲動
+    }
+    // 檢查上邊界 (主要用在移到上方後)
+    if (popupTop < scrollY + 10) {
+      popupTop = scrollY + 10;
+    }
+
+    popupEl.style.left = `${popupLeft}px`;
+    popupEl.style.top = `${popupTop}px`;
+    popupEl.style.visibility = 'visible'; // 定位完成後再顯示
+  } else {
+    // 若無 selectionRect (理論上不應發生)，退回原本置中方式
+    popupEl.style.left = '50%';
+    popupEl.style.top = '50%';
+    popupEl.style.transform = 'translate(-50%, -50%)';
+    popupEl.style.display = 'block'; // 確保顯示
+    console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
+  }
+
   backdropEl.style.display = 'block';
-  popupEl.style.display = 'block';
   popupEl.focus(); // 將焦點移到 popup，方便鍵盤操作 (例如 Esc 關閉)
   activeSelectionPopup = true;
 }
@@ -3197,6 +3258,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
 function hidePronunciationPopup(popupEl, backdropEl) {
+  if (popupEl) popupEl.style.transform = ''; // 清除可能存在的 transform
   if (popupEl) popupEl.style.display = 'none';
   if (backdropEl) backdropEl.style.display = 'none';
   activeSelectionPopup = false;
@@ -3209,11 +3271,16 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
 
   if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return; // *** MODIFIED: Use generatedArea ***
 
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制，避免選太長
-    console.log('選中例句文字:', selectedText);
-    const readings = findPronunciationsInAllData(selectedText);
-    showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl);
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const selectedText = selection.toString().trim();
+    if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制
+      console.log('選中例句文字:', selectedText); // DEBUG_MSG
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const readings = findPronunciationsInAllData(selectedText);
+      showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+    }
   }
 }
 // --- 選詞發音 Popup 相關函式結束 ---
