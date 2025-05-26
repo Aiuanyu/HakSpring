@@ -41,8 +41,8 @@
 
 
 :root {
-  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui,
-      sans-serif;
+  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
   --iMazinGrace-1-rgb: 170, 150, 183; /* 新增 RGB 版本方便用 rgba() */
@@ -127,7 +127,7 @@
   rt,
   ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
     font-size: 1em;
-    font-family: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif !important;
+    font-family: var(--roman-font) !important;
     margin-bottom: 0.3em;
   }
   ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
@@ -489,10 +489,8 @@ span[data-varname].active-dialect-level {
 }
 
 #selectionPopup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute; /* 改做絕對定位 */
+  /* top, left 會由 JavaScript 動態設定 */
   background-color: #fff; /* 日間模式背景 */
   color: var(--main-text-color); /* 日間模式文字 */
   padding: 20px;
@@ -634,6 +632,72 @@ input:checked + .slider:before {
   font-style: italic;
   color: #555;
   text-align: center;
+}
+
+/* --- Accordion Styles for Popup --- */
+.accordion-item {
+  border-bottom: 1px solid #eee;
+}
+.accordion-item:last-child {
+  border-bottom: none;
+}
+
+.accordion-header {
+  background-color: transparent;
+  color: var(--main-text-color);
+  cursor: pointer;
+  padding: 12px 5px; /* Reduced horizontal padding */
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: background-color 0.3s ease;
+  font-size: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--title-font); /* Ensure consistent font */
+}
+
+.accordion-header:hover,
+.accordion-header.active {
+  background-color: #f0f0f0;
+}
+
+.accordion-header .pronunciation-text { /* For the main pronunciation text */
+  flex-grow: 1;
+  font-family: var(--roman-font);
+  font-weight: 700;
+}
+
+.accordion-header .pronunciation-source { /* Keep source style */
+  font-size: 0.85em;
+  color: #777;
+  margin-left: 8px;
+  margin-right: 10px; /* Space before indicator */
+}
+
+.accordion-header .indicator {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.accordion-panel {
+  padding: 0 18px 10px 18px;
+  background-color: white;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+.accordion-panel p {
+  margin: 8px 0;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+.accordion-panel audio {
+  max-width: 100%;
+  height: 30px; /* Adjust height as needed */
+  margin-top: 8px;
 }
 
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
@@ -820,7 +884,6 @@ input:checked + .slider:before {
 
   #selectionPopup {
     background-color: var(--dark-surface-color, #2c2c2c); /* 暗夜模式背景 */
-    color: var(--main-text-color); /* 暗夜模式文字 (已在 :root 設定) */
     box-shadow: 0 6px 25px rgba(0,0,0,0.4);
   }
 
@@ -861,6 +924,28 @@ input:checked + .slider:before {
   #selectionPopupContent .popup-not-found {
     color: #bbb; /* 暗夜模式尋無訊息文字顏色 */
   }
+
+  /* Accordion Dark Mode Styles */
+  .accordion-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  .accordion-header {
+    color: var(--main-text-color);
+  }
+  .accordion-header:hover,
+  .accordion-header.active {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .accordion-header .pronunciation-source {
+     color: #aaa;
+  }
+  .accordion-panel {
+    background-color: var(--dark-surface-color, #2c2c2c); /* Slightly lighter than popup bg or same */
+  }
+  .accordion-panel p {
+    color: var(--main-text-color);
+  }
+  /* Audio controls are generally handled by browser, might need specific styling if issues arise */
 }
 
 /* --- 響應式表格：疊起來个樣式 (螢幕闊度 <= 768px) --- */

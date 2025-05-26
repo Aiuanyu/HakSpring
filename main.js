@@ -61,6 +61,7 @@ let loadedViaUrlParams = false; // <-- 新增：標記是否透過 URL 參數載
 let activeSelectionPopup = false; // <-- 新增：標記選詞 popup 是否開啟
 let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目前頁面顯示的完整腔調級別全名
 let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
+let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
 
 // --- 新增：所有已知的資料變數名稱 (用於「共腔尋詞」) ---
 const allKnownDataVars = [
@@ -1891,25 +1892,15 @@ document.addEventListener('DOMContentLoaded', function () {
   if (contentContainer && window.ResizeObserver) {
     console.log('Setting up ResizeObserver for #generated container.');
 
-    // Debounced scroll function specifically for the observer
-    const debouncedScrollOnResize = debounce(() => {
-      console.log(
-        'ResizeObserver triggered (debounced). Checking for #nowPlaying.'
-      );
-      const activeRow = document.getElementById('nowPlaying');
-      if (activeRow) {
-        console.log(
-          'ResizeObserver: Found #nowPlaying, calling scrollToNowPlayingElement.'
-        );
-        scrollToNowPlayingElement();
-      } else {
-        console.log('ResizeObserver: #nowPlaying not found, skipping scroll.');
-      }
+    // --- 修改：ResizeObserver 直接呼叫 debounced handleResizeActions ---
+    const debouncedResizeObserverActions = debounce(() => {
+      console.log('ResizeObserver triggered (debounced). Calling handleResizeActions.'); // DEBUG_MSG
+      handleResizeActions();
     }, 250); // Use the same debounce delay as window resize
 
     const resizeObserver = new ResizeObserver((entries) => {
-      // We don't need to inspect entries in detail, just trigger the debounced scroll
-      debouncedScrollOnResize();
+      // We don't need to inspect entries in detail, just trigger the debounced actions
+      debouncedResizeObserverActions();
     });
 
     // Start observing the container
@@ -1983,141 +1974,51 @@ document.addEventListener('DOMContentLoaded', function () {
   setTimeout(adjustHeaderFontSizeOnOverflow, 50); // 稍微延遲
 });
 
-document.addEventListener('keydown', function(event) {
-  // 這個監聽器會被新的 globalKeydownHandler 取代
-  // 保留這段程式碼的註解或將其內容合併到新的處理函式中
-  // --- 空白鍵：暫停/繼續播放 ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 加上 !activeSelectionPopup 條件
-    const activeElement = document.activeElement;
-    // 檢查目前 focus 个元素係無係輸入框、選擇單、按鈕這兜
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (!isInteractiveElementFocused) {
-      if (isPlaying) {
-        event.preventDefault(); // 避免頁面捲動
-        const pauseResumeButton = document.getElementById('pauseResumeBtn');
-        if (pauseResumeButton) {
-          console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
-          pauseResumeButton.click();
-        }
-      } else { // !isPlaying: 載入並播放第一筆書籤
-        const progressDropdown = document.getElementById('progressDropdown');
-        if (progressDropdown && progressDropdown.options.length > 1) {
-          // 取得下拉選單中第一筆實際書籤个 value (索引 1，因為索引 0 係 "擇進前个進度")
-          const selectedValue = progressDropdown.options[1].value;
-          const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-          // 根據 value 尋著對應个書籤物件
-          const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
-
-          if (firstBookmark) {
-            const targetTableName = firstBookmark.tableName;
-            const targetCategory = firstBookmark.cat;
-            const targetRowIdToGo = firstBookmark.rowId;
-            const dataVarName = mapTableNameToDataVar(targetTableName);
-
-            if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-              event.preventDefault(); // 處理了事件，避免頁面捲動
-              const dataObject = window[dataVarName];
-              console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
-
-              // 1. 更新腔調級別連結个 active 狀態
-              document.querySelectorAll('span[data-varname]').forEach(span => {
-                span.classList.remove('active-dialect-level');
-              });
-              const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
-              if (activeDialectSpan) {
-                activeDialectSpan.classList.add('active-dialect-level');
-              }
-
-              // 2. 呼叫 generate 函式，佢會處理類別選擇、表格建立同開始播放
-              //    因為無透過 URL 參數，所以毋會觸發 modal
-              generate(dataObject, targetCategory, targetRowIdToGo);
-
-              // 3. 確保下拉選單視覺上也選到第一筆 (雖然 saveBookmark 會再處理一次，但係先設定較好)
-              progressDropdown.selectedIndex = 1;
-
-              // 註：progressDetailsSpan 个內容會在 saveBookmark 函式中更新
-            }
-          }
-          // 若尋無書籤或相關資料，空白鍵在這情況下就無作用
-        }
-      }
-    }
-  }
-  // --- Esc 鍵：停止播放 ---
-  if (event.key === 'Escape' || event.code === 'Escape') { // Popup 的 Esc 處理會在新的 globalKeydownHandler
-    const activeElement = document.activeElement;
-    const isInteractiveElementFocused = activeElement && (
-      activeElement.tagName === 'INPUT' ||
-      activeElement.tagName === 'TEXTAREA' ||
-      activeElement.tagName === 'SELECT' ||
-      activeElement.tagName === 'BUTTON' ||
-      activeElement.isContentEditable
-    );
-
-    if (isInteractiveElementFocused) {
-      // 如果有互動元素係 focus 狀態，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault(); // 避免 Esc 觸發元素本身个其他預設行為 (例如關閉下拉選單)
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
-    } else if (isPlaying) {
-      // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
-      const stopButton = document.getElementById('stopBtn');
-      if (stopButton) {
-        console.log('Global hotkey: Escape pressed (no interactive focus), stopping playback.');
-        stopButton.click();
-      }
-    }
-    // 如果無互動元素 focus，也無音樂在播，Esc 就無作用
-  }
-});
-
-
 // --- 新增：全域鍵盤事件處理 (取代舊的) ---
 function globalKeydownHandler(event) {
-  const activeElement = document.activeElement;
-  const isInteractiveElementFocused = activeElement && (
+  const activeElement = document.activeElement; // Can be null
+
+  // 判斷一般个互動元素 (輸入框、按鈕等) 係無係 focus 狀態
+  // 這隻判斷毋包含 popup 本身个 focus 狀態 (分 !activeSelectionPopup 時節用)
+  const isGeneralInputLikeFocused = activeElement && (
     activeElement.tagName === 'INPUT' ||
     activeElement.tagName === 'TEXTAREA' ||
     activeElement.tagName === 'SELECT' ||
-    activeElement.tagName === 'BUTTON' ||
-    activeElement.isContentEditable ||
-    activeElement.closest('#selectionPopup') // 如果焦點在 popup 內，也算互動
+    activeElement.tagName === 'BUTTON' || // 這包含頁面上一般个按鈕
+    activeElement.isContentEditable
   );
 
   // --- Esc 鍵：優先關閉 Popup，然後才停止播放 ---
   if (event.key === 'Escape' || event.code === 'Escape') {
     if (activeSelectionPopup) {
       event.preventDefault(); // 避免其他 Esc 行為
-      const selectionPopup = document.getElementById('selectionPopup');
-      const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-      hidePronunciationPopup(selectionPopup, selectionPopupBackdrop);
+      const popupEl = document.getElementById('selectionPopup');
+      const backdropEl = document.getElementById('selectionPopupBackdrop');
+      hidePronunciationPopup(popupEl, backdropEl);
       console.log('Global hotkey: Escape pressed, closing selection popup.');
-    } else if (isInteractiveElementFocused && activeElement.tagName !== 'BODY' && !activeElement.closest('#selectionPopup')) {
-      // 如果有互動元素係 focus 狀態 (且非 popup)，就先 blur 佢
-      activeElement.blur();
-      event.preventDefault();
-      console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+    } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
+      // 若 popup 未開啟，但係有一般互動元素 focus 中 (且非 body)，就 blur 該元素
+      // 這確保毋會 blur 到 (已隱藏) popup 內部个元素
+      if (activeElement) { // 再次確認 activeElement 存在
+        activeElement.blur();
+        event.preventDefault();
+        console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
+      }
     } else if (isPlaying) {
       // 如果無互動元素係 focus 狀態，而且音樂在播放中，就停止播放
       const stopButton = document.getElementById('stopBtn');
       if (stopButton) {
         stopButton.click();
-        console.log('Global hotkey: Escape pressed (no interactive focus, no popup), stopping playback.');
+        console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
       }
     }
     return; // Esc 鍵處理完畢
   }
 
   // --- 空白鍵：暫停/繼續播放 (僅在 Popup 未開啟且非互動元素 focus 時) ---
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
-    if (!isInteractiveElementFocused || activeElement.tagName === 'BODY') { // 確保不是在輸入框等地方按空白
+  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) { // 檢查 popup 係無係開啟
+    // 若 popup 未開啟，而且無一般互動元素 focus 中，正處理播放/暫停
+    if (!isGeneralInputLikeFocused) {
       if (isPlaying) {
         event.preventDefault(); // 避免頁面捲動
         const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -2751,9 +2652,8 @@ function debounce(func, wait, immediate) {
  * 並在 Firefox 中重新調整 Ruby 字體大小。
  */
 function handleResizeActions() {
-  console.log(
-    'Debounced resize event triggered. Calling scroll and font adjustment.'
-  ); // 新增 log
+  console.log('handleResizeActions CALLED. Performing adjustments.'); // DEBUG_MSG
+
   scrollToNowPlayingElement();
   // 取得表格容器，如果不存在就返回
   const contentContainer = document.getElementById('generated');
@@ -2768,22 +2668,29 @@ function handleResizeActions() {
   // *** 在這裡加入呼叫 ***
   adjustHeaderFontSizeOnOverflow();
 
-  // 淨在 #nowPlaying 存在个時節正捲動
-  const activeRow = document.getElementById('nowPlaying');
-  if (activeRow) {
-    console.log(
-      'Resize handler: Found #nowPlaying, calling scrollToNowPlayingElement.'
-    );
-    scrollToNowPlayingElement(); // 呼叫原本个捲動函式
-  } else {
-    // 係講尋毋著，就毋做捲動，單淨印 log
-    console.log('Resize handler: #nowPlaying not found, skipping scroll.');
+  // --- 修改：Popup 更新邏輯移到這裡，並用 requestAnimationFrame ---
+  if (activeSelectionPopup && lastAnchorElementForPopup) {
+    const popupEl = document.getElementById('selectionPopup');
+    if (popupEl && popupEl.style.display === 'block') {
+      if (document.body.contains(lastAnchorElementForPopup)) {
+        requestAnimationFrame(() => { // 等待下一次瀏覽器重繪
+          // 在重繪後，再用 setTimeout 延遲執行，分瀏覽器有較多時間穩定版面
+          setTimeout(() => {
+            // 再次檢查錨點元素係無係還在 DOM 裡肚
+            if (document.body.contains(lastAnchorElementForPopup)) {
+              console.log('handleResizeActions (rAF + setTimeout 100ms): Popup is active, updating position.'); // DEBUG_MSG
+              updatePopupPosition(popupEl, lastAnchorElementForPopup.getBoundingClientRect()); // DEBUG_MSG
+            } else {
+              console.warn("handleResizeActions (rAF + setTimeout 100ms): Anchor for popup disappeared before final update."); // DEBUG_MSG
+            }
+          }, 700); // 改做延遲 700 毫秒
+          });
+      } else {
+        console.warn("handleResizeActions: Anchor for popup gone before rAF. Not repositioning."); // DEBUG_MSG
+      }
+    }
   }
 }
-
-/**
- * 捲動到目前具有 'nowPlaying' ID 的元素 (正在播放或暫停的列)
- */
 /**
  * 捲動到目前具有 'nowPlaying' ID 的列中，包含 currentAudio 的 TD 元素。
  */
@@ -2820,6 +2727,8 @@ function scrollToNowPlayingElement() {
       'scrollToNowPlayingElement: #nowPlaying TR or currentAudio reference not found. Skipping scroll.'
     );
   }
+
+  // --- 移除這裡个 popup 更新邏輯 ---
 }
 
 // 監聽 window 的 resize 事件，並使用 debounce 處理
@@ -3150,12 +3059,36 @@ function findPronunciationsInAllData(searchText) {
   const normalizedSearchText = searchText.trim();
 
   allKnownDataVars.forEach(dataVarName => {
+    // dataVarName is like '四基', '海初'
     const dataObject = window[dataVarName];
-    if (dataObject && dataObject.content) {
+    if (dataObject && dataObject.content && dataObject.name) {
       try {
+        // 1. Construct dialectInfoForLevel for this dataVarName
+        const 腔 = dataObject.name.substring(0, 1);
+        const 級 = dataObject.name.substring(1);
+        let selected例外音檔;
+        switch (級) {
+          case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
+          case '初': selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : []; break;
+          case '中': selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : []; break;
+          case '中高': selected例外音檔 = typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : []; break;
+          case '高': selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : []; break;
+          default: selected例外音檔 = [];
+        }
+        let 檔腔 = '', 檔級 = '', 目錄級 = '', 目錄另級 = undefined;
+        // Simplified from generate()
+        if (腔 === '四') { 檔腔 = 'si'; } else if (腔 === '海') { 檔腔 = 'ha'; } else if (腔 === '大') { 檔腔 = 'da'; } else if (腔 === '平') { 檔腔 = 'rh'; } else if (腔 === '安') { 檔腔 = 'zh'; }
+        if (級 === '基') { 目錄級 = '5'; 目錄另級 = '1'; } else if (級 === '初') { 目錄級 = '1'; } else if (級 === '中') { 目錄級 = '2'; 檔級 = '1'; } else if (級 === '中高') { 目錄級 = '3'; 檔級 = '2'; } else if (級 === '高') { 目錄級 = '4'; 檔級 = '3'; }
+
+        const dialectInfoForLevel = {
+          腔, 級, selected例外音檔,
+          generalMediaYr: '112', // Assuming constant
+          目錄級, 目錄另級, 檔腔, 檔級,
+          fullLvlName: getFullLevelName(dataObject.name)
+        };
+
         const vocabularyArray = csvToArray(dataObject.content);
         const sourceName = getFullLevelName(dataObject.name);
-
         vocabularyArray.forEach(line => {
           if (line.客家語 && line.客語標音) { // 確保客家語和標音都存在
             const isExact = line.客家語 === normalizedSearchText;
@@ -3168,7 +3101,9 @@ function findPronunciationsInAllData(searchText) {
                   pronunciation: line.客語標音,
                   source: sourceName,
                   isExactMatch: true,
-                  originalTerm: line.客家語
+                  originalTerm: line.客家語,
+                  mandarinMeaning: line.華語詞義,
+                  audioDetails: { lineData: { ...line }, dialectInfo: dialectInfoForLevel } // Store line data and dialect info
                 });
                 uniqueEntries.add(entryKey);
               }
@@ -3180,7 +3115,9 @@ function findPronunciationsInAllData(searchText) {
                   pronunciation: line.客語標音,
                   source: sourceName,
                   isExactMatch: false,
-                  originalTerm: line.客家語
+                  originalTerm: line.客家語,
+                  mandarinMeaning: line.華語詞義,
+                  audioDetails: { lineData: { ...line }, dialectInfo: dialectInfoForLevel } // Store line data and dialect info
                 });
                 uniqueEntries.add(entryKey);
               }
@@ -3197,6 +3134,120 @@ function findPronunciationsInAllData(searchText) {
 }
 
 /**
+ * Helper function to construct audio URL for a term in the popup.
+ * @param {object} lineData - The specific line data for the term (must include '編號').
+ * @param {object} dialectInfo - Dialect and level specific info (腔, 級, selected例外音檔, etc.).
+ * @returns {string|null} The audio URL or null if not constructible.
+ */
+function constructAudioUrlForPopup(lineData, dialectInfo) {
+  if (!lineData || !lineData.編號 || !dialectInfo) return null;
+
+  let mediaYr = dialectInfo.generalMediaYr || '112';
+  let pre112Insertion詞 = '';
+  let current目錄級 = dialectInfo.目錄級;
+  // no[0] and no[1] from lineData.編號
+  const noParts = lineData.編號.split('-');
+  if (noParts.length < 2) return null;
+
+  let no_0 = noParts[0]; // Original first part from CSV, e.g., "1", "12"
+
+  // Step 1: General padding for single digit (applies to all before specific '初' logic)
+  // This ensures "X" becomes "0X". "XX" remains "XX".
+  if (no_0.length === 1 && !isNaN(parseInt(no_0))) {
+    no_0 = '0' + no_0;
+  }
+  // Now no_0 is "0X" if original was "X", or "XX" if original was "XX".
+
+  // Step 2: Specific padding for '初級' to make it three digits if it's two (e.g., "0X" -> "00X", "XX" -> "0XX")
+  if (dialectInfo.級 === '初') {
+    no_0 = '0' + no_0; // "01" -> "001", "12" -> "012"
+  }
+
+  let mediaNo = noParts[1]; // Default mediaNo from 編號
+  if (mediaNo.length < 2 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add leading zero if single digit
+  if (mediaNo.length < 3 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add second leading zero if two digits
+
+
+  // Exception handling (simplified from buildTableAndSetupPlayback)
+  const exceptionList = dialectInfo.selected例外音檔 || [];
+  const exceptionIndex = exceptionList.findIndex(([編號]) => 編號 === lineData.編號);
+
+  if (exceptionIndex !== -1) {
+    const matchedElement = exceptionList[exceptionIndex];
+    mediaYr = matchedElement[1] || mediaYr;
+    mediaNo = matchedElement[2] || mediaNo;
+    pre112Insertion詞 = 'w/'; // Assuming 'w/' for word exceptions
+    if (dialectInfo.目錄另級 !== undefined) {
+      current目錄級 = dialectInfo.目錄另級;
+    }
+  }
+
+  const 詞目錄 = `${current目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+  
+  let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
+
+  // Specific override for 海陸中高級 4-261 (word audio)
+  if (dialectInfo.fullLvlName === '海陸中高級' && lineData.編號 === '4-261') {
+    audioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+  }
+
+  return audioSrc;
+}
+
+/**
+ * 更新 Popup 的位置。
+ * @param {HTMLElement} popupEl - Popup 元素。
+ * @param {DOMRect} selectionRect - 文字選取範圍的邊界矩形。
+ */
+function updatePopupPosition(popupEl, selectionRect) {
+  if (!popupEl || !selectionRect) return;
+
+  // 先隱藏 popup (如果還沒顯示)，設定 display:block 來取得尺寸，然後再定位
+  const initialDisplay = popupEl.style.display;
+  popupEl.style.visibility = 'hidden';
+  if (initialDisplay !== 'block') {
+    popupEl.style.display = 'block';
+  }
+
+  const popupWidth = popupEl.offsetWidth;
+  const popupHeight = popupEl.offsetHeight;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+
+  let popupTop = scrollY + selectionRect.bottom + 5; // 預設在選取區下方 5px
+  let popupLeft = scrollX + selectionRect.left;
+
+  // 檢查右邊界
+  if (popupLeft + popupWidth > scrollX + viewportWidth - 10) {
+    popupLeft = scrollX + viewportWidth - popupWidth - 10;
+  }
+  // 檢查左邊界
+  if (popupLeft < scrollX + 10) {
+    popupLeft = scrollX + 10;
+  }
+  // 檢查下邊界，若超出，嘗試移到選取區上方
+  if (popupTop + popupHeight > scrollY + viewportHeight - 10) {
+    let topAbove = scrollY + selectionRect.top - popupHeight - 5;
+    if (topAbove > scrollY + 10) { // 檢查上方是否有足夠空間
+      popupTop = topAbove;
+    }
+  }
+  // 檢查上邊界 (主要用在移到上方後)
+  if (popupTop < scrollY + 10) {
+    popupTop = scrollY + 10;
+  }
+
+  popupEl.style.left = `${popupLeft}px`;
+  popupEl.style.top = `${popupTop}px`;
+  popupEl.style.visibility = 'visible'; // 定位完成後再顯示
+  if (initialDisplay !== 'block' && popupEl.style.display === 'block' && !activeSelectionPopup) {
+     // 如果是初次定位且 popup 應為隱藏，則恢復隱藏 (這主要給 showPronunciationPopup 控制)
+  }
+}
+
+/**
  * 顯示選詞發音 Popup。
  * @param {string} selectedText - 被選取的文字。
  * @param {Array<object>} readings - 搜尋到的發音陣列。
@@ -3204,14 +3255,36 @@ function findPronunciationsInAllData(searchText) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl) {
+function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElementOrRect) {
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
+  const popupTitleElement = document.getElementById('selectionPopupTitle');
+  
+  lastAnchorElementForPopup = null; // 先清除舊的
+  let initialRect;
+
+  if (anchorElementOrRect instanceof HTMLElement) {
+    lastAnchorElementForPopup = anchorElementOrRect; // 儲存錨點元素
+    initialRect = lastAnchorElementForPopup.getBoundingClientRect();
+  } else { // Fallback if a rect was passed directly (e.g. raw selection)
+    initialRect = anchorElementOrRect;
+  }
+
+  // 1. 設定 Popup 標題
+  if (popupTitleElement) {
+    popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
+  }
+
+  // --- 新增：預設關閉「顯示其他腔頭」開關 ---
+  if (showOtherAccentsToggle) {
+    showOtherAccentsToggle.checked = false;
+    console.log('Reset "Show other accents" toggle to unchecked.'); // DEBUG_MSG
+  }
 
   // 內部函式，用來實際產生列表
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
-    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`);
+    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
     let displayReadings = [...readings]; // 複製一份來操作
 
@@ -3244,30 +3317,61 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
     });
 
     if (displayReadings.length > 0) {
-      const ul = document.createElement('ul');
+      const accordionContainer = document.createElement('div');
+      accordionContainer.className = 'accordion-container'; // You might want to style this container
+
       displayReadings.forEach(reading => {
-        const li = document.createElement('li');
-        let displayText = reading.pronunciation;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'accordion-item';
+
+        const headerBtn = document.createElement('button');
+        headerBtn.className = 'accordion-header';
+        let headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
         if (!reading.isExactMatch) {
-          // 只在部分符合時顯示原詞目
-          displayText += ` (詞目: ${reading.originalTerm})`;
+          // If not an exact match, show the original term it was found in
+          headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
         }
-        li.textContent = displayText;
+        headerBtn.innerHTML = `${headerText}<span class="pronunciation-source">(${reading.source})</span><span class="indicator">+</span>`;
+
+        const panelDiv = document.createElement('div');
+        panelDiv.className = 'accordion-panel';
         
-        const sourceSpan = document.createElement('span');
-        sourceSpan.className = 'pronunciation-source';
-        sourceSpan.textContent = `(${reading.source})`;
-        li.appendChild(sourceSpan);
-        ul.appendChild(li);
+        let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
+        
+        // Construct audio URL using the new helper function
+        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
+        if (audioUrl) {
+          panelContent += `<audio controls src="${audioUrl}" style="width: 100%;"><a href="${audioUrl}">下載音檔</a></audio>`;
+        } else {
+          panelContent += `<p><em>(無音檔資訊)</em></p>`;
+        }
+        panelDiv.innerHTML = panelContent;
+
+        itemDiv.appendChild(headerBtn);
+        itemDiv.appendChild(panelDiv);
+        accordionContainer.appendChild(itemDiv);
+
+        // Add click event listener to the header button
+        headerBtn.addEventListener('click', () => {
+          headerBtn.classList.toggle('active');
+          const indicator = headerBtn.querySelector('.indicator');
+          if (panelDiv.style.maxHeight) {
+            panelDiv.style.maxHeight = null;
+            if (indicator) indicator.textContent = '+';
+          } else {
+            panelDiv.style.maxHeight = panelDiv.scrollHeight + "px";
+            if (indicator) indicator.textContent = '−';
+          }
+        });
       });
-      contentEl.appendChild(ul);
+      contentEl.appendChild(accordionContainer);
     } else {
       // 根據開關狀態和原始搜尋結果來決定提示訊息
       if (showAllAccents) { // 開關打開，但所有腔調都尋無
         contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
       } else { // 開關關閉
         if (readings.some(r => !r.source.startsWith(currentActiveMainDialectName))) { // 目前主要腔調尋無，但其他主要腔調有結果
-          contentEl.innerHTML = `<p class="popup-not-found">在這隻【${currentActiveMainDialectName}】腔頭尋無讀音。試看啊打開「顯示其他腔頭」？</p>`;
+          contentEl.innerHTML = `<p class="popup-not-found">在${currentActiveMainDialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
         } else { // 所有腔調都尋無，或者其他腔調也尋無
           contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
         }
@@ -3284,8 +3388,20 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
 
   renderPronunciationList(); // 第一次顯示時呼叫
 
+  // --- 定位邏輯 ---
+  if (initialRect) {
+    popupEl.style.display = 'block'; // 確保 popup 是 block 狀態分 updatePopupPosition 計算
+    updatePopupPosition(popupEl, initialRect);
+  } else {
+    // 若無 selectionRect (理論上不應發生)，退回原本置中方式
+    popupEl.style.left = '50%';
+    popupEl.style.top = '50%';
+    popupEl.style.transform = 'translate(-50%, -50%)';
+    popupEl.style.display = 'block';
+    console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
+  }
+
   backdropEl.style.display = 'block';
-  popupEl.style.display = 'block';
   popupEl.focus(); // 將焦點移到 popup，方便鍵盤操作 (例如 Esc 關閉)
   activeSelectionPopup = true;
 }
@@ -3296,8 +3412,10 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
 function hidePronunciationPopup(popupEl, backdropEl) {
+  if (popupEl) popupEl.style.transform = ''; // 清除可能存在的 transform
   if (popupEl) popupEl.style.display = 'none';
   if (backdropEl) backdropEl.style.display = 'none';
+  lastAnchorElementForPopup = null; // 清除儲存的錨點元素
   activeSelectionPopup = false;
 }
 
@@ -3308,11 +3426,37 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
 
   if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return; // *** MODIFIED: Use generatedArea ***
 
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制，避免選太長
-    console.log('選中例句文字:', selectedText);
-    const readings = findPronunciationsInAllData(selectedText);
-    showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl);
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const selectedText = selection.toString().trim();
+    if (selectedText.length > 0 && selectedText.length <= 15) {
+      console.log('選中例句文字:', selectedText); // DEBUG_MSG
+      const readings = findPronunciationsInAllData(selectedText);
+
+      let anchorElement = null;
+      const trElement = sentenceSpan.closest('tr');
+
+      if (trElement) {
+        const exampleTd = trElement.cells[2]; // 第三大格係例句欄
+        if (exampleTd) {
+          // 優先尋例句个 audio 元素 (毋係 data-skip='true' 个)
+          anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+        }
+      }
+      // 如果尋無 audio，或者尋無 tr/td，就用 sentenceSpan 本身做錨點
+      if (!anchorElement) {
+        anchorElement = sentenceSpan;
+      }
+
+      if (anchorElement) {
+        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElement);
+      } else {
+        // 極端个 fallback，理論上 sentenceSpan 一定會在
+        const rect = selection.getRangeAt(0).getBoundingClientRect();
+        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+      }
+    }
   }
 }
+
 // --- 選詞發音 Popup 相關函式結束 ---
