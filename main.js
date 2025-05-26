@@ -61,6 +61,7 @@ let loadedViaUrlParams = false; // <-- 新增：標記是否透過 URL 參數載
 let activeSelectionPopup = false; // <-- 新增：標記選詞 popup 是否開啟
 let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目前頁面顯示的完整腔調級別全名
 let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
+let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
 
 // --- 新增：所有已知的資料變數名稱 (用於「共腔尋詞」) ---
 const allKnownDataVars = [
@@ -1891,25 +1892,15 @@ document.addEventListener('DOMContentLoaded', function () {
   if (contentContainer && window.ResizeObserver) {
     console.log('Setting up ResizeObserver for #generated container.');
 
-    // Debounced scroll function specifically for the observer
-    const debouncedScrollOnResize = debounce(() => {
-      console.log(
-        'ResizeObserver triggered (debounced). Checking for #nowPlaying.'
-      );
-      const activeRow = document.getElementById('nowPlaying');
-      if (activeRow) {
-        console.log(
-          'ResizeObserver: Found #nowPlaying, calling scrollToNowPlayingElement.'
-        );
-        scrollToNowPlayingElement();
-      } else {
-        console.log('ResizeObserver: #nowPlaying not found, skipping scroll.');
-      }
+    // --- 修改：ResizeObserver 直接呼叫 debounced handleResizeActions ---
+    const debouncedResizeObserverActions = debounce(() => {
+      console.log('ResizeObserver triggered (debounced). Calling handleResizeActions.'); // DEBUG_MSG
+      handleResizeActions();
     }, 250); // Use the same debounce delay as window resize
 
     const resizeObserver = new ResizeObserver((entries) => {
-      // We don't need to inspect entries in detail, just trigger the debounced scroll
-      debouncedScrollOnResize();
+      // We don't need to inspect entries in detail, just trigger the debounced actions
+      debouncedResizeObserverActions();
     });
 
     // Start observing the container
@@ -2661,9 +2652,8 @@ function debounce(func, wait, immediate) {
  * 並在 Firefox 中重新調整 Ruby 字體大小。
  */
 function handleResizeActions() {
-  console.log(
-    'Debounced resize event triggered. Calling scroll and font adjustment.'
-  ); // 新增 log
+  console.log('handleResizeActions CALLED. Performing adjustments.'); // DEBUG_MSG
+
   scrollToNowPlayingElement();
   // 取得表格容器，如果不存在就返回
   const contentContainer = document.getElementById('generated');
@@ -2678,22 +2668,29 @@ function handleResizeActions() {
   // *** 在這裡加入呼叫 ***
   adjustHeaderFontSizeOnOverflow();
 
-  // 淨在 #nowPlaying 存在个時節正捲動
-  const activeRow = document.getElementById('nowPlaying');
-  if (activeRow) {
-    console.log(
-      'Resize handler: Found #nowPlaying, calling scrollToNowPlayingElement.'
-    );
-    scrollToNowPlayingElement(); // 呼叫原本个捲動函式
-  } else {
-    // 係講尋毋著，就毋做捲動，單淨印 log
-    console.log('Resize handler: #nowPlaying not found, skipping scroll.');
+  // --- 修改：Popup 更新邏輯移到這裡，並用 requestAnimationFrame ---
+  if (activeSelectionPopup && lastAnchorElementForPopup) {
+    const popupEl = document.getElementById('selectionPopup');
+    if (popupEl && popupEl.style.display === 'block') {
+      if (document.body.contains(lastAnchorElementForPopup)) {
+        requestAnimationFrame(() => { // 等待下一次瀏覽器重繪
+          // 在重繪後，再用 setTimeout 延遲執行，分瀏覽器有較多時間穩定版面
+          setTimeout(() => {
+            // 再次檢查錨點元素係無係還在 DOM 裡肚
+            if (document.body.contains(lastAnchorElementForPopup)) {
+              console.log('handleResizeActions (rAF + setTimeout 100ms): Popup is active, updating position.'); // DEBUG_MSG
+              updatePopupPosition(popupEl, lastAnchorElementForPopup.getBoundingClientRect()); // DEBUG_MSG
+            } else {
+              console.warn("handleResizeActions (rAF + setTimeout 100ms): Anchor for popup disappeared before final update."); // DEBUG_MSG
+            }
+          }, 700); // 改做延遲 700 毫秒
+          });
+      } else {
+        console.warn("handleResizeActions: Anchor for popup gone before rAF. Not repositioning."); // DEBUG_MSG
+      }
+    }
   }
 }
-
-/**
- * 捲動到目前具有 'nowPlaying' ID 的元素 (正在播放或暫停的列)
- */
 /**
  * 捲動到目前具有 'nowPlaying' ID 的列中，包含 currentAudio 的 TD 元素。
  */
@@ -2730,6 +2727,8 @@ function scrollToNowPlayingElement() {
       'scrollToNowPlayingElement: #nowPlaying TR or currentAudio reference not found. Skipping scroll.'
     );
   }
+
+  // --- 移除這裡个 popup 更新邏輯 ---
 }
 
 // 監聽 window 的 resize 事件，並使用 debounce 處理
@@ -3195,6 +3194,58 @@ function constructAudioUrlForPopup(lineData, dialectInfo) {
   return audioSrc;
 }
 
+/**
+ * 更新 Popup 的位置。
+ * @param {HTMLElement} popupEl - Popup 元素。
+ * @param {DOMRect} selectionRect - 文字選取範圍的邊界矩形。
+ */
+function updatePopupPosition(popupEl, selectionRect) {
+  if (!popupEl || !selectionRect) return;
+
+  // 先隱藏 popup (如果還沒顯示)，設定 display:block 來取得尺寸，然後再定位
+  const initialDisplay = popupEl.style.display;
+  popupEl.style.visibility = 'hidden';
+  if (initialDisplay !== 'block') {
+    popupEl.style.display = 'block';
+  }
+
+  const popupWidth = popupEl.offsetWidth;
+  const popupHeight = popupEl.offsetHeight;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+
+  let popupTop = scrollY + selectionRect.bottom + 5; // 預設在選取區下方 5px
+  let popupLeft = scrollX + selectionRect.left;
+
+  // 檢查右邊界
+  if (popupLeft + popupWidth > scrollX + viewportWidth - 10) {
+    popupLeft = scrollX + viewportWidth - popupWidth - 10;
+  }
+  // 檢查左邊界
+  if (popupLeft < scrollX + 10) {
+    popupLeft = scrollX + 10;
+  }
+  // 檢查下邊界，若超出，嘗試移到選取區上方
+  if (popupTop + popupHeight > scrollY + viewportHeight - 10) {
+    let topAbove = scrollY + selectionRect.top - popupHeight - 5;
+    if (topAbove > scrollY + 10) { // 檢查上方是否有足夠空間
+      popupTop = topAbove;
+    }
+  }
+  // 檢查上邊界 (主要用在移到上方後)
+  if (popupTop < scrollY + 10) {
+    popupTop = scrollY + 10;
+  }
+
+  popupEl.style.left = `${popupLeft}px`;
+  popupEl.style.top = `${popupTop}px`;
+  popupEl.style.visibility = 'visible'; // 定位完成後再顯示
+  if (initialDisplay !== 'block' && popupEl.style.display === 'block' && !activeSelectionPopup) {
+     // 如果是初次定位且 popup 應為隱藏，則恢復隱藏 (這主要給 showPronunciationPopup 控制)
+  }
+}
 
 /**
  * 顯示選詞發音 Popup。
@@ -3204,9 +3255,19 @@ function constructAudioUrlForPopup(lineData, dialectInfo) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, selectionRect) {
+function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElementOrRect) {
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
+  
+  lastAnchorElementForPopup = null; // 先清除舊的
+  let initialRect;
+
+  if (anchorElementOrRect instanceof HTMLElement) {
+    lastAnchorElementForPopup = anchorElementOrRect; // 儲存錨點元素
+    initialRect = lastAnchorElementForPopup.getBoundingClientRect();
+  } else { // Fallback if a rect was passed directly (e.g. raw selection)
+    initialRect = anchorElementOrRect;
+  }
 
   // 1. 設定 Popup 標題
   if (popupTitleElement) {
@@ -3328,52 +3389,15 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
   renderPronunciationList(); // 第一次顯示時呼叫
 
   // --- 定位邏輯 ---
-  if (selectionRect) {
-    // 先隱藏 popup，設定 display:block 來取得尺寸，然後再定位
-    popupEl.style.visibility = 'hidden';
-    popupEl.style.display = 'block';
-
-    const popupWidth = popupEl.offsetWidth;
-    const popupHeight = popupEl.offsetHeight;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
-
-    let popupTop = scrollY + selectionRect.bottom + 5; // 預設在選取區下方 5px
-    let popupLeft = scrollX + selectionRect.left;
-
-    // 檢查右邊界
-    if (popupLeft + popupWidth > scrollX + viewportWidth - 10) {
-      popupLeft = scrollX + viewportWidth - popupWidth - 10;
-    }
-    // 檢查左邊界
-    if (popupLeft < scrollX + 10) {
-      popupLeft = scrollX + 10;
-    }
-
-    // 檢查下邊界，若超出，嘗試移到選取區上方
-    if (popupTop + popupHeight > scrollY + viewportHeight - 10) {
-      let topAbove = scrollY + selectionRect.top - popupHeight - 5;
-      if (topAbove > scrollY + 10) { // 檢查上方是否有足夠空間
-        popupTop = topAbove;
-      }
-      // 若上方空間也不足，popup 可能還是會部分超出，或需要頁面捲動
-    }
-    // 檢查上邊界 (主要用在移到上方後)
-    if (popupTop < scrollY + 10) {
-      popupTop = scrollY + 10;
-    }
-
-    popupEl.style.left = `${popupLeft}px`;
-    popupEl.style.top = `${popupTop}px`;
-    popupEl.style.visibility = 'visible'; // 定位完成後再顯示
+  if (initialRect) {
+    popupEl.style.display = 'block'; // 確保 popup 是 block 狀態分 updatePopupPosition 計算
+    updatePopupPosition(popupEl, initialRect);
   } else {
     // 若無 selectionRect (理論上不應發生)，退回原本置中方式
     popupEl.style.left = '50%';
     popupEl.style.top = '50%';
     popupEl.style.transform = 'translate(-50%, -50%)';
-    popupEl.style.display = 'block'; // 確保顯示
+    popupEl.style.display = 'block';
     console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
   }
 
@@ -3391,6 +3415,7 @@ function hidePronunciationPopup(popupEl, backdropEl) {
   if (popupEl) popupEl.style.transform = ''; // 清除可能存在的 transform
   if (popupEl) popupEl.style.display = 'none';
   if (backdropEl) backdropEl.style.display = 'none';
+  lastAnchorElementForPopup = null; // 清除儲存的錨點元素
   activeSelectionPopup = false;
 }
 
@@ -3404,13 +3429,34 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
   const selection = window.getSelection();
   if (selection.rangeCount > 0) {
     const selectedText = selection.toString().trim();
-    if (selectedText.length > 0 && selectedText.length <= 15) { // 加入長度限制
+    if (selectedText.length > 0 && selectedText.length <= 15) {
       console.log('選中例句文字:', selectedText); // DEBUG_MSG
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
       const readings = findPronunciationsInAllData(selectedText);
-      showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+
+      let anchorElement = null;
+      const trElement = sentenceSpan.closest('tr');
+
+      if (trElement) {
+        const exampleTd = trElement.cells[2]; // 第三大格係例句欄
+        if (exampleTd) {
+          // 優先尋例句个 audio 元素 (毋係 data-skip='true' 个)
+          anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+        }
+      }
+      // 如果尋無 audio，或者尋無 tr/td，就用 sentenceSpan 本身做錨點
+      if (!anchorElement) {
+        anchorElement = sentenceSpan;
+      }
+
+      if (anchorElement) {
+        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElement);
+      } else {
+        // 極端个 fallback，理論上 sentenceSpan 一定會在
+        const rect = selection.getRangeAt(0).getBoundingClientRect();
+        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+      }
     }
   }
 }
+
 // --- 選詞發音 Popup 相關函式結束 ---

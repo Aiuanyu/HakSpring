@@ -41,8 +41,8 @@
 
 
 :root {
-  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui,
-      sans-serif;
+  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
   --iMazinGrace-1-rgb: 170, 150, 183; /* 新增 RGB 版本方便用 rgba() */
@@ -127,7 +127,7 @@
   rt,
   ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
     font-size: 1em;
-    font-family: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif !important;
+    font-family: var(--roman-font) !important;
     margin-bottom: 0.3em;
   }
   ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
@@ -666,6 +666,8 @@ input:checked + .slider:before {
 
 .accordion-header .pronunciation-text { /* For the main pronunciation text */
   flex-grow: 1;
+  font-family: var(--roman-font);
+  font-weight: 700;
 }
 
 .accordion-header .pronunciation-source { /* Keep source style */
