@@ -62,6 +62,9 @@ let activeSelectionPopup = false; // <-- 新增：標記選詞 popup 是否開�
 let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目前頁面顯示的完整腔調級別全名
 let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
 let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
+let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
+let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
+let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
 
 // --- 新增：所有已知的資料變數名稱 (用於「共腔尋詞」) ---
 const allKnownDataVars = [
@@ -1945,7 +1948,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // --- 新增：設定選詞 Popup 功能 ---
   if (selectionPopup && selectionPopupBackdrop && selectionPopupContent && selectionPopupCloseBtn && contentContainer) { // *** MODIFIED: Use contentContainer ***
-    contentContainer.addEventListener('mouseup', (event) => handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentContainer)); // *** MODIFIED: Pass contentContainer ***
+    if (isMobileDevice()) {
+      console.log('手機裝置，設定 selectionchange 監聽器分查詞按鈕。');
+      createMobileLookupButton(selectionPopup, selectionPopupContent, selectionPopupBackdrop);
+      document.addEventListener('selectionchange', debouncedMobileSelectionHandler);
+    } else {
+      console.log('桌機裝置，設定 mouseup 監聽器分 popup。');
+      contentContainer.addEventListener('mouseup', (event) => handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentContainer));
+    }
 
     selectionPopupCloseBtn.addEventListener('click', () => hidePronunciationPopup(selectionPopup, selectionPopupBackdrop));
     selectionPopupBackdrop.addEventListener('click', () => hidePronunciationPopup(selectionPopup, selectionPopupBackdrop));
@@ -1973,6 +1983,132 @@ document.addEventListener('DOMContentLoaded', function () {
   // 或者直接放在最尾項
   setTimeout(adjustHeaderFontSizeOnOverflow, 50); // 稍微延遲
 });
+
+// --- 新增：判斷是否為手機裝置 ---
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// --- 新增：手機版查詞按鈕相關函式 ---
+function createMobileLookupButton(popupEl, contentEl, backdropEl) {
+  if (mobileLookupButton) return;
+
+  mobileLookupButton = document.createElement('button');
+  mobileLookupButton.id = 'mobileLookupBtn';
+  mobileLookupButton.innerHTML = '查詞 <i class="fas fa-search"></i>';
+  mobileLookupButton.style.display = 'none'; // 初始隱藏
+  document.body.appendChild(mobileLookupButton);
+
+  mobileLookupButton.addEventListener('click', () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0 && lastSelectionRectForMobile) {
+      const selectedText = selection.toString().trim();
+      if (selectedText.length > 0 && selectedText.length <= 15) {
+        console.log('手機查詞按鈕點擊:', selectedText);
+        const readings = findPronunciationsInAllData(selectedText);
+        // 使用儲存的 lastSelectionRectForMobile 來定位 popup
+        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, lastSelectionRectForMobile);
+        hideMobileLookupButton(); // 顯示 popup 後隱藏按鈕
+      }
+    } else {
+      hideMobileLookupButton(); // 若無效選取或 rect，也隱藏按鈕
+    }
+  });
+}
+
+function showMobileLookupButton(selectionRect) {
+  if (!mobileLookupButton) return;
+
+  lastSelectionRectForMobile = selectionRect; // 儲存 rect 供點擊時使用
+
+  // 先暫時顯示以取得尺寸
+  mobileLookupButton.style.visibility = 'hidden';
+  mobileLookupButton.style.display = 'block';
+  const btnWidth = mobileLookupButton.offsetWidth;
+  const btnHeight = mobileLookupButton.offsetHeight;
+
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  const margin = 3; // 按鈕與選取範圍邊緣的間距
+
+  // 預設位置：選取範圍右下角外一點
+  let btnTop = scrollY + selectionRect.bottom + margin;
+  let btnLeft = scrollX + selectionRect.right - btnWidth; // 按鈕右邊緣對齊選取範圍右邊緣
+  // 如果選取範圍太窄，按鈕左邊緣對齊選取範圍左邊緣
+  if (selectionRect.width < btnWidth) {
+    btnLeft = scrollX + selectionRect.left;
+  }
+
+
+  // 檢查是否超出視窗範圍
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const edgeMargin = 5; // 按鈕與視窗邊緣的最小間距
+
+  // 調整左邊位置
+  if (btnLeft + btnWidth > scrollX + viewportWidth - edgeMargin) {
+    btnLeft = scrollX + viewportWidth - btnWidth - edgeMargin;
+  }
+  if (btnLeft < scrollX + edgeMargin) {
+    btnLeft = scrollX + edgeMargin;
+  }
+
+  // 調整上方位置
+  if (btnTop + btnHeight > scrollY + viewportHeight - edgeMargin) {
+    let topAbove = scrollY + selectionRect.top - btnHeight - margin; // 嘗試移到選取範圍上方
+    if (topAbove > scrollY + edgeMargin) {
+      btnTop = topAbove;
+    } // 若上方空間不足，維持在下方但避免超出底部 (這部分會在下面被btnTop < scrollY + edgeMargin處理)
+  }
+   if (btnTop < scrollY + edgeMargin) { // 避免超出頂部
+        btnTop = scrollY + edgeMargin;
+   }
+
+  mobileLookupButton.style.top = `${btnTop}px`;
+  mobileLookupButton.style.left = `${btnLeft}px`;
+  mobileLookupButton.style.visibility = 'visible';
+}
+
+function hideMobileLookupButton() {
+  if (mobileLookupButton) {
+    mobileLookupButton.style.display = 'none';
+  }
+  lastSelectionRectForMobile = null; // 清除儲存的 rect
+}
+
+// 手機版選取事件的 debounced 處理器
+const debouncedMobileSelectionHandler = debounce(function() {
+  const selection = window.getSelection();
+  const contentContainer = document.getElementById('generated');
+
+  if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
+    const range = selection.getRangeAt(0);
+    const selectedText = selection.toString().trim();
+    const commonAncestorContainer = range.commonAncestorContainer;
+    let sentenceSpan = null;
+
+    if (commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
+      sentenceSpan = commonAncestorContainer.closest('span.sentence');
+    } else if (commonAncestorContainer.parentNode) {
+      sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
+    }
+
+    // 檢查選取範圍是否在 .sentence span 內，且該 span 在 #generated 內
+    if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0 && selectedText.length <= 15) {
+      // 只有在 popup 未開啟時才顯示按鈕
+      if (!activeSelectionPopup) {
+        const rect = range.getBoundingClientRect();
+        showMobileLookupButton(rect);
+      } else {
+        hideMobileLookupButton(); // 若 popup 已開啟，則隱藏按鈕
+      }
+    } else {
+      hideMobileLookupButton(); // 選取無效或不在目標區，隱藏按鈕
+    }
+  } else {
+    hideMobileLookupButton(); // 無選取內容，隱藏按鈕
+  }
+}, 250); // 250 毫秒 debounce
 
 // --- 新增：全域鍵盤事件處理 (取代舊的) ---
 function globalKeydownHandler(event) {
@@ -2668,25 +2804,37 @@ function handleResizeActions() {
   // *** 在這裡加入呼叫 ***
   adjustHeaderFontSizeOnOverflow();
 
-  // --- 修改：Popup 更新邏輯移到這裡，並用 requestAnimationFrame ---
-  if (activeSelectionPopup && lastAnchorElementForPopup) {
+  // --- 修改：Popup 更新邏輯，加入 lastRectForPopupPositioning ---
+  if (activeSelectionPopup) { // 檢查 popup 是否開啟
     const popupEl = document.getElementById('selectionPopup');
     if (popupEl && popupEl.style.display === 'block') {
-      if (document.body.contains(lastAnchorElementForPopup)) {
+      let rectToUse = null;
+      if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+        rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+      } else if (lastRectForPopupPositioning) {
+        // 若使用儲存的 rect，它應當是 popup 開啟時的有效位置
+        rectToUse = lastRectForPopupPositioning;
+      }
+
+      if (rectToUse) {
         requestAnimationFrame(() => { // 等待下一次瀏覽器重繪
           // 在重繪後，再用 setTimeout 延遲執行，分瀏覽器有較多時間穩定版面
           setTimeout(() => {
             // 再次檢查錨點元素係無係還在 DOM 裡肚
-            if (document.body.contains(lastAnchorElementForPopup)) {
-              console.log('handleResizeActions (rAF + setTimeout 100ms): Popup is active, updating position.'); // DEBUG_MSG
-              updatePopupPosition(popupEl, lastAnchorElementForPopup.getBoundingClientRect()); // DEBUG_MSG
-            } else {
-              console.warn("handleResizeActions (rAF + setTimeout 100ms): Anchor for popup disappeared before final update."); // DEBUG_MSG
+            if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
+              console.warn("handleResizeActions (rAF + setTimeout 700ms): 錨點元素在最終更新前消失了。"); // DEBUG_MSG
+              return;
             }
+            let currentRect = rectToUse;
+            if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) { // 如果錨點元素還在，就用佢最新个位置
+                 currentRect = lastAnchorElementForPopup.getBoundingClientRect();
+            }
+              console.log('handleResizeActions (rAF + setTimeout 100ms): Popup is active, updating position.'); // DEBUG_MSG
+            updatePopupPosition(popupEl, currentRect);
           }, 700); // 改做延遲 700 毫秒
           });
       } else {
-        console.warn("handleResizeActions: Anchor for popup gone before rAF. Not repositioning."); // DEBUG_MSG
+        console.warn("handleResizeActions: Popup 開啟，但尋無有效个錨點元素或 rect 來重新定位。"); // DEBUG_MSG
       }
     }
   }
@@ -3259,14 +3407,28 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
   
-  lastAnchorElementForPopup = null; // 先清除舊的
+  // 清除舊的錨點資訊
+  lastAnchorElementForPopup = null;
+  lastRectForPopupPositioning = null;
   let initialRect;
 
   if (anchorElementOrRect instanceof HTMLElement) {
     lastAnchorElementForPopup = anchorElementOrRect; // 儲存錨點元素
     initialRect = lastAnchorElementForPopup.getBoundingClientRect();
-  } else { // Fallback if a rect was passed directly (e.g. raw selection)
+  } else if (anchorElementOrRect instanceof DOMRect) { // 若傳入的是 DOMRect
+    lastRectForPopupPositioning = anchorElementOrRect; // 儲存錨點 DOMRect
     initialRect = anchorElementOrRect;
+  } else {
+    console.warn("傳入 showPronunciationPopup 的 anchorElementOrRect 無效:", anchorElementOrRect);
+    // 若無有效錨點/rect，退回置中顯示
+    popupEl.style.left = '50%';
+    popupEl.style.top = '50%';
+    popupEl.style.transform = 'translate(-50%, -50%)';
+    popupEl.style.display = 'block';
+    backdropEl.style.display = 'block';
+    popupEl.focus();
+    activeSelectionPopup = true;
+    return;
   }
 
   // 1. 設定 Popup 標題
@@ -3415,8 +3577,12 @@ function hidePronunciationPopup(popupEl, backdropEl) {
   if (popupEl) popupEl.style.transform = ''; // 清除可能存在的 transform
   if (popupEl) popupEl.style.display = 'none';
   if (backdropEl) backdropEl.style.display = 'none';
-  lastAnchorElementForPopup = null; // 清除儲存的錨點元素
+  lastAnchorElementForPopup = null; // 清除儲存的錨點 HTML 元素
+  lastRectForPopupPositioning = null; // 清除儲存的 DOMRect
   activeSelectionPopup = false;
+  if (isMobileDevice()) { // 若是手機，也隱藏查詞按鈕
+    hideMobileLookupButton();
+  }
 }
 
 // *** MODIFIED: Added generatedArea parameter ***
