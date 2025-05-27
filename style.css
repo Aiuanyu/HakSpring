@@ -1078,3 +1078,36 @@ input:checked + .slider:before {
     }
   }
 }
+
+/* --- 手機版查詞按鈕樣式 (Mobile Lookup Button Styles) --- */
+#mobileLookupBtn {
+  position: absolute; /* 用絕對定位，JS 會設定 top/left */
+  z-index: 1000; /* 要在一般內容之上，但在 popup backdrop 之下 (若 backdrop z-index 更高) */
+  background-color: #007bff; /* 範例：藍色背景 */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px; /* 調整內距 */
+  font-size: 0.9em; /* 字體大小 */
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  display: none; /* 初始隱藏，由 JS 控制顯示 */
+  font-family: var(--title-font); /* 用返相同个標題字型 */
+  line-height: 1.2; /* 調整行高避免圖示文字擠在一堆 */
+}
+
+#mobileLookupBtn i.fas.fa-search {
+  margin-left: 5px; /* 圖示和文字之間加點距離 */
+  color: white; /* 確保圖示顏色 */
+}
+
+/* 暗夜模式下的按鈕樣式 (可選) */
+@media (prefers-color-scheme: dark) {
+  #mobileLookupBtn {
+    background-color: var(--dark-primary-accent, #678d3f); /* 用暗模式的主要強調色 */
+    color: var(--dark-button-text-color, #1f1f1f); /* 按鈕文字顏色 */
+  }
+  #mobileLookupBtn i.fas.fa-search {
+    color: var(--dark-button-text-color, #1f1f1f);
+  }
+}
