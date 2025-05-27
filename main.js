@@ -1995,7 +1995,7 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
 
   mobileLookupButton = document.createElement('button');
   mobileLookupButton.id = 'mobileLookupBtn';
-  mobileLookupButton.innerHTML = '查詞 <i class="fas fa-search"></i>';
+  mobileLookupButton.innerHTML = '尋讀音 <i class="fas fa-search"></i>';
   mobileLookupButton.style.display = 'none'; // 初始隱藏
   document.body.appendChild(mobileLookupButton);
 
@@ -2904,18 +2904,12 @@ function adjustRubyFontSize(rubyElement) {
   // 先重設字體大小，以便取得正確个 scrollWidth
   rubyElement.style.fontSize = ''; // 重設為 CSS 預設值
   // 需要強制瀏覽器重新計算樣式
-  window.getComputedStyle(rubyElement).fontSize;
-
-  // 用 setTimeout 確保樣式重設先生效
-  setTimeout(() => {
-    const currentFontSize = parseFloat(
-      window.getComputedStyle(rubyElement).fontSize
-    );
-    const rubyWidth = rubyElement.scrollWidth;
-    // const tdWidth = tdElement.clientWidth; // <-- 原本个方式
+      const forcedStyle = window.getComputedStyle(rubyElement); // 強制重新計算並取得樣式
+      const currentFontSize = parseFloat(forcedStyle.fontSize); // 取得重設後个字體大小
+      const rubyWidth = rubyElement.scrollWidth; // 取得重設後个捲動闊度
 
     // --- 新增：判斷模式並計算可用寬度 ---
-    const computedTdStyle = window.getComputedStyle(tdElement);
+        const computedTdStyle = window.getComputedStyle(tdElement); // td 樣式
     const isCardMode = computedTdStyle.display === 'block';
     let availableWidth;
     const buffer = 5; // 緩衝空間
@@ -2932,10 +2926,10 @@ function adjustRubyFontSize(rubyElement) {
       // console.log(`Wide Mode: clientW=${tdElement.clientWidth}, availW=${availableWidth}`);
     }
     // --- 新增結束 ---
-
+    
     if (rubyWidth > availableWidth) {
       // <-- 用 availableWidth 比較
-      // 按比例計算新字體大小，但設定下限
+          // 按比例計算新字體大小，但設定下限 (用 Math.floor 避免小數造成循環)
       let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
       const minSize = 10; // 最小字體大小 (px)
       newSize = Math.max(newSize, minSize);
@@ -2943,22 +2937,27 @@ function adjustRubyFontSize(rubyElement) {
       if (newSize < currentFontSize) {
         // 只有在需要縮小時才應用
         // console.log(`Firefox: Adjusting ruby font size: ${rubyElement.textContent.substring(0,10)}... from ${currentFontSize}px to ${newSize}px`);
-        rubyElement.style.fontSize = `${newSize}px`;
+            // 檢查係無係同目前設定个 style.fontSize 無共樣，避免重複設定
+            if (rubyElement.style.fontSize !== `${newSize}px`) {
+              rubyElement.style.fontSize = `${newSize}px`;
+            }
       } else {
         // 如果計算出个 newSize 無比 currentFontSize 細，愛確定拿忒 style.fontSize
-        if (rubyElement.style.fontSize) {
+            // 這表示預設字體較好，或者已經在最小值但還係溢出。
+            // 若先前有縮小過 (style.fontSize 有值)，就重設佢。
+            if (rubyElement.style.fontSize) {
           // console.log(`Firefox: Ruby fits or newSize >= currentSize, removing inline style.`);
           rubyElement.style.fontSize = '';
         }
       }
     } else {
       // 如果 ruby 元素闊度細過可用闊度，愛確定拿忒 style.fontSize
-      if (rubyElement.style.fontSize) {
+          if (rubyElement.style.fontSize) { // 若先前有設定 style.fontSize，就清掉
         // console.log(`Firefox: Ruby fits, removing inline style.`);
         rubyElement.style.fontSize = '';
       }
     }
-  }, 0); // Timeout 0 通常會延遲到目前腳本執行完畢後
+      // 同步套用，拿掉 setTimeout(0)
 }
 
 /**
