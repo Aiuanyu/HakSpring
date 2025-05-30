@@ -171,6 +171,8 @@ function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name); // 增加日誌
   currentActiveDialectLevelFullName = getFullLevelName(content.name); // <-- 設定目前作用中的完整腔調級別全名
   // currentActiveMainDialectName 會在下面 switch(腔) 後設定
+  currentVocabularyArrayForDelegation = arr; // <--- 新增：儲存 arr 到全域變數
+  currentDialectInfoForDelegation = dialectInfo; // <--- 新增：儲存 dialectInfo 到全域變數
 
   // --- 新增：在 generate 開始時，確保清除舊的類別選中狀態 ---
   document.querySelectorAll('.radioItem').forEach((label) => {
@@ -297,26 +299,10 @@ function generate(content, initialCategory = null, targetRowId = null) {
   // --- 將建立表格和設定播放的邏輯移到新函式 ---
   // (這部分程式碼將從 generate 移到下面的 buildTableAndSetupPlayback)
 
-  // --- *** 新增修改：克隆 cat-panel 以移除舊監聽器 *** ---
-  const catPanel = document.getElementById('cat-panel');
-  if (catPanel) {
-    const catPanelClone = catPanel.cloneNode(true); // true 表示深層複製
-    catPanel.parentNode.replaceChild(catPanelClone, catPanel);
-    console.log('Cloned cat-panel to remove old listeners.');
-  } else {
-    console.error('Could not find #cat-panel to clone.');
-    // 如果找不到 cat-panel，後續可能會出錯，但至少記錄下來
-  }
-
-  // --- 修改 radio button 的處理邏輯 ---
-  // *** 注意：因為 cat-panel 被替換了，需要重新獲取 radios 和 radioLabels ***
-  var radios = document.querySelectorAll('input[name="category"]');
-  const radioLabels = document.querySelectorAll('.radioItem'); // 重新獲取
-
   // 將需要傳遞給 buildTableAndSetupPlayback 的資訊包裝起來
-  const dialectInfo = {
-    腔,
-    級,
+  // const dialectInfo = { // dialectInfo is already defined and populated before this block
+  //   腔,
+  //   級,
     例外音檔,
     fullLvlName,
     generalMediaYr,
@@ -327,35 +313,6 @@ function generate(content, initialCategory = null, targetRowId = null) {
     腔名,
     級名,
   };
-
-  // 設定 radio button 的 change 事件監聽
-  radios.forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      if (this.checked) {
-        const selectedCategory = this.value;
-        console.log('Category changed to:', selectedCategory); // 增加日誌
-
-        // --- 修改：處理類別選中樣式 ---
-        // 1. 移除所有 radio label 的 active class
-        radioLabels.forEach((label) =>
-          label.classList.remove('active-category')
-        );
-        // 2. 為當前選中的 radio button 對應的 label 加上 active class
-        const currentLabel = this.closest('.radioItem');
-        if (currentLabel) {
-          currentLabel.classList.add('active-category');
-        }
-        // --- 修改結束 ---
-
-        // --- 新增：手動切換分類時清除進度詳情 ---
-        const progressDetailsSpan = document.getElementById('progressDetails');
-        if (progressDetailsSpan) progressDetailsSpan.textContent = '';
-        // --- 新增結束 ---
-        // 當 radio button 改變時，呼叫新函式來建立表格並設定功能
-        buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
-      }
-    });
-  });
 
   // --- 新增：處理從下拉選單跳轉過來的情況 ---
   if (initialCategory) {
@@ -371,7 +328,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
       const targetLabel = targetRadio.closest('.radioItem');
       if (targetLabel) {
         // 先清除所有，再添加目標的 (以防萬一)
-        radioLabels.forEach((label) =>
+        document.querySelectorAll('.radioItem').forEach((label) => // 使用 document.querySelectorAll
           label.classList.remove('active-category')
         );
         targetLabel.classList.add('active-category');
@@ -395,7 +352,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
     // 目前行為：不預選，讓使用者點選。
     console.log('No initial category specified.'); // 增加日誌
     // 清除舊表格內容和 radio button 選擇
-    radios.forEach((radio) => (radio.checked = false));
+    document.querySelectorAll('input[name="category"]').forEach((radio) => (radio.checked = false)); // 使用 document.querySelectorAll
     contentContainer.innerHTML =
       '<p style="text-align: center; margin-top: 20px;">請選擇一個類別來顯示詞彙。</p>';
     // **新增這行**：移除 header 中的播放控制鈕
@@ -545,6 +502,7 @@ function buildTableAndSetupPlayback(
   // --- 如果類別毋係空个，繼續執行原本个邏輯 ---
   var table = document.createElement('table');
   table.innerHTML = '';
+  const fragment = document.createDocumentFragment(); // <--- 新增 DocumentFragment
   let rowIndex = 0; // 音檔索引計數器
   let audioElementsList = []; // 收集此分類的 audio 元素
   let bookmarkButtonsList = []; // 收集此分類的書籤按鈕
@@ -798,9 +756,10 @@ function buildTableAndSetupPlayback(
     }
     item.appendChild(td3);
 
-    table.appendChild(item);
+    fragment.appendChild(item); // <--- 修改：加到 fragment
   } // --- for loop 結束 ---
 
+  table.appendChild(fragment); // <--- 新增：將 fragment 加到 table
   table.setAttribute('width', '100%');
   contentContainer.appendChild(table);
 
@@ -1536,6 +1495,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ? autoplayModal.querySelector('.modal-content')
     : null; // 處理 modal 可能不存在个情況
   const dialectLevelLinks = document.querySelectorAll('.dialect a');
+  const catPanel = document.getElementById('cat-panel'); // <--- 新增：獲取 cat-panel
 
   // --- 新增：選詞 Popup 相關元素 ---
   const selectionPopup = document.getElementById('selectionPopup');
@@ -1977,7 +1937,60 @@ document.addEventListener('DOMContentLoaded', function () {
   console.log('全域鍵盤監聽器已設定 (包含 Popup 關閉)。');
   // --- 新增結束 ---
 
+  // --- 新增：為 cat-panel 設定事件委派 ---
+  if (catPanel) {
+    catPanel.addEventListener('change', function(event) {
+      const target = event.target;
+      if (target.matches('input[type="radio"][name="category"]')) {
+        if (target.checked) {
+          const selectedCategory = target.value;
+          console.log('Category changed (event delegation):', selectedCategory);
 
+          // --- 處理類別選中樣式 ---
+          document.querySelectorAll('.radioItem').forEach((label) => {
+            label.classList.remove('active-category');
+          });
+          const currentLabel = target.closest('.radioItem');
+          if (currentLabel) {
+            currentLabel.classList.add('active-category');
+          }
+          // --- 處理類別選中樣式結束 ---
+
+          // --- 手動切換分類時清除進度詳情 ---
+          const progressDetailsSpan = document.getElementById('progressDetails');
+          if (progressDetailsSpan) progressDetailsSpan.textContent = '';
+          // --- 清除進度詳情結束 ---
+
+          // --- 重新獲取 arr 和 dialectInfo ---
+          // 這部分比較棘手，因為 arr 和 dialectInfo 是在 generate 函式作用域內
+          // 需要找到一種方式傳遞這些資訊，或者在 generate 被呼叫時保存它們以便後續使用
+          // 暫時的解決方案：假設 generate 最後一次呼叫時的 content 和 arr 仍然是有效的
+          // 這在單頁應用中通常是可行的，但不是最穩健的做法。
+          // 一個改進方法是在 generate 被呼叫時，將當前的 content 和 arr 存儲在全域變數或 catPanel 的 dataset 中。
+          // 為了簡化，這裡我們先假設 generate 已經被正確的 content 呼叫過。
+
+          // 我們需要從某處獲取當前的 vocabularyArray (arr) 和 dialectInfo
+          // 這是之前 radios.forEach 內部使用的變數。
+          // 最簡單的方法可能是當 generate 被呼叫時，將這些資訊附加到 cat-panel 的 dataset 或一個全域變數。
+          // 這裡我們假設 generate 函式最後一次呼叫時的 content 仍然是我們需要的。
+          // 這需要 generate 函式將當前的 `content` (或從中衍生的 `arr` 和 `dialectInfo`) 儲存到一個更高作用域的變數。
+          // 為了這個修改，我們需要在 generate 函式中把 arr 和 dialectInfo 存起來。
+          // 我們將在 generate 函式中把 arr 和 dialectInfo 存到全域變數。
+          // **注意**: 這需要在 generate 函式中做相應修改來保存 currentVocabularyArray 和 currentDialectInfo。
+          if (typeof currentVocabularyArrayForDelegation !== 'undefined' && typeof currentDialectInfoForDelegation !== 'undefined') {
+            buildTableAndSetupPlayback(selectedCategory, currentVocabularyArrayForDelegation, currentDialectInfoForDelegation);
+          } else {
+            console.error('無法獲取當前的詞彙資料 (arr) 或腔調資訊 (dialectInfo) 來處理類別切換。');
+            // 可能需要提示使用者重新選擇腔調級別
+          }
+        }
+      }
+    });
+    console.log('Event delegation set up for #cat-panel.');
+  } else {
+    console.error('Could not find #cat-panel to set up event delegation.');
+  }
+  // --- 事件委派設定結束 ---
 
   // --- 再加一次確保，特別是如果 URL 參數處理是異步的 ---
   // 或者直接放在最尾項
