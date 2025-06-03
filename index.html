@@ -53,6 +53,7 @@
       <select id="progressDropdown">
         <option selected disabled>擇進前个進度</option>
       </select>
+      <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
     </h3>
 
@@ -295,6 +296,19 @@
       </div>
       <div id="selectionPopupContent">
         <!-- JavaScript will fill this -->
+      </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h4 id="infoModalTitle" class="modal-title">關於本站</h4>
+          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="infoFrame" src="info.html" style="width: 100%; height: 100%;"></iframe>
+        </div>
       </div>
     </div>
   </body>

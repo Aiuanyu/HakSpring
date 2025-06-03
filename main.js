@@ -1543,6 +1543,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const selectionPopupContent = document.getElementById('selectionPopupContent');
   const selectionPopupCloseBtn = document.getElementById('selectionPopupCloseBtn');
 
+  // --- 新增：資訊 Modal 相關元素 ---
+  const infoButton = document.getElementById('infoButton');
+  const infoModal = document.getElementById('infoModal');
+  const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
+  // const infoFrame = document.getElementById('infoFrame'); // 若 iframe src 固定，可能毋使特別操作
   // --- 新增：在 #progressDropdown 頭前加入 emoji ---
   if (isFileProtocol && progressDropdown && progressDropdown.parentNode) {
     const emojiNode = document.createTextNode('💻 ');
@@ -1977,6 +1982,34 @@ document.addEventListener('DOMContentLoaded', function () {
   console.log('全域鍵盤監聽器已設定 (包含 Popup 關閉)。');
   // --- 新增結束 ---
 
+  // --- 新增：資訊 Modal 事件處理 ---
+  if (infoButton && infoModal && infoModalCloseBtn) {
+    infoButton.addEventListener('click', () => {
+      // 只有在 modal 目前係隱藏个時節正顯示
+      if (infoModal.style.display === 'none' || infoModal.style.display === '') {
+        // 可選：若 iframe 內容需要刷新，可在此設定 infoFrame.src
+        // if (infoFrame.src !== 'info.html') { infoFrame.src = 'info.html'; }
+        infoModal.style.display = 'flex'; // 用 flex 做垂直置中
+        infoModalCloseBtn.focus(); // 將焦點移到關閉按鈕，方便鍵盤操作
+      }
+    });
+
+    infoModalCloseBtn.addEventListener('click', () => {
+      infoModal.style.display = 'none';
+      infoButton.focus(); // 將焦點還分打開 modal 个按鈕
+    });
+
+    infoModal.addEventListener('click', (event) => {
+      // 若點擊个係 modal 背景本身 (modal-overlay)
+      if (event.target === infoModal) {
+        infoModal.style.display = 'none';
+        infoButton.focus(); // 將焦點還分打開 modal 个按鈕
+      }
+    });
+  } else {
+    console.warn('一個或多個資訊 Modal 相關元素尋無。');
+  }
+
 
 
   // --- 再加一次確保，特別是如果 URL 參數處理是異步的 ---
@@ -2132,6 +2165,11 @@ function globalKeydownHandler(event) {
       const backdropEl = document.getElementById('selectionPopupBackdrop');
       hidePronunciationPopup(popupEl, backdropEl);
       console.log('Global hotkey: Escape pressed, closing selection popup.');
+    } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) { // 檢查 infoModal 係無係顯示中
+        event.preventDefault();
+        infoModal.style.display = 'none';
+        if (infoButton) infoButton.focus(); // 將焦點還分打開 modal 个按鈕
+        console.log('Global hotkey: Escape pressed, closing info modal.');
     } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
       // 若 popup 未開啟，但係有一般互動元素 focus 中 (且非 body)，就 blur 該元素
       // 這確保毋會 blur 到 (已隱藏) popup 內部个元素
