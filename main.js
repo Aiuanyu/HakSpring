@@ -3530,18 +3530,30 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
           // If not an exact match, show the original term it was found in
           headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
         }
-        headerBtn.innerHTML = `${headerText}<span class="pronunciation-source">(${reading.source})</span><span class="indicator">+</span>`;
+
+        // Construct audio URL using the new helper function
+        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
+        let audioElementHTML = '';
+        if (audioUrl) {
+          // 改成播放按鈕，節省空間
+          audioElementHTML = `
+            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" 
+                    style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;">
+              <i class="fas fa-volume-up"></i>
+            </button>`;
+        }
+
+        headerBtn.innerHTML = `
+          ${headerText}
+          <span class="pronunciation-source">(${reading.source})</span>
+          ${audioElementHTML}
+          <span class="indicator">+</span>`;
 
         const panelDiv = document.createElement('div');
         panelDiv.className = 'accordion-panel';
         
         let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
-        
-        // Construct audio URL using the new helper function
-        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
-        if (audioUrl) {
-          panelContent += `<audio controls src="${audioUrl}" style="width: 100%;"><a href="${audioUrl}">下載音檔</a></audio>`;
-        } else {
+        if (!audioUrl) { // If audio was moved to header and there's no URL, show message in panel
           panelContent += `<p><em>(無音檔資訊)</em></p>`;
         }
         panelDiv.innerHTML = panelContent;
@@ -3549,6 +3561,41 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
         itemDiv.appendChild(headerBtn);
         itemDiv.appendChild(panelDiv);
         accordionContainer.appendChild(itemDiv);
+
+        // --- 新增：為播放按鈕加上事件處理 ---
+        const playButton = headerBtn.querySelector('.popup-audio-play-btn');
+        if (playButton) {
+            playButton.addEventListener('click', (e) => {
+                // e.stopPropagation(); // 拿掉這行，讓點擊播放時也會觸發 accordion 開合
+                const audioSrc = playButton.dataset.audioSrc;
+                if (audioSrc) {
+                    // 若有其他 popup 音檔在播放，先停止
+                    if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') {
+                        window.currentPopupAudio.pause();
+                        window.currentPopupAudio.currentTime = 0;
+                    }
+                    window.currentPopupAudio = new Audio(audioSrc);
+                    const iconElement = playButton.querySelector('i');
+                    const originalIconClasses = iconElement ? iconElement.className : '';
+
+                    if (iconElement) iconElement.className = 'fas fa-spinner fa-spin'; // 播放前顯示讀取中
+
+                    window.currentPopupAudio.play().catch(err => {
+                        console.error("播放 popup 音檔失敗:", err);
+                        if (iconElement) iconElement.className = originalIconClasses; // 播放失敗恢復圖示
+                    });
+
+                    window.currentPopupAudio.onended = () => {
+                        if (iconElement) iconElement.className = originalIconClasses; // 播放完畢恢復圖示
+                        window.currentPopupAudio = null;
+                    };
+                    window.currentPopupAudio.onerror = () => { // 錯誤時也恢復圖示
+                        if (iconElement) iconElement.className = originalIconClasses;
+                        window.currentPopupAudio = null;
+                    };
+                }
+            });
+        }
 
         // Add click event listener to the header button
         headerBtn.addEventListener('click', () => {

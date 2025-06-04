@@ -1118,8 +1118,8 @@ input:checked + .slider:before {
   border: none;
   color: var(--main-text-color);
   font-size: clamp(1.1rem, 1.5vw, 1.5rem); /* 同其他 header 控制項大細相近 */
-  padding: 5px 8px;
-  margin-left: 8px; /* 同 progressDetails 間隔 */
+  padding: 3px 3px;
+  margin-left: 3px; /* 同 progressDetails 間隔 */
   cursor: pointer;
   vertical-align: middle;
   flex-shrink: 0; /* 避免被壓縮 */
