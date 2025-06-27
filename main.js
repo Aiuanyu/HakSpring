@@ -1983,29 +1983,37 @@ document.addEventListener('DOMContentLoaded', function () {
   // --- 新增結束 ---
 
   // --- 新增：資訊 Modal 事件處理 ---
-  if (infoButton && infoModal && infoModalCloseBtn) {
-    infoButton.addEventListener('click', () => {
+  const dontShowInfoModalAgainCheckbox = document.getElementById('dontShowInfoModalAgain');
+
+  if (infoButton && infoModal && infoModalCloseBtn && dontShowInfoModalAgainCheckbox) {
+    const showInfoModal = () => {
       // 只有在 modal 目前係隱藏个時節正顯示
       if (infoModal.style.display === 'none' || infoModal.style.display === '') {
-        // 可選：若 iframe 內容需要刷新，可在此設定 infoFrame.src
-        // if (infoFrame.src !== 'info.html') { infoFrame.src = 'info.html'; }
         infoModal.style.display = 'flex'; // 用 flex 做垂直置中
         infoModalCloseBtn.focus(); // 將焦點移到關閉按鈕，方便鍵盤操作
       }
-    });
+    };
 
-    infoModalCloseBtn.addEventListener('click', () => {
+    const hideInfoModal = () => {
       infoModal.style.display = 'none';
-      infoButton.focus(); // 將焦點還分打開 modal 个按鈕
+    };
+
+    infoButton.addEventListener('click', showInfoModal);
+    infoModalCloseBtn.addEventListener('click', hideInfoModal);
+
+    // Checkbox 儲存邏輯
+    dontShowInfoModalAgainCheckbox.addEventListener('change', function () {
+      localStorage.setItem('hideInfoModal', this.checked);
     });
 
-    infoModal.addEventListener('click', (event) => {
-      // 若點擊个係 modal 背景本身 (modal-overlay)
-      if (event.target === infoModal) {
-        infoModal.style.display = 'none';
-        infoButton.focus(); // 將焦點還分打開 modal 个按鈕
-      }
-    });
+    // 頁面載入時檢查係無係愛自動顯示
+    const shouldHideModal = localStorage.getItem('hideInfoModal') === 'true';
+    dontShowInfoModalAgainCheckbox.checked = shouldHideModal;
+
+    if (!shouldHideModal) {
+      // 延遲一息仔再顯示，避免頁面一載入就跳出來當嚇人
+      setTimeout(showInfoModal, 500);
+    }
   } else {
     console.warn('一個或多個資訊 Modal 相關元素尋無。');
   }

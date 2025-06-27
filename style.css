@@ -1233,3 +1233,63 @@ input:checked + .slider:before {
     color: #fff;
   }
 }
+
+/* iOS Autoplay Instruction Message Style */
+tr.ios-autoplay-instruction td {
+  background-color: rgba(var(--paused-yellow-rgb), 0.7); /* 用半透明个黃色做背景 */
+  border: 1px solid var(--paused-yellow);
+  border-radius: 6px;
+  padding: 8px 12px !important; /* 覆蓋原本个 padding */
+  text-align: center !important; /* 強制置中 */
+  font-size: 0.9em;
+  color: #333; /* 深色文字 */
+  position: relative; /* 確保在堆疊模式下正常顯示 */
+}
+
+tr.ios-autoplay-instruction td::before {
+  display: none !important; /* 毋使顯示 "編號：" 這兜標籤 */
+}
+
+/* Dark mode for iOS instruction */
+@media (prefers-color-scheme: dark) {
+  tr.ios-autoplay-instruction td {
+    background-color: rgba(var(--dark-paused-yellow-rgb), 0.4);
+    border-color: var(--dark-paused-yellow);
+    color: var(--main-text-color);
+  }
+}
+
+/* Info Modal Footer Styles */
+#infoModal .modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+#infoModal .modal-footer label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #212529;
+}
+
+#infoModal .modal-footer input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Dark Mode for Info Modal Footer */
+@media (prefers-color-scheme: dark) {
+  #infoModal .modal-footer {
+    background-color: #343a40;
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+  #infoModal .modal-footer label {
+    color: var(--main-text-color);
+  }
+}
