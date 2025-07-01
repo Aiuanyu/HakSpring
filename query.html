@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>客語認證詞彙查詢</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
+
+    <!-- All vocabulary data files -->
+    <script type="text/javascript" src="113四基.js"></script>
+    <script type="text/javascript" src="113四初.js"></script>
+    <script type="text/javascript" src="113四中.js"></script>
+    <script type="text/javascript" src="113四中高.js"></script>
+    <script type="text/javascript" src="113四高.js"></script>
+    <script type="text/javascript" src="113海基.js"></script>
+    <script type="text/javascript" src="113海初.js"></script>
+    <script type="text/javascript" src="113海中.js"></script>
+    <script type="text/javascript" src="113海中高.js"></script>
+    <script type="text/javascript" src="113海高.js"></script>
+    <script type="text/javascript" src="113大基.js"></script>
+    <script type="text/javascript" src="113大初.js"></script>
+    <script type="text/javascript" src="113大中.js"></script>
+    <script type="text/javascript" src="113大中高.js"></script>
+    <script type="text/javascript" src="113大高.js"></script>
+    <script type="text/javascript" src="113平基.js"></script>
+    <script type="text/javascript" src="113平初.js"></script>
+    <script type="text/javascript" src="113平中.js"></script>
+    <script type="text/javascript" src="113平中高.js"></script>
+    <script type="text/javascript" src="113平高.js"></script>
+    <script type="text/javascript" src="113安基.js"></script>
+    <script type="text/javascript" src="113安初.js"></script>
+    <script type="text/javascript" src="113安中.js"></script>
+    <script type="text/javascript" src="113安中高.js"></script>
+    <script type="text/javascript" src="113安高.js"></script>
+    
+    <script type="text/javascript" src="exclusions.js"></script>
+    <script type="text/javascript" src="NAmedias.js"></script>
+    <script type="text/javascript" src="query.js" defer></script>
+</head>
+<body>
+    <h2>客語認證詞彙查詢</h2>
+    <div id="query-controls">
+        <div id="dialect-selection">
+            <p>請擇腔調：</p>
+            <label><input type="radio" name="dialect" value="四縣" checked> 四縣</label>
+            <label><input type="radio" name="dialect" value="海陸"> 海陸</label>
+            <label><input type="radio" name="dialect" value="大埔"> 大埔</label>
+            <label><input type="radio" name="dialect" value="饒平"> 饒平</label>
+            <label><input type="radio" name="dialect" value="詔安"> 詔安</label>
+        </div>
+        <div id="search-mode-selection">
+            <p>請擇查詢模式：</p>
+            <label><input type="radio" name="search-mode" value="客家語" checked> 尋客詞</label>
+            <label><input type="radio" name="search-mode" value="華語詞義"> 用華語意思查詞</label>
+            <label><input type="radio" name="search-mode" value="例句"> 尋客話用例</label>
+            <label><input type="radio" name="search-mode" value="翻譯"> 用華語意思尋用例</label>
+        </div>
+        <div id="search-bar">
+            <input type="text" id="search-input" placeholder="請輸入關鍵字...">
+            <button id="search-button">查詢</button>
+        </div>
+    </div>
+    <div id="results-summary"></div>
+    <div id="results"></div>
+    <footer>
+        網頁程式開發：<a href="https://portaly.cc/aiuanyu" target="_blank" rel="noopener noreferrer">Aiuanyu 愛灣語江瑋平律師</a> x Gemini 2025<br>
+        更新日期：v0.1 2025/7/1
+    </footer>
+</body>
+</html>
