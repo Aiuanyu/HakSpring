@@ -994,7 +994,7 @@ function buildTableAndSetupPlayback(
         if (audioTd) {
           // <--- 改成檢查 audioTd
           console.log('Scrolling to audio TD:', audioTd); // 加 log 方便除錯
-          // 對尋到个 td 執行 scrollIntoView
+          // 對尋著个 td 執行 scrollIntoView
           audioTd.scrollIntoView({
             behavior: 'smooth',
             block: 'center', // 試看啊用 'center' 或者 'nearest'
@@ -1593,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return false;
     });
     
-    resultsSummaryContainer.textContent = `尋到 ${results.length} 筆結果`;
+    resultsSummaryContainer.textContent = `尋著 ${results.length} 筆結果`;
     displayQueryResults(results, keyword, searchMode);
   }
 
@@ -1693,8 +1693,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const sourceSpan = document.createElement('span');
           sourceSpan.className = 'source-tag';
           sourceSpan.textContent = `(${fullLvlName})`;
-          sourceSpan.style.fontSize = '0.8em';
-          sourceSpan.style.color = '#666';
           td1.appendChild(document.createElement('br'));
           td1.appendChild(sourceSpan);
           item.appendChild(td1);
