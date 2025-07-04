@@ -1563,6 +1563,10 @@ document.addEventListener('DOMContentLoaded', function () {
     searchContainer.classList.remove('active');
     searchInput.blur(); // 讓輸入框失去焦點
 
+    // --- 設定目前作用中的腔調，供「擇詞 popup」使用 ---
+    currentActiveMainDialectName = selectedDialect;
+    currentActiveDialectLevelFullName = ''; // 清除級別全名，表示目前是查詢模式
+
     const dialectData = allData[selectedDialect];
     let combinedData = [];
     dialectData.forEach(level => {
@@ -1575,12 +1579,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const results = combinedData.filter(item => {
-        if (item && item[searchMode]) {
-            return item[searchMode].toLowerCase().includes(keyword.toLowerCase());
-        }
-        return false;
-    });
+    let results;
+    if (searchMode === '客家語') {
+        results = combinedData.filter(item => {
+            const inWord = item && item['客家語'] && item['客家語'].toLowerCase().includes(keyword.toLowerCase());
+            const inSentence = item && item['例句'] && item['例句'].toLowerCase().includes(keyword.toLowerCase());
+            return inWord || inSentence;
+        });
+    } else if (searchMode === '華語') { // For 華語詞義 and 翻譯
+        results = combinedData.filter(item => {
+            const inMeaning = item && item['華語詞義'] && item['華語詞義'].toLowerCase().includes(keyword.toLowerCase());
+            const inTranslation = item && item['翻譯'] && item['翻譯'].toLowerCase().includes(keyword.toLowerCase());
+            return inMeaning || inTranslation;
+        });
+    }
     
     resultsSummaryContainer.textContent = `尋著 ${results.length} 筆結果`;
     displayQueryResults(results, keyword, searchMode);
@@ -1595,13 +1607,11 @@ document.addEventListener('DOMContentLoaded', function () {
           return; // Summary is already set
       }
 
-      const table = document.createElement('table');
-      table.setAttribute('width', '100%');
-
       const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
-      results.forEach(line => {
-          if (!line || !line.編號) return;
+      // --- 抽離出建立單一表格列 (tr) 的函式，避免程式碼重複 ---
+      const createResultRow = (line, highlight) => {
+          if (!line || !line.編號) return null;
 
           const sourceName = line.sourceName;
           let 腔 = sourceName.substring(0, 1);
@@ -1689,7 +1699,8 @@ document.addEventListener('DOMContentLoaded', function () {
           const td2 = document.createElement('td');
           td2.dataset.label = '詞彙';
           const ruby = document.createElement('ruby');
-          ruby.innerHTML = searchMode === '客家語' ? line.客家語.replace(highlightRegex, '<mark>$1</mark>') : line.客家語;
+          // --- Highlight logic ---
+          ruby.innerHTML = highlight.word ? line.客家語.replace(highlightRegex, '<mark>$1</mark>') : line.客家語;
           const rt = document.createElement('rt');
           rt.textContent = line.客語標音;
           ruby.appendChild(rt);
@@ -1712,7 +1723,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
           td2.appendChild(document.createElement('br'));
           const meaningText = document.createElement('span');
-          meaningText.innerHTML = searchMode === '華語詞義' ? line.華語詞義.replace(/"/g, '').replace(highlightRegex, '<mark>$1</mark>') : line.華語詞義.replace(/"/g, '');
+          // --- Highlight logic ---
+          meaningText.innerHTML = highlight.meaning ? line.華語詞義.replace(/"/g, '').replace(highlightRegex, '<mark>$1</mark>') : line.華語詞義.replace(/"/g, '');
           td2.appendChild(meaningText);
           if (line.備註 && line.備註.trim() !== '') {
               const notesP = document.createElement('p');
@@ -1728,7 +1740,8 @@ document.addEventListener('DOMContentLoaded', function () {
           if (hasExampleSentenceText) {
               const sentenceSpan = document.createElement('span');
               sentenceSpan.className = 'sentence';
-              sentenceSpan.innerHTML = (searchMode === '例句' ? line.例句.replace(highlightRegex, '<mark>$1</mark>') : line.例句).replace(/"/g, '').replace(/\n/g, '<br>');
+              // --- Highlight logic ---
+              sentenceSpan.innerHTML = (highlight.sentence ? line.例句.replace(highlightRegex, '<mark>$1</mark>') : line.例句).replace(/"/g, '').replace(/\n/g, '<br>');
               td3.appendChild(sentenceSpan);
               td3.appendChild(document.createElement('br'));
 
@@ -1744,16 +1757,130 @@ document.addEventListener('DOMContentLoaded', function () {
 
               td3.appendChild(document.createElement('br'));
               const translationText = document.createElement('span');
-              translationText.innerHTML = (searchMode === '翻譯' ? line.翻譯.replace(highlightRegex, '<mark>$1</mark>') : line.翻譯).replace(/"/g, '').replace(/\n/g, '<br>');
+              // --- Highlight logic ---
+              translationText.innerHTML = (highlight.translation ? line.翻譯.replace(highlightRegex, '<mark>$1</mark>') : line.翻譯).replace(/"/g, '').replace(/\n/g, '<br>');
               td3.appendChild(translationText);
           }
           item.appendChild(td3);
+          return item;
+      };
 
-          table.appendChild(item);
-      });
+      // --- 根據查詢模式顯示結果 ---
+      if (searchMode === '客家語') {
+          const resultsInBoth = [];
+          const resultsInSentenceOnly = [];
+          const resultsInWordOnly = [];
+          const lowerKeyword = keyword.toLowerCase();
 
-      contentContainer.appendChild(table);
+          results.forEach(line => {
+              const inWord = line && line['客家語'] && line['客家語'].toLowerCase().includes(lowerKeyword);
+              const inSentence = line && line['例句'] && line['例句'].toLowerCase().includes(lowerKeyword);
+              if (inWord && inSentence) {
+                  resultsInBoth.push(line);
+              } else if (inSentence) {
+                  resultsInSentenceOnly.push(line);
+              } else if (inWord) {
+                  resultsInWordOnly.push(line);
+              }
+          });
 
+          // 顯示「詞、句皆符合」的結果
+          if (resultsInBoth.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '詞、句皆符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInBoth.forEach(line => {
+                  const row = createResultRow(line, { word: true, sentence: true, meaning: false, translation: false });
+                  if (row) table.appendChild(row);
+              });
+          }
+
+          // 顯示「僅客詞符合」的結果
+          if (resultsInWordOnly.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '僅客詞符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInWordOnly.forEach(line => {
+                  const row = createResultRow(line, { word: true, sentence: false, meaning: false, translation: false });
+                  if (row) table.appendChild(row);
+              });
+          }
+
+          // 顯示「僅例句符合」的結果
+          if (resultsInSentenceOnly.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '僅例句符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInSentenceOnly.forEach(line => {
+                  const row = createResultRow(line, { word: false, sentence: true, meaning: false, translation: false });
+                  if (row) table.appendChild(row);
+              });
+          }
+      } else if (searchMode === '華語') {
+          const resultsInBoth = [];
+          const resultsInMeaningOnly = [];
+          const resultsInTranslationOnly = [];
+          const lowerKeyword = keyword.toLowerCase();
+
+          results.forEach(line => {
+              const inMeaning = line && line['華語詞義'] && line['華語詞義'].toLowerCase().includes(lowerKeyword);
+              const inTranslation = line && line['翻譯'] && line['翻譯'].toLowerCase().includes(lowerKeyword);
+              if (inMeaning && inTranslation) {
+                  resultsInBoth.push(line);
+              } else if (inTranslation) {
+                  resultsInTranslationOnly.push(line);
+              } else if (inMeaning) {
+                  resultsInMeaningOnly.push(line);
+              }
+          });
+
+          // 顯示「詞義、翻譯皆符合」的結果
+          if (resultsInBoth.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '詞義、翻譯皆符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInBoth.forEach(line => {
+                  const row = createResultRow(line, { word: false, sentence: false, meaning: true, translation: true });
+                  if (row) table.appendChild(row);
+              });
+          }
+
+          // 顯示「僅華語詞義符合」的結果
+          if (resultsInMeaningOnly.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '僅華語詞義符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInMeaningOnly.forEach(line => {
+                  const row = createResultRow(line, { word: false, sentence: false, meaning: true, translation: false });
+                  if (row) table.appendChild(row);
+              });
+          }
+
+          // 顯示「僅例句翻譯符合」的結果
+          if (resultsInTranslationOnly.length > 0) {
+              const heading = contentContainer.appendChild(document.createElement('h4'));
+              heading.textContent = '僅例句翻譯符合：';
+              heading.className = 'results-section-heading';
+              const table = contentContainer.appendChild(document.createElement('table'));
+              table.setAttribute('width', '100%');
+              resultsInTranslationOnly.forEach(line => {
+                  const row = createResultRow(line, { word: false, sentence: false, meaning: false, translation: true });
+                  if (row) table.appendChild(row);
+              });
+          }
+      }
+
+      // 對所有新產生的表格內容執行大埔變調
       if (document.querySelector('#search-popup input[name="dialect"]:checked').value === '大埔') {
           if (typeof 大埔高降異化 === 'function') 大埔高降異化();
           if (typeof 大埔中遇低升 === 'function') 大埔中遇低升();
