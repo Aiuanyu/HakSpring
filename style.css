@@ -200,8 +200,7 @@ a {
   padding: 8px 15px; /* 微調 padding */
   display: flex; /* 改用 Flexbox 排版 */
   align-items: center; /* 垂直置中 */
-  /* justify-content: space-between; /* 兩端對齊 */
-  justify-content: flex-start; /* <--- 讓元素靠左對齊 */
+  justify-content: space-between; /* <--- 改為兩端對齊 */
   /* flex-wrap: wrap; /* 改做做得換行 */
   gap: 10px; /* 項目之間的間距 */
   font-family: var(--title-font);
@@ -700,52 +699,53 @@ input:checked + .slider:before {
   margin-top: 8px;
 }
 
-.mode-switcher {
-  text-align: center;
-  margin-bottom: 15px;
+/* --- 新增：頁首搜尋容器樣式 --- */
+#search-container {
+  position: relative;
+  margin-left: auto; /* 將搜尋框推到最右邊 */
 }
 
-.mode-switcher button {
-  padding: 8px 15px;
+#search-input {
+  padding: 8px 12px;
   border: 1px solid #ccc;
-  background-color: #f0f0f0;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
+  border-radius: 15px; /* 圓角 */
+  width: 180px; /* 預設寬度 */
+  transition: width 0.3s ease-in-out, background-color 0.3s;
 }
 
-.mode-switcher button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+#search-input:focus {
+  width: 220px; /* focus 時變闊 */
+  background-color: #f8f8f8;
 }
 
-.mode-switcher button:first-child {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-.mode-switcher button:last-child {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  border-left: none;
-}
-
-#query-mode-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding: 15px;
+#search-popup {
+  display: none; /* 預設隱藏 */
+  position: absolute;
+  top: 100%; /* 在輸入框下方 */
+  right: 0;
+  background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+  padding: 15px;
+  width: 300px; /* 固定寬度 */
+  margin-top: 5px; /* 和輸入框的間距 */
+}
+
+#search-container.active #search-popup {
+  display: block; /* 當容器有 active class 時顯示 */
 }
 
 #dialect-selection, #search-mode-selection {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
+}
+#dialect-selection:not(:last-child) {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 #dialect-selection p, #search-mode-selection p {
@@ -753,31 +753,10 @@ input:checked + .slider:before {
   font-weight: bold;
 }
 
-#search-bar {
-  display: flex;
+#dialect-selection label, #search-mode-selection label {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-}
-
-#search-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 250px;
-}
-
-#search-button {
-  padding: 8px 15px;
-  border: none;
-  background-color: #28a745;
-  color: white;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-#search-button:hover {
-  background-color: #218838;
 }
 
 #results-summary {
@@ -1033,40 +1012,20 @@ input:checked + .slider:before {
   }
   /* Audio controls are generally handled by browser, might need specific styling if issues arise */
 
-  /* --- 暗夜模式下个查詢/模式控制項樣式 --- */
-  #query-mode-controls {
-    background-color: var(--dark-surface-color, #2c2c2c);
-    /* 用表面顏色做背景 */
-    border-color: rgba(255, 255, 255, 0.15);
-    /* 加一條較淺个邊線 */
-  }
-
-  #query-mode-controls p {
-    color: var(--main-text-color);
-    /* 確保標題文字也係淺色 */
-  }
-
-  #search-bar #search-input {
+  #search-input {
     background-color: var(--dark-background-color, #1f1f1f);
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--main-text-color);
   }
-
-  /* --- 暗夜模式下个模式切換按鈕 --- */
-  .mode-switcher button {
-    background-color: var(--dark-surface-color, #2c2c2c);
-    color: var(--main-text-color);
-    /* 確保文字係淺色 */
-    border-color: rgba(255, 255, 255, 0.2);
+  #search-input:focus {
+    background-color: #333;
   }
-
-  /* 暗夜模式下作用中个按鈕樣式 */
-  .mode-switcher button.active {
-    background-color: var(--dark-link-color, #90caf9);
-    /* 用較亮个連結藍色做強調 */
-    color: var(--dark-background-color, #1f1f1f);
-    /* 按鈕上个文字用暗色較明顯 */
-    border-color: var(--dark-link-color, #90caf9);
+  #search-popup {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  #dialect-selection:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 
   mark {
@@ -1428,5 +1387,129 @@ tr.ios-autoplay-instruction td::before {
 @media (prefers-color-scheme: dark) {
   .source-tag {
     color: #aaa;
+  }
+}
+
+/* --- 頁首查詢容器樣式 (Header Search Container) --- */
+#search-container {
+  position: relative; /* 設定相對定位，分彈出面板好用絕對定位 */
+  margin-left: auto; /* 將查詢容器推到 flex 容器个最右片 */
+}
+
+/* --- 查詢輸入框 (Search Input) --- */
+#search-input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 15px; /* 圓角，看起來較幼秀 */
+  width: 180px; /* 預設寬度 */
+  transition: width 0.3s ease-in-out, background-color 0.3s; /* 平滑過渡效果 */
+}
+
+#search-input:focus {
+  width: 220px; /* focus 个時節變闊兜 */
+  background-color: #f8f8f8; /* focus 个時節背景色小小愛變 */
+}
+
+/* --- 查詢設定彈出面板 (Search Settings Popup) --- */
+#search-popup {
+  display: none; /* 預設隱藏 */
+  position: absolute;
+  top: 100%; /* 在輸入框个正下方 */
+  right: 0; /* 對齊輸入框个右邊 */
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 加一息仔陰影，看起來有浮起來个效果 */
+  z-index: 20; /* 確保在其他內容之上 */
+  padding: 15px;
+  width: 300px; /* 固定寬度 */
+  margin-top: 5px; /* 同輸入框之間个距離 */
+}
+
+/* 用 JS 控制个 .active class 來顯示彈出面板 */
+#search-container.active #search-popup {
+  display: block;
+}
+
+/* --- 彈出面板內容 (Popup Content) --- */
+#dialect-selection, #search-mode-selection {
+  display: flex;
+  flex-direction: column; /* 內容垂直排列 */
+  gap: 8px; /* 項目之間个距離 */
+}
+
+/* 兩個區塊之間个分隔線 */
+#dialect-selection:not(:last-child) {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* 區塊標題文字 */
+#dialect-selection p, #search-mode-selection p {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+}
+
+/* 區塊內个選項 */
+#dialect-selection label, #search-mode-selection label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* --- 查詢結果相關樣式 (Search Results) --- */
+#results-summary {
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* 搜尋結果頁面用个，來源標籤樣式 */
+.source-tag {
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* 關鍵字 highlight 樣式 */
+mark {
+    background-color: #ffda06;
+    padding: 0.1em 0.2em;
+    border-radius: 3px;
+}
+
+
+/* --- 暗夜模式調整 (Dark Mode Adjustments) --- */
+@media (prefers-color-scheme: dark) {
+  /* 查詢輸入框 */
+  #search-input {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+  #search-input:focus {
+    background-color: #333;
+  }
+
+  /* 彈出面板 */
+  #search-popup {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* 彈出面板內部分隔線 */
+  #dialect-selection:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* 查詢結果頁面用个，來源標籤樣式 */
+  .source-tag {
+    color: #aaa;
+  }
+
+  /* 暗夜模式个關鍵字 highlight */
+  mark {
+    background-color: var(--dark-primary-accent);
+    color: var(--dark-button-text-color, #1f1f1f);
   }
 }

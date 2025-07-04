@@ -1526,46 +1526,31 @@ function buildTableAndSetupPlayback(
 
 /* 最頂端一開始讀取進度 */
 document.addEventListener('DOMContentLoaded', function () {
-  let currentMode = 'learn'; // 'learn' or 'query'
-
-  // --- 模式切換 ---
-  const modeLearnButton = document.getElementById('mode-learn');
-  const modeQueryButton = document.getElementById('mode-query');
-  const learnControls = document.getElementById('learning-mode-controls');
-  const queryControls = document.getElementById('query-mode-controls');
   const resultsSummaryContainer = document.getElementById('results-summary');
 
-  function switchMode(newMode) {
-    currentMode = newMode;
-    if (newMode === 'learn') {
-      modeLearnButton.classList.add('active');
-      modeQueryButton.classList.remove('active');
-      learnControls.style.display = 'block';
-      queryControls.style.display = 'none';
-      resultsSummaryContainer.innerHTML = '';
-      // Optionally, clear or restore the last learning state
-      // contentContainer.innerHTML = '<p style="text-align: center; margin-top: 20px;">請點頂項連結擇腔調同級別。</p>';
-    } else {
-      modeLearnButton.classList.remove('active');
-      modeQueryButton.classList.add('active');
-      learnControls.style.display = 'none';
-      queryControls.style.display = 'block';
-      contentContainer.innerHTML = ''; // Clear previous results
-      resultsSummaryContainer.innerHTML = '';
-      header?.querySelector('#audioControls')?.remove(); // 查詢模式下移除播放控制
-    }
-  }
-
-  modeLearnButton.addEventListener('click', () => switchMode('learn'));
-  modeQueryButton.addEventListener('click', () => switchMode('query'));
-
   // --- 查詢功能 ---
-  const searchButton = document.getElementById('search-button');
+  const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
+  const searchPopup = document.getElementById('search-popup');
+  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
+  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
+
+  // 顯示查詢設定 popup
+  searchInput.addEventListener('focus', () => {
+    searchContainer.classList.add('active');
+  });
+
+  // 點擊頁面其他地方時隱藏 popup
+  document.addEventListener('click', (event) => {
+    if (!searchContainer.contains(event.target)) {
+      searchContainer.classList.remove('active');
+    }
+  });
 
   function performSearch() {
-    const selectedDialect = document.querySelector('input[name="dialect"]:checked').value;
-    const searchMode = document.querySelector('input[name="search-mode"]:checked').value;
+    // 確保 radio button 是從 popup 內讀取
+    const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
+    const searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
     const keyword = searchInput.value.trim();
 
     if (!keyword) {
@@ -1573,6 +1558,10 @@ document.addEventListener('DOMContentLoaded', function () {
         contentContainer.innerHTML = '<p style="text-align: center;">請輸入關鍵字</p>';
         return;
     }
+
+    // 執行查詢時，隱藏 popup
+    searchContainer.classList.remove('active');
+    searchInput.blur(); // 讓輸入框失去焦點
 
     const dialectData = allData[selectedDialect];
     let combinedData = [];
@@ -1765,19 +1754,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
       contentContainer.appendChild(table);
 
-      if (document.querySelector('input[name="dialect"]:checked').value === '大埔') {
+      if (document.querySelector('#search-popup input[name="dialect"]:checked').value === '大埔') {
           if (typeof 大埔高降異化 === 'function') 大埔高降異化();
           if (typeof 大埔中遇低升 === 'function') 大埔中遇低升();
           if (typeof 大埔低升異化 === 'function') 大埔低升異化();
       }
   }
 
-  searchButton.addEventListener('click', performSearch);
+  // 當在輸入框按 Enter 時查詢
   searchInput.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
           performSearch();
       }
   });
+
+  // 當改變腔調或查詢模式時，如果輸入框有內容，也觸發查詢
+  const triggerSearchOnChange = () => {
+    if (searchInput.value.trim()) {
+      performSearch();
+    }
+  };
+
+  searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
+  searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
 
 
   // --- 檢查 URL 協定 ---
