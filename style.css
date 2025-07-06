@@ -367,7 +367,7 @@ tr#nowPlaying.paused-playback {
   vertical-align: middle; /* 垂直對齊方式 */
   max-width: 50vw;
   /*flex-grow: 1; /* 允許它伸展利用空間 */
-  min-width: 150px; /* 確保最小寬度 */
+  min-width: 50px; /* 確保最小寬度 */
   cursor: pointer; /* 滑鼠指標 */
   flex-shrink: 1; /* 允許被壓縮 */
 }
@@ -1135,6 +1135,17 @@ input:checked + .slider:before {
     animation: pulse-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
   }
 
+  /* --- 新增：調整搜尋框在狹窄螢幕下的樣式 --- */
+  #search-input {
+    width: 50px !important; /* 再縮小預設寬度 */
+    padding: 6px 10px; /* 縮小內距 */
+    /* 字型大小已由主要規則中的 clamp() 處理 */
+  }
+
+  #search-input:focus {
+    width: 100px; /* 再縮小 focus 時的寬度 */
+  }
+
 
   /* 暗夜模式下个調整 */
   @media (prefers-color-scheme: dark) {
@@ -1402,6 +1413,7 @@ tr.ios-autoplay-instruction td::before {
   border: 1px solid #ccc;
   border-radius: 15px; /* 圓角，看起來較幼秀 */
   width: 180px; /* 預設寬度 */
+  font-size: clamp(16px, 1.8vw, 18px); /* 自動調整字型大小 */
   transition: width 0.3s ease-in-out, background-color 0.3s; /* 平滑過渡效果 */
 }
 
@@ -1460,9 +1472,16 @@ tr.ios-autoplay-instruction td::before {
 
 /* --- 查詢結果相關樣式 (Search Results) --- */
 #results-summary {
+  display: none; /* 預設隱藏 */
   text-align: center;
   margin-bottom: 10px;
   font-weight: bold;
+  position: sticky;
+  top: 80px; /* Adjust this value based on your header's height */
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  padding: 10px 0;
+  z-index: 5;
 }
 
 /* 搜尋結果頁面用个，來源標籤樣式 */
@@ -1511,5 +1530,11 @@ mark {
   mark {
     background-color: var(--dark-primary-accent);
     color: var(--dark-button-text-color, #1f1f1f);
+  }
+
+  #results-summary {
+    background: rgba(20, 60, 50, 0.95); /* Darker shade of #245d48 */
+    color: #f0f0f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

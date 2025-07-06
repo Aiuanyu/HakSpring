@@ -1,3 +1,18 @@
+// --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
+function updateResultsSummaryVisibility() {
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  const contentContainer = document.getElementById('generated');
+
+  if (!resultsSummaryContainer || !contentContainer) return; // 確保元素存在
+
+  // 檢查 #generated 裡肚係無係有實際个內容 (trim() 會拿忒頭尾空白)
+  if (contentContainer.innerHTML.trim() !== '') {
+    resultsSummaryContainer.style.display = 'block'; // 有內容就顯示
+  } else {
+    resultsSummaryContainer.style.display = 'none'; // 無內容就隱藏
+  }
+}
+
 /**
  * 從表格名稱 (例如 "四縣基礎級") 解析出腔調和級別代碼。
  * @param {string} tableName - 表格名稱 (例如 "四縣基礎級")
@@ -185,10 +200,12 @@ function generate(content, initialCategory = null, targetRowId = null) {
   document.querySelectorAll('.radioItem').forEach((label) => {
     label.classList.remove('active-category');
   });
-  // --- 新增：如果不是從下拉選單觸發，就清除進度詳情 ---
+  // --- 新增：如果不是從下拉選單觸發，就清除進度詳情和結果摘要 ---
   if (!initialCategory && !targetRowId) {
     const progressDetailsSpan = document.getElementById('progressDetails');
     if (progressDetailsSpan) progressDetailsSpan.textContent = '';
+    // const resultsSummaryContainer = document.getElementById('results-summary');
+    // if (resultsSummaryContainer) resultsSummaryContainer.innerHTML = '';
   }
   // --- 新增結束 ---
 
@@ -407,6 +424,8 @@ function generate(content, initialCategory = null, targetRowId = null) {
     radios.forEach((radio) => (radio.checked = false));
     contentContainer.innerHTML =
       '<p style="text-align: center; margin-top: 20px;">請選擇一個類別來顯示詞彙。</p>';
+
+    updateResultsSummaryVisibility();
     // **新增這行**：移除 header 中的播放控制鈕
     header?.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
   }
@@ -423,6 +442,12 @@ function buildTableAndSetupPlayback(
   dialectInfo,
   autoPlayTargetRowId = null
 ) {
+  // --- 新增：設定學習模式的摘要 ---
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  if (resultsSummaryContainer) {
+    resultsSummaryContainer.textContent = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
+  }
+  // --- 新增結束 ---
   // 獲取類別列表和目前索引
   const radioButtons = document.querySelectorAll('input[name="category"]');
   categoryList = Array.from(radioButtons).map((radio) => radio.value);
@@ -1522,6 +1547,8 @@ function buildTableAndSetupPlayback(
 
   // --- 在函式最尾項，確保 DOM 都更新後 ---
   setTimeout(adjustHeaderFontSizeOnOverflow, 0); // 使用 setTimeout
+
+  updateResultsSummaryVisibility();
 } // --- buildTableAndSetupPlayback 函式結束 ---
 
 /* 最頂端一開始讀取進度 */
@@ -1594,17 +1621,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    resultsSummaryContainer.textContent = `尋著 ${results.length} 筆結果`;
-    displayQueryResults(results, keyword, searchMode);
+    let summaryText = '';
+    if (searchMode === '客家語') {
+      summaryText = `在客文部分尋「${keyword}」，`;
+    } else if (searchMode === '華語') {
+      summaryText = `在華文部分尋「${keyword}」，`;
+    }
+    displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect);
   }
 
-  function displayQueryResults(results, keyword, searchMode) {
+  function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect) {
       const contentContainer = document.getElementById('generated');
+      const resultsSummaryContainer = document.getElementById('results-summary');
       contentContainer.innerHTML = ''; // Clear previous content
       header?.querySelector('#audioControls')?.remove(); // 顯示查詢結果前，先移除播放控制
 
+      resultsSummaryContainer.textContent = summaryText + `尋著 ${results.length} 筆結果（${selectedDialect}）`;
+
       if (results.length === 0) {
-          return; // Summary is already set
+          return;
       }
 
       const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
@@ -1787,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「詞、句皆符合」的結果
           if (resultsInBoth.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '詞、句皆符合：';
+              heading.textContent = '詞、句裡肚都有：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1800,7 +1835,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「僅客詞符合」的結果
           if (resultsInWordOnly.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '僅客詞符合：';
+              heading.textContent = '淨詞彙裡肚有：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1813,7 +1848,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「僅例句符合」的結果
           if (resultsInSentenceOnly.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '僅例句符合：';
+              heading.textContent = '僅例句裡肚有：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1843,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「詞義、翻譯皆符合」的結果
           if (resultsInBoth.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '詞義、翻譯皆符合：';
+              heading.textContent = '華語詞義、翻譯裡肚都有出現：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1856,7 +1891,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「僅華語詞義符合」的結果
           if (resultsInMeaningOnly.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '僅華語詞義符合：';
+              heading.textContent = '淨出現在華語詞義裡肚：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1869,7 +1904,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 顯示「僅例句翻譯符合」的結果
           if (resultsInTranslationOnly.length > 0) {
               const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '僅例句翻譯符合：';
+              heading.textContent = '淨出現在例句翻譯裡肚：';
               heading.className = 'results-section-heading';
               const table = contentContainer.appendChild(document.createElement('table'));
               table.setAttribute('width', '100%');
@@ -1886,6 +1921,8 @@ document.addEventListener('DOMContentLoaded', function () {
           if (typeof 大埔中遇低升 === 'function') 大埔中遇低升();
           if (typeof 大埔低升異化 === 'function') 大埔低升異化();
       }
+      
+      updateResultsSummaryVisibility();
   }
 
   // 當在輸入框按 Enter 時查詢
@@ -2335,6 +2372,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (contentContainer && contentContainer.innerHTML.trim() === '') {
       contentContainer.innerHTML =
         '<p style="text-align: center; margin-top: 20px;">請點頂項連結擇腔調同級別。</p>';
+      // updateResultsSummaryVisibility();
     }
     // 確保下拉選單選在預設值
     if (progressDropdown) progressDropdown.selectedIndex = 0;
@@ -3417,31 +3455,31 @@ function adjustAllRubyFontSizes(containerElement) {
  * 動態調整 #header 內主要元素 (#progressDropdown, #progressDetails) 的字體大小，
  * 檢查 #header 是否發生橫向溢出 (overflow)，如果是，則縮小字體。
  */
-function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
+function adjustHeaderFontSizeOnOverflow() {
     console.log('--- adjustHeaderFontSizeOnOverflow function CALLED ---');
     const header = document.getElementById('header');
     const dropdown = document.getElementById('progressDropdown');
-    const detailsContainer = document.getElementById('progressDetails'); // <span>
-    // 注意：linkElement 還是需要，因為 detailsContainer 本身可能沒有文字
-    const linkElement = detailsContainer?.querySelector('a'); // <a>
+    const detailsContainer = document.getElementById('progressDetails');
+    const searchInput = document.getElementById('search-input'); // <-- 新增
 
-    // 確保主要元素都存在
-    if (!header || !dropdown || !detailsContainer || !linkElement) {
-        console.warn('adjustHeaderFontSizeOnOverflow: Missing required elements (header, dropdown, detailsContainer, or linkElement).');
-        // 如果缺少元素，嘗試重設可能存在的行內樣式
-        [dropdown, linkElement].forEach(el => {
-            if (el && el.style.fontSize !== '') {
-                el.style.fontSize = '';
-            }
-        });
+    // --- MODIFIED: Check for essential container elements first ---
+    if (!header || !dropdown || !detailsContainer) {
+        console.warn('adjustHeaderFontSizeOnOverflow: Missing essential elements (header, dropdown, or detailsContainer). Skipping execution.');
         return;
     }
 
+    const linkElement = detailsContainer.querySelector('a'); // May be null
+
+    // --- MODIFIED: Dynamically build the list of elements to resize ---
+    const elementsToResize = [{ element: dropdown, minSize: 10 }];
+    if (linkElement) {
+        elementsToResize.push({ element: linkElement, minSize: 8 });
+    }
+    if (searchInput) {
+        elementsToResize.push({ element: searchInput, minSize: 12 });
+    }
+
     // --- 記錄目標元素的初始字體大小 ---
-    const elementsToResize = [
-        { element: dropdown, minSize: 10 }, // 下拉選單最小字體 (可調整)
-        { element: linkElement, minSize: 8 }   // 連結最小字體 (可調整)
-    ];
     const initialStyles = elementsToResize.map(item => ({
         element: item.element,
         initialSize: parseFloat(window.getComputedStyle(item.element).fontSize),
@@ -3452,15 +3490,18 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
     initialStyles.forEach(item => {
         item.element.style.fontSize = '';
     });
+    if (linkElement) {
+        linkElement.style.whiteSpace = ''; // Also reset whitespace
+    }
+    
     // 強制瀏覽器重繪
     header.offsetHeight;
 
     // --- 計算 Header 可用寬度與初始需求寬度 ---
     const headerWidth = header.clientWidth;
-    let totalRequiredWidth = calculateTotalRequiredWidth(header); // 使用輔助函式
-    const gapValue = parseFloat(window.getComputedStyle(header).gap) || 0; // 讀取 gap
+    let totalRequiredWidth = calculateTotalRequiredWidth(header);
 
-    console.log(`Header Width: ${headerWidth}, Initial Required Width: ${totalRequiredWidth}, Gap: ${gapValue}`);
+    console.log(`Header Width: ${headerWidth}, Initial Required Width: ${totalRequiredWidth}`);
 
     // --- 檢查是否溢出 ---
     const isOverflowing = totalRequiredWidth > headerWidth;
@@ -3468,51 +3509,43 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
 
     if (isOverflowing && totalRequiredWidth - headerWidth > buffer) {
         console.log(`#header is overflowing by ${totalRequiredWidth - headerWidth}px. Shrinking fonts.`);
-        // --- 已溢出，執行縮小字體邏輯 ---
-
-        // 確保連結文字不換行 (CSS 應該已處理，但 JS 加強)
-        linkElement.style.whiteSpace = 'nowrap';
+        
+        if (linkElement) {
+            linkElement.style.whiteSpace = 'nowrap';
+        }
 
         // --- 逐步縮小字體 ---
-        let canShrinkMore = true; // 標記是否還能繼續縮小
+        let canShrinkMore = true;
         for (let i = 0; i < 50 && totalRequiredWidth > headerWidth && canShrinkMore; i++) {
-            canShrinkMore = false; // 假設這次不能再縮了
-            let currentTotalWidthBeforeShrink = totalRequiredWidth; // 記錄縮小前的寬度
+            canShrinkMore = false;
+            let currentTotalWidthBeforeShrink = totalRequiredWidth;
 
-            // 對每個目標元素縮小 1px (如果還沒到最小值)
             initialStyles.forEach(item => {
                 let currentElementSize = parseFloat(item.element.style.fontSize || item.initialSize);
                 if (currentElementSize > item.minSize) {
                     currentElementSize -= 1;
                     item.element.style.fontSize = `${currentElementSize}px`;
-                    canShrinkMore = true; // 只要有一個能縮，就標記為 true
+                    canShrinkMore = true;
                 } else {
-                    // 確保最小值被應用
                     item.element.style.fontSize = `${item.minSize}px`;
                 }
             });
 
-            // 如果沒有任何元素可以再縮小了，就跳出循環
             if (!canShrinkMore) {
                  console.log('All elements reached minimum font size.');
                  break;
             }
 
-            // 強制重繪
             header.offsetHeight;
-
-            // *** 重新計算 totalRequiredWidth ***
             totalRequiredWidth = calculateTotalRequiredWidth(header);
             console.log(`  Shrunk step ${i+1}, new required width: ${totalRequiredWidth}`);
 
-            // *** 增加檢查：如果寬度沒有變小，可能卡住了，跳出 ***
             if (totalRequiredWidth >= currentTotalWidthBeforeShrink && canShrinkMore) {
                 console.warn('  Width did not decrease after shrinking, breaking loop to prevent infinite loop.');
                 break;
             }
-        } // --- 縮小循環結束 ---
+        }
 
-        // 循環結束後最後檢查
         if (totalRequiredWidth > headerWidth) {
              console.warn(`Fonts shrunk to minimum, but header might still overflow by ${totalRequiredWidth - headerWidth}px.`);
         } else {
@@ -3520,8 +3553,7 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
         }
 
     } else {
-        // --- 未溢出或溢出在 buffer 內 ---
-        // console.log('#header is not overflowing significantly. Resetting fonts if needed.');
+        // --- 未溢出 ---
         let stylesReset = false;
         initialStyles.forEach(item => {
             if (item.element.style.fontSize !== '') {
@@ -3529,8 +3561,7 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
                 stylesReset = true;
             }
         });
-         // 恢復連結的 white-space (如果之前被 JS 修改過)
-        if (linkElement.style.whiteSpace !== '') {
+        if (linkElement && linkElement.style.whiteSpace !== '') {
              linkElement.style.whiteSpace = '';
              stylesReset = true;
         }
