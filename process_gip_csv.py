@@ -1,5 +1,58 @@
 import os
 import re
+import json
+
+def convert_syllable(syllable, tone_map):
+    """轉換單一音節个聲調符號，並保留前後个標點符號"""
+    # 樣式：(頭前標點) (字母) (數字) (後壁標點)
+    match = re.match(r'^([^a-zA-Z]*)?([a-zA-Z]+)(\d+)([^a-zA-Z]*)?$', syllable)
+    if not match:
+        return syllable
+
+    leading_punc, letters, tone_val, trailing_punc = match.groups()
+    leading_punc = leading_punc or ""
+    trailing_punc = trailing_punc or ""
+
+    # 進行聲調轉換
+    tone_mappings = tone_map.get('tones', {}).get(tone_val)
+    if not tone_mappings:
+        # 若尋無對應，原樣組合回去
+        return leading_punc + letters + tone_val + trailing_punc
+
+    vowel_priority = tone_map.get('vowel_priority', [])
+    
+    converted_letters = letters # 預設值
+    # 根據元音優先順序尋著愛換个字母
+    for vowel in vowel_priority:
+        if vowel in letters:
+            new_vowel = tone_mappings.get(vowel)
+            if new_vowel:
+                converted_letters = letters.replace(vowel, new_vowel, 1)
+                break # 尋著了就跳出
+
+    # 將標點、轉換後个音節組合轉去
+    return leading_punc + converted_letters + trailing_punc
+
+def convert_phonetic_string(phonetic_str, tone_map):
+    """轉換歸个音讀字串，包含前處理標點符號"""
+    if not phonetic_str:
+        return ""
+    
+    # 1. 前處理：統一標點與間隔
+    # 淨將全形連字號「－」轉做半形「-」
+    processed_str = phonetic_str.replace('－', '-')
+
+    # 標準化所有指定標點符號前後的空白：前後都加一隻空白
+    # 匹配全形逗號、頓號、分號、冒號，以及半形連字號（一個或多個）
+    processed_str = re.sub(r'([，、；：-]+)', r' \1 ', processed_str)
+    
+    # 壓縮多餘的空白
+    processed_str = re.sub(r'\s+', ' ', processed_str).strip()
+
+    # 2. 用空白來切分音節
+    syllables = processed_str.split(' ')
+    converted_syllables = [convert_syllable(s, tone_map) for s in syllables if s]
+    return " ".join(converted_syllables)
 
 def process_csv_files():
     """
@@ -10,6 +63,12 @@ def process_csv_files():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # 組合出 data/gip 的絕對路徑
         gip_dir = os.path.join(script_dir, 'data', 'gip')
+        mapping_path = os.path.join(script_dir, 'tone_mapping.json')
+
+        # 讀取聲調對應表
+        with open(mapping_path, 'r', encoding='utf-8') as f:
+            tone_map = json.load(f)
+
         output_dir = gip_dir  # 輸出目錄與來源目錄相同
 
         if not os.path.isdir(gip_dir):
@@ -45,19 +104,51 @@ def process_csv_files():
             print(f"  - 新 JS 檔名: {new_file_name}")
             print(f"  - 新 JS 變數名: {variable_name}")
 
+            # 組合聲調對應表
+            default_tones = tone_map.get('default_tones', {})
+            dialect_specific_tones = tone_map.get('dialect_maps', {}).get(dialect_char, {})
+            
+            # 合併，腔調特別規則會蓋過預設值
+            final_tones = {**default_tones, **dialect_specific_tones}
+            
+            current_tone_map = {
+                "vowel_priority": tone_map.get("vowel_priority", []),
+                "tones": final_tones
+            }
+
             # 2. 讀取 CSV 檔案內容 (使用 utf-8-sig 來自動處理 BOM)
             with open(full_path, 'r', encoding='utf-8-sig') as f:
-                csv_content = f.read()
+                lines = f.readlines()
+
+            # 處理音讀轉換
+            header = lines[0].strip().split(',')
+            try:
+                phonetic_col_index = header.index('音讀')
+            except ValueError:
+                print(f"  - 警告：在 {csv_file} 尋無 '音讀' 欄位，跳過轉換。")
+                csv_content = "".join(lines)
+            else:
+                new_lines = [lines[0]] # 保留標頭
+                for line in lines[1:]:
+                    parts = line.strip().split(',')
+                    if len(parts) > phonetic_col_index:
+                        original_phonetics = parts[phonetic_col_index]
+                        converted_phonetics = convert_phonetic_string(original_phonetics, current_tone_map)
+                        parts[phonetic_col_index] = converted_phonetics
+                        new_lines.append(','.join(parts) + '\n')
+                    else:
+                        new_lines.append(line)
+                csv_content = "".join(new_lines)
 
             # 3. 組合新个 JS 檔案內容
             # 處理內容中可能出現的反引號 `
-            js_safe_content = csv_content.replace('`', '\\`')
+            js_safe_content = csv_content.replace('`', '\`')
             
             js_content = (
-                f"{variable_name} = {{\n"
-                f'  "name": "{variable_name}",\n'
-                f'  "content": `{js_safe_content}`\n'
-                f"}};\n"
+                f"const {variable_name} = {{\n"  # 用 const 較好
+                f'  name: "{variable_name}",\n'
+                f'  content: `{js_safe_content}`\n'
+                f"}};"
             )
 
             # 4. 將新內容寫入 JS 檔案
