@@ -1594,3 +1594,19 @@ mark {
     margin-right: 0.5em; /* 在小螢幕下，序號和內容之間的距離 */
   }
 }
+/* --- 查詢結果來源標籤 --- */
+.source-tag {
+  font-size: 0.8em;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.gip-source {
+  background-color: #e0f2f1; /* 淡青色背景 */
+  color: #00796b; /* 深青色文字 */
+  border: 1px solid #b2dfdb;
+}

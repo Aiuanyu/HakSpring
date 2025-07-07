@@ -90,6 +90,9 @@ const allKnownDataVars = [
   '安基', '安初', '安中', '安中高', '安高'
 ];
 
+// --- 新增：所有教典資料變數名稱 ---
+const allKnownGipDataVars = ['教典四', '教典海', '教典大', '教典平', '教典安'];
+
 // All data variables from the included JS files
 const allData = {
     '四縣': [四基, 四初, 四中, 四中高, 四高],
@@ -97,6 +100,15 @@ const allData = {
     '大埔': [大基, 大初, 大中, 大中高, 大高],
     '饒平': [平基, 平初, 平中, 平中高, 平高],
     '詔安': [安基, 安初, 安中, 安中高, 安高]
+};
+
+// --- 新增：教典資料 ---
+const gipData = {
+    '四縣': typeof 教典四 !== 'undefined' ? 教典四 : null,
+    '海陸': typeof 教典海 !== 'undefined' ? 教典海 : null,
+    '大埔': typeof 教典大 !== 'undefined' ? 教典大 : null,
+    '饒平': typeof 教典平 !== 'undefined' ? 教典平 : null,
+    '詔安': typeof 教典安 !== 'undefined' ? 教典安 : null,
 };
 
 /* Gemini 老師。這種方式還是會因為 CORS 被擋下，無法偵測
@@ -180,6 +192,33 @@ function csvToArray(str, delimiter = ',') {
     const obj = {};
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = values[j];
+    }
+    data.push(obj);
+  }
+  return data;
+}
+
+function gipCsvToArray(str, delimiter = ',') {
+  if (!str) return [];
+  const rows = str.trim().split('\n');
+  if (rows.length < 2) return [];
+  
+  // .replace(/"/g, '') is a simple way to clean up headers that might be quoted
+  const headers = rows[0].split(delimiter).map(h => h.trim().replace(/"/g, ''));
+  const data = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].trim() === '') continue;
+    
+    // This is a simple split, and won't handle commas inside quoted fields.
+    const values = rows[i].split(delimiter);
+    const obj = {};
+    for (let j = 0; j < headers.length; j++) {
+      if (headers[j]) {
+        const value = values[j] || '';
+        // .replace(/^"|"$/g, '') removes leading/trailing quotes from values
+        obj[headers[j]] = value.replace(/^"|"$/g, '').trim();
+      }
     }
     data.push(obj);
   }
@@ -1614,10 +1653,33 @@ document.addEventListener('DOMContentLoaded', function () {
             const levelData = csvToArray(level.content);
             levelData.forEach(item => {
                 item.sourceName = level.name; // e.g., '四基'
+                item.sourceType = 'cert'; // 標記來源為「認證」
             });
             combinedData = combinedData.concat(levelData);
         }
     });
+
+    // --- 新增：讀取教典資料 ---
+    const gipDialectData = gipData[selectedDialect];
+    if (gipDialectData && gipDialectData.content) {
+        const gipRawData = gipCsvToArray(gipDialectData.content);
+        const gipNormalizedData = gipRawData.map((item, index) => {
+            if (!item['詞目']) return null; // 跳過無詞目个空行
+            return {
+                '客家語': item['詞目'],
+                '客語標音': item['音讀'],
+                '華語詞義': item['釋義'],
+                '例句': item['例句'] || '', // 確保例句欄存在
+                '翻譯': '', // 教典資料無翻譯欄
+                '備註': '', // 教典資料無備註欄
+                '分類': '教典', // 分類統一為「教典」
+                '編號': `gip-${index}`, // 產生一隻唯一个 ID
+                'sourceName': gipDialectData.name, // e.g., '教典四'
+                'sourceType': 'gip' // 標記來源為「教典」
+            };
+        }).filter(Boolean); // 拿掉 null 項目
+        combinedData = combinedData.concat(gipNormalizedData);
+    }
 
     let results;
     if (searchMode === '客家語') {
@@ -1690,8 +1752,61 @@ document.addEventListener('DOMContentLoaded', function () {
       let globalRowIndex = startIndex;
       const createResultRow = (line, highlight) => {
           globalRowIndex++;
-          if (!line || !line.編號) return null;
+          if (!line) return null;
 
+          // --- 新增：處理教典(gip)來源的資料 ---
+          if (line.sourceType === 'gip') {
+              if (!line['客家語']) return null;
+              const item = document.createElement('tr');
+              item.dataset.source = line.sourceName;
+
+              // TD1: 序號與來源
+              const td1 = document.createElement('td');
+              td1.className = 'no';
+              td1.dataset.label = '編號';
+              const seqNum = document.createElement('span');
+              seqNum.className = 'result-sequence-number';
+              seqNum.textContent = globalRowIndex;
+              td1.appendChild(seqNum);
+              td1.appendChild(document.createElement('br'));
+              const sourceSpan = document.createElement('span');
+              sourceSpan.className = 'source-tag gip-source'; // 為教典來源加上特別个 class
+              sourceSpan.textContent = `(${line.sourceName})`;
+              td1.appendChild(sourceSpan);
+              item.appendChild(td1);
+
+              // TD2: 詞彙、標音、釋義
+              const td2 = document.createElement('td');
+              td2.dataset.label = '詞彙';
+              const ruby = document.createElement('ruby');
+              ruby.innerHTML = highlight.word ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>') : line['客家語'];
+              const rt = document.createElement('rt');
+              rt.textContent = line['客語標音'];
+              ruby.appendChild(rt);
+              td2.appendChild(ruby);
+              td2.appendChild(document.createElement('br'));
+              // 教典資料無音檔，直接換行
+              td2.appendChild(document.createElement('br'));
+              const meaningText = document.createElement('span');
+              meaningText.innerHTML = highlight.meaning ? line['華語詞義'].replace(highlightRegex, '<mark>$1</mark>') : line['華語詞義'];
+              td2.appendChild(meaningText);
+              item.appendChild(td2);
+
+              // TD3: 例句
+              const td3 = document.createElement('td');
+              td3.dataset.label = '例句';
+              if (line['例句'] && line['例句'].trim() !== '') {
+                  const sentenceSpan = document.createElement('span');
+                  sentenceSpan.className = 'sentence';
+                  sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
+                  td3.appendChild(sentenceSpan);
+              }
+              item.appendChild(td3);
+              return item;
+          }
+
+          // --- 原本處理認證(cert)來源的資料 ---
+          if (!line.編號) return null;
           const sourceName = line.sourceName;
           let 腔 = sourceName.substring(0, 1);
           let 級 = sourceName.substring(1);
@@ -3779,6 +3894,54 @@ function findPronunciationsInAllData(searchText) {
       }
     }
   });
+
+  // --- 新增：在教典資料中搜尋 ---
+  allKnownGipDataVars.forEach(dataVarName => {
+    const dataObject = window[dataVarName];
+    if (dataObject && dataObject.content && dataObject.name) {
+      try {
+        const vocabularyArray = gipCsvToArray(dataObject.content);
+        const sourceName = dataObject.name; // e.g., '教典四'
+        vocabularyArray.forEach(line => {
+          if (line['詞目'] && line['音讀']) {
+            const isExact = line['詞目'] === normalizedSearchText;
+            const isPartial = !isExact && line['詞目'].includes(normalizedSearchText);
+
+            if (isExact) {
+              const entryKey = `${line['音讀']}|${sourceName}|exact|${line['詞目']}`;
+              if (!uniqueEntries.has(entryKey)) {
+                foundReadings.push({
+                  pronunciation: line['音讀'],
+                  source: sourceName,
+                  isExactMatch: true,
+                  originalTerm: line['詞目'],
+                  mandarinMeaning: line['釋義'],
+                  audioDetails: null // 教典資料無音檔資訊
+                });
+                uniqueEntries.add(entryKey);
+              }
+            } else if (isPartial) {
+              const entryKey = `${line['音讀']}|${sourceName}|partial|${line['詞目']}`;
+              if (!uniqueEntries.has(entryKey) && foundReadings.length < 50) {
+                foundReadings.push({
+                  pronunciation: line['音讀'],
+                  source: sourceName,
+                  isExactMatch: false,
+                  originalTerm: line['詞目'],
+                  mandarinMeaning: line['釋義'],
+                  audioDetails: null // 教典資料無音檔資訊
+                });
+                uniqueEntries.add(entryKey);
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error(`處理資料 ${dataVarName} 時發生錯誤:`, e);
+      }
+    }
+  });
+
   console.log(`Found ${foundReadings.length} readings for "${searchText}" before sorting/filtering in popup.`);
   return foundReadings;
 }
@@ -3997,7 +4160,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
         }
 
         // Construct audio URL using the new helper function
-        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
+        const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
         let audioElementHTML = '';
         if (audioUrl) {
           // 改成播放按鈕，節省空間
