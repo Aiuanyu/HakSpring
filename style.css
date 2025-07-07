@@ -1097,6 +1097,9 @@ input:checked + .slider:before {
   #generated td.no::before {
      display: none; /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
+  #generated td.no br {
+    display: none; /* 編號欄位毋使換行 */
+  }
 
   /* 調整詞彙欄位个標音 */
   #generated td[data-label="詞彙"] ruby {
@@ -1536,5 +1539,58 @@ mark {
     background: rgba(20, 60, 50, 0.95); /* Darker shade of #245d48 */
     color: #f0f0f0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+/* --- Pagination Container --- */
+.pagination-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.page-button {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 0 4px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.page-button:hover {
+  background-color: #ddd;
+}
+
+.page-button.active {
+  background-color: #4CAF50;
+  color: white;
+  border: 1px solid #4CAF50;
+}
+/* --- Result Sequence Number --- */
+.result-sequence-number {
+  background-color: #f0f0f0;
+  color: #333;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  padding: 0.5em;
+  min-width: 40px;
+  font-family: 'Bodoni 72 Oldstyle', serif; /* 使用 Bodoni Oldstyle 字型 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-sequence-number {
+    background-color: #333;
+    color: #f0f0f0;
+  }
+}
+@media screen and (max-width: 768px) {
+  .result-sequence-number {
+    margin-right: 0.5em; /* 在小螢幕下，序號和內容之間的距離 */
   }
 }

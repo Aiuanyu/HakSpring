@@ -1562,6 +1562,19 @@ document.addEventListener('DOMContentLoaded', function () {
   const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
   const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
 
+  // --- 新增：正規化客語拼音 (拿掉聲調) ---
+  function normalizePhonetics(text) {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .replace(/[áàăâāǎ]/g, 'a')
+      .replace(/[éèĕêēě]/g, 'e')
+      .replace(/[íìĭîīǐ]/g, 'i')
+      .replace(/[óòŏôōǒ]/g, 'o')
+      .replace(/[úùŭûūǔ]/g, 'u')
+      .replace(/[ńňǹ]/g, 'n');
+  }
+
   // 顯示查詢設定 popup
   searchInput.addEventListener('focus', () => {
     searchContainer.classList.add('active');
@@ -1574,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  function performSearch() {
+  function performSearch(page = 1, itemsPerPage = 50) {
     // 確保 radio button 是從 popup 內讀取
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     const searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
@@ -1608,17 +1621,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let results;
     if (searchMode === '客家語') {
-        results = combinedData.filter(item => {
-            const inWord = item && item['客家語'] && item['客家語'].toLowerCase().includes(keyword.toLowerCase());
-            const inSentence = item && item['例句'] && item['例句'].toLowerCase().includes(keyword.toLowerCase());
-            return inWord || inSentence;
-        });
+        const lowerKeyword = keyword.toLowerCase();
+        const normalizedKeyword = normalizePhonetics(keyword);
+        results = combinedData.map(item => {
+            const inWord = item && item['客家語'] && item['客家語'].toLowerCase().includes(lowerKeyword);
+            const inSentence = item && item['例句'] && item['例句'].toLowerCase().includes(lowerKeyword);
+            let inPhonetics = false;
+            if (item && item['客語標音']) {
+                const normalizedPhonetics = normalizePhonetics(item['客語標音']);
+                inPhonetics = normalizedPhonetics.includes(normalizedKeyword);
+            }
+            
+            if (inWord || inSentence || inPhonetics) {
+                return { ...item, _match: { inWord, inSentence, inPhonetics } };
+            }
+            return null;
+        }).filter(Boolean); // 拿忒 null 个項目
     } else if (searchMode === '華語') { // For 華語詞義 and 翻譯
-        results = combinedData.filter(item => {
-            const inMeaning = item && item['華語詞義'] && item['華語詞義'].toLowerCase().includes(keyword.toLowerCase());
-            const inTranslation = item && item['翻譯'] && item['翻譯'].toLowerCase().includes(keyword.toLowerCase());
-            return inMeaning || inTranslation;
-        });
+        const lowerKeyword = keyword.toLowerCase();
+        results = combinedData.map(item => {
+            const inMeaning = item && item['華語詞義'] && item['華語詞義'].toLowerCase().includes(lowerKeyword);
+            const inTranslation = item && item['翻譯'] && item['翻譯'].toLowerCase().includes(lowerKeyword);
+            if (inMeaning || inTranslation) {
+                return { ...item, _match: { inMeaning, inTranslation } };
+            }
+            return null;
+        }).filter(Boolean); // 拿忒 null 个項目
     }
     
     let summaryText = '';
@@ -1627,25 +1655,41 @@ document.addEventListener('DOMContentLoaded', function () {
     } else if (searchMode === '華語') {
       summaryText = `在華文部分尋「${keyword}」，`;
     }
-    displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect);
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
+    newUrl.searchParams.set('ca', keyword);
+    newUrl.searchParams.set('bidsu', itemsPerPage);
+    newUrl.searchParams.set('iab', page);
+    history.pushState({}, '', newUrl);
+
+    displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page, itemsPerPage);
   }
 
-  function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect) {
+  function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page = 1, itemsPerPage = 50) {
       const contentContainer = document.getElementById('generated');
       const resultsSummaryContainer = document.getElementById('results-summary');
       contentContainer.innerHTML = ''; // Clear previous content
       header?.querySelector('#audioControls')?.remove(); // 顯示查詢結果前，先移除播放控制
 
-      resultsSummaryContainer.textContent = summaryText + `尋著 ${results.length} 筆結果（${selectedDialect}）`;
+      const totalResults = results.length;
+      const totalPages = Math.ceil(totalResults / itemsPerPage);
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedResults = results.slice(startIndex, endIndex);
 
-      if (results.length === 0) {
+      resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+
+      if (totalResults === 0) {
           return;
       }
 
       const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
       // --- 抽離出建立單一表格列 (tr) 的函式，避免程式碼重複 ---
+      let globalRowIndex = startIndex;
       const createResultRow = (line, highlight) => {
+          globalRowIndex++;
           if (!line || !line.編號) return null;
 
           const sourceName = line.sourceName;
@@ -1722,6 +1766,11 @@ document.addEventListener('DOMContentLoaded', function () {
           const td1 = document.createElement('td');
           td1.className = 'no';
           td1.dataset.label = '編號';
+          const seqNum = document.createElement('span');
+          seqNum.className = 'result-sequence-number';
+          seqNum.textContent = globalRowIndex;
+          td1.appendChild(seqNum);
+          td1.appendChild(document.createElement('br'));
           const noText = document.createTextNode(line.編號 + '\u00A0');
           td1.appendChild(noText);
           const sourceSpan = document.createElement('span');
@@ -1801,71 +1850,53 @@ document.addEventListener('DOMContentLoaded', function () {
       };
 
       // --- 根據查詢模式顯示結果 ---
+      const displayCategorizedResults = (categorizedResults) => {
+          for (const category of categorizedResults) {
+              if (category.results.length > 0) {
+                  const heading = contentContainer.appendChild(document.createElement('h4'));
+                  heading.textContent = category.title;
+                  heading.className = 'results-section-heading';
+                  const table = contentContainer.appendChild(document.createElement('table'));
+                  table.setAttribute('width', '100%');
+                  category.results.forEach(line => {
+                      const row = createResultRow(line, category.highlight);
+                      if (row) table.appendChild(row);
+                  });
+              }
+          }
+      };
+
       if (searchMode === '客家語') {
           const resultsInBoth = [];
           const resultsInSentenceOnly = [];
           const resultsInWordOnly = [];
           const lowerKeyword = keyword.toLowerCase();
+          const normalizedKeyword = normalizePhonetics(keyword);
 
-          results.forEach(line => {
-              const inWord = line && line['客家語'] && line['客家語'].toLowerCase().includes(lowerKeyword);
-              const inSentence = line && line['例句'] && line['例句'].toLowerCase().includes(lowerKeyword);
-              if (inWord && inSentence) {
+          paginatedResults.forEach(line => {
+              const { inWord, inSentence, inPhonetics } = line._match;
+              if ((inWord || inPhonetics) && inSentence) {
                   resultsInBoth.push(line);
               } else if (inSentence) {
                   resultsInSentenceOnly.push(line);
-              } else if (inWord) {
+              } else if (inWord || inPhonetics) {
                   resultsInWordOnly.push(line);
               }
           });
 
-          // 顯示「詞、句皆符合」的結果
-          if (resultsInBoth.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '詞、句裡肚都有：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInBoth.forEach(line => {
-                  const row = createResultRow(line, { word: true, sentence: true, meaning: false, translation: false });
-                  if (row) table.appendChild(row);
-              });
-          }
-
-          // 顯示「僅客詞符合」的結果
-          if (resultsInWordOnly.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '淨詞彙裡肚有：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInWordOnly.forEach(line => {
-                  const row = createResultRow(line, { word: true, sentence: false, meaning: false, translation: false });
-                  if (row) table.appendChild(row);
-              });
-          }
-
-          // 顯示「僅例句符合」的結果
-          if (resultsInSentenceOnly.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '僅例句裡肚有：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInSentenceOnly.forEach(line => {
-                  const row = createResultRow(line, { word: false, sentence: true, meaning: false, translation: false });
-                  if (row) table.appendChild(row);
-              });
-          }
+          displayCategorizedResults([
+              { title: '詞、句裡肚都有：', results: resultsInBoth, highlight: { word: true, sentence: true, meaning: false, translation: false } },
+              { title: '淨詞彙裡肚有：', results: resultsInWordOnly, highlight: { word: true, sentence: false, meaning: false, translation: false } },
+              { title: '僅例句裡肚有：', results: resultsInSentenceOnly, highlight: { word: false, sentence: true, meaning: false, translation: false } }
+          ]);
       } else if (searchMode === '華語') {
           const resultsInBoth = [];
           const resultsInMeaningOnly = [];
           const resultsInTranslationOnly = [];
           const lowerKeyword = keyword.toLowerCase();
 
-          results.forEach(line => {
-              const inMeaning = line && line['華語詞義'] && line['華語詞義'].toLowerCase().includes(lowerKeyword);
-              const inTranslation = line && line['翻譯'] && line['翻譯'].toLowerCase().includes(lowerKeyword);
+          paginatedResults.forEach(line => {
+              const { inMeaning, inTranslation } = line._match;
               if (inMeaning && inTranslation) {
                   resultsInBoth.push(line);
               } else if (inTranslation) {
@@ -1875,44 +1906,11 @@ document.addEventListener('DOMContentLoaded', function () {
               }
           });
 
-          // 顯示「詞義、翻譯皆符合」的結果
-          if (resultsInBoth.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '華語詞義、翻譯裡肚都有出現：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInBoth.forEach(line => {
-                  const row = createResultRow(line, { word: false, sentence: false, meaning: true, translation: true });
-                  if (row) table.appendChild(row);
-              });
-          }
-
-          // 顯示「僅華語詞義符合」的結果
-          if (resultsInMeaningOnly.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '淨出現在華語詞義裡肚：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInMeaningOnly.forEach(line => {
-                  const row = createResultRow(line, { word: false, sentence: false, meaning: true, translation: false });
-                  if (row) table.appendChild(row);
-              });
-          }
-
-          // 顯示「僅例句翻譯符合」的結果
-          if (resultsInTranslationOnly.length > 0) {
-              const heading = contentContainer.appendChild(document.createElement('h4'));
-              heading.textContent = '淨出現在例句翻譯裡肚：';
-              heading.className = 'results-section-heading';
-              const table = contentContainer.appendChild(document.createElement('table'));
-              table.setAttribute('width', '100%');
-              resultsInTranslationOnly.forEach(line => {
-                  const row = createResultRow(line, { word: false, sentence: false, meaning: false, translation: true });
-                  if (row) table.appendChild(row);
-              });
-          }
+          displayCategorizedResults([
+              { title: '華語詞義、翻譯裡肚都有出現：', results: resultsInBoth, highlight: { word: false, sentence: false, meaning: true, translation: true } },
+              { title: '淨出現在華語詞義裡肚：', results: resultsInMeaningOnly, highlight: { word: false, sentence: false, meaning: true, translation: false } },
+              { title: '淨出現在例句翻譯裡肚：', results: resultsInTranslationOnly, highlight: { word: false, sentence: false, meaning: false, translation: true } }
+          ]);
       }
 
       // 對所有新產生的表格內容執行大埔變調
@@ -1920,6 +1918,29 @@ document.addEventListener('DOMContentLoaded', function () {
           if (typeof 大埔高降異化 === 'function') 大埔高降異化();
           if (typeof 大埔中遇低升 === 'function') 大埔中遇低升();
           if (typeof 大埔低升異化 === 'function') 大埔低升異化();
+      }
+
+      // --- 新增：分頁控制 ---
+      if (totalPages > 1) {
+          const paginationContainer = document.createElement('div');
+          paginationContainer.className = 'pagination-container';
+
+          for (let i = 1; i <= totalPages; i++) {
+              const pageButton = document.createElement('button');
+              pageButton.textContent = i;
+              pageButton.className = 'page-button';
+              if (i === page) {
+                  pageButton.classList.add('active');
+              }
+              pageButton.addEventListener('click', () => {
+                  performSearch(i, itemsPerPage);
+                  setTimeout(() => {
+                    document.getElementById('generated').scrollIntoView({ behavior: 'smooth' });
+                  }, 100); // 延遲 100 毫秒
+              });
+              paginationContainer.appendChild(pageButton);
+          }
+          contentContainer.appendChild(paginationContainer);
       }
       
       updateResultsSummaryVisibility();
@@ -2156,13 +2177,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // --- 新增：頁面載入時解析 URL 參數 ---
   const urlParams = new URLSearchParams(window.location.search);
+  const musiidParam = urlParams.get('musiid');
+  const caParam = urlParams.get('ca');
+  const bidsuParam = urlParams.get('bidsu');
+  const iabParam = urlParams.get('iab');
   const dialectParam = urlParams.get('dialect');
   const levelParam = urlParams.get('level');
   const categoryParam = urlParams.get('category'); // 這是編碼過的
   const rowParam = urlParams.get('row');
   let successfullyLoadedFromUrl = false; // <--- 用這隻新變數來追蹤
 
-  if (dialectParam && levelParam && categoryParam && rowParam) {
+  if (musiidParam && caParam) {
+    const searchMode = musiidParam === 'hak' ? '客家語' : '華語';
+    const dialect = '四縣'; // Default or from another param if needed
+    const itemsPerPage = parseInt(bidsuParam) || 50;
+    const page = parseInt(iabParam) || 1;
+
+    document.querySelector(`#search-popup input[name="search-mode"][value="${searchMode}"]`).checked = true;
+    // Assuming a default dialect selection for now, can be enhanced
+    document.querySelector(`#search-popup input[name="dialect"][value="${dialect}"]`).checked = true;
+    searchInput.value = caParam;
+    
+    performSearch(page, itemsPerPage);
+  } else if (dialectParam && levelParam && categoryParam && rowParam) {
     console.log(
       'URL parameters detected on load:',
       dialectParam,
