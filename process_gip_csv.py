@@ -124,17 +124,25 @@ def process_csv_files():
             header = lines[0].strip().split(',')
             try:
                 phonetic_col_index = header.index('音讀')
-            except ValueError:
-                print(f"  - 警告：在 {csv_file} 尋無 '音讀' 欄位，跳過轉換。")
+                # 將 '對應音檔名稱' 改為 '詞目音檔名'
+                audio_col_index = header.index('對應音檔名稱')
+                header[audio_col_index] = '詞目音檔名' # 修改標頭名稱
+            except ValueError as e:
+                print(f"  - 警告：在 {csv_file} 尋無必要个欄位 ({e})，跳過轉換。")
                 csv_content = "".join(lines)
             else:
-                new_lines = [lines[0]] # 保留標頭
+                new_lines = [ ','.join(header) + '\n' ] # 使用修改後个標頭
                 for line in lines[1:]:
                     parts = line.strip().split(',')
                     if len(parts) > phonetic_col_index:
                         original_phonetics = parts[phonetic_col_index]
                         converted_phonetics = convert_phonetic_string(original_phonetics, current_tone_map)
                         parts[phonetic_col_index] = converted_phonetics
+
+                        # 拿忒在音檔名稱頭前加 URL 个邏輯
+                        # if len(parts) > audio_col_index and parts[audio_col_index].strip() != '':
+                        #     parts[audio_col_index] = "https://hakkadict.moe.edu.tw/static/audio/" + parts[audio_col_index]
+
                         new_lines.append(','.join(parts) + '\n')
                     else:
                         new_lines.append(line)

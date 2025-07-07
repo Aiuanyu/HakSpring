@@ -246,9 +246,10 @@ function gipCsvToArray(str, delimiter = ',') {
     const obj = {};
     for (let j = 0; j < headers.length; j++) {
       if (headers[j]) {
+        const headerName = headers[j]; // 直接使用從 CSV 讀取到的標頭名稱
         const value = values[j] || '';
         // .replace(/^"|"$/g, '') removes leading/trailing quotes from values
-        obj[headers[j]] = value.replace(/^"|"$/g, '').trim();
+        obj[headerName] = value.replace(/^"|"$/g, '').trim();
       }
     }
     data.push(obj);
@@ -1808,7 +1809,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 '分類': '教典', // 分類統一為「教典」
                 '編號': `gip-${index}`, // 產生一隻唯一个 ID
                 'sourceName': gipDialectData.name, // e.g., '教典四'
-                'sourceType': 'gip' // 標記來源為「教典」
+                'sourceType': 'gip',
+                '詞目音檔名': item['詞目音檔名'] || '' // 確保詞目音檔名存在
             };
         }).filter(Boolean); // 拿掉 null 項目
         combinedData = combinedData.concat(gipNormalizedData);
@@ -1948,7 +1950,24 @@ document.addEventListener('DOMContentLoaded', function () {
               ruby.appendChild(rt);
               td2.appendChild(ruby);
               td2.appendChild(document.createElement('br'));
-              // 教典資料無音檔，直接換行
+
+              // --- 新增：處理教典音檔 (gip audio) ---
+              if (line['詞目音檔名'] && line['詞目音檔名'].trim() !== '') {
+                  const audio = document.createElement('audio');
+                  audio.className = 'media'; // Add class for consistency
+                  audio.controls = true;
+                  audio.preload = 'none';
+                  const source = document.createElement('source');
+                  source.src = "https://hakkadict.moe.edu.tw/static/audio/" + (line['詞目音檔名'].endsWith('.mp3') ? line['詞目音檔名'] : line['詞目音檔名'] + '.mp3'); // Use the pre-processed URL
+                  source.type = 'audio/mpeg';
+                  audio.appendChild(source);
+                  td2.appendChild(audio);
+              } else {
+                  // 如果無音檔，還是加個換行，保持版面一致
+                  td2.appendChild(document.createElement('br'));
+              }
+              // --- 教典音檔處理結束 ---
+
               td2.appendChild(document.createElement('br'));
               const meaningText = document.createElement('span');
               meaningText.innerHTML = highlight.meaning ? line['華語詞義'].replace(highlightRegex, '<mark>$1</mark>') : line['華語詞義'];
