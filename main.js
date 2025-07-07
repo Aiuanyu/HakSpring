@@ -1804,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '客語標音': item['音讀'],
                 '華語詞義': item['釋義'],
                 '例句': item['例句'] || '', // 確保例句欄存在
-                '翻譯': '', // 教典資料無翻譯欄
+                '翻譯': item['翻譯'] || '', // 確保翻譯欄存在；教典資料本旦無翻譯欄，愛自家轉出來
                 '備註': '', // 教典資料無備註欄
                 '分類': '教典', // 分類統一為「教典」
                 '編號': `gip-${index}`, // 產生一隻唯一个 ID
@@ -1982,6 +1982,19 @@ document.addEventListener('DOMContentLoaded', function () {
                   sentenceSpan.className = 'sentence';
                   sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
                   td3.appendChild(sentenceSpan);
+                  td3.appendChild(document.createElement('br'));
+
+                  td3.appendChild(document.createElement('br'));
+                  const translationText = document.createElement('span');
+                  // --- Highlight logic ---
+                  translationText.innerHTML = (
+                    highlight.translation
+                      ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>')
+                      : line['翻譯']
+                  )
+                    .replace(/"/g, '')
+                    .replace(/\n/g, '<br>');
+                  td3.appendChild(translationText);
               }
               item.appendChild(td3);
               return item;

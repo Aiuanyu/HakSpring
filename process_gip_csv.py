@@ -120,32 +120,63 @@ def process_csv_files():
             with open(full_path, 'r', encoding='utf-8-sig') as f:
                 lines = f.readlines()
 
-            # 處理音讀轉換
+            # 處理音讀與例句轉換
             header = lines[0].strip().split(',')
             try:
                 phonetic_col_index = header.index('音讀')
-                # 將 '對應音檔名稱' 改為 '詞目音檔名'
                 audio_col_index = header.index('對應音檔名稱')
                 header[audio_col_index] = '詞目音檔名' # 修改標頭名稱
+
+                # 檢查並準備處理「例句」欄位
+                try:
+                    example_col_index = header.index('例句')
+                    header.append('翻譯')
+                    has_example_col = True
+                except ValueError:
+                    example_col_index = -1
+                    has_example_col = False
+
             except ValueError as e:
                 print(f"  - 警告：在 {csv_file} 尋無必要个欄位 ({e})，跳過轉換。")
                 csv_content = "".join(lines)
             else:
-                new_lines = [ ','.join(header) + '\n' ] # 使用修改後个標頭
+                new_lines = [','.join(header) + '\n'] # 使用修改後个標頭
                 for line in lines[1:]:
+                    if not line.strip(): continue # 跳過空行
                     parts = line.strip().split(',')
+
+                    # 處理音讀轉換
                     if len(parts) > phonetic_col_index:
                         original_phonetics = parts[phonetic_col_index]
                         converted_phonetics = convert_phonetic_string(original_phonetics, current_tone_map)
                         parts[phonetic_col_index] = converted_phonetics
 
-                        # 拿忒在音檔名稱頭前加 URL 个邏輯
-                        # if len(parts) > audio_col_index and parts[audio_col_index].strip() != '':
-                        #     parts[audio_col_index] = "https://hakkadict.moe.edu.tw/static/audio/" + parts[audio_col_index]
+                    # 處理例句與翻譯
+                    if has_example_col:
+                        # 確保欄位列表有足夠空間容納新增的翻譯欄
+                        while len(parts) < len(header):
+                            parts.append('')
+                        
+                        if example_col_index < len(parts) and parts[example_col_index]:
+                            original_example = parts[example_col_index]
+                            
+                            # 1. 提取翻譯 (...)
+                            translations = re.findall(r'\((.*?)\)', original_example)
+                            translation_text = "<br>".join(t.strip() for t in translations)
 
-                        new_lines.append(','.join(parts) + '\n')
-                    else:
-                        new_lines.append(line)
+                            # 2. 清理例句，移除 (...)
+                            cleaned_example = re.sub(r'\s*\([^)]*\)', '', original_example).strip()
+                            
+                            # 3. 將多個例句用 <br> 分隔
+                            example_sentences = re.split(r'[。；]', cleaned_example)
+                            example_sentences = [s.strip() for s in example_sentences if s.strip()]
+                            new_example_text = "<br>".join(example_sentences)
+
+                            # 4. 更新 parts
+                            parts[example_col_index] = new_example_text
+                            parts[len(header)-1] = translation_text # 翻譯放在最後一欄
+
+                    new_lines.append(','.join(parts) + '\n')
                 csv_content = "".join(new_lines)
 
             # 3. 組合新个 JS 檔案內容
