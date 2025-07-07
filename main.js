@@ -1,3 +1,14 @@
+// --- 新增：更新網頁標題函式 ---
+const BASE_TITLE = '客語 HakLex';
+function updatePageTitle(titleParts = []) {
+  if (titleParts.length === 0) {
+    document.title = BASE_TITLE;
+  } else {
+    // 將各部分用分隔符號串接，並在最後加上專案名稱
+    document.title = [...titleParts, 'HakLex'].join(' - ');
+  }
+}
+
 // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
 function updateResultsSummaryVisibility() {
   const resultsSummaryContainer = document.getElementById('results-summary');
@@ -460,6 +471,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
     // 目前行為：不預選，讓使用者點選。
     console.log('No initial category specified.'); // 增加日誌
     // 清除舊表格內容和 radio button 選擇
+    updatePageTitle([currentActiveDialectLevelFullName]); // <-- 新增：更新標題
     radios.forEach((radio) => (radio.checked = false));
     contentContainer.innerHTML =
       '<p style="text-align: center; margin-top: 20px;">請選擇一個類別來顯示詞彙。</p>';
@@ -486,6 +498,8 @@ function buildTableAndSetupPlayback(
   if (resultsSummaryContainer) {
     resultsSummaryContainer.textContent = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
   }
+  // --- 新增：更新網頁標題 ---
+  updatePageTitle([dialectInfo.fullLvlName, category]);
   // --- 新增結束 ---
   // 獲取類別列表和目前索引
   const radioButtons = document.querySelectorAll('input[name="category"]');
@@ -1614,9 +1628,57 @@ document.addEventListener('DOMContentLoaded', function () {
       .replace(/[ńňǹ]/g, 'n');
   }
 
+  // --- 新增：判斷輸入係毋係羅馬字拼音 ---
+  function isRomanizedHakka(text) {
+    console.log(`[isRomanizedHakka] 檢查文本: '${text}'`);
+    // 檢查係無包含任何漢字
+    const hasChinese = /[\u4e00-\u9fa5]/.test(text);
+    if (hasChinese) {
+      console.log(`[isRomanizedHakka] 包含漢字，返回 false`);
+      return false;
+    }
+
+    // 檢查係無主要係羅馬字同聲調符號
+    // 包含大小寫英文字母、數字、常見个聲調符號、連字號、撇號、空白
+    const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\']+$/.test(text);
+    if (!isRoman) {
+      console.log(`[isRomanizedHakka] 毋係羅馬字格式，返回 false`);
+      return false;
+    }
+
+    // 檢查係無包含至少一隻羅馬字
+    const hasLetters = /[a-zA-Z]/.test(text);
+    if (!hasLetters) {
+      console.log(`[isRomanizedHakka] 毋包含字母，返回 false`);
+      return false;
+    }
+
+    console.log(`[isRomanizedHakka] 判斷為羅馬字，返回 true`);
+    return true;
+  }
+
   // 顯示查詢設定 popup
   searchInput.addEventListener('focus', () => {
     searchContainer.classList.add('active');
+  });
+
+  // --- 新增：輸入時判斷係無係羅馬字，自動切換查詢模式 ---
+  searchInput.addEventListener('input', () => {
+    const keyword = searchInput.value.trim();
+    console.log(`[searchInput.input] 輸入關鍵字: '${keyword}'`);
+    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+      console.log(`[searchInput.input] 判斷為羅馬字，嘗試選取「客家語」模式`);
+      // 若係羅馬字，自動選取「客家語」模式
+      const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+      if (hakkaModeRadio) {
+        hakkaModeRadio.checked = true;
+        console.log(`[searchInput.input] 「客家語」模式已選取`);
+      } else {
+        console.warn(`[searchInput.input] 找不到「客家語」模式的 radio button`);
+      }
+    } else {
+      console.log(`[searchInput.input] 毋係羅馬字或者關鍵字為空，毋切換模式`);
+    }
   });
 
   // 點擊頁面其他地方時隱藏 popup
@@ -1629,12 +1691,24 @@ document.addEventListener('DOMContentLoaded', function () {
   function performSearch(page = 1, itemsPerPage = 50) {
     // 確保 radio button 是從 popup 內讀取
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
-    const searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
+    let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value; // 改為 let
     const keyword = searchInput.value.trim();
 
+    // --- 新增：若關鍵字係羅馬字，強制切換到「客家語」模式 ---
+    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+      console.log(`[performSearch] 偵測到羅馬字輸入: '${keyword}'，強制切換到「客家語」模式。`);
+      searchMode = '客家語';
+      const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+      if (hakkaModeRadio) {
+        hakkaModeRadio.checked = true;
+      }
+    }
+
     if (!keyword) {
-        resultsSummaryContainer.textContent = '';
+        if (resultsSummaryContainer) resultsSummaryContainer.textContent = ''; // Add null check
         contentContainer.innerHTML = '<p style="text-align: center;">請輸入關鍵字</p>';
+        updatePageTitle(); // <-- 新增：重設標題
+        updateResultsSummaryVisibility(); // <-- 新增：更新摘要可見度
         return;
     }
 
@@ -1742,6 +1816,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
       resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
 
+      // --- 新增：更新網頁標題 ---
+      const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+      updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
+      // --- 新增結束 ---
+
       if (totalResults === 0) {
           return;
       }
@@ -1771,7 +1850,28 @@ document.addEventListener('DOMContentLoaded', function () {
               td1.appendChild(document.createElement('br'));
               const sourceSpan = document.createElement('span');
               sourceSpan.className = 'source-tag gip-source'; // 為教典來源加上特別个 class
-              sourceSpan.textContent = `(${line.sourceName})`;
+              // Determine the full dialect name for gip sources
+              let fullGipDialectName = '';
+              switch (line.sourceName) {
+                  case '教典四':
+                      fullGipDialectName = '教典四縣';
+                      break;
+                  case '教典海':
+                      fullGipDialectName = '教典海陸';
+                      break;
+                  case '教典大':
+                      fullGipDialectName = '教典大埔';
+                      break;
+                  case '教典平':
+                      fullGipDialectName = '教典饒平';
+                      break;
+                  case '教典安':
+                      fullGipDialectName = '教典詔安';
+                      break;
+                  default:
+                      fullGipDialectName = line.sourceName; // Fallback
+              }
+              sourceSpan.textContent = `(${fullGipDialectName})`;
               td1.appendChild(sourceSpan);
               item.appendChild(td1);
 
@@ -2083,10 +2183,9 @@ document.addEventListener('DOMContentLoaded', function () {
   let isFileProtocol = false;
   if (window.location.protocol === 'file:') {
     isFileProtocol = true;
-    document.title = '💻 ' + document.title;
     console.log('偵測到 file:// 協定，已修改網頁標題。');
   }
-
+  updatePageTitle(); // <-- 新增：確保初始標題正確
   // --- 統一獲取常用元素 ---
   const progressDropdown = document.getElementById('progressDropdown');
   const progressDetailsSpan = document.getElementById('progressDetails');

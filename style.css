@@ -1595,7 +1595,7 @@ mark {
   }
 }
 /* --- 查詢結果來源標籤 --- */
-.source-tag {
+/*.source-tag {
   font-size: 0.8em;
   color: #666;
   background-color: #f0f0f0;
@@ -1603,10 +1603,10 @@ mark {
   border-radius: 3px;
   display: inline-block;
   margin-top: 4px;
-}
+}*/
 
-.gip-source {
+/*.gip-source {
   background-color: #e0f2f1; /* 淡青色背景 */
-  color: #00796b; /* 深青色文字 */
-  border: 1px solid #b2dfdb;
-}
+/*  color: #00796b; /* 深青色文字 */
+/*  border: 1px solid #b2dfdb;
+}*/
