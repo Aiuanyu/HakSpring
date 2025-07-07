@@ -102,11 +102,12 @@ const allKnownDataVars = [
 ];
 
 // --- 新增：所有教典資料變數名稱 ---
-const allKnownGipDataVars = ['教典四', '教典海', '教典大', '教典平', '教典安'];
+const allKnownGipDataVars = ['教典四', '教典海', '教典大', '教典平', '教典安', '教典南'];
 
 // All data variables from the included JS files
 const allData = {
     '四縣': [四基, 四初, 四中, 四中高, 四高],
+    '南四縣': [四基, 四初, 四中, 四中高, 四高],
     '海陸': [海基, 海初, 海中, 海中高, 海高],
     '大埔': [大基, 大初, 大中, 大中高, 大高],
     '饒平': [平基, 平初, 平中, 平中高, 平高],
@@ -120,6 +121,25 @@ const gipData = {
     '大埔': typeof 教典大 !== 'undefined' ? 教典大 : null,
     '饒平': typeof 教典平 !== 'undefined' ? 教典平 : null,
     '詔安': typeof 教典安 !== 'undefined' ? 教典安 : null,
+    '南四縣': typeof 教典南 !== 'undefined' ? 教典南 : null
+};
+
+// 新增：腔調代碼與腔調名稱的對應
+const DIALECT_CODE_TO_NAME = {
+  'si': '四縣',
+  'na': '南四縣',
+  'ha': '海陸',
+  'da': '大埔',
+  'rh': '饒平',
+  'zh': '詔安'
+};
+const DIALECT_NAME_TO_CODE = {
+  '四縣': 'si',
+  '南四縣': 'na',
+  '海陸': 'ha',
+  '大埔': 'da',
+  '饒平': 'rh',
+  '詔安': 'zh'
 };
 
 /* Gemini 老師。這種方式還是會因為 CORS 被擋下，無法偵測
@@ -1606,6 +1626,8 @@ function buildTableAndSetupPlayback(
 
 /* 最頂端一開始讀取進度 */
 document.addEventListener('DOMContentLoaded', function () {
+  const urlParams = new URLSearchParams(window.location.search);
+
   const resultsSummaryContainer = document.getElementById('results-summary');
 
   // --- 查詢功能 ---
@@ -1614,6 +1636,43 @@ document.addEventListener('DOMContentLoaded', function () {
   const searchPopup = document.getElementById('search-popup');
   const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
   const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
+
+  // --- 處理腔調選擇个邏輯 ---
+  const kiongParam = urlParams.get('kiong');
+  const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+
+  let dialectToSelect = '';
+
+  if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
+    // 1. 優先用 URL 參數
+    dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
+    console.log(`從 URL 參數設定腔調為: ${dialectToSelect}`);
+  } else if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
+    // 2. 若無 URL 參數，用 localStorage
+    dialectToSelect = lastUsedDialect;
+    console.log(`從 localStorage 設定腔調為: ${dialectToSelect}`);
+  } else {
+    // 3. 若都無，用預設值 (例如 '四縣')
+    dialectToSelect = '四縣';
+    console.log(`無 URL 參數或 localStorage，預設腔調為: ${dialectToSelect}`);
+  }
+
+  // 根據決定好个腔調，去選取對應个 radio button
+  const radioToSelect = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToSelect}"]`);
+  if (radioToSelect) {
+    radioToSelect.checked = true;
+  }
+
+  // --- 監聽腔調變化，並存到 localStorage ---
+  searchDialectRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.checked) {
+        const selectedDialectName = this.value;
+        localStorage.setItem('lastSearchDialect', selectedDialectName);
+        console.log(`使用者選擇个腔調 "${selectedDialectName}" 已儲存到 localStorage。`);
+      }
+    });
+  });
 
   // --- 新增：正規化客語拼音 (拿掉聲調) ---
   function normalizePhonetics(text) {
@@ -1797,6 +1856,7 @@ document.addEventListener('DOMContentLoaded', function () {
     newUrl.searchParams.set('ca', keyword);
     newUrl.searchParams.set('bidsu', itemsPerPage);
     newUrl.searchParams.set('iab', page);
+    newUrl.searchParams.set('kiong', DIALECT_NAME_TO_CODE[selectedDialect]);
     history.pushState({}, '', newUrl);
 
     displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page, itemsPerPage);
@@ -1855,6 +1915,9 @@ document.addEventListener('DOMContentLoaded', function () {
               switch (line.sourceName) {
                   case '教典四':
                       fullGipDialectName = '教典四縣';
+                      break;
+                  case '教典南':
+                      fullGipDialectName = '教典南四縣';
                       break;
                   case '教典海':
                       fullGipDialectName = '教典海陸';
@@ -2390,7 +2453,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // --- 新增：頁面載入時解析 URL 參數 ---
-  const urlParams = new URLSearchParams(window.location.search);
   const musiidParam = urlParams.get('musiid');
   const caParam = urlParams.get('ca');
   const bidsuParam = urlParams.get('bidsu');
@@ -2402,16 +2464,38 @@ document.addEventListener('DOMContentLoaded', function () {
   let successfullyLoadedFromUrl = false; // <--- 用這隻新變數來追蹤
 
   if (musiidParam && caParam) {
-    const searchMode = musiidParam === 'hak' ? '客家語' : '華語';
-    const dialect = '四縣'; // Default or from another param if needed
+    const searchModeValue = musiidParam === 'hak' ? '客家語' : '華語'; // 修正 searchMode 个值
     const itemsPerPage = parseInt(bidsuParam) || 50;
     const page = parseInt(iabParam) || 1;
 
-    document.querySelector(`#search-popup input[name="search-mode"][value="${searchMode}"]`).checked = true;
-    // Assuming a default dialect selection for now, can be enhanced
-    document.querySelector(`#search-popup input[name="dialect"][value="${dialect}"]`).checked = true;
+    let dialectToUseForSearch = '四縣'; // 1. 先設定一個預設值
+    const kiongFromUrl = urlParams.get('kiong'); // 2. 讀取 kiong 參數
+
+    if (kiongFromUrl && DIALECT_CODE_TO_NAME[kiongFromUrl]) {
+        // 3. 如果 URL 有 kiong 參數，就用佢來決定腔調
+        dialectToUseForSearch = DIALECT_CODE_TO_NAME[kiongFromUrl];
+    } else {
+        // 4. (備用) 如果無 kiong，做得再檢查 localStorage，不然就用預設个「四縣」
+        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+        if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
+            dialectToUseForSearch = lastUsedDialect;
+        }
+    }
+
+    // 將決定好个腔調、模式設定到畫面上
+    const dialectRadio = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToUseForSearch}"]`);
+    if (dialectRadio) {
+        dialectRadio.checked = true;
+    }
+
+    const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
+    if (modeRadio) {
+        modeRadio.checked = true;
+    }
+    
     searchInput.value = caParam;
     
+    // 最後，用正確个設定來執行查詢
     performSearch(page, itemsPerPage);
   } else if (dialectParam && levelParam && categoryParam && rowParam) {
     console.log(
@@ -4210,13 +4294,21 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
+
+    let effectiveDialect = currentActiveMainDialectName;
+    if (currentActiveMainDialectName === '南四縣') {
+      effectiveDialect = '四縣';
+    }
+
     console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
     let displayReadings = [...readings]; // 複製一份來操作
 
     if (!showAllAccents) {
       // 若開關關閉，只顯示目前主要腔調的結果 (所有級別)
-      displayReadings = displayReadings.filter(r => r.source.startsWith(currentActiveMainDialectName));
+      displayReadings = displayReadings.filter((r) =>
+        r.source.startsWith(effectiveDialect)
+      );
     }
 
     // 排序：1. 完全符合優先, 2. 目前腔調優先
@@ -4226,8 +4318,8 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
       if (!a.isExactMatch && b.isExactMatch) return 1;
 
       // 2. 目前主要腔調優先 (所有級別)
-      const aIsCurrentMainDialect = a.source.startsWith(currentActiveMainDialectName);
-      const bIsCurrentMainDialect = b.source.startsWith(currentActiveMainDialectName);
+      const aIsCurrentMainDialect = a.source.startsWith(effectiveDialect);
+      const bIsCurrentMainDialect = b.source.startsWith(effectiveDialect);
       if (aIsCurrentMainDialect && !bIsCurrentMainDialect) return -1;
       if (!aIsCurrentMainDialect && bIsCurrentMainDialect) return 1;
       
@@ -4343,10 +4435,13 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
       if (showAllAccents) { // 開關打開，但所有腔調都尋無
         contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
       } else { // 開關關閉
-        if (readings.some(r => !r.source.startsWith(currentActiveMainDialectName))) { // 目前主要腔調尋無，但其他主要腔調有結果
-          contentEl.innerHTML = `<p class="popup-not-found">在${currentActiveMainDialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
-        } else { // 所有腔調都尋無，或者其他腔調也尋無
-          contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
+        if (readings.some((r) => !r.source.startsWith(effectiveDialect))) {
+          // 目前主要腔調尋無，但其他主要腔調有結果
+          contentEl.innerHTML = `<p class="popup-not-found">在${effectiveDialect}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
+        } else {
+          // 所有腔調都尋無，或者其他腔調也尋無
+          contentEl.innerHTML =
+            '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
         }
       }
     }

@@ -1447,6 +1447,11 @@ tr.ios-autoplay-instruction td::before {
 }
 
 /* --- 彈出面板內容 (Popup Content) --- */
+.dialect-row {
+  display: flex; /* 用 Flexbox 排版 */
+  gap: 15px;     /* 選項之間个距離 */
+}
+
 #dialect-selection, #search-mode-selection {
   display: flex;
   flex-direction: column; /* 內容垂直排列 */
