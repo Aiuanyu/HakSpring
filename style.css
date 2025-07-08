@@ -200,8 +200,7 @@ a {
   padding: 8px 15px; /* 微調 padding */
   display: flex; /* 改用 Flexbox 排版 */
   align-items: center; /* 垂直置中 */
-  /* justify-content: space-between; /* 兩端對齊 */
-  justify-content: flex-start; /* <--- 讓元素靠左對齊 */
+  justify-content: space-between; /* <--- 改為兩端對齊 */
   /* flex-wrap: wrap; /* 改做做得換行 */
   gap: 10px; /* 項目之間的間距 */
   font-family: var(--title-font);
@@ -368,7 +367,7 @@ tr#nowPlaying.paused-playback {
   vertical-align: middle; /* 垂直對齊方式 */
   max-width: 50vw;
   /*flex-grow: 1; /* 允許它伸展利用空間 */
-  min-width: 150px; /* 確保最小寬度 */
+  min-width: 50px; /* 確保最小寬度 */
   cursor: pointer; /* 滑鼠指標 */
   flex-shrink: 1; /* 允許被壓縮 */
 }
@@ -700,6 +699,72 @@ input:checked + .slider:before {
   margin-top: 8px;
 }
 
+/* --- 新增：頁首搜尋容器樣式 --- */
+#search-container {
+  position: relative;
+  margin-left: auto; /* 將搜尋框推到最右邊 */
+}
+
+#search-input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 15px; /* 圓角 */
+  width: 180px; /* 預設寬度 */
+  transition: width 0.3s ease-in-out, background-color 0.3s;
+}
+
+#search-input:focus {
+  width: 220px; /* focus 時變闊 */
+  background-color: #f8f8f8;
+}
+
+#search-popup {
+  display: none; /* 預設隱藏 */
+  position: absolute;
+  top: 100%; /* 在輸入框下方 */
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+  padding: 15px;
+  width: 300px; /* 固定寬度 */
+  margin-top: 5px; /* 和輸入框的間距 */
+}
+
+#search-container.active #search-popup {
+  display: block; /* 當容器有 active class 時顯示 */
+}
+
+#dialect-selection, #search-mode-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#dialect-selection:not(:last-child) {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+#dialect-selection p, #search-mode-selection p {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+}
+
+#dialect-selection label, #search-mode-selection label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+#results-summary {
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -946,6 +1011,26 @@ input:checked + .slider:before {
     color: var(--main-text-color);
   }
   /* Audio controls are generally handled by browser, might need specific styling if issues arise */
+
+  #search-input {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+  #search-input:focus {
+    background-color: #333;
+  }
+  #search-popup {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  #dialect-selection:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  mark {
+    background-color: var(--dark-primary-accent);
+  }
 }
 
 /* --- 響應式表格：疊起來个樣式 (螢幕闊度 <= 768px) --- */
@@ -1012,6 +1097,9 @@ input:checked + .slider:before {
   #generated td.no::before {
      display: none; /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
+  #generated td.no br {
+    display: none; /* 編號欄位毋使換行 */
+  }
 
   /* 調整詞彙欄位个標音 */
   #generated td[data-label="詞彙"] ruby {
@@ -1048,6 +1136,17 @@ input:checked + .slider:before {
   #generated tr#nowPlaying.paused-playback {
     /* background-color: transparent !important; */ /* 動畫會處理背景 */
     animation: pulse-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
+  }
+
+  /* --- 新增：調整搜尋框在狹窄螢幕下的樣式 --- */
+  #search-input {
+    width: 50px !important; /* 再縮小預設寬度 */
+    padding: 6px 10px; /* 縮小內距 */
+    /* 字型大小已由主要規則中的 clamp() 處理 */
+  }
+
+  #search-input:focus {
+    width: 100px; /* 再縮小 focus 時的寬度 */
   }
 
 
@@ -1293,3 +1392,226 @@ tr.ios-autoplay-instruction td::before {
     color: var(--main-text-color);
   }
 }
+
+.source-tag {
+  font-size: 0.8em;
+  color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+  .source-tag {
+    color: #aaa;
+  }
+}
+
+/* --- 頁首查詢容器樣式 (Header Search Container) --- */
+#search-container {
+  position: relative; /* 設定相對定位，分彈出面板好用絕對定位 */
+  margin-left: auto; /* 將查詢容器推到 flex 容器个最右片 */
+}
+
+/* --- 查詢輸入框 (Search Input) --- */
+#search-input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 15px; /* 圓角，看起來較幼秀 */
+  width: 180px; /* 預設寬度 */
+  font-size: clamp(16px, 1.8vw, 18px); /* 自動調整字型大小 */
+  transition: width 0.3s ease-in-out, background-color 0.3s; /* 平滑過渡效果 */
+}
+
+#search-input:focus {
+  width: 220px; /* focus 个時節變闊兜 */
+  background-color: #f8f8f8; /* focus 个時節背景色小小愛變 */
+}
+
+/* --- 查詢設定彈出面板 (Search Settings Popup) --- */
+#search-popup {
+  display: none; /* 預設隱藏 */
+  position: absolute;
+  top: 100%; /* 在輸入框个正下方 */
+  right: 0; /* 對齊輸入框个右邊 */
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 加一息仔陰影，看起來有浮起來个效果 */
+  z-index: 20; /* 確保在其他內容之上 */
+  padding: 15px;
+  width: 300px; /* 固定寬度 */
+  margin-top: 5px; /* 同輸入框之間个距離 */
+}
+
+/* 用 JS 控制个 .active class 來顯示彈出面板 */
+#search-container.active #search-popup {
+  display: block;
+}
+
+/* --- 彈出面板內容 (Popup Content) --- */
+.dialect-row {
+  display: flex; /* 用 Flexbox 排版 */
+  gap: 15px;     /* 選項之間个距離 */
+}
+
+#dialect-selection, #search-mode-selection {
+  display: flex;
+  flex-direction: column; /* 內容垂直排列 */
+  gap: 8px; /* 項目之間个距離 */
+}
+
+/* 兩個區塊之間个分隔線 */
+#dialect-selection:not(:last-child) {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* 區塊標題文字 */
+#dialect-selection p, #search-mode-selection p {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+}
+
+/* 區塊內个選項 */
+#dialect-selection label, #search-mode-selection label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* --- 查詢結果相關樣式 (Search Results) --- */
+#results-summary {
+  display: none; /* 預設隱藏 */
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+  position: sticky;
+  top: 80px; /* Adjust this value based on your header's height */
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  padding: 10px 0;
+  z-index: 5;
+}
+
+/* 搜尋結果頁面用个，來源標籤樣式 */
+.source-tag {
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* 關鍵字 highlight 樣式 */
+mark {
+    background-color: #ffda06;
+    padding: 0.1em 0.2em;
+    border-radius: 3px;
+}
+
+
+/* --- 暗夜模式調整 (Dark Mode Adjustments) --- */
+@media (prefers-color-scheme: dark) {
+  /* 查詢輸入框 */
+  #search-input {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+  #search-input:focus {
+    background-color: #333;
+  }
+
+  /* 彈出面板 */
+  #search-popup {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* 彈出面板內部分隔線 */
+  #dialect-selection:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* 查詢結果頁面用个，來源標籤樣式 */
+  .source-tag {
+    color: #aaa;
+  }
+
+  /* 暗夜模式个關鍵字 highlight */
+  mark {
+    background-color: var(--dark-primary-accent);
+    color: var(--dark-button-text-color, #1f1f1f);
+  }
+
+  #results-summary {
+    background: rgba(20, 60, 50, 0.95); /* Darker shade of #245d48 */
+    color: #f0f0f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+/* --- Pagination Container --- */
+.pagination-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.page-button {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 0 4px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.page-button:hover {
+  background-color: #ddd;
+}
+
+.page-button.active {
+  background-color: #4CAF50;
+  color: white;
+  border: 1px solid #4CAF50;
+}
+/* --- Result Sequence Number --- */
+.result-sequence-number {
+  background-color: #f0f0f0;
+  color: #333;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  padding: 0.5em;
+  min-width: 40px;
+  font-family: 'Bodoni 72 Oldstyle', serif; /* 使用 Bodoni Oldstyle 字型 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-sequence-number {
+    background-color: #333;
+    color: #f0f0f0;
+  }
+}
+@media screen and (max-width: 768px) {
+  .result-sequence-number {
+    margin-right: 0.5em; /* 在小螢幕下，序號和內容之間的距離 */
+  }
+}
+/* --- 查詢結果來源標籤 --- */
+/*.source-tag {
+  font-size: 0.8em;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 4px;
+}*/
+
+/*.gip-source {
+  background-color: #e0f2f1; /* 淡青色背景 */
+/*  color: #00796b; /* 深青色文字 */
+/*  border: 1px solid #b2dfdb;
+}*/

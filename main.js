@@ -1,3 +1,29 @@
+// --- 新增：更新網頁標題函式 ---
+const BASE_TITLE = '客語 HakLex';
+function updatePageTitle(titleParts = []) {
+  if (titleParts.length === 0) {
+    document.title = BASE_TITLE;
+  } else {
+    // 將各部分用分隔符號串接，並在最後加上專案名稱
+    document.title = [...titleParts, 'HakLex'].join(' - ');
+  }
+}
+
+// --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
+function updateResultsSummaryVisibility() {
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  const contentContainer = document.getElementById('generated');
+
+  if (!resultsSummaryContainer || !contentContainer) return; // 確保元素存在
+
+  // 檢查 #generated 裡肚係無係有實際个內容 (trim() 會拿忒頭尾空白)
+  if (contentContainer.innerHTML.trim() !== '') {
+    resultsSummaryContainer.style.display = 'block'; // 有內容就顯示
+  } else {
+    resultsSummaryContainer.style.display = 'none'; // 無內容就隱藏
+  }
+}
+
 /**
  * 從表格名稱 (例如 "四縣基礎級") 解析出腔調和級別代碼。
  * @param {string} tableName - 表格名稱 (例如 "四縣基礎級")
@@ -74,6 +100,47 @@ const allKnownDataVars = [
   '平基', '平初', '平中', '平中高', '平高',
   '安基', '安初', '安中', '安中高', '安高'
 ];
+
+// --- 新增：所有教典資料變數名稱 ---
+const allKnownGipDataVars = ['教典四', '教典海', '教典大', '教典平', '教典安', '教典南'];
+
+// All data variables from the included JS files
+const allData = {
+    '四縣': [四基, 四初, 四中, 四中高, 四高],
+    '南四縣': [四基, 四初, 四中, 四中高, 四高],
+    '海陸': [海基, 海初, 海中, 海中高, 海高],
+    '大埔': [大基, 大初, 大中, 大中高, 大高],
+    '饒平': [平基, 平初, 平中, 平中高, 平高],
+    '詔安': [安基, 安初, 安中, 安中高, 安高]
+};
+
+// --- 新增：教典資料 ---
+const gipData = {
+    '四縣': typeof 教典四 !== 'undefined' ? 教典四 : null,
+    '海陸': typeof 教典海 !== 'undefined' ? 教典海 : null,
+    '大埔': typeof 教典大 !== 'undefined' ? 教典大 : null,
+    '饒平': typeof 教典平 !== 'undefined' ? 教典平 : null,
+    '詔安': typeof 教典安 !== 'undefined' ? 教典安 : null,
+    '南四縣': typeof 教典南 !== 'undefined' ? 教典南 : null
+};
+
+// 新增：腔調代碼與腔調名稱的對應
+const DIALECT_CODE_TO_NAME = {
+  'si': '四縣',
+  'na': '南四縣',
+  'ha': '海陸',
+  'da': '大埔',
+  'rh': '饒平',
+  'zh': '詔安'
+};
+const DIALECT_NAME_TO_CODE = {
+  '四縣': 'si',
+  '南四縣': 'na',
+  '海陸': 'ha',
+  '大埔': 'da',
+  '饒平': 'rh',
+  '詔安': 'zh'
+};
 
 /* Gemini 老師。這種方式還是會因為 CORS 被擋下，無法偵測
 function checkAudioStatus(url) {
@@ -162,6 +229,52 @@ function csvToArray(str, delimiter = ',') {
   return data;
 }
 
+function gipCsvToArray(str, delimiter = ',') {
+  if (!str) return [];
+  const rows = str.trim().split('\n');
+  if (rows.length < 2) return [];
+  
+  // .replace(/"/g, '') is a simple way to clean up headers that might be quoted
+  const headers = rows[0].split(delimiter).map(h => h.trim().replace(/"/g, ''));
+  const data = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].trim() === '') continue;
+    
+    // This is a simple split, and won't handle commas inside quoted fields.
+    const values = rows[i].split(delimiter);
+    const obj = {};
+    for (let j = 0; j < headers.length; j++) {
+      if (headers[j]) {
+        const headerName = headers[j]; // 直接使用從 CSV 讀取到的標頭名稱
+        const value = values[j] || '';
+        // .replace(/^"|"$/g, '') removes leading/trailing quotes from values
+        obj[headerName] = value.replace(/^"|"$/g, '').trim();
+      }
+    }
+    data.push(obj);
+  }
+  return data;
+}
+
+// --- 新增：當學習模式改變時，同步更新查詞腔調設定 ---
+function updateSearchDialect(dialectName) {
+  if (!dialectName) return;
+
+  // 1. 更新 localStorage
+  localStorage.setItem('lastSearchDialect', dialectName);
+  console.log(`學習模式觸發：查詞腔調已更新並儲存到 localStorage: "${dialectName}"`);
+
+  // 2. 更新查詞 popup 裡肚个 radio button
+  const radioToSelect = document.querySelector(`#search-popup input[name="dialect"][value="${dialectName}"]`);
+  if (radioToSelect) {
+    radioToSelect.checked = true;
+    console.log(`學習模式觸發：查詞介面个腔調 radio button 已更新為 "${dialectName}"`);
+  } else {
+    console.warn(`無法尋著對應个查詞腔調 radio button: "${dialectName}"`);
+  }
+}
+
 //cat = "2心理活動與感覺";
 //console.log(cat);
 
@@ -176,10 +289,12 @@ function generate(content, initialCategory = null, targetRowId = null) {
   document.querySelectorAll('.radioItem').forEach((label) => {
     label.classList.remove('active-category');
   });
-  // --- 新增：如果不是從下拉選單觸發，就清除進度詳情 ---
+  // --- 新增：如果不是從下拉選單觸發，就清除進度詳情和結果摘要 ---
   if (!initialCategory && !targetRowId) {
     const progressDetailsSpan = document.getElementById('progressDetails');
     if (progressDetailsSpan) progressDetailsSpan.textContent = '';
+    // const resultsSummaryContainer = document.getElementById('results-summary');
+    // if (resultsSummaryContainer) resultsSummaryContainer.innerHTML = '';
   }
   // --- 新增結束 ---
 
@@ -227,26 +342,31 @@ function generate(content, initialCategory = null, targetRowId = null) {
       檔腔 = 'si';
       腔名 = '四縣';
       currentActiveMainDialectName = '四縣'; // <-- 設定主要腔調名
+      updateSearchDialect('四縣');
       break;
     case '海':
       檔腔 = 'ha';
       腔名 = '海陸';
       currentActiveMainDialectName = '海陸'; // <-- 設定主要腔調名
+      updateSearchDialect('海陸');
       break;
     case '大':
       檔腔 = 'da';
       腔名 = '大埔';
       currentActiveMainDialectName = '大埔'; // <-- 設定主要腔調名
+      updateSearchDialect('大埔');
       break;
     case '平':
       檔腔 = 'rh';
       腔名 = '饒平';
       currentActiveMainDialectName = '饒平'; // <-- 設定主要腔調名
+      updateSearchDialect('饒平');
       break;
     case '安':
       檔腔 = 'zh';
       腔名 = '詔安';
       currentActiveMainDialectName = '詔安'; // <-- 設定主要腔調名
+      updateSearchDialect('詔安');
       break;
     default:
       currentActiveMainDialectName = ''; // 未知腔調
@@ -395,9 +515,12 @@ function generate(content, initialCategory = null, targetRowId = null) {
     // 目前行為：不預選，讓使用者點選。
     console.log('No initial category specified.'); // 增加日誌
     // 清除舊表格內容和 radio button 選擇
+    updatePageTitle([currentActiveDialectLevelFullName]); // <-- 新增：更新標題
     radios.forEach((radio) => (radio.checked = false));
     contentContainer.innerHTML =
       '<p style="text-align: center; margin-top: 20px;">請選擇一個類別來顯示詞彙。</p>';
+
+    updateResultsSummaryVisibility();
     // **新增這行**：移除 header 中的播放控制鈕
     header?.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
   }
@@ -414,6 +537,14 @@ function buildTableAndSetupPlayback(
   dialectInfo,
   autoPlayTargetRowId = null
 ) {
+  // --- 新增：設定學習模式的摘要 ---
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  if (resultsSummaryContainer) {
+    resultsSummaryContainer.textContent = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
+  }
+  // --- 新增：更新網頁標題 ---
+  updatePageTitle([dialectInfo.fullLvlName, category]);
+  // --- 新增結束 ---
   // 獲取類別列表和目前索引
   const radioButtons = document.querySelectorAll('input[name="category"]');
   categoryList = Array.from(radioButtons).map((radio) => radio.value);
@@ -985,7 +1116,7 @@ function buildTableAndSetupPlayback(
         if (audioTd) {
           // <--- 改成檢查 audioTd
           console.log('Scrolling to audio TD:', audioTd); // 加 log 方便除錯
-          // 對尋到个 td 執行 scrollIntoView
+          // 對尋著个 td 執行 scrollIntoView
           audioTd.scrollIntoView({
             behavior: 'smooth',
             block: 'center', // 試看啊用 'center' 或者 'nearest'
@@ -1513,18 +1644,666 @@ function buildTableAndSetupPlayback(
 
   // --- 在函式最尾項，確保 DOM 都更新後 ---
   setTimeout(adjustHeaderFontSizeOnOverflow, 0); // 使用 setTimeout
+
+  updateResultsSummaryVisibility();
 } // --- buildTableAndSetupPlayback 函式結束 ---
 
 /* 最頂端一開始讀取進度 */
 document.addEventListener('DOMContentLoaded', function () {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const resultsSummaryContainer = document.getElementById('results-summary');
+
+  // --- 查詢功能 ---
+  const searchContainer = document.getElementById('search-container');
+  const searchInput = document.getElementById('search-input');
+  const searchPopup = document.getElementById('search-popup');
+  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
+  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
+
+  // --- 處理腔調選擇个邏輯 ---
+  const kiongParam = urlParams.get('kiong');
+  const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+
+  let dialectToSelect = '';
+
+  if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
+    // 1. 優先用 URL 參數
+    dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
+    console.log(`從 URL 參數設定腔調為: ${dialectToSelect}`);
+  } else if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
+    // 2. 若無 URL 參數，用 localStorage
+    dialectToSelect = lastUsedDialect;
+    console.log(`從 localStorage 設定腔調為: ${dialectToSelect}`);
+  } else {
+    // 3. 若都無，用預設值 (例如 '四縣')
+    dialectToSelect = '四縣';
+    console.log(`無 URL 參數或 localStorage，預設腔調為: ${dialectToSelect}`);
+  }
+
+  // 根據決定好个腔調，去選取對應个 radio button
+  const radioToSelect = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToSelect}"]`);
+  if (radioToSelect) {
+    radioToSelect.checked = true;
+  }
+
+  // --- 監聽腔調變化，並存到 localStorage ---
+  searchDialectRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.checked) {
+        const selectedDialectName = this.value;
+        localStorage.setItem('lastSearchDialect', selectedDialectName);
+        console.log(`使用者選擇个腔調 "${selectedDialectName}" 已儲存到 localStorage。`);
+      }
+    });
+  });
+
+  // --- 新增：正規化客語拼音 (拿掉聲調) ---
+  function normalizePhonetics(text) {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .replace(/[áàăâāǎ]/g, 'a')
+      .replace(/[éèĕêēě]/g, 'e')
+      .replace(/[íìĭîīǐ]/g, 'i')
+      .replace(/[óòŏôōǒ]/g, 'o')
+      .replace(/[úùŭûūǔ]/g, 'u')
+      .replace(/[ńňǹ]/g, 'n');
+  }
+
+  // --- 新增：判斷輸入係毋係羅馬字拼音 ---
+  function isRomanizedHakka(text) {
+    console.log(`[isRomanizedHakka] 檢查文本: '${text}'`);
+    // 檢查係無包含任何漢字
+    const hasChinese = /[\u4e00-\u9fa5]/.test(text);
+    if (hasChinese) {
+      console.log(`[isRomanizedHakka] 包含漢字，返回 false`);
+      return false;
+    }
+
+    // 檢查係無主要係羅馬字同聲調符號
+    // 包含大小寫英文字母、數字、常見个聲調符號、連字號、撇號、空白
+    const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\']+$/.test(text);
+    if (!isRoman) {
+      console.log(`[isRomanizedHakka] 毋係羅馬字格式，返回 false`);
+      return false;
+    }
+
+    // 檢查係無包含至少一隻羅馬字
+    const hasLetters = /[a-zA-Z]/.test(text);
+    if (!hasLetters) {
+      console.log(`[isRomanizedHakka] 毋包含字母，返回 false`);
+      return false;
+    }
+
+    console.log(`[isRomanizedHakka] 判斷為羅馬字，返回 true`);
+    return true;
+  }
+
+  // 顯示查詢設定 popup
+  searchInput.addEventListener('focus', () => {
+    searchContainer.classList.add('active');
+  });
+
+  // --- 新增：輸入時判斷係無係羅馬字，自動切換查詢模式 ---
+  searchInput.addEventListener('input', () => {
+    const keyword = searchInput.value.trim();
+    console.log(`[searchInput.input] 輸入關鍵字: '${keyword}'`);
+    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+      console.log(`[searchInput.input] 判斷為羅馬字，嘗試選取「客家語」模式`);
+      // 若係羅馬字，自動選取「客家語」模式
+      const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+      if (hakkaModeRadio) {
+        hakkaModeRadio.checked = true;
+        console.log(`[searchInput.input] 「客家語」模式已選取`);
+      } else {
+        console.warn(`[searchInput.input] 找不到「客家語」模式的 radio button`);
+      }
+    } else {
+      console.log(`[searchInput.input] 毋係羅馬字或者關鍵字為空，毋切換模式`);
+    }
+  });
+
+  // 點擊頁面其他地方時隱藏 popup
+  document.addEventListener('click', (event) => {
+    if (!searchContainer.contains(event.target)) {
+      searchContainer.classList.remove('active');
+    }
+  });
+
+  function performSearch(page = 1, itemsPerPage = 50) {
+    // 確保 radio button 是從 popup 內讀取
+    const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
+    let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value; // 改為 let
+    const keyword = searchInput.value.trim();
+
+    // --- 新增：若關鍵字係羅馬字，強制切換到「客家語」模式 ---
+    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+      console.log(`[performSearch] 偵測到羅馬字輸入: '${keyword}'，強制切換到「客家語」模式。`);
+      searchMode = '客家語';
+      const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+      if (hakkaModeRadio) {
+        hakkaModeRadio.checked = true;
+      }
+    }
+
+    if (!keyword) {
+        if (resultsSummaryContainer) resultsSummaryContainer.textContent = ''; // Add null check
+        contentContainer.innerHTML = '<p style="text-align: center;">請輸入關鍵字</p>';
+        updatePageTitle(); // <-- 新增：重設標題
+        updateResultsSummaryVisibility(); // <-- 新增：更新摘要可見度
+        return;
+    }
+
+    // 執行查詢時，隱藏 popup
+    searchContainer.classList.remove('active');
+    searchInput.blur(); // 讓輸入框失去焦點
+
+    // --- 設定目前作用中的腔調，供「擇詞 popup」使用 ---
+    currentActiveMainDialectName = selectedDialect;
+    currentActiveDialectLevelFullName = ''; // 清除級別全名，表示目前是查詢模式
+
+    const dialectData = allData[selectedDialect];
+    let combinedData = [];
+    dialectData.forEach(level => {
+        if (level && level.content) {
+            const levelData = csvToArray(level.content);
+            levelData.forEach(item => {
+                item.sourceName = level.name; // e.g., '四基'
+                item.sourceType = 'cert'; // 標記來源為「認證」
+            });
+            combinedData = combinedData.concat(levelData);
+        }
+    });
+
+    // --- 新增：讀取教典資料 ---
+    const gipDialectData = gipData[selectedDialect];
+    if (gipDialectData && gipDialectData.content) {
+        const gipRawData = gipCsvToArray(gipDialectData.content);
+        const gipNormalizedData = gipRawData.map((item, index) => {
+            if (!item['詞目']) return null; // 跳過無詞目个空行
+            return {
+                '客家語': item['詞目'],
+                '客語標音': item['音讀'],
+                '華語詞義': item['釋義'],
+                '例句': item['例句'] || '', // 確保例句欄存在
+                '翻譯': item['翻譯'] || '', // 確保翻譯欄存在；教典資料本旦無翻譯欄，愛自家轉出來
+                '備註': '', // 教典資料無備註欄
+                '分類': '教典', // 分類統一為「教典」
+                '編號': `gip-${index}`, // 產生一隻唯一个 ID
+                'sourceName': gipDialectData.name, // e.g., '教典四'
+                'sourceType': 'gip',
+                '詞目音檔名': item['詞目音檔名'] || '' // 確保詞目音檔名存在
+            };
+        }).filter(Boolean); // 拿掉 null 項目
+        combinedData = combinedData.concat(gipNormalizedData);
+    }
+
+    let results;
+    if (searchMode === '客家語') {
+        const lowerKeyword = keyword.toLowerCase();
+        const normalizedKeyword = normalizePhonetics(keyword);
+        results = combinedData.map(item => {
+            const inWord = item && item['客家語'] && item['客家語'].toLowerCase().includes(lowerKeyword);
+            const inSentence = item && item['例句'] && item['例句'].toLowerCase().includes(lowerKeyword);
+            let inPhonetics = false;
+            if (item && item['客語標音']) {
+                const normalizedPhonetics = normalizePhonetics(item['客語標音']);
+                inPhonetics = normalizedPhonetics.includes(normalizedKeyword);
+            }
+            
+            if (inWord || inSentence || inPhonetics) {
+                return { ...item, _match: { inWord, inSentence, inPhonetics } };
+            }
+            return null;
+        }).filter(Boolean); // 拿忒 null 个項目
+    } else if (searchMode === '華語') { // For 華語詞義 and 翻譯
+        const lowerKeyword = keyword.toLowerCase();
+        results = combinedData.map(item => {
+            const inMeaning = item && item['華語詞義'] && item['華語詞義'].toLowerCase().includes(lowerKeyword);
+            const inTranslation = item && item['翻譯'] && item['翻譯'].toLowerCase().includes(lowerKeyword);
+            if (inMeaning || inTranslation) {
+                return { ...item, _match: { inMeaning, inTranslation } };
+            }
+            return null;
+        }).filter(Boolean); // 拿忒 null 个項目
+    }
+    
+    let summaryText = '';
+    if (searchMode === '客家語') {
+      summaryText = `在客文部分尋「${keyword}」，`;
+    } else if (searchMode === '華語') {
+      summaryText = `在華文部分尋「${keyword}」，`;
+    }
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
+    newUrl.searchParams.set('ca', keyword);
+    newUrl.searchParams.set('bidsu', itemsPerPage);
+    newUrl.searchParams.set('iab', page);
+    newUrl.searchParams.set('kiong', DIALECT_NAME_TO_CODE[selectedDialect]);
+    history.pushState({}, '', newUrl);
+
+    displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page, itemsPerPage);
+  }
+
+  function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page = 1, itemsPerPage = 50) {
+      const contentContainer = document.getElementById('generated');
+      const resultsSummaryContainer = document.getElementById('results-summary');
+      contentContainer.innerHTML = ''; // Clear previous content
+      header?.querySelector('#audioControls')?.remove(); // 顯示查詢結果前，先移除播放控制
+
+      const totalResults = results.length;
+      const totalPages = Math.ceil(totalResults / itemsPerPage);
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedResults = results.slice(startIndex, endIndex);
+
+      resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+
+      // --- 新增：更新網頁標題 ---
+      const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+      updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
+      // --- 新增結束 ---
+
+      if (totalResults === 0) {
+          return;
+      }
+
+      const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
+
+      // --- 抽離出建立單一表格列 (tr) 的函式，避免程式碼重複 ---
+      let globalRowIndex = startIndex;
+      const createResultRow = (line, highlight) => {
+          globalRowIndex++;
+          if (!line) return null;
+
+          // --- 新增：處理教典(gip)來源的資料 ---
+          if (line.sourceType === 'gip') {
+              if (!line['客家語']) return null;
+              const item = document.createElement('tr');
+              item.dataset.source = line.sourceName;
+
+              // TD1: 序號與來源
+              const td1 = document.createElement('td');
+              td1.className = 'no';
+              td1.dataset.label = '編號';
+              const seqNum = document.createElement('span');
+              seqNum.className = 'result-sequence-number';
+              seqNum.textContent = globalRowIndex;
+              td1.appendChild(seqNum);
+              td1.appendChild(document.createElement('br'));
+              const sourceSpan = document.createElement('span');
+              sourceSpan.className = 'source-tag gip-source'; // 為教典來源加上特別个 class
+              // Determine the full dialect name for gip sources
+              let fullGipDialectName = '';
+              switch (line.sourceName) {
+                  case '教典四':
+                      fullGipDialectName = '教典四縣';
+                      break;
+                  case '教典南':
+                      fullGipDialectName = '教典南四縣';
+                      break;
+                  case '教典海':
+                      fullGipDialectName = '教典海陸';
+                      break;
+                  case '教典大':
+                      fullGipDialectName = '教典大埔';
+                      break;
+                  case '教典平':
+                      fullGipDialectName = '教典饒平';
+                      break;
+                  case '教典安':
+                      fullGipDialectName = '教典詔安';
+                      break;
+                  default:
+                      fullGipDialectName = line.sourceName; // Fallback
+              }
+              sourceSpan.textContent = `(${fullGipDialectName})`;
+              td1.appendChild(sourceSpan);
+              item.appendChild(td1);
+
+              // TD2: 詞彙、標音、釋義
+              const td2 = document.createElement('td');
+              td2.dataset.label = '詞彙';
+              const ruby = document.createElement('ruby');
+              ruby.innerHTML = highlight.word ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>') : line['客家語'];
+              const rt = document.createElement('rt');
+              rt.textContent = line['客語標音'];
+              ruby.appendChild(rt);
+              td2.appendChild(ruby);
+
+              // --- 新增：處理教典音檔 (gip audio) ---
+              if (line['詞目音檔名'] && line['詞目音檔名'].trim() !== '') {
+                  td2.appendChild(document.createElement('br'));
+                  const audio = document.createElement('audio');
+                  audio.className = 'media'; // Add class for consistency
+                  audio.controls = true;
+                  audio.preload = 'none';
+                  const source = document.createElement('source');
+                  source.src = "https://hakkadict.moe.edu.tw/static/audio/" + (line['詞目音檔名'].endsWith('.mp3') ? line['詞目音檔名'] : line['詞目音檔名'] + '.mp3'); // Use the pre-processed URL
+                  source.type = 'audio/mpeg';
+                  audio.appendChild(source);
+                  td2.appendChild(audio);
+              } else {
+                  // 如果無音檔，還是加個換行，保持版面一致
+                  // td2.appendChild(document.createElement('br'));
+              }
+              // --- 教典音檔處理結束 ---
+
+              td2.appendChild(document.createElement('br'));
+              const meaningText = document.createElement('span');
+              meaningText.innerHTML = highlight.meaning ? line['華語詞義'].replace(highlightRegex, '<mark>$1</mark>') : line['華語詞義'];
+              td2.appendChild(meaningText);
+              item.appendChild(td2);
+
+              // TD3: 例句
+              const td3 = document.createElement('td');
+              td3.dataset.label = '例句';
+              if (line['例句'] && line['例句'].trim() !== '') {
+                  const sentenceSpan = document.createElement('span');
+                  sentenceSpan.className = 'sentence';
+                  sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
+                  td3.appendChild(sentenceSpan);
+                  td3.appendChild(document.createElement('br'));
+
+                  td3.appendChild(document.createElement('br'));
+                  const translationText = document.createElement('span');
+                  // --- Highlight logic ---
+                  translationText.innerHTML = (
+                    highlight.translation
+                      ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>')
+                      : line['翻譯']
+                  )
+                    .replace(/"/g, '')
+                    .replace(/\n/g, '<br>');
+                  td3.appendChild(translationText);
+              }
+              item.appendChild(td3);
+              return item;
+          }
+
+          // --- 原本處理認證(cert)來源的資料 ---
+          if (!line.編號) return null;
+          const sourceName = line.sourceName;
+          let 腔 = sourceName.substring(0, 1);
+          let 級 = sourceName.substring(1);
+
+          let selected例外音檔;
+          switch (級) {
+              case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
+              case '初': selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : []; break;
+              case '中': selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : []; break;
+              case '中高': selected例外音檔 = typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : []; break;
+              case '高': selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : []; break;
+              default: selected例外音檔 = [];
+          }
+          const 例外音檔 = selected例外音檔;
+
+          const generalMediaYr = '112';
+          var 目錄級, 目錄另級, 檔腔, 檔級 = '';
+
+          switch (腔) {
+              case '四': 檔腔 = 'si'; break;
+              case '海': 檔腔 = 'ha'; break;
+              case '大': 檔腔 = 'da'; break;
+              case '平': 檔腔 = 'rh'; break;
+              case '安': 檔腔 = 'zh'; break;
+          }
+          switch (級) {
+              case '基': 目錄級 = '5'; 目錄另級 = '1'; break;
+              case '初': 目錄級 = '1'; break;
+              case '中': 目錄級 = '2'; 檔級 = '1'; break;
+              case '中高': 目錄級 = '3'; 檔級 = '2'; break;
+              case '高': 目錄級 = '4'; 檔級 = '3'; break;
+          }
+          const fullLvlName = getFullLevelName(sourceName);
+          const category = line.分類;
+
+          const missingAudioInfo = typeof getMissingAudioInfo === 'function' ?
+              getMissingAudioInfo(fullLvlName, category, line.編號) : null;
+
+          let mediaYr = generalMediaYr;
+          let pre112Insertion詞 = '';
+          let pre112Insertion句 = '';
+          let 詞目錄級 = 目錄級;
+          let 句目錄級 = 目錄級;
+          let mediaNo = '';
+
+          var no = line.編號.split('-');
+          if (no[0] <= 9) no[0] = '0' + no[0];
+          if (級 === '初') no[0] = '0' + no[0];
+          if (no[1] <= 9) no[1] = '0' + no[1];
+          if (no[1] <= 99) no[1] = '0' + no[1];
+          mediaNo = no[1];
+
+          const index = 例外音檔.findIndex(([編號]) => 編號 === line.編號);
+          if (index !== -1) {
+              const matchedElement = 例外音檔[index];
+              mediaYr = matchedElement[1];
+              mediaNo = matchedElement[2];
+              pre112Insertion詞 = 'w/';
+              pre112Insertion句 = 's/';
+              if (目錄另級 !== undefined) {
+                  詞目錄級 = 目錄另級;
+                  句目錄級 = 目錄另級;
+              }
+          }
+
+          const 詞目錄 = `${詞目錄級}/${檔腔}/${pre112Insertion詞}${檔級}${檔腔}`;
+          const 句目錄 = `${句目錄級}/${檔腔}/${pre112Insertion句}${檔級}${檔腔}`;
+
+          var item = document.createElement('tr');
+          item.dataset.source = fullLvlName;
+
+          const td1 = document.createElement('td');
+          td1.className = 'no';
+          td1.dataset.label = '編號';
+          const seqNum = document.createElement('span');
+          seqNum.className = 'result-sequence-number';
+          seqNum.textContent = globalRowIndex;
+          td1.appendChild(seqNum);
+          td1.appendChild(document.createElement('br'));
+          const noText = document.createTextNode(line.編號 + '\u00A0');
+          td1.appendChild(noText);
+          const sourceSpan = document.createElement('span');
+          sourceSpan.className = 'source-tag';
+          sourceSpan.textContent = `(${fullLvlName})`;
+          td1.appendChild(document.createElement('br'));
+          td1.appendChild(sourceSpan);
+          item.appendChild(td1);
+
+          const td2 = document.createElement('td');
+          td2.dataset.label = '詞彙';
+          const ruby = document.createElement('ruby');
+          // --- Highlight logic ---
+          ruby.innerHTML = highlight.word ? line.客家語.replace(highlightRegex, '<mark>$1</mark>') : line.客家語;
+          const rt = document.createElement('rt');
+          rt.textContent = line.客語標音;
+          ruby.appendChild(rt);
+          td2.appendChild(ruby);
+          td2.appendChild(document.createElement('br'));
+
+          let wordAudioActuallyMissing = missingAudioInfo && missingAudioInfo.word === false;
+          if (!wordAudioActuallyMissing) {
+              const audio1 = document.createElement('audio');
+              audio1.className = 'media';
+              audio1.controls = true;
+              audio1.preload = 'none';
+              let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+              if (fullLvlName === '海陸中高級' && line.編號 === '4-261') {
+                  wordAudioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+              }
+              audio1.src = wordAudioSrc;
+              td2.appendChild(audio1);
+          }
+
+          td2.appendChild(document.createElement('br'));
+          const meaningText = document.createElement('span');
+          // --- Highlight logic ---
+          meaningText.innerHTML = highlight.meaning ? line.華語詞義.replace(/"/g, '').replace(highlightRegex, '<mark>$1</mark>') : line.華語詞義.replace(/"/g, '');
+          td2.appendChild(meaningText);
+          if (line.備註 && line.備註.trim() !== '') {
+              const notesP = document.createElement('p');
+              notesP.className = 'notes';
+              notesP.textContent = `（${line.備註}）`;
+              td2.appendChild(notesP);
+          }
+          item.appendChild(td2);
+
+          const td3 = document.createElement('td');
+          td3.dataset.label = '例句';
+          const hasExampleSentenceText = line.例句 && line.例句.trim() !== '';
+          if (hasExampleSentenceText) {
+              const sentenceSpan = document.createElement('span');
+              sentenceSpan.className = 'sentence';
+              // --- Highlight logic ---
+              sentenceSpan.innerHTML = (highlight.sentence ? line.例句.replace(highlightRegex, '<mark>$1</mark>') : line.例句).replace(/"/g, '').replace(/\n/g, '<br>');
+              td3.appendChild(sentenceSpan);
+              td3.appendChild(document.createElement('br'));
+
+              let sentenceAudioActuallyMissing = (missingAudioInfo && missingAudioInfo.sentence === false) || 級 === '高';
+              if (!sentenceAudioActuallyMissing) {
+                  const audio2 = document.createElement('audio');
+                  audio2.className = 'media';
+                  audio2.controls = true;
+                  audio2.preload = 'none';
+                  audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+                  td3.appendChild(audio2);
+              }
+
+              td3.appendChild(document.createElement('br'));
+              const translationText = document.createElement('span');
+              // --- Highlight logic ---
+              translationText.innerHTML = (highlight.translation ? line.翻譯.replace(highlightRegex, '<mark>$1</mark>') : line.翻譯).replace(/"/g, '').replace(/\n/g, '<br>');
+              td3.appendChild(translationText);
+          }
+          item.appendChild(td3);
+          return item;
+      };
+
+      // --- 根據查詢模式顯示結果 ---
+      const displayCategorizedResults = (categorizedResults) => {
+          for (const category of categorizedResults) {
+              if (category.results.length > 0) {
+                  const heading = contentContainer.appendChild(document.createElement('h4'));
+                  heading.textContent = category.title;
+                  heading.className = 'results-section-heading';
+                  const table = contentContainer.appendChild(document.createElement('table'));
+                  table.setAttribute('width', '100%');
+                  category.results.forEach(line => {
+                      const row = createResultRow(line, category.highlight);
+                      if (row) table.appendChild(row);
+                  });
+              }
+          }
+      };
+
+      if (searchMode === '客家語') {
+          const resultsInBoth = [];
+          const resultsInSentenceOnly = [];
+          const resultsInWordOnly = [];
+          const lowerKeyword = keyword.toLowerCase();
+          const normalizedKeyword = normalizePhonetics(keyword);
+
+          paginatedResults.forEach(line => {
+              const { inWord, inSentence, inPhonetics } = line._match;
+              if ((inWord || inPhonetics) && inSentence) {
+                  resultsInBoth.push(line);
+              } else if (inSentence) {
+                  resultsInSentenceOnly.push(line);
+              } else if (inWord || inPhonetics) {
+                  resultsInWordOnly.push(line);
+              }
+          });
+
+          displayCategorizedResults([
+              { title: '詞、句裡肚都有：', results: resultsInBoth, highlight: { word: true, sentence: true, meaning: false, translation: false } },
+              { title: '淨詞彙裡肚有：', results: resultsInWordOnly, highlight: { word: true, sentence: false, meaning: false, translation: false } },
+              { title: '僅例句裡肚有：', results: resultsInSentenceOnly, highlight: { word: false, sentence: true, meaning: false, translation: false } }
+          ]);
+      } else if (searchMode === '華語') {
+          const resultsInBoth = [];
+          const resultsInMeaningOnly = [];
+          const resultsInTranslationOnly = [];
+          const lowerKeyword = keyword.toLowerCase();
+
+          paginatedResults.forEach(line => {
+              const { inMeaning, inTranslation } = line._match;
+              if (inMeaning && inTranslation) {
+                  resultsInBoth.push(line);
+              } else if (inTranslation) {
+                  resultsInTranslationOnly.push(line);
+              } else if (inMeaning) {
+                  resultsInMeaningOnly.push(line);
+              }
+          });
+
+          displayCategorizedResults([
+              { title: '華語詞義、翻譯裡肚都有出現：', results: resultsInBoth, highlight: { word: false, sentence: false, meaning: true, translation: true } },
+              { title: '淨出現在華語詞義裡肚：', results: resultsInMeaningOnly, highlight: { word: false, sentence: false, meaning: true, translation: false } },
+              { title: '淨出現在例句翻譯裡肚：', results: resultsInTranslationOnly, highlight: { word: false, sentence: false, meaning: false, translation: true } }
+          ]);
+      }
+
+      // 對所有新產生的表格內容執行大埔變調
+      if (document.querySelector('#search-popup input[name="dialect"]:checked').value === '大埔') {
+          if (typeof 大埔高降異化 === 'function') 大埔高降異化();
+          if (typeof 大埔中遇低升 === 'function') 大埔中遇低升();
+          if (typeof 大埔低升異化 === 'function') 大埔低升異化();
+      }
+
+      // --- 新增：分頁控制 ---
+      if (totalPages > 1) {
+          const paginationContainer = document.createElement('div');
+          paginationContainer.className = 'pagination-container';
+
+          for (let i = 1; i <= totalPages; i++) {
+              const pageButton = document.createElement('button');
+              pageButton.textContent = i;
+              pageButton.className = 'page-button';
+              if (i === page) {
+                  pageButton.classList.add('active');
+              }
+              pageButton.addEventListener('click', () => {
+                  performSearch(i, itemsPerPage);
+                  setTimeout(() => {
+                    document.getElementById('generated').scrollIntoView({ behavior: 'smooth' });
+                  }, 100); // 延遲 100 毫秒
+              });
+              paginationContainer.appendChild(pageButton);
+          }
+          contentContainer.appendChild(paginationContainer);
+      }
+      
+      updateResultsSummaryVisibility();
+  }
+
+  // 當在輸入框按 Enter 時查詢
+  searchInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+          performSearch();
+      }
+  });
+
+  // 當改變腔調或查詢模式時，如果輸入框有內容，也觸發查詢
+  const triggerSearchOnChange = () => {
+    if (searchInput.value.trim()) {
+      performSearch();
+    }
+  };
+
+  searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
+  searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
+
+
   // --- 檢查 URL 協定 ---
   let isFileProtocol = false;
   if (window.location.protocol === 'file:') {
     isFileProtocol = true;
-    document.title = '💻 ' + document.title;
     console.log('偵測到 file:// 協定，已修改網頁標題。');
   }
-
+  updatePageTitle(); // <-- 新增：確保初始標題正確
   // --- 統一獲取常用元素 ---
   const progressDropdown = document.getElementById('progressDropdown');
   const progressDetailsSpan = document.getElementById('progressDetails');
@@ -1729,14 +2508,51 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // --- 新增：頁面載入時解析 URL 參數 ---
-  const urlParams = new URLSearchParams(window.location.search);
+  const musiidParam = urlParams.get('musiid');
+  const caParam = urlParams.get('ca');
+  const bidsuParam = urlParams.get('bidsu');
+  const iabParam = urlParams.get('iab');
   const dialectParam = urlParams.get('dialect');
   const levelParam = urlParams.get('level');
   const categoryParam = urlParams.get('category'); // 這是編碼過的
   const rowParam = urlParams.get('row');
   let successfullyLoadedFromUrl = false; // <--- 用這隻新變數來追蹤
 
-  if (dialectParam && levelParam && categoryParam && rowParam) {
+  if (musiidParam && caParam) {
+    const searchModeValue = musiidParam === 'hak' ? '客家語' : '華語'; // 修正 searchMode 个值
+    const itemsPerPage = parseInt(bidsuParam) || 50;
+    const page = parseInt(iabParam) || 1;
+
+    let dialectToUseForSearch = '四縣'; // 1. 先設定一個預設值
+    const kiongFromUrl = urlParams.get('kiong'); // 2. 讀取 kiong 參數
+
+    if (kiongFromUrl && DIALECT_CODE_TO_NAME[kiongFromUrl]) {
+        // 3. 如果 URL 有 kiong 參數，就用佢來決定腔調
+        dialectToUseForSearch = DIALECT_CODE_TO_NAME[kiongFromUrl];
+    } else {
+        // 4. (備用) 如果無 kiong，做得再檢查 localStorage，不然就用預設个「四縣」
+        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+        if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
+            dialectToUseForSearch = lastUsedDialect;
+        }
+    }
+
+    // 將決定好个腔調、模式設定到畫面上
+    const dialectRadio = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToUseForSearch}"]`);
+    if (dialectRadio) {
+        dialectRadio.checked = true;
+    }
+
+    const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
+    if (modeRadio) {
+        modeRadio.checked = true;
+    }
+    
+    searchInput.value = caParam;
+    
+    // 最後，用正確个設定來執行查詢
+    performSearch(page, itemsPerPage);
+  } else if (dialectParam && levelParam && categoryParam && rowParam) {
     console.log(
       'URL parameters detected on load:',
       dialectParam,
@@ -1946,6 +2762,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (contentContainer && contentContainer.innerHTML.trim() === '') {
       contentContainer.innerHTML =
         '<p style="text-align: center; margin-top: 20px;">請點頂項連結擇腔調同級別。</p>';
+      // updateResultsSummaryVisibility();
     }
     // 確保下拉選單選在預設值
     if (progressDropdown) progressDropdown.selectedIndex = 0;
@@ -3028,31 +3845,31 @@ function adjustAllRubyFontSizes(containerElement) {
  * 動態調整 #header 內主要元素 (#progressDropdown, #progressDetails) 的字體大小，
  * 檢查 #header 是否發生橫向溢出 (overflow)，如果是，則縮小字體。
  */
-function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
+function adjustHeaderFontSizeOnOverflow() {
     console.log('--- adjustHeaderFontSizeOnOverflow function CALLED ---');
     const header = document.getElementById('header');
     const dropdown = document.getElementById('progressDropdown');
-    const detailsContainer = document.getElementById('progressDetails'); // <span>
-    // 注意：linkElement 還是需要，因為 detailsContainer 本身可能沒有文字
-    const linkElement = detailsContainer?.querySelector('a'); // <a>
+    const detailsContainer = document.getElementById('progressDetails');
+    const searchInput = document.getElementById('search-input'); // <-- 新增
 
-    // 確保主要元素都存在
-    if (!header || !dropdown || !detailsContainer || !linkElement) {
-        console.warn('adjustHeaderFontSizeOnOverflow: Missing required elements (header, dropdown, detailsContainer, or linkElement).');
-        // 如果缺少元素，嘗試重設可能存在的行內樣式
-        [dropdown, linkElement].forEach(el => {
-            if (el && el.style.fontSize !== '') {
-                el.style.fontSize = '';
-            }
-        });
+    // --- MODIFIED: Check for essential container elements first ---
+    if (!header || !dropdown || !detailsContainer) {
+        console.warn('adjustHeaderFontSizeOnOverflow: Missing essential elements (header, dropdown, or detailsContainer). Skipping execution.');
         return;
     }
 
+    const linkElement = detailsContainer.querySelector('a'); // May be null
+
+    // --- MODIFIED: Dynamically build the list of elements to resize ---
+    const elementsToResize = [{ element: dropdown, minSize: 10 }];
+    if (linkElement) {
+        elementsToResize.push({ element: linkElement, minSize: 8 });
+    }
+    if (searchInput) {
+        elementsToResize.push({ element: searchInput, minSize: 12 });
+    }
+
     // --- 記錄目標元素的初始字體大小 ---
-    const elementsToResize = [
-        { element: dropdown, minSize: 10 }, // 下拉選單最小字體 (可調整)
-        { element: linkElement, minSize: 8 }   // 連結最小字體 (可調整)
-    ];
     const initialStyles = elementsToResize.map(item => ({
         element: item.element,
         initialSize: parseFloat(window.getComputedStyle(item.element).fontSize),
@@ -3063,15 +3880,18 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
     initialStyles.forEach(item => {
         item.element.style.fontSize = '';
     });
+    if (linkElement) {
+        linkElement.style.whiteSpace = ''; // Also reset whitespace
+    }
+    
     // 強制瀏覽器重繪
     header.offsetHeight;
 
     // --- 計算 Header 可用寬度與初始需求寬度 ---
     const headerWidth = header.clientWidth;
-    let totalRequiredWidth = calculateTotalRequiredWidth(header); // 使用輔助函式
-    const gapValue = parseFloat(window.getComputedStyle(header).gap) || 0; // 讀取 gap
+    let totalRequiredWidth = calculateTotalRequiredWidth(header);
 
-    console.log(`Header Width: ${headerWidth}, Initial Required Width: ${totalRequiredWidth}, Gap: ${gapValue}`);
+    console.log(`Header Width: ${headerWidth}, Initial Required Width: ${totalRequiredWidth}`);
 
     // --- 檢查是否溢出 ---
     const isOverflowing = totalRequiredWidth > headerWidth;
@@ -3079,51 +3899,43 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
 
     if (isOverflowing && totalRequiredWidth - headerWidth > buffer) {
         console.log(`#header is overflowing by ${totalRequiredWidth - headerWidth}px. Shrinking fonts.`);
-        // --- 已溢出，執行縮小字體邏輯 ---
-
-        // 確保連結文字不換行 (CSS 應該已處理，但 JS 加強)
-        linkElement.style.whiteSpace = 'nowrap';
+        
+        if (linkElement) {
+            linkElement.style.whiteSpace = 'nowrap';
+        }
 
         // --- 逐步縮小字體 ---
-        let canShrinkMore = true; // 標記是否還能繼續縮小
+        let canShrinkMore = true;
         for (let i = 0; i < 50 && totalRequiredWidth > headerWidth && canShrinkMore; i++) {
-            canShrinkMore = false; // 假設這次不能再縮了
-            let currentTotalWidthBeforeShrink = totalRequiredWidth; // 記錄縮小前的寬度
+            canShrinkMore = false;
+            let currentTotalWidthBeforeShrink = totalRequiredWidth;
 
-            // 對每個目標元素縮小 1px (如果還沒到最小值)
             initialStyles.forEach(item => {
                 let currentElementSize = parseFloat(item.element.style.fontSize || item.initialSize);
                 if (currentElementSize > item.minSize) {
                     currentElementSize -= 1;
                     item.element.style.fontSize = `${currentElementSize}px`;
-                    canShrinkMore = true; // 只要有一個能縮，就標記為 true
+                    canShrinkMore = true;
                 } else {
-                    // 確保最小值被應用
                     item.element.style.fontSize = `${item.minSize}px`;
                 }
             });
 
-            // 如果沒有任何元素可以再縮小了，就跳出循環
             if (!canShrinkMore) {
                  console.log('All elements reached minimum font size.');
                  break;
             }
 
-            // 強制重繪
             header.offsetHeight;
-
-            // *** 重新計算 totalRequiredWidth ***
             totalRequiredWidth = calculateTotalRequiredWidth(header);
             console.log(`  Shrunk step ${i+1}, new required width: ${totalRequiredWidth}`);
 
-            // *** 增加檢查：如果寬度沒有變小，可能卡住了，跳出 ***
             if (totalRequiredWidth >= currentTotalWidthBeforeShrink && canShrinkMore) {
                 console.warn('  Width did not decrease after shrinking, breaking loop to prevent infinite loop.');
                 break;
             }
-        } // --- 縮小循環結束 ---
+        }
 
-        // 循環結束後最後檢查
         if (totalRequiredWidth > headerWidth) {
              console.warn(`Fonts shrunk to minimum, but header might still overflow by ${totalRequiredWidth - headerWidth}px.`);
         } else {
@@ -3131,8 +3943,7 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
         }
 
     } else {
-        // --- 未溢出或溢出在 buffer 內 ---
-        // console.log('#header is not overflowing significantly. Resetting fonts if needed.');
+        // --- 未溢出 ---
         let stylesReset = false;
         initialStyles.forEach(item => {
             if (item.element.style.fontSize !== '') {
@@ -3140,8 +3951,7 @@ function adjustHeaderFontSizeOnOverflow() { // <--- 改名仔
                 stylesReset = true;
             }
         });
-         // 恢復連結的 white-space (如果之前被 JS 修改過)
-        if (linkElement.style.whiteSpace !== '') {
+        if (linkElement && linkElement.style.whiteSpace !== '') {
              linkElement.style.whiteSpace = '';
              stylesReset = true;
         }
@@ -3322,6 +4132,54 @@ function findPronunciationsInAllData(searchText) {
       }
     }
   });
+
+  // --- 新增：在教典資料中搜尋 ---
+  allKnownGipDataVars.forEach(dataVarName => {
+    const dataObject = window[dataVarName];
+    if (dataObject && dataObject.content && dataObject.name) {
+      try {
+        const vocabularyArray = gipCsvToArray(dataObject.content);
+        const sourceName = dataObject.name; // e.g., '教典四'
+        vocabularyArray.forEach(line => {
+          if (line['詞目'] && line['音讀']) {
+            const isExact = line['詞目'] === normalizedSearchText;
+            const isPartial = !isExact && line['詞目'].includes(normalizedSearchText);
+
+            if (isExact) {
+              const entryKey = `${line['音讀']}|${sourceName}|exact|${line['詞目']}`;
+              if (!uniqueEntries.has(entryKey)) {
+                foundReadings.push({
+                  pronunciation: line['音讀'],
+                  source: sourceName,
+                  isExactMatch: true,
+                  originalTerm: line['詞目'],
+                  mandarinMeaning: line['釋義'],
+                  audioDetails: null // 教典資料無音檔資訊
+                });
+                uniqueEntries.add(entryKey);
+              }
+            } else if (isPartial) {
+              const entryKey = `${line['音讀']}|${sourceName}|partial|${line['詞目']}`;
+              if (!uniqueEntries.has(entryKey) && foundReadings.length < 50) {
+                foundReadings.push({
+                  pronunciation: line['音讀'],
+                  source: sourceName,
+                  isExactMatch: false,
+                  originalTerm: line['詞目'],
+                  mandarinMeaning: line['釋義'],
+                  audioDetails: null // 教典資料無音檔資訊
+                });
+                uniqueEntries.add(entryKey);
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error(`處理資料 ${dataVarName} 時發生錯誤:`, e);
+      }
+    }
+  });
+
   console.log(`Found ${foundReadings.length} readings for "${searchText}" before sorting/filtering in popup.`);
   return foundReadings;
 }
@@ -3491,13 +4349,21 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
+
+    let effectiveDialect = currentActiveMainDialectName;
+    if (currentActiveMainDialectName === '南四縣') {
+      effectiveDialect = '四縣';
+    }
+
     console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
     let displayReadings = [...readings]; // 複製一份來操作
 
     if (!showAllAccents) {
       // 若開關關閉，只顯示目前主要腔調的結果 (所有級別)
-      displayReadings = displayReadings.filter(r => r.source.startsWith(currentActiveMainDialectName));
+      displayReadings = displayReadings.filter((r) =>
+        r.source.startsWith(effectiveDialect)
+      );
     }
 
     // 排序：1. 完全符合優先, 2. 目前腔調優先
@@ -3507,8 +4373,8 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
       if (!a.isExactMatch && b.isExactMatch) return 1;
 
       // 2. 目前主要腔調優先 (所有級別)
-      const aIsCurrentMainDialect = a.source.startsWith(currentActiveMainDialectName);
-      const bIsCurrentMainDialect = b.source.startsWith(currentActiveMainDialectName);
+      const aIsCurrentMainDialect = a.source.startsWith(effectiveDialect);
+      const bIsCurrentMainDialect = b.source.startsWith(effectiveDialect);
       if (aIsCurrentMainDialect && !bIsCurrentMainDialect) return -1;
       if (!aIsCurrentMainDialect && bIsCurrentMainDialect) return 1;
       
@@ -3540,7 +4406,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
         }
 
         // Construct audio URL using the new helper function
-        const audioUrl = constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo);
+        const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
         let audioElementHTML = '';
         if (audioUrl) {
           // 改成播放按鈕，節省空間
@@ -3624,10 +4490,13 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
       if (showAllAccents) { // 開關打開，但所有腔調都尋無
         contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
       } else { // 開關關閉
-        if (readings.some(r => !r.source.startsWith(currentActiveMainDialectName))) { // 目前主要腔調尋無，但其他主要腔調有結果
-          contentEl.innerHTML = `<p class="popup-not-found">在${currentActiveMainDialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
-        } else { // 所有腔調都尋無，或者其他腔調也尋無
-          contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
+        if (readings.some((r) => !r.source.startsWith(effectiveDialect))) {
+          // 目前主要腔調尋無，但其他主要腔調有結果
+          contentEl.innerHTML = `<p class="popup-not-found">在${effectiveDialect}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
+        } else {
+          // 所有腔調都尋無，或者其他腔調也尋無
+          contentEl.innerHTML =
+            '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
         }
       }
     }
