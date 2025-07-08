@@ -167,10 +167,21 @@ def process_csv_files():
                             # 2. 清理例句，移除 (...)
                             cleaned_example = re.sub(r'\s*\([^)]*\)', '', original_example).strip()
                             
-                            # 3. 將多個例句用 <br> 分隔
-                            example_sentences = re.split(r'[。；]', cleaned_example)
-                            example_sentences = [s.strip() for s in example_sentences if s.strip()]
-                            new_example_text = "<br>".join(example_sentences)
+                            # 3. 將多個例句用 <br> 分隔，並保留句尾標點
+                            split_parts = re.split(r'([。；])', cleaned_example)
+                            example_sentences = []
+                            # 將句子和其後的分隔符號配對組合
+                            for i in range(0, len(split_parts) - 1, 2):
+                                sentence = split_parts[i]
+                                delimiter = split_parts[i+1]
+                                if sentence.strip():
+                                    example_sentences.append(sentence.strip() + delimiter)
+                            
+                            # 處理最後一個可能沒有分隔符號的句子
+                            if len(split_parts) % 2 == 1 and split_parts[-1].strip():
+                                example_sentences.append(split_parts[-1].strip())
+
+                            new_example_text = "<br>".join(s.strip() for s in example_sentences)
 
                             # 4. 更新 parts
                             parts[example_col_index] = new_example_text

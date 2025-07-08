@@ -257,6 +257,24 @@ function gipCsvToArray(str, delimiter = ',') {
   return data;
 }
 
+// --- 新增：當學習模式改變時，同步更新查詞腔調設定 ---
+function updateSearchDialect(dialectName) {
+  if (!dialectName) return;
+
+  // 1. 更新 localStorage
+  localStorage.setItem('lastSearchDialect', dialectName);
+  console.log(`學習模式觸發：查詞腔調已更新並儲存到 localStorage: "${dialectName}"`);
+
+  // 2. 更新查詞 popup 裡肚个 radio button
+  const radioToSelect = document.querySelector(`#search-popup input[name="dialect"][value="${dialectName}"]`);
+  if (radioToSelect) {
+    radioToSelect.checked = true;
+    console.log(`學習模式觸發：查詞介面个腔調 radio button 已更新為 "${dialectName}"`);
+  } else {
+    console.warn(`無法尋著對應个查詞腔調 radio button: "${dialectName}"`);
+  }
+}
+
 //cat = "2心理活動與感覺";
 //console.log(cat);
 
@@ -324,26 +342,31 @@ function generate(content, initialCategory = null, targetRowId = null) {
       檔腔 = 'si';
       腔名 = '四縣';
       currentActiveMainDialectName = '四縣'; // <-- 設定主要腔調名
+      updateSearchDialect('四縣');
       break;
     case '海':
       檔腔 = 'ha';
       腔名 = '海陸';
       currentActiveMainDialectName = '海陸'; // <-- 設定主要腔調名
+      updateSearchDialect('海陸');
       break;
     case '大':
       檔腔 = 'da';
       腔名 = '大埔';
       currentActiveMainDialectName = '大埔'; // <-- 設定主要腔調名
+      updateSearchDialect('大埔');
       break;
     case '平':
       檔腔 = 'rh';
       腔名 = '饒平';
       currentActiveMainDialectName = '饒平'; // <-- 設定主要腔調名
+      updateSearchDialect('饒平');
       break;
     case '安':
       檔腔 = 'zh';
       腔名 = '詔安';
       currentActiveMainDialectName = '詔安'; // <-- 設定主要腔調名
+      updateSearchDialect('詔安');
       break;
     default:
       currentActiveMainDialectName = ''; // 未知腔調
@@ -1949,10 +1972,10 @@ document.addEventListener('DOMContentLoaded', function () {
               rt.textContent = line['客語標音'];
               ruby.appendChild(rt);
               td2.appendChild(ruby);
-              td2.appendChild(document.createElement('br'));
 
               // --- 新增：處理教典音檔 (gip audio) ---
               if (line['詞目音檔名'] && line['詞目音檔名'].trim() !== '') {
+                  td2.appendChild(document.createElement('br'));
                   const audio = document.createElement('audio');
                   audio.className = 'media'; // Add class for consistency
                   audio.controls = true;
@@ -1964,7 +1987,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   td2.appendChild(audio);
               } else {
                   // 如果無音檔，還是加個換行，保持版面一致
-                  td2.appendChild(document.createElement('br'));
+                  // td2.appendChild(document.createElement('br'));
               }
               // --- 教典音檔處理結束 ---
 
