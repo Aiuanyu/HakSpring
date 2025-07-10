@@ -1831,9 +1831,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 直接對「查詢用」欄位做正規化比對，毋使再做任何即時清洗
                 const normalizedPhonetics = normalizePhonetics(item['客語標音_查詢'] || '');
                 const inPhonetics = normalizedPhonetics.includes(normalizedKeyword);
+                // 【修正】加入對「例句」的搜尋
+                const inSentence = item['例句'] && item['例句'].toLowerCase().includes(keyword);
     
-                if (inWord || inPhonetics) {
-                    return { ...item, _match: { inWord, inPhonetics, isExact: false } };
+                if (inWord || inPhonetics || inSentence) {
+                    // 【修正】將 inSentence 加入 _match 物件
+                    return { ...item, _match: { inWord, inPhonetics, inSentence, isExact: false } };
                 }
                 return null;
             }).filter(Boolean);
@@ -1869,6 +1872,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page = 1, itemsPerPage = 50) {
+      let globalRowIndex = (page - 1) * itemsPerPage;
       const contentContainer = document.getElementById('generated');
       const resultsSummaryContainer = document.getElementById('results-summary');
       contentContainer.innerHTML = ''; // Clear previous content
