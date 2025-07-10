@@ -2215,48 +2215,46 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // --- 新增：處理腔別級別連結點擊 ---
+  // --- 新增：處理腔別級別連結點擊 ---
   dialectLevelLinks.forEach((link) => {
     link.addEventListener('click', function (event) {
       event.preventDefault(); // 防止頁面跳轉
 
-      // 找到包覆 <a> 的那個帶有 data-varname 的 span
-      const targetSpan = this.parentElement;
-      if (!targetSpan || !targetSpan.dataset.varname) {
-        console.error('無法找到帶有 data-varname 的父層 span:', this);
-        alert('處理點擊時發生錯誤。');
-        return;
-      }
+     // FIX: 改用 .closest() 來尋找父層，避免 HTML 結構改變造成个錯誤
+     const targetSpan = this.closest('span[data-varname]');
+     if (!targetSpan) {
+       console.error('無法找到帶有 data-varname 的父層 span:', this);
+       alert('處理點擊時發生錯誤。');
+       return;
+     }
+     const dataVarName = targetSpan.dataset.varname;
 
-      const dataVarName = targetSpan.dataset.varname; // 從正確的 span 讀取 data-varname
+     // FIX: 改用 eval() 來取得非 window scope 个變數
+     let dataObject;
+     try {
+       dataObject = eval(dataVarName);
+     } catch (e) {
+       dataObject = undefined;
+     }
 
-      if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-        // 1. 移除所有級別連結 span 的 active class
-        //    (更精確地針對帶 data-varname 的 span 操作)
-        document.querySelectorAll('span[data-varname]').forEach((span) => {
-          span.classList.remove('active-dialect-level');
-        });
-        // 2. 為當前點擊的連結對應的 span 加上 active class
-        targetSpan.classList.add('active-dialect-level');
-
-        // 3. 清除類別選項的 active class (因為換了詞庫)
-        document.querySelectorAll('.radioItem').forEach((label) => {
-          label.classList.remove('active-category');
-        });
-
-        // 4. 呼叫 generate 函式
-        console.log(
-          `Dialect link clicked, calling generate for ${dataVarName}`
-        );
-        generate(window[dataVarName]);
+     if (dataObject) {
+       document.querySelectorAll('span[data-varname]').forEach((span) => {
+         span.classList.remove('active-dialect-level');
+       });
+       targetSpan.classList.add('active-dialect-level');
+       document.querySelectorAll('.radioItem').forEach((label) => {
+         label.classList.remove('active-category');
+       });
+       console.log(`Dialect link clicked, calling generate for ${dataVarName}`);
+       generate(dataObject);
       } else {
-        // 在錯誤訊息中加入更多上下文
         console.error(
           '找不到對應的資料變數或 data-varname:',
           dataVarName,
           'on element:',
           targetSpan
         );
-        alert('載入詞庫時發生錯誤。');
+        alert('載入詞庫時發生錯誤。情緒。');
       }
     });
   });
@@ -2311,8 +2309,16 @@ document.addEventListener('DOMContentLoaded', function () {
           const targetRowIdToGo = selectedBookmark.rowId;
           const dataVarName = mapTableNameToDataVar(targetTableName);
 
-          if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-            const dataObject = window[dataVarName];
+          if (dataVarName) {
+            // FIX: 改用 eval() 來取得非 window scope 个變數
+            let dataObject;
+            try {
+              dataObject = eval(dataVarName);
+            } catch (e) {
+              dataObject = undefined;
+            }
+
+            if (dataObject) {
             console.log(
               `Calling generate from dropdown for ${dataVarName}, category: ${targetCategory}, row: ${targetRowIdToGo}`
             );
@@ -2371,6 +2377,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (progressDetailsSpan) progressDetailsSpan.textContent = '';
             this.selectedIndex = 0;
           }
+        }
         } else {
           console.error('找不到對應 value 的書籤:', selectedValue);
           alert('載入選定進度時發生錯誤：選項與儲存資料不符。');

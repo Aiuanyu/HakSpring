@@ -34,8 +34,8 @@ def comprehensive_clean_spacing(text):
     if not text: return ""
     all_hakka_vowels = "áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹm̄ḿm̌m̂m̀n̄ńňn̂ǹ"
     letter_like = f"a-zA-Z0-9{all_hakka_vowels}'"
-    text = re.sub(f"([{letter_like}])([^{letter_like}\s])", r"\1 \2", text)
-    text = re.sub(f"([^{letter_like}\s])([{letter_like}])", r"\1 \2", text)
+    text = re.sub(f"([{letter_like}])([^{letter_like}\\s])", r"\1 \2", text)
+    text = re.sub(f"([^{letter_like}\\s])([{letter_like}])", r"\1 \2", text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
@@ -173,8 +173,16 @@ def get_cert_source_name(filename):
 def get_js_variable_name(filename, source_type):
     base_name = os.path.splitext(filename)[0]
     if source_type == 'cert':
-        match = re.match(r'\d*(.*)', base_name)
-        return match.group(1) if match else base_name
+        # More robustly parse the cert filename to get the short variable name
+        # e.g., "113大中高.csv" -> "大中高"
+        match = re.match(r'\d*([四海大平安])(基|初|中高|中|高)', base_name)
+        if match:
+            dialect_char, level_char = match.groups()
+            return f"{dialect_char}{level_char}"
+        else:
+            # Fallback for safety, though it shouldn't be needed if filenames are consistent.
+            match_fallback = re.match(r'\d*(.*)', base_name)
+            return match_fallback.group(1) if match_fallback else base_name
     elif source_type == 'gip':
         match = re.search(r'\d+-(.+)', base_name)
         if match:
@@ -219,8 +227,8 @@ def parse_cert_csv(file_path, dialect_reverse_map, vowel_map, vowel_priority):
                 '編號': row.get('編號', ''),
                 '客家語': row.get(f'{dialect_prefix}客家語', ''),
                 '華語詞義': row.get(f'{dialect_prefix}華語詞義', ''),
-                '例句': row.get(f'{dialect_prefix}例句', ''),
-                '翻譯': row.get(f'{dialect_prefix}翻譯', ''),
+                '例句': row.get(f'{dialect_prefix}例句', row.get('例句', '')),
+                '翻譯': row.get(f'{dialect_prefix}翻譯', row.get('翻譯', '')),
                 '備註': row.get('備註', ''),
                 '分類': row.get('分類', ''),
                 '詞性1': row.get('詞性1', ''),
@@ -276,7 +284,7 @@ def write_to_js_file(data, output_path, source_type, variable_name=None):
         writer.writeheader()
         writer.writerows(data)
         csv_string = output.getvalue()
-    escaped_csv_content = csv_string.replace('`', '\`')
+    escaped_csv_content = csv_string.replace('`', '\\`')
     js_content = f"const {variable_name} = {{\n  name: '{variable_name}',\n  content: `{escaped_csv_content}`\n}};\n"
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(js_content)
