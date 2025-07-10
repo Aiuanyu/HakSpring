@@ -54,6 +54,34 @@ def convert_phonetic_string(phonetic_str, tone_map):
     converted_syllables = [convert_syllable(s, tone_map) for s in syllables if s]
     return " ".join(converted_syllables)
 
+def generate_js_from_json(json_path, js_path):
+    """
+    讀取純 JSON 檔案，並將其內容包裝成一支 JS 變數檔案。
+    """
+    try:
+        print("\n--- 開始產生前端用个 JS 聲調對應檔 ---")
+        # 讀取 JSON 檔案个原始文字內容
+        with open(json_path, 'r', encoding='utf-8') as f:
+            json_string_content = f.read()
+
+        # 組合 JS 檔案个內容
+        js_content = (
+            f"const toneMappingData = {json_string_content};"
+        )
+        
+        # 決定 JS 檔案个輸出路徑 (同 JSON 檔案共目錄)
+        output_dir = os.path.dirname(json_path)
+        full_js_path = os.path.join(output_dir, os.path.basename(js_path))
+
+        # 將內容寫入 .js 檔案
+        with open(full_js_path, 'w', encoding='utf-8') as f:
+            f.write(js_content)
+        
+        print(f"✓ 已成功產生檔案: {full_js_path}")
+
+    except Exception as e:
+        print(f"產生 JS 檔案時發生錯誤: {e}")
+
 def process_csv_files():
     """
     處理 data/gip 目錄下的所有 CSV 檔案，並將其轉換為 JS 變數檔案。
@@ -215,3 +243,16 @@ def process_csv_files():
 
 if __name__ == "__main__":
     process_csv_files()
+
+    # --- ▼▼▼ 在這搭加上底下个程式碼 ▼▼▼ ---
+    # 執行完 CSV 處理後，自動產生分前端用个 .js 檔案
+    # 確定 tone_mapping.json 檔案个路徑
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(script_dir, 'tone_mapping.json')
+    js_path = 'tone_mapping_data.js' # JS 檔案个名稱
+
+    if os.path.exists(json_path):
+        generate_js_from_json(json_path, js_path)
+    else:
+        print(f"\n警告：尋無 {json_path}，無法度產生前端用个 JS 檔案。")
+    # --- ▲▲▲ 加入結束 ▲▲▲ ---
