@@ -259,7 +259,7 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char):
                 '編號': f"gip-{idx+1}",
                 '客家語': row.get('詞目', ''),
                 '華語詞義': row.get('釋義', ''),
-                '詞目音檔名': row.get('對應音檔名稱', ''),
+                '詞目音檔名': row.get('對應音檔名稱', '').strip(),
                 '例句': cleaned_example,
                 '翻譯': translation,
                 '客語標音_顯示': convert_phonetic_string(original_phonetic, current_tone_map),
