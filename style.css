@@ -1404,6 +1404,35 @@ tr.ios-autoplay-instruction td::before {
   }
 }
 
+/* --- 學習面板樣式 (Learning Panel as details/summary) --- */
+#learningSelectionPanel {
+  border: 2px groove rgba(128, 128, 128, 0.5);
+  padding: 0.5em 1em 1em;
+  border-radius: 8px;
+  margin-bottom: 1em;
+}
+
+#learningSelectionPanel summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 0.2em 0.5em;
+  display: inline-block; /* 讓 padding 生效 */
+}
+
+#learningSelectionPanel summary:hover {
+  background-color: rgba(128, 128, 128, 0.1);
+}
+
+/* 隱藏 details 預設的箭頭 */
+#learningSelectionPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+#learningSelectionPanel summary::marker {
+  display: none;
+}
+
+
 /* --- 頁首查詢容器樣式 (Header Search Container) --- */
 #search-container {
   position: relative; /* 設定相對定位，分彈出面板好用絕對定位 */

@@ -512,6 +512,10 @@ function buildTableAndSetupPlayback(
   const resultsSummaryContainer = document.getElementById('results-summary');
   if (resultsSummaryContainer) {
     resultsSummaryContainer.textContent = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
+    // --- Roo: 只有在非自動跳轉時才捲動到摘要，避免衝突 ---
+    if (!autoPlayTargetRowId) {
+      resultsSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+    }
   }
   // --- 新增：更新網頁標題 ---
   updatePageTitle([dialectInfo.fullLvlName, category]);
@@ -1772,6 +1776,12 @@ document.addEventListener('DOMContentLoaded', function () {
     searchContainer.classList.remove('active');
     searchInput.blur(); // 讓輸入框失去焦點
 
+    // --- Roo: 新增摺疊學習面板 ---
+    const learningPanel = document.getElementById('learningSelectionPanel');
+    if (learningPanel) {
+      learningPanel.open = false;
+    }
+
     // --- 設定目前作用中的腔調，供「擇詞 popup」使用 ---
     currentActiveMainDialectName = selectedDialect;
     currentActiveDialectLevelFullName = ''; // 清除級別全名，表示目前是查詢模式
@@ -1880,6 +1890,8 @@ document.addEventListener('DOMContentLoaded', function () {
       // --- 新增結束 ---
 
       if (totalResults === 0) {
+          // --- Roo: 就算無結果，也愛更新可見度 ---
+          updateResultsSummaryVisibility();
           return;
       }
 
@@ -2136,17 +2148,36 @@ document.addEventListener('DOMContentLoaded', function () {
                   pageButton.classList.add('active');
               }
               pageButton.addEventListener('click', () => {
-                  performSearch(i, itemsPerPage);
-                  setTimeout(() => {
-                    document.getElementById('generated').scrollIntoView({ behavior: 'smooth' });
-                  }, 100); // 延遲 100 毫秒
-              });
+                 performSearch(i, itemsPerPage);
+                 // --- Roo: 恢復捲動到摘要 ---
+                 // --- 修改：捲動到第一個結果，毋係摘要 ---
+                 setTimeout(() => {
+                   const firstResultCell = document.querySelector('#generated table:first-of-type tr:first-of-type td:first-of-type');
+                   if (firstResultCell) {
+                     firstResultCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                   } else {
+                     // Fallback: 若因故尋無結果，退回捲動摘要
+                     const resultsSummaryEl = document.getElementById('results-summary');
+                     if (resultsSummaryEl) { resultsSummaryEl.scrollIntoView({ behavior: 'smooth' }); }
+                   }
+                 }, 100); // 延遲 100 毫秒
+             });
               paginationContainer.appendChild(pageButton);
           }
           contentContainer.appendChild(paginationContainer);
       }
       
       updateResultsSummaryVisibility();
+
+      // --- Roo: 在顯示結果後才捲動 ---
+      // --- 修改：捲動到第一個結果，毋係摘要 ---
+      const firstResultCell = contentContainer.querySelector('table:first-of-type tr:first-of-type td:first-of-type');
+      if (firstResultCell) {
+        firstResultCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (resultsSummaryContainer) {
+        // Fallback: 若無結果，捲動到摘要
+        resultsSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+      }
   }
 
   // 當在輸入框按 Enter 時查詢
