@@ -442,6 +442,29 @@ function generate(content, initialCategory = null, targetRowId = null) {
         const progressDetailsSpan = document.getElementById('progressDetails');
         if (progressDetailsSpan) progressDetailsSpan.textContent = '';
         // --- 新增結束 ---
+
+        // -----【修改開始：在這搭加入下背這段】-----
+        const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+        if (dialectLevelCodes) {
+            const newUrl = new URL(window.location.href);
+            // 為著保險，dialect 同 level 再設定一擺
+            newUrl.searchParams.set('dialect', dialectLevelCodes.dialect);
+            newUrl.searchParams.set('level', dialectLevelCodes.level);
+            newUrl.searchParams.set('category', selectedCategory);
+            newUrl.searchParams.delete('row'); // 手動切換類別，row 參數就無意義了，拿忒佢
+
+            // 因為這係手動點選，愛確定其他查詢用个參數係無个
+            newUrl.searchParams.delete('musiid');
+            newUrl.searchParams.delete('ca');
+            newUrl.searchParams.delete('bidsu');
+            newUrl.searchParams.delete('iab');
+            newUrl.searchParams.delete('kiong');
+
+            history.pushState({}, '', newUrl.toString());
+            console.log(`手動切換類別，URL 已更新: ${newUrl.toString()}`);
+        }
+        // -----【修改結束】-----
+
         // 當 radio button 改變時，呼叫新函式來建立表格並設定功能
         buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
       }
@@ -962,6 +985,23 @@ function buildTableAndSetupPlayback(
     });
     removeNowPlaying();
     isCrossCategoryPlaying = false; // 確保標記被重設
+    // --- Roo: 新增：播放結束時，移除最後一個播放完畢的類別書籤 ---
+    if (finishedTableName && finishedCat) {
+      let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      const lastBookmarkIndex = bookmarks.findIndex(
+        (bm) => bm.tableName === finishedTableName && bm.cat === finishedCat
+      );
+      if (lastBookmarkIndex > -1) {
+        bookmarks.splice(lastBookmarkIndex, 1);
+        localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+        console.log(
+          `播放結束，已移除最後一個書籤: ${finishedTableName} - ${finishedCat}`
+        );
+        updateProgressDropdown(); // 更新下拉選單
+      }
+    }
+    // --- Roo: 新增結束 ---
+
     // --- 新增：播放結束時也清除書籤暫存 ---
     finishedTableName = null;
     finishedCat = null;
@@ -1010,40 +1050,48 @@ function buildTableAndSetupPlayback(
       const nextCategoryIndex = currentCategoryIndex + 1;
       if (nextCategoryIndex < categoryList.length) {
         const nextCategoryValue = categoryList[nextCategoryIndex];
+
+        // -----【修改開始】-----
+        console.log(`連續播放：準備切換到下一個類別: ${nextCategoryValue}`);
+
+        // 1. 移除舊書籤 (這部分邏輯做得保留)
+        let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+        const previousBookmarkIndex = bookmarks.findIndex(
+          (bm) => bm.tableName === dialectInfo.fullLvlName && bm.cat === category
+        );
+        if (previousBookmarkIndex > -1) {
+          bookmarks.splice(previousBookmarkIndex, 1);
+          localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+        }
+
+        // 2. 更新 URL，毋重新載入
+        const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+        if (dialectLevelCodes) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('category', nextCategoryValue);
+            newUrl.searchParams.delete('row'); // 順便確定拿忒 row 參數
+            history.pushState({}, '', newUrl.toString());
+            console.log(`URL 已更新，無重新載入: ${newUrl.toString()}`);
+        }
+
+        // 3. 尋著下一個 radio button 然後點佢
         const nextRadioButton = document.querySelector(
-          `input[name="category"][value="${nextCategoryValue}"]`
+            `input[name="category"][value="${nextCategoryValue}"]`
         );
         if (nextRadioButton) {
-          console.log(`Switching to next category: ${nextCategoryValue}`);
-          console.log(
-            `Storing finished category: ${dialectInfo.fullLvlName} - ${category}`
-          ); // Debug
-          finishedTableName = dialectInfo.fullLvlName; // 儲存剛完成的表格名稱
-          finishedCat = category; // 儲存剛完成的類別
-          isCrossCategoryPlaying = true; // 設定標記
-          // 確保停止目前的播放狀態視覺效果
-          const stopButton = document.getElementById('stopBtn'); // 獲取停止按鈕
-          if (stopButton && isPlaying) {
-            // 只有在播放中才需要點擊停止
-            console.log(
-              'Stopping current playback before switching category...'
-            );
-            stopButton.click(); // 模擬點擊停止按鈕來清理狀態
-          }
-          // 使用 setTimeout 確保狀態清理完成
-          setTimeout(() => {
-            console.log('Clicking next radio button...');
-            nextRadioButton.click(); // 觸發切換類別
-          }, 50); // 短暫延遲
+            isCrossCategoryPlaying = true; // 在點擊前設定旗標
+            nextRadioButton.click(); // 觸發切換
         } else {
-          console.error(
-            `Could not find radio button for next category: ${nextCategoryValue}`
-          );
-          // 找不到下一個類別按鈕，執行停止邏輯
-          playEndOfPlayback();
+            console.error(`尋無下一個類別个 radio button: ${nextCategoryValue}`);
+            playEndOfPlayback(); // 尋無就結束播放
         }
+        // -----【修改結束】-----
       } else {
         console.log('Reached end of all categories.');
+        // --- Roo: 新增：在結束前，記錄最後一個播放完畢的類別 ---
+        finishedTableName = dialectInfo.fullLvlName;
+        finishedCat = category;
+        // --- Roo: 新增結束 ---
         // 已經是最後一個類別，執行停止邏輯
         playEndOfPlayback();
       }
@@ -1435,8 +1483,7 @@ function buildTableAndSetupPlayback(
             }
             console.log('Calculated baseURL (on load):', baseURL); // 增加日誌檢查 baseURL
             // --- 修改結束 ---
-            const encodedCategory = encodeURIComponent(category);
-            const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${encodedCategory}&row=${autoPlayTargetRowId}`;
+            const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${autoPlayTargetRowId}`;
 
             // 決定連結文字
             const linkText = loadedBookmark
@@ -2367,8 +2414,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     baseURL += '/';
                   }
                 }
-                const encodedCategory = encodeURIComponent(targetCategory);
-                const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${encodedCategory}&row=${targetRowIdToGo}`;
+                const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${targetCategory}&row=${targetRowIdToGo}`;
 
                 const linkElement = document.createElement('a');
                 linkElement.href = shareURL;
@@ -2512,112 +2558,161 @@ document.addEventListener('DOMContentLoaded', function () {
       const targetTableName = dialectName + levelName;
       const dataVarName = mapTableNameToDataVar(targetTableName); // 取得對應的資料變數名稱，例如 '大中'
 
-      if (dataVarName && typeof window[dataVarName] !== 'undefined') {
-        const dataObject = window[dataVarName]; // 取得對應的詞彙資料物件
-        const decodedCategory = decodeURIComponent(categoryParam); // **解碼 category**
+      if (dataVarName) {
+        // FIX: 改用 eval() 來取得非 window scope 个變數
+        let dataObject;
+        try {
+          dataObject = eval(dataVarName);
+        } catch (e) {
+          dataObject = undefined;
+        }
 
-        // --- 修改：顯示 Modal 而不是直接呼叫 generate ---
-        const autoplayModal = document.getElementById('autoplayModal');
-        // const modalBackdrop = autoplayModal.querySelector('.modal-backdrop'); // 背景現在是 #autoplayModal 本身
-        const modalContent = autoplayModal.querySelector('.modal-content');
+        if (typeof dataObject !== 'undefined') {
+          const decodedCategory = decodeURIComponent(categoryParam); // **解碼 category**
 
-        if (autoplayModal && modalContent) {
-          // 儲存需要傳遞的資訊 (或者在監聽器內重新獲取)
-          // 這裡選擇在監聽器內重新獲取，避免閉包問題
+          // --- 修改：顯示 Modal 而不是直接呼叫 generate ---
+          const autoplayModal = document.getElementById('autoplayModal');
+          // const modalBackdrop = autoplayModal.querySelector('.modal-backdrop'); // 背景現在是 #autoplayModal 本身
+          const modalContent = autoplayModal.querySelector('.modal-content');
 
-          // 隱藏 Modal 並執行 generate 的函式
-          const startPlayback = () => {
-            console.log('Modal clicked, starting playback...');
-            autoplayModal.style.display = 'none';
-            // 在使用者互動後呼叫 generate
-            generate(dataObject, decodedCategory, rowParam); // generate 會處理內容顯示摎播放
-            successfullyLoadedFromUrl = true; // <--- 在成功呼叫 generate 後設定
+          if (autoplayModal && modalContent) {
+            // 儲存需要傳遞的資訊 (或者在監聽器內重新獲取)
+            // 這裡選擇在監聽器內重新獲取，避免閉包問題
 
-            // --- (可選) 更新下拉選單狀態 ---
-            if (progressDropdown) {
-              const targetValue = targetTableName + '||' + decodedCategory;
-              const optionToSelect = progressDropdown.querySelector(
-                `option[value="${targetValue}"]`
-              );
-              if (optionToSelect) {
-                optionToSelect.selected = true;
-                console.log(
-                  'Selected corresponding option in dropdown based on URL params.'
+            // 隱藏 Modal 並執行 generate 的函式
+            const startPlayback = () => {
+              console.log('Modal clicked, starting playback...');
+              autoplayModal.style.display = 'none';
+              // 在使用者互動後呼叫 generate
+              generate(dataObject, decodedCategory, rowParam); // generate 會處理內容顯示摎播放
+              successfullyLoadedFromUrl = true; // <--- 在成功呼叫 generate 後設定
+
+              // --- (可選) 更新下拉選單狀態 ---
+              if (progressDropdown) {
+                const targetValue = targetTableName + '||' + decodedCategory;
+                const optionToSelect = progressDropdown.querySelector(
+                  `option[value="${targetValue}"]`
                 );
-              } else {
-                progressDropdown.selectedIndex = 0;
-                console.log(
-                  'URL params specified a bookmark not currently in the top 10 dropdown options.'
-                );
-              }
-            }
-            // --- 更新結束 ---
-          };
-
-          // 點擊 Modal 內容區域時觸發播放
-          modalContent.addEventListener('click', startPlayback, { once: true });
-
-          // 點擊 Modal 背景 (外部陰暗處) 時僅關閉 Modal
-          autoplayModal.addEventListener(
-            'click',
-            (event) => {
-              // 檢查點擊的是否是背景本身，而不是內容區域
-              if (event.target === autoplayModal) {
-                console.log('Modal backdrop clicked, cancelling autoplay.');
-                autoplayModal.style.display = 'none';
-                // 清理 modalContent 的監聽器，避免下次 modal 顯示時重複觸發
-                modalContent.removeEventListener('click', startPlayback);
-                // 可選：顯示預設提示
-                const contentContainer = document.getElementById('generated');
-                if (
-                  contentContainer &&
-                  contentContainer.innerHTML.trim() === ''
-                ) {
-                  contentContainer.innerHTML =
-                    '<p style="text-align: center; margin-top: 20px;">請點擊上方連結選擇腔調與級別。</p>';
+                if (optionToSelect) {
+                  optionToSelect.selected = true;
+                  console.log(
+                    'Selected corresponding option in dropdown based on URL params.'
+                  );
+                } else {
+                  progressDropdown.selectedIndex = 0;
+                  console.log(
+                    'URL params specified a bookmark not currently in the top 10 dropdown options.'
+                  );
                 }
               }
-            },
-            { once: true }
-          ); // 背景的監聽器也設為 once，點擊一次後移除
+              // --- 更新結束 ---
+            };
 
-          // 顯示 Modal
-          autoplayModal.style.display = 'flex'; // 使用 flex 來置中
-          console.log('Autoplay modal displayed.');
+            // 點擊 Modal 內容區域時觸發播放
+            modalContent.addEventListener('click', startPlayback, { once: true });
+
+            // 點擊 Modal 背景 (外部陰暗處) 時僅關閉 Modal
+            autoplayModal.addEventListener(
+              'click',
+              (event) => {
+                // 檢查點擊的是否是背景本身，而不是內容區域
+                if (event.target === autoplayModal) {
+                  console.log('Modal backdrop clicked, cancelling autoplay.');
+                  autoplayModal.style.display = 'none';
+                  // 清理 modalContent 的監聽器，避免下次 modal 顯示時重複觸發
+                  modalContent.removeEventListener('click', startPlayback);
+                  // 可選：顯示預設提示
+                  const contentContainer = document.getElementById('generated');
+                  if (
+                    contentContainer &&
+                    contentContainer.innerHTML.trim() === ''
+                  ) {
+                    contentContainer.innerHTML =
+                      '<p style="text-align: center; margin-top: 20px;">請點擊上方連結選擇腔調與級別。</p>';
+                  }
+                }
+              },
+              { once: true }
+            ); // 背景的監聽器也設為 once，點擊一次後移除
+
+            // 顯示 Modal
+            autoplayModal.style.display = 'flex'; // 使用 flex 來置中
+            console.log('Autoplay modal displayed.');
+          } else {
+            console.error('Modal elements not found!');
+            // 備用方案：如果找不到 Modal，直接呼叫 generate (可能無法自動播放)
+            console.warn(
+              'Modal not found, attempting direct generation (autoplay might fail).'
+            );
+            generate(dataObject, decodedCategory, rowParam);
+            successfullyLoadedFromUrl = true; // <--- 在成功呼叫 generate 後設定
+            // ... (對應的下拉選單更新邏輯) ...
+          }
+          // --- 修改結束 ---
         } else {
-          console.error('Modal elements not found!');
-          // 備用方案：如果找不到 Modal，直接呼叫 generate (可能無法自動播放)
-          console.warn(
-            'Modal not found, attempting direct generation (autoplay might fail).'
+          console.error(
+            '無法找到對應的資料變數:',
+            dataVarName || targetTableName
           );
-          generate(dataObject, decodedCategory, rowParam);
-          successfullyLoadedFromUrl = true; // <--- 在成功呼叫 generate 後設定
-          // ... (對應的下拉選單更新邏輯) ...
+          loadedViaUrlParams = false; // <-- 失敗時重設旗標 (可選，但較安全)
+          // 可以在這裡顯示錯誤訊息或預設內容
+          const contentContainer = document.getElementById('generated');
+          if (contentContainer)
+            contentContainer.innerHTML = '<p>載入資料个時節搣毋著。</p>';
+          if (progressDetailsSpan) progressDetailsSpan.textContent = ''; // 清除文字
         }
-        // --- 修改結束 ---
       } else {
         console.error(
-          '無法找到對應的資料變數:',
-          dataVarName || targetTableName
+          '無法從 URL 參數映射腔調或級別名稱:',
+          dialectParam,
+          levelParam
         );
         loadedViaUrlParams = false; // <-- 失敗時重設旗標 (可選，但較安全)
-        // 可以在這裡顯示錯誤訊息或預設內容
-        const contentContainer = document.getElementById('generated');
-        if (contentContainer)
-          contentContainer.innerHTML = '<p>載入資料个時節搣毋著。</p>';
         if (progressDetailsSpan) progressDetailsSpan.textContent = ''; // 清除文字
       }
-    } else {
-      console.error(
-        '無法從 URL 參數映射腔調或級別名稱:',
-        dialectParam,
-        levelParam
-      );
-      loadedViaUrlParams = false; // <-- 失敗時重設旗標 (可選，但較安全)
-      if (progressDetailsSpan) progressDetailsSpan.textContent = ''; // 清除文字
     }
+  } else if (dialectParam && levelParam && categoryParam) {
+    // 判斷 3：處理無 row 參數个純類別分享連結
+    console.log('偵測到無 row 參數个純類別分享 URL');
+    loadedViaUrlParams = true;
+
+    // 將 URL 參數映射回表格名稱 (這段邏輯做得從上壁个區塊複製)
+    let dialectName = '';
+    let levelName = '';
+    switch (dialectParam) {
+      case 'si': dialectName = '四縣'; break;
+      case 'ha': dialectName = '海陸'; break;
+      case 'da': dialectName = '大埔'; break;
+      case 'rh': dialectName = '饒平'; break;
+      case 'zh': dialectName = '詔安'; break;
+    }
+    switch (levelParam) {
+      case '5': levelName = '基礎級'; break;
+      case '1': levelName = '初級'; break;
+      case '2': levelName = '中級'; break;
+      case '3': levelName = '中高級'; break;
+      case '4': levelName = '高級'; break;
+    }
+
+    if (dialectName && levelName) {
+        const targetTableName = dialectName + levelName;
+        const dataVarName = mapTableNameToDataVar(targetTableName);
+        if (dataVarName) {
+            let dataObject;
+            try { dataObject = eval(dataVarName); } catch (e) { dataObject = undefined; }
+
+            if (typeof dataObject !== 'undefined') {
+                const decodedCategory = decodeURIComponent(categoryParam);
+                // 直接呼叫 generate，毋傳入 rowId (第三個參數)，恁樣就毋會觸發自動播放
+                console.log(`直接載入類別: ${dataVarName}, category: ${decodedCategory}`);
+                generate(dataObject, decodedCategory, null); // 第三個參數傳 null
+                successfullyLoadedFromUrl = true; // 標記成功載入
+            } else { console.error('尋無對應个資料變數:', dataVarName); }
+        } else { console.error('無法從 URL 參數映射資料變數:', targetTableName); }
+    } else { console.error('無法從 URL 參數映射腔調或級別:', dialectParam, levelParam); }
+  
   } else {
-    console.log('No valid URL parameters found for auto-generation on load.');
+    console.log('無有效个 URL 參數，毋會自動載入內容或顯示 Modal。');
   }
 
   // --- 新增：使用 ResizeObserver 監聽表格容器大小變化 ---
@@ -2669,7 +2764,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 顯示預設提示 (如果內容為空)
     if (contentContainer && contentContainer.innerHTML.trim() === '') {
       contentContainer.innerHTML =
-        '<p style="text-align: center; margin-top: 20px;">請點頂項連結擇腔調同級別。</p>';
+          '<p style="text-align: center; margin-top: 20px;">請點選頂方个連結來選擇腔調與級別。</p>';
       // updateResultsSummaryVisibility();
     }
     // 確保下拉選單選在預設值
@@ -3456,21 +3551,21 @@ function saveBookmark(rowId, percentage, category, tableName) {
   localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
   updateProgressDropdown(); // 更新下拉選單顯示
 
-  // --- 新增：如果頁面是透過 URL 參數載入的，則在第一次儲存書籤後清除參數 ---
+  // --- 新增：如果頁面是透過 URL 參數載入的，則在第一次儲存書籤後清除 row 參數 ---
   if (loadedViaUrlParams) {
-    console.log('首次儲存書籤 (來自 URL 參數載入)，清除 URL 參數...');
-    // 取得目前的 URL 路徑部分 (不含查詢字串和 hash)
-    const newUrl = window.location.pathname;
-    try {
-      // 使用 replaceState 修改 URL 而不重新載入頁面，也不會留下舊的 URL 在歷史紀錄中
-      history.replaceState(null, '', newUrl);
-      console.log('URL 參數已清除。');
-      loadedViaUrlParams = false; // 將旗標設回 false，表示參數已處理完畢，避免後續重複清除
-    } catch (e) {
-      console.error('清除 URL 參數時發生錯誤:', e);
-      // 即使清除失敗，也將標記設為 false，避免無限嘗試
-      loadedViaUrlParams = false;
+    console.log('首次儲存書籤 (來自 URL 參數載入)，清除 URL 的 row 參數...');
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.searchParams.has('row')) {
+      currentUrl.searchParams.delete('row');
+      try {
+        // 使用 replaceState 修改 URL 而不重新載入頁面
+        history.replaceState(null, '', currentUrl.toString());
+        console.log('URL 的 row 參數已清除。');
+      } catch (e) {
+        console.error('清除 URL 的 row 參數時發生錯誤:', e);
+      }
     }
+    loadedViaUrlParams = false; // 將旗標設回 false，表示參數已處理完畢
   }
 
   // --- 修改：強制選中剛儲存的進度並更新詳情為連結 ---
@@ -3508,8 +3603,7 @@ function saveBookmark(rowId, percentage, category, tableName) {
       const dialectLevelCodes = extractDialectLevelCodes(tableName);
       if (dialectLevelCodes) {
         // const baseURL = window.location.origin + window.location.pathname;
-        const encodedCategory = encodeURIComponent(category);
-        const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${encodedCategory}&row=${rowId}`;
+        const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
 
         // 建立連結元素
         const linkElement = document.createElement('a');
