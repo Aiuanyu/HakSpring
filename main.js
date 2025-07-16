@@ -516,7 +516,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
 
     updateResultsSummaryVisibility();
     // **新增這行**：移除 header 中的播放控制鈕
-    header?.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
+    document.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
   }
 
   // --- 在函式最尾項 ---
@@ -588,7 +588,7 @@ function buildTableAndSetupPlayback(
     // 顯示空類別訊息
     contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容。</p>`;
     // **移除** header 中的播放控制鈕 (因為這類別無東西好播)
-    header?.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
+    document.querySelector('#audioControls')?.remove(); // 使用 Optional Chaining 避免錯誤
 
     // 檢查係無係在跨類別播放模式
     if (isCrossCategoryPlaying) {
@@ -1234,12 +1234,12 @@ function buildTableAndSetupPlayback(
   // --- 改由 playAudio 函式內部，在音檔成功播放後正儲存書籤 ---
 
   // --- 修改：尋找或建立 Header 內的播放控制按鈕 ---
-  let audioControlsDiv = header.querySelector('#audioControls');
+  let audioControlsDiv = document.getElementById('audioControls');
   let playAllButton, pauseResumeButton, stopButton;
 
   if (!audioControlsDiv) {
-    console.log('Creating #audioControls span inside #header');
-    // 如果 #audioControls 不在 header 內，則建立它
+    console.log('Creating #audioControls span inside #results-summary');
+    // 如果 #audioControls 不存在，則建立它
     audioControlsDiv = document.createElement('span');
     audioControlsDiv.id = 'audioControls';
 
@@ -1265,10 +1265,10 @@ function buildTableAndSetupPlayback(
     audioControlsDiv.appendChild(pauseResumeButton);
     audioControlsDiv.appendChild(stopButton);
 
-    // 將 #audioControls span 加入 header
-    header.appendChild(audioControlsDiv);
+    // 將 #audioControls span 加入 results-summary
+    resultsSummaryContainer.appendChild(audioControlsDiv);
   } else {
-    console.log('Found existing #audioControls span inside #header');
+    console.log('Found existing #audioControls span.');
     // 如果 #audioControls 已存在，直接找到裡面的按鈕
     playAllButton = audioControlsDiv.querySelector('#playAllBtn');
     pauseResumeButton = audioControlsDiv.querySelector('#pauseResumeBtn');
@@ -2279,7 +2279,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const contentContainer = document.getElementById('generated');
       const resultsSummaryContainer = document.getElementById('results-summary');
       contentContainer.innerHTML = ''; // Clear previous content
-      header?.querySelector('#audioControls')?.remove(); // 顯示查詢結果前，先移除播放控制
+      document.querySelector('#audioControls')?.remove(); // 顯示查詢結果前，先移除播放控制
 
       const totalResults = results.length;
       const totalPages = Math.ceil(totalResults / itemsPerPage);

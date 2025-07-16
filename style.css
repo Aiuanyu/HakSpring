@@ -200,7 +200,7 @@ a {
   padding: 8px 15px; /* 微調 padding */
   display: flex; /* 改用 Flexbox 排版 */
   align-items: center; /* 垂直置中 */
-  justify-content: space-between; /* <--- 改為兩端對齊 */
+  justify-content: flex-start; /* <--- 改為從頭開始對齊 */
   /* flex-wrap: wrap; /* 改做做得換行 */
   gap: 10px; /* 項目之間的間距 */
   font-family: var(--title-font);
@@ -252,6 +252,7 @@ a {
   /* 如果 #audioControls 沒有其他 flex 相關設定，
      可以加上 flex-shrink: 0 確保它也不會被壓縮 */
   flex-shrink: 0;
+  margin-left: 1%;
   /* display: inline-flex; */ /* 如果原本有 display，確保與 flex 容器兼容 */
   /* align-items: center; */ /* 確保按鈕垂直對齊 */
 }
@@ -760,9 +761,21 @@ input:checked + .slider:before {
 }
 
 #results-summary {
+  display: none; /* 預設隱藏 */
   text-align: center;
   margin-bottom: 10px;
   font-weight: bold;
+  position: sticky;
+  top: 80px; /* Adjust this value based on your header's height */
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  padding: 10px 0;
+  z-index: 5;
+  /* --- 新增 Flexbox 樣式 --- */
+  display: flex;
+  justify-content: center; /* 水平置中 */
+  align-items: center;    /* 垂直置中 */
+  gap: 15px;              /* 項目之間个距離 */
 }
 
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
@@ -1508,18 +1521,7 @@ tr.ios-autoplay-instruction td::before {
 }
 
 /* --- 查詢結果相關樣式 (Search Results) --- */
-#results-summary {
-  display: none; /* 預設隱藏 */
-  text-align: center;
-  margin-bottom: 10px;
-  font-weight: bold;
-  position: sticky;
-  top: 80px; /* Adjust this value based on your header's height */
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
-  padding: 10px 0;
-  z-index: 5;
-}
+/* #results-summary is now a flex container, so this is handled above */
 
 /* 搜尋結果頁面用个，來源標籤樣式 */
 .source-tag {
