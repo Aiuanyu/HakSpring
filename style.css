@@ -366,7 +366,7 @@ tr#nowPlaying.paused-playback {
   font-size: clamp(18px, 2vw, 2rem); /* 字型大小，可調整 */
   margin: 0; /* 移除外距，由 header 的 gap 控制 */
   vertical-align: middle; /* 垂直對齊方式 */
-  max-width: 15vw; /* 變狹因為有 #resultsSummary 吔 */
+  max-width: 30vw; /* 變狹因為有 #resultsSummary 吔 */
   /*flex-grow: 1; /* 允許它伸展利用空間 */
   min-width: 50px; /* 確保最小寬度 */
   cursor: pointer; /* 滑鼠指標 */
@@ -715,7 +715,7 @@ input:checked + .slider:before {
 }
 
 #search-input:focus {
-  width: 220px; /* focus 時變闊 */
+  width: 300px; /* focus 時變闊 */
   background-color: #f8f8f8;
 }
 
@@ -1159,7 +1159,7 @@ input:checked + .slider:before {
   }
 
   #search-input:focus {
-    width: 100px; /* 再縮小 focus 時的寬度 */
+    width: 150px !important; /* 再縮小 focus 時的寬度 */
   }
 
 

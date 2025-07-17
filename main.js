@@ -965,6 +965,10 @@ function buildTableAndSetupPlayback(
   }
   // --- 抽離出播放結束音效和重置狀態的邏輯 ---
   function playEndOfPlayback() {
+    const progressDropdown = document.getElementById('progressDropdown');
+    if (progressDropdown && progressDropdown.options.length > 0) {
+      progressDropdown.options[0].text = '擇進前个進度';
+    }
     const endAudio = new Audio('endOfPlay.mp3');
     endAudio.play().catch((e) => console.error('播放結束音效失敗:', e));
     currentAudioIndex = 0;
@@ -1162,7 +1166,8 @@ function buildTableAndSetupPlayback(
               rowId,
               percentageFixed,
               category, // 這就係 currentCategoryForBookmark
-              dialectInfo.fullLvlName // 這就係 currentTableNameForBookmark
+              dialectInfo.fullLvlName, // 這就係 currentTableNameForBookmark
+              true // isPlayingContext
             );
             console.log(`播放成功，儲存書籤至列表：${rowId} (來自 playAudio)`);
           } else {
@@ -1370,6 +1375,10 @@ function buildTableAndSetupPlayback(
         isPlaying = false;
         isPaused = false;
         currentAudio = null;
+        const progressDropdown = document.getElementById('progressDropdown');
+        if (progressDropdown && progressDropdown.options.length > 0) {
+          progressDropdown.options[0].text = '擇進前个進度';
+        }
         if (pauseResumeButton)
           pauseResumeButton.innerHTML = '<i class="fas fa-pause"></i>';
         if (pauseResumeButton) pauseResumeButton.classList.remove('ongoing');
@@ -3544,7 +3553,13 @@ function mapTableNameToDataVar(tableName) {
  * @param {string} category - 當前類別名稱
  * @param {string} tableName - 當前表格名稱 (腔調級別)
  */
-function saveBookmark(rowId, percentage, category, tableName) {
+function saveBookmark(
+  rowId,
+  percentage,
+  category,
+  tableName,
+  isPlayingContext = false
+) {
   let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
   const newBookmark = {
     rowId: rowId,
@@ -3653,8 +3668,16 @@ function saveBookmark(rowId, percentage, category, tableName) {
   if (progressDropdown && progressDetailsSpan) {
     if (bookmarks.length > 0) {
       // 確保有書籤
-      progressDropdown.selectedIndex = 1; // 選中第一個實際進度 (索引為 1)
-      console.log('Dropdown selection forced to index 1 (newest).');
+      if (isPlayingContext) {
+        if (progressDropdown.options.length > 0) {
+          progressDropdown.options[0].text = '擇其他進度';
+        }
+        progressDropdown.selectedIndex = 0;
+        console.log('Dropdown selection forced to index 0 (playing).');
+      } else {
+        progressDropdown.selectedIndex = 1; // 選中第一個實際進度 (索引為 1)
+        console.log('Dropdown selection forced to index 1 (newest).');
+      }
 
       // --- 修改 baseURL 計算方式 ---
       let baseURL = '';
