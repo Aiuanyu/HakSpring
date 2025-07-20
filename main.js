@@ -1,11 +1,11 @@
 // --- 新增：更新網頁標題函式 ---
-const BASE_TITLE = '客語 HakLex';
+const BASE_TITLE = '客源翠 HakSpring';
 function updatePageTitle(titleParts = []) {
   if (titleParts.length === 0) {
     document.title = BASE_TITLE;
   } else {
     // 將各部分用分隔符號串接，並在最後加上專案名稱
-    document.title = [...titleParts, 'HakLex'].join(' - ');
+    document.title = [...titleParts, '客源翠 HakSpring'].join(' - ');
   }
 }
 
