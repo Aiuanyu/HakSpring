@@ -1,6 +1,7 @@
-# HakCertLexicon
+# 客源翠 HakSpring：客話詞典、分類學習放送
+（HakCertLexicon 擴充詞典功能後改名哦）
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Aiuanyu/HakCertLexicon)
+[![Ask DeepWiki]()](https://deepwiki.com/Aiuanyu/HakSpring)
 
 ## 鍵盤控制
 
