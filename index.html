@@ -66,6 +66,7 @@
       crossorigin="anonymous"
     ></script>
     <!--20250309 上去申請的 kit-->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
 
   <!-- Google tag (gtag.js) -->
@@ -360,9 +361,7 @@
           <h4 id="infoModalTitle" class="modal-title">關於本站</h4>
           <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
         </div>
-        <div class="modal-body">
-          <iframe id="infoFrame" src="info.html" style="width: 100%; height: 100%;"></iframe>
-        </div>
+        <div class="modal-body" id="info-content"></div>
         <div class="modal-footer">
           <label for="dontShowInfoModalAgain">
             <input type="checkbox" id="dontShowInfoModalAgain">

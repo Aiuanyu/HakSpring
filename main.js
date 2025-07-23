@@ -2898,6 +2898,31 @@ document.addEventListener('DOMContentLoaded', function () {
       if (infoModal.style.display === 'none' || infoModal.style.display === '') {
         infoModal.style.display = 'flex'; // 用 flex 做垂直置中
         infoModalCloseBtn.focus(); // 將焦點移到關閉按鈕，方便鍵盤操作
+
+        const infoContent = document.getElementById('info-content');
+        // 只有在內容為空時才載入，避免重複載入
+        if (infoContent.innerHTML.trim() === '') {
+          fetch('info.md')
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+              }
+              return response.text();
+            })
+            .then(markdown => {
+              // 使用 marked.js 將 Markdown 轉換為 HTML
+              if (typeof marked !== 'undefined') {
+                infoContent.innerHTML = marked.parse(markdown);
+              } else {
+                console.error('marked.js is not defined. Please check if the library is loaded.');
+                infoContent.innerHTML = '<p>Error: Markdown parsing library failed to load.</p>';
+              }
+            })
+            .catch(error => {
+              console.error('Failed to fetch or parse info.md:', error);
+              infoContent.innerHTML = '<p>Could not load the information document. Please try again later.</p>';
+            });
+        }
       }
     };
 

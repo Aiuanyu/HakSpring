@@ -772,7 +772,7 @@ input:checked + .slider:before {
   padding: 10px 0;
   z-index: 5;
   /* --- 新增 Flexbox 樣式 --- */
-  display: flex;
+  display: hidden; /* 預設隱藏 */
   justify-content: center; /* 水平置中 */
   align-items: center;    /* 垂直置中 */
   gap: 15px;              /* 項目之間个距離 */
@@ -1624,6 +1624,57 @@ mark {
     background-color: #333;
     color: #f0f0f0;
   }
+}
+
+/* --- Info Modal Styles --- */
+#infoModal .modal-body {
+  max-height: 70vh; /* 設定最大高度，例如視窗高度的 70% */
+  overflow-y: auto; /* 當內容超過最大高度時，顯示垂直捲動軸 */
+  padding: 20px 30px; /* 增加內距，上下 20px，左右 30px */
+  line-height: 1.7; /* 調整行高以利閱讀 */
+}
+
+#infoModal .modal-body h1,
+#infoModal .modal-body h2,
+#infoModal .modal-body h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  color: var(--main-text-color); /* 確保標題顏色與主題一致 */
+}
+
+#infoModal .modal-body h1 {
+  font-size: 1.8rem;
+  border-bottom: 2px solid var(--main-text-color);
+  padding-bottom: 0.3em;
+}
+
+#infoModal .modal-body h2 {
+  font-size: 1.5rem;
+}
+
+#infoModal .modal-body p,
+#infoModal .modal-body li {
+  font-size: 1rem;
+  margin-bottom: 0.8em;
+}
+
+#infoModal .modal-body ul {
+  padding-left: 25px; /* 讓清單項目有內縮 */
+}
+
+#infoModal .modal-body a {
+  color: #007bff; /* 使用較亮的藍色讓連結更明顯 */
+  text-decoration: underline;
+}
+
+#infoModal .modal-body a:hover {
+  color: #0056b3;
+}
+
+#infoModal .modal-body hr {
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 2em 0;
 }
 @media screen and (max-width: 768px) {
   .result-sequence-number {
