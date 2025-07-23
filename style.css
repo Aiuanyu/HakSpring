@@ -761,18 +761,17 @@ input:checked + .slider:before {
 }
 
 #results-summary {
-  display: none; /* 預設隱藏 */
-  text-align: center;
-  margin-bottom: 10px;
-  font-weight: bold;
+  display: none; /* 預設完全隱藏，不佔空間 */
   position: sticky;
   top: 80px; /* Adjust this value based on your header's height */
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(5px);
-  padding: 10px 0;
+  padding: 12px 20px;
+  margin-bottom: 10px;
   z-index: 5;
-  /* --- 新增 Flexbox 樣式 --- */
-  display: hidden; /* 預設隱藏 */
+  font-weight: bold;
+  
+  /* Flexbox 佈局 */
   justify-content: center; /* 水平置中 */
   align-items: center;    /* 垂直置中 */
   gap: 15px;              /* 項目之間个距離 */

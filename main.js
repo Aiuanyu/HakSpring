@@ -57,13 +57,11 @@ function parseUnifiedCsv(csvString) {
 // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
 function updateResultsSummaryVisibility() {
   const resultsSummaryContainer = document.getElementById('results-summary');
-  const contentContainer = document.getElementById('generated');
+  if (!resultsSummaryContainer) return; // 確保元素存在
 
-  if (!resultsSummaryContainer || !contentContainer) return; // 確保元素存在
-
-  // 檢查 #generated 裡肚係無係有實際个內容 (trim() 會拿忒頭尾空白)
-  if (contentContainer.innerHTML.trim() !== '') {
-    resultsSummaryContainer.style.display = 'block'; // 有內容就顯示
+  // 檢查 #results-summary 自身係無係有實際个內容 (trim() 會拿忒頭尾空白)
+  if (resultsSummaryContainer.textContent.trim() !== '') {
+    resultsSummaryContainer.style.display = 'flex'; // 有內容就顯示，並啟用 Flexbox 佈局
   } else {
     resultsSummaryContainer.style.display = 'none'; // 無內容就隱藏
   }
@@ -2062,7 +2060,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // 顯示預設提示 (如果內容為空)
       if (contentContainer && contentContainer.innerHTML.trim() === '') {
         contentContainer.innerHTML =
-          '<p style="text-align: center; margin-top: 20px;">請點選頂方个連結來選擇腔調與級別。</p>';
+          '<p style="text-align: center; margin-top: 20px;">係講愛學認證詞彙，請點選頂項个主控板來擇腔調、級別、類別。</p>';
         // updateResultsSummaryVisibility();
       }
       // 確保下拉選單選在預設值
@@ -2296,18 +2294,23 @@ document.addEventListener('DOMContentLoaded', function () {
       const endIndex = startIndex + itemsPerPage;
       const paginatedResults = results.slice(startIndex, endIndex);
 
+      // --- Roo: 修改結果為 0 時的處理邏輯 ---
+      if (totalResults === 0) {
+          resultsSummaryContainer.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+          updateResultsSummaryVisibility();
+          // --- 新增：就算無結果，也愛更新網頁標題 ---
+          const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+          updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
+          // --- 新增結束 ---
+          return;
+      }
+
       resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
 
       // --- 新增：更新網頁標題 ---
       const searchModeText = searchMode === '客家語' ? '客文' : '華文';
       updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
       // --- 新增結束 ---
-
-      if (totalResults === 0) {
-          // --- Roo: 就算無結果，也愛更新可見度 ---
-          updateResultsSummaryVisibility();
-          return;
-      }
 
       const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
