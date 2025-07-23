@@ -47,6 +47,6 @@
 ---
 
 網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2025  
-更新日期：2025/7/20  
+更新日期：2025/7/23
 
 問題回報：[GitHub](https://github.com/Aiuanyu/HakSpring)、[email](mailto:aiuanyu777@gmail.com)

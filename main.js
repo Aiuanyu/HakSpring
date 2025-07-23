@@ -837,10 +837,9 @@ function buildTableAndSetupPlayback(
     // --- 詞彙音檔處理結束 ---
 
     td2.appendChild(document.createElement('br'));
-    const meaningText = document.createTextNode(
-      line.華語詞義.replace(/"/g, '')
-    );
-    td2.appendChild(meaningText);
+    const meaningSpan = document.createElement('span');
+    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
+    td2.appendChild(meaningSpan);
     if (line.備註 && line.備註.trim() !== '') {
       const notesP = document.createElement('p');
       notesP.className = 'notes';
@@ -2426,7 +2425,8 @@ document.addEventListener('DOMContentLoaded', function () {
             td2.appendChild(document.createElement('br'));
         }
         const meaningText = document.createElement('span');
-        meaningText.innerHTML = highlight.meaning ? line['華語詞義'].replace(/"/g, '').replace(highlightRegex, '<mark>$1</mark>') : line['華語詞義'].replace(/"/g, '');
+        const processedMeaning = line['華語詞義'].replace(/"/g, '').replace(/\n/g, '<br>');
+        meaningText.innerHTML = highlight.meaning ? processedMeaning.replace(highlightRegex, '<mark>$1</mark>') : processedMeaning;
         td2.appendChild(meaningText);
         if (line.備註 && line.備註.trim() !== '') {
             const notesP = document.createElement('p');
