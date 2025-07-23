@@ -1132,6 +1132,7 @@ input:checked + .slider:before {
   /* 調整備註樣式 */
   #generated .notes {
     margin-top: 5px;
+    margin-left: 5px;
     display: inline-block; /* 避免佔歸行 */
   }
 
@@ -1188,7 +1189,12 @@ input:checked + .slider:before {
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
   }
+  /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
+  #generated td.empty-sentence-cell {
+    display: none;
+  }
 }
+
 
 /* --- 手機版查詞按鈕樣式 (Mobile Lookup Button Styles) --- */
 #mobileLookupBtn {

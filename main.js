@@ -16,8 +16,13 @@ function updatePageTitle(titleParts = []) {
  */
 function formatPhoneticForDisplay(text) {
     if (!text) return "";
-    // 拿忒所有在【】（）() 這兜符號前後个空白
-    return text.replace(/\s*([【（】）()])\s*/g, '$1');
+    // 1. 拿忒全形括號【】（）前後个所有空白
+    let result = text.replace(/\s*([【（】）])\s*/g, '$1');
+    // 2. 處理半形括號 (：淨拿忒佢「後背」个空白
+    result = result.replace(/\(\s+/g, '(');
+    // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
+    result = result.replace(/\s+\)/g, ')');
+    return result;
 }
 
 /**
@@ -535,7 +540,7 @@ function buildTableAndSetupPlayback(
     resultsSummaryContainer.textContent = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
     // --- Roo: 只有在非自動跳轉時才捲動到摘要，避免衝突 ---
     if (!autoPlayTargetRowId) {
-      resultsSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+      resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
   // --- 新增：更新網頁標題 ---
@@ -914,6 +919,7 @@ function buildTableAndSetupPlayback(
       td3.appendChild(translationText);
     } else {
       // 無例句文本：加入一個跳過的假音檔
+      td3.classList.add('empty-sentence-cell'); // Roo: 加上 class 供 CSS 選擇
       const dummyAudioNoSentence = document.createElement('audio');
       dummyAudioNoSentence.className = 'media';
       dummyAudioNoSentence.dataset.skip = 'true';
@@ -2476,6 +2482,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const translationText = document.createElement('span');
             translationText.innerHTML = (highlight.translation ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>') : line['翻譯']).replace(/"/g, '').replace(/\n/g, '<br>');
             td3.appendChild(translationText);
+        } else {
+          // Roo: 若無例句，為 td3 加上 class 以便 CSS 隱藏
+          td3.classList.add('empty-sentence-cell');
         }
         item.appendChild(td3);
         return item;
@@ -2569,13 +2578,14 @@ document.addEventListener('DOMContentLoaded', function () {
                  // --- Roo: 恢復捲動到摘要 ---
                  // --- 修改：捲動到第一個結果，毋係摘要 ---
                  setTimeout(() => {
-                   const firstResultCell = document.querySelector('#generated table:first-of-type tr:first-of-type td:first-of-type');
-                   if (firstResultCell) {
-                     firstResultCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                   // Roo: 改用更穩定个選擇器來尋著第一個結果个標題或表格
+                   const firstResultElement = document.querySelector('#generated > h4, #generated > table');
+                   if (firstResultElement) {
+                     firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                    } else {
                      // Fallback: 若因故尋無結果，退回捲動摘要
                      const resultsSummaryEl = document.getElementById('results-summary');
-                     if (resultsSummaryEl) { resultsSummaryEl.scrollIntoView({ behavior: 'smooth' }); }
+                     if (resultsSummaryEl) { resultsSummaryEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
                    }
                  }, 100); // 延遲 100 毫秒
              });
@@ -2588,13 +2598,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // --- Roo: 在顯示結果後才捲動 ---
       // --- 修改：捲動到第一個結果，毋係摘要 ---
-      const firstResultCell = contentContainer.querySelector('table:first-of-type tr:first-of-type td:first-of-type');
-      if (firstResultCell) {
-        firstResultCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (resultsSummaryContainer) {
-        // Fallback: 若無結果，捲動到摘要
-        resultsSummaryContainer.scrollIntoView({ behavior: 'smooth' });
-      }
+      // Roo: 加入 setTimeout 確保 DOM 繪製完成後再捲動
+      setTimeout(() => {
+        const firstResultElement = contentContainer.querySelector('h4, table');
+        if (firstResultElement) {
+          firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (resultsSummaryContainer) {
+          // Fallback: 若因故尋無結果，退回捲動摘要
+          resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100); // 延遲 100 毫秒
   }
 
   // 當在輸入框按 Enter 時查詢
