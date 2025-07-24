@@ -2267,6 +2267,31 @@ document.addEventListener('DOMContentLoaded', function () {
             return null;
         }).filter(Boolean); // 拿忒 null 个項目
     }
+
+    // Roo: 新增：在分頁前，對所有結果進行完整排序
+    const getCategoryRank = (item, mode) => {
+        if (mode === '客家語') {
+            const { inWord, inSentence, inPhonetics } = item._match;
+            if ((inWord || inPhonetics) && inSentence) return 1; // 詞句都有
+            if (inWord || inPhonetics) return 2; // 淨詞彙
+            if (inSentence) return 3; // 僅例句
+        } else { // 華語
+            const { inMeaning, inTranslation } = item._match;
+            if (inMeaning && inTranslation) return 1; // 詞義翻譯都有
+            if (inMeaning) return 2; // 淨詞義
+            if (inTranslation) return 3; // 僅翻譯
+        }
+        return 4; // 預防萬一
+    };
+    results.sort((a, b) => {
+        const rankA = getCategoryRank(a, searchMode);
+        const rankB = getCategoryRank(b, searchMode);
+        if (rankA !== rankB) {
+            return rankA - rankB;
+        }
+        // Roo: 若排序級別相同，保持原有順序或加入次要排序規則 (暫時穩定即可)
+        return 0;
+    });
     
     let summaryText = '';
     if (searchMode === '客家語') {
@@ -2490,69 +2515,62 @@ document.addEventListener('DOMContentLoaded', function () {
         return item;
     };
 
-      // --- 根據查詢模式顯示結果 ---
-      const displayCategorizedResults = (categorizedResults) => {
-          for (const category of categorizedResults) {
-              if (category.results.length > 0) {
-                  const heading = contentContainer.appendChild(document.createElement('h4'));
-                  heading.textContent = category.title;
-                  heading.className = 'results-section-heading';
-                  const table = contentContainer.appendChild(document.createElement('table'));
-                  table.setAttribute('width', '100%');
-                  category.results.forEach(line => {
-                      const row = createResultRow(line, category.highlight);
-                      if (row) table.appendChild(row);
-                  });
-              }
+      // --- Roo: 重構顯示邏輯，以處理預先排序好个資料 ---
+      let currentCategoryKey = null;
+      let currentTable = null;
+
+      const categoryConfig = {
+          '客家語': {
+              'both': { title: '詞、句裡肚都有：', highlight: { word: true, sentence: true, meaning: false, translation: false } },
+              'word_only': { title: '淨詞彙裡肚有：', highlight: { word: true, sentence: false, meaning: false, translation: false } },
+              'sentence_only': { title: '僅例句裡肚有：', highlight: { word: false, sentence: true, meaning: false, translation: false } }
+          },
+          '華語': {
+              'both': { title: '華語詞義、翻譯裡肚都有出現：', highlight: { word: false, sentence: false, meaning: true, translation: true } },
+              'meaning_only': { title: '淨出現在華語詞義裡肚：', highlight: { word: false, sentence: false, meaning: true, translation: false } },
+              'translation_only': { title: '淨出現在例句翻譯裡肚：', highlight: { word: false, sentence: false, meaning: false, translation: true } }
           }
       };
 
-      if (searchMode === '客家語') {
-          const resultsInBoth = [];
-          const resultsInSentenceOnly = [];
-          const resultsInWordOnly = [];
-          const lowerKeyword = keyword.toLowerCase();
-          const normalizedKeyword = normalizePhonetics(keyword);
+      const getCategoryKey = (item, mode) => {
+          if (mode === '客家語') {
+              const { inWord, inSentence, inPhonetics } = item._match;
+              if ((inWord || inPhonetics) && inSentence) return 'both';
+              if (inWord || inPhonetics) return 'word_only';
+              if (inSentence) return 'sentence_only';
+          } else { // 華語
+              const { inMeaning, inTranslation } = item._match;
+              if (inMeaning && inTranslation) return 'both';
+              if (inMeaning) return 'meaning_only';
+              if (inTranslation) return 'translation_only';
+          }
+          return null;
+      };
 
-          paginatedResults.forEach(line => {
-              const { inWord, inSentence, inPhonetics } = line._match;
-              if ((inWord || inPhonetics) && inSentence) {
-                  resultsInBoth.push(line);
-              } else if (inSentence) {
-                  resultsInSentenceOnly.push(line);
-              } else if (inWord || inPhonetics) {
-                  resultsInWordOnly.push(line);
-              }
-          });
+      paginatedResults.forEach(line => {
+          const categoryKey = getCategoryKey(line, searchMode);
+          if (!categoryKey) return;
 
-          displayCategorizedResults([
-              { title: '詞、句裡肚都有：', results: resultsInBoth, highlight: { word: true, sentence: true, meaning: false, translation: false } },
-              { title: '淨詞彙裡肚有：', results: resultsInWordOnly, highlight: { word: true, sentence: false, meaning: false, translation: false } },
-              { title: '僅例句裡肚有：', results: resultsInSentenceOnly, highlight: { word: false, sentence: true, meaning: false, translation: false } }
-          ]);
-      } else if (searchMode === '華語') {
-          const resultsInBoth = [];
-          const resultsInMeaningOnly = [];
-          const resultsInTranslationOnly = [];
-          const lowerKeyword = keyword.toLowerCase();
+          if (categoryKey !== currentCategoryKey) {
+              currentCategoryKey = categoryKey;
+              const config = categoryConfig[searchMode][categoryKey];
 
-          paginatedResults.forEach(line => {
-              const { inMeaning, inTranslation } = line._match;
-              if (inMeaning && inTranslation) {
-                  resultsInBoth.push(line);
-              } else if (inTranslation) {
-                  resultsInTranslationOnly.push(line);
-              } else if (inMeaning) {
-                  resultsInMeaningOnly.push(line);
-              }
-          });
+              const heading = document.createElement('h4');
+              heading.textContent = config.title;
+              heading.className = 'results-section-heading';
+              contentContainer.appendChild(heading);
 
-          displayCategorizedResults([
-              { title: '華語詞義、翻譯裡肚都有出現：', results: resultsInBoth, highlight: { word: false, sentence: false, meaning: true, translation: true } },
-              { title: '淨出現在華語詞義裡肚：', results: resultsInMeaningOnly, highlight: { word: false, sentence: false, meaning: true, translation: false } },
-              { title: '淨出現在例句翻譯裡肚：', results: resultsInTranslationOnly, highlight: { word: false, sentence: false, meaning: false, translation: true } }
-          ]);
-      }
+              currentTable = document.createElement('table');
+              currentTable.setAttribute('width', '100%');
+              contentContainer.appendChild(currentTable);
+          }
+
+          const config = categoryConfig[searchMode][categoryKey];
+          const row = createResultRow(line, config.highlight);
+          if (row && currentTable) {
+              currentTable.appendChild(row);
+          }
+      });
 
       // 對所有新產生的表格內容執行大埔變調
       if (document.querySelector('#search-popup input[name="dialect"]:checked').value === '大埔') {
