@@ -54,7 +54,7 @@
 - Canva
 
 #### 權利
-![](https://i.imgur.com/wrefOam.jpeg)
+<img src="https://i.imgur.com/wrefOam.jpeg" alt="源翠娘阿翠妹做你个客援隊／客研隊" title="源翠娘阿翠妹做你个客援隊／客研隊" width="100%"></img>
 - 「客源翠 HakSpring」名稱、「源翠娘阿翠妹」圖像著作權歸愛灣語江瑋平
 - 原始詞庫資料依教育部、客委會開放授權
 - 轉換「客拼乙式 HagPinPlus」讀音資料及其餘原始碼公開 GPLv3 授權
