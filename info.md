@@ -46,7 +46,17 @@
 
 ---
 
-網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2025  
-更新日期：2025/7/23
+網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2.5 Pro  
+更新日期：2025/7/24
 
-問題回報：[GitHub](https://github.com/Aiuanyu/HakSpring)、[email](mailto:aiuanyu777@gmail.com)
+#### 銘謝
+- 再會豆腐字、芫荽體、辰宇落雁體
+- Canva
+
+#### 權利
+![](https://i.imgur.com/wrefOam.jpeg)
+- 「客源翠 HakSpring」名稱、「源翠娘阿翠妹」圖像著作權歸愛灣語江瑋平
+- 原始詞庫資料依教育部、客委會開放授權
+- 轉換「客拼乙式 HagPinPlus」讀音資料及其餘原始碼公開 GPLv3 授權
+
+建議及問題回報：[GitHub](https://github.com/Aiuanyu/HakSpring)、[email](mailto:aiuanyu777@gmail.com)
