@@ -4230,12 +4230,9 @@ function findPronunciationsInAllData(searchText) {
   }
   const normalizedSearchText = searchText.trim();
 
-  // --- FIX: 將 cert 和 gip 資料源合併，用單一迴圈處理統一格式 ---
   const allDataSourceVars = [...allKnownDataVars, ...allKnownGipDataVars];
 
   allDataSourceVars.forEach(dataVarName => {
-    // --- FIX: 改用 eval() 來取得非 window scope 个變數 ---
-    // 舊个 window[dataVarName] 會因為 const 變數个作用域限制而尋無
     let dataObject;
     try {
       dataObject = eval(dataVarName);
@@ -4253,24 +4250,27 @@ function findPronunciationsInAllData(searchText) {
             const isPartial = !isExact && term.includes(normalizedSearchText);
 
             if (isExact || isPartial) {
-              // --- FIX: 修正 gip 資料个來源名稱，確保佢做得被腔調過濾器正確處理 ---
+              const isGipData = dataVarName.startsWith('教典');
               let displayName;
-              if (line.sourceType === 'cert') {
-                displayName = getFullLevelName(dataObject.name);
-              } else { // 處理 gip
+              let sourceTypeForAudio;
+
+              if (isGipData) {
                 const gipNameMap = { '教典四': '四縣教典', '教典海': '海陸教典', '教典大': '大埔教典', '教典平': '饒平教典', '教典安': '詔安教典', '教典南': '南四縣教典' };
-                displayName = gipNameMap[dataObject.name] || dataObject.name; // 若無對應到，用原名做 fallback
+                displayName = gipNameMap[dataObject.name] || dataObject.name;
+                sourceTypeForAudio = 'gip';
+              } else {
+                displayName = getFullLevelName(dataObject.name);
+                sourceTypeForAudio = 'cert';
               }
 
               const entryKey = `${line['客語標音_顯示']}|${displayName}|${isExact ? 'exact' : 'partial'}|${term}`;
 
-              if (!uniqueEntries.has(entryKey) && foundReadings.length < 50) {
+              if (!uniqueEntries.has(entryKey)) {
                 let audioDetails = null;
-                // --- FIX: 根據 sourceType，用正確个變數 (dataObject.name) 來建立 audioDetails ---
-                if (line.sourceType === 'cert') {
-                  // 對 cert 資料，愛用 dataObject.name (例: '四基') 來分析腔調級別
+                if (sourceTypeForAudio === 'cert') {
                   const 腔 = dataObject.name.substring(0, 1);
                   const 級 = dataObject.name.substring(1);
+                  // --- FIX: Correctly define and pass the exclusion list ---
                   let selected例外音檔;
                   switch (級) {
                     case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
@@ -4283,8 +4283,9 @@ function findPronunciationsInAllData(searchText) {
                   let 檔腔 = '', 檔級 = '', 目錄級 = '', 目錄另級 = undefined;
                   if (腔 === '四') { 檔腔 = 'si'; } else if (腔 === '海') { 檔腔 = 'ha'; } else if (腔 === '大') { 檔腔 = 'da'; } else if (腔 === '平') { 檔腔 = 'rh'; } else if (腔 === '安') { 檔腔 = 'zh'; }
                   if (級 === '基') { 目錄級 = '5'; 目錄另級 = '1'; } else if (級 === '初') { 目錄級 = '1'; } else if (級 === '中') { 目錄級 = '2'; 檔級 = '1'; } else if (級 === '中高') { 目錄級 = '3'; 檔級 = '2'; } else if (級 === '高') { 目錄級 = '4'; 檔級 = '3'; }
-                  audioDetails = { lineData: { ...line }, dialectInfo: { 腔, 級, selected例外音檔, generalMediaYr: '112', 目錄級, 目錄另級, 檔腔, 檔級, fullLvlName: displayName } };
-                } else if (line.sourceType === 'gip') {
+                  
+                  audioDetails = { lineData: { ...line }, dialectInfo: { 腔, 級, selected例外音檔: selected例外音檔, generalMediaYr: '112', 目錄級, 目錄另級, 檔腔, 檔級, fullLvlName: displayName } };
+                } else if (sourceTypeForAudio === 'gip') {
                   audioDetails = { lineData: { ...line }, dialectInfo: { sourceType: 'gip' } };
                 }
 
@@ -4293,7 +4294,7 @@ function findPronunciationsInAllData(searchText) {
                   source: displayName,
                   isExactMatch: isExact,
                   originalTerm: term,
-                  mandarinMeaning: line.華語詞義, // Python 腳本已統一欄位
+                  mandarinMeaning: line.華語詞義,
                   audioDetails: audioDetails
                 });
                 uniqueEntries.add(entryKey);
@@ -4497,48 +4498,58 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
     contentEl.innerHTML = ''; // 清空舊內容
     const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
 
-    let effectiveDialect = currentActiveMainDialectName;
-    if (currentActiveMainDialectName === '南四縣') {
-      effectiveDialect = '四縣';
+    // --- REFACTORED LOGIC START ---
+    let currentDialect = '';
+    // 1. 優先從 currentActiveDialectLevelFullName (學習模式) 推斷
+    if (currentActiveDialectLevelFullName) {
+        if (currentActiveDialectLevelFullName.startsWith('四縣')) currentDialect = '四縣';
+        else if (currentActiveDialectLevelFullName.startsWith('南四縣')) currentDialect = '南四縣';
+        else if (currentActiveDialectLevelFullName.startsWith('海陸')) currentDialect = '海陸';
+        else if (currentActiveDialectLevelFullName.startsWith('大埔')) currentDialect = '大埔';
+        else if (currentActiveDialectLevelFullName.startsWith('饒平')) currentDialect = '饒平';
+        else if (currentActiveDialectLevelFullName.startsWith('詔安')) currentDialect = '詔安';
+    }
+    
+    // 2. 如果無法從學習模式推斷 (例如在查詢模式)，才用 currentActiveMainDialectName
+    if (!currentDialect) {
+        currentDialect = currentActiveMainDialectName;
     }
 
     console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
 
-    let displayReadings = [...readings]; // 複製一份來操作
+    let displayReadings = [...readings];
 
+    // Helper to check if a source matches the current dialect context
+    const isCurrentDialect = (source) => {
+        if (currentDialect === '南四縣') {
+            return source.startsWith('南四縣') || source.startsWith('四縣');
+        }
+        return source.startsWith(currentDialect);
+    };
+
+    // Filter if "show other accents" is off
     if (!showAllAccents) {
       // 若開關關閉，只顯示目前主要腔調的結果 (所有級別)
-      displayReadings = displayReadings.filter((r) =>
-        r.source.startsWith(effectiveDialect)
-      );
+        displayReadings = displayReadings.filter(r => isCurrentDialect(r.source));
     }
 
     // 排序：1. 完全符合優先, 2. 目前腔調優先
     displayReadings.sort((a, b) => {
-      // 優先顯示完全符合的
-      if (a.isExactMatch && !b.isExactMatch) return -1;
-      if (!a.isExactMatch && b.isExactMatch) return 1;
-
-      // 2. 目前主要腔調優先 (所有級別)
-      const aIsCurrentMainDialect = a.source.startsWith(effectiveDialect);
-      const bIsCurrentMainDialect = b.source.startsWith(effectiveDialect);
-      if (aIsCurrentMainDialect && !bIsCurrentMainDialect) return -1;
-      if (!aIsCurrentMainDialect && bIsCurrentMainDialect) return 1;
-      
-      // 3. 若符合類型和主要腔調都相同，按原詞目字母排序
-      if (a.originalTerm < b.originalTerm) return -1;
-      if (a.originalTerm > b.originalTerm) return 1;
-
-      // 4. 若原詞目也相同，按完整來源名稱排序 (例如 四縣初級 會在 四縣基礎級 後面)
-      if (a.source < b.source) return -1;
-      if (a.source > b.source) return 1;
-
-      return 0; // 都相同
+        // Priority 1: Exact match
+        if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
+        // Priority 2: Current dialect
+        const aIsCurrent = isCurrentDialect(a.source);
+        const bIsCurrent = isCurrentDialect(b.source);
+        if (aIsCurrent !== bIsCurrent) return aIsCurrent ? -1 : 1;
+        // Priority 3: Original term alphabetical
+        if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
+        // Priority 4: Source name alphabetical
+        return a.source.localeCompare(b.source);
     });
 
     if (displayReadings.length > 0) {
       const accordionContainer = document.createElement('div');
-      accordionContainer.className = 'accordion-container'; // You might want to style this container
+      accordionContainer.className = 'accordion-container';
 
       displayReadings.forEach(reading => {
         const itemDiv = document.createElement('div');
@@ -4548,17 +4559,14 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
         headerBtn.className = 'accordion-header';
         let headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
         if (!reading.isExactMatch) {
-          // If not an exact match, show the original term it was found in
           headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
         }
 
-        // Construct audio URL using the new helper function
         const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
         let audioElementHTML = '';
         if (audioUrl) {
-          // 改成播放按鈕，節省空間
           audioElementHTML = `
-            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" 
+            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音"
                     style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;">
               <i class="fas fa-volume-up"></i>
             </button>`;
@@ -4574,7 +4582,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
         panelDiv.className = 'accordion-panel';
         
         let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
-        if (!audioUrl) { // If audio was moved to header and there's no URL, show message in panel
+        if (!audioUrl) {
           panelContent += `<p><em>(無音檔資訊)</em></p>`;
         }
         panelDiv.innerHTML = panelContent;
@@ -4583,14 +4591,11 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
         itemDiv.appendChild(panelDiv);
         accordionContainer.appendChild(itemDiv);
 
-        // --- 新增：為播放按鈕加上事件處理 ---
         const playButton = headerBtn.querySelector('.popup-audio-play-btn');
         if (playButton) {
             playButton.addEventListener('click', (e) => {
-                // e.stopPropagation(); // 拿掉這行，讓點擊播放時也會觸發 accordion 開合
                 const audioSrc = playButton.dataset.audioSrc;
                 if (audioSrc) {
-                    // 若有其他 popup 音檔在播放，先停止
                     if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') {
                         window.currentPopupAudio.pause();
                         window.currentPopupAudio.currentTime = 0;
@@ -4598,19 +4603,16 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
                     window.currentPopupAudio = new Audio(audioSrc);
                     const iconElement = playButton.querySelector('i');
                     const originalIconClasses = iconElement ? iconElement.className : '';
-
-                    if (iconElement) iconElement.className = 'fas fa-spinner fa-spin'; // 播放前顯示讀取中
-
+                    if (iconElement) iconElement.className = 'fas fa-spinner fa-spin';
                     window.currentPopupAudio.play().catch(err => {
                         console.error("播放 popup 音檔失敗:", err);
-                        if (iconElement) iconElement.className = originalIconClasses; // 播放失敗恢復圖示
+                        if (iconElement) iconElement.className = originalIconClasses;
                     });
-
                     window.currentPopupAudio.onended = () => {
-                        if (iconElement) iconElement.className = originalIconClasses; // 播放完畢恢復圖示
+                        if (iconElement) iconElement.className = originalIconClasses;
                         window.currentPopupAudio = null;
                     };
-                    window.currentPopupAudio.onerror = () => { // 錯誤時也恢復圖示
+                    window.currentPopupAudio.onerror = () => {
                         if (iconElement) iconElement.className = originalIconClasses;
                         window.currentPopupAudio = null;
                     };
@@ -4618,25 +4620,18 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
             });
         }
 
-        // Add click event listener to the header button
         headerBtn.addEventListener('click', () => {
-          // *** ROMANIZER INTEGRATION START ***
-          // If a callback is provided, treat this click as a selection event.
           if (typeof callbackOnSelect === 'function') {
             const selectedPhonetic = reading.pronunciation;
             callbackOnSelect(anchorElementOrRect, selectedPhonetic);
-            
-            // Hide the popup immediately after selection
             const popupEl = document.getElementById('selectionPopup');
             const backdropEl = document.getElementById('selectionPopupBackdrop');
             if (popupEl && backdropEl) {
               hidePronunciationPopup(popupEl, backdropEl);
             }
-            return; // Stop further execution to prevent accordion behavior
+            return;
           }
-          // *** ROMANIZER INTEGRATION END ***
 
-          // Original accordion logic
           headerBtn.classList.toggle('active');
           const indicator = headerBtn.querySelector('.indicator');
           if (panelDiv.style.maxHeight) {
@@ -4650,17 +4645,15 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       });
       contentEl.appendChild(accordionContainer);
     } else {
-      // 根據開關狀態和原始搜尋結果來決定提示訊息
-      if (showAllAccents) { // 開關打開，但所有腔調都尋無
+      if (showAllAccents) {
         contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
-      } else { // 開關關閉
-        if (readings.some((r) => !r.source.startsWith(effectiveDialect))) {
-          // 目前主要腔調尋無，但其他主要腔調有結果
-          contentEl.innerHTML = `<p class="popup-not-found">在${effectiveDialect}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
+      } else {
+        const otherResultsExist = readings.some(r => !isCurrentDialect(r.source));
+        if (otherResultsExist) {
+          const dialectName = currentDialect === '四縣' ? '四縣或南四縣' : currentDialect;
+          contentEl.innerHTML = `<p class="popup-not-found">在${dialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
         } else {
-          // 所有腔調都尋無，或者其他腔調也尋無
-          contentEl.innerHTML =
-            '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
+          contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
         }
       }
     }
