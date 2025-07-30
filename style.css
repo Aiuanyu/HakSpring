@@ -1682,24 +1682,14 @@ mark {
   margin: 2em 0;
 }
 
-/* Romanizer Modal inherits overlay styles */
-#romanizerModal.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.65);
-  z-index: 1050;
-  display: none; /* Hidden by default */
-  align-items: center;
-  justify-content: center;
+/* --- Romanizer Container Styles --- */
+#romanizer-container {
+  display: none; /* Hidden by default, controlled by JS */
   padding: 20px;
-  box-sizing: border-box;
-}
-
-#romanizerModal.modal-overlay.is-visible {
-  display: flex; /* Shown when .is-visible is added */
+  margin-top: 1em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 @media screen and (max-width: 768px) {
   .result-sequence-number {
@@ -1722,20 +1712,17 @@ mark {
 /*  color: #00796b; /* 深青色文字 */
 /*  border: 1px solid #b2dfdb;
 }*/
-/* --- Romanizer Modal Styles --- */
-#romanizerModal .romanizer-content {
+/* --- Romanizer Content Styles --- */
+#romanizer-container .romanizer-content {
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  width: 90vw;
-  max-width: 1200px;
-  height: 90vh;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
 }
 
-#romanizerModal .modal-header {
+#romanizer-container .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1743,7 +1730,7 @@ mark {
     flex-shrink: 0;
 }
 
-#romanizerModal .modal-body {
+#romanizer-container .modal-body {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -1830,4 +1817,54 @@ mark {
 
 #romanizer-start-btn:hover {
   background-color: #0056b3;
+}
+/* --- Dark Mode for Romanizer Modal --- */
+@media (prefers-color-scheme: dark) {
+  #romanizer-container {
+    background-color: var(--dark-background-color);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  #romanizer-container .romanizer-content {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    color: var(--main-text-color);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  #romanizer-output-container,
+  #romanizer-input,
+  #segmentation-workspace {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+
+  #copy-romanizer-result-btn {
+    background: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+    #copy-romanizer-result-btn:hover {
+    background-color: #444;
+  }
+
+
+  #segmentation-workspace .segment-word:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #segmentation-workspace .segment-word.completed {
+    background-color: #2a4b37; /* Darker green */
+    border-bottom-color: #6fa883; /* Lighter green for border */
+    color: #e0e0e0;
+  }
+
+  #romanizer-start-btn {
+    background-color: var(--dark-primary-accent, #678d3f);
+    color: var(--dark-button-text-color, #1f1f1f);
+  }
+
+  #romanizer-start-btn:hover {
+    background-color: #85b567; /* Lighter shade of the accent color */
+  }
 }

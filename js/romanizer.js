@@ -5,8 +5,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const showRomanizerBtn = document.getElementById('showRomanizerBtn');
-  const romanizerModal = document.getElementById('romanizerModal');
-  const romanizerCloseBtn = document.getElementById('romanizerCloseBtn');
+  const romanizerContainer = document.getElementById('romanizer-container');
+  const hideRomanizerBtn = document.getElementById('hideRomanizerBtn');
   const romanizerStartBtn = document.getElementById('romanizer-start-btn');
   const segmentationWorkspace = document.getElementById('segmentation-workspace');
   const copyRomanizerResultBtn = document.getElementById('copy-romanizer-result-btn');
@@ -16,10 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Event Listeners
   if (showRomanizerBtn) {
-    showRomanizerBtn.addEventListener('click', showRomanizer);
+    showRomanizerBtn.addEventListener('click', toggleRomanizer);
   }
-  if (romanizerCloseBtn) {
-    romanizerCloseBtn.addEventListener('click', hideRomanizer);
+  if (hideRomanizerBtn) {
+    hideRomanizerBtn.addEventListener('click', hideRomanizer);
   }
   if (romanizerStartBtn) {
     romanizerStartBtn.addEventListener('click', startSegmentation);
@@ -34,19 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Functions ---
 
   // Placeholder functions to be implemented later
-  function showRomanizer() {
-    if (romanizerModal) {
-      romanizerModal.classList.add('is-visible');
-      // Sync dialect selector with global variable from main.js
-      if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
-        romanizerDialectSelector.value = currentActiveMainDialectName;
+  function toggleRomanizer() {
+    if (romanizerContainer) {
+      const isVisible = romanizerContainer.style.display === 'block';
+      romanizerContainer.style.display = isVisible ? 'none' : 'block';
+
+      if (!isVisible) {
+        // Sync dialect selector with global variable from main.js
+        if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
+          romanizerDialectSelector.value = currentActiveMainDialectName;
+        }
       }
     }
   }
 
   function hideRomanizer() {
-    if (romanizerModal) {
-      romanizerModal.classList.remove('is-visible');
+    if (romanizerContainer) {
+      romanizerContainer.style.display = 'none';
     }
   }
   function startSegmentation() {

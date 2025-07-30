@@ -321,6 +321,36 @@
     <div id="results-summary"></div>
     <div id="generated"></div>
 
+    <!-- Romanizer Container -->
+    <div id="romanizer-container">
+      <div class="romanizer-content">
+        <div class="modal-header">
+          <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
+          <select id="romanizer-dialect-selector">
+            <option selected disabled>擇腔調</option>
+            <option>四縣</option>
+            <option>海陸</option>
+            <option>大埔</option>
+            <option>饒平</option>
+            <option>詔安</option>
+            <option>南四縣</option>
+          </select>
+          <button id="hideRomanizerBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="romanizer-output-container">
+            <div id="romanizer-output"></div>
+            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
+          </div>
+          <div id="segmentation-workspace"></div>
+          <div class="romanizer-section">
+            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
+            <button id="romanizer-start-btn">開始斷詞轉換</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button id="backToTopBtn" title="歸頂高">
       <i class="fas fa-arrow-up"></i>
     </button>
@@ -369,36 +399,6 @@
             <input type="checkbox" id="dontShowInfoModalAgain">
             看忒吔，下擺毋使自動跳出
           </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- Romanizer Modal -->
-    <div id="romanizerModal" class="modal-overlay">
-      <div class="romanizer-content">
-        <div class="modal-header">
-          <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
-          <select id="romanizer-dialect-selector">
-            <option selected disabled>擇腔調</option>
-            <option>四縣</option>
-            <option>海陸</option>
-            <option>大埔</option>
-            <option>饒平</option>
-            <option>詔安</option>
-            <option>南四縣</option>
-          </select>
-          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="romanizer-output-container">
-            <div id="romanizer-output"></div>
-            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
-          </div>
-          <div id="segmentation-workspace"></div>
-          <div class="romanizer-section">
-            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
-            <button id="romanizer-start-btn">開始斷詞轉換</button>
-          </div>
         </div>
       </div>
     </div>
