@@ -41,8 +41,8 @@
 
 
 :root {
-  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, sans-serif;
-  --roman-font: 'jf金萱那提2.0', tauhu-oo, sans-serif;
+  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
   --iMazinGrace-1-rgb: 170, 150, 183; /* 新增 RGB 版本方便用 rgba() */

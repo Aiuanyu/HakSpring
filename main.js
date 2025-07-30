@@ -4271,7 +4271,7 @@ function findPronunciationsInAllData(searchText) {
 
               const entryKey = `${line['客語標音_顯示']}|${displayName}|${isExact ? 'exact' : 'partial'}|${term}`;
 
-              if (!uniqueEntries.has(entryKey)) {
+              if (!uniqueEntries.has(entryKey) && foundReadings.length < 50) {
                 let audioDetails = null;
                 // --- FIX: 根據 sourceType，用正確个變數 (dataObject.name) 來建立 audioDetails ---
                 if (line.sourceType === 'cert') {
