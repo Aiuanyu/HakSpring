@@ -1,13 +1,3 @@
-@font-face {
-  font-family: 'tauhu-oo';
-  src: local('TauhuOo20.05-Regular'),
-       url('https://tauhu.tw/TauhuOo20.05-Regular.woff2') format('woff2'),
-       url('https://tauhu.tw/TauhuOo20.05-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
 
 @font-face {
