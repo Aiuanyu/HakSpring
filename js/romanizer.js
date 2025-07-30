@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Placeholder functions to be implemented later
   function showRomanizer() {
     if (romanizerModal) {
-      romanizerModal.style.display = 'flex';
+      romanizerModal.classList.add('is-visible');
       // Sync dialect selector with global variable from main.js
       if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
         romanizerDialectSelector.value = currentActiveMainDialectName;
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function hideRomanizer() {
     if (romanizerModal) {
-      romanizerModal.style.display = 'none';
+      romanizerModal.classList.remove('is-visible');
     }
   }
   function startSegmentation() {
@@ -97,8 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Call the popup function, passing the clicked span as the anchor,
       // and a new callback function to handle the selection.
-      showPronunciationPopup(searchText, readings, target, (selectedRomanization) => {
-        updateRomanizerOutput(target, selectedRomanization);
+      // Call the new, self-contained popup function
+      showPronunciationPopup(searchText, readings, target, (anchor, phonetic) => {
+        updateRomanizerOutput(anchor, phonetic);
       });
     }
   }

@@ -3014,7 +3014,7 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
         console.log('手機查詞按鈕點擊:', selectedText);
         const readings = findPronunciationsInAllData(selectedText);
         // 使用儲存的 lastSelectionRectForMobile 來定位 popup
-        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, lastSelectionRectForMobile);
+        showPronunciationPopup(selectedText, readings, lastSelectionRectForMobile, null);
         hideMobileLookupButton(); // 顯示 popup 後隱藏按鈕
       }
     } else {
@@ -4445,8 +4445,17 @@ function updatePopupPosition(popupEl, selectionRect) {
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
 function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect) {
+  // --- Self-contained DOM element retrieval ---
+  const popupEl = document.getElementById('selectionPopup');
+  const contentEl = document.getElementById('selectionPopupContent');
+  const backdropEl = document.getElementById('selectionPopupBackdrop');
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
+
+  if (!popupEl || !contentEl || !backdropEl) {
+    console.error("Popup elements could not be found in the DOM.");
+    return;
+  }
   
   // 清除舊的錨點資訊
   lastAnchorElementForPopup = null;
@@ -4611,7 +4620,23 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
         // Add click event listener to the header button
         headerBtn.addEventListener('click', () => {
-          // Accordion logic
+          // *** ROMANIZER INTEGRATION START ***
+          // If a callback is provided, treat this click as a selection event.
+          if (typeof callbackOnSelect === 'function') {
+            const selectedPhonetic = reading.pronunciation;
+            callbackOnSelect(anchorElementOrRect, selectedPhonetic);
+            
+            // Hide the popup immediately after selection
+            const popupEl = document.getElementById('selectionPopup');
+            const backdropEl = document.getElementById('selectionPopupBackdrop');
+            if (popupEl && backdropEl) {
+              hidePronunciationPopup(popupEl, backdropEl);
+            }
+            return; // Stop further execution to prevent accordion behavior
+          }
+          // *** ROMANIZER INTEGRATION END ***
+
+          // Original accordion logic
           headerBtn.classList.toggle('active');
           const indicator = headerBtn.querySelector('.indicator');
           if (panelDiv.style.maxHeight) {
@@ -4621,20 +4646,6 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
             panelDiv.style.maxHeight = panelDiv.scrollHeight + "px";
             if (indicator) indicator.textContent = '−';
           }
-
-          // *** ROMANIZER INTEGRATION START ***
-          // We consider clicking the header as "selecting" the pronunciation
-          if (typeof callbackOnSelect === 'function') {
-            // The `reading` object is available in this scope
-            const selectedPhonetic = reading['客語標音_顯示'];
-            callbackOnSelect(anchorElementOrRect, selectedPhonetic);
-            
-            // Hide the popup immediately after selection
-            const popupEl = document.getElementById('selectionPopup');
-            const backdropEl = document.getElementById('selectionPopupBackdrop');
-            hidePronunciationPopup(popupEl, backdropEl);
-          }
-          // *** ROMANIZER INTEGRATION END ***
         });
       });
       contentEl.appendChild(accordionContainer);
@@ -4666,7 +4677,8 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
   // --- 定位邏輯 ---
   if (initialRect) {
-    popupEl.style.display = 'block'; // 確保 popup 是 block 狀態分 updatePopupPosition 計算
+    // 確保 popup 是 block 狀態分 updatePopupPosition 計算
+    if (popupEl) popupEl.style.display = 'block';
     updatePopupPosition(popupEl, initialRect);
   } else {
     // 若無 selectionRect (理論上不應發生)，退回原本置中方式
@@ -4677,7 +4689,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
     console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
   }
 
-  backdropEl.style.display = 'block';
+  if (backdropEl) backdropEl.style.display = 'block';
   popupEl.focus(); // 將焦點移到 popup，方便鍵盤操作 (例如 Esc 關閉)
   activeSelectionPopup = true;
 }
@@ -4729,11 +4741,11 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
       }
 
       if (anchorElement) {
-        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElement);
+        showPronunciationPopup(selectedText, readings, anchorElement, null);
       } else {
         // 極端个 fallback，理論上 sentenceSpan 一定會在
         const rect = selection.getRangeAt(0).getBoundingClientRect();
-        showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, rect);
+        showPronunciationPopup(selectedText, readings, rect, null);
       }
     }
   }
