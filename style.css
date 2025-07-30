@@ -1702,3 +1702,112 @@ mark {
 /*  color: #00796b; /* 深青色文字 */
 /*  border: 1px solid #b2dfdb;
 }*/
+/* --- Romanizer Modal Styles --- */
+#romanizerModal .romanizer-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 90vw;
+  max-width: 1200px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#romanizerModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+#romanizerModal .modal-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: hidden; /* Prevent double scrollbars */
+}
+
+#romanizer-output-container {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#romanizer-output {
+  font-family: var(--roman-font);
+  font-weight: 700;
+  font-size: 1.2em;
+  flex-grow: 1;
+  min-height: 1.5em; /* Ensure it has some height even when empty */
+}
+
+#copy-romanizer-result-btn {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+#segmentation-workspace {
+  border: 1px dashed #ccc;
+  padding: 15px;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  line-height: 2.5;
+}
+
+#segmentation-workspace .segment-word {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+#segmentation-workspace .segment-word:hover {
+  background-color: #f0f0f0;
+}
+
+#segmentation-workspace .segment-word.completed {
+  background-color: #d4edda; /* Light green */
+  border-bottom: 2px solid #155724; /* Darker green */
+}
+
+.romanizer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#romanizer-input {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+#romanizer-start-btn {
+  padding: 10px 15px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+#romanizer-start-btn:hover {
+  background-color: #0056b3;
+}

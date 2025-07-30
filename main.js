@@ -4444,7 +4444,7 @@ function updatePopupPosition(popupEl, selectionRect) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, popupEl, contentEl, backdropEl, anchorElementOrRect) {
+function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect) {
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
   
@@ -4611,6 +4611,7 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
 
         // Add click event listener to the header button
         headerBtn.addEventListener('click', () => {
+          // Accordion logic
           headerBtn.classList.toggle('active');
           const indicator = headerBtn.querySelector('.indicator');
           if (panelDiv.style.maxHeight) {
@@ -4620,6 +4621,20 @@ function showPronunciationPopup(selectedText, readings, popupEl, contentEl, back
             panelDiv.style.maxHeight = panelDiv.scrollHeight + "px";
             if (indicator) indicator.textContent = '−';
           }
+
+          // *** ROMANIZER INTEGRATION START ***
+          // We consider clicking the header as "selecting" the pronunciation
+          if (typeof callbackOnSelect === 'function') {
+            // The `reading` object is available in this scope
+            const selectedPhonetic = reading['客語標音_顯示'];
+            callbackOnSelect(anchorElementOrRect, selectedPhonetic);
+            
+            // Hide the popup immediately after selection
+            const popupEl = document.getElementById('selectionPopup');
+            const backdropEl = document.getElementById('selectionPopupBackdrop');
+            hidePronunciationPopup(popupEl, backdropEl);
+          }
+          // *** ROMANIZER INTEGRATION END ***
         });
       });
       contentEl.appendChild(accordionContainer);
