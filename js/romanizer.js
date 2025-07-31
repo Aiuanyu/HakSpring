@@ -70,34 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function startSegmentation() {
     if (!romanizerInput || !segmentationWorkspace || !romanizerOutput) return;
-
-    // 1. Clear previous results
     segmentationWorkspace.innerHTML = '';
     romanizerOutput.innerHTML = '';
-
-    // 2. Get input text
     const text = romanizerInput.value;
     if (!text) return;
-
-    // 3. Define segmentation regex (Han characters vs. others)
-    // This regex splits the string by sequences of non-Han characters, keeping the delimiters.
-    // The regex for CJK Unified Ideographs is \u4e00-\u9fa5. We add common extensions.
+  
     const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
-    const segments = text.split(segmentRegex).filter(Boolean); // filter(Boolean) removes empty strings
-
-    // 4. & 5. Create and append spans
+    const segments = text.split(segmentRegex).filter(Boolean);
+  
     segments.forEach(segment => {
       const span = document.createElement('span');
       span.textContent = segment;
-
-      // 6. Add class to word segments for click handling
-      // If the segment does NOT match the non-Han regex, it's a word.
       if (!segmentRegex.test(segment)) {
         span.classList.add('segment-word');
+        const readings = findPronunciationsInAllData(segment);
+        const exactMatches = readings.filter(r => r.isExactMatch);
+        if (exactMatches.length > 0) {
+          let preferredReading = exactMatches.find(r => r.source.startsWith(romanizerSelectedDialect)) || exactMatches[0];
+          span.dataset.romanized = preferredReading.pronunciation;
+          span.classList.add('completed');
+          if (exactMatches.length > 1) {
+            span.classList.add('auto-filled-multiple');
+          }
+        } else {
+          span.dataset.romanized = '--iMazinGrace-1';
+          span.classList.add('no-result');
+        }
       }
-      
       segmentationWorkspace.appendChild(span);
     });
+    updateAllRomanizerOutput();
   }
   function handleSegmentClick(event) {
     const target = event.target;
@@ -142,22 +144,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   function updateRomanizerOutput(targetSpan, selectedRomanization) {
-    if (!targetSpan || !romanizerOutput || !segmentationWorkspace) return;
-
-    // 1. & 2. Set data attribute and add 'completed' class
+    if (!targetSpan) return;
     targetSpan.dataset.romanized = selectedRomanization;
     targetSpan.classList.add('completed');
+    targetSpan.classList.remove('auto-filled-multiple');
+    targetSpan.classList.remove('no-result');
+    updateAllRomanizerOutput();
+  }
 
-    // 3. & 4. & 5. Iterate through all spans to rebuild the output string
+  function updateAllRomanizerOutput() {
+    if (!romanizerOutput || !segmentationWorkspace) return;
     const allSpans = segmentationWorkspace.querySelectorAll('span');
     let resultString = '';
     allSpans.forEach(span => {
-      // Use the stored romanization if available, otherwise use the original text (for punctuation)
       const text = span.dataset.romanized || span.textContent;
       resultString += text + ' ';
     });
-
-    // Update the output display, trimming trailing space
     romanizerOutput.textContent = resultString.trim();
   }
 });
