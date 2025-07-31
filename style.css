@@ -1683,7 +1683,7 @@ mark {
 }
 
 /* --- Romanizer Container Styles --- */
-#romanizer-container {
+#romanizerContainer {
   display: none; /* Hidden by default, controlled by JS */
   padding: 20px;
   margin-top: 1em;
@@ -1713,16 +1713,18 @@ mark {
 /*  border: 1px solid #b2dfdb;
 }*/
 /* --- Romanizer Content Styles --- */
-#romanizer-container .romanizer-content {
+#romanizerContainer .romanizer-content {
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
+  max-width: 900px; /* <-- 新增：限制最大闊度 */
+  margin: 0 auto;   /* <-- 新增：水平置中 */
 }
 
-#romanizer-container .modal-header {
+#romanizerContainer .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1730,7 +1732,7 @@ mark {
     flex-shrink: 0;
 }
 
-#romanizer-container .modal-body {
+#romanizerContainer .modal-body {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -1820,12 +1822,12 @@ mark {
 }
 /* --- Dark Mode for Romanizer Modal --- */
 @media (prefers-color-scheme: dark) {
-  #romanizer-container {
+  #romanizerContainer {
     background-color: var(--dark-background-color);
     border-color: rgba(255, 255, 255, 0.15);
   }
 
-  #romanizer-container .romanizer-content {
+  #romanizerContainer .romanizer-content {
     background-color: var(--dark-surface-color, #2c2c2c);
     color: var(--main-text-color);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
@@ -1866,5 +1868,50 @@ mark {
 
   #romanizer-start-btn:hover {
     background-color: #85b567; /* Lighter shade of the accent color */
+  }
+}
+/* --- Romanizer Container Styles --- */
+#romanizerContainer {
+  padding: 20px;
+  margin: 1.5em 0; /* 與上下內容的間距 */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  display: none; /* 初始隱藏，由 JS 控制 */
+}
+
+/* 內部結構樣式微調 */
+#romanizerContainer .romanizer-content {
+  /* .romanizer-content 現在只是個 wrapper，不需要太多特殊樣式 */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 統一內部元件的間距 */
+}
+
+#romanizerContainer .modal-header {
+  /* 維持 flex 但移除邊距，由父層 gap 控制 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#romanizerContainer .modal-body {
+  /* 移除 body wrapper，讓內容直接在 content 裡 */
+  /* 如果要保留，確保它沒有多餘的樣式 */
+}
+
+/* 確保輸出區塊的字體樣式正確 */
+#romanizer-output {
+  font-family: var(--roman-font);
+  font-weight: 700;
+  font-size: 1.2em;
+  min-height: 1.5em;
+}
+
+/* --- Dark Mode for Romanizer Container --- */
+@media (prefers-color-scheme: dark) {
+  #romanizerContainer {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 }

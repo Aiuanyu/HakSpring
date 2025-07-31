@@ -318,11 +318,8 @@
       </div>
     </details>
 
-    <div id="results-summary"></div>
-    <div id="generated"></div>
-
-    <!-- Romanizer Container -->
-    <div id="romanizer-container">
+    <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
+    <div id="romanizerContainer" style="display: none;">
       <div class="romanizer-content">
         <div class="modal-header">
           <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
@@ -335,7 +332,7 @@
             <option>詔安</option>
             <option>南四縣</option>
           </select>
-          <button id="hideRomanizerBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
         </div>
         <div class="modal-body">
           <div id="romanizer-output-container">
@@ -350,6 +347,10 @@
         </div>
       </div>
     </div>
+    <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
+
+    <div id="results-summary"></div>
+    <div id="generated"></div>
 
     <button id="backToTopBtn" title="歸頂高">
       <i class="fas fa-arrow-up"></i>

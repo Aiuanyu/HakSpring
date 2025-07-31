@@ -4445,7 +4445,7 @@ function updatePopupPosition(popupEl, selectionRect) {
  * @param {HTMLElement} contentEl - Popup 內容區域元素。
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
-function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect) {
+function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect, contextualDialect = null) {
   // --- Self-contained DOM element retrieval ---
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
@@ -4500,22 +4500,30 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
     // --- REFACTORED LOGIC START ---
     let currentDialect = '';
-    // 1. 優先從 currentActiveDialectLevelFullName (學習模式) 推斷
-    if (currentActiveDialectLevelFullName) {
-        if (currentActiveDialectLevelFullName.startsWith('四縣')) currentDialect = '四縣';
-        else if (currentActiveDialectLevelFullName.startsWith('南四縣')) currentDialect = '南四縣';
-        else if (currentActiveDialectLevelFullName.startsWith('海陸')) currentDialect = '海陸';
-        else if (currentActiveDialectLevelFullName.startsWith('大埔')) currentDialect = '大埔';
-        else if (currentActiveDialectLevelFullName.startsWith('饒平')) currentDialect = '饒平';
-        else if (currentActiveDialectLevelFullName.startsWith('詔安')) currentDialect = '詔安';
-    }
     
-    // 2. 如果無法從學習模式推斷 (例如在查詢模式)，才用 currentActiveMainDialectName
-    if (!currentDialect) {
-        currentDialect = currentActiveMainDialectName;
+    // --- ↓↓↓ 修改判斷邏輯 ↓↓↓ ---
+    // 1. 優先使用從 Romanizer 傳入的 contextualDialect
+    if (contextualDialect) {
+      currentDialect = contextualDialect;
     }
-
-    console.log(`Rendering list. Show all accents: ${showAllAccents}. Current active main dialect: ${currentActiveMainDialectName}, full level: ${currentActiveDialectLevelFullName}`); // DEBUG_MSG
+    // 2. 若無，則維持原有的邏輯，從全域變數推斷
+    else {
+      if (currentActiveDialectLevelFullName) {
+          if (currentActiveDialectLevelFullName.startsWith('四縣')) currentDialect = '四縣';
+          else if (currentActiveDialectLevelFullName.startsWith('南四縣')) currentDialect = '南四縣';
+          else if (currentActiveDialectLevelFullName.startsWith('海陸')) currentDialect = '海陸';
+          else if (currentActiveDialectLevelFullName.startsWith('大埔')) currentDialect = '大埔';
+          else if (currentActiveDialectLevelFullName.startsWith('饒平')) currentDialect = '饒平';
+          else if (currentActiveDialectLevelFullName.startsWith('詔安')) currentDialect = '詔安';
+      }
+    
+      if (!currentDialect) {
+          currentDialect = currentActiveMainDialectName;
+      }
+    }
+    // --- ↑↑↑ 修改結束 ↑↑↑ ---
+    
+    console.log(`Rendering list. Contextual Dialect: ${contextualDialect}, Final Dialect for filtering: ${currentDialect}`);
 
     let displayReadings = [...readings];
 
