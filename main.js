@@ -41,7 +41,7 @@ function parseUnifiedCsv(csvString) {
   for (let i = 1; i < rows.length; i++) {
     if (rows[i].trim() === '') continue;
     // 這邊用正規表示式來切分，較能處理包含逗號个欄位
-    const values = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+    const values = rows[i].split(/,(?=(?:(?:[^\"]*"){2})*[^"]*$)/);
     const obj = {};
     for (let j = 0; j < headers.length; j++) {
       if (headers[j]) {
@@ -57,6 +57,71 @@ function parseUnifiedCsv(csvString) {
     data.push(obj);
   }
   return data;
+}
+
+// --- 升級：資料預處理與索引建立函式 ---
+function preprocessAllData() {
+  console.log('開始預處理並索引所有詞庫資料...');
+  const startTime = performance.now();
+  const allDataSourceVars = [...allKnownDataVars, ...allKnownGipDataVars];
+
+  // 步驟 1: 像之前一樣，先解析所有資料存入 preprocessedDataCache
+  allDataSourceVars.forEach(dataVarName => {
+    let dataObject;
+    try {
+      dataObject = eval(dataVarName);
+      if (dataObject && dataObject.content) {
+        preprocessedDataCache[dataVarName] = parseUnifiedCsv(dataObject.content);
+      }
+    } catch (e) {
+      console.error(`預處理資料 ${dataVarName} 時發生錯誤:`, e);
+    }
+  });
+
+  // 步驟 2: 根據解析好的資料，建立索引
+  for (const dataVarName in preprocessedDataCache) {
+    const vocabularyArray = preprocessedDataCache[dataVarName];
+    const isGipData = dataVarName.startsWith('教典');
+    let sourceName;
+
+    if (isGipData) {
+        const gipNameMap = { '教典四': '四縣教典', '教典海': '海陸教典', '教典大': '大埔教典', '教典平': '饒平教典', '教典安': '詔安教典', '教典南': '南四縣教典' };
+        sourceName = gipNameMap[dataVarName] || dataVarName;
+    } else {
+        sourceName = getFullLevelName(dataVarName);
+    }
+
+    vocabularyArray.forEach(line => {
+      const term = line.客家語 ? line.客家語.trim() : null;
+      if (term && term.length > 0) {
+        // 如果這個詞彙還沒在索引中，先建立一個空陣列
+        if (!indexedDataCache[term]) {
+          indexedDataCache[term] = [];
+        }
+        // 將這筆詞條的相關資訊加入索引
+        indexedDataCache[term].push({
+          pronunciation: line['客語標音_顯示'],
+          source: sourceName,
+          isExactMatch: true, // 索引的 key 本身就是完全符合
+          originalTerm: term,
+          mandarinMeaning: line.華語詞義,
+          // 為了 popup 播放音檔，需要 audioDetails
+          audioDetails: {
+              lineData: { ...line },
+              dialectInfo: {
+                  sourceType: isGipData ? 'gip' : 'cert',
+                  dataVarName: dataVarName // 傳遞原始變數名以便後續處理
+              }
+          }
+        });
+      }
+    });
+  }
+
+  const endTime = performance.now();
+  console.log(`所有詞庫資料預處理與索引完成，耗時：${(endTime - startTime).toFixed(2)} 毫秒。`);
+  // 可選：顯示索引了多少獨特的詞彙
+  console.log(`總共索引了 ${Object.keys(indexedDataCache).length} 筆獨特詞彙。`);
 }
 
 // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
@@ -137,6 +202,8 @@ let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目�
 let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
 let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
 let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
+let preprocessedDataCache = {};
+let indexedDataCache = {}; // <-- 新增此索引快取物件
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
 
@@ -1684,6 +1751,8 @@ function buildTableAndSetupPlayback(
 
 /* 最頂端一開始讀取進度 */
 document.addEventListener('DOMContentLoaded', function () {
+  preprocessAllData(); // <-- 在監聽器最頂部呼叫
+
   let successfullyLoadedFromUrl = false;
 
   const resultsSummaryContainer = document.getElementById('results-summary');
@@ -4216,172 +4285,123 @@ function getFullLevelName(dataVarNameStr) {
 }
 
 /**
- * 在所有已知的客語資料中搜尋指定文字的發音。
+ * 從索引快取中快速搜尋指定文字的發音，並合併完全符合與部分符合的結果。
  * @param {string} searchText - 要搜尋的文字。
- * @returns {Array<object>} 包含發音和來源的物件陣列。每個物件格式：{ pronunciation: string, source: string }
+ * @returns {Array<object>} 包含發音和來源的物件陣列。
  */
 function findPronunciationsInAllData(searchText) {
-  let foundReadings = [];
-  const uniqueEntries = new Set();
-
   if (!searchText || searchText.trim().length === 0) {
-    console.log('Search text is empty, returning empty array.');
     return [];
   }
   const normalizedSearchText = searchText.trim();
 
-  const allDataSourceVars = [...allKnownDataVars, ...allKnownGipDataVars];
+  let foundReadings = [];
+  const uniqueEntries = new Set();
 
-  allDataSourceVars.forEach(dataVarName => {
-    let dataObject;
-    try {
-      dataObject = eval(dataVarName);
-    } catch (e) {
-      dataObject = undefined;
-    }
-    if (dataObject && dataObject.content && dataObject.name) {
-      try {
-        const vocabularyArray = parseUnifiedCsv(dataObject.content);
-
-        vocabularyArray.forEach(line => {
-          if (line.客家語 && line['客語標音_顯示']) {
-            const term = line.客家語.trim();
-            const isExact = term === normalizedSearchText;
-            const isPartial = !isExact && term.includes(normalizedSearchText);
-
-            if (isExact || isPartial) {
-              const isGipData = dataVarName.startsWith('教典');
-              let displayName;
-              let sourceTypeForAudio;
-
-              if (isGipData) {
-                const gipNameMap = { '教典四': '四縣教典', '教典海': '海陸教典', '教典大': '大埔教典', '教典平': '饒平教典', '教典安': '詔安教典', '教典南': '南四縣教典' };
-                displayName = gipNameMap[dataObject.name] || dataObject.name;
-                sourceTypeForAudio = 'gip';
-              } else {
-                displayName = getFullLevelName(dataObject.name);
-                sourceTypeForAudio = 'cert';
-              }
-
-              const entryKey = `${line['客語標音_顯示']}|${displayName}|${isExact ? 'exact' : 'partial'}|${term}`;
-
-              if (!uniqueEntries.has(entryKey)) {
-                let audioDetails = null;
-                if (sourceTypeForAudio === 'cert') {
-                  const 腔 = dataObject.name.substring(0, 1);
-                  const 級 = dataObject.name.substring(1);
-                  // --- FIX: Correctly define and pass the exclusion list ---
-                  let selected例外音檔;
-                  switch (級) {
-                    case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
-                    case '初': selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : []; break;
-                    case '中': selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : []; break;
-                    case '中高': selected例外音檔 = typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : []; break;
-                    case '高': selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : []; break;
-                    default: selected例外音檔 = [];
-                  }
-                  let 檔腔 = '', 檔級 = '', 目錄級 = '', 目錄另級 = undefined;
-                  if (腔 === '四') { 檔腔 = 'si'; } else if (腔 === '海') { 檔腔 = 'ha'; } else if (腔 === '大') { 檔腔 = 'da'; } else if (腔 === '平') { 檔腔 = 'rh'; } else if (腔 === '安') { 檔腔 = 'zh'; }
-                  if (級 === '基') { 目錄級 = '5'; 目錄另級 = '1'; } else if (級 === '初') { 目錄級 = '1'; } else if (級 === '中') { 目錄級 = '2'; 檔級 = '1'; } else if (級 === '中高') { 目錄級 = '3'; 檔級 = '2'; } else if (級 === '高') { 目錄級 = '4'; 檔級 = '3'; }
-                  
-                  audioDetails = { lineData: { ...line }, dialectInfo: { 腔, 級, selected例外音檔: selected例外音檔, generalMediaYr: '112', 目錄級, 目錄另級, 檔腔, 檔級, fullLvlName: displayName } };
-                } else if (sourceTypeForAudio === 'gip') {
-                  audioDetails = { lineData: { ...line }, dialectInfo: { sourceType: 'gip' } };
-                }
-
-                foundReadings.push({
-                  pronunciation: line['客語標音_顯示'],
-                  source: displayName,
-                  isExactMatch: isExact,
-                  originalTerm: term,
-                  mandarinMeaning: line.華語詞義,
-                  audioDetails: audioDetails
-                });
-                uniqueEntries.add(entryKey);
-              }
-            }
-          }
-        });
-      } catch (e) {
-        console.error(`處理資料 ${dataVarName} 時發生錯誤:`, e);
+  // 步驟 1: 先取得所有「完全符合」的結果
+  if (indexedDataCache[normalizedSearchText]) {
+    // 複製一份，避免修改到快取
+    const exactMatches = JSON.parse(JSON.stringify(indexedDataCache[normalizedSearchText]));
+    exactMatches.forEach(reading => {
+      // 確保 isExactMatch 標記為 true
+      reading.isExactMatch = true; 
+      const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
+      if (!uniqueEntries.has(entryKey)) {
+        foundReadings.push(reading);
+        uniqueEntries.add(entryKey);
       }
-    }
-  });
+    });
+  }
 
-  console.log(`Found ${foundReadings.length} readings for "${searchText}" before sorting/filtering in popup.`);
+  // 步驟 2: 繼續尋找「部分符合」的結果
+  for (const term in indexedDataCache) {
+    // 條件：term 包含搜尋文字，但 term 本身不等於搜尋文字 (避免重複加入)
+    if (term.includes(normalizedSearchText) && term !== normalizedSearchText) {
+      indexedDataCache[term].forEach(reading => {
+        const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
+        if (!uniqueEntries.has(entryKey)) {
+          // 建立一個新的物件，並標示 isExactMatch 為 false
+          const partialMatchReading = {
+            ...JSON.parse(JSON.stringify(reading)), // 複製一份，避免修改到快取
+            isExactMatch: false // 標示為部分符合
+          };
+          foundReadings.push(partialMatchReading);
+          uniqueEntries.add(entryKey);
+        }
+      });
+    }
+  }
+
   return foundReadings;
 }
 
-/**
- * Helper function to construct audio URL for a term in the popup.
- * @param {object} lineData - The specific line data for the term (must include '編號').
- * @param {object} dialectInfo - Dialect and level specific info (腔, 級, selected例外音檔, etc.).
- * @returns {string|null} The audio URL or null if not constructible.
- */
 function constructAudioUrlForPopup(lineData, dialectInfo) {
-  // --- Roo: 新增 GIP 資料處理邏輯 ---
-  if (dialectInfo && dialectInfo.sourceType === 'gip') {
+  if (!dialectInfo) return null;
+
+  // --- GIP 資料處理 ---
+  if (dialectInfo.sourceType === 'gip') {
     const audioFileName = lineData['詞目音檔名'];
     if (audioFileName && audioFileName.trim() !== '') {
       const finalName = audioFileName.endsWith('.mp3') ? audioFileName : `${audioFileName}.mp3`;
       return `https://hakkadict.moe.edu.tw/static/audio/${finalName}`;
     }
-    return null; // GIP 資料無音檔名
-  }
-  // --- GIP 處理結束，以下係原本个 CERT 邏輯 ---
-
-  if (!lineData || !lineData.編號 || !dialectInfo) return null;
-
-  let mediaYr = dialectInfo.generalMediaYr || '112';
-  let pre112Insertion詞 = '';
-  let current目錄級 = dialectInfo.目錄級;
-  // no[0] and no[1] from lineData.編號
-  const noParts = lineData.編號.split('-');
-  if (noParts.length < 2) return null;
-
-  let no_0 = noParts[0]; // Original first part from CSV, e.g., "1", "12"
-
-  // Step 1: General padding for single digit (applies to all before specific '初' logic)
-  // This ensures "X" becomes "0X". "XX" remains "XX".
-  if (no_0.length === 1 && !isNaN(parseInt(no_0))) {
-    no_0 = '0' + no_0;
-  }
-  // Now no_0 is "0X" if original was "X", or "XX" if original was "XX".
-
-  // Step 2: Specific padding for '初級' to make it three digits if it's two (e.g., "0X" -> "00X", "XX" -> "0XX")
-  if (dialectInfo.級 === '初') {
-    no_0 = '0' + no_0; // "01" -> "001", "12" -> "012"
+    return null;
   }
 
-  let mediaNo = noParts[1]; // Default mediaNo from 編號
-  if (mediaNo.length < 2 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add leading zero if single digit
-  if (mediaNo.length < 3 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo; // Add second leading zero if two digits
+  // --- CERT (認證) 資料處理 ---
+  if (dialectInfo.sourceType === 'cert') {
+    if (!lineData || !lineData.編號 || !dialectInfo.dataVarName) return null;
 
+    const dataVarName = dialectInfo.dataVarName; // e.g., '四基'
+    const 腔 = dataVarName.substring(0, 1);
+    const 級 = dataVarName.substring(1);
 
-  // Exception handling (simplified from buildTableAndSetupPlayback)
-  const exceptionList = dialectInfo.selected例外音檔 || [];
-  const exceptionIndex = exceptionList.findIndex(([編號]) => 編號 === lineData.編號);
-
-  if (exceptionIndex !== -1) {
-    const matchedElement = exceptionList[exceptionIndex];
-    mediaYr = matchedElement[1] || mediaYr;
-    mediaNo = matchedElement[2] || mediaNo;
-    pre112Insertion詞 = 'w/'; // Assuming 'w/' for word exceptions
-    if (dialectInfo.目錄另級 !== undefined) {
-      current目錄級 = dialectInfo.目錄另級;
+    let selected例外音檔;
+    switch (級) {
+      case '基': selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : []; break;
+      case '初': selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : []; break;
+      case '中': selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : []; break;
+      case '中高': selected例外音檔 = typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : []; break;
+      case '高': selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : []; break;
+      default: selected例外音檔 = [];
     }
+
+    let 檔腔 = '', 檔級 = '', 目錄級 = '', 目錄另級 = undefined;
+    if (腔 === '四') { 檔腔 = 'si'; } else if (腔 === '海') { 檔腔 = 'ha'; } else if (腔 === '大') { 檔腔 = 'da'; } else if (腔 === '平') { 檔腔 = 'rh'; } else if (腔 === '安') { 檔腔 = 'zh'; }
+    if (級 === '基') { 目錄級 = '5'; 目錄另級 = '1'; } else if (級 === '初') { 目錄級 = '1'; } else if (級 === '中') { 目錄級 = '2'; 檔級 = '1'; } else if (級 === '中高') { 目錄級 = '3'; 檔級 = '2'; } else if (級 === '高') { 目錄級 = '4'; 檔級 = '3'; }
+
+    let mediaYr = '112';
+    let pre112Insertion詞 = '';
+    let current目錄級 = 目錄級;
+    const noParts = lineData.編號.split('-');
+    if (noParts.length < 2) return null;
+
+    let no_0 = noParts[0];
+    if (no_0.length === 1 && !isNaN(parseInt(no_0))) no_0 = '0' + no_0;
+    if (級 === '初') no_0 = '0' + no_0;
+
+    let mediaNo = noParts[1];
+    if (mediaNo.length < 2 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo;
+    if (mediaNo.length < 3 && !isNaN(parseInt(mediaNo))) mediaNo = '0' + mediaNo;
+
+    const exceptionIndex = selected例外音檔.findIndex(([編號]) => 編號 === lineData.編號);
+    if (exceptionIndex !== -1) {
+      const matchedElement = selected例外音檔[exceptionIndex];
+      mediaYr = matchedElement[1] || mediaYr;
+      mediaNo = matchedElement[2] || mediaNo;
+      pre112Insertion詞 = 'w/';
+      if (目錄另級 !== undefined) current目錄級 = 目錄另級;
+    }
+
+    const 詞目錄 = `${current目錄級}/${檔腔}/${pre112Insertion詞}${檔級}${檔腔}`;
+    let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
+
+    if (getFullLevelName(dataVarName) === '海陸中高級' && lineData.編號 === '4-261') {
+      audioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+    }
+    return audioSrc;
   }
-
-  const 詞目錄 = `${current目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
-  
-  let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
-
-  // Specific override for 海陸中高級 4-261 (word audio)
-  if (dialectInfo.fullLvlName === '海陸中高級' && lineData.編號 === '4-261') {
-    audioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
-  }
-
-  return audioSrc;
+  return null;
 }
 
 /**
