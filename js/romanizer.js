@@ -226,6 +226,46 @@ function startSegmentation() {
     return result;
   }
 
+/**
+ * 根據客語連寫規則，在需要个地方插入分隔撇號 (')，避免音節混淆。
+ * @param {string} spaceSeparatedSyllables - 用空白隔開个原始音節字串。
+ * @returns {string} 處理後个連寫字串。
+ */
+function applyApostropheRules(spaceSeparatedSyllables) {
+  if (!spaceSeparatedSyllables) return '';
+  let text = spaceSeparatedSyllables;
+
+  // 定義所有正規表示式規則
+  const rules = [
+    // 規則 1: C'V (特定輔音後接元音)
+    { find: /([bdgmn]) ([aáǎàāâeéěèēêiíǐìīîoóǒòōôuúǔùūû])/g, replace: "$1'$2" },
+    // 規則 2: a'iu
+    { find: /([aáǎàāâ]) ([iíǐìīîuúǔùūû])/g, replace: "$1'$2" },
+    // 規則 3: e'u
+    { find: /([eéěèēê]) ([uúǔùūû])/g, replace: "$1'$2" },
+    // 規則 4: i'V
+    { find: /([iíǐìīî]) ([aáǎàāâeéěèēêiíǐìīîoóǒòōôuúǔùūû])/g, replace: "$1'$2" },
+    // 規則 5: o'i
+    { find: /([oóǒòōô]) ([iíǐìīî])/g, replace: "$1'$2" },
+    // 規則 6: u'aei
+    { find: /([uúǔùūû]) ([aáǎàāâeéěèēêiíǐìīî])/g, replace: "$1'$2" },
+    // 規則 7: V'ng
+    { find: /([aáǎàāâeéěèēêiíǐìīîoóǒòōôuúǔùūû]) ([nńňǹ]g)/g, replace: "$1'$2" },
+    // 規則 8: n'g
+    { find: /(n) (g)/g, replace: "$1'$2" }
+  ];
+
+  // 逐一應用規則，將符合條件个空白換做撇號
+  rules.forEach(rule => {
+    text = text.replace(rule.find, rule.replace);
+  });
+
+  // 最後，拿忒所有剩下个空白
+  text = text.replace(/\s/g, '');
+
+  return text;
+}
+
   // --- 取代舊的 updateAllRomanizerOutput 函式 ---
 function updateAllRomanizerOutput() {
   if (!romanizerOutput || !segmentationWorkspace) return;
@@ -244,7 +284,8 @@ function updateAllRomanizerOutput() {
       if (syllables.length > 1) {
         switch (romanizerJoiningMode) {
           case 'none':
-            text = syllables.join('');
+            // 【核心修改】呼叫新个函式來處理連寫規則
+            text = applyApostropheRules(span.dataset.romanized);
             break;
           case 'hyphen':
             text = syllables.join('-');
