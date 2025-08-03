@@ -21,6 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     romanizerDialectSelector.addEventListener('change', function() {
       romanizerSelectedDialect = this.value;
       console.log(`Romanizer 腔調已切換為: ${romanizerSelectedDialect}`);
+
+      // --- ↓↓↓ 新增以下程式碼 ↓↓↓ ---
+      if (segmentationWorkspace) {
+        segmentationWorkspace.innerHTML = '';
+      }
+      if (romanizerOutput) {
+        romanizerOutput.innerHTML = '';
+      }
+      // --- ↑↑↑ 新增結束 ↑↑↑ ---
     });
   }
   if (showRomanizerBtn) {
@@ -148,7 +157,10 @@ function startSegmentation() {
   }
   function copyRomanizerResult() {
     if (!romanizerOutput || !copyRomanizerResultBtn) return;
-    const textToCopy = romanizerOutput.textContent;
+
+    // 【新】用正規表示式將多隻空白換做一隻，再過 trim()
+    const textToCopy = romanizerOutput.textContent.replace(/\s+/g, ' ').trim();
+
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy).then(() => {
         // Optional: Provide user feedback
@@ -174,14 +186,50 @@ function startSegmentation() {
     updateAllRomanizerOutput();
   }
 
+  // --- 新增：標點正規化函式 ---
+  function normalizePunctuation(punc) {
+    const punctuationMap = {
+      '，': ',', '。': '.', '？': '?', '！': '!', '；': ';', '：': ':',
+      '（': '(', '）': ')', '、': ',', // 頓號也轉做逗號
+      '「': '“', '」': '”', '『': '‘', '』': '’'
+    };
+    // 逐一替換，處理連續標點个情況
+    let result = '';
+    for (let i = 0; i < punc.length; i++) {
+      result += punctuationMap[punc[i]] || punc[i];
+    }
+    return result;
+  }
+
+  // --- 取代舊的 updateAllRomanizerOutput 函式 ---
   function updateAllRomanizerOutput() {
     if (!romanizerOutput || !segmentationWorkspace) return;
     const allSpans = segmentationWorkspace.querySelectorAll('span');
     let resultString = '';
+
     allSpans.forEach(span => {
-      const text = span.dataset.romanized || span.textContent;
+      let text;
+      // 檢查係無係詞彙 (有 data-romanized)
+      if (span.dataset.romanized) {
+        text = span.dataset.romanized;
+      } else {
+        // 若無，就係標點符號，進行轉換
+        text = normalizePunctuation(span.textContent);
+      }
       resultString += text + ' ';
     });
-    romanizerOutput.textContent = resultString.trim();
+
+    // --- ↓↓↓ 強化後个後處理邏輯 ↓↓↓ ---
+    let finalString = resultString.trim();
+    // 1. 拿忒標點符號「頭前」个空白 (像係 , . ? !)
+    finalString = finalString.replace(/\s+([,.?!:;”’)])/g, '$1');
+    // 2. 拿忒開頭引號/括號「後背」个空白
+    finalString = finalString.replace(/([“‘(])\s+/g, '$1');
+    // 3. 【新】在標點符號「後背」加上必要个空白
+    //    用 (?![”’) ]) 來確保後背毋係其他標點或既有个空白
+    finalString = finalString.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
+    // --- ↑↑↑ 強化結束 ↑↑↑ ---
+
+    romanizerOutput.textContent = finalString.trim(); // 最後再 trim 一次確保淨俐
   }
 });
