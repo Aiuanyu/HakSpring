@@ -1820,6 +1820,25 @@ mark {
   margin: 0 auto;   /* <-- 新增：水平置中 */
 }
 
+/* 【新增】Romanizer 連詞模式選擇器樣式 */
+#romanizer-joining-mode-selector {
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-family: inherit;
+  margin-left: 10px; /* 同腔調選單隔開 */
+}
+
+/* 【新增】對應个暗夜模式樣式 */
+@media (prefers-color-scheme: dark) {
+  #romanizer-joining-mode-selector {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    color: var(--main-text-color);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
 #romanizerContainer .modal-header {
     display: flex;
     justify-content: space-between;

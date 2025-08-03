@@ -4,6 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   let romanizerSelectedDialect = '四縣'; // <-- 新增此行，預設為「四縣」
+  const ROMANIZER_JOINING_MODE_KEY = 'romanizerJoiningMode';
+  let romanizerJoiningMode = 'none'; // 【新增】預設連詞模式
 
   // DOM Elements
   const showRomanizerBtn = document.getElementById('showRomanizerBtn');
@@ -13,8 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const segmentationWorkspace = document.getElementById('segmentation-workspace');
   const copyRomanizerResultBtn = document.getElementById('copy-romanizer-result-btn');
   const romanizerDialectSelector = document.getElementById('romanizer-dialect-selector');
+  const romanizerJoiningModeSelector = document.getElementById('romanizer-joining-mode-selector'); // 【新增】
   const romanizerInput = document.getElementById('romanizer-input');
   const romanizerOutput = document.getElementById('romanizer-output');
+
+  // 【新增】頁面載入時，讀取使用者偏好
+  const savedJoiningMode = localStorage.getItem(ROMANIZER_JOINING_MODE_KEY);
+  if (savedJoiningMode && romanizerJoiningModeSelector) {
+    romanizerJoiningMode = savedJoiningMode;
+    romanizerJoiningModeSelector.value = savedJoiningMode;
+    console.log(`從 localStorage 載入連詞模式: ${savedJoiningMode}`);
+  }
 
   // --- Event Listeners (修正後) ---
   if (romanizerDialectSelector) {
@@ -30,6 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
         romanizerOutput.innerHTML = '';
       }
       // --- ↑↑↑ 新增結束 ↑↑↑ ---
+    });
+  }
+
+  // 【新增】監聽連詞模式選擇器个變化
+  if (romanizerJoiningModeSelector) {
+    romanizerJoiningModeSelector.addEventListener('change', function() {
+      romanizerJoiningMode = this.value;
+      localStorage.setItem(ROMANIZER_JOINING_MODE_KEY, romanizerJoiningMode);
+      console.log(`連詞模式已切換並儲存: ${romanizerJoiningMode}`);
+
+      // 若工作區有內容，就即時更新結果
+      if (segmentationWorkspace && segmentationWorkspace.innerHTML.trim() !== '') {
+        updateAllRomanizerOutput();
+      }
     });
   }
   if (showRomanizerBtn) {
@@ -204,35 +229,50 @@ function startSegmentation() {
   // --- 取代舊的 updateAllRomanizerOutput 函式 ---
 function updateAllRomanizerOutput() {
   if (!romanizerOutput || !segmentationWorkspace) return;
+
   const allSpans = segmentationWorkspace.querySelectorAll('span');
   let resultString = '';
 
   allSpans.forEach(span => {
     let text;
-    // 【新邏輯】直接檢查 .no-result class
+
     if (span.classList.contains('no-result')) {
-      // 若是無結果的詞，直接插入 placeholder span 的 HTML 字串
       text = '<span class="placeholder-block"></span>';
     } else if (span.dataset.romanized) {
-      // 若有羅馬字結果，使用該結果
-      text = span.dataset.romanized;
+      // --- ↓↓↓ 【核心修改】根據連詞模式處理多音節詞彙 ↓↓↓ ---
+      const syllables = span.dataset.romanized.split(' ');
+      if (syllables.length > 1) {
+        switch (romanizerJoiningMode) {
+          case 'none':
+            text = syllables.join('');
+            break;
+          case 'hyphen':
+            text = syllables.join('-');
+            break;
+          case 'space':
+          default:
+            text = span.dataset.romanized; // 維持原樣
+            break;
+        }
+      } else {
+        // 單音節詞，毋使處理
+        text = span.dataset.romanized;
+      }
+      // --- ↑↑↑ 【核心修改結束】 ↑↑↑ ---
     } else {
-      // 若是標點符號等，正規化後使用
+      // 處理標點符號
       text = normalizePunctuation(span.textContent);
     }
     resultString += text + ' ';
   });
 
   let finalHTML = resultString.trim();
-  // 標點符號摎空白个處理邏輯 (維持不變)
+  // 處理標點符號摎空白个處理邏輯 (維持不變)
   finalHTML = finalHTML.replace(/\s+([,.?!:;”’)])/g, '$1');
   finalHTML = finalHTML.replace(/([“‘(])\s+/g, '$1');
   finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
   finalHTML = finalHTML.trim();
 
-  // 【已移除】原本取代 '--iMazinGrace-1' 的程式碼已不再需要
-
-  // 用 innerHTML 來顯示結果，恁樣 placeholder 正會著
   romanizerOutput.innerHTML = finalHTML;
 }
 });
