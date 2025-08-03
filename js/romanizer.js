@@ -68,39 +68,61 @@ document.addEventListener('DOMContentLoaded', () => {
       romanizerContainer.style.display = 'none';
     }
   }
-  function startSegmentation() {
-    if (!romanizerInput || !segmentationWorkspace || !romanizerOutput) return;
-    segmentationWorkspace.innerHTML = '';
-    romanizerOutput.innerHTML = '';
-    const text = romanizerInput.value;
-    if (!text) return;
-  
-    const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
-    const segments = text.split(segmentRegex).filter(Boolean);
-  
-    segments.forEach(segment => {
-      const span = document.createElement('span');
-      span.textContent = segment;
-      if (!segmentRegex.test(segment)) {
-        span.classList.add('segment-word');
-        const readings = findPronunciationsInAllData(segment);
-        const exactMatches = readings.filter(r => r.isExactMatch);
-        if (exactMatches.length > 0) {
-          let preferredReading = exactMatches.find(r => r.source.startsWith(romanizerSelectedDialect)) || exactMatches[0];
+  // --- 取代舊的 startSegmentation 函式 ---
+function startSegmentation() {
+  if (!romanizerInput || !segmentationWorkspace || !romanizerOutput) return;
+
+  segmentationWorkspace.innerHTML = '';
+  romanizerOutput.innerHTML = '';
+
+  const text = romanizerInput.value;
+  if (!text) return;
+
+  const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
+  const segments = text.split(segmentRegex).filter(Boolean);
+
+  segments.forEach(segment => {
+    const span = document.createElement('span');
+    span.textContent = segment;
+
+    if (!segmentRegex.test(segment)) {
+      span.classList.add('segment-word');
+
+      const readings = findPronunciationsInAllData(segment);
+      const exactMatches = readings.filter(r => r.isExactMatch);
+
+      if (exactMatches.length > 0) {
+        const dialectSpecificMatches = exactMatches.filter(r => isSourceMatchingDialect(r.source, romanizerSelectedDialect));
+
+        if (dialectSpecificMatches.length > 0) {
+          const preferredReading = dialectSpecificMatches[0];
           span.dataset.romanized = preferredReading.pronunciation;
           span.classList.add('completed');
-          if (exactMatches.length > 1) {
+
+          // --- ↓↓↓ 修正後个核心邏輯 ↓↓↓ ---
+          // 檢查「符合當前腔調」的結果中，有多少種「不同」的讀音
+          const uniquePronunciationsInDialect = [...new Set(dialectSpecificMatches.map(r => r.pronunciation))];
+
+          // 只有在當前腔調下存在多種不同讀音時，才標示為黃色待確認
+          if (uniquePronunciationsInDialect.length > 1) {
             span.classList.add('auto-filled-multiple');
           }
+          // --- ↑↑↑ 修正結束 ↑↑↑ ---
+
         } else {
           span.dataset.romanized = '--iMazinGrace-1';
           span.classList.add('no-result');
         }
+      } else {
+        span.dataset.romanized = '--iMazinGrace-1';
+        span.classList.add('no-result');
       }
-      segmentationWorkspace.appendChild(span);
-    });
-    updateAllRomanizerOutput();
-  }
+    }
+    segmentationWorkspace.appendChild(span);
+  });
+
+  updateAllRomanizerOutput();
+}
   function handleSegmentClick(event) {
     const target = event.target;
     // Make sure the clicked element is a word segment

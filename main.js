@@ -100,7 +100,7 @@ function preprocessAllData() {
         }
         // 將這筆詞條的相關資訊加入索引
         indexedDataCache[term].push({
-          pronunciation: line['客語標音_顯示'],
+          pronunciation: formatPhoneticForDisplay(line['客語標音_顯示']), // <-- 用正規化後个資料
           source: sourceName,
           isExactMatch: true, // 索引的 key 本身就是完全符合
           originalTerm: term,
@@ -4285,6 +4285,24 @@ function getFullLevelName(dataVarNameStr) {
 }
 
 /**
+ * 檢查資料來源係無係符合特定个腔調規則（特別處理南四縣）。
+ * @param {string} source - 資料來源名稱 (例如 "四縣基礎級", "南四縣教典").
+ * @param {string} dialect - 愛比對个腔調 (例如 "南四縣", "四縣").
+ * @returns {boolean} - 係無符合.
+ */
+function isSourceMatchingDialect(source, dialect) {
+  if (!source || !dialect) return false;
+
+  if (dialect === '南四縣') {
+    // 南四縣模式：愛 gip『南四縣』(source "南四縣教典") 同 cert『四縣各級』(source "四縣基礎級" 等)
+    return source.startsWith('南四縣') || (source.startsWith('四縣') && !source.endsWith('教典'));
+  }
+
+  // 其他腔調个規則：直接比對頭前个字
+  return source.startsWith(dialect);
+}
+
+/**
  * 從索引快取中快速搜尋指定文字的發音，並合併完全符合與部分符合的結果。
  * @param {string} searchText - 要搜尋的文字。
  * @returns {Array<object>} 包含發音和來源的物件陣列。
@@ -4547,18 +4565,10 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
     let displayReadings = [...readings];
 
-    // Helper to check if a source matches the current dialect context
-    const isCurrentDialect = (source) => {
-        if (currentDialect === '南四縣') {
-            return source.startsWith('南四縣') || source.startsWith('四縣');
-        }
-        return source.startsWith(currentDialect);
-    };
-
     // Filter if "show other accents" is off
     if (!showAllAccents) {
-      // 若開關關閉，只顯示目前主要腔調的結果 (所有級別)
-        displayReadings = displayReadings.filter(r => isCurrentDialect(r.source));
+      // 改用新个共用函式
+      displayReadings = displayReadings.filter(r => isSourceMatchingDialect(r.source, currentDialect));
     }
 
     // 排序：1. 完全符合優先, 2. 目前腔調優先
@@ -4566,8 +4576,8 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
         // Priority 1: Exact match
         if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
         // Priority 2: Current dialect
-        const aIsCurrent = isCurrentDialect(a.source);
-        const bIsCurrent = isCurrentDialect(b.source);
+        const aIsCurrent = isSourceMatchingDialect(a.source, currentDialect);
+        const bIsCurrent = isSourceMatchingDialect(b.source, currentDialect);
         if (aIsCurrent !== bIsCurrent) return aIsCurrent ? -1 : 1;
         // Priority 3: Original term alphabetical
         if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
