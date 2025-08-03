@@ -642,21 +642,24 @@ input:checked + .slider:before {
   border-bottom: none;
 }
 
+/* --- 取代並新增 Accordion Header 樣式 --- */
 .accordion-header {
   background-color: transparent;
   color: var(--main-text-color);
   cursor: pointer;
-  padding: 12px 5px; /* Reduced horizontal padding */
+  padding: 12px 5px;
   width: 100%;
   text-align: left;
   border: none;
   outline: none;
   transition: background-color 0.3s ease;
   font-size: 1em;
+  /* 【新】改做 Flexbox 排版 */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: var(--title-font); /* Ensure consistent font */
+  gap: 8px; /* 內容摎控制項之間个距離 */
+  font-family: var(--title-font);
 }
 
 .accordion-header:hover,
@@ -664,22 +667,76 @@ input:checked + .slider:before {
   background-color: #f0f0f0;
 }
 
-.accordion-header .pronunciation-text { /* For the main pronunciation text */
-  flex-grow: 1;
+/* 【新】標頭內容个容器 */
+.accordion-header-content {
+  flex-grow: 1; /* 佔用大部分空間 */
+  display: flex;
+  flex-direction: column; /* 分詞目摎來源上下排列 */
+}
+
+.accordion-header .pronunciation-text {
   font-family: var(--roman-font);
   font-weight: 700;
 }
 
-.accordion-header .pronunciation-source { /* Keep source style */
+.accordion-header .pronunciation-source {
   font-size: 0.85em;
   color: #777;
-  margin-left: 8px;
-  margin-right: 10px; /* Space before indicator */
+  margin-top: 2px; /* 同頂高个讀音隔開一息仔 */
+}
+
+/* 【新】標頭控制項个容器 */
+.accordion-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* 控制項之間个距離 */
+  flex-shrink: 0; /* 毋分佢縮起來 */
+}
+
+/* 【新】「選用這筆讀音」个按鈕樣式 */
+.popup-substitute-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #007bff;
+  font-size: 1.1em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.popup-substitute-btn:hover {
+  background-color: #e7f3ff;
+  border-color: #007bff;
 }
 
 .accordion-header .indicator {
   font-size: 1.2em;
   font-weight: bold;
+  width: 1em; /* 固定闊度，避免展開時跳動 */
+  text-align: center;
+}
+
+/* --- 暗夜模式个對應樣式 --- */
+@media (prefers-color-scheme: dark) {
+  .accordion-header:hover,
+  .accordion-header.active {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .accordion-header .pronunciation-source {
+     color: #aaa;
+  }
+  .popup-substitute-btn {
+    color: var(--dark-link-color);
+  }
+  .popup-substitute-btn:hover {
+    background-color: rgba(144, 202, 249, 0.15);
+    border-color: var(--dark-link-color);
+  }
 }
 
 .accordion-panel {
@@ -1705,6 +1762,44 @@ mark {
 /*  border: 1px solid #b2dfdb;
 }*/
 /* --- Romanizer Styles --- */
+
+/* --- 新增：Romanizer 無結果預留位置樣式 --- */
+
+/* 1. 樣式化「斷詞工作區」肚个無結果 span */
+#segmentation-workspace .segment-word.no-result {
+  /* 【新】淨保留背景色摎底線，分文字做得看著 */
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+  border-bottom: 2px dotted var(--iMazinGrace-1);
+  color: #777;
+}
+
+#segmentation-workspace .segment-word.no-result:hover {
+  background-color: #c4b5d0; /* 滑鼠懸停時个顏色 */
+}
+
+/* 2. 建立分「最終結果區」用个獨立 placeholder class */
+.placeholder-block {
+  display: inline-block;
+  width: 3em;
+  height: 1.2em; /* 這高度做得根據你个行高微調 */
+  background-color: var(--iMazinGrace-1);
+  border-radius: 4px;
+  vertical-align: middle; /* 垂直置中 */
+}
+
+/* --- 暗夜模式个對應樣式 --- */
+@media (prefers-color-scheme: dark) {
+  #segmentation-workspace .segment-word.no-result {
+    background-color: var(--dark-secondary-accent);
+  }
+  #segmentation-workspace .segment-word.no-result:hover {
+    background-color: #8a7899;
+  }
+  .placeholder-block {
+    background-color: var(--dark-secondary-accent);
+  }
+}
+
 #romanizerContainer {
   padding: 20px;
   margin: 1.5em 0;

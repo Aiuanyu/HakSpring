@@ -4595,6 +4595,8 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
         const headerBtn = document.createElement('button');
         headerBtn.className = 'accordion-header';
+
+        // --- ↓↓↓ 產生新个 HTML 結構 ↓↓↓ ---
         let headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
         if (!reading.isExactMatch) {
           headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
@@ -4604,72 +4606,108 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
         let audioElementHTML = '';
         if (audioUrl) {
           audioElementHTML = `
-            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音"
-                    style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;">
+            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;">
               <i class="fas fa-volume-up"></i>
             </button>`;
         }
 
+        let substituteButtonHTML = '';
+        // 只有在 Romanizer 情境下（callbackOnSelect 存在時）正產生這隻按鈕
+        if (typeof callbackOnSelect === 'function') {
+          substituteButtonHTML = `
+            <button class="popup-substitute-btn" title="選用這个讀音">
+              <i class="fas fa-arrow-up-from-bracket"></i>
+            </button>`;
+        }
+
         headerBtn.innerHTML = `
-          ${headerText}
-          <span class="pronunciation-source">(${reading.source})</span>
-          ${audioElementHTML}
-          <span class="indicator">+</span>`;
+          <div class="accordion-header-content">
+            ${headerText}
+            <span class="pronunciation-source">(${reading.source})</span>
+          </div>
+          <div class="accordion-header-controls">
+            ${audioElementHTML}
+            ${substituteButtonHTML}
+            <span class="indicator">+</span>
+          </div>`;
+        // --- ↑↑↑ HTML 結構產生結束 ↑↑↑ ---
 
         const panelDiv = document.createElement('div');
         panelDiv.className = 'accordion-panel';
-        
         let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
-        if (!audioUrl) {
-          panelContent += `<p><em>(無音檔資訊)</em></p>`;
-        }
         panelDiv.innerHTML = panelContent;
 
         itemDiv.appendChild(headerBtn);
         itemDiv.appendChild(panelDiv);
         accordionContainer.appendChild(itemDiv);
 
+        // --- ↓↓↓ 重新設計事件監聽器 ↓↓↓ ---
+        // 播放音檔个按鈕
         const playButton = headerBtn.querySelector('.popup-audio-play-btn');
         if (playButton) {
-            playButton.addEventListener('click', (e) => {
-                const audioSrc = playButton.dataset.audioSrc;
-                if (audioSrc) {
-                    if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') {
-                        window.currentPopupAudio.pause();
-                        window.currentPopupAudio.currentTime = 0;
-                    }
-                    window.currentPopupAudio = new Audio(audioSrc);
-                    const iconElement = playButton.querySelector('i');
-                    const originalIconClasses = iconElement ? iconElement.className : '';
-                    if (iconElement) iconElement.className = 'fas fa-spinner fa-spin';
-                    window.currentPopupAudio.play().catch(err => {
-                        console.error("播放 popup 音檔失敗:", err);
-                        if (iconElement) iconElement.className = originalIconClasses;
-                    });
-                    window.currentPopupAudio.onended = () => {
-                        if (iconElement) iconElement.className = originalIconClasses;
-                        window.currentPopupAudio = null;
-                    };
-                    window.currentPopupAudio.onerror = () => {
-                        if (iconElement) iconElement.className = originalIconClasses;
-                        window.currentPopupAudio = null;
-                    };
+          playButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // 【新】加回這行！避免觸發外層 header 的 toggle 事件
+
+            // --- ↓↓↓ 確保 Accordion 係展開个狀態 (這段邏輯維持不變) ↓↓↓ ---
+            const header = playButton.closest('.accordion-header');
+            const panel = header ? header.nextElementSibling : null;
+
+            // 檢查係無既經展開了
+            if (header && panel && !header.classList.contains('active')) {
+              // 若無，就手動展開佢
+              header.classList.add('active');
+              const indicator = header.querySelector('.indicator');
+              panel.style.maxHeight = panel.scrollHeight + "px";
+              if (indicator) indicator.textContent = '−';
+            }
+            // --- ↑↑↑ 邏輯維持不變 ↑↑↑ ---
+
+            // (原本播放音檔个邏輯維持不變)
+            const audioSrc = playButton.dataset.audioSrc;
+            if (audioSrc) {
+                if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') {
+                    window.currentPopupAudio.pause();
+                    window.currentPopupAudio.currentTime = 0;
                 }
-            });
+                window.currentPopupAudio = new Audio(audioSrc);
+                const iconElement = playButton.querySelector('i');
+                const originalIconClasses = iconElement ? iconElement.className : '';
+                if (iconElement) iconElement.className = 'fas fa-spinner fa-spin';
+                window.currentPopupAudio.play().catch(err => {
+                    console.error("播放 popup 音檔失敗:", err);
+                    if (iconElement) iconElement.className = originalIconClasses;
+                });
+                window.currentPopupAudio.onended = () => {
+                    if (iconElement) iconElement.className = originalIconClasses;
+                    window.currentPopupAudio = null;
+                };
+                window.currentPopupAudio.onerror = () => {
+                    if (iconElement) iconElement.className = originalIconClasses;
+                    window.currentPopupAudio = null;
+                };
+            }
+          });
         }
 
-        headerBtn.addEventListener('click', () => {
-          if (typeof callbackOnSelect === 'function') {
-            const selectedPhonetic = reading.pronunciation;
-            callbackOnSelect(anchorElementOrRect, selectedPhonetic);
-            const popupEl = document.getElementById('selectionPopup');
-            const backdropEl = document.getElementById('selectionPopupBackdrop');
-            if (popupEl && backdropEl) {
-              hidePronunciationPopup(popupEl, backdropEl);
+        // 選用讀音个按鈕
+        const substituteBtn = headerBtn.querySelector('.popup-substitute-btn');
+        if (substituteBtn) {
+          substituteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 避免觸發 Accordion 展開
+            if (typeof callbackOnSelect === 'function') {
+              const selectedPhonetic = reading.pronunciation;
+              callbackOnSelect(anchorElementOrRect, selectedPhonetic);
+              const popupEl = document.getElementById('selectionPopup');
+              const backdropEl = document.getElementById('selectionPopupBackdrop');
+              if (popupEl && backdropEl) {
+                hidePronunciationPopup(popupEl, backdropEl);
+              }
             }
-            return;
-          }
+          });
+        }
 
+        // 展開/收合 Accordion 个按鈕 (歸隻 header)
+        headerBtn.addEventListener('click', () => {
           headerBtn.classList.toggle('active');
           const indicator = headerBtn.querySelector('.indicator');
           if (panelDiv.style.maxHeight) {
@@ -4680,6 +4718,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
             if (indicator) indicator.textContent = '−';
           }
         });
+        // --- ↑↑↑ 事件監聽器設計結束 ↑↑↑ ---
       });
       contentEl.appendChild(accordionContainer);
     } else {

@@ -119,7 +119,7 @@ function startSegmentation() {
           // --- ↑↑↑ 修正結束 ↑↑↑ ---
 
         } else {
-          span.dataset.romanized = '--iMazinGrace-1';
+          span.dataset.romanized = ''; // 或者 span.dataset.romanized = null; 亦可
           span.classList.add('no-result');
         }
       } else {
@@ -202,34 +202,37 @@ function startSegmentation() {
   }
 
   // --- 取代舊的 updateAllRomanizerOutput 函式 ---
-  function updateAllRomanizerOutput() {
-    if (!romanizerOutput || !segmentationWorkspace) return;
-    const allSpans = segmentationWorkspace.querySelectorAll('span');
-    let resultString = '';
+function updateAllRomanizerOutput() {
+  if (!romanizerOutput || !segmentationWorkspace) return;
+  const allSpans = segmentationWorkspace.querySelectorAll('span');
+  let resultString = '';
 
-    allSpans.forEach(span => {
-      let text;
-      // 檢查係無係詞彙 (有 data-romanized)
-      if (span.dataset.romanized) {
-        text = span.dataset.romanized;
-      } else {
-        // 若無，就係標點符號，進行轉換
-        text = normalizePunctuation(span.textContent);
-      }
-      resultString += text + ' ';
-    });
+  allSpans.forEach(span => {
+    let text;
+    // 【新邏輯】直接檢查 .no-result class
+    if (span.classList.contains('no-result')) {
+      // 若是無結果的詞，直接插入 placeholder span 的 HTML 字串
+      text = '<span class="placeholder-block"></span>';
+    } else if (span.dataset.romanized) {
+      // 若有羅馬字結果，使用該結果
+      text = span.dataset.romanized;
+    } else {
+      // 若是標點符號等，正規化後使用
+      text = normalizePunctuation(span.textContent);
+    }
+    resultString += text + ' ';
+  });
 
-    // --- ↓↓↓ 強化後个後處理邏輯 ↓↓↓ ---
-    let finalString = resultString.trim();
-    // 1. 拿忒標點符號「頭前」个空白 (像係 , . ? !)
-    finalString = finalString.replace(/\s+([,.?!:;”’)])/g, '$1');
-    // 2. 拿忒開頭引號/括號「後背」个空白
-    finalString = finalString.replace(/([“‘(])\s+/g, '$1');
-    // 3. 【新】在標點符號「後背」加上必要个空白
-    //    用 (?![”’) ]) 來確保後背毋係其他標點或既有个空白
-    finalString = finalString.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
-    // --- ↑↑↑ 強化結束 ↑↑↑ ---
+  let finalHTML = resultString.trim();
+  // 標點符號摎空白个處理邏輯 (維持不變)
+  finalHTML = finalHTML.replace(/\s+([,.?!:;”’)])/g, '$1');
+  finalHTML = finalHTML.replace(/([“‘(])\s+/g, '$1');
+  finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
+  finalHTML = finalHTML.trim();
 
-    romanizerOutput.textContent = finalString.trim(); // 最後再 trim 一次確保淨俐
-  }
+  // 【已移除】原本取代 '--iMazinGrace-1' 的程式碼已不再需要
+
+  // 用 innerHTML 來顯示結果，恁樣 placeholder 正會著
+  romanizerOutput.innerHTML = finalHTML;
+}
 });
