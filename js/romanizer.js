@@ -73,6 +73,34 @@ document.addEventListener('DOMContentLoaded', () => {
     copyRomanizerResultBtn.addEventListener('click', copyRomanizerResult);
   }
 
+  // --- 新增：監聽 output 區个點擊，處理大寫轉換 ---
+  if (romanizerOutput) {
+    romanizerOutput.addEventListener('click', function(event) {
+      // 檢查點擊个係無係大寫按鈕
+      if (event.target.classList.contains('uppercase-btn')) {
+        const button = event.target;
+        const wrapper = button.parentNode;
+
+        // 尋著 wrapper 內背个文字節點
+        for (const node of wrapper.childNodes) {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+            const currentText = node.textContent;
+
+            // 【新邏輯】檢查第一個字母係無係大寫
+            if (currentText[0] === currentText[0].toUpperCase()) {
+              // 若係，就轉做全部小寫
+              node.textContent = currentText.toLowerCase();
+            } else {
+              // 若無，就淨係將第一個字母轉做大寫
+              node.textContent = currentText.charAt(0).toUpperCase() + currentText.slice(1);
+            }
+            break; // 處理完就跳出迴圈
+          }
+        }
+      }
+    });
+  }
+
   // --- Functions (修正後) ---
   function showRomanizer() {
     if (romanizerContainer) {
@@ -112,47 +140,60 @@ function startSegmentation() {
   const text = romanizerInput.value;
   if (!text) return;
 
-  const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
-  const segments = text.split(segmentRegex).filter(Boolean);
+  // 【新】按換行符切分做多行
+  const lines = text.split('\n');
 
-  segments.forEach(segment => {
-    const span = document.createElement('span');
-    span.textContent = segment;
+  lines.forEach((line, lineIndex) => {
+    // 【新】處理不大寫个例外指示符
+    let suppressCapitalization = false;
+    if (line.startsWith("'")) {
+      suppressCapitalization = true;
+      line = line.substring(1); // 拿忒指示符
+    }
 
-    if (!segmentRegex.test(segment)) {
-      span.classList.add('segment-word');
+    const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
+    const segments = line.split(segmentRegex).filter(Boolean);
 
-      const readings = findPronunciationsInAllData(segment);
-      const exactMatches = readings.filter(r => r.isExactMatch);
+    segments.forEach((segment, segmentIndex) => {
+      const span = document.createElement('span');
+      span.textContent = segment;
 
-      if (exactMatches.length > 0) {
-        const dialectSpecificMatches = exactMatches.filter(r => isSourceMatchingDialect(r.source, romanizerSelectedDialect));
+      // 【新】若係行首个例外情況，加上 data-* 屬性
+      if (segmentIndex === 0 && suppressCapitalization) {
+        span.dataset.noCapitalize = 'true';
+      }
 
-        if (dialectSpecificMatches.length > 0) {
-          const preferredReading = dialectSpecificMatches[0];
-          span.dataset.romanized = preferredReading.pronunciation;
-          span.classList.add('completed');
+      if (!segmentRegex.test(segment)) {
+        span.classList.add('segment-word');
+        const readings = findPronunciationsInAllData(segment);
+        const exactMatches = readings.filter(r => r.isExactMatch);
 
-          // --- ↓↓↓ 修正後个核心邏輯 ↓↓↓ ---
-          // 檢查「符合當前腔調」的結果中，有多少種「不同」的讀音
-          const uniquePronunciationsInDialect = [...new Set(dialectSpecificMatches.map(r => r.pronunciation))];
-
-          // 只有在當前腔調下存在多種不同讀音時，才標示為黃色待確認
-          if (uniquePronunciationsInDialect.length > 1) {
-            span.classList.add('auto-filled-multiple');
+        if (exactMatches.length > 0) {
+          const dialectSpecificMatches = exactMatches.filter(r => isSourceMatchingDialect(r.source, romanizerSelectedDialect));
+          if (dialectSpecificMatches.length > 0) {
+            const preferredReading = dialectSpecificMatches[0];
+            span.dataset.romanized = preferredReading.pronunciation;
+            span.classList.add('completed');
+            const uniquePronunciationsInDialect = [...new Set(dialectSpecificMatches.map(r => r.pronunciation))];
+            if (uniquePronunciationsInDialect.length > 1) {
+              span.classList.add('auto-filled-multiple');
+            }
+          } else {
+            span.dataset.romanized = '';
+            span.classList.add('no-result');
           }
-          // --- ↑↑↑ 修正結束 ↑↑↑ ---
-
         } else {
-          span.dataset.romanized = ''; // 或者 span.dataset.romanized = null; 亦可
+          span.dataset.romanized = ''; // 無結果統一處理
           span.classList.add('no-result');
         }
-      } else {
-        span.dataset.romanized = '--iMazinGrace-1';
-        span.classList.add('no-result');
       }
+      segmentationWorkspace.appendChild(span);
+    });
+
+    // 【新】在每一行後壁（除了最尾一行）加上換行符
+    if (lineIndex < lines.length - 1) {
+      segmentationWorkspace.appendChild(document.createElement('br'));
     }
-    segmentationWorkspace.appendChild(span);
   });
 
   updateAllRomanizerOutput();
@@ -270,50 +311,101 @@ function applyApostropheRules(spaceSeparatedSyllables) {
 function updateAllRomanizerOutput() {
   if (!romanizerOutput || !segmentationWorkspace) return;
 
-  const allSpans = segmentationWorkspace.querySelectorAll('span');
-  let resultString = '';
+  // 1. 清空舊个結果
+  romanizerOutput.innerHTML = '';
 
-  allSpans.forEach(span => {
-    let text;
+  // 【新】直接處理所有子節點，包含 <span> 同 <br>
+  const childNodes = Array.from(segmentationWorkspace.childNodes);
 
-    if (span.classList.contains('no-result')) {
-      text = '<span class="placeholder-block"></span>';
-    } else if (span.dataset.romanized) {
-      // --- ↓↓↓ 【核心修改】根據連詞模式處理多音節詞彙 ↓↓↓ ---
-      const syllables = span.dataset.romanized.split(' ');
-      if (syllables.length > 1) {
-        switch (romanizerJoiningMode) {
-          case 'none':
-            // 【核心修改】呼叫新个函式來處理連寫規則
-            text = applyApostropheRules(span.dataset.romanized);
-            break;
-          case 'hyphen':
-            text = syllables.join('-');
-            break;
-          case 'space':
-          default:
-            text = span.dataset.romanized; // 維持原樣
-            break;
-        }
-      } else {
-        // 單音節詞，毋使處理
-        text = span.dataset.romanized;
-      }
-      // --- ↑↑↑ 【核心修改結束】 ↑↑↑ ---
-    } else {
-      // 處理標點符號
-      text = normalizePunctuation(span.textContent);
+  childNodes.forEach(node => {
+    // 若係 <br> 標籤，直接複製到 output
+    if (node.nodeName === 'BR') {
+      romanizerOutput.appendChild(document.createElement('br'));
+      return; // 處理完畢，換下一個節點
     }
-    resultString += text + ' ';
+
+    // 若係一般个 <span> 節點
+    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'SPAN') {
+      const span = node;
+      if (span.classList.contains('no-result')) {
+        const placeholder = document.createElement('span');
+        placeholder.className = 'placeholder-block';
+        romanizerOutput.appendChild(placeholder);
+      } else if (span.dataset.romanized) {
+        const syllables = span.dataset.romanized.split(' ').filter(s => s);
+        syllables.forEach((syllable, index) => {
+          const wrapper = document.createElement('span');
+          wrapper.className = 'syllable-wrapper';
+          // 【新】傳遞 no-capitalize 屬性
+          if (span.dataset.noCapitalize) {
+            wrapper.dataset.noCapitalize = 'true';
+          }
+          const textNode = document.createTextNode(syllable);
+          const uppercaseBtn = document.createElement('button');
+          uppercaseBtn.className = 'uppercase-btn';
+          uppercaseBtn.textContent = 'U';
+          uppercaseBtn.setAttribute('aria-label', `將 ${syllable} 轉做大寫`);
+          wrapper.appendChild(textNode);
+          wrapper.appendChild(uppercaseBtn);
+          romanizerOutput.appendChild(wrapper);
+
+          if (index < syllables.length - 1) {
+            let separator = '';
+            switch (romanizerJoiningMode) {
+              case 'hyphen': separator = '-'; break;
+              case 'space': separator = ' '; break;
+              case 'none':
+                const tempString = applyApostropheRules(`${syllable} ${syllables[index + 1]}`);
+                if (tempString.includes("'")) separator = "'";
+                break;
+            }
+            if (separator) romanizerOutput.appendChild(document.createTextNode(separator));
+          }
+        });
+      } else {
+        const puncText = normalizePunctuation(span.textContent);
+        const puncNode = document.createTextNode(puncText);
+        romanizerOutput.appendChild(puncNode);
+      }
+    }
   });
 
-  let finalHTML = resultString.trim();
-  // 處理標點符號摎空白个處理邏輯 (維持不變)
+  // 2. 後處理：整理標點符號前後个空白
+  let finalHTML = romanizerOutput.innerHTML;
   finalHTML = finalHTML.replace(/\s+([,.?!:;”’)])/g, '$1');
   finalHTML = finalHTML.replace(/([“‘(])\s+/g, '$1');
   finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
-  finalHTML = finalHTML.trim();
+  romanizerOutput.innerHTML = finalHTML.trim();
 
-  romanizerOutput.innerHTML = finalHTML;
+  // --- ↓↓↓ 【重構】自動句首大寫邏輯 ↓↓↓ ---
+  let capitalizeNext = true; // 預設第一隻音節愛大寫
+  const outputNodes = Array.from(romanizerOutput.childNodes);
+
+  for (const node of outputNodes) {
+    // 規則 a & c: 若係愛大寫，而且目前節點係音節 wrapper
+    if (capitalizeNext && node.nodeType === Node.ELEMENT_NODE && node.classList.contains('syllable-wrapper')) {
+      // 檢查係無係有「毋使大寫」个指示
+      if (!node.dataset.noCapitalize) {
+        const textNode = Array.from(node.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        if (textNode) {
+          const text = textNode.textContent;
+          textNode.textContent = text.charAt(0).toUpperCase() + text.slice(1);
+        }
+      }
+      capitalizeNext = false; // 無論有做無，處理完第一隻音節後就重設旗標
+    }
+    // 規則 b: 若目前節點係文字，檢查係無係以「句點」結束
+    else if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent.trim();
+      if (text.endsWith('.')) { // 【新】淨檢查句點
+        capitalizeNext = true; // 係，表示下一隻音節愛大寫
+      }
+    }
+    // 規則 a: 若目前節點係換行 <br>，表示下一隻音節係行首，愛大寫
+    else if (node.nodeName === 'BR') {
+      capitalizeNext = true;
+    }
+  }
+  // --- ↑↑↑ 自動句首大寫邏輯結束 ↑↑↑ ---
 }
 });

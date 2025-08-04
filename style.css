@@ -1763,6 +1763,67 @@ mark {
 }*/
 /* --- Romanizer Styles --- */
 
+/* --- 新增：Romanizer 互動式音節樣式 --- */
+
+/* 每一個音節个外層容器 */
+.syllable-wrapper {
+  position: relative; /* 設定相對定位，分絕對定位个按鈕有好个基準 */
+  display: inline-block; /* 讓佢像文字樣排列，但有區塊特性 */
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+  font-family: var(--roman-font); /* 【新】設定羅馬字字型 */
+  /* 【舊】拿掉 padding 同 margin */
+}
+
+/* 大寫按鈕樣式 */
+.uppercase-btn {
+  position: absolute; /* 絕對定位，相對於 .syllable-wrapper */
+  top: -8px;          /* 移到頂高 */
+  left: -8px;         /* 移到左片 */
+  width: 20px;
+  height: 20px;
+  background-color: #007bff;
+  color: white;
+  border: 1px solid white;
+  border-radius: 50%; /* 圓形按鈕 */
+  cursor: pointer;
+  font-family: sans-serif; /* 用較清晰个無襯線字體 */
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 18px; /* 調整讓 'U' 在垂直方向置中 */
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+
+  /* 預設隱藏按鈕 */
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8); /* 預設縮小 */
+  transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
+}
+
+/* 當滑鼠懸停在音節容器上時，顯示按鈕 */
+.syllable-wrapper:hover {
+  background-color: rgba(0, 123, 255, 0.1); /* 淡淡个藍色背景 */
+}
+
+.syllable-wrapper:hover .uppercase-btn {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1); /* 恢復正常大小 */
+}
+
+/* 暗夜模式个對應樣式 */
+@media (prefers-color-scheme: dark) {
+  .syllable-wrapper:hover {
+    background-color: rgba(144, 202, 249, 0.15); /* 暗夜模式个 hover 背景色 */
+  }
+  .uppercase-btn {
+    background-color: var(--dark-link-color, #90caf9);
+    color: var(--dark-background-color, #1f1f1f);
+    border-color: var(--dark-surface-color, #2c2c2c);
+  }
+}
+
 /* --- 新增：Romanizer 無結果預留位置樣式 --- */
 
 /* 1. 樣式化「斷詞工作區」肚个無結果 span */
