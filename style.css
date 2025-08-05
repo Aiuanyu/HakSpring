@@ -1763,6 +1763,71 @@ mark {
 }*/
 /* --- Romanizer Styles --- */
 
+/* --- 新增：Romanizer 互動式斷詞修正樣式 --- */
+
+/* 確保 .segment-word 係定位基準 */
+#segmentation-workspace .segment-word {
+  position: relative;
+}
+
+/* 「重新斷詞」按鈕樣式 */
+.resegment-btn {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 22px;
+  height: 22px;
+  background-color: #dc3545; /* 紅色，表示有問題 */
+  color: white;
+  border: 1px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 20px; /* 調整讓圖示置中 */
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+
+  /* 預設隱藏 */
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+}
+
+/* 當滑鼠懸停在「多字元」且「無結果」个詞彙上時，顯示按鈕 */
+/* (用 .multichar class 來輔助，這會由 JS 加上) */
+#segmentation-workspace .segment-word.no-result.multichar:hover .resegment-btn {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* 原地編輯用个 input 輸入框樣式 */
+.resegment-input {
+  border: 1px solid #007bff;
+  border-radius: 3px;
+  padding: 1px 3px;
+  font-size: inherit; /* 承襲字體大小 */
+  font-family: inherit; /* 承襲字體 */
+  background-color: #e7f3ff; /* 淡藍色背景，提示編輯中 */
+  color: #333;
+  outline: none;
+}
+
+/* --- 暗夜模式个對應樣式 --- */
+@media (prefers-color-scheme: dark) {
+  .resegment-btn {
+	background-color: #f56565; /* 較亮个紅色 */
+	color: #1a202c;
+	border-color: #2d3748;
+  }
+  .resegment-input {
+	background-color: #2a4365;
+	border-color: #63b3ed;
+	color: #e2e8f0;
+  }
+}
+
 /* --- 新增：Romanizer 互動式音節樣式 --- */
 
 /* 每一個音節个外層容器 */

@@ -130,7 +130,84 @@ document.addEventListener('DOMContentLoaded', () => {
       romanizerContainer.style.display = 'none';
     }
   }
-  // --- 取代舊的 startSegmentation 函式 ---
+  
+  function handleSegmentClick(event) {
+	const target = event.target;
+	// 尋著點擊目標最近个 .resegment-btn 或 .segment-word
+	const resegmentBtn = target.closest('.resegment-btn');
+	const segmentWordSpan = target.closest('.segment-word');
+  
+	// 若點擊个係重新斷詞按鈕
+	if (resegmentBtn && segmentWordSpan) {
+	  event.stopPropagation(); // 避免觸發後續个查詞 popup
+	  initiateResegment(segmentWordSpan);
+	} 
+	// 若點擊个係詞彙本身 (但毋係重新斷詞按鈕)
+	else if (segmentWordSpan) {
+	  const searchText = segmentWordSpan.textContent;
+  
+	  if (typeof findPronunciationsInAllData !== 'function' || typeof showPronunciationPopup !== 'function') {
+		console.error('核心函式 (findPronunciationsInAllData 或 showPronunciationPopup) 未定義。');
+		alert('核心查詢功能載入失敗，請重新整理頁面。');
+		return;
+	  }
+  
+	  const readings = findPronunciationsInAllData(searchText);
+  
+	  showPronunciationPopup(searchText, readings, segmentWordSpan, (anchor, phonetic) => {
+		updateRomanizerOutput(anchor, phonetic);
+	  }, romanizerSelectedDialect);
+	}
+  }
+
+  /**
+ * 根據一段文字，建立一個包含查詞結果个 <span> 元素。
+ * @param {string} segmentText - 愛處理个文字片段。
+ * @returns {HTMLElement} - 建立好个 <span> 元素。
+ */
+function createSegmentSpan(segmentText) {
+  const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
+  const span = document.createElement('span');
+  span.textContent = segmentText;
+
+  // 若毋係標點符號，就執行查詞
+  if (!segmentRegex.test(segmentText)) {
+	span.classList.add('segment-word');
+	const readings = findPronunciationsInAllData(segmentText);
+	const exactMatches = readings.filter(r => r.isExactMatch);
+
+	if (exactMatches.length > 0) {
+	  const dialectSpecificMatches = exactMatches.filter(r => isSourceMatchingDialect(r.source, romanizerSelectedDialect));
+	  if (dialectSpecificMatches.length > 0) {
+		span.dataset.romanized = dialectSpecificMatches[0].pronunciation;
+		span.classList.add('completed');
+		const uniquePronunciations = [...new Set(dialectSpecificMatches.map(r => r.pronunciation))];
+		if (uniquePronunciations.length > 1) {
+		  span.classList.add('auto-filled-multiple');
+		}
+	  } else {
+		span.dataset.romanized = '';
+		span.classList.add('no-result');
+	  }
+	} else {
+	  span.dataset.romanized = '';
+	  span.classList.add('no-result');
+	}
+
+	// 【核心新增】若係多字元且無結果，就加上重新斷詞按鈕
+	if (segmentText.length > 1 && span.classList.contains('no-result')) {
+	  span.classList.add('multichar'); // 加上 class 分 CSS 好選擇
+	  const resegmentBtn = document.createElement('button');
+	  resegmentBtn.className = 'resegment-btn';
+	  resegmentBtn.innerHTML = '<i class="fas fa-cut"></i>'; // Font Awesome 剪刀圖示
+	  resegmentBtn.title = '重新斷詞';
+	  resegmentBtn.setAttribute('aria-label', '重新斷詞');
+	  span.appendChild(resegmentBtn);
+	}
+  }
+  return span;
+}
+
 function startSegmentation() {
   if (!romanizerInput || !segmentationWorkspace || !romanizerOutput) return;
 
@@ -140,87 +217,105 @@ function startSegmentation() {
   const text = romanizerInput.value;
   if (!text) return;
 
-  // 【新】按換行符切分做多行
   const lines = text.split('\n');
 
   lines.forEach((line, lineIndex) => {
-    // 【新】處理不大寫个例外指示符
-    let suppressCapitalization = false;
-    if (line.startsWith("'")) {
-      suppressCapitalization = true;
-      line = line.substring(1); // 拿忒指示符
-    }
+	let suppressCapitalization = false;
+	if (line.startsWith("'")) {
+	  suppressCapitalization = true;
+	  line = line.substring(1);
+	}
 
-    const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
-    const segments = line.split(segmentRegex).filter(Boolean);
+	const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
+	const segments = line.split(segmentRegex).filter(Boolean);
 
-    segments.forEach((segment, segmentIndex) => {
-      const span = document.createElement('span');
-      span.textContent = segment;
+	segments.forEach((segment, segmentIndex) => {
+	  // 【重構】直接呼叫新个輔助函式
+	  const span = createSegmentSpan(segment);
 
-      // 【新】若係行首个例外情況，加上 data-* 屬性
-      if (segmentIndex === 0 && suppressCapitalization) {
-        span.dataset.noCapitalize = 'true';
-      }
+	  if (segmentIndex === 0 && suppressCapitalization) {
+		span.dataset.noCapitalize = 'true';
+	  }
+	  segmentationWorkspace.appendChild(span);
+	});
 
-      if (!segmentRegex.test(segment)) {
-        span.classList.add('segment-word');
-        const readings = findPronunciationsInAllData(segment);
-        const exactMatches = readings.filter(r => r.isExactMatch);
-
-        if (exactMatches.length > 0) {
-          const dialectSpecificMatches = exactMatches.filter(r => isSourceMatchingDialect(r.source, romanizerSelectedDialect));
-          if (dialectSpecificMatches.length > 0) {
-            const preferredReading = dialectSpecificMatches[0];
-            span.dataset.romanized = preferredReading.pronunciation;
-            span.classList.add('completed');
-            const uniquePronunciationsInDialect = [...new Set(dialectSpecificMatches.map(r => r.pronunciation))];
-            if (uniquePronunciationsInDialect.length > 1) {
-              span.classList.add('auto-filled-multiple');
-            }
-          } else {
-            span.dataset.romanized = '';
-            span.classList.add('no-result');
-          }
-        } else {
-          span.dataset.romanized = ''; // 無結果統一處理
-          span.classList.add('no-result');
-        }
-      }
-      segmentationWorkspace.appendChild(span);
-    });
-
-    // 【新】在每一行後壁（除了最尾一行）加上換行符
-    if (lineIndex < lines.length - 1) {
-      segmentationWorkspace.appendChild(document.createElement('br'));
-    }
+	if (lineIndex < lines.length - 1) {
+	  segmentationWorkspace.appendChild(document.createElement('br'));
+	}
   });
 
   updateAllRomanizerOutput();
 }
-  function handleSegmentClick(event) {
-    const target = event.target;
-    // Make sure the clicked element is a word segment
-    if (target.classList.contains('segment-word')) {
-      const searchText = target.textContent;
-      
-      // Check if dependent functions from main.js exist
-      if (typeof findPronunciationsInAllData !== 'function' || typeof showPronunciationPopup !== 'function') {
-        console.error('Core functions (findPronunciationsInAllData or showPronunciationPopup) are not defined. Make sure main.js is loaded before romanizer.js.');
-        alert('核心查詢功能載入失敗，請重新整理頁面。');
-        return;
-      }
-      
-      const readings = findPronunciationsInAllData(searchText);
-      
-      // Call the popup function, passing the clicked span as the anchor,
-      // and a new callback function to handle the selection.
-      // Call the new, self-contained popup function
-      showPronunciationPopup(searchText, readings, target, (anchor, phonetic) => {
-        updateRomanizerOutput(anchor, phonetic);
-      }, romanizerSelectedDialect); // <-- 在此傳入 Romanizer 選擇的腔調
-    }
+
+/**
+ * 將指定个 <span> 換做一個 input 輸入框，啟動編輯模式。
+ * @param {HTMLElement} spanToEdit - 愛編輯个 <span> 元素。
+ */
+function initiateResegment(spanToEdit) {
+  const originalText = spanToEdit.textContent;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = originalText;
+  input.className = 'resegment-input';
+  input.style.width = `${spanToEdit.offsetWidth + 10}px`; // 大概个闊度
+
+  // 用 input 取代 span
+  spanToEdit.replaceWith(input);
+  input.focus();
+  input.select(); // 全選文字方便修改
+
+  // 監聽 Enter 同 Escape 鍵
+  input.addEventListener('keydown', (e) => {
+	if (e.key === 'Enter') {
+	  e.preventDefault();
+	  confirmResegment(input);
+	} else if (e.key === 'Escape') {
+	  cancelResegment(input, spanToEdit);
+	}
+  });
+
+  // 監聽 blur 事件 (失去焦點)
+  input.addEventListener('blur', () => {
+	cancelResegment(input, spanToEdit);
+  });
+}
+
+/**
+ * 確認重新斷詞个結果，並用新个 <span> 取代 input 輸入框。
+ * @param {HTMLElement} inputElement - 使用者編輯个 input 元素。
+ */
+function confirmResegment(inputElement) {
+  const newText = inputElement.value.trim();
+  if (!newText) { // 若使用者清空了，就淨係拿掉 input
+	inputElement.remove();
+	updateAllRomanizerOutput();
+	return;
   }
+
+  const newSegments = newText.split(/\s+/).filter(Boolean); // 用空白分隔
+  const fragment = document.createDocumentFragment();
+
+  newSegments.forEach(segment => {
+	const newSpan = createSegmentSpan(segment);
+	fragment.appendChild(newSpan);
+  });
+
+  inputElement.replaceWith(fragment);
+  updateAllRomanizerOutput();
+}
+
+/**
+ * 取消編輯，將 input 輸入框換回原本个 <span>。
+ * @param {HTMLElement} inputElement - 使用者編輯个 input 元素。
+ * @param {HTMLElement} originalSpan - 原本个 <span> 元素。
+ */
+function cancelResegment(inputElement, originalSpan) {
+  // 檢查 inputElement 係無係還在 DOM 內背，避免重複觸發
+  if (document.body.contains(inputElement)) {
+	inputElement.replaceWith(originalSpan);
+  }
+}
+
   function copyRomanizerResult() {
     if (!romanizerOutput || !copyRomanizerResultBtn) return;
 
@@ -374,7 +469,7 @@ function updateAllRomanizerOutput() {
   let finalHTML = romanizerOutput.innerHTML;
   finalHTML = finalHTML.replace(/\s+([,.?!:;”’)])/g, '$1');
   finalHTML = finalHTML.replace(/([“‘(])\s+/g, '$1');
-  finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
+  finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'\])])\s*/g, '$1 ');
   romanizerOutput.innerHTML = finalHTML.trim();
 
   // --- ↓↓↓ 【重構】自動句首大寫邏輯 ↓↓↓ ---
