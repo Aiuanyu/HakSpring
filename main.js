@@ -2765,6 +2765,13 @@ document.addEventListener('DOMContentLoaded', function () {
        });
        console.log(`Dialect link clicked, calling generate for ${dataVarName}`);
        generate(dataObject);
+
+       // --- 新增：點擊後捲動到類別選擇區塊 ---
+       const catPanel = document.getElementById('cat-panel');
+       if (catPanel) {
+         catPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }
+       // --- 新增結束 ---
       } else {
         console.error(
           '找不到對應的資料變數或 data-varname:',
@@ -3354,7 +3361,7 @@ function 大埔高降異化() {
 
         if (
           currentToken.length > 0 &&
-          currentToken.match(/[\u00E0\u00E8\u00EC\u00F2\u00F9]/) // à è ì ò ù
+          currentToken.match(/[àèìòù](?![bdg])/) // à è ì ò ù, 但排除後跟 b, d, g
         ) {
           if (
             nextWordToken &&
@@ -4312,7 +4319,7 @@ function findPronunciationsInAllData(searchText) {
     return [];
   }
   const normalizedSearchText = searchText.trim();
-
+  
   let foundReadings = [];
   const uniqueEntries = new Set();
 
