@@ -484,7 +484,7 @@ span[data-varname].active-dialect-level {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
-  z-index: 1001; /* 比其他內容高，比 popup 低 */
+  z-index: 1051; /* 比 Romanizer Modal 高 */
   /* display: none; 由 JS 控制 */
 }
 
@@ -496,7 +496,7 @@ span[data-varname].active-dialect-level {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  z-index: 1002; /* 比 backdrop 高一層 */
+  z-index: 1052; /* 比 backdrop 高一層 */
   /* display: none; 由 JS 控制 */
   width: clamp(300px, 60vw, 500px); /* 響應式寬度，最小 300px */
   max-height: 70vh; /* 最大高度 */
@@ -642,21 +642,24 @@ input:checked + .slider:before {
   border-bottom: none;
 }
 
+/* --- 取代並新增 Accordion Header 樣式 --- */
 .accordion-header {
   background-color: transparent;
   color: var(--main-text-color);
   cursor: pointer;
-  padding: 12px 5px; /* Reduced horizontal padding */
+  padding: 12px 5px;
   width: 100%;
   text-align: left;
   border: none;
   outline: none;
   transition: background-color 0.3s ease;
   font-size: 1em;
+  /* 【新】改做 Flexbox 排版 */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: var(--title-font); /* Ensure consistent font */
+  gap: 8px; /* 內容摎控制項之間个距離 */
+  font-family: var(--title-font);
 }
 
 .accordion-header:hover,
@@ -664,22 +667,76 @@ input:checked + .slider:before {
   background-color: #f0f0f0;
 }
 
-.accordion-header .pronunciation-text { /* For the main pronunciation text */
-  flex-grow: 1;
+/* 【新】標頭內容个容器 */
+.accordion-header-content {
+  flex-grow: 1; /* 佔用大部分空間 */
+  display: flex;
+  flex-direction: column; /* 分詞目摎來源上下排列 */
+}
+
+.accordion-header .pronunciation-text {
   font-family: var(--roman-font);
   font-weight: 700;
 }
 
-.accordion-header .pronunciation-source { /* Keep source style */
+.accordion-header .pronunciation-source {
   font-size: 0.85em;
   color: #777;
-  margin-left: 8px;
-  margin-right: 10px; /* Space before indicator */
+  margin-top: 2px; /* 同頂高个讀音隔開一息仔 */
+}
+
+/* 【新】標頭控制項个容器 */
+.accordion-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* 控制項之間个距離 */
+  flex-shrink: 0; /* 毋分佢縮起來 */
+}
+
+/* 【新】「選用這筆讀音」个按鈕樣式 */
+.popup-substitute-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #007bff;
+  font-size: 1.1em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.popup-substitute-btn:hover {
+  background-color: #e7f3ff;
+  border-color: #007bff;
 }
 
 .accordion-header .indicator {
   font-size: 1.2em;
   font-weight: bold;
+  width: 1em; /* 固定闊度，避免展開時跳動 */
+  text-align: center;
+}
+
+/* --- 暗夜模式个對應樣式 --- */
+@media (prefers-color-scheme: dark) {
+  .accordion-header:hover,
+  .accordion-header.active {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .accordion-header .pronunciation-source {
+     color: #aaa;
+  }
+  .popup-substitute-btn {
+    color: var(--dark-link-color);
+  }
+  .popup-substitute-btn:hover {
+    background-color: rgba(144, 202, 249, 0.15);
+    border-color: var(--dark-link-color);
+  }
 }
 
 .accordion-panel {
@@ -1681,6 +1738,8 @@ mark {
   border-top: 1px solid #ccc;
   margin: 2em 0;
 }
+
+
 @media screen and (max-width: 768px) {
   .result-sequence-number {
     margin-right: 0.5em; /* 在小螢幕下，序號和內容之間的距離 */
@@ -1702,3 +1761,251 @@ mark {
 /*  color: #00796b; /* 深青色文字 */
 /*  border: 1px solid #b2dfdb;
 }*/
+/* --- Romanizer Styles --- */
+
+/* --- 新增：Romanizer 無結果預留位置樣式 --- */
+
+/* 1. 樣式化「斷詞工作區」肚个無結果 span */
+#segmentation-workspace .segment-word.no-result {
+  /* 【新】淨保留背景色摎底線，分文字做得看著 */
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+  border-bottom: 2px dotted var(--iMazinGrace-1);
+  color: #777;
+}
+
+#segmentation-workspace .segment-word.no-result:hover {
+  background-color: #c4b5d0; /* 滑鼠懸停時个顏色 */
+}
+
+/* 2. 建立分「最終結果區」用个獨立 placeholder class */
+.placeholder-block {
+  display: inline-block;
+  width: 3em;
+  height: 1.2em; /* 這高度做得根據你个行高微調 */
+  background-color: var(--iMazinGrace-1);
+  border-radius: 4px;
+  vertical-align: middle; /* 垂直置中 */
+}
+
+/* --- 暗夜模式个對應樣式 --- */
+@media (prefers-color-scheme: dark) {
+  #segmentation-workspace .segment-word.no-result {
+    background-color: var(--dark-secondary-accent);
+  }
+  #segmentation-workspace .segment-word.no-result:hover {
+    background-color: #8a7899;
+  }
+  .placeholder-block {
+    background-color: var(--dark-secondary-accent);
+  }
+}
+
+#romanizerContainer {
+  padding: 20px;
+  margin: 1.5em 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  display: none; /* Controlled by JS */
+}
+
+#romanizerContainer .romanizer-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  max-width: 900px; /* <-- 新增：限制最大闊度 */
+  margin: 0 auto;   /* <-- 新增：水平置中 */
+}
+
+/* 【新增】Romanizer 連詞模式選擇器樣式 */
+#romanizer-joining-mode-selector {
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-family: inherit;
+  margin-left: 10px; /* 同腔調選單隔開 */
+}
+
+/* 【新增】對應个暗夜模式樣式 */
+@media (prefers-color-scheme: dark) {
+  #romanizer-joining-mode-selector {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    color: var(--main-text-color);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+#romanizerContainer .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+#romanizerContainer .modal-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: hidden; /* Prevent double scrollbars */
+}
+
+#romanizer-output-container {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#romanizer-output {
+  font-family: var(--roman-font);
+  font-weight: 700;
+  font-size: 1.2em;
+  flex-grow: 1;
+  min-height: 1.5em; /* Ensure it has some height even when empty */
+}
+
+#copy-romanizer-result-btn {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+#segmentation-workspace {
+  border: 1px dashed #ccc;
+  padding: 15px;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  line-height: 2.5;
+}
+
+#segmentation-workspace .segment-word {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+#segmentation-workspace .segment-word:hover {
+  background-color: #f0f0f0;
+}
+
+#segmentation-workspace .segment-word.completed {
+  background-color: #d4edda; /* Light green */
+  border-bottom: 2px solid #155724; /* Darker green */
+}
+
+.romanizer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#romanizer-input {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+#romanizer-start-btn {
+  padding: 10px 15px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+#romanizer-start-btn:hover {
+  background-color: #0056b3;
+}
+
+#segmentation-workspace .segment-word.auto-filled-multiple {
+  background-color: #fffacd; /* LemonChiffon */
+  border-bottom: 2px solid #ffd700; /* Gold */
+}
+
+#segmentation-workspace .segment-word.no-result {
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+  border-bottom: 2px dotted var(--iMazinGrace-1);
+  color: #777;
+}
+
+/* --- Dark Mode for Romanizer Container --- */
+@media (prefers-color-scheme: dark) {
+  #romanizerContainer {
+    background-color: var(--dark-background-color);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  #romanizerContainer .romanizer-content {
+    background-color: var(--dark-surface-color, #2c2c2c);
+    color: var(--main-text-color);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  #romanizer-output-container,
+  #romanizer-input,
+  #segmentation-workspace {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+
+  #copy-romanizer-result-btn {
+    background: var(--dark-surface-color, #2c2c2c);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+    #copy-romanizer-result-btn:hover {
+    background-color: #444;
+  }
+
+
+  #segmentation-workspace .segment-word:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #segmentation-workspace .segment-word.completed {
+    background-color: #2a4b37; /* Darker green */
+    border-bottom-color: #6fa883; /* Lighter green for border */
+    color: #e0e0e0;
+  }
+
+  #romanizer-start-btn {
+    background-color: var(--dark-primary-accent, #678d3f);
+    color: var(--dark-button-text-color, #1f1f1f);
+  }
+
+  #romanizer-start-btn:hover {
+    background-color: #85b567; /* Lighter shade of the accent color */
+  }
+
+  #segmentation-workspace .segment-word.auto-filled-multiple {
+    background-color: #5a5a22;
+    border-bottom-color: #ffd700;
+    color: #fff;
+  }
+
+  #segmentation-workspace .segment-word.no-result {
+    background-color: rgba(var(--iMazinGrace-1-rgb), 0.3);
+    border-bottom-color: var(--iMazinGrace-1);
+    color: #aaa;
+  }
+}
