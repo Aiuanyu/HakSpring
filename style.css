@@ -1839,7 +1839,7 @@ mark {
   font-family: var(--roman-font); /* 【新】設定羅馬字字型 */
   /* 【舊】拿掉 padding 同 margin */
 }
-.segment-group {
+.segment-group, .segment-group span[data-seg-id] {
   font-family: var(--roman-font); /* 乜愛設定字型 */
 }
 

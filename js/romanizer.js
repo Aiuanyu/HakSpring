@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 淨更新分隔符，毋儲存到歷史紀錄
       updateJoiningSeparators();
+      applyPunctuationSpacing(); // 【新】加上這行
     });
   }
 
@@ -133,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         saveState();
-        updateJoiningSeparators(); // 【新】加上這行
+        updateJoiningSeparators();
+        applyPunctuationSpacing(); // 【新】加上這行
       }
     });
   }
@@ -307,65 +309,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const newText = inputElement.value.trim();
         const workspaceSpansFragment = document.createDocumentFragment();
     
-        // 1. 在 workspace 內底產生新个 span 元素
+        // 1. 更新 workspace (邏輯無變)
         if (newText) {
             const newSegments = newText.split(/\s+/).filter(Boolean);
             newSegments.forEach((segment, index) => {
                 const newSpan = createSegmentSpan(segment);
-                newSpan.dataset.segId = `${originalSegId}-${index}`; // 分佢兜有系統个新 ID
+                newSpan.dataset.segId = `${originalSegId}-${index}`;
                 workspaceSpansFragment.appendChild(newSpan);
             });
         }
         inputElement.replaceWith(workspaceSpansFragment);
     
-        // 2. 尋著 output 區內底愛被取代个舊 group
-        const groupToReplace = romanizerOutput.querySelector(`.segment-group[data-seg-id="${originalSegId}"]`);
+        const groupToUpdate = romanizerOutput.querySelector(`.segment-group[data-seg-id="${originalSegId}"]`);
     
-        if (groupToReplace) {
-            const outputNodesFragment = document.createDocumentFragment();
+        if (groupToUpdate) {
+            groupToUpdate.innerHTML = '';
+            const outputFragment = document.createDocumentFragment();
             const newWorkspaceSpans = Array.from(segmentationWorkspace.querySelectorAll(`[data-seg-id^="${originalSegId}-"]`));
     
-            // 3. 根據 workspace 內底个新 span，產生對應个 output 節點
             newWorkspaceSpans.forEach(span => {
                 if (span.classList.contains('segment-word')) {
-                    // 係詞彙，就產生一隻新个 segment-group
-                    const newGroup = document.createElement('span');
-                    newGroup.className = 'segment-group';
-                    newGroup.dataset.segId = span.dataset.segId; // 用相同个新 ID
+                    const subSegmentWrapper = document.createElement('span');
+                    subSegmentWrapper.dataset.segId = span.dataset.segId;
     
                     if (span.dataset.romanized) {
-                        populateSegmentGroup(newGroup, span.dataset.romanized, span);
+                        populateSegmentGroup(subSegmentWrapper, span.dataset.romanized, span);
                     } else {
-                        // 係 no-result，就加入 placeholder
                         const placeholder = document.createElement('span');
                         placeholder.className = 'placeholder-block';
-                        newGroup.appendChild(placeholder);
+                        subSegmentWrapper.appendChild(placeholder);
                     }
-                    outputNodesFragment.appendChild(newGroup);
+                    outputFragment.appendChild(subSegmentWrapper);
                 } else {
-                    // 係標點，就產生文字節點
                     const puncText = normalizePunctuation(span.textContent);
-                    outputNodesFragment.appendChild(document.createTextNode(puncText));
+                    outputFragment.appendChild(document.createTextNode(puncText));
                 }
-                // 在新節點之間加空白
-                outputNodesFragment.appendChild(document.createTextNode(' '));
+                // 【關鍵修改】拿忒了在這位產生个固定闊位
             });
-    
-            // 拿掉最尾項多餘个空白
-            if (outputNodesFragment.lastChild && outputNodesFragment.lastChild.nodeType === Node.TEXT_NODE) {
-                outputNodesFragment.lastChild.textContent = outputNodesFragment.lastChild.textContent.trimEnd();
-            }
-    
-            // 4. 【關鍵】用新產生个節點組，去取代舊个 group
-            groupToReplace.replaceWith(outputNodesFragment);
-    
+            groupToUpdate.appendChild(outputFragment);
         } else if (newText) {
-            console.warn(`尋無 ID 為: ${originalSegId} 个 segment group 來取代。`);
+            console.warn(`尋無 ID 為: ${originalSegId} 个 segment group 來更新。`);
         }
     
-        // 5. 重新套用全局規則
+        // 5. 重新套用全局規則，並呼叫新个 updateJoiningSeparators
         applyCapitalizationRules();
-        updateJoiningSeparators();
+        updateJoiningSeparators(); // 【新】呼叫這隻來處理所有連接符號
+        applyPunctuationSpacing(); // 【新】加上這行
         saveState();
     }
 
@@ -400,30 +389,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updatePronunciationAndMark(targetSpan, selectedRomanization) {
-    if (!targetSpan || !targetSpan.dataset.segId) return;
-
-    document.querySelectorAll('#segmentation-workspace .just-substituted').forEach(el => {
-      el.classList.remove('just-substituted');
-    });
-
-    targetSpan.dataset.romanized = selectedRomanization;
-    targetSpan.classList.add('completed', 'just-substituted');
-    targetSpan.classList.remove('auto-filled-multiple', 'no-result');
-
-    const segId = targetSpan.dataset.segId;
-    const groupToUpdate = romanizerOutput.querySelector(`.segment-group[data-seg-id="${segId}"]`);
-
-    // 【新邏輯】直接假定 groupToUpdate 一定尋得著
-    if (groupToUpdate) {
-      populateSegmentGroup(groupToUpdate, selectedRomanization, targetSpan);
-      saveState();
-      applyCapitalizationRules();
-      updateJoiningSeparators(); // 【新】加上這行
+        if (!targetSpan || !targetSpan.dataset.segId) return;
+    
+        document.querySelectorAll('#segmentation-workspace .just-substituted').forEach(el => {
+            el.classList.remove('just-substituted');
+        });
+    
+        targetSpan.dataset.romanized = selectedRomanization;
+        targetSpan.classList.add('completed', 'just-substituted');
+        targetSpan.classList.remove('auto-filled-multiple', 'no-result');
+    
+        const segId = targetSpan.dataset.segId;
+    
+        // 【新邏輯】用通用个屬性選擇器來尋著目標，無論佢係 .segment-group 還係內部个子元素
+        const elementToUpdate = romanizerOutput.querySelector(`[data-seg-id="${segId}"]`);
+    
+        if (elementToUpdate) {
+            // 直接用 populateSegmentGroup 來重新填入新个內容
+            populateSegmentGroup(elementToUpdate, selectedRomanization, targetSpan);
+            saveState();
+            applyCapitalizationRules();
+            updateJoiningSeparators();
+            applyPunctuationSpacing(); // 【新】加上這行
+        } else {
+            // 這條錯誤訊息在除錯時當有用
+            console.error(`無法在 output 區內尋著帶有 seg-id="${segId}" 个元素來更新。`);
+        }
+    
+        targetSpan.classList.remove('just-substituted');
     }
-    // 【舊个 else 區塊已拿掉】
-
-    targetSpan.classList.remove('just-substituted');
-  }
 
   function normalizePunctuation(punc) {
     const punctuationMap = {
@@ -463,56 +457,44 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function populateSegmentGroup(container, romanizedText, sourceSpan) {
-    container.innerHTML = '';
-    const tokens = tokenizeRomanization(romanizedText);
-
-    tokens.forEach((token, index) => {
-      if (!/[【】（）()\/]/.test(token)) {
-        const wrapper = document.createElement('span');
-        wrapper.className = 'syllable-wrapper';
-        if (sourceSpan.classList.contains('just-substituted')) {
-          wrapper.classList.add('substituted-by-user');
-        }
-        if (sourceSpan.dataset.noCapitalize) {
-          wrapper.dataset.noCapitalize = 'true';
-        }
-        wrapper.appendChild(document.createTextNode(token));
-
-        const uppercaseBtn = document.createElement('button');
-        uppercaseBtn.className = 'uppercase-btn';
-        uppercaseBtn.textContent = 'U';
-        uppercaseBtn.setAttribute('aria-label', `將 ${token} 轉做大寫`);
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-        deleteBtn.setAttribute('aria-label', `刪除 ${token}`);
-
-        wrapper.appendChild(uppercaseBtn);
-        wrapper.appendChild(deleteBtn);
-        container.appendChild(wrapper);
-
-        const nextToken = tokens[index + 1];
-        if (nextToken && !/[【】（）()\/]/.test(nextToken)) {
-          let separator = '';
-          switch (romanizerJoiningMode) {
-            case 'hyphen': separator = '-'; break;
-            case 'space': separator = ' '; break;
-            case 'none':
-              const tempString = applyApostropheRules(`${token} ${nextToken}`);
-              if (tempString.includes("'")) separator = "'";
-              break;
-          }
-          if (separator) container.appendChild(document.createTextNode(separator));
-        }
-      } else {
-        const separatorSpan = document.createElement('span');
-        separatorSpan.className = 'separator';
-        separatorSpan.textContent = token;
-        container.appendChild(separatorSpan);
-      }
-    });
-  }
+        container.innerHTML = '';
+        const tokens = tokenizeRomanization(romanizedText);
+    
+        tokens.forEach(token => {
+            if (!/[【】（）()\/]/.test(token)) {
+                // 【新邏輯】淨產生音節个 wrapper，毋產生連接符號
+                const wrapper = document.createElement('span');
+                wrapper.className = 'syllable-wrapper';
+                if (sourceSpan.classList.contains('just-substituted')) {
+                    wrapper.classList.add('substituted-by-user');
+                }
+                if (sourceSpan.dataset.noCapitalize) {
+                    wrapper.dataset.noCapitalize = 'true';
+                }
+                wrapper.appendChild(document.createTextNode(token));
+    
+                const uppercaseBtn = document.createElement('button');
+                uppercaseBtn.className = 'uppercase-btn';
+                uppercaseBtn.textContent = 'U';
+                uppercaseBtn.setAttribute('aria-label', `將 ${token} 轉做大寫`);
+    
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                deleteBtn.setAttribute('aria-label', `刪除 ${token}`);
+    
+                wrapper.appendChild(uppercaseBtn);
+                wrapper.appendChild(deleteBtn);
+                container.appendChild(wrapper);
+            } else {
+                // 分隔符號 (像【】) 還係愛保留
+                const separatorSpan = document.createElement('span');
+                separatorSpan.className = 'separator';
+                separatorSpan.textContent = token;
+                container.appendChild(separatorSpan);
+            }
+        });
+    }
 
   function applyCapitalizationRules() {
     if (!romanizerOutput) return;
@@ -569,6 +551,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+function applyPunctuationSpacing(){
+    if (!romanizerOutput) return;
+
+    let finalHTML = romanizerOutput.innerHTML;
+
+    // 【全新規則組】
+    // 規則 1: 在後引號和開引號之間加上闊位 e.g. ")(" -> ") ("
+    finalHTML = finalHTML.replace(/([”’)}\]])([“‘(\[{])/g, '$1 $2');
+
+    // 規則 2: 在一個詞 (</span>) 和一個開引號之間加上闊位 e.g. "</span>(" -> "</span> ("
+    finalHTML = finalHTML.replace(/(<\/span>)([“‘(\[{])/g, '$1 $2');
+
+    // 規則 3: 拿忒「開引號」後壁个闊位 e.g. "( " -> "("
+    finalHTML = finalHTML.replace(/([“‘(\[{])\s+/g, '$1');
+
+    // 規則 4: 拿忒「後引號」還有一般標點頭前个闊位 e.g. " ," -> ","
+    finalHTML = finalHTML.replace(/\s+([,.?!:;”’)}\]])/g, '$1');
+
+    // 規則 5: 在「後引號」還有一般標點後壁加上一個闊位，並避免在連續標點之間也加闊位
+    finalHTML = finalHTML.replace(/([,.?!:;”’)}\]])(?![\n,.?!:;”’)}\]])/g, '$1 ');
+
+    romanizerOutput.innerHTML = finalHTML.trim();
+}
+
 /**
  * 淨更新 output 區內底个音節連詞符，毋影響音節本身。
  * 這擺會正確處理 .segment-group 內底个結構。
@@ -576,51 +582,71 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateJoiningSeparators() {
     if (!romanizerOutput) return;
 
+    // 步驟 1: 拿忒所有舊个連接符號 (文字節點)
+    const textNodesToRemove = [];
+    const walker = document.createTreeWalker(romanizerOutput, NodeFilter.SHOW_TEXT);
+    let node;
+    while (node = walker.nextNode()) {
+        if (/^[\s'-]+$/.test(node.textContent) && node.parentNode.closest('.segment-group')) {
+            textNodesToRemove.push(node);
+        }
+    }
+    textNodesToRemove.forEach(n => n.remove());
+
+    // 步驟 2: 對每一隻 segment-group 做獨立處理
     const segmentGroups = romanizerOutput.querySelectorAll('.segment-group');
-
     segmentGroups.forEach(group => {
-        // 步驟 1: 拿掉舊个分隔符 (純文字節點)
-        const oldSeparators = Array.from(group.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-        oldSeparators.forEach(sep => sep.remove());
+        const syllables = Array.from(group.querySelectorAll('.syllable-wrapper'));
+        if (syllables.length <= 1) return;
 
-        // 步驟 2: 重新插入新个分隔符
-        const children = Array.from(group.childNodes);
-        children.forEach((child, index) => {
-            if (index < children.length - 1) {
-                const nextChild = children[index + 1];
+        // 步驟 3: 尋出所有个「障礙物」
+        const nonSyllableElements = Array.from(group.querySelectorAll('.separator'));
+        const puncWalker = document.createTreeWalker(group, NodeFilter.SHOW_TEXT);
+        const punctuationNodes = [];
+        let puncNode;
+        while (puncNode = puncWalker.nextNode()) {
+            // 淨愛無係闊位、而且毋係在音節內部个文字節點
+            if (!/^\s*$/.test(puncNode.textContent) && !puncNode.parentNode.closest('.syllable-wrapper')) {
+                punctuationNodes.push(puncNode);
+            }
+        }
+        const obstacles = [...nonSyllableElements, ...punctuationNodes];
 
-                // 【新邏輯】淨在兩隻 syllable-wrapper 直接相鄰个時節正插入
-                if (child.classList && child.classList.contains('syllable-wrapper') &&
-                    nextChild.classList && nextChild.classList.contains('syllable-wrapper')) {
+        // 步驟 4: 檢查每一對相鄰个音節之間係無係有障礙物
+        for (let i = 0; i < syllables.length - 1; i++) {
+            const s1 = syllables[i];
+            const s2 = syllables[i + 1];
 
-                    const syllable1Text = Array.from(child.childNodes).find(n => n.nodeType === Node.TEXT_NODE)?.textContent || '';
-                    const syllable2Text = Array.from(nextChild.childNodes).find(n => n.nodeType === Node.TEXT_NODE)?.textContent || '';
+            const hasObstacle = obstacles.some(obs =>
+                (s1.compareDocumentPosition(obs) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+                (s2.compareDocumentPosition(obs) & Node.DOCUMENT_POSITION_PRECEDING)
+            );
 
+            // 若係無障礙物，正插入連接符號
+            if (!hasObstacle) {
+                const s1TextNode = Array.from(s1.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                const s2TextNode = Array.from(s2.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+
+                if (s1TextNode && s2TextNode) {
+                    const s1Text = s1TextNode.textContent.toLowerCase();
+                    const s2Text = s2TextNode.textContent.toLowerCase();
                     let separator = '';
+
                     switch (romanizerJoiningMode) {
-                        case 'hyphen':
-                            separator = '-';
-                            break;
-                        case 'space':
-                            separator = ' ';
-                            break;
+                        case 'hyphen': separator = '-'; break;
+                        case 'space': separator = ' '; break;
                         case 'none':
-                            const s1 = syllable1Text.toLowerCase();
-                            const s2 = syllable2Text.toLowerCase();
-                            const tempString = applyApostropheRules(`${s1} ${s2}`);
-                            if (tempString.includes("'")) {
-                                separator = "'";
-                            }
+                            const tempString = applyApostropheRules(`${s1Text} ${s2Text}`);
+                            if (tempString.includes("'")) separator = "'";
                             break;
                     }
 
                     if (separator) {
-                        const separatorNode = document.createTextNode(separator);
-                        group.insertBefore(separatorNode, nextChild);
+                        s1.after(document.createTextNode(separator));
                     }
                 }
             }
-        });
+        }
     });
 }
 
@@ -644,19 +670,15 @@ function updateJoiningSeparators() {
           const segmentGroup = document.createElement('span');
           segmentGroup.className = 'segment-group';
           segmentGroup.dataset.segId = currentSegId;
-
           const placeholder = document.createElement('span');
           placeholder.className = 'placeholder-block';
-
           segmentGroup.appendChild(placeholder);
           romanizerOutput.appendChild(segmentGroup);
         } else if (span.dataset.romanized) {
           const segmentGroup = document.createElement('span');
           segmentGroup.className = 'segment-group';
           segmentGroup.dataset.segId = currentSegId;
-
           populateSegmentGroup(segmentGroup, span.dataset.romanized, span);
-
           romanizerOutput.appendChild(segmentGroup);
         } else {
           const puncText = normalizePunctuation(span.textContent);
@@ -665,13 +687,10 @@ function updateJoiningSeparators() {
       }
     });
 
-    let finalHTML = romanizerOutput.innerHTML;
-    finalHTML = finalHTML.replace(/\s+([,.?!:;”’)])/g, '$1');
-    finalHTML = finalHTML.replace(/([“‘(])\s+/g, '$1');
-    finalHTML = finalHTML.replace(/([,.?!:;”’)])(?!["'’)])\s*/g, '$1 ');
-    romanizerOutput.innerHTML = finalHTML.trim();
-
+    // 【關鍵修改】拿忒舊个正規表示式闊位處理，改呼叫新函式
     applyCapitalizationRules();
+    updateJoiningSeparators();
+    applyPunctuationSpacing(); // 【新】加上這行
     saveState(true);
 
     document.querySelectorAll('#segmentation-workspace .just-substituted').forEach(el => {
@@ -709,6 +728,8 @@ function updateJoiningSeparators() {
       historyIndex--;
       romanizerOutput.innerHTML = history[historyIndex];
       updateUndoRedoButtons();
+      updateJoiningSeparators();
+      applyPunctuationSpacing(); // 【新】加上這行
     }
   }
 
@@ -717,6 +738,8 @@ function updateJoiningSeparators() {
       historyIndex++;
       romanizerOutput.innerHTML = history[historyIndex];
       updateUndoRedoButtons();
+      updateJoiningSeparators();
+      applyPunctuationSpacing(); // 【新】加上這行
     }
   }
 
