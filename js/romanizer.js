@@ -88,15 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (uppercaseBtn) {
         const wrapper = uppercaseBtn.parentNode;
+        // 【新】為這粒音節加上手動設定个標籤
+        wrapper.dataset.manualCase = 'true'; 
         const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
         if (textNode) {
-          const currentText = textNode.textContent;
-          if (currentText[0] === currentText[0].toUpperCase()) {
-            textNode.textContent = currentText.toLowerCase();
-          } else {
-            textNode.textContent = currentText.charAt(0).toUpperCase() + currentText.slice(1);
-          }
-          saveState();
+            const currentText = textNode.textContent;
+            if (currentText[0] === currentText[0].toUpperCase()) {
+                textNode.textContent = currentText.toLowerCase();
+            } else {
+                textNode.textContent = currentText.charAt(0).toUpperCase() + currentText.slice(1);
+            }
+            // 手動調整後，毋使呼叫 applyCapitalizationRules，直接儲存狀態
+            saveState();
         }
       } 
       else if (deleteBtn) {
@@ -309,7 +312,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const newText = inputElement.value.trim();
         const workspaceSpansFragment = document.createDocumentFragment();
     
-        // 1. 更新 workspace (邏輯無變)
+        // 【舊个記憶邏輯已刪除】
+    
+        // 1. 更新 workspace
         if (newText) {
             const newSegments = newText.split(/\s+/).filter(Boolean);
             newSegments.forEach((segment, index) => {
@@ -344,17 +349,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const puncText = normalizePunctuation(span.textContent);
                     outputFragment.appendChild(document.createTextNode(puncText));
                 }
-                // 【關鍵修改】拿忒了在這位產生个固定闊位
             });
             groupToUpdate.appendChild(outputFragment);
         } else if (newText) {
             console.warn(`尋無 ID 為: ${originalSegId} 个 segment group 來更新。`);
         }
     
-        // 5. 重新套用全局規則，並呼叫新个 updateJoiningSeparators
+        // 5. 重新套用全局規則
         applyCapitalizationRules();
-        updateJoiningSeparators(); // 【新】呼叫這隻來處理所有連接符號
-        applyPunctuationSpacing(); // 【新】加上這行
+        updateJoiningSeparators();
+        applyPunctuationSpacing();
+    
+        // 【舊个還原邏輯已刪除】
+    
         saveState();
     }
 
@@ -400,19 +407,18 @@ document.addEventListener('DOMContentLoaded', () => {
         targetSpan.classList.remove('auto-filled-multiple', 'no-result');
     
         const segId = targetSpan.dataset.segId;
-    
-        // 【新邏輯】用通用个屬性選擇器來尋著目標，無論佢係 .segment-group 還係內部个子元素
         const elementToUpdate = romanizerOutput.querySelector(`[data-seg-id="${segId}"]`);
     
         if (elementToUpdate) {
-            // 直接用 populateSegmentGroup 來重新填入新个內容
             populateSegmentGroup(elementToUpdate, selectedRomanization, targetSpan);
-            saveState();
+    
+            // 重新套用全局規則
             applyCapitalizationRules();
             updateJoiningSeparators();
-            applyPunctuationSpacing(); // 【新】加上這行
+            applyPunctuationSpacing();
+    
+            saveState();
         } else {
-            // 這條錯誤訊息在除錯時當有用
             console.error(`無法在 output 區內尋著帶有 seg-id="${segId}" 个元素來更新。`);
         }
     
@@ -499,9 +505,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyCapitalizationRules() {
     if (!romanizerOutput) return;
 
-    // 步驟一：重設，將所有音節个頭个字母都先轉做細寫
+    // 步驟一：重設，淨將無手動標籤个音節轉做細寫
     const allSyllableWrappers = romanizerOutput.querySelectorAll('.syllable-wrapper');
     allSyllableWrappers.forEach(wrapper => {
+        // 【新】若係有手動標籤，就跳過毋處理
+        if (wrapper.dataset.manualCase) {
+            return;
+        }
         const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
         if (textNode) {
             const currentText = textNode.textContent;
@@ -516,13 +526,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputNodes = Array.from(romanizerOutput.childNodes);
 
     for (const node of outputNodes) {
-        // 處理換行
         if (node.nodeName === 'BR') {
             capitalizeNext = true;
             continue;
         }
-
-        // 處理標點符號
         if (node.nodeType === Node.TEXT_NODE) {
             const text = node.textContent.trim();
             if (text.endsWith('.') || text.endsWith('?') || text.endsWith('!')) {
@@ -530,22 +537,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             continue;
         }
-
-        // 處理包含音節个元素 (一定是 .segment-group)
         if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('segment-group')) {
-            // 尋著這組內底个第一隻有效音節
             const firstSyllableInGroup = node.querySelector('.syllable-wrapper');
-            
             if (firstSyllableInGroup) {
-                if (capitalizeNext && !firstSyllableInGroup.dataset.noCapitalize) {
+                // 【新】愛確定無手動標籤，正做自動大寫
+                if (capitalizeNext && !firstSyllableInGroup.dataset.manualCase && !firstSyllableInGroup.dataset.noCapitalize) {
                     const textNode = Array.from(firstSyllableInGroup.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
                     if (textNode) {
                         const text = textNode.textContent;
                         textNode.textContent = text.charAt(0).toUpperCase() + text.slice(1);
                     }
                 }
-                // 無論係無係大寫，這組詞處理忒以後，後背个詞就毋使再大寫了 (直到新个句子開始)
-                capitalizeNext = false; 
+                capitalizeNext = false;
             }
         }
     }
