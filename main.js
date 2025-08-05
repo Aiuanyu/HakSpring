@@ -298,6 +298,20 @@ function checkAudioStatus(url) {
 }*/
 
 
+/**
+ * 根據羅馬字拼音个分隔規則，準確計算音節數量。
+ * @param {string} romanizationText - 包含羅馬字拼音个字串。
+ * @returns {number} - 實際个音節數量。
+ */
+function countSyllables(romanizationText) {
+    if (!romanizationText) return 0;
+    // 這隻正規表示式直接對應 romanizer.js 內底个 tokenizeRomanization 函式
+    const tokens = romanizationText.match(/[【】（）()\/]|[^【】（）()\/\s]+/g) || [];
+    // 過濾掉所有淨係標點符號个 token，淨留下音節
+    const syllables = tokens.filter(token => !/^[【】（）()\/]$/.test(token));
+    return syllables.length;
+}
+
 // --- 新增：當學習模式改變時，同步更新查詞腔調設定 ---
 function updateSearchDialect(dialectName) {
   if (!dialectName) return;
@@ -4578,18 +4592,20 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       displayReadings = displayReadings.filter(r => isSourceMatchingDialect(r.source, currentDialect));
     }
 
-    // 排序：1. 完全符合優先, 2. 目前腔調優先
+    // 排序：
     displayReadings.sort((a, b) => {
-        // Priority 1: Exact match
-        if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
-        // Priority 2: Current dialect
-        const aIsCurrent = isSourceMatchingDialect(a.source, currentDialect);
-        const bIsCurrent = isSourceMatchingDialect(b.source, currentDialect);
-        if (aIsCurrent !== bIsCurrent) return aIsCurrent ? -1 : 1;
-        // Priority 3: Original term alphabetical
-        if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
-        // Priority 4: Source name alphabetical
-        return a.source.localeCompare(b.source);
+      // Priority 1: 完全符合優先
+      if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
+      // Priority 2: 音節數較少个優先
+      const aSyllables = countSyllables(a.pronunciation);
+      const bSyllables = countSyllables(b.pronunciation);
+      if (aSyllables !== bSyllables) {
+        return aSyllables - bSyllables;
+      }
+      // Priority 3: 照原本詞目个字母順序
+      if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
+      // Priority 4: 照來源个字母順序
+      return a.source.localeCompare(b.source);
     });
 
     if (displayReadings.length > 0) {

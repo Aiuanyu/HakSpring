@@ -341,6 +341,11 @@
           <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
         </div>
         <div class="modal-body">
+          <!-- 【新增】Undo/Redo 控制按鈕 -->
+          <div id="romanizer-history-controls">
+            <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+            <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+          </div>
           <div id="romanizer-output-container">
             <div id="romanizer-output"></div>
             <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
