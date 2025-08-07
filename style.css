@@ -2038,6 +2038,7 @@ mark {
     align-items: center;
     margin-bottom: 15px;
     flex-shrink: 0;
+    flex-wrap: wrap; /* 允許換行 */
 }
 
 #romanizerContainer .modal-body {
@@ -2200,5 +2201,28 @@ mark {
     background-color: rgba(var(--iMazinGrace-1-rgb), 0.3);
     border-bottom-color: var(--iMazinGrace-1);
     color: #aaa;
+  }
+}
+
+/* --- Romanizer Header 響應式設計 --- */
+@media screen and (max-width: 768px) {
+  #romanizerContainer .modal-header {
+    /* 在狹窄螢幕，改做從頭開始對齊，分 h2 好看 */
+    justify-content: flex-start;
+    gap: 10px; /* 加入項目之間个間距 */
+  }
+
+  #romanizerContainer .modal-header h2 {
+    /* 分標題佔用歸行个闊度，佢就會自動跳到第一行 */
+    flex-basis: 100%;
+    /* 拿掉 h2 預設个 margin，避免影響排版 */
+    margin: 0 0 10px 0; 
+    /* 文字做得靠左或置中，看你歡喜哪一樣 */
+    text-align: left; 
+  }
+
+  #romanizerContainer .modal-header .modal-close-btn {
+    /* 將關閉按鈕推到最右片 */
+    margin-left: auto;
   }
 }

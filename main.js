@@ -4505,286 +4505,137 @@ function updatePopupPosition(popupEl, selectionRect) {
  * @param {HTMLElement} backdropEl - Popup 背景元素。
  */
 function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect, contextualDialect = null) {
-  // --- Self-contained DOM element retrieval ---
+  // 【新邏輯】拿忒了頭前个 if (readings.length === 0) return; 判斷
+  // 分歸隻函式無論如何都會完整執行，確保 renderPronunciationList 時時係最新个
+
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
   const backdropEl = document.getElementById('selectionPopupBackdrop');
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
 
-  if (!popupEl || !contentEl || !backdropEl) {
-    console.error("Popup elements could not be found in the DOM.");
+  if (!popupEl || !contentEl || !backdropEl || !showOtherAccentsToggle || !popupTitleElement) {
+    console.error("Popup 相關个 HTML 元素尋無。");
     return;
   }
-  
-  // 清除舊的錨點資訊
+
+  // 清除舊个錨點資訊
   lastAnchorElementForPopup = null;
   lastRectForPopupPositioning = null;
   let initialRect;
 
   if (anchorElementOrRect instanceof HTMLElement) {
-    lastAnchorElementForPopup = anchorElementOrRect; // 儲存錨點元素
+    lastAnchorElementForPopup = anchorElementOrRect;
     initialRect = lastAnchorElementForPopup.getBoundingClientRect();
-  } else if (anchorElementOrRect instanceof DOMRect) { // 若傳入的是 DOMRect
-    lastRectForPopupPositioning = anchorElementOrRect; // 儲存錨點 DOMRect
+  } else if (anchorElementOrRect instanceof DOMRect) {
+    lastRectForPopupPositioning = anchorElementOrRect;
     initialRect = anchorElementOrRect;
   } else {
-    console.warn("傳入 showPronunciationPopup 的 anchorElementOrRect 無效:", anchorElementOrRect);
+    console.warn("傳入 showPronunciationPopup 个 anchorElementOrRect 無效:", anchorElementOrRect);
     // 若無有效錨點/rect，退回置中顯示
     popupEl.style.left = '50%';
     popupEl.style.top = '50%';
     popupEl.style.transform = 'translate(-50%, -50%)';
-    popupEl.style.display = 'block';
-    backdropEl.style.display = 'block';
-    popupEl.focus();
-    activeSelectionPopup = true;
-    return;
   }
 
   // 1. 設定 Popup 標題
-  if (popupTitleElement) {
-    popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
-  }
+  popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
 
-  // --- 新增：預設關閉「顯示其他腔頭」開關 ---
-  if (showOtherAccentsToggle) {
-    showOtherAccentsToggle.checked = false;
-    console.log('Reset "Show other accents" toggle to unchecked.'); // DEBUG_MSG
-  }
+  // 2. 預設關閉「顯示其他腔頭」開關
+  showOtherAccentsToggle.checked = false;
 
-  // 內部函式，用來實際產生列表
+  // 3. 定義用來產生列表个內部函式
+  //    這隻函式這下會正確恁「關閉」最新个 readings 變數，無論佢係無係空个
   function renderPronunciationList() {
     contentEl.innerHTML = ''; // 清空舊內容
-    const showAllAccents = showOtherAccentsToggle ? showOtherAccentsToggle.checked : false;
+    const showAllAccents = showOtherAccentsToggle.checked;
+    let currentDialect = contextualDialect || currentActiveMainDialectName || '四縣';
 
-    // --- REFACTORED LOGIC START ---
-    let currentDialect = '';
-    
-    // --- ↓↓↓ 修改判斷邏輯 ↓↓↓ ---
-    // 1. 優先使用從 Romanizer 傳入的 contextualDialect
-    if (contextualDialect) {
-      currentDialect = contextualDialect;
-    }
-    // 2. 若無，則維持原有的邏輯，從全域變數推斷
-    else {
-      if (currentActiveDialectLevelFullName) {
-          if (currentActiveDialectLevelFullName.startsWith('四縣')) currentDialect = '四縣';
-          else if (currentActiveDialectLevelFullName.startsWith('南四縣')) currentDialect = '南四縣';
-          else if (currentActiveDialectLevelFullName.startsWith('海陸')) currentDialect = '海陸';
-          else if (currentActiveDialectLevelFullName.startsWith('大埔')) currentDialect = '大埔';
-          else if (currentActiveDialectLevelFullName.startsWith('饒平')) currentDialect = '饒平';
-          else if (currentActiveDialectLevelFullName.startsWith('詔安')) currentDialect = '詔安';
-      }
-    
-      if (!currentDialect) {
-          currentDialect = currentActiveMainDialectName;
-      }
-    }
-    // --- ↑↑↑ 修改結束 ↑↑↑ ---
-    
-    console.log(`Rendering list. Contextual Dialect: ${contextualDialect}, Final Dialect for filtering: ${currentDialect}`);
+    let displayReadings = [...readings]; // 用最新傳入个 readings
 
-    let displayReadings = [...readings];
-
-    // Filter if "show other accents" is off
     if (!showAllAccents) {
-      // 改用新个共用函式
       displayReadings = displayReadings.filter(r => isSourceMatchingDialect(r.source, currentDialect));
     }
 
-    // 排序：
+    // 排序邏輯 (無變)
     displayReadings.sort((a, b) => {
-      // Priority 1: 完全符合優先
       if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
-      // Priority 2: 音節數較少个優先
       const aSyllables = countSyllables(a.pronunciation);
       const bSyllables = countSyllables(b.pronunciation);
-      if (aSyllables !== bSyllables) {
-        return aSyllables - bSyllables;
-      }
-      // Priority 3: 照原本詞目个字母順序
+      if (aSyllables !== bSyllables) return aSyllables - bSyllables;
       if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
-      // Priority 4: 照來源个字母順序
       return a.source.localeCompare(b.source);
     });
 
+    // 【新】將所有个顯示邏輯全部放在這位
     if (displayReadings.length > 0) {
+      // ... 原本建立 accordion 項目个程式碼完全無變 ...
       const accordionContainer = document.createElement('div');
       accordionContainer.className = 'accordion-container';
-
       displayReadings.forEach(reading => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'accordion-item';
-
         const headerBtn = document.createElement('button');
         headerBtn.className = 'accordion-header';
-
-        // --- ↓↓↓ 產生新个 HTML 結構 ↓↓↓ ---
         let headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
         if (!reading.isExactMatch) {
           headerText = `<span class="pronunciation-text">${reading.pronunciation} (詞目: ${reading.originalTerm})</span>`;
         }
-
         const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
         let audioElementHTML = '';
         if (audioUrl) {
-          audioElementHTML = `
-            <button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;">
-              <i class="fas fa-volume-up"></i>
-            </button>`;
+          audioElementHTML = `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>`;
         }
-
         let substituteButtonHTML = '';
-        // 只有在 Romanizer 情境下（callbackOnSelect 存在時）正產生這隻按鈕
         if (typeof callbackOnSelect === 'function') {
-          substituteButtonHTML = `
-            <button class="popup-substitute-btn" title="選用這个讀音">
-              <i class="fas fa-arrow-up-from-bracket"></i>
-            </button>`;
+          substituteButtonHTML = `<button class="popup-substitute-btn" title="選用這个讀音"><i class="fas fa-arrow-up-from-bracket"></i></button>`;
         }
-
-        headerBtn.innerHTML = `
-          <div class="accordion-header-content">
-            ${headerText}
-            <span class="pronunciation-source">(${reading.source})</span>
-          </div>
-          <div class="accordion-header-controls">
-            ${audioElementHTML}
-            ${substituteButtonHTML}
-            <span class="indicator">+</span>
-          </div>`;
-        // --- ↑↑↑ HTML 結構產生結束 ↑↑↑ ---
-
+        headerBtn.innerHTML = `<div class="accordion-header-content">${headerText}<span class="pronunciation-source">(${reading.source})</span></div><div class="accordion-header-controls">${audioElementHTML}${substituteButtonHTML}<span class="indicator">+</span></div>`;
         const panelDiv = document.createElement('div');
         panelDiv.className = 'accordion-panel';
-        let panelContent = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
-        panelDiv.innerHTML = panelContent;
-
+        panelDiv.innerHTML = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
         itemDiv.appendChild(headerBtn);
         itemDiv.appendChild(panelDiv);
         accordionContainer.appendChild(itemDiv);
-
-        // --- ↓↓↓ 重新設計事件監聽器 ↓↓↓ ---
-        // 播放音檔个按鈕
         const playButton = headerBtn.querySelector('.popup-audio-play-btn');
         if (playButton) {
-          playButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // 【新】加回這行！避免觸發外層 header 的 toggle 事件
-
-            // --- ↓↓↓ 確保 Accordion 係展開个狀態 (這段邏輯維持不變) ↓↓↓ ---
-            const header = playButton.closest('.accordion-header');
-            const panel = header ? header.nextElementSibling : null;
-
-            // 檢查係無既經展開了
-            if (header && panel && !header.classList.contains('active')) {
-              // 若無，就手動展開佢
-              header.classList.add('active');
-              const indicator = header.querySelector('.indicator');
-              panel.style.maxHeight = panel.scrollHeight + "px";
-              if (indicator) indicator.textContent = '−';
-            }
-            // --- ↑↑↑ 邏輯維持不變 ↑↑↑ ---
-
-            // (原本播放音檔个邏輯維持不變)
-            const audioSrc = playButton.dataset.audioSrc;
-            if (audioSrc) {
-                if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') {
-                    window.currentPopupAudio.pause();
-                    window.currentPopupAudio.currentTime = 0;
-                }
-                window.currentPopupAudio = new Audio(audioSrc);
-                const iconElement = playButton.querySelector('i');
-                const originalIconClasses = iconElement ? iconElement.className : '';
-                if (iconElement) iconElement.className = 'fas fa-spinner fa-spin';
-                window.currentPopupAudio.play().catch(err => {
-                    console.error("播放 popup 音檔失敗:", err);
-                    if (iconElement) iconElement.className = originalIconClasses;
-                });
-                window.currentPopupAudio.onended = () => {
-                    if (iconElement) iconElement.className = originalIconClasses;
-                    window.currentPopupAudio = null;
-                };
-                window.currentPopupAudio.onerror = () => {
-                    if (iconElement) iconElement.className = originalIconClasses;
-                    window.currentPopupAudio = null;
-                };
-            }
-          });
+          playButton.addEventListener('click', (e) => { e.stopPropagation(); const header = playButton.closest('.accordion-header'); const panel = header ? header.nextElementSibling : null; if (header && panel && !header.classList.contains('active')) { header.classList.add('active'); const indicator = header.querySelector('.indicator'); panel.style.maxHeight = panel.scrollHeight + "px"; if (indicator) indicator.textContent = '−'; } const audioSrc = playButton.dataset.audioSrc; if (audioSrc) { if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') { window.currentPopupAudio.pause(); window.currentPopupAudio.currentTime = 0; } window.currentPopupAudio = new Audio(audioSrc); const iconElement = playButton.querySelector('i'); const originalIconClasses = iconElement ? iconElement.className : ''; if (iconElement) iconElement.className = 'fas fa-spinner fa-spin'; window.currentPopupAudio.play().catch(err => { console.error("播放 popup 音檔失敗:", err); if (iconElement) iconElement.className = originalIconClasses; }); window.currentPopupAudio.onended = () => { if (iconElement) iconElement.className = originalIconClasses; window.currentPopupAudio = null; }; window.currentPopupAudio.onerror = () => { if (iconElement) iconElement.className = originalIconClasses; window.currentPopupAudio = null; }; } });
         }
-
-        // 選用讀音个按鈕
         const substituteBtn = headerBtn.querySelector('.popup-substitute-btn');
         if (substituteBtn) {
-          substituteBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // 避免觸發 Accordion 展開
-            if (typeof callbackOnSelect === 'function') {
-              const selectedPhonetic = reading.pronunciation;
-              callbackOnSelect(anchorElementOrRect, selectedPhonetic);
-              const popupEl = document.getElementById('selectionPopup');
-              const backdropEl = document.getElementById('selectionPopupBackdrop');
-              if (popupEl && backdropEl) {
-                hidePronunciationPopup(popupEl, backdropEl);
-              }
-            }
-          });
+          substituteBtn.addEventListener('click', (e) => { e.stopPropagation(); if (typeof callbackOnSelect === 'function') { const selectedPhonetic = reading.pronunciation; callbackOnSelect(anchorElementOrRect, selectedPhonetic); hidePronunciationPopup(popupEl, backdropEl); } });
         }
-
-        // 展開/收合 Accordion 个按鈕 (歸隻 header)
-        headerBtn.addEventListener('click', () => {
-          headerBtn.classList.toggle('active');
-          const indicator = headerBtn.querySelector('.indicator');
-          if (panelDiv.style.maxHeight) {
-            panelDiv.style.maxHeight = null;
-            if (indicator) indicator.textContent = '+';
-          } else {
-            panelDiv.style.maxHeight = panelDiv.scrollHeight + "px";
-            if (indicator) indicator.textContent = '−';
-          }
-        });
-        // --- ↑↑↑ 事件監聽器設計結束 ↑↑↑ ---
+        headerBtn.addEventListener('click', () => { headerBtn.classList.toggle('active'); const indicator = headerBtn.querySelector('.indicator'); if (panelDiv.style.maxHeight) { panelDiv.style.maxHeight = null; if (indicator) indicator.textContent = '+'; } else { panelDiv.style.maxHeight = panelDiv.scrollHeight + "px"; if (indicator) indicator.textContent = '−'; } });
       });
       contentEl.appendChild(accordionContainer);
     } else {
-      if (showAllAccents) {
-        contentEl.innerHTML = '<p class="popup-not-found">在所有腔頭中都尋無讀音。還係縮短尋个字詞？</p>';
+      // 這邊處理所有「無結果」个情況
+      if (readings.length === 0) {
+        // 情況一：最源頭个資料就係空个
+        contentEl.innerHTML = `<p class="popup-not-found">在所有腔調中都尋無「${selectedText}」个讀音。<br>請試看啊重新斷詞，或者縮短尋个字詞。</p>`;
       } else {
-        const otherResultsExist = readings.some(r => !isCurrentDialect(r.source));
-        if (otherResultsExist) {
-          const dialectName = currentDialect === '四縣' ? '四縣或南四縣' : currentDialect;
-          contentEl.innerHTML = `<p class="popup-not-found">在${dialectName}腔頭尋無讀音。試看啊縮短尋个字詞？</p>`;
-        } else {
-          contentEl.innerHTML = '<p class="popup-not-found">尋無讀音。還係縮短尋个字詞？</p>';
-        }
+        // 情況二：源頭有資料，但係目前腔調無
+        const dialectName = currentDialect === '四縣' ? '四縣或南四縣' : currentDialect;
+        contentEl.innerHTML = `<p class="popup-not-found">在「${dialectName}」腔頭尋無讀音。<br>請試看啊打開「顯示其他腔頭」。</p>`;
       }
     }
   }
 
-  // 設定開關事件監聽 (如果開關存在)
-  if (showOtherAccentsToggle) {
-    // 為確保監聽器不重複添加，可以先移除再添加，或用 cloneNode 技巧 (如先前範例)
-    // 簡單起見，這裡直接添加，假設 popup 每次顯示都會重新執行這段
-    showOtherAccentsToggle.onchange = renderPronunciationList; // 用 onchange 確保覆蓋
-  }
+  // 4. 綁定事件監聽器
+  //    用 onchange 直接覆蓋，確保佢時時都係最新个
+  showOtherAccentsToggle.onchange = renderPronunciationList;
 
-  renderPronunciationList(); // 第一次顯示時呼叫
+  // 5. 初次顯示
+  renderPronunciationList();
 
-  // --- 定位邏輯 ---
-  if (initialRect) {
-    // 確保 popup 是 block 狀態分 updatePopupPosition 計算
-    if (popupEl) popupEl.style.display = 'block';
-    updatePopupPosition(popupEl, initialRect);
-  } else {
-    // 若無 selectionRect (理論上不應發生)，退回原本置中方式
-    popupEl.style.left = '50%';
-    popupEl.style.top = '50%';
-    popupEl.style.transform = 'translate(-50%, -50%)';
-    popupEl.style.display = 'block';
-    console.warn("Selection rect not provided to showPronunciationPopup, centering as fallback.");
-  }
-
-  if (backdropEl) backdropEl.style.display = 'block';
-  popupEl.focus(); // 將焦點移到 popup，方便鍵盤操作 (例如 Esc 關閉)
+  // 6. 定位並顯示 Popup
+  popupEl.style.display = 'block';
+  backdropEl.style.display = 'block';
   activeSelectionPopup = true;
+  if (initialRect) {
+    updatePopupPosition(popupEl, initialRect);
+  }
+  popupEl.focus();
 }
 
 /**

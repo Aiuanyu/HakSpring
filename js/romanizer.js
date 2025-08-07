@@ -166,30 +166,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function handleSegmentClick(event) {
-    const target = event.target;
-    const resegmentBtn = target.closest('.resegment-btn');
-    const segmentWordSpan = target.closest('.segment-word');
-  
-    if (resegmentBtn && segmentWordSpan) {
-      event.stopPropagation();
-      initiateResegment(segmentWordSpan);
-    } 
-    else if (segmentWordSpan) {
-      const searchText = segmentWordSpan.textContent;
-  
-      if (typeof findPronunciationsInAllData !== 'function' || typeof showPronunciationPopup !== 'function') {
-        console.error('核心函式 (findPronunciationsInAllData 或 showPronunciationPopup) 未定義。');
-        alert('核心查詢功能載入失敗，請重新整理頁面。');
-        return;
-      }
-  
-      const readings = findPronunciationsInAllData(searchText);
-  
-      showPronunciationPopup(searchText, readings, segmentWordSpan, (anchor, phonetic) => {
-        updatePronunciationAndMark(anchor, phonetic);
-      }, romanizerSelectedDialect);
+        const target = event.target;
+        const resegmentBtn = target.closest('.resegment-btn');
+        const segmentWordSpan = target.closest('.segment-word');
+    
+        if (resegmentBtn && segmentWordSpan) {
+          event.stopPropagation();
+          initiateResegment(segmentWordSpan);
+        } 
+        else if (segmentWordSpan) {
+          const searchText = segmentWordSpan.textContent;
+    
+          if (typeof findPronunciationsInAllData !== 'function' || typeof showPronunciationPopup !== 'function') {
+            console.error('核心函式 (findPronunciationsInAllData 或 showPronunciationPopup) 未定義。');
+            alert('核心查詢功能載入失敗，請重新整理頁面。');
+            return;
+          }
+    
+          const readings = findPronunciationsInAllData(searchText);
+    
+          // 【新邏輯】無論 readings 係無係空个，都直接呼叫 showPronunciationPopup
+          // 函式內部自家會處理空陣列个情況
+          showPronunciationPopup(searchText, readings, segmentWordSpan, (anchor, phonetic) => {
+            updatePronunciationAndMark(anchor, phonetic);
+          }, romanizerSelectedDialect);
+        }
     }
-  }
 
   function createSegmentSpan(segmentText) {
     const segmentRegex = /([^\u4e00-\u9fa5\u3400-\u4dbf\u{20000}-\u{2a6df}\u{2a700}-\u{2b73f}\u{2b740}-\u{2b81f}\u{2b820}-\u{2ceaf}\u{2ceb0}-\u{2ebef}]+)/u;
