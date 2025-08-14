@@ -156,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         romanizerSelectedDialect = romanizerDialectSelector.value;
         console.log(`Romanizer opened. Dialect set to: ${romanizerSelectedDialect}`);
       }
+
+      // 【新】加上 GA 事件追蹤
+      trackEvent('open', 'Romaine', 'open_container');
     }
   }
 
@@ -235,6 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startSegmentation() {
+    // 【新】加上 GA 事件追蹤
+    trackEvent('click', 'Romaine', 'start_segmentation');
+
     if (!romanizerInput || !segmentationWorkspace || !romanizerOutput) return;
 
     segmentationWorkspace.innerHTML = '';

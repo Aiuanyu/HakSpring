@@ -1,3 +1,22 @@
+/**
+ * 將事件傳送分 Google Analytics。
+ * @param {string} action - 事件動作 (例如 'open', 'click')。
+ * @param {string} category - 事件類別 (例如 'Romaine', 'Playback')。
+ * @param {string} label - 事件標籤 (例如 'open_container', 'start_segmentation')。
+ */
+function trackEvent(action, category, label) {
+  // 檢查 gtag 函式係無係存在，避免在無載入 GA 个環境下出錯
+  if (typeof gtag === 'function') {
+    gtag('event', action, {
+      'event_category': category,
+      'event_label': label
+    });
+    console.log(`GA Event Sent: { Action: ${action}, Category: ${category}, Label: ${label} }`);
+  } else {
+    console.warn('gtag function not found. GA event not sent.');
+  }
+}
+
 // --- 新增：更新網頁標題函式 ---
 const BASE_TITLE = '客源翠 HakSpring';
 function updatePageTitle(titleParts = []) {
