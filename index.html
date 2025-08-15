@@ -19,49 +19,10 @@
     <link rel="stylesheet" href="style.css" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="data/cert/113四基.js"></script>
-    <script type="text/javascript" src="data/cert/113四初.js"></script>
-    <script type="text/javascript" src="data/cert/113四中.js"></script>
-    <script type="text/javascript" src="data/cert/113四中高.js"></script>
-    <script type="text/javascript" src="data/cert/113四高.js"></script>
+    <!-- Data scripts are now loaded dynamically by main.js -->
+    <script src="main.js" defer></script>
+    <script src="js/romanizer.js" defer></script>
 
-    <script type="text/javascript" src="data/cert/113海基.js"></script>
-    <script type="text/javascript" src="data/cert/113海初.js"></script>
-    <script type="text/javascript" src="data/cert/113海中.js"></script>
-    <script type="text/javascript" src="data/cert/113海中高.js"></script>
-    <script type="text/javascript" src="data/cert/113海高.js"></script>
-
-    <script type="text/javascript" src="data/cert/113大基.js"></script>
-    <script type="text/javascript" src="data/cert/113大初.js"></script>
-    <script type="text/javascript" src="data/cert/113大中.js"></script>
-    <script type="text/javascript" src="data/cert/113大中高.js"></script>
-    <script type="text/javascript" src="data/cert/113大高.js"></script>
-
-    <script type="text/javascript" src="data/cert/113平基.js"></script>
-    <script type="text/javascript" src="data/cert/113平初.js"></script>
-    <script type="text/javascript" src="data/cert/113平中.js"></script>
-    <script type="text/javascript" src="data/cert/113平中高.js"></script>
-    <script type="text/javascript" src="data/cert/113平高.js"></script>
-
-    <script type="text/javascript" src="data/cert/113安基.js"></script>
-    <script type="text/javascript" src="data/cert/113安初.js"></script>
-    <script type="text/javascript" src="data/cert/113安中.js"></script>
-    <script type="text/javascript" src="data/cert/113安中高.js"></script>
-    <script type="text/javascript" src="data/cert/113安高.js"></script>
-
-    <!-- 教典資料 -->
-    <script type="text/javascript" src="data/gip/20250630-四.js"></script>
-    <script type="text/javascript" src="data/gip/20250630-南.js"></script>
-    <script type="text/javascript" src="data/gip/20250630-海.js"></script>
-    <script type="text/javascript" src="data/gip/20250630-大.js"></script>
-    <script type="text/javascript" src="data/gip/20250630-平.js"></script>
-    <script type="text/javascript" src="data/gip/20250630-安.js"></script>
-
-    <script type="text/javascript" src="tone_mapping_data.js"></script>
-    <script type="text/javascript" src="NAmedias.js"></script> <!-- 新增：載入音檔缺失清單 -->
-    <script type="text/javascript" src="main.js"></script>
-    <script type="text/javascript" src="js/romanizer.js"></script>
-    <script type="text/javascript" src="exclusions.js"></script>
     <script
       src="https://kit.fontawesome.com/6741caa77f.js"
       crossorigin="anonymous"
@@ -81,338 +42,343 @@
   </script>
   
   <body>
-    <h2>客源翠 HakSpring：你个客援隊／客研隊。詞典+分類學習</h2>
-    <h3 id="header">
-      <select id="progressDropdown">
-        <option selected disabled>擇進前个進度</option>
-      </select>
-      <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
-      <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
-      <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
-      <div id="search-container">
-        <input type="text" id="search-input" placeholder="查語詞" />
-        <div id="search-popup">
-          <div id="dialect-selection">
-            <p>請擇腔調：</p>
-            <div class="dialect-row">
-              <label><input type="radio" name="dialect" value="四縣" checked /> 四縣</label>
-              <label><input type="radio" name="dialect" value="南四縣" /> 南四縣</label>
+    <div id="loading-indicator" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; font-size: 1.5em; text-align: center; color: #333;">
+      <p>🔂 正在載入資料...</p>
+      <p style="font-size: 0.7em; margin-top: 10px;">（初次載入會較久，請稍候）</p>
+    </div>
+    <div id="main-content" style="display: none;">
+      <h2>客源翠 HakSpring：你个客援隊／客研隊。詞典+分類學習</h2>
+      <h3 id="header">
+        <select id="progressDropdown">
+          <option selected disabled>擇進前个進度</option>
+        </select>
+        <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
+        <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
+        <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
+        <div id="search-container">
+          <input type="text" id="search-input" placeholder="查語詞" />
+          <div id="search-popup">
+            <div id="dialect-selection">
+              <p>請擇腔調：</p>
+              <div class="dialect-row">
+                <label><input type="radio" name="dialect" value="四縣" checked /> 四縣</label>
+                <label><input type="radio" name="dialect" value="南四縣" /> 南四縣</label>
+              </div>
+              <label><input type="radio" name="dialect" value="海陸" /> 海陸</label>
+              <label><input type="radio" name="dialect" value="大埔" /> 大埔</label>
+              <label><input type="radio" name="dialect" value="饒平" /> 饒平</label>
+              <label><input type="radio" name="dialect" value="詔安" /> 詔安</label>
             </div>
-            <label><input type="radio" name="dialect" value="海陸" /> 海陸</label>
-            <label><input type="radio" name="dialect" value="大埔" /> 大埔</label>
-            <label><input type="radio" name="dialect" value="饒平" /> 饒平</label>
-            <label><input type="radio" name="dialect" value="詔安" /> 詔安</label>
-          </div>
-          <div id="search-mode-selection">
-            <p>請擇查詢模式：</p>
-            <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字／拼音）</label>
-            <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
+            <div id="search-mode-selection">
+              <p>請擇查詢模式：</p>
+              <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字／拼音）</label>
+              <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
+            </div>
           </div>
         </div>
-      </div>
-    </h3>
+      </h3>
 
-    <div id="learning-mode-controls">
+      <div id="learning-mode-controls">
 
-    <details id="learningSelectionPanel" open>
-      <summary>認證詞彙學習主控板</summary>
-      <p>
-        先擇腔調摎級別，
-        <span class="dialect 四縣">
-          四縣：
-          <span data-varname="四基"><a href="#">基礎</a></span>
-          <span data-varname="四初"><a href="#">初級</a></span>
-          <span data-varname="四中"><a href="#">中級</a></span>
-          <span data-varname="四中高"><a href="#">中高</a></span>
-          <span data-varname="四高"><a href="#">高級</a></span>
-        </span>
-        <span class="dialect 海陸">
-          海陸：
-          <span data-varname="海基"><a href="#">基礎</a></span>
-          <span data-varname="海初"><a href="#">初級</a></span>
-          <span data-varname="海中"><a href="#">中級</a></span>
-          <span data-varname="海中高"><a href="#">中高</a></span>
-          <span data-varname="海高"><a href="#">高級</a></span>
-        </span>
-        <span class="dialect 大埔">
-          大埔：
-          <span data-varname="大基"><a href="#">基礎</a></span>
-          <span data-varname="大初"><a href="#">初級</a></span>
-          <span data-varname="大中"><a href="#">中級</a></span>
-          <span data-varname="大中高"><a href="#">中高</a></span>
-          <span data-varname="大高"><a href="#">高級</a></span>
-        </span>
-        <span class="dialect 饒平">
-          饒平：
-          <span data-varname="平基"><a href="#">基礎</a></span>
-          <span data-varname="平初"><a href="#">初級</a></span>
-          <span data-varname="平中"><a href="#">中級</a></span>
-          <span data-varname="平中高"><a href="#">中高</a></span>
-          <span data-varname="平高"><a href="#">高級</a></span>
-        </span>
-        <span class="dialect 詔安">
-          詔安：
-          <span data-varname="安基"><a href="#">基礎</a></span>
-          <span data-varname="安初"><a href="#">初級</a></span>
-          <span data-varname="安中"><a href="#">中級</a></span>
-          <span data-varname="安中高"><a href="#">中高</a></span>
-          <span data-varname="安高"><a href="#">高級</a></span>
-        </span>
-      </p>
-      <!-- 多謝 https://webspe.net/tools/en/radio-button/ -->
-      <div id="cat-panel">
-        再擇類別：
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="人體與醫療"
-            class="radioButton"
-          />
-          人體與醫療
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="心理活動與感覺"
-            class="radioButton"
-          />
-          心理活動與感覺
-        </label>
-        <label class="radioItem">
-          <input type="radio" name="category" value="代詞" class="radioButton" />
-          代詞
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="外在活動與動作"
-            class="radioButton"
-          />
-          外在活動與動作
-        </label>
-        <label class="radioItem">
-          <input type="radio" name="category" value="生物" class="radioButton" />
-          生物
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="自然與景觀"
-            class="radioButton"
-          />
-          自然與景觀
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="事物狀態與變化"
-            class="radioButton"
-          />
-          事物狀態與變化
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="居家生活"
-            class="radioButton"
-          />
-          居家生活
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="抽象概念與形容"
-            class="radioButton"
-          />
-          抽象概念與形容
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="法律、政治與軍事"
-            class="radioButton"
-          />
-          法律、政治與軍事
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="社會關係與行為"
-            class="radioButton"
-          />
-          社會關係與行為
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="時空與情狀副詞"
-            class="radioButton"
-          />
-          時空與情狀副詞
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="特殊詞類"
-            class="radioButton"
-          />
-          特殊詞類
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="通訊、建設與交通"
-            class="radioButton"
-          />
-          通訊、建設與交通
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="歲時祭儀、習俗與宗教"
-            class="radioButton"
-          />
-          歲時祭儀、習俗與宗教
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="數詞量詞"
-            class="radioButton"
-          />
-          數詞量詞
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="職業與經濟"
-            class="radioButton"
-          />
-          職業與經濟
-        </label>
-        <label class="radioItem">
-          <input
-            type="radio"
-            name="category"
-            value="藝文與教育"
-            class="radioButton"
-          />
-          藝文與教育
-        </label>
-        </div>
-      </div>
-    </details>
-
-    <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
-    <div id="romanizerContainer" style="display: none;">
-      <div class="romanizer-content">
-        <div class="modal-header">
-          <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
-          <select id="romanizer-dialect-selector">
-            <option selected disabled>擇腔調</option>
-            <option>四縣</option>
-            <option>海陸</option>
-            <option>大埔</option>
-            <option>饒平</option>
-            <option>詔安</option>
-            <option>南四縣</option>
-          </select>
-          <!-- 【新增】連詞模式選擇器 -->
-          <select id="romanizer-joining-mode-selector">
-            <option value="none" selected>"liěncǐi fóngsìid"（詞中無空格）</option>
-            <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
-            <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
-          </select>
-          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
-        </div>
-        <div class="modal-body">
-          <!-- 【新增】Undo/Redo 控制按鈕 -->
-          <div id="romanizer-history-controls">
-            <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
-            <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
-          </div>
-          <div id="romanizer-output-container">
-            <div id="romanizer-output"></div>
-            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
-          </div>
-          <div id="segmentation-workspace"></div>
-          <div class="romanizer-section">
-            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
-            <button id="romanizer-start-btn">開始斷詞轉換</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
-
-    <div id="results-summary"></div>
-    <div id="generated"></div>
-
-    <button id="backToTopBtn" title="歸頂高">
-      <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <!-- Autoplay Confirmation Modal -->
-    <div id="autoplayModal" style="display: none;">
-      <div class="modal-backdrop"></div>
-      <div class="modal-content">
-        <p>網址裡肚偵測著自動放送个進度，<br>請點這位開始<br><br>係講無愛自動放送這隻進度，<br>請點邊脣烏陰所在</p>
-        <!-- 你也可以選擇加入一個明確的按鈕 -->
-        <!-- <button id="startAutoplayBtn">開始播放</button> -->
-      </div>
-    </div>
-
-    <!-- Selection Pronunciation Popup -->
-    <div id="selectionPopupBackdrop" style="display: none;"></div>
-    <div id="selectionPopup" role="dialog" aria-modal="true" aria-labelledby="selectionPopupTitle" tabindex="-1" style="display: none;">
-      <div class="popup-header">
-        <h4 id="selectionPopupTitle">擇詞讀音結果</h4>
-        <button id="selectionPopupCloseBtn" aria-label="關閉">&times;</button>
-      </div>
-      <div class="popup-controls">
-        <div class="popup-toggle-switch">
-          <label class="switch">
-            <input type="checkbox" id="showOtherAccentsToggle">
-            <span class="slider round"></span>
+      <details id="learningSelectionPanel" open>
+        <summary>認證詞彙學習主控板</summary>
+        <p>
+          先擇腔調摎級別，
+          <span class="dialect 四縣">
+            四縣：
+            <span data-varname="四基"><a href="#">基礎</a></span>
+            <span data-varname="四初"><a href="#">初級</a></span>
+            <span data-varname="四中"><a href="#">中級</a></span>
+            <span data-varname="四中高"><a href="#">中高</a></span>
+            <span data-varname="四高"><a href="#">高級</a></span>
+          </span>
+          <span class="dialect 海陸">
+            海陸：
+            <span data-varname="海基"><a href="#">基礎</a></span>
+            <span data-varname="海初"><a href="#">初級</a></span>
+            <span data-varname="海中"><a href="#">中級</a></span>
+            <span data-varname="海中高"><a href="#">中高</a></span>
+            <span data-varname="海高"><a href="#">高級</a></span>
+          </span>
+          <span class="dialect 大埔">
+            大埔：
+            <span data-varname="大基"><a href="#">基礎</a></span>
+            <span data-varname="大初"><a href="#">初級</a></span>
+            <span data-varname="大中"><a href="#">中級</a></span>
+            <span data-varname="大中高"><a href="#">中高</a></span>
+            <span data-varname="大高"><a href="#">高級</a></span>
+          </span>
+          <span class="dialect 饒平">
+            饒平：
+            <span data-varname="平基"><a href="#">基礎</a></span>
+            <span data-varname="平初"><a href="#">初級</a></span>
+            <span data-varname="平中"><a href="#">中級</a></span>
+            <span data-varname="平中高"><a href="#">中高</a></span>
+            <span data-varname="平高"><a href="#">高級</a></span>
+          </span>
+          <span class="dialect 詔安">
+            詔安：
+            <span data-varname="安基"><a href="#">基礎</a></span>
+            <span data-varname="安初"><a href="#">初級</a></span>
+            <span data-varname="安中高"><a href="#">中高</a></span>
+            <span data-varname="安高"><a href="#">高級</a></span>
+          </span>
+        </p>
+        <!-- 多謝 https://webspe.net/tools/en/radio-button/ -->
+        <div id="cat-panel">
+          再擇類別：
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="人體與醫療"
+              class="radioButton"
+            />
+            人體與醫療
           </label>
-          <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label>
-        </div>
-      </div>
-      <div id="selectionPopupContent">
-        <!-- JavaScript will fill this -->
-      </div>
-    </div>
-
-    <!-- Info Modal -->
-    <div id="infoModal" class="modal-overlay" style="display: none;">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
-          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
-        </div>
-        <div class="modal-body" id="info-content"></div>
-        <div class="modal-footer">
-          <label for="dontShowInfoModalAgain">
-            <input type="checkbox" id="dontShowInfoModalAgain">
-            看忒吔，下擺毋使自動跳出
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="心理活動與感覺"
+              class="radioButton"
+            />
+            心理活動與感覺
           </label>
+          <label class="radioItem">
+            <input type="radio" name="category" value="代詞" class="radioButton" />
+            代詞
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="外在活動與動作"
+              class="radioButton"
+            />
+            外在活動與動作
+          </label>
+          <label class="radioItem">
+            <input type="radio" name="category" value="生物" class="radioButton" />
+            生物
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="自然與景觀"
+              class="radioButton"
+            />
+            自然與景觀
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="事物狀態與變化"
+              class="radioButton"
+            />
+            事物狀態與變化
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="居家生活"
+              class="radioButton"
+            />
+            居家生活
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="抽象概念與形容"
+              class="radioButton"
+            />
+            抽象概念與形容
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="法律、政治與軍事"
+              class="radioButton"
+            />
+            法律、政治與軍事
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="社會關係與行為"
+              class="radioButton"
+            />
+            社會關係與行為
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="時空與情狀副詞"
+              class="radioButton"
+            />
+            時空與情狀副詞
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="特殊詞類"
+              class="radioButton"
+            />
+            特殊詞類
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="通訊、建設與交通"
+              class="radioButton"
+            />
+            通訊、建設與交通
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="歲時祭儀、習俗與宗教"
+              class="radioButton"
+            />
+            歲時祭儀、習俗與宗教
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="數詞量詞"
+              class="radioButton"
+            />
+            數詞量詞
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="職業與經濟"
+              class="radioButton"
+            />
+            職業與經濟
+          </label>
+          <label class="radioItem">
+            <input
+              type="radio"
+              name="category"
+              value="藝文與教育"
+              class="radioButton"
+            />
+            藝文與教育
+          </label>
+          </div>
+        </div>
+      </details>
+
+      <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
+      <div id="romanizerContainer" style="display: none;">
+        <div class="romanizer-content">
+          <div class="modal-header">
+            <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
+            <select id="romanizer-dialect-selector">
+              <option selected disabled>擇腔調</option>
+              <option>四縣</option>
+              <option>海陸</option>
+              <option>大埔</option>
+              <option>饒平</option>
+              <option>詔安</option>
+              <option>南四縣</option>
+            </select>
+            <!-- 【新增】連詞模式選擇器 -->
+            <select id="romanizer-joining-mode-selector">
+              <option value="none" selected>"liěncǐi fóngsìid"（詞中無空格）</option>
+              <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
+              <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
+            </select>
+            <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+          </div>
+          <div class="modal-body">
+            <!-- 【新增】Undo/Redo 控制按鈕 -->
+            <div id="romanizer-history-controls">
+              <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+              <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+            </div>
+            <div id="romanizer-output-container">
+              <div id="romanizer-output"></div>
+              <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
+            </div>
+            <div id="segmentation-workspace"></div>
+            <div class="romanizer-section">
+              <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
+              <button id="romanizer-start-btn">開始斷詞轉換</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+      <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
+
+      <div id="results-summary"></div>
+      <div id="generated"></div>
+
+      <button id="backToTopBtn" title="歸頂高">
+        <i class="fas fa-arrow-up"></i>
+      </button>
+
+      <!-- Autoplay Confirmation Modal -->
+      <div id="autoplayModal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+          <p>網址裡肚偵測著自動放送个進度，<br>請點這位開始<br><br>係講無愛自動放送這隻進度，<br>請點邊脣烏陰所在</p>
+          <!-- 你也可以選擇加入一個明確的按鈕 -->
+          <!-- <button id="startAutoplayBtn">開始播放</button> -->
+        </div>
+      </div>
+
+      <!-- Selection Pronunciation Popup -->
+      <div id="selectionPopupBackdrop" style="display: none;"></div>
+      <div id="selectionPopup" role="dialog" aria-modal="true" aria-labelledby="selectionPopupTitle" tabindex="-1" style="display: none;">
+        <div class="popup-header">
+          <h4 id="selectionPopupTitle">擇詞讀音結果</h4>
+          <button id="selectionPopupCloseBtn" aria-label="關閉">&times;</button>
+        </div>
+        <div class="popup-controls">
+          <div class="popup-toggle-switch">
+            <label class="switch">
+              <input type="checkbox" id="showOtherAccentsToggle">
+              <span class="slider round"></span>
+            </label>
+            <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label>
+          </div>
+        </div>
+        <div id="selectionPopupContent">
+          <!-- JavaScript will fill this -->
+        </div>
+      </div>
+
+      <!-- Info Modal -->
+      <div id="infoModal" class="modal-overlay" style="display: none;">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
+            <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+          </div>
+          <div class="modal-body" id="info-content"></div>
+          <div class="modal-footer">
+            <label for="dontShowInfoModalAgain">
+              <input type="checkbox" id="dontShowInfoModalAgain">
+              看忒吔，下擺毋使自動跳出
+            </label>
+          </div>
+        </div>
+      </div>
+    </div><!-- end #main-content -->
   </body>
 </html>
