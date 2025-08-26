@@ -516,6 +516,7 @@ const debouncedMobileSelectionHandler = debounce(function() {
 
 function globalKeydownHandler(event) {
   const activeElement = document.activeElement;
+
   const isGeneralInputLikeFocused = activeElement && (
     activeElement.tagName === 'INPUT' ||
     activeElement.tagName === 'TEXTAREA' ||
@@ -530,19 +531,23 @@ function globalKeydownHandler(event) {
       const popupEl = document.getElementById('selectionPopup');
       const backdropEl = document.getElementById('selectionPopupBackdrop');
       hidePronunciationPopup(popupEl, backdropEl);
+      console.log('Global hotkey: Escape pressed, closing selection popup.');
     } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
         event.preventDefault();
         infoModal.style.display = 'none';
         if (infoButton) infoButton.focus();
+        console.log('Global hotkey: Escape pressed, closing info modal.');
     } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
       if (activeElement) {
         activeElement.blur();
         event.preventDefault();
+        console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
       }
     } else if (isPlaying) {
       const stopButton = document.getElementById('stopBtn');
       if (stopButton) {
         stopButton.click();
+        console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
       }
     }
     return;
@@ -555,6 +560,7 @@ function globalKeydownHandler(event) {
         const pauseResumeButton = document.getElementById('pauseResumeBtn');
         if (pauseResumeButton) {
           pauseResumeButton.click();
+          console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
         }
       } else {
         const progressDropdown = document.getElementById('progressDropdown');
@@ -573,6 +579,8 @@ function globalKeydownHandler(event) {
             if (dataVarName) {
               let dataObject = window[dataVarName];
               if (typeof dataObject !== 'undefined') {
+                console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
+
                 document.querySelectorAll('span[data-varname]').forEach(span => {
                 span.classList.remove('active-dialect-level');
               });
@@ -1023,12 +1031,34 @@ function initializeAppUI() {
 
     localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
 
-    if (!isPlayingContext) {
-      updateProgressDropdown();
-      const progressDetailsSpan = document.getElementById('progressDetails');
-      if (progressDetailsSpan) {
-        progressDetailsSpan.textContent = `#${rowId} (${percentage}%)`;
-      }
+    updateProgressDropdown();
+
+    const progressDetailsSpan = document.getElementById('progressDetails');
+    if (progressDetailsSpan) {
+        let baseURL = '';
+        if (window.location.protocol === 'file:') {
+            baseURL = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+        } else {
+            let path = window.location.pathname;
+            baseURL = window.location.origin + path.substring(0, path.lastIndexOf('/') + 1);
+            if (!baseURL.endsWith('/')) {
+                baseURL += '/';
+            }
+        }
+
+        const dialectLevelCodes = extractDialectLevelCodes(tableName);
+        if (dialectLevelCodes) {
+            const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
+            const linkElement = document.createElement('a');
+            linkElement.href = shareURL;
+            linkElement.textContent = `#${rowId} (${percentage}%)`;
+            linkElement.style.marginLeft = '5px';
+            progressDetailsSpan.innerHTML = '';
+            progressDetailsSpan.appendChild(linkElement);
+        } else {
+            progressDetailsSpan.textContent = `#${rowId} (${percentage}%)`;
+            console.error('Could not generate share link for bookmark; tableName invalid:', tableName);
+        }
     }
   }
 
@@ -2901,7 +2931,8 @@ this.classList.add('ended');
   updateProgressDropdown();
   progressDropdown.addEventListener('change', function () {
     const selectedValue = this.value;
-    if (selectedValue) {
+
+    if (selectedValue && selectedValue !== '擇進前个進度') {
       const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
       const selectedBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
@@ -2915,12 +2946,15 @@ this.classList.add('ended');
           const dataObject = window[dataVarName];
           if (dataObject) {
             generate(dataObject, targetCategory, targetRowIdToGo);
+            // This also creates the link via the logic inside buildTableAndSetupPlayback
           } else {
-            console.error(`From dropdown: Could not find data object for ${dataVarName}`);
+            console.error('無法找到對應的資料變數:', dataVarName || targetTableName);
+            alert('載入選定進度時發生錯誤：找不到對應的資料集。');
           }
         }
       } else {
-        console.error(`From dropdown: Could not find bookmark for value ${selectedValue}`);
+        console.error('找不到對應 value 的書籤:', selectedValue);
+        alert('載入選定進度時發生錯誤：選項與儲存資料不符。');
       }
     }
   });
