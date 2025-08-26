@@ -1659,8 +1659,10 @@ function preprocessAllData() {
     
       // 步驟 1: 資料已在 loadDataFromDB 中載入到 window，直接從 window 讀取
       allDataSourceVars.forEach(dataVarName => {
-        if (window[dataVarName] && Array.isArray(window[dataVarName])) {
-          preprocessedDataCache[dataVarName] = window[dataVarName];
+        const dataObject = window[dataVarName];
+        // Corrected check for the new data structure { name: '...', content: [...] }
+        if (dataObject && dataObject.content && Array.isArray(dataObject.content)) {
+          preprocessedDataCache[dataVarName] = dataObject.content;
         } else {
           // console.warn(`建立索引時找不到或格式不符的資料變數: ${dataVarName}`);
         }
@@ -2898,20 +2900,27 @@ this.classList.add('ended');
 
   updateProgressDropdown();
   progressDropdown.addEventListener('change', function () {
-    var selectedValue = this.value;
+    const selectedValue = this.value;
     if (selectedValue) {
-      var parts = selectedValue.split('||');
-      var tableName = parts[0];
-      var category = parts[1];
-      var rowId = parts[2];
-      var dataVarName = mapTableNameToDataVar(tableName);
-      if (dataVarName) {
-        var dataObject = window[dataVarName]; // *** 關鍵修正 ***
-        if (dataObject) {
-          generate(dataObject, category, rowId);
-        } else {
-          console.error(`從下拉選單找不到資料物件: ${dataVarName}`);
+      const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      const selectedBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
+
+      if (selectedBookmark) {
+        const targetTableName = selectedBookmark.tableName;
+        const targetCategory = selectedBookmark.cat;
+        const targetRowIdToGo = selectedBookmark.rowId;
+        const dataVarName = mapTableNameToDataVar(targetTableName);
+
+        if (dataVarName) {
+          const dataObject = window[dataVarName];
+          if (dataObject) {
+            generate(dataObject, targetCategory, targetRowIdToGo);
+          } else {
+            console.error(`From dropdown: Could not find data object for ${dataVarName}`);
+          }
         }
+      } else {
+        console.error(`From dropdown: Could not find bookmark for value ${selectedValue}`);
       }
     }
   });
