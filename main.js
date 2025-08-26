@@ -18,6 +18,27 @@ const DB_VERSION = 1;
 const STORE_FILES = 'data_files';
 const STORE_VERSION = 'version_info';
 
+// --- 全域變數 ---
+let isCrossCategoryPlaying = false; // 標記是否正在進行跨類別連續播放
+let categoryList = []; // 儲存目前腔調級別的類別列表
+let currentCategoryIndex = -1; // 儲存目前播放類別的索引
+let currentAudio = null; // 將 currentAudio 移到全域，以便在 playAudio 和其他地方共享
+let isPlaying = false; // 播放狀態也移到全域
+let isPaused = false; // 暫停狀態也移到全域
+let currentAudioIndex = 0; // 當前音檔索引也移到全域
+let finishedTableName = null; // 暫存剛播放完畢的表格名稱 (用於書籤替換)
+let finishedCat = null; // 暫存剛播放完畢的類別名稱 (用於書籤替換)
+let loadedViaUrlParams = false; // <-- 新增：標記是否透過 URL 參數載入
+let activeSelectionPopup = false; // <-- 新增：標記選詞 popup 是否開啟
+let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目前頁面顯示的完整腔調級別全名
+let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
+let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
+let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
+let preprocessedDataCache = {};
+let indexedDataCache = {}; // <-- 新增此索引快取物件
+let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
+let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
+
 /**
  * 將事件傳送分 Google Analytics。
  * @param {string} action - 事件動作 (例如 'open', 'click')。
@@ -376,6 +397,198 @@ function isRomanizedHakka(text) {
     return false;
   }
   return true;
+}
+
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this,
+      args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function createMobileLookupButton(popupEl, contentEl, backdropEl) {
+  if (mobileLookupButton) return;
+  mobileLookupButton = document.createElement('button');
+  mobileLookupButton.id = 'mobileLookupBtn';
+  mobileLookupButton.innerHTML = '尋讀音 <i class="fas fa-search"></i>';
+  mobileLookupButton.style.display = 'none';
+  document.body.appendChild(mobileLookupButton);
+  mobileLookupButton.addEventListener('click', () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0 && lastSelectionRectForMobile) {
+      const selectedText = selection.toString().trim();
+      if (selectedText.length > 0 && selectedText.length <= 15) {
+        const readings = findPronunciationsInAllData(selectedText);
+        showPronunciationPopup(selectedText, readings, lastSelectionRectForMobile, null);
+        hideMobileLookupButton();
+      }
+    } else {
+      hideMobileLookupButton();
+    }
+  });
+}
+
+function showMobileLookupButton(selectionRect) {
+  if (!mobileLookupButton) return;
+  lastSelectionRectForMobile = selectionRect;
+  mobileLookupButton.style.visibility = 'hidden';
+  mobileLookupButton.style.display = 'block';
+  const btnWidth = mobileLookupButton.offsetWidth;
+  const btnHeight = mobileLookupButton.offsetHeight;
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  const margin = 3;
+  let btnTop = scrollY + selectionRect.bottom + margin;
+  let btnLeft = scrollX + selectionRect.right - btnWidth;
+  if (selectionRect.width < btnWidth) {
+    btnLeft = scrollX + selectionRect.left;
+  }
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const edgeMargin = 5;
+  if (btnLeft + btnWidth > scrollX + viewportWidth - edgeMargin) {
+    btnLeft = scrollX + viewportWidth - btnWidth - edgeMargin;
+  }
+  if (btnLeft < scrollX + edgeMargin) {
+    btnLeft = scrollX + edgeMargin;
+  }
+  if (btnTop + btnHeight > scrollY + viewportHeight - edgeMargin) {
+    let topAbove = scrollY + selectionRect.top - btnHeight - margin;
+    if (topAbove > scrollY + edgeMargin) {
+      btnTop = topAbove;
+    }
+  }
+   if (btnTop < scrollY + edgeMargin) {
+        btnTop = scrollY + edgeMargin;
+   }
+  mobileLookupButton.style.top = `${btnTop}px`;
+  mobileLookupButton.style.left = `${btnLeft}px`;
+  mobileLookupButton.style.visibility = 'visible';
+}
+
+function hideMobileLookupButton() {
+  if (mobileLookupButton) {
+    mobileLookupButton.style.display = 'none';
+  }
+  lastSelectionRectForMobile = null;
+}
+
+const debouncedMobileSelectionHandler = debounce(function() {
+  const selection = window.getSelection();
+  const contentContainer = document.getElementById('generated');
+  if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
+    const range = selection.getRangeAt(0);
+    const selectedText = selection.toString().trim();
+    const commonAncestorContainer = range.commonAncestorContainer;
+    let sentenceSpan = null;
+    if (commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
+      sentenceSpan = commonAncestorContainer.closest('span.sentence');
+    } else if (commonAncestorContainer.parentNode) {
+      sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
+    }
+    if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0 && selectedText.length <= 15) {
+      if (!activeSelectionPopup) {
+        const rect = range.getBoundingClientRect();
+        showMobileLookupButton(rect);
+      } else {
+        hideMobileLookupButton();
+      }
+    } else {
+      hideMobileLookupButton();
+    }
+  } else {
+    hideMobileLookupButton();
+  }
+}, 250);
+
+function globalKeydownHandler(event) {
+  const activeElement = document.activeElement;
+  const isGeneralInputLikeFocused = activeElement && (
+    activeElement.tagName === 'INPUT' ||
+    activeElement.tagName === 'TEXTAREA' ||
+    activeElement.tagName === 'SELECT' ||
+    activeElement.tagName === 'BUTTON' ||
+    activeElement.isContentEditable
+  );
+
+  if (event.key === 'Escape' || event.code === 'Escape') {
+    if (activeSelectionPopup) {
+      event.preventDefault();
+      const popupEl = document.getElementById('selectionPopup');
+      const backdropEl = document.getElementById('selectionPopupBackdrop');
+      hidePronunciationPopup(popupEl, backdropEl);
+    } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
+        event.preventDefault();
+        infoModal.style.display = 'none';
+        if (infoButton) infoButton.focus();
+    } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
+      if (activeElement) {
+        activeElement.blur();
+        event.preventDefault();
+      }
+    } else if (isPlaying) {
+      const stopButton = document.getElementById('stopBtn');
+      if (stopButton) {
+        stopButton.click();
+      }
+    }
+    return;
+  }
+
+  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
+    if (!isGeneralInputLikeFocused) {
+      if (isPlaying) {
+        event.preventDefault();
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton) {
+          pauseResumeButton.click();
+        }
+      } else {
+        const progressDropdown = document.getElementById('progressDropdown');
+        if (progressDropdown && progressDropdown.options.length > 1) {
+          event.preventDefault();
+          const selectedValue = progressDropdown.options[1].value;
+          const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+          const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
+
+          if (firstBookmark) {
+            const targetTableName = firstBookmark.tableName;
+            const targetCategory = firstBookmark.cat;
+            const targetRowIdToGo = firstBookmark.rowId;
+            const dataVarName = mapTableNameToDataVar(targetTableName);
+
+            if (dataVarName) {
+              let dataObject = window[dataVarName];
+              if (typeof dataObject !== 'undefined') {
+                document.querySelectorAll('span[data-varname]').forEach(span => {
+                span.classList.remove('active-dialect-level');
+              });
+              const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
+              if (activeDialectSpan) {
+                activeDialectSpan.classList.add('active-dialect-level');
+              }
+                generate(dataObject, targetCategory, targetRowIdToGo);
+                progressDropdown.selectedIndex = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 function openDB() {
@@ -1557,27 +1770,6 @@ function extractDialectLevelCodes(tableName) {
   return { dialect: dialectCode, level: levelCode };
 }
 
-// --- 全域變數 ---
-let isCrossCategoryPlaying = false; // 標記是否正在進行跨類別連續播放
-let categoryList = []; // 儲存目前腔調級別的類別列表
-let currentCategoryIndex = -1; // 儲存目前播放類別的索引
-let currentAudio = null; // 將 currentAudio 移到全域，以便在 playAudio 和其他地方共享
-let isPlaying = false; // 播放狀態也移到全域
-let isPaused = false; // 暫停狀態也移到全域
-let currentAudioIndex = 0; // 當前音檔索引也移到全域
-let finishedTableName = null; // 暫存剛播放完畢的表格名稱 (用於書籤替換)
-let finishedCat = null; // 暫存剛播放完畢的類別名稱 (用於書籤替換)
-let loadedViaUrlParams = false; // <-- 新增：標記是否透過 URL 參數載入
-let activeSelectionPopup = false; // <-- 新增：標記選詞 popup 是否開啟
-let currentActiveDialectLevelFullName = ''; // <-- 修改變數名：儲存目前頁面顯示的完整腔調級別全名
-let currentActiveMainDialectName = ''; // <-- 新增：儲存目前頁面顯示的主要腔調名稱 (例如：四縣)
-let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨點元素
-let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
-let preprocessedDataCache = {};
-let indexedDataCache = {}; // <-- 新增此索引快取物件
-let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
-let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
-
 // --- 新增：所有已知的資料變數名稱 (用於「共腔尋詞」) ---
 const allKnownDataVars = [
   '四基', '四初', '四中', '四中高', '四高',
@@ -2472,6 +2664,24 @@ this.classList.add('ended');
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
 
+  if (selectionPopup && selectionPopupBackdrop && selectionPopupContent && selectionPopupCloseBtn && contentContainer) {
+    if (isMobileDevice()) {
+      console.log('手機裝置，設定 selectionchange 監聽器分查詞按鈕。');
+      createMobileLookupButton(selectionPopup, selectionPopupContent, selectionPopupBackdrop);
+      document.addEventListener('selectionchange', debouncedMobileSelectionHandler);
+    } else {
+      console.log('桌機裝置，設定 mouseup 監聽器分 popup。');
+      contentContainer.addEventListener('mouseup', (event) => handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentContainer));
+    }
+
+    selectionPopupCloseBtn.addEventListener('click', () => hidePronunciationPopup(selectionPopup, selectionPopupBackdrop));
+    selectionPopupBackdrop.addEventListener('click', () => hidePronunciationPopup(selectionPopup, selectionPopupBackdrop));
+
+    selectionPopup.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+  }
+
   function handleUrlChange() {
     const urlParams = new URLSearchParams(window.location.search);
     const kiongParam = urlParams.get('kiong');
@@ -2707,6 +2917,7 @@ this.classList.add('ended');
   });
 
   window.addEventListener('resize', handleResizeActions);
+  document.addEventListener('keydown', globalKeydownHandler);
   handleResizeActions();
 }
 
