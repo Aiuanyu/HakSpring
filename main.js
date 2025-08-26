@@ -2358,16 +2358,16 @@ this.classList.add('ended');
         searchPopup.style.display = 'none';
       }
     });
-    searchDialectRadios.forEach(radio => {
-      radio.addEventListener('change', () => {
-        localStorage.setItem('lastSearchDialect', radio.value);
-      });
-    });
-    searchModeRadios.forEach(radio => {
-      radio.addEventListener('change', () => {
-        localStorage.setItem('lastSearchMode', radio.value);
-      });
-    });
+    const triggerSearchOnChange = () => {
+        localStorage.setItem('lastSearchDialect', document.querySelector('#search-popup input[name="dialect"]:checked').value);
+        localStorage.setItem('lastSearchMode', document.querySelector('#search-popup input[name="search-mode"]:checked').value);
+        if (searchInput.value.trim()) {
+            performSearch();
+        }
+    };
+
+    searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
+    searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
     const lastDialect = localStorage.getItem('lastSearchDialect');
     if (lastDialect) {
       const radioToCheck = document.querySelector(`#search-popup input[name="dialect"][value="${lastDialect}"]`);
