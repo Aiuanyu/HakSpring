@@ -1799,6 +1799,33 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     });
 
     adjustHeaderFontSizeOnOverflow();
+
+    if (activeSelectionPopup) {
+      const popupEl = document.getElementById('selectionPopup');
+      if (popupEl && popupEl.style.display === 'block') {
+        let rectToUse = null;
+        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+        } else if (lastRectForPopupPositioning) {
+          rectToUse = lastRectForPopupPositioning;
+        }
+
+        if (rectToUse) {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
+                return;
+              }
+              let currentRect = rectToUse;
+              if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+                   currentRect = lastAnchorElementForPopup.getBoundingClientRect();
+              }
+              updatePopupPosition(popupEl, currentRect);
+            }, 100);
+          });
+        }
+      }
+    }
   }
 
   function debounce(func, wait, immediate) {
