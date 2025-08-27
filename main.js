@@ -1,10 +1,10 @@
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
-  'data/cert/四基.json', 'data/cert/四初.json', 'data/cert/四中.json', 'data/cert/四中高.json', 'data/cert/四高.json',
-  'data/cert/海基.json', 'data/cert/海初.json', 'data/cert/海中.json', 'data/cert/海中高.json', 'data/cert/海高.json',
-  'data/cert/大基.json', 'data/cert/大初.json', 'data/cert/大中.json', 'data/cert/大中高.json', 'data/cert/大高.json',
-  'data/cert/平基.json', 'data/cert/平初.json', 'data/cert/平中.json', 'data/cert/平中高.json', 'data/cert/平高.json',
-  'data/cert/安基.json', 'data/cert/安初.json', 'data/cert/安中.json', 'data/cert/安中高.json', 'data/cert/安高.json',
+  'data/cert/113四基.json', 'data/cert/113四初.json', 'data/cert/113四中.json', 'data/cert/113四中高.json', 'data/cert/113四高.json',
+  'data/cert/113海基.json', 'data/cert/113海初.json', 'data/cert/113海中.json', 'data/cert/113海中高.json', 'data/cert/113海高.json',
+  'data/cert/113大基.json', 'data/cert/113大初.json', 'data/cert/113大中.json', 'data/cert/113大中高.json', 'data/cert/113大高.json',
+  'data/cert/113平基.json', 'data/cert/113平初.json', 'data/cert/113平中.json', 'data/cert/113平中高.json', 'data/cert/113平高.json',
+  'data/cert/113安基.json', 'data/cert/113安初.json', 'data/cert/113安中.json', 'data/cert/113安中高.json', 'data/cert/113安高.json',
   // 教典資料
   'data/gip/20250630-四.json', 'data/gip/20250630-南.json', 'data/gip/20250630-海.json', 'data/gip/20250630-大.json', 'data/gip/20250630-平.json', 'data/gip/20250630-安.json',
   // 其他資料
@@ -695,8 +695,16 @@ function getKeyNameFromPath(filePath) {
 
     // 2. 根據檔案所在的不同資料夾，套用不同的命名規則
     if (filePath.includes('/cert/')) {
-        // 認證詞彙檔：直接使用檔名 (例如 '四基')
-        return fileName;
+        // 認證詞彙檔：從檔名中提取簡稱 (例如 '113大中' -> '大中')
+        const match = fileName.match(/\d*([四海大平安])(基|初|中高|中|高)/);
+        if (match) {
+            const dialectChar = match[1];
+            const levelChar = match[2];
+            return `${dialectChar}${levelChar}`;
+        } else {
+            console.warn(`getKeyNameFromPath: 無法解析認證檔名: ${fileName}。將使用完整檔名作為鍵名。`);
+            return fileName;
+        }
     }
     if (filePath.includes('/gip/')) {
         // 教典資料檔：將檔名 (例如 '20250630-四') 轉換為 '教典四'
