@@ -1028,35 +1028,59 @@ function initializeAppUI() {
     isPlayingContext = false
   ) {
     let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    const newBookmark = {
+      rowId: rowId,
+      percentage: percentage,
+      cat: category,
+      tableName: tableName,
+      timestamp: Date.now(),
+    };
 
-    const existingBookmarkIndex = bookmarks.findIndex(
-      (bm) => bm.tableName === tableName && bm.cat === category
+    // 1. 移除已存在的完全相同的紀錄 (同表格同類別)
+    const existingIndex = bookmarks.findIndex(
+      (bm) => bm.tableName === newBookmark.tableName && bm.cat === newBookmark.cat
     );
-
-    if (existingBookmarkIndex > -1) {
-      bookmarks[existingBookmarkIndex].rowId = rowId;
-      bookmarks[existingBookmarkIndex].percentage = percentage;
-      bookmarks[existingBookmarkIndex].timestamp = new Date().getTime();
-    } else {
-      bookmarks.push({
-        tableName: tableName,
-        cat: category,
-        rowId: rowId,
-        percentage: percentage,
-        timestamp: new Date().getTime(),
-      });
+    if (existingIndex > -1) {
+      bookmarks.splice(existingIndex, 1);
     }
+    // 2. 將新紀錄加到最前面
+    bookmarks.unshift(newBookmark);
 
-    bookmarks.sort((a, b) => b.timestamp - a.timestamp);
-
+    // 3. 如果紀錄超過 10 筆，執行您微調過的汰換邏輯
     if (bookmarks.length > 10) {
-      bookmarks = bookmarks.slice(0, 10);
+      let indexToDelete = -1;
+      let foundMatch = false;
+
+      // 從最舊的開始往前找 (但不包含最新的第0筆)
+      for (let i = bookmarks.length - 1; i >= 1; i--) {
+        const currentBookmark = bookmarks[i];
+        // 檢查是否為「同表格，但不同類別」
+        if (
+          currentBookmark.tableName === newBookmark.tableName &&
+          currentBookmark.cat !== newBookmark.cat
+        ) {
+          indexToDelete = i;
+          foundMatch = true;
+          break; // 找到目標，停止搜尋
+        }
+      }
+
+      // 如果找到了符合條件的，就刪除它
+      if (foundMatch) {
+        bookmarks.splice(indexToDelete, 1);
+      } else {
+        // 如果沒找到，才刪除最舊的一筆 (也就是最後一筆)
+        bookmarks.pop();
+      }
     }
 
+    // 4. 儲存更新後的紀錄
     localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
 
+    // 5. 更新下拉選單 UI
     updateProgressDropdown();
 
+    // 6. 更新進度詳情連結 (採用新版清晰的邏輯)
     const progressDetailsSpan = document.getElementById('progressDetails');
     if (progressDetailsSpan) {
         let baseURL = '';
@@ -1783,7 +1807,63 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     }
   }
 
+  function isFirefox() {
+    return navigator.userAgent.toLowerCase().includes('firefox');
+  }
+
+  function adjustRubyFontSize(rubyElement) {
+    if (!isFirefox()) return;
+    const tdElement = rubyElement.closest('td');
+    if (!tdElement) return;
+    rubyElement.style.fontSize = '';
+    const forcedStyle = window.getComputedStyle(rubyElement);
+    const currentFontSize = parseFloat(forcedStyle.fontSize);
+    const rubyWidth = rubyElement.scrollWidth;
+    const computedTdStyle = window.getComputedStyle(tdElement);
+    const isCardMode = computedTdStyle.display === 'block';
+    let availableWidth;
+    const buffer = 5;
+    if (isCardMode) {
+      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
+      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+    } else {
+      availableWidth = tdElement.clientWidth - buffer;
+    }
+    if (rubyWidth > availableWidth) {
+      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
+      const minSize = 10;
+      newSize = Math.max(newSize, minSize);
+      if (newSize < currentFontSize) {
+        if (rubyElement.style.fontSize !== `${newSize}px`) {
+          rubyElement.style.fontSize = `${newSize}px`;
+        }
+      } else {
+        if (rubyElement.style.fontSize) {
+          rubyElement.style.fontSize = '';
+        }
+      }
+    } else {
+      if (rubyElement.style.fontSize) {
+        rubyElement.style.fontSize = '';
+      }
+    }
+  }
+
+  function adjustAllRubyFontSizes(containerElement) {
+    if (!isFirefox()) return;
+    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
+    rubyElements.forEach((rubyElement) => {
+      rubyElement.style.fontSize = '';
+      adjustRubyFontSize(rubyElement);
+    });
+  }
+
   function handleResizeActions() {
+    const contentContainer = document.getElementById('generated');
+    if (contentContainer) {
+        adjustAllRubyFontSizes(contentContainer);
+    }
+
     const rubies = document.querySelectorAll('ruby');
     rubies.forEach(ruby => {
       const rt = ruby.querySelector('rt');
@@ -3246,19 +3326,20 @@ this.classList.add('ended');
 
     if (selectedValue && selectedValue !== '擇進前个進度') {
       const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      // [修正] 先從 bookmarks 陣列中找到完整的書籤物件
       const selectedBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
       if (selectedBookmark) {
+        // [修正] 從找到的物件中安全地取得所有資訊
         const targetTableName = selectedBookmark.tableName;
         const targetCategory = selectedBookmark.cat;
-        const targetRowIdToGo = selectedBookmark.rowId;
+        const targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
         const dataVarName = mapTableNameToDataVar(targetTableName);
 
         if (dataVarName) {
           const dataObject = window[dataVarName];
           if (dataObject) {
             generate(dataObject, targetCategory, targetRowIdToGo);
-            // This also creates the link via the logic inside buildTableAndSetupPlayback
           } else {
             console.error('無法找到對應的資料變數:', dataVarName || targetTableName);
             alert('載入選定進度時發生錯誤：找不到對應的資料集。');
