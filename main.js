@@ -1576,6 +1576,8 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     updateResultsSummaryVisibility();
 
+    setTimeout(() => handleResizeActions(), 0); // Trigger font size adjustment after table is rendered
+
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
       if (firstResultElement) {
