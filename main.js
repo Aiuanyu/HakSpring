@@ -931,6 +931,30 @@ function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log("Initializing UI...");
 
+  let successfullyLoadedFromUrl = false;
+
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  const searchContainer = document.getElementById('search-container');
+  const searchInput = document.getElementById('search-input');
+  const searchPopup = document.getElementById('search-popup');
+  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
+  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
+  const progressDropdown = document.getElementById('progressDropdown');
+  const progressDetailsSpan = document.getElementById('progressDetails');
+  const contentContainer = document.getElementById('generated');
+  const header = document.getElementById('header');
+  const backToTopButton = document.getElementById('backToTopBtn');
+  const autoplayModal = document.getElementById('autoplayModal');
+  const modalContent = autoplayModal ? autoplayModal.querySelector('.modal-content') : null;
+  const dialectLevelLinks = document.querySelectorAll('.dialect a');
+  const selectionPopup = document.getElementById('selectionPopup');
+  const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
+  const selectionPopupContent = document.getElementById('selectionPopupContent');
+  const selectionPopupCloseBtn = document.getElementById('selectionPopupCloseBtn');
+  const infoButton = document.getElementById('infoButton');
+  const infoModal = document.getElementById('infoModal');
+  const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
+
   // All data variables from the included JS files
   const allData = {
     '四縣': [window['四基'], window['四初'], window['四中'], window['四中高'], window['四高']],
@@ -1529,90 +1553,219 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 }
 
   function 大埔高降異化() {
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach((ruby) => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        let originalText = rt.innerHTML;
-        let newText = originalText.replace(
-          /([a-zA-Z]+)vh(?![^<]*>)/g,
-          (match, p1) => {
-            const nextSyllableIndex =
-              rt.innerHTML.indexOf(match) + match.length;
-            const restOfString = rt.innerHTML.substring(nextSyllableIndex);
-            const nextMatch = restOfString.match(
-              /([a-zA-Z]+)(v|b|f|p|m|vf|va|vb|vc|vd|ve|vh)(?![^<]*>)/
-            );
-            if (nextMatch) {
-              const nextTone = nextMatch[2];
-              if (nextTone === 'vh') {
-                return `${p1}vh`;
-              } else {
-                return `${p1}va`;
-              }
+    const rtElements = document.querySelectorAll('#generated rt');
+    rtElements.forEach((rt) => {
+      let htmlContent = rt.innerHTML;
+      const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
+      let preliminaryTokens = [];
+      let lastIndex = 0;
+      htmlContent.replace(sandhiRubyRegex, (match, offset) => {
+        if (offset > lastIndex) {
+          preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
+        }
+        preliminaryTokens.push(match);
+        lastIndex = offset + match.length;
+        return match;
+      });
+      if (lastIndex < htmlContent.length) {
+        preliminaryTokens.push(htmlContent.substring(lastIndex));
+      }
+      const tokens = preliminaryTokens.flatMap(token => {
+        if (token.startsWith("<ruby class=\"sandhi-")) {
+          return [token];
+        }
+        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+      }).filter(t => t && t.length > 0);
+      let modifiedTokens = [];
+      let hasActualModification = false;
+      for (let i = 0; i < tokens.length; i++) {
+        let currentToken = tokens[i];
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+          modifiedTokens.push(currentToken);
+        } else {
+          let nextWordToken = "";
+          for (let j = i + 1; j < tokens.length; j++) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+              continue;
             }
-            return `${p1}vh`;
+            if (tokens[j] === '(' || tokens[j] === '（') {
+              nextWordToken = "";
+              break;
+            }
+            nextWordToken = tokens[j];
+            break;
           }
-        );
-        rt.innerHTML = newText;
+          if (currentToken.length > 0 && currentToken.match(/[àèìòù](?![bdg])/)) {
+            if (nextWordToken && nextWordToken.match(/[\u00E0\u00E8\u00EC\u00F2\u00F9\u00E2\u00EA\u00EE\u00F4\u00FB]/)) {
+              if (currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+                modifiedTokens.push(currentToken);
+              } else {
+                let rubyElement = document.createElement('ruby');
+                rubyElement.className = 'sandhi-高降變';
+                rubyElement.textContent = currentToken;
+                let rtInnerElement = document.createElement('rt');
+                rtInnerElement.textContent = '55';
+                rubyElement.appendChild(rtInnerElement);
+                modifiedTokens.push(rubyElement.outerHTML);
+                hasActualModification = true;
+              }
+            } else {
+              modifiedTokens.push(currentToken);
+            }
+          }
+          else {
+            modifiedTokens.push(currentToken);
+          }
+        }
+      }
+      if (hasActualModification) {
+        rt.innerHTML = modifiedTokens.join('');
       }
     });
   }
 
   function 大埔中遇低升() {
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach((ruby) => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        let originalText = rt.innerHTML;
-        let newText = originalText.replace(
-          /([a-zA-Z]+)f(?![^<]*>)/g,
-          (match, p1) => {
-            const nextSyllableIndex =
-              rt.innerHTML.indexOf(match) + match.length;
-            const restOfString = rt.innerHTML.substring(nextSyllableIndex);
-            const nextMatch = restOfString.match(
-              /([a-zA-Z]+)(v|b|f|p|m|vf|va|vb|vc|vd|ve|vh)(?![^<]*>)/
-            );
-            if (nextMatch) {
-              const nextTone = nextMatch[2];
-              if (nextTone === 'v' || nextTone === 'b') {
-                return `${p1}va`;
-              }
+    const rtElements = document.querySelectorAll('#generated rt');
+    rtElements.forEach((rt) => {
+      let htmlContent = rt.innerHTML;
+      const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
+      let preliminaryTokens = [];
+      let lastIndex = 0;
+      htmlContent.replace(sandhiRubyRegex, (match, offset) => {
+        if (offset > lastIndex) {
+          preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
+        }
+        preliminaryTokens.push(match);
+        lastIndex = offset + match.length;
+        return match;
+      });
+      if (lastIndex < htmlContent.length) {
+        preliminaryTokens.push(htmlContent.substring(lastIndex));
+      }
+      const tokens = preliminaryTokens.flatMap(token => {
+        if (token.startsWith("<ruby class=\"sandhi-")) {
+          return [token];
+        }
+        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+      }).filter(t => t && t.length > 0);
+      let modifiedTokens = [];
+      let hasActualModification = false;
+      for (let i = 0; i < tokens.length; i++) {
+        let currentToken = tokens[i];
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+          modifiedTokens.push(currentToken);
+        }
+        else {
+          let nextWordToken = "";
+          for (let j = i + 1; j < tokens.length; j++) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+              continue;
             }
-            return `${p1}f`;
+            if (tokens[j] === '(' || tokens[j] === '（') {
+              nextWordToken = "";
+              break;
+            }
+            nextWordToken = tokens[j];
+            break;
           }
-        );
-        rt.innerHTML = newText;
+          if (currentToken.length > 0 && currentToken.match(/[\u0101\u0113\u012B\u014D\u016B]/)) {
+            if (nextWordToken && nextWordToken.match(/[\u01CE\u011B\u01D0\u01D2\u01D4\u00E2\u00EA\u00EE\u00F4\u00FB]/)) {
+              if (currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+                modifiedTokens.push(currentToken);
+              } else {
+                let rubyElement = document.createElement('ruby');
+                rubyElement.className = 'sandhi-中平變';
+                rubyElement.textContent = currentToken;
+                let rtInnerElement = document.createElement('rt');
+                rtInnerElement.textContent = '35';
+                rubyElement.appendChild(rtInnerElement);
+                modifiedTokens.push(rubyElement.outerHTML);
+                hasActualModification = true;
+              }
+            } else {
+              modifiedTokens.push(currentToken);
+            }
+          }
+          else {
+            modifiedTokens.push(currentToken);
+          }
+        }
+      }
+      if (hasActualModification) {
+        rt.innerHTML = modifiedTokens.join('');
       }
     });
   }
 
   function 大埔低升異化() {
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach((ruby) => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        let originalText = rt.innerHTML;
-        let newText = originalText.replace(
-          /([a-zA-Z]+)v(?![^<]*>)/g,
-          (match, p1) => {
-            const nextSyllableIndex =
-              rt.innerHTML.indexOf(match) + match.length;
-            const restOfString = rt.innerHTML.substring(nextSyllableIndex);
-            const nextMatch = restOfString.match(
-              /([a-zA-Z]+)(v|b|f|p|m|vf|va|vb|vc|vd|ve|vh)(?![^<]*>)/
-            );
-            if (nextMatch) {
-              const nextTone = nextMatch[2];
-              if (nextTone === 'v' || nextTone === 'b') {
-                return `${p1}f`;
-              }
+    const rtElements = document.querySelectorAll('#generated rt');
+    rtElements.forEach((rt) => {
+      let htmlContent = rt.innerHTML;
+      const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
+      let preliminaryTokens = [];
+      let lastIndex = 0;
+      htmlContent.replace(sandhiRubyRegex, (match, offset) => {
+        if (offset > lastIndex) {
+          preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
+        }
+        preliminaryTokens.push(match);
+        lastIndex = offset + match.length;
+        return match;
+      });
+      if (lastIndex < htmlContent.length) {
+        preliminaryTokens.push(htmlContent.substring(lastIndex));
+      }
+      const tokens = preliminaryTokens.flatMap(token => {
+        if (token.startsWith("<ruby class=\"sandhi-")) {
+          return [token];
+        }
+        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+      }).filter(t => t && t.length > 0);
+      let modifiedTokens = [];
+      let hasActualModification = false;
+      for (let i = 0; i < tokens.length; i++) {
+        let currentToken = tokens[i];
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+          modifiedTokens.push(currentToken);
+        }
+        else {
+          let nextWordToken = "";
+          for (let j = i + 1; j < tokens.length; j++) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+              continue;
             }
-            return `${p1}v`;
+            if (tokens[j] === '(' || tokens[j] === '（') {
+              nextWordToken = "";
+              break;
+            }
+            nextWordToken = tokens[j];
+            break;
           }
-        );
-        rt.innerHTML = newText;
+          if (currentToken.length > 0 && currentToken.match(/[\u01CE\u011B\u01D0\u01D2\u01D4]/)) {
+            if (nextWordToken && nextWordToken.match(/[\u01CE\u011B\u01D0\u01D2\u01D4]/)) {
+              if (currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+                modifiedTokens.push(currentToken);
+              } else {
+                let rubyElement = document.createElement('ruby');
+                rubyElement.className = 'sandhi-低升變';
+                rubyElement.textContent = currentToken;
+                let rtElement = document.createElement('rt');
+                rtElement.textContent = '33';
+                rubyElement.appendChild(rtElement);
+                modifiedTokens.push(rubyElement.outerHTML);
+                hasActualModification = true;
+              }
+            } else {
+              modifiedTokens.push(currentToken);
+            }
+          }
+          else {
+            modifiedTokens.push(currentToken);
+          }
+        }
+      }
+      if (hasActualModification) {
+        rt.innerHTML = modifiedTokens.join('');
       }
     });
   }
@@ -1647,6 +1800,159 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     adjustHeaderFontSizeOnOverflow();
   }
+
+  function debounce(func, wait, immediate) {
+    let timeout;
+    return function () {
+      const context = this,
+        args = arguments;
+      const later = function () {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      const callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  }
+
+  function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  function isSourceMatchingDialect(source, dialect) {
+    if (!source || !dialect) return false;
+    if (dialect === '南四縣') {
+      return source.startsWith('南四縣') || (source.startsWith('四縣') && !source.endsWith('教典'));
+    }
+    return source.startsWith(dialect);
+  }
+
+  const debouncedMobileSelectionHandler = debounce(function() {
+    const selection = window.getSelection();
+    const contentContainer = document.getElementById('generated');
+    if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
+      const range = selection.getRangeAt(0);
+      const selectedText = selection.toString().trim();
+      const commonAncestorContainer = range.commonAncestorContainer;
+      let sentenceSpan = null;
+      if (commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
+        sentenceSpan = commonAncestorContainer.closest('span.sentence');
+      } else if (commonAncestorContainer.parentNode) {
+        sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
+      }
+      if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0 && selectedText.length <= 15) {
+        if (!activeSelectionPopup) {
+          const rect = range.getBoundingClientRect();
+          showMobileLookupButton(rect);
+        } else {
+          hideMobileLookupButton();
+        }
+      } else {
+        hideMobileLookupButton();
+      }
+    } else {
+      hideMobileLookupButton();
+    }
+  }, 250);
+
+  function globalKeydownHandler(event) {
+    const activeElement = document.activeElement;
+    const isGeneralInputLikeFocused = activeElement && (
+      activeElement.tagName === 'INPUT' ||
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.tagName === 'SELECT' ||
+      activeElement.tagName === 'BUTTON' ||
+      activeElement.isContentEditable
+    );
+
+    if (event.key === 'Escape' || event.code === 'Escape') {
+      if (activeSelectionPopup) {
+        event.preventDefault();
+        const popupEl = document.getElementById('selectionPopup');
+        const backdropEl = document.getElementById('selectionPopupBackdrop');
+        hidePronunciationPopup(popupEl, backdropEl);
+      } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
+          event.preventDefault();
+          infoModal.style.display = 'none';
+          if (infoButton) infoButton.focus();
+      } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
+        if (activeElement) {
+          activeElement.blur();
+          event.preventDefault();
+        }
+      } else if (isPlaying) {
+        const stopButton = document.getElementById('stopBtn');
+        if (stopButton) {
+          stopButton.click();
+        }
+      }
+      return;
+    }
+
+    if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
+      if (!isGeneralInputLikeFocused) {
+        if (isPlaying) {
+          event.preventDefault();
+          const pauseResumeButton = document.getElementById('pauseResumeBtn');
+          if (pauseResumeButton) {
+            pauseResumeButton.click();
+          }
+        } else {
+          const progressDropdown = document.getElementById('progressDropdown');
+          if (progressDropdown && progressDropdown.options.length > 1) {
+            event.preventDefault();
+            const selectedValue = progressDropdown.options[1].value;
+            const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+            const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
+
+            if (firstBookmark) {
+              const targetTableName = firstBookmark.tableName;
+              const targetCategory = firstBookmark.cat;
+              const targetRowIdToGo = firstBookmark.rowId;
+              const dataVarName = mapTableNameToDataVar(targetTableName);
+
+              if (dataVarName) {
+                let dataObject = window[dataVarName];
+                if (typeof dataObject !== 'undefined') {
+                  document.querySelectorAll('span[data-varname]').forEach(span => {
+                  span.classList.remove('active-dialect-level');
+                });
+                const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
+                if (activeDialectSpan) {
+                  activeDialectSpan.classList.add('active-dialect-level');
+                }
+                  generate(dataObject, targetCategory, targetRowIdToGo);
+                  progressDropdown.selectedIndex = 1;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (isMobileDevice()) {
+    createMobileLookupButton();
+    document.addEventListener('selectionchange', debouncedMobileSelectionHandler);
+  } else {
+    contentContainer.addEventListener('mouseup', (event) => {
+      handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentContainer);
+    });
+  }
+
+  document.addEventListener('keydown', globalKeydownHandler);
+
+  document.addEventListener('click', (event) => {
+    if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+      const button = event.target.tagName === 'BUTTON' ? event.target : event.target.closest('button');
+      setTimeout(() => button.blur(), 300);
+    }
+  });
+
+  window.addEventListener('resize', debounce(handleResizeActions, 250));
 
   
 // --- 新增：更新網頁標題函式 ---
@@ -2283,9 +2589,11 @@ td2.appendChild(ruby);
   contentContainer.appendChild(table);
 
   if (dialectInfo.腔 === '大') {
-    大埔高降異化();
-    大埔中遇低升();
-    大埔低升異化();
+    setTimeout(() => {
+      大埔高降異化();
+      大埔中遇低升();
+      大埔低升異化();
+    }, 0);
   }
 
   setTimeout(() => handleResizeActions(), 50);
@@ -2672,29 +2980,6 @@ this.classList.add('ended');
 }
 
   preprocessAllData(); // <-- 確保這一行被執行
-
-  let successfullyLoadedFromUrl = false;
-  const resultsSummaryContainer = document.getElementById('results-summary');
-  const searchContainer = document.getElementById('search-container');
-  const searchInput = document.getElementById('search-input');
-  const searchPopup = document.getElementById('search-popup');
-  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
-  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
-  const progressDropdown = document.getElementById('progressDropdown');
-  const progressDetailsSpan = document.getElementById('progressDetails');
-  const contentContainer = document.getElementById('generated');
-  const header = document.getElementById('header');
-  const backToTopButton = document.getElementById('backToTopBtn');
-  const autoplayModal = document.getElementById('autoplayModal');
-  const modalContent = autoplayModal ? autoplayModal.querySelector('.modal-content') : null;
-  const dialectLevelLinks = document.querySelectorAll('.dialect a');
-  const selectionPopup = document.getElementById('selectionPopup');
-  const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-  const selectionPopupContent = document.getElementById('selectionPopupContent');
-  const selectionPopupCloseBtn = document.getElementById('selectionPopupCloseBtn');
-  const infoButton = document.getElementById('infoButton');
-  const infoModal = document.getElementById('infoModal');
-  const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupContent && selectionPopupCloseBtn && contentContainer) {
     if (isMobileDevice()) {
