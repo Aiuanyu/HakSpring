@@ -3027,33 +3027,45 @@ this.classList.add('ended');
             const autoplayModal = document.getElementById('autoplayModal');
             const modalContent = autoplayModal.querySelector('.modal-content');
             if (autoplayModal && modalContent) {
-              const startPlayback = () => {
-                autoplayModal.style.display = 'none';
-                generate(dataObject, decodedCategory, rowParam);
-                successfullyLoadedFromUrl = true;
-                if (progressDropdown) {
-                  const targetValue = targetTableName + '||' + decodedCategory;
-                  const optionToSelect = progressDropdown.querySelector(`option[value="${targetValue}"]`);
-                  if (optionToSelect) {
-                    optionToSelect.selected = true;
-                  } else {
-                    progressDropdown.selectedIndex = 0;
-                  }
-                }
-              };
-              const newModalContent = modalContent.cloneNode(true);
-              modalContent.parentNode.replaceChild(newModalContent, modalContent);
-              newModalContent.addEventListener('click', startPlayback, { once: true });
-              const newAutoplayModal = autoplayModal.cloneNode(true);
-              autoplayModal.parentNode.replaceChild(newAutoplayModal, autoplayModal);
-              newAutoplayModal.addEventListener('click', (event) => {
-                if (event.target.closest('.modal-content')) return;
-                newAutoplayModal.style.display = 'none';
-              }, { once: false });
-              newAutoplayModal.style.display = 'flex';
-            } else {
-              generate(dataObject, decodedCategory, rowParam);
-              successfullyLoadedFromUrl = true;
+                // 步驟 1: 將事件處理函式定義為具名函式，以便移除
+                const startPlayback = () => {
+                    autoplayModal.style.display = 'none';
+                    generate(dataObject, decodedCategory, rowParam);
+                    successfullyLoadedFromUrl = true;
+                    if (progressDropdown) {
+                        const targetValue = targetTableName + '||' + decodedCategory;
+                        const optionToSelect = progressDropdown.querySelector(`option[value="${targetValue}"]`);
+                        if (optionToSelect) {
+                            optionToSelect.selected = true;
+                        } else {
+                            progressDropdown.selectedIndex = 0;
+                        }
+                    }
+                    // 操作完成後，移除監聽器以避免記憶體洩漏
+                    modalContent.removeEventListener('click', startPlayback);
+                    autoplayModal.removeEventListener('click', backdropClickHandler);
+                };
+
+                const backdropClickHandler = (event) => {
+                    // 如果點擊的不是背景本身 (而是內容)，則不關閉
+                    if (event.target !== autoplayModal) return;
+                    
+                    autoplayModal.style.display = 'none';
+                    // 同樣，操作完成後移除監聽器
+                    modalContent.removeEventListener('click', startPlayback);
+                    autoplayModal.removeEventListener('click', backdropClickHandler);
+                };
+
+                // 步驟 2: 在新增監聽器前，先明確地移除舊的，確保狀態乾淨
+                modalContent.removeEventListener('click', startPlayback);
+                autoplayModal.removeEventListener('click', backdropClickHandler);
+
+                // 步驟 3: 新增事件監聽器
+                modalContent.addEventListener('click', startPlayback, { once: true });
+                autoplayModal.addEventListener('click', backdropClickHandler, { once: false }); // 背景點擊可能需要多次，所以不用 once
+
+                // 步驟 4: 直接顯示 Modal，不再使用 cloneNode
+                autoplayModal.style.display = 'flex';
             }
           }
         }
