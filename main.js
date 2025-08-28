@@ -60,45 +60,37 @@ function trackEvent(action, category, label) {
 
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
 
+/**
+ * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
+ * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
+ * @returns {string} 格式化後个淨俐字串。
+ */
 function formatPhoneticForDisplay(text) {
     if (!text) return "";
+    // 1. 拿忒全形括號【】（）前後个所有空白
     let result = text.replace(/\s*([【（】）])\s*/g, '$1');
+    // 2. 處理半形括號 (：淨拿忒佢「後背」个空白
     result = result.replace(/\(\s+/g, '(');
+    // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
     result = result.replace(/\s+\)/g, ')');
     return result;
 }
 
+/**
+ * 根據羅馬字拼音个分隔規則，準確計算音節數量。
+ * @param {string} romanizationText - 包含羅馬字拼音个字串。
+ * @returns {number} - 實際个音節數量。
+ */
 function countSyllables(romanizationText) {
     if (!romanizationText) return 0;
+    // 這隻正規表示式直接對應 romanizer.js 內底个 tokenizeRomanization 函式
     const tokens = romanizationText.match(/[【】（）()\/]|[^【】（）()\/\s]+/g) || [];
+    // 過濾掉所有淨係標點符號个 token，淨留下音節
     const syllables = tokens.filter(token => !/^[【】（）()\/]$/.test(token));
     return syllables.length;
 }
 
-function getFullLevelName(dataVarNameStr) {
-  if (!dataVarNameStr || dataVarNameStr.length < 2) return dataVarNameStr;
-  let dialectChar = dataVarNameStr.substring(0, 1);
-  let levelAbbr = dataVarNameStr.substring(1);
-  let dialectName = '';
-  let levelName = '';
-  switch (dialectChar) {
-    case '四': dialectName = '四縣'; break;
-    case '海': dialectName = '海陸'; break;
-    case '大': dialectName = '大埔'; break;
-    case '平': dialectName = '饒平'; break;
-    case '安': dialectName = '詔安'; break;
-    default: dialectName = dialectChar;
-  }
-  switch (levelAbbr) {
-    case '基': levelName = '基礎級'; break;
-    case '初': levelName = '初級'; break;
-    case '中': levelName = '中級'; break;
-    case '中高': levelName = '中高級'; break;
-    case '高': levelName = '高級'; break;
-    default: levelName = levelAbbr;
-  }
-  return dialectName + levelName;
-}
+
 
 function isSourceMatchingDialect(source, dialect) {
   if (!source || !dialect) return false;
@@ -486,119 +478,6 @@ function hideMobileLookupButton() {
   lastSelectionRectForMobile = null;
 }
 
-const debouncedMobileSelectionHandler = debounce(function() {
-  const selection = window.getSelection();
-  const contentContainer = document.getElementById('generated');
-  if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
-    const range = selection.getRangeAt(0);
-    const selectedText = selection.toString().trim();
-    const commonAncestorContainer = range.commonAncestorContainer;
-    let sentenceSpan = null;
-    if (commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
-      sentenceSpan = commonAncestorContainer.closest('span.sentence');
-    } else if (commonAncestorContainer.parentNode) {
-      sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
-    }
-    if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0 && selectedText.length <= 15) {
-      if (!activeSelectionPopup) {
-        const rect = range.getBoundingClientRect();
-        showMobileLookupButton(rect);
-      } else {
-        hideMobileLookupButton();
-      }
-    } else {
-      hideMobileLookupButton();
-    }
-  } else {
-    hideMobileLookupButton();
-  }
-}, 250);
-
-function globalKeydownHandler(event) {
-  const activeElement = document.activeElement;
-
-  const isGeneralInputLikeFocused = activeElement && (
-    activeElement.tagName === 'INPUT' ||
-    activeElement.tagName === 'TEXTAREA' ||
-    activeElement.tagName === 'SELECT' ||
-    activeElement.tagName === 'BUTTON' ||
-    activeElement.isContentEditable
-  );
-
-  if (event.key === 'Escape' || event.code === 'Escape') {
-    if (activeSelectionPopup) {
-      event.preventDefault();
-      const popupEl = document.getElementById('selectionPopup');
-      const backdropEl = document.getElementById('selectionPopupBackdrop');
-      hidePronunciationPopup(popupEl, backdropEl);
-      console.log('Global hotkey: Escape pressed, closing selection popup.');
-    } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
-        event.preventDefault();
-        infoModal.style.display = 'none';
-        if (infoButton) infoButton.focus();
-        console.log('Global hotkey: Escape pressed, closing info modal.');
-    } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
-      if (activeElement) {
-        activeElement.blur();
-        event.preventDefault();
-        console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
-      }
-    } else if (isPlaying) {
-      const stopButton = document.getElementById('stopBtn');
-      if (stopButton) {
-        stopButton.click();
-        console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
-      }
-    }
-    return;
-  }
-
-  if (!activeSelectionPopup && (event.key === ' ' || event.code === 'Space')) {
-    if (!isGeneralInputLikeFocused) {
-      if (isPlaying) {
-        event.preventDefault();
-        const pauseResumeButton = document.getElementById('pauseResumeBtn');
-        if (pauseResumeButton) {
-          pauseResumeButton.click();
-          console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
-        }
-      } else {
-        const progressDropdown = document.getElementById('progressDropdown');
-        if (progressDropdown && progressDropdown.options.length > 1) {
-          event.preventDefault();
-          const selectedValue = progressDropdown.options[1].value;
-          const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-          const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
-
-          if (firstBookmark) {
-            const targetTableName = firstBookmark.tableName;
-            const targetCategory = firstBookmark.cat;
-            const targetRowIdToGo = firstBookmark.rowId;
-            const dataVarName = mapTableNameToDataVar(targetTableName);
-
-            if (dataVarName) {
-              let dataObject = window[dataVarName];
-              if (typeof dataObject !== 'undefined') {
-                console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
-
-                document.querySelectorAll('span[data-varname]').forEach(span => {
-                span.classList.remove('active-dialect-level');
-              });
-              const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
-              if (activeDialectSpan) {
-                activeDialectSpan.classList.add('active-dialect-level');
-              }
-                generate(dataObject, targetCategory, targetRowIdToGo);
-                progressDropdown.selectedIndex = 1;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -724,6 +603,38 @@ function getKeyNameFromPath(filePath) {
     };
     return otherMap[fileName];
 }
+
+  function getFullLevelName(varName) {
+    if (!varName) return '未知級別';
+    if (varName.startsWith('教典')) {
+        const gipNameMap = {
+            '教典四': '四縣教典', '教典海': '海陸教典', '教典大': '大埔教典',
+            '教典平': '饒平教典', '教典安': '詔安教典', '教典南': '南四縣教典'
+        };
+        return gipNameMap[varName] || varName;
+    }
+    const 腔調 = varName.substring(0, 1);
+    const 級別 = varName.substring(1);
+    let full腔調 = '';
+    let full級別 = '';
+    switch (腔調) {
+      case '四': full腔調 = '四縣'; break;
+      case '海': full腔調 = '海陸'; break;
+      case '大': full腔調 = '大埔'; break;
+      case '平': full腔調 = '饒平'; break;
+      case '安': full腔調 = '詔安'; break;
+      default: full腔調 = '未知';
+    }
+    switch (級別) {
+      case '基': full級別 = '基礎級'; break;
+      case '初': full級別 = '初級'; break;
+      case '中': full級別 = '中級'; break;
+      case '中高': full級別 = '中高級'; break;
+      case '高': full級別 = '高級'; break;
+      default: full級別 = '級別';
+    }
+    return full腔調 + full級別;
+  }
 
 // --- Data Loading Logic (Refactored) ---
 
@@ -1149,38 +1060,6 @@ function initializeAppUI() {
       '詔安高': '安高',
     };
     return mapping[simplified] || null;
-  }
-
-  function getFullLevelName(varName) {
-    if (!varName) return '未知級別';
-    if (varName.startsWith('教典')) {
-        const gipNameMap = {
-            '教典四': '四縣教典', '教典海': '海陸教典', '教典大': '大埔教典',
-            '教典平': '饒平教典', '教典安': '詔安教典', '教典南': '南四縣教典'
-        };
-        return gipNameMap[varName] || varName;
-    }
-    const 腔調 = varName.substring(0, 1);
-    const 級別 = varName.substring(1);
-    let full腔調 = '';
-    let full級別 = '';
-    switch (腔調) {
-      case '四': full腔調 = '四縣'; break;
-      case '海': full腔調 = '海陸'; break;
-      case '大': full腔調 = '大埔'; break;
-      case '平': full腔調 = '饒平'; break;
-      case '安': full腔調 = '詔安'; break;
-      default: full腔調 = '未知';
-    }
-    switch (級別) {
-      case '基': full級別 = '基礎級'; break;
-      case '初': full級別 = '初級'; break;
-      case '中': full級別 = '中級'; break;
-      case '中高': full級別 = '中高級'; break;
-      case '高': full級別 = '高級'; break;
-      default: full級別 = '級別';
-    }
-    return full腔調 + full級別;
   }
 
 
@@ -1918,33 +1797,11 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     }
   }
 
-  function debounce(func, wait, immediate) {
-    let timeout;
-    return function () {
-      const context = this,
-        args = arguments;
-      const later = function () {
-        timeout = null;
-        if (!immediate) func.apply(context, args);
-      };
-      const callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow) func.apply(context, args);
-    };
-  }
+  
 
-  function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
+  
 
-  function isSourceMatchingDialect(source, dialect) {
-    if (!source || !dialect) return false;
-    if (dialect === '南四縣') {
-      return source.startsWith('南四縣') || (source.startsWith('四縣') && !source.endsWith('教典'));
-    }
-    return source.startsWith(dialect);
-  }
+  
 
   const debouncedMobileSelectionHandler = debounce(function() {
     const selection = window.getSelection();
@@ -1976,6 +1833,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
   function globalKeydownHandler(event) {
     const activeElement = document.activeElement;
+
     const isGeneralInputLikeFocused = activeElement && (
       activeElement.tagName === 'INPUT' ||
       activeElement.tagName === 'TEXTAREA' ||
@@ -1990,19 +1848,23 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         const popupEl = document.getElementById('selectionPopup');
         const backdropEl = document.getElementById('selectionPopupBackdrop');
         hidePronunciationPopup(popupEl, backdropEl);
+        console.log('Global hotkey: Escape pressed, closing selection popup.');
       } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
           event.preventDefault();
           infoModal.style.display = 'none';
           if (infoButton) infoButton.focus();
+          console.log('Global hotkey: Escape pressed, closing info modal.');
       } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
         if (activeElement) {
           activeElement.blur();
           event.preventDefault();
+          console.log('Global hotkey: Escape pressed, blurred active element:', activeElement);
         }
       } else if (isPlaying) {
         const stopButton = document.getElementById('stopBtn');
         if (stopButton) {
           stopButton.click();
+          console.log('Global hotkey: Escape pressed (no interactive focus/popup closed), stopping playback.');
         }
       }
       return;
@@ -2015,6 +1877,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
           const pauseResumeButton = document.getElementById('pauseResumeBtn');
           if (pauseResumeButton) {
             pauseResumeButton.click();
+            console.log('Global hotkey: Spacebar pressed (isPlaying), toggling pause/resume.');
           }
         } else {
           const progressDropdown = document.getElementById('progressDropdown');
@@ -2033,6 +1896,8 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
               if (dataVarName) {
                 let dataObject = window[dataVarName];
                 if (typeof dataObject !== 'undefined') {
+                  console.log('Global hotkey: Spacebar pressed (!isPlaying), loading first bookmark:', firstBookmark);
+
                   document.querySelectorAll('span[data-varname]').forEach(span => {
                   span.classList.remove('active-dialect-level');
                 });
@@ -2082,23 +1947,6 @@ function updatePageTitle(titleParts = []) {
     document.title = [...titleParts, '客源翠 HakSpring'].join(' - ');
   }
 }
-
-/**
- * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
- * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
- * @returns {string} 格式化後个淨俐字串。
- */
-function formatPhoneticForDisplay(text) {
-    if (!text) return "";
-    // 1. 拿忒全形括號【】（）前後个所有空白
-    let result = text.replace(/\s*([【（】）])\s*/g, '$1');
-    // 2. 處理半形括號 (：淨拿忒佢「後背」个空白
-    result = result.replace(/\(\s+/g, '(');
-    // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
-    result = result.replace(/\s+\)/g, ')');
-    return result;
-}
-
 
 
 function preprocessAllData() {
@@ -2255,19 +2103,7 @@ const DIALECT_NAME_TO_CODE = {
   '詔安': 'zh'
 };
 
-/**
- * 根據羅馬字拼音个分隔規則，準確計算音節數量。
- * @param {string} romanizationText - 包含羅馬字拼音个字串。
- * @returns {number} - 實際个音節數量。
- */
-function countSyllables(romanizationText) {
-    if (!romanizationText) return 0;
-    // 這隻正規表示式直接對應 romanizer.js 內底个 tokenizeRomanization 函式
-    const tokens = romanizationText.match(/[【】（）()\/]|[^【】（）()\/\s]+/g) || [];
-    // 過濾掉所有淨係標點符號个 token，淨留下音節
-    const syllables = tokens.filter(token => !/^[【】（）()\/]$/.test(token));
-    return syllables.length;
-}
+
 
 // --- 新增：當學習模式改變時，同步更新查詞腔調設定 ---
 function updateSearchDialect(dialectName) {
@@ -3363,7 +3199,6 @@ this.classList.add('ended');
   });
 
   window.addEventListener('resize', handleResizeActions);
-  document.addEventListener('keydown', globalKeydownHandler);
   handleResizeActions();
 }
 
