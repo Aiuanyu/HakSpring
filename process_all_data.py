@@ -273,33 +273,24 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char):
 
 # --- Output Functions ---
 
-def write_to_js_file(data, output_path, source_type, variable_name=None):
-    if not variable_name:
-        filename = os.path.basename(output_path)
-        variable_name = get_js_variable_name(filename, source_type)
+def write_to_json_file(data, output_path, variable_name):
     csv_string = ""
     if data:
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=UNIFIED_SCHEMA_HEADERS)
+        output = io.StringIO(newline='')
+        writer = csv.DictWriter(output, fieldnames=UNIFIED_SCHEMA_HEADERS, lineterminator='\n')
         writer.writeheader()
         writer.writerows(data)
         csv_string = output.getvalue()
-    escaped_csv_content = csv_string.replace('`', '\\`')
-    js_content = f"const {variable_name} = {{\n  name: '{variable_name}',\n  content: `{escaped_csv_content}`\n}};\n"
+    
+    json_content = {
+        "name": variable_name,
+        "content": csv_string
+    }
+    
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(js_content)
+        json.dump(json_content, f, ensure_ascii=False, indent=2)
 
-def generate_js_from_json(json_path, js_path):
-    try:
-        print("\n--- 開始產生前端用个 JS 聲調對應檔 ---")
-        with open(json_path, 'r', encoding='utf-8') as f:
-            json_string_content = f.read()
-        js_content = f"const toneMappingData = {json_string_content};"
-        with open(js_path, 'w', encoding='utf-8') as f:
-            f.write(js_content)
-        print(f"✓ 已成功產生檔案: {js_path}")
-    except Exception as e:
-        print(f"✗ 產生 JS 檔案時發生錯誤: {e}")
+
 
 # --- Main Processing Logic ---
 
@@ -316,24 +307,25 @@ def process_directory(directory_path, source_type, all_maps):
         file_path = os.path.join(directory_path, filename)
         print(f"\n> 處理中: {file_path}")
         try:
-            parsed_data, output_js_path, js_variable_name = None, None, None
+            parsed_data, output_path, variable_name = None, None, None
             if source_type == 'cert':
-                output_js_path = os.path.splitext(file_path)[0] + '.js'
+                output_path = os.path.splitext(file_path)[0] + '.json'
+                variable_name = get_js_variable_name(os.path.basename(file_path), source_type)
                 parsed_data = parse_cert_csv(file_path, all_maps['expanded_reverse_map'], all_maps['vowel_map'], all_maps['vowel_priority'])
             elif source_type == 'gip':
                 match = re.search(r'(\d+)-(.+)\.csv', filename)
                 if match:
                     dialect_char = match.group(2)
-                    output_js_path = os.path.splitext(file_path)[0] + '.js'
-                    js_variable_name = f"教典{dialect_char}"
+                    output_path = os.path.splitext(file_path)[0] + '.json'
+                    variable_name = f"教典{dialect_char}"
                     parsed_data = parse_gip_csv(file_path, all_maps['tone_map_data'], dialect_char)
                 else:
                     print(f"  ✗ 警告：GIP 檔名格式毋著，跳過: {filename}")
                     continue
-            if not parsed_data:
+            if parsed_data is None:
                 continue
-            write_to_js_file(parsed_data, output_js_path, source_type, variable_name=js_variable_name)
-            print(f"  ✓ 成功產生檔案: {output_js_path}")
+            write_to_json_file(parsed_data, output_path, variable_name)
+            print(f"  ✓ 成功產生檔案: {output_path}")
         except Exception as e:
             print(f"  ✗ 錯誤：處理檔案 {filename} 時發生意外：{e}")
 
@@ -365,4 +357,4 @@ if __name__ == '__main__':
         
     print("\n--- 全部 CSV 處理完成 ---")
 
-    generate_js_from_json(os.path.join(script_dir, 'tone_mapping.json'), os.path.join(script_dir, 'tone_mapping_data.js'))
+    
