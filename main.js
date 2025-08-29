@@ -38,6 +38,7 @@ let preprocessedDataCache = {};
 let indexedDataCache = {}; // <-- 新增此索引快取物件
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
+let isNavigatingViaCode = false; // <--- 在這裡新增這一行
 
 /**
  * 將事件傳送分 Google Analytics。
@@ -1683,20 +1684,156 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     });
   }
 
-  function adjustHeaderFontSizeOnOverflow() {
+  
+
+  /**
+ * 動態調整 #header 內主要元素 (#progressDropdown, #progressDetails) 的字體大小，
+ * 檢查 #header 是否發生橫向溢出 (overflow)，如果是，則縮小字體。
+ */
+function adjustHeaderFontSizeOnOverflow() {
+    console.log('--- adjustHeaderFontSizeOnOverflow function CALLED ---');
     const header = document.getElementById('header');
-    if (!header) return;
+    const dropdown = document.getElementById('progressDropdown');
+    const detailsContainer = document.getElementById('progressDetails');
+    const searchInput = document.getElementById('search-input'); // <-- 新增
 
-    header.style.fontSize = '1em';
-
-    const isOverflown = ({ clientWidth, scrollWidth }) => scrollWidth > clientWidth;
-
-    if (isOverflown(header)) {
-      header.style.fontSize = '0.8em';
+    // --- MODIFIED: Check for essential container elements first ---
+    if (!header || !dropdown || !detailsContainer) {
+        console.warn('adjustHeaderFontSizeOnOverflow: Missing essential elements (header, dropdown, or detailsContainer). Skipping execution.');
+        return;
     }
-  }
 
-  function isFirefox() {
+    const linkElement = detailsContainer.querySelector('a'); // May be null
+
+    // --- MODIFIED: Dynamically build the list of elements to resize ---
+    const elementsToResize = [{ element: dropdown, minSize: 10 }];
+    if (linkElement) {
+        elementsToResize.push({ element: linkElement, minSize: 8 });
+    }
+    if (searchInput) {
+        elementsToResize.push({ element: searchInput, minSize: 12 });
+    }
+
+    // --- 記錄目標元素的初始字體大小 ---
+    const initialStyles = elementsToResize.map(item => ({
+        element: item.element,
+        initialSize: parseFloat(window.getComputedStyle(item.element).fontSize),
+        minSize: item.minSize
+    }));
+
+    // --- 重設行內樣式，以便計算自然寬度 ---
+    initialStyles.forEach(item => {
+        item.element.style.fontSize = '';
+    });
+    if (linkElement) {
+        linkElement.style.whiteSpace = ''; // Also reset whitespace
+    }
+    
+    // 強制瀏覽器重繪
+    header.offsetHeight;
+
+    // --- 計算 Header 可用寬度與初始需求寬度 ---
+    const headerWidth = header.clientWidth;
+    let totalRequiredWidth = calculateTotalRequiredWidth(header);
+
+    console.log(`Header Width: ${headerWidth}, Initial Required Width: ${totalRequiredWidth}`);
+
+    // --- 檢查是否溢出 ---
+    const isOverflowing = totalRequiredWidth > headerWidth;
+    const buffer = 1; // 允許一點點誤差
+
+    if (isOverflowing && totalRequiredWidth - headerWidth > buffer) {
+        console.log(`#header is overflowing by ${totalRequiredWidth - headerWidth}px. Shrinking fonts.`);
+        
+        if (linkElement) {
+            linkElement.style.whiteSpace = 'nowrap';
+        }
+
+        // --- 逐步縮小字體 ---
+        let canShrinkMore = true;
+        for (let i = 0; i < 50 && totalRequiredWidth > headerWidth && canShrinkMore; i++) {
+            canShrinkMore = false;
+            let currentTotalWidthBeforeShrink = totalRequiredWidth;
+
+            initialStyles.forEach(item => {
+                let currentElementSize = parseFloat(item.element.style.fontSize || item.initialSize);
+                if (currentElementSize > item.minSize) {
+                    currentElementSize -= 1;
+                    item.element.style.fontSize = `${currentElementSize}px`;
+                    canShrinkMore = true;
+                } else {
+                    item.element.style.fontSize = `${item.minSize}px`;
+                }
+            });
+
+            if (!canShrinkMore) {
+                 console.log('All elements reached minimum font size.');
+                 break;
+            }
+
+            header.offsetHeight;
+            totalRequiredWidth = calculateTotalRequiredWidth(header);
+            console.log(`  Shrunk step ${i+1}, new required width: ${totalRequiredWidth}`);
+
+            if (totalRequiredWidth >= currentTotalWidthBeforeShrink && canShrinkMore) {
+                console.warn('  Width did not decrease after shrinking, breaking loop to prevent infinite loop.');
+                break;
+            }
+        }
+
+        if (totalRequiredWidth > headerWidth) {
+             console.warn(`Fonts shrunk to minimum, but header might still overflow by ${totalRequiredWidth - headerWidth}px.`);
+        } else {
+             console.log(`Font sizes adjusted. Final required width: ${totalRequiredWidth}`);
+        }
+
+    } else {
+        // --- 未溢出 ---
+        let stylesReset = false;
+        initialStyles.forEach(item => {
+            if (item.element.style.fontSize !== '') {
+                item.element.style.fontSize = '';
+                stylesReset = true;
+            }
+        });
+        if (linkElement && linkElement.style.whiteSpace !== '') {
+             linkElement.style.whiteSpace = '';
+             stylesReset = true;
+        }
+        if (stylesReset) {
+            console.log('Reset font sizes to default.');
+        }
+    }
+}
+
+/**
+ * 輔助函式：計算 Header 內部可見子元素的總需求寬度 (包含 gap)
+ * @param {HTMLElement} headerElement - #header 元素
+ * @returns {number} 總需求寬度 (px)
+ */
+function calculateTotalRequiredWidth(headerElement) {
+    const children = headerElement.children;
+    let totalWidth = 0;
+    const computedHeaderStyle = window.getComputedStyle(headerElement);
+    const gapValue = parseFloat(computedHeaderStyle.gap) || 0;
+    let visibleChildrenCount = 0;
+
+    for (const child of children) {
+        // 確保只計算實際顯示的元素
+        if (child.offsetParent !== null && window.getComputedStyle(child).display !== 'none') {
+            totalWidth += child.scrollWidth;
+            visibleChildrenCount++;
+        }
+    }
+
+    // 只有在超過一個可見元素時才加上 gap
+    if (visibleChildrenCount > 1) {
+        totalWidth += (visibleChildrenCount - 1) * gapValue;
+    }
+    return totalWidth;
+}
+
+function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
   }
 
@@ -2124,6 +2261,36 @@ function updateSearchDialect(dialectName) {
 }
 
 // 加入新的可選參數：initialCategory, targetRowId
+/**
+ * [新增] 根據當前的腔調級別和類別，更新瀏覽器 URL 並新增一筆歷史紀錄。
+ * @param {object} dialectInfo - 包含腔調級別資訊的物件。
+ * @param {string} selectedCategory - 使用者選擇的類別名稱。
+ */
+function updateUrlForCategory(dialectInfo, selectedCategory) {
+  const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+  if (dialectLevelCodes) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('dialect', dialectLevelCodes.dialect);
+      newUrl.searchParams.set('level', dialectLevelCodes.level);
+      newUrl.searchParams.set('category', selectedCategory);
+      
+      // 拿忒所有其他無相關个參數，確保 URL 淨俐
+      newUrl.searchParams.delete('row');
+      newUrl.searchParams.delete('musiid');
+      newUrl.searchParams.delete('ca');
+      newUrl.searchParams.delete('bidsu');
+      newUrl.searchParams.delete('iab');
+      newUrl.searchParams.delete('kiong');
+
+      // 只有在產生的新 URL 和當前 URL 不同的情況下，才執行 pushState
+      if (newUrl.toString() !== window.location.href) {
+        history.pushState({}, '', newUrl.toString());
+        console.log(`URL 已更新: ${newUrl.toString()}`);
+      }
+  }
+}
+
+// --- generate() 函式從這裡開始 ---
 function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
@@ -2250,31 +2417,23 @@ function generate(content, initialCategory = null, targetRowId = null) {
 
   radios.forEach(function (radio) {
     radio.addEventListener('change', function () {
-      if (this.checked) {
-        const selectedCategory = this.value;
-        radioLabels.forEach((label) => label.classList.remove('active-category'));
-        const currentLabel = this.closest('.radioItem');
-        if (currentLabel) {
-          currentLabel.classList.add('active-category');
+      // 【關鍵修正】只在不是由程式碼觸發導航時才執行
+      if (!isNavigatingViaCode && !isCrossCategoryPlaying) {
+        if (this.checked) {
+          const selectedCategory = this.value;
+          
+          // --- 將原本一大段 pushState 邏輯，替換成底下這一行 ---
+          updateUrlForCategory(dialectInfo, selectedCategory);
+          
+          // 移除舊的樣式設定和進度詳情清除，統一由 buildTableAndSetupPlayback 處理
+          radioLabels.forEach((label) => label.classList.remove('active-category'));
+          const currentLabel = this.closest('.radioItem');
+          if (currentLabel) {
+            currentLabel.classList.add('active-category');
+          }
+          
+          buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
         }
-        const progressDetailsSpan = document.getElementById('progressDetails');
-        if (progressDetailsSpan) progressDetailsSpan.textContent = '';
-
-        const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
-        if (dialectLevelCodes) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('dialect', dialectLevelCodes.dialect);
-            newUrl.searchParams.set('level', dialectLevelCodes.level);
-            newUrl.searchParams.set('category', selectedCategory);
-            newUrl.searchParams.delete('row');
-            newUrl.searchParams.delete('musiid');
-            newUrl.searchParams.delete('ca');
-            newUrl.searchParams.delete('bidsu');
-            newUrl.searchParams.delete('iab');
-            newUrl.searchParams.delete('kiong');
-            history.pushState({}, '', newUrl.toString());
-        }
-        buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
       }
     });
   });
@@ -2288,6 +2447,9 @@ function generate(content, initialCategory = null, targetRowId = null) {
         radioLabels.forEach((label) => label.classList.remove('active-category'));
         targetLabel.classList.add('active-category');
       }
+      // --- 【關鍵修正】在這裡手動呼叫 URL 更新函式 ---
+      updateUrlForCategory(dialectInfo, initialCategory);
+
       buildTableAndSetupPlayback(initialCategory, arr, dialectInfo, targetRowId);
     } else {
       console.warn('找不到要自動選擇的類別按鈕:', initialCategory);
@@ -2999,10 +3161,14 @@ this.classList.add('ended');
       if (modeRadio) modeRadio.checked = true;
       searchInput.value = caParam;
       performSearch(page, itemsPerPage);
-    } else if (dialectParam && levelParam && categoryParam && rowParam) {
-      loadedViaUrlParams = true;
+    } else if (dialectParam && levelParam && categoryParam) {
+      loadedViaUrlParams = true; // 標記是透過 URL 載入
+      const rowParam = urlParams.get('row'); // 獲取 row 參數備用
+      
       let dialectName = '';
       let levelName = '';
+      
+      // --- 參數解析邏輯 (不變) ---
       switch (dialectParam) {
         case 'si': dialectName = '四縣'; break;
         case 'ha': dialectName = '海陸'; break;
@@ -3017,58 +3183,72 @@ this.classList.add('ended');
         case '3': levelName = '中高級'; break;
         case '4': levelName = '高級'; break;
       }
+
       if (dialectName && levelName) {
         const targetTableName = dialectName + levelName;
         const dataVarName = mapTableNameToDataVar(targetTableName);
         if (dataVarName) {
-          let dataObject = window[dataVarName]; // *** 關鍵修正 ***
+          const dataObject = window[dataVarName];
           if (typeof dataObject !== 'undefined') {
             const decodedCategory = decodeURIComponent(categoryParam);
-            const autoplayModal = document.getElementById('autoplayModal');
-            const modalContent = autoplayModal.querySelector('.modal-content');
-            if (autoplayModal && modalContent) {
-                // 步驟 1: 將事件處理函式定義為具名函式，以便移除
-                const startPlayback = () => {
-                    autoplayModal.style.display = 'none';
-                    generate(dataObject, decodedCategory, rowParam);
-                    successfullyLoadedFromUrl = true;
-                    if (progressDropdown) {
-                        const targetValue = targetTableName + '||' + decodedCategory;
-                        const optionToSelect = progressDropdown.querySelector(`option[value="${targetValue}"]`);
-                        if (optionToSelect) {
-                            optionToSelect.selected = true;
-                        } else {
-                            progressDropdown.selectedIndex = 0;
-                        }
-                    }
-                    // 操作完成後，移除監聽器以避免記憶體洩漏
-                    modalContent.removeEventListener('click', startPlayback);
-                    autoplayModal.removeEventListener('click', backdropClickHandler);
-                };
 
-                const backdropClickHandler = (event) => {
-                    // 如果點擊的不是背景本身 (而是內容)，則不關閉
-                    if (event.target !== autoplayModal) return;
-                    
-                    autoplayModal.style.display = 'none';
-                    // 同樣，操作完成後移除監聽器
-                    modalContent.removeEventListener('click', startPlayback);
-                    autoplayModal.removeEventListener('click', backdropClickHandler);
-                };
+            if (rowParam) {
+              // **情境：有 row 參數，需要自動播放 -> 所有裝置都顯示 Modal**
+              console.log('[handleUrlChange] 偵測到 row 參數，顯示 Modal 以啟動播放。');
+              if (autoplayModal && modalContent) {
+                  // 步驟 1: 將事件處理函式定義為具名函式，以便移除
+                  const startPlayback = () => {
+                      autoplayModal.style.display = 'none';
+                      generate(dataObject, decodedCategory, rowParam);
+                      successfullyLoadedFromUrl = true;
+                      if (progressDropdown) {
+                          const targetValue = targetTableName + '||' + decodedCategory;
+                          const optionToSelect = progressDropdown.querySelector(`option[value="${targetValue}"]`);
+                          if (optionToSelect) {
+                              optionToSelect.selected = true;
+                          } else {
+                              progressDropdown.selectedIndex = 0;
+                          }
+                      }
+                      // 操作完成後，移除監聽器以避免記憶體洩漏
+                      modalContent.removeEventListener('click', startPlayback);
+                      autoplayModal.removeEventListener('click', backdropClickHandler);
+                  };
 
-                // 步驟 2: 在新增監聽器前，先明確地移除舊的，確保狀態乾淨
-                modalContent.removeEventListener('click', startPlayback);
-                autoplayModal.removeEventListener('click', backdropClickHandler);
+                  const backdropClickHandler = (event) => {
+                      // 如果點擊的不是背景本身 (而是內容)，則不關閉
+                      if (event.target !== autoplayModal) return;
+                      
+                      autoplayModal.style.display = 'none';
+                      // 同樣，操作完成後移除監聽器
+                      modalContent.removeEventListener('click', startPlayback);
+                      autoplayModal.removeEventListener('click', backdropClickHandler);
+                  };
 
-                // 步驟 3: 新增事件監聽器
-                modalContent.addEventListener('click', startPlayback, { once: true });
-                autoplayModal.addEventListener('click', backdropClickHandler, { once: false }); // 背景點擊可能需要多次，所以不用 once
+                  // 步驟 2: 在新增監聽器前，先明確地移除舊的，確保狀態乾淨
+                  modalContent.removeEventListener('click', startPlayback);
+                  autoplayModal.removeEventListener('click', backdropClickHandler);
 
-                // 步驟 4: 直接顯示 Modal，不再使用 cloneNode
-                autoplayModal.style.display = 'flex';
+                  // 步驟 3: 新增事件監聽器
+                  modalContent.addEventListener('click', startPlayback, { once: true });
+                  autoplayModal.addEventListener('click', backdropClickHandler, { once: false });
+
+                  // 步驟 4: 直接顯示 Modal
+                  autoplayModal.style.display = 'flex';
+              }
+            } else {
+              // **情境：無 row 參數，僅顯示類別列表**
+              console.log('[handleUrlChange] 偵測到無 row 參數，僅載入類別。');
+              generate(dataObject, decodedCategory, null); // rowId 傳 null
+              successfullyLoadedFromUrl = true;
             }
+
+          } else {
+            console.error('URL 處理錯誤：找不到對應的資料變數:', dataVarName);
           }
         }
+      } else {
+        console.error('URL 處理錯誤：無法從參數映射腔調或級別:', dialectParam, levelParam);
       }
     }
   }
@@ -3197,7 +3377,16 @@ this.classList.add('ended');
         if (dataVarName) {
           const dataObject = window[dataVarName];
           if (dataObject) {
+            isNavigatingViaCode = true; // <--- 在呼叫 generate() 之前，設定旗標
+
             generate(dataObject, targetCategory, targetRowIdToGo);
+            
+            
+
+            // <--- 在操作的最後，用 setTimeout 來重設旗標
+            setTimeout(() => {
+              isNavigatingViaCode = false;
+            }, 0);
           } else {
             console.error('無法找到對應的資料變數:', dataVarName || targetTableName);
             alert('載入選定進度時發生錯誤：找不到對應的資料集。');
