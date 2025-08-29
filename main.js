@@ -2418,7 +2418,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
   radios.forEach(function (radio) {
     radio.addEventListener('change', function () {
       // 【關鍵修正】只在不是由程式碼觸發導航時才執行
-      if (!isNavigatingViaCode && !isCrossCategoryPlaying) {
+      if (!isNavigatingViaCode) { // <--- 拿掉 !isCrossCategoryPlaying 以修正 regression
         if (this.checked) {
           const selectedCategory = this.value;
           
