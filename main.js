@@ -2785,6 +2785,13 @@ td2.appendChild(ruby);
           bookmarks.splice(previousBookmarkIndex, 1);
           localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
         }
+        const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+        if (dialectLevelCodes) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('category', nextCategoryValue);
+            newUrl.searchParams.delete('row');
+            history.pushState({}, '', newUrl.toString());
+        }
         const nextRadioButton = document.querySelector(`input[name="category"][value="${nextCategoryValue}"]`);
         if (nextRadioButton) {
             isCrossCategoryPlaying = true;
@@ -3075,9 +3082,7 @@ this.classList.add('ended');
       }
       const firstPlayButton = contentContainer.querySelector('.playFromThisRow');
       if (firstPlayButton) {
-        setTimeout(() => {
-          startPlayingFromRow(firstPlayButton);
-        }, 100);
+        startPlayingFromRow(firstPlayButton);
       } else {
         playEndOfPlayback();
       }
