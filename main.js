@@ -50,6 +50,7 @@ let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
 let g_currentDialectInfo = null;
 let g_currentCategory = '';
+let audioAbortController = new AbortController();
 
 /**
  * 將事件傳送分 Google Analytics。
@@ -2901,6 +2902,7 @@ function playAudio(itemIndex) {
     const audioElementsInRow = Array.from(targetRow.querySelectorAll('audio.media'));
     const wordAudio = audioElementsInRow[0];
     const sentenceAudio = audioElementsInRow[1];
+    const signal = audioAbortController.signal;
 
     const playNextItem = () => {
         playAudio(currentAudioIndex + 1);
@@ -2910,7 +2912,7 @@ function playAudio(itemIndex) {
         if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
             currentAudio = sentenceAudio;
             currentAudio.play().catch(e => { console.error('播放例句音檔失敗', e); playNextItem(); });
-            currentAudio.addEventListener('ended', playNextItem, { once: true });
+            currentAudio.addEventListener('ended', playNextItem, { once: true, signal });
         } else {
             playNextItem();
         }
@@ -2919,7 +2921,7 @@ function playAudio(itemIndex) {
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
         currentAudio = wordAudio;
         currentAudio.play().catch(e => { console.error('播放詞彙音檔失敗', e); playSentence(); });
-        currentAudio.addEventListener('ended', playSentence, { once: true });
+        currentAudio.addEventListener('ended', playSentence, { once: true, signal });
     } else {
         playSentence();
     }
@@ -2929,6 +2931,8 @@ function playAudio(itemIndex) {
  * 結束播放流程並重設 UI。
  */
 function playEndOfPlayback() {
+    audioAbortController.abort();
+    audioAbortController = new AbortController();
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
@@ -2959,6 +2963,8 @@ function playEndOfPlayback() {
  * 停止播放並重設 UI (供 stop 按鈕使用)。
  */
 function stopPlayback() {
+    audioAbortController.abort();
+    audioAbortController = new AbortController();
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
@@ -3097,102 +3103,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
          // 理論上 buildTableAndSetupPlayback 已確保會渲染，此處為防禦性程式碼
          startPlayingFromIndex(itemIndex);
     }
-}
-
-
-function scrollHandler() {
-    if (isLoadingMoreItems || !g_currentDialectInfo) {
-        return;
-    }
-
-    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-    const table = document.getElementById('category-table');
-    if (!table) return;
-
-    if (scrollTop + clientHeight >= scrollHeight - 250 && lastLoadedIndex < activeCategoryData.length) {
-        isLoadingMoreItems = true;
-        const start = lastLoadedIndex;
-        const end = Math.min(start + ITEMS_PER_LOAD, activeCategoryData.length);
-        
-        if (start < end) {
-            const itemsToRender = activeCategoryData.slice(start, end);
-            renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, false);
-            lastLoadedIndex = end;
-        }
-        isLoadingMoreItems = false;
-    }
-
-    if (scrollTop <= 250 && firstLoadedIndex > 0) {
-        isLoadingMoreItems = true;
-        const currentHeight = table.offsetHeight;
-        
-        const end = firstLoadedIndex;
-        const start = Math.max(0, end - ITEMS_PER_LOAD);
-
-        if (start < end) {
-            const itemsToRender = activeCategoryData.slice(start, end);
-            renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, true);
-            firstLoadedIndex = start;
-            
-            const newHeight = table.offsetHeight;
-            window.scrollTo({ top: scrollTop + (newHeight - currentHeight), behavior: 'instant' });
-        }
-        isLoadingMoreItems = false;
-    }
-}
-
-// --- Playback Logic (New Version) ---
-
-/**
- * 標記目前正在播放的列。
- * @param {HTMLElement} element - 要標記的 <tr> 元素。
- */
-function addNowPlaying(element) {
-    removeNowPlaying();
-    if (element) {
-        element.id = 'nowPlaying';
-        element.classList.remove('paused-playback');
-    }
-}
-
-/**
- * 移除正在播放列的標記。
- */
-function removeNowPlaying() {
-    const nowPlaying = document.getElementById('nowPlaying');
-    if (nowPlaying) {
-        nowPlaying.removeAttribute('id');
-    }
-}
-
-/**
- * 結束播放流程並重設 UI。
- */
-function playEndOfPlayback() {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
-    isPlaying = false;
-    isPaused = false;
-    currentAudio = null;
-    currentAudioIndex = 0;
-    removeNowPlaying();
-
-    const pauseResumeButton = document.getElementById('pauseResumeBtn');
-    const stopButton = document.getElementById('stopBtn');
-    if (pauseResumeButton) {
-        pauseResumeButton.innerHTML = '<i class="fas fa-play"></i>';
-        pauseResumeButton.classList.add('ended');
-        pauseResumeButton.classList.remove('ongoing');
-    }
-    if (stopButton) {
-        stopButton.classList.add('ended');
-        stopButton.classList.remove('ongoing');
-    }
-    
-    const endAudio = new Audio('endOfPlay.mp3');
-    endAudio.play().catch(e => console.error('播放結束音效失敗:', e));
 }
 
   preprocessAllData(); // <-- 確保這一行被執行
