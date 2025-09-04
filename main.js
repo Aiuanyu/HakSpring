@@ -2833,7 +2833,6 @@ function startPlayingFromIndex(itemIndex) {
         stopButton.classList.add('ongoing');
     }
 
-    playAudio(currentAudioIndex);
     playAudio(currentAudioIndex, playbackSessionId); // <-- 【修改此行】傳入新的 ID
 }
 
