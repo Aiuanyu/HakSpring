@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Event Listeners ---
+  // segmentation workspace 入口（腔調切換）
   if (romanizerDialectSelector) {
     romanizerDialectSelector.addEventListener('change', function() {
       romanizerSelectedDialect = this.value;
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (romanizerOutput) {
         romanizerOutput.innerHTML = '';
       }
+      // After dialect change, user needs to manually re-segment.
     });
   }
 
@@ -64,15 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (romanizerCloseBtn) {
     romanizerCloseBtn.addEventListener('click', hideRomanizer);
   }
+  // segmentation 入口（自動）
   if (romanizerStartBtn) {
     romanizerStartBtn.addEventListener('click', startSegmentation);
   }
+  // segmentation 入口（手動）
   if (segmentationWorkspace) {
     segmentationWorkspace.addEventListener('click', handleSegmentClick);
   }
   if (copyRomanizerResultBtn) {
     copyRomanizerResultBtn.addEventListener('click', copyRomanizerResult);
   }
+  // segmentation 入口（Undo/Redo）
   if (romanizerUndoBtn) {
     romanizerUndoBtn.addEventListener('click', undo);
   }
@@ -289,6 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
     input.style.width = `${spanToEdit.offsetWidth + 10}px`;
     // 【新】將 segId 傳分 input element
     input.dataset.originalSegId = originalSegId;
+    // PATCH: 儲存 noCapitalize flag
+    if (spanToEdit.dataset.noCapitalize) {
+      input.dataset.hadNoCapitalize = 'true';
+    }
 
     // 重新分配 workspace 內底个 ID，避免衝突
     const newIdPrefix = `${originalSegId}-${Date.now()}`;
@@ -319,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalSegId = inputElement.dataset.originalSegId;
         const newText = inputElement.value.trim();
         const workspaceSpansFragment = document.createDocumentFragment();
+        // PATCH: 讀取 noCapitalize flag
+        const hadNoCapitalize = inputElement.dataset.hadNoCapitalize === 'true';
     
         // 【舊个記憶邏輯已刪除】
     
@@ -328,6 +339,10 @@ document.addEventListener('DOMContentLoaded', () => {
             newSegments.forEach((segment, index) => {
                 const newSpan = createSegmentSpan(segment);
                 newSpan.dataset.segId = `${originalSegId}-${index}`;
+                // PATCH: 若原始 span 有 noCapitalize，加轉分詞後个第一個 span
+                if (index === 0 && hadNoCapitalize) {
+                    newSpan.dataset.noCapitalize = 'true';
+                }
                 workspaceSpansFragment.appendChild(newSpan);
             });
         }
@@ -739,6 +754,8 @@ function updateJoiningSeparators() {
       historyIndex--;
       romanizerOutput.innerHTML = history[historyIndex];
       updateUndoRedoButtons();
+      // PATCH: 還原後重新套用規則，確保一致性
+      applyCapitalizationRules();
       updateJoiningSeparators();
       applyPunctuationSpacing(); // 【新】加上這行
     }
@@ -749,6 +766,8 @@ function updateJoiningSeparators() {
       historyIndex++;
       romanizerOutput.innerHTML = history[historyIndex];
       updateUndoRedoButtons();
+      // PATCH: 還原後重新套用規則，確保一致性
+      applyCapitalizationRules();
       updateJoiningSeparators();
       applyPunctuationSpacing(); // 【新】加上這行
     }
