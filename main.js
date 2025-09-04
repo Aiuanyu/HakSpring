@@ -51,6 +51,7 @@ let g_bookmarkButtonsList = [];
 let g_currentDialectInfo = null;
 let g_currentCategory = '';
 let audioAbortController = new AbortController();
+let playbackSessionId = null; // <-- 【新增此行】
 
 /**
  * 將事件傳送分 Google Analytics。
@@ -2809,6 +2810,9 @@ function startPlayingFromIndex(itemIndex) {
     }
     
     // 重設狀態
+    // 【新增此行】用當前時間戳記產生一個獨一無二的 ID
+    playbackSessionId = Date.now(); 
+    
     isCrossCategoryPlaying = false;
     finishedTableName = null;
     finishedCat = null;
@@ -2830,13 +2834,20 @@ function startPlayingFromIndex(itemIndex) {
     }
 
     playAudio(currentAudioIndex);
+    playAudio(currentAudioIndex, playbackSessionId); // <-- 【修改此行】傳入新的 ID
 }
 
 /**
  * 播放指定資料索引的音檔。這是新的播放核心。
  * @param {number} itemIndex - 在 activeCategoryData 中的索引。
  */
-function playAudio(itemIndex) {
+function playAudio(itemIndex, sessionId) {
+    // 【新增此區塊】在函式最開頭驗證對談 ID
+    if (sessionId !== playbackSessionId) {
+        console.log(`一個過時的播放對談 (ID: ${sessionId}) 被攔截，不予執行。`);
+        return;
+    }
+
     if (!isPlaying) return;
 
     // --- 檢查是否已播完目前類別的所有項目 ---
@@ -2905,7 +2916,8 @@ function playAudio(itemIndex) {
     const signal = audioAbortController.signal;
 
     const playNextItem = () => {
-        playAudio(currentAudioIndex + 1);
+        // 【修改此行】將 sessionId 傳遞下去
+        playAudio(currentAudioIndex + 1, sessionId);
     };
 
     const playSentence = () => {
@@ -2937,6 +2949,7 @@ function playEndOfPlayback() {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
+    playbackSessionId = null;
     isPlaying = false;
     isPaused = false;
     currentAudio = null;
@@ -2969,6 +2982,7 @@ function stopPlayback() {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
+    playbackSessionId = null;
     isPlaying = false;
     isPaused = false;
     currentAudio = null;
