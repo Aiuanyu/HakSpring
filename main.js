@@ -1865,6 +1865,33 @@ function calculateTotalRequiredWidth(headerElement) {
     return totalWidth;
 }
 
+function adjustResultsSummaryFontSize() {
+    const summary = document.getElementById('results-summary');
+    if (!summary || summary.style.display === 'none') return;
+
+    // Reset font size to default to get natural width
+    summary.style.fontSize = '';
+    
+    // Force browser to recalculate styles
+    window.getComputedStyle(summary).fontSize;
+
+    const initialFontSize = parseFloat(window.getComputedStyle(summary).fontSize);
+    const minFontSize = 10; // Minimum font size in pixels
+    const buffer = 2; // A small buffer to prevent floating point inaccuracies
+
+    if (summary.scrollWidth > summary.clientWidth + buffer) {
+        let currentSize = initialFontSize;
+        // Loop to reduce font size
+        for (let i = 0; i < 30 && (summary.scrollWidth > summary.clientWidth + buffer); i++) {
+            if (currentSize <= minFontSize) {
+                break; // Stop if we've reached the minimum size
+            }
+            currentSize -= 0.5; // Reduce by 0.5px
+            summary.style.fontSize = `${currentSize}px`;
+        }
+    }
+}
+
 function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
   }
@@ -1937,6 +1964,7 @@ function isFirefox() {
     });
 
     adjustHeaderFontSizeOnOverflow();
+    adjustResultsSummaryFontSize();
 
     if (activeSelectionPopup) {
       const popupEl = document.getElementById('selectionPopup');
@@ -2575,9 +2603,9 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         
         const resultsSummaryContainer = document.getElementById('results-summary');
         if (resultsSummaryContainer) {
-            let summaryText = `${dialectInfo.fullLvlName}認證詞彙：${category}類別`;
+            let summaryText = `${dialectInfo.fullLvlName}：${category}`;
             if (totalResults > 0) {
-                summaryText += ` (總共 ${totalResults} 筆)`;
+                summaryText += ` (${totalResults})`;
             }
             resultsSummaryContainer.textContent = summaryText;
             if (!autoPlayTargetRowId) {
