@@ -44,7 +44,7 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
-const ITEMS_PER_LOAD = 50;
+const ITEMS_PER_LOAD = 30;
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
@@ -2911,6 +2911,22 @@ function playAudio(itemIndex, sessionId) {
             playEndOfPlayback();
         }
         return;
+    }
+
+    // --- 【新增】播放器同步預載入機制 ---
+    const PRELOAD_THRESHOLD = 5;
+    // 檢查是否接近已載入項目的結尾，且還有更多項目未載入，且目前不在載入中
+    if ((itemIndex >= lastLoadedIndex - PRELOAD_THRESHOLD) && (lastLoadedIndex < activeCategoryData.length) && !isLoadingMoreItems) {
+        console.log(`[Autoplay Preload] Index: ${itemIndex}, LastLoaded: ${lastLoadedIndex}. Triggering load.`);
+        isLoadingMoreItems = true; // 防止重複觸發
+        const start = lastLoadedIndex;
+        const end = Math.min(start + ITEMS_PER_LOAD, activeCategoryData.length);
+        if (start < end) {
+            const itemsToRender = activeCategoryData.slice(start, end);
+            renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, false);
+            lastLoadedIndex = end;
+        }
+        isLoadingMoreItems = false; // 完成後重設旗標
     }
 
     currentAudioIndex = itemIndex;
