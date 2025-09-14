@@ -1251,7 +1251,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
-    const createResultRow = (line, highlight) => {
+    const createResultRow = (line, highlight, selectedDialect) => {
         globalRowIndex++;
         if (!line || !line['客家語']) return null;
 
@@ -1399,6 +1399,14 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
           td3.classList.add('empty-sentence-cell');
         }
         item.appendChild(td3);
+
+        if (selectedDialect === '大埔') {
+            const td4 = document.createElement('td');
+            td4.dataset.label = '大埔變調';
+            td4.className = 'dabu-sandhi-cell';
+            item.appendChild(td4);
+        }
+
         return item;
     };
 
@@ -1450,7 +1458,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         }
 
         const config = categoryConfig[searchMode][categoryKey];
-        const row = createResultRow(line, config.highlight);
+        const row = createResultRow(line, config.highlight, selectedDialect);
         if (row && currentTable) {
             currentTable.appendChild(row);
         }
@@ -1496,6 +1504,16 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 100);
+}
+
+function updateSandhiCell(rtElement, newContent) {
+    const tr = rtElement.closest('tr');
+    if (tr) {
+        const sandhiCell = tr.querySelector('.dabu-sandhi-cell');
+        if (sandhiCell) {
+            sandhiCell.innerHTML = newContent;
+        }
+    }
 }
 
   function 大埔高降異化() {
@@ -1565,7 +1583,9 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         }
       }
       if (hasActualModification) {
-        rt.innerHTML = modifiedTokens.join('');
+        const newContent = modifiedTokens.join('');
+        rt.innerHTML = newContent;
+        updateSandhiCell(rt, newContent);
       }
     });
   }
@@ -1638,7 +1658,9 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         }
       }
       if (hasActualModification) {
-        rt.innerHTML = modifiedTokens.join('');
+        const newContent = modifiedTokens.join('');
+        rt.innerHTML = newContent;
+        updateSandhiCell(rt, newContent);
       }
     });
   }
@@ -1711,7 +1733,9 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         }
       }
       if (hasActualModification) {
-        rt.innerHTML = modifiedTokens.join('');
+        const newContent = modifiedTokens.join('');
+        rt.innerHTML = newContent;
+        updateSandhiCell(rt, newContent);
       }
     });
   }
