@@ -118,7 +118,8 @@
 }
 
 /* Mine */
-#generated td:nth-of-type(2) {
+#generated td:nth-of-type(2),
+.pronunciation-text {
   ruby {
     font-family: var(--title-font) !important;
     font-size: 1.5em;
