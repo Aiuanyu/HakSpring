@@ -751,6 +751,19 @@ input:checked + .slider:before {
   font-size: 0.9em;
   line-height: 1.5;
 }
+
+.sandhi-applied {
+    color: #c0392b; /* A reddish color to highlight the change */
+    font-weight: bold;
+}
+
+.pronunciation-text {
+    display: inline-block;
+}
+
+.accordion-header-content br {
+    margin-bottom: 4px;
+}
 .accordion-panel audio {
   max-width: 100%;
   height: 30px; /* Adjust height as needed */
