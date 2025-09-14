@@ -143,7 +143,7 @@
     color: red;
   }
   ruby.sandhi-中平變 { /* 修改 class 選擇器 */
-    color: orangered;
+    color: green;
   }
   ruby.sandhi-低升變 { /* 修改 class 選擇器 */
     color: blue;
@@ -258,7 +258,7 @@ a {
 }
 #audioControls button {
   border: none;
-  font-size: clamp(15px, 2vw, 30px);
+  font-size: clamp(15px, 2vw, 22px);
   /* margin: 0 5px;*/
   background: none;
   padding: 0;
@@ -996,7 +996,7 @@ input:checked + .slider:before {
     color: #FF8A80; /* 較亮个紅色 */
   }
   #generated td:nth-of-type(2) ruby.sandhi-中平變 { /* 修改 class 選擇器 */
-    color: #FFCC80; /* 較亮个橘色 */
+    color: lightgreen; /* 較亮个綠色 */
   }
   #generated td:nth-of-type(2) ruby.sandhi-低升變 { /* 修改 class 選擇器 */
     color: #80CBC4; /* 較亮个藍綠色 */
