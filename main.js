@@ -381,6 +381,17 @@ function getSandhiPronunciation(pronunciation, dialect) {
     return null;
 }
 
+function applyDapuSandhiToGenerated() {
+    const rtElements = document.querySelectorAll('#generated rt');
+    rtElements.forEach((rt) => {
+        const originalHtml = rt.innerHTML;
+        const newHtml = getDapuSandhiHtml(originalHtml);
+        if (originalHtml !== newHtml) {
+            rt.innerHTML = newHtml;
+        }
+    });
+}
+
 function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect, contextualDialect = null) {
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
@@ -433,8 +444,8 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
         let headerText;
         if (sandhiResult) {
-            // If sandhi is applied, show only the sandhi version.
-            headerText = `<span class="pronunciation-text sandhi-applied">${sandhiResult.sandhi}</span>`;
+            // If sandhi is applied, use the returned HTML which contains the correct classes.
+            headerText = `<span class="pronunciation-text">${sandhiResult.sandhi}</span>`;
         } else {
             // Otherwise, show the original pronunciation.
             headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
@@ -2675,7 +2686,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
     }
     
     if (dialectInfo.腔 === '大') {
-        setTimeout(() => { 大埔高降異化(); 大埔中遇低升(); 大埔低升異化(); }, 0);
+        setTimeout(() => { applyDapuSandhiToGenerated(); }, 0);
     }
     
     setTimeout(() => handleResizeActions(), 50);
