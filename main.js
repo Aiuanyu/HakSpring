@@ -255,6 +255,132 @@ function updatePopupPosition(popupEl, selectionRect) {
   popupEl.style.visibility = 'visible';
 }
 
+function getDapuSandhiHtml(htmlContent) {
+    // This function processes a string containing romanization and returns a new
+    // string with Dapu sandhi rules applied, wrapped in <ruby> tags.
+    // It is designed to be called from multiple places.
+
+    const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
+    let preliminaryTokens = [];
+    let lastIndex = 0;
+
+    // First, separate existing sandhi rubies from the rest of the text.
+    htmlContent.replace(sandhiRubyRegex, (match, offset) => {
+        if (offset > lastIndex) {
+            preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
+        }
+        preliminaryTokens.push(match);
+        lastIndex = offset + match.length;
+        return match;
+    });
+    if (lastIndex < htmlContent.length) {
+        preliminaryTokens.push(htmlContent.substring(lastIndex));
+    }
+
+    // Tokenize the non-ruby parts of the text.
+    const tokens = preliminaryTokens.flatMap(token => {
+        if (token.startsWith("<ruby class=\"sandhi-")) {
+            return [token]; // Keep existing sandhi rubies as is.
+        }
+        // This regex splits the string into syllables and punctuation.
+        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+    }).filter(t => t && t.length > 0);
+
+    let modifiedTokens = [];
+    let hasActualModification = false;
+
+    for (let i = 0; i < tokens.length; i++) {
+        let currentToken = tokens[i];
+
+        // Skip tokens that are already sandhi-fied or are just whitespace/punctuation.
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+            modifiedTokens.push(currentToken);
+            continue;
+        }
+
+        // Find the next actual syllable, skipping over punctuation.
+        let nextWordToken = "";
+        for (let j = i + 1; j < tokens.length; j++) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+                continue;
+            }
+            // Stop if we hit parentheses, as they block sandhi.
+            if (tokens[j] === '(' || tokens[j] === '（') {
+                nextWordToken = "";
+                break;
+            }
+            nextWordToken = tokens[j];
+            break;
+        }
+
+        // Conditions that prevent sandhi application.
+        if (currentToken.length === 0 || !nextWordToken || currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+            modifiedTokens.push(currentToken);
+            continue;
+        }
+
+        let newTone = null;
+        let rubyClass = null;
+
+        // Rule 1: Dapu High-falling dissimilation (高降異化)
+        if (currentToken.match(/[àèìòù](?![bdg])/) && nextWordToken.match(/[àèìòùâêîôû]/)) {
+            newTone = '55';
+            rubyClass = 'sandhi-高降變';
+        }
+        // Rule 2: Dapu Mid-level tone change (中平變)
+        else if (currentToken.match(/[āēīōū]/) && nextWordToken.match(/[ǎěǐǒǔâêîôû]/)) {
+            newTone = '35';
+            rubyClass = 'sandhi-中平變';
+        }
+        // Rule 3: Dapu Low-rising dissimilation (低升異化)
+        else if (currentToken.match(/[ǎěǐǒǔ]/) && nextWordToken.match(/[ǎěǐǒǔ]/)) {
+            newTone = '33';
+            rubyClass = 'sandhi-低升變';
+        }
+
+        if (newTone && rubyClass) {
+            let rubyElement = document.createElement('ruby');
+            rubyElement.className = rubyClass;
+            rubyElement.textContent = currentToken;
+            let rtInnerElement = document.createElement('rt');
+            rtInnerElement.textContent = newTone;
+            rubyElement.appendChild(rtInnerElement);
+            modifiedTokens.push(rubyElement.outerHTML);
+            hasActualModification = true;
+        } else {
+            modifiedTokens.push(currentToken);
+        }
+    }
+
+    if (hasActualModification) {
+        return modifiedTokens.join('');
+    } else {
+        return htmlContent; // Return original content if no changes were made.
+    }
+}
+
+/**
+ * Checks for and applies tone sandhi for a given pronunciation and dialect.
+ * Currently only supports Dapu dialect.
+ * @param {string} pronunciation - The original pronunciation string.
+ * @param {string} dialect - The dialect name (e.g., '大埔教典').
+ * @returns {object|null} An object with original and sandhi versions, or null if no change.
+ */
+function getSandhiPronunciation(pronunciation, dialect) {
+    if (dialect && dialect.includes('大埔')) {
+        const sandhiPron = getDapuSandhiHtml(pronunciation);
+        // Return an object only if a change was actually made.
+        if (sandhiPron !== pronunciation) {
+            return {
+                original: pronunciation,
+                sandhi: sandhiPron
+            };
+        }
+    }
+    // If no sandhi applies or it's not the right dialect, return null.
+    return null;
+}
+
 function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect, contextualDialect = null) {
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
@@ -1508,142 +1634,6 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     }, 100);
 }
 
-function getDapuSandhiHtml(htmlContent) {
-    // This function processes a string containing romanization and returns a new
-    // string with Dapu sandhi rules applied, wrapped in <ruby> tags.
-    // It is designed to be called from multiple places.
-
-    const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
-    let preliminaryTokens = [];
-    let lastIndex = 0;
-
-    // First, separate existing sandhi rubies from the rest of the text.
-    htmlContent.replace(sandhiRubyRegex, (match, offset) => {
-        if (offset > lastIndex) {
-            preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
-        }
-        preliminaryTokens.push(match);
-        lastIndex = offset + match.length;
-        return match;
-    });
-    if (lastIndex < htmlContent.length) {
-        preliminaryTokens.push(htmlContent.substring(lastIndex));
-    }
-
-    // Tokenize the non-ruby parts of the text.
-    const tokens = preliminaryTokens.flatMap(token => {
-        if (token.startsWith("<ruby class=\"sandhi-")) {
-            return [token]; // Keep existing sandhi rubies as is.
-        }
-        // This regex splits the string into syllables and punctuation.
-        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
-    }).filter(t => t && t.length > 0);
-
-    let modifiedTokens = [];
-    let hasActualModification = false;
-
-    for (let i = 0; i < tokens.length; i++) {
-        let currentToken = tokens[i];
-
-        // Skip tokens that are already sandhi-fied or are just whitespace/punctuation.
-        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
-            modifiedTokens.push(currentToken);
-            continue;
-        }
-
-        // Find the next actual syllable, skipping over punctuation.
-        let nextWordToken = "";
-        for (let j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
-                continue;
-            }
-            // Stop if we hit parentheses, as they block sandhi.
-            if (tokens[j] === '(' || tokens[j] === '（') {
-                nextWordToken = "";
-                break;
-            }
-            nextWordToken = tokens[j];
-            break;
-        }
-
-        // Conditions that prevent sandhi application.
-        if (currentToken.length === 0 || !nextWordToken || currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
-            modifiedTokens.push(currentToken);
-            continue;
-        }
-
-        let newTone = null;
-        let rubyClass = null;
-
-        // Rule 1: Dapu High-falling dissimilation (高降異化)
-        if (currentToken.match(/[àèìòù](?![bdg])/) && nextWordToken.match(/[àèìòùâêîôû]/)) {
-            newTone = '55';
-            rubyClass = 'sandhi-高降變';
-        }
-        // Rule 2: Dapu Mid-level tone change (中平變)
-        else if (currentToken.match(/[āēīōū]/) && nextWordToken.match(/[ǎěǐǒǔâêîôû]/)) {
-            newTone = '35';
-            rubyClass = 'sandhi-中平變';
-        }
-        // Rule 3: Dapu Low-rising dissimilation (低升異化)
-        else if (currentToken.match(/[ǎěǐǒǔ]/) && nextWordToken.match(/[ǎěǐǒǔ]/)) {
-            newTone = '33';
-            rubyClass = 'sandhi-低升變';
-        }
-
-        if (newTone && rubyClass) {
-            let rubyElement = document.createElement('ruby');
-            rubyElement.className = rubyClass;
-            rubyElement.textContent = currentToken;
-            let rtInnerElement = document.createElement('rt');
-            rtInnerElement.textContent = newTone;
-            rubyElement.appendChild(rtInnerElement);
-            modifiedTokens.push(rubyElement.outerHTML);
-            hasActualModification = true;
-        } else {
-            modifiedTokens.push(currentToken);
-        }
-    }
-
-    if (hasActualModification) {
-        return modifiedTokens.join('');
-    } else {
-        return htmlContent; // Return original content if no changes were made.
-    }
-}
-
-function applyDapuSandhiToGenerated() {
-    const rtElements = document.querySelectorAll('#generated rt');
-    rtElements.forEach((rt) => {
-        const originalHtml = rt.innerHTML;
-        const newHtml = getDapuSandhiHtml(originalHtml);
-        if (originalHtml !== newHtml) {
-            rt.innerHTML = newHtml;
-        }
-    });
-}
-
-/**
- * Checks for and applies tone sandhi for a given pronunciation and dialect.
- * Currently only supports Dapu dialect.
- * @param {string} pronunciation - The original pronunciation string.
- * @param {string} dialect - The dialect name (e.g., '大埔教典').
- * @returns {object|null} An object with original and sandhi versions, or null if no change.
- */
-function getSandhiPronunciation(pronunciation, dialect) {
-    if (dialect && dialect.includes('大埔')) {
-        const sandhiPron = getDapuSandhiHtml(pronunciation);
-        // Return an object only if a change was actually made.
-        if (sandhiPron !== pronunciation) {
-            return {
-                original: pronunciation,
-                sandhi: sandhiPron
-            };
-        }
-    }
-    // If no sandhi applies or it's not the right dialect, return null.
-    return null;
-}
 
   
 
