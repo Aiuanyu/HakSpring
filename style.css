@@ -140,7 +140,7 @@
     }
   }
   rt {
-      font-size: initial !important;
+      /*font-size: initial !important;*/
       color: inherit;
     }
   }
