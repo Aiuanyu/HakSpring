@@ -118,7 +118,8 @@
 }
 
 /* Mine */
-#generated td:nth-of-type(2) {
+#generated td:nth-of-type(2),
+.pronunciation-text {
   ruby {
     font-family: var(--title-font) !important;
     font-size: 1.5em;
@@ -139,18 +140,23 @@
       color: inherit;
     }
   }
-  ruby.sandhi-高降變 { /* 修改 class 選擇器 */
-    color: red;
-  }
-  ruby.sandhi-中平變 { /* 修改 class 選擇器 */
-    color: green;
-  }
-  ruby.sandhi-低升變 { /* 修改 class 選擇器 */
-    color: blue;
+  rt {
+    /*font-size: initial !important;*/
+    color: inherit;
   }
 }
 .sentence rt {
   font-size: 70%;
+}
+
+ruby.sandhi-高降變 {
+    color: red;
+}
+ruby.sandhi-中平變 {
+    color: green;
+}
+ruby.sandhi-低升變 {
+    color: blue;
 }
 
 body {
@@ -751,6 +757,19 @@ input:checked + .slider:before {
   font-size: 0.9em;
   line-height: 1.5;
 }
+
+.sandhi-applied {
+    color: #c0392b; /* A reddish color to highlight the change */
+    font-weight: bold;
+}
+
+.pronunciation-text {
+    display: inline-block;
+}
+
+.accordion-header-content br {
+    margin-bottom: 4px;
+}
 .accordion-panel audio {
   max-width: 100%;
   height: 30px; /* Adjust height as needed */
@@ -992,14 +1011,17 @@ input:checked + .slider:before {
   }
 
   /* 標音變調顏色調整 */
-  #generated td:nth-of-type(2) ruby.sandhi-高降變 { /* 修改 class 選擇器 */
-    color: #FF8A80; /* 較亮个紅色 */
-  }
-  #generated td:nth-of-type(2) ruby.sandhi-中平變 { /* 修改 class 選擇器 */
-    color: lightgreen; /* 較亮个綠色 */
-  }
-  #generated td:nth-of-type(2) ruby.sandhi-低升變 { /* 修改 class 選擇器 */
-    color: #80CBC4; /* 較亮个藍綠色 */
+  #generated td:nth-of-type(2),
+  .pronunciation-text {
+    ruby.sandhi-高降變 { /* 修改 class 選擇器 */
+      color: #FF8A80; /* 較亮个紅色 */
+    }
+    ruby.sandhi-中平變 { /* 修改 class 選擇器 */
+      color: lightgreen; /* 較亮个橘色 */
+    }
+    ruby.sandhi-低升變 { /* 修改 class 選擇器 */
+      color: #80CBC4; /* 較亮个藍綠色 */
+    }
   }
 
   /* --- 暗夜模式下个 tr#nowPlaying 樣式 --- */
