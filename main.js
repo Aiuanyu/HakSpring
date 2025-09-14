@@ -433,8 +433,8 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
         let headerText;
         if (sandhiResult) {
-            // If sandhi is applied, show both original and sandhi versions.
-            headerText = `本調：<span class="pronunciation-text">${sandhiResult.original}</span><br>變調：<span class="pronunciation-text sandhi-applied">${sandhiResult.sandhi}</span>`;
+            // If sandhi is applied, show only the sandhi version.
+            headerText = `<span class="pronunciation-text sandhi-applied">${sandhiResult.sandhi}</span>`;
         } else {
             // Otherwise, show the original pronunciation.
             headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
