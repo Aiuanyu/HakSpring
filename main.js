@@ -1826,14 +1826,8 @@ function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
   }
 
-  function isSafari() {
-    const ua = navigator.userAgent.toLowerCase();
-    // SigmaOS also uses WebKit, so we should include it.
-    return (ua.includes('safari') && !ua.includes('chrome')) || ua.includes('sigmaos');
-  }
-
   function adjustRubyFontSize(rubyElement) {
-    if (!isFirefox() && !isSafari()) return;
+    if (!isFirefox()) return;
     const tdElement = rubyElement.closest('td');
     if (!tdElement) return;
     rubyElement.style.fontSize = '';
@@ -1871,7 +1865,7 @@ function isFirefox() {
   }
 
   function adjustAllRubyFontSizes(containerElement) {
-    if (!isFirefox() && !isSafari()) return;
+    if (!isFirefox() && !isWebKit()) return;
     const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
     rubyElements.forEach((rubyElement) => {
       rubyElement.style.fontSize = '';
