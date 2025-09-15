@@ -44,3 +44,30 @@
 
 - `invalidMediaChecker.html`: 用於檢查音檔連結是否有效。
 - `table-extractor.html`: 用於從應用程式中匯出帶有附加元數據的 CSV 檔案。
+
+## 詳細文件參考 (Detailed Documentation Reference)
+
+本檔案是專案的快速入門指南。更詳細的設計與架構文件，請參考以下的 DeepWiki 頁面：
+
+- [User Guide](https://deepwiki.com/Aiuanyu/HakSpring/2-user-guide)
+- [Application Architecture](https://deepwiki.com/Aiuanyu/HakSpring/3-application-architecture)
+- [Frontend Application](https://deepwiki.com/Aiuanyu/HakSpring/4-frontend-application)
+	- [HTML Structure and Entry Point](https://deepwiki.com/Aiuanyu/HakSpring/4.1-html-structure-and-entry-point)
+	- [User Interface Design and Styling](https://deepwiki.com/Aiuanyu/HakSpring/4.2-user-interface-design-and-styling)
+	- [Core Application Logic](https://deepwiki.com/Aiuanyu/HakSpring/4.3-core-application-logic)
+	- [Romanization Tool](https://deepwiki.com/Aiuanyu/HakSpring/4.4-romanization-tool)
+- [Features and Functionality](https://deepwiki.com/Aiuanyu/HakSpring/5-features-and-functionality)
+	- [Dictionary Search System](https://deepwiki.com/Aiuanyu/HakSpring/5.1-dictionary-search-system)
+	- [Vocabulary Learning Mode](https://deepwiki.com/Aiuanyu/HakSpring/5.2-vocabulary-learning-mode)
+	- [Audio Playback and Controls](https://deepwiki.com/Aiuanyu/HakSpring/5.3-audio-playback-and-controls)
+- [Data Infrastructure](https://deepwiki.com/Aiuanyu/HakSpring/6-data-infrastructure)
+	- [Data Processing Pipeline](https://deepwiki.com/Aiuanyu/HakSpring/6.1-data-processing-pipeline)
+	- [Client-Side Data Management](https://deepwiki.com/Aiuanyu/HakSpring/6.2-client-side-data-management)
+	- [Audio File Management](https://deepwiki.com/Aiuanyu/HakSpring/6.3-audio-file-management)
+- [Developer Tools](https://deepwiki.com/Aiuanyu/HakSpring/7-developer-tools)
+	- [Audio Validation Tool](https://deepwiki.com/Aiuanyu/HakSpring/7.1-audio-validation-tool)
+	- [Data Processing Scripts](https://deepwiki.com/Aiuanyu/HakSpring/7.2-data-processing-scripts)
+	- [Data Export Tool](https://deepwiki.com/Aiuanyu/HakSpring/7.3-data-export-tool)
+- [Reference and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8-reference-and-configuration)
+	- [URL Patterns and Data Formats](https://deepwiki.com/Aiuanyu/HakSpring/8.1-url-patterns-and-data-formats)
+	- [Supporting Assets and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8.2-supporting-assets-and-configuration)
