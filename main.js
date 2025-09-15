@@ -45,6 +45,9 @@ let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
 const ITEMS_PER_LOAD = 20;
+const VIEWPORT_MULTIPLIER = 4; // Buffer for rows outside the viewport
+const MAX_ROWS_IN_DOM = ITEMS_PER_LOAD * (1 + 2 * VIEWPORT_MULTIPLIER); // e.g., 20 * (1 + 2*4) = 180
+let g_currentlyRendered = { start: 0, end: 0 }; // Tracks the slice of activeCategoryData in the DOM
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
@@ -2466,6 +2469,7 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     currentAudioIndex = 0;
     isPlaying = false;
     isPaused = false;
+    g_currentlyRendered = { start: 0, end: 0 }; // Reset DOM tracking
     window.removeEventListener('scroll', scrollHandler); // Remove old listener
 
     // 2. Filter data and handle empty category
@@ -2490,7 +2494,9 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     }
     firstLoadedIndex = start;
     lastLoadedIndex = Math.min(start + ITEMS_PER_LOAD, totalResults);
+    g_currentlyRendered = { start: firstLoadedIndex, end: lastLoadedIndex }; // Set initial range
     const initialItems = activeCategoryData.slice(firstLoadedIndex, lastLoadedIndex);
+
 
     // 4. Render the initial chunk of items (no return value handled)
     renderCategoryItems(initialItems, dialectInfo, category, true, totalResults, autoPlayTargetRowId);
@@ -2692,6 +2698,40 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
     setTimeout(() => handleResizeActions(), 50);
 }
 
+function pruneOffscreenRows(direction) {
+    const tableBody = document.querySelector('#category-table tbody');
+    if (!tableBody) return;
+
+    const totalRowsInDom = tableBody.rows.length;
+    if (totalRowsInDom <= MAX_ROWS_IN_DOM) {
+        return; // No need to prune
+    }
+
+    const rowsToRemove = totalRowsInDom - MAX_ROWS_IN_DOM;
+    if (rowsToRemove <= 0) return;
+
+    if (direction === 'down') {
+        // User is scrolling down, remove rows from the top
+        for (let i = 0; i < rowsToRemove; i++) {
+            if (tableBody.rows[0]) {
+                tableBody.rows[0].remove();
+            }
+        }
+        g_currentlyRendered.start += rowsToRemove;
+        console.log(`Pruned ${rowsToRemove} rows from top. New range: ${g_currentlyRendered.start}-${g_currentlyRendered.end}`);
+    } else if (direction === 'up') {
+        // User is scrolling up, remove rows from the bottom
+        for (let i = 0; i < rowsToRemove; i++) {
+            const lastRow = tableBody.rows[tableBody.rows.length - 1];
+            if (lastRow) {
+                lastRow.remove();
+            }
+        }
+        g_currentlyRendered.end -= rowsToRemove;
+        console.log(`Pruned ${rowsToRemove} rows from bottom. New range: ${g_currentlyRendered.start}-${g_currentlyRendered.end}`);
+    }
+}
+
 function scrollHandler() {
     if (isLoadingMoreItems || !g_currentDialectInfo) {
         return;
@@ -2710,6 +2750,8 @@ function scrollHandler() {
             const itemsToRender = activeCategoryData.slice(start, end);
             renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, false);
             lastLoadedIndex = end;
+            g_currentlyRendered.end = lastLoadedIndex;
+            pruneOffscreenRows('down');
         }
         isLoadingMoreItems = false;
     }
@@ -2725,6 +2767,8 @@ function scrollHandler() {
             const itemsToRender = activeCategoryData.slice(start, end);
             renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, true);
             firstLoadedIndex = start;
+            g_currentlyRendered.start = firstLoadedIndex;
+            pruneOffscreenRows('up');
             
             const newHeight = table.offsetHeight;
             window.scrollTo({ top: scrollTop + (newHeight - currentHeight), behavior: 'instant' });
