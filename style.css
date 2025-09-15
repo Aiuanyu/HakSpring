@@ -1289,7 +1289,8 @@ input:checked + .slider:before {
 }
 
 /* Info Button in Header */
-#infoButton {
+#infoButton,
+#showRomanizerBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1300,11 +1301,13 @@ input:checked + .slider:before {
   vertical-align: middle;
   flex-shrink: 0; /* 避免被壓縮 */
 }
-#infoButton i {
+#infoButton i,
+#showRomanizerBtn i {
   color: inherit;
 }
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
-#infoButton:hover i { /* 單獨處理 hover 效果 */
+#infoButton:hover i,
+#showRomanizerBtn:hover i { /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
 }
 
@@ -1385,10 +1388,12 @@ input:checked + .slider:before {
 
 /* Dark Mode for Info Modal */
 @media (prefers-color-scheme: dark) {
-  #infoButton {
+  #infoButton,
+  #showRomanizerBtn {
     color: var(--main-text-color);
   }
-  #infoButton:hover i {
+  #infoButton:hover i,
+  #showRomanizerBtn:hover i {
     color: var(--focus-glow-color);
   }
 
