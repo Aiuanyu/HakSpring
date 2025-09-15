@@ -6,6 +6,12 @@
 
 「客源翠 HakSpring」是一個線上的客語詞典與分類學習網站。本專案提供多種客語腔調的詞彙查詢，以及分類詞彙的學習功能。
 
+## 技術棧 (Tech Stack)
+
+- **前端 (Frontend)**: 本專案使用 **Vanilla JavaScript**，並無使用任何主要的前端框架（如 React, Vue, Angular）。所有 DOM 操作與狀態管理皆透過原生瀏覽器 API 處理。
+- **資料處理 (Data Processing)**: 使用 Python 腳本 (`process_all_data.py`) 進行資料轉換。
+- **相依套件 (Dependencies)**: 外部函式庫（如 FontAwesome）是透過 CDN 載入，專案沒有使用 npm 或其他套件管理器。
+
 ## 開發核心：資料處理流程
 
 本專案的核心資料儲存於 `.csv` 檔案中，但前端應用程式實際使用的是經過處理的 `.json` 檔案。當您需要修改詞彙資料時，請務必遵循以下流程。
