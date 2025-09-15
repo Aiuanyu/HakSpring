@@ -44,7 +44,7 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
-const ITEMS_PER_LOAD = 30;
+const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
