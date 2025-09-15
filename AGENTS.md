@@ -12,29 +12,31 @@
 - **資料處理 (Data Processing)**: 使用 Python 腳本 (`process_all_data.py`) 進行資料轉換。
 - **相依套件 (Dependencies)**: 外部函式庫（如 FontAwesome）是透過 CDN 載入，專案沒有使用 npm 或其他套件管理器。
 
-## 開發核心：資料處理流程
+## 核心架構與流程 (Core Architecture & Workflow)
 
-本專案的核心資料儲存於 `.csv` 檔案中，但前端應用程式實際使用的是經過處理的 `.json` 檔案。當您需要修改詞彙資料時，請務必遵循以下流程。
+### 架構原則 (Architectural Principles)
 
-### 資料檔案說明
+- **客戶端為主、離線優先 (Client-heavy, Offline-First)**: 大部分的應用程式邏輯都在瀏覽器中執行，並透過 IndexedDB 進行全面的本地資料快取。
+- **事件驅動 (Event-Driven)**: 透過全域的鍵盤事件監聽和 UI 事件綁定來進行組件間的通訊。
+- **主要進入點 (Main Entry Point)**: 應用程式的初始化由 `main.js` 中的 `initializeApp()` 函式協調。
 
-- **原始資料**: 所有的原始詞彙資料都存放在 `data/cert/*.csv` 以及 `data/gip/*.csv`。這些檔案包含了不同客語腔調與級別的詞彙。若要新增、刪除或修改詞彙，請直接編輯這些 `.csv` 檔案。
+### 資料處理流程 (Data Processing Pipeline)
 
-- **處理後資料**: 網站應用程式是從 `data/cert/*.json` 和 `data/gip/*.json` 載入資料的。**請勿直接編輯這些 .json 檔案**，因為它們是由腳本自動產生的。
+1.  **原始資料 (Source)**: 位於 `data/cert/*.csv` 和 `data/gip/*.csv`。若要修改詞彙，請編輯這些檔案。
+2.  **處理腳本 (Processing)**: 執行 `python process_all_data.py`。此腳本會將 CSV 轉換、統一格式，並產生 JSON 檔案。
+3.  **產出檔案 (Output)**: 腳本會在原始檔旁產生對應的 `.json` 檔案。**請勿直接編輯 .json 檔**。
 
-### 客戶端資料儲存 (Client-Side Data Storage)
+### 客戶端資料管理 (Client-Side Data Management)
 
-處理過的 `.json` 檔案在載入後，會被儲存到瀏覽器的 IndexedDB (`HakkaDataDB`) 中。這樣做是為了支援離線使用，並提升資料查詢的效能。當您在偵錯資料相關問題時，記得檢查 IndexedDB 中的狀態。
+- **資料庫 (Database)**: 前端會將處理過的 `.json` 檔案載入並儲存到瀏覽器的 **IndexedDB** (`HakkaDataDB`) 中。
+- **資料區塊 (Chunking)**: 大型資料集會被自動切割成 500 筆記錄的區塊 (chunks) 儲存。
+- **搜尋索引 (Search Index)**: 應用程式會在記憶體中建立一個搜尋索引 (`indexedDataCache`) 以加速查詢。
+- **版本控制 (Versioning)**: 應用程式透過 `data/data_version.json` 檔案來追蹤資料版本。開發時可使用 `?force-refresh=true` URL 參數來強制清除快取。
 
-### 關鍵指令
+### 音檔 URL 規則 (Audio URL Structure)
 
-當您修改了任何 `data/` 目錄下的 `.csv` 原始檔後，**必須**在專案根目錄下執行以下指令，以處理資料並重新產生對應的 `.json` 檔案：
-
-```bash
-python process_all_data.py
-```
-
-若未執行此指令，您對 CSV 檔案的修改將不會反映在網站上。
+- **URL 結構**: 音檔的 URL 是根據腔調、級別、單元等資訊動態產生的。詳細的規則定義在 `URL patterns.csv` 檔案中。
+- **例外處理**: `exclusions.js` 和 `NAmedias.js` 用於記錄和處理無法取得的音檔，屬於音檔的例外管理。
 
 ## 開發工具 (Developer Utilities)
 
