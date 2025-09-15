@@ -1311,7 +1311,8 @@ input:checked + .slider:before {
 }
 
 /* Info Button in Header */
-#infoButton {
+#infoButton,
+#showRomanizerBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1322,11 +1323,13 @@ input:checked + .slider:before {
   vertical-align: middle;
   flex-shrink: 0; /* 避免被壓縮 */
 }
-#infoButton i {
+#infoButton i,
+#showRomanizerBtn i {
   color: inherit;
 }
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
-#infoButton:hover i { /* 單獨處理 hover 效果 */
+#infoButton:hover i,
+#showRomanizerBtn:hover i { /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
 }
 
@@ -1377,7 +1380,8 @@ input:checked + .slider:before {
   color: inherit;
 }
 
-#infoModal .modal-close-btn {
+#infoModal .modal-close-btn,
+#romanizerContainer .modal-close-btn {
   background: none;
   border: none;
   font-size: 1.8rem;
@@ -1388,7 +1392,9 @@ input:checked + .slider:before {
   line-height: 1;
 }
 #infoModal .modal-close-btn:hover,
-#infoModal .modal-close-btn:focus-visible {
+#infoModal .modal-close-btn:focus-visible,
+#romanizerContainer .modal-close-btn:hover,
+#romanizerContainer .modal-close-btn:focus-visible {
   color: #333;
 }
 
@@ -1407,10 +1413,12 @@ input:checked + .slider:before {
 
 /* Dark Mode for Info Modal */
 @media (prefers-color-scheme: dark) {
-  #infoButton {
+  #infoButton,
+  #showRomanizerBtn {
     color: var(--main-text-color);
   }
-  #infoButton:hover i {
+  #infoButton:hover i,
+  #showRomanizerBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -1423,11 +1431,14 @@ input:checked + .slider:before {
   #infoModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
-  #infoModal .modal-close-btn {
+  #infoModal .modal-close-btn,
+  #romanizerContainer .modal-close-btn {
     color: #aaa;
   }
   #infoModal .modal-close-btn:hover,
-  #infoModal .modal-close-btn:focus-visible {
+  #infoModal .modal-close-btn:focus-visible,
+  #romanizerContainer .modal-close-btn:hover,
+  #romanizerContainer .modal-close-btn:focus-visible {
     color: #fff;
   }
 }
@@ -2038,17 +2049,22 @@ mark {
 }
 
 /* 【新增】Romanizer 連詞模式選擇器樣式 */
+#romanizer-dialect-selector,
 #romanizer-joining-mode-selector {
   padding: 5px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: white;
   font-family: inherit;
-  margin-left: 10px; /* 同腔調選單隔開 */
+}
+
+#romanizer-joining-mode-selector {
+  margin-left: 10px;
 }
 
 /* 【新增】對應个暗夜模式樣式 */
 @media (prefers-color-scheme: dark) {
+  #romanizer-dialect-selector,
   #romanizer-joining-mode-selector {
     background-color: var(--dark-surface-color, #2c2c2c);
     color: var(--main-text-color);
