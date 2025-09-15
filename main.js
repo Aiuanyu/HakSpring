@@ -1826,8 +1826,15 @@ function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
   }
 
+  function isWebKit() {
+    const ua = navigator.userAgent;
+    // This is a more robust way to detect WebKit-based browsers (like Safari, SigmaOS)
+    // while excluding Chrome and other Chromium-based browsers.
+    return ua.includes('AppleWebKit') && !ua.includes('Chrome');
+  }
+
   function adjustRubyFontSize(rubyElement) {
-    if (!isFirefox()) return;
+    if (!isFirefox() && !isWebKit()) return;
     const tdElement = rubyElement.closest('td');
     if (!tdElement) return;
     rubyElement.style.fontSize = '';
