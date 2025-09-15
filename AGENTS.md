@@ -16,6 +16,10 @@
 
 - **處理後資料**: 網站應用程式是從 `data/cert/*.json` 和 `data/gip/*.json` 載入資料的。**請勿直接編輯這些 .json 檔案**，因為它們是由腳本自動產生的。
 
+### 客戶端資料儲存 (Client-Side Data Storage)
+
+處理過的 `.json` 檔案在載入後，會被儲存到瀏覽器的 IndexedDB (`HakkaDataDB`) 中。這樣做是為了支援離線使用，並提升資料查詢的效能。當您在偵錯資料相關問題時，記得檢查 IndexedDB 中的狀態。
+
 ### 關鍵指令
 
 當您修改了任何 `data/` 目錄下的 `.csv` 原始檔後，**必須**在專案根目錄下執行以下指令，以處理資料並重新產生對應的 `.json` 檔案：
@@ -25,3 +29,10 @@ python process_all_data.py
 ```
 
 若未執行此指令，您對 CSV 檔案的修改將不會反映在網站上。
+
+## 開發工具 (Developer Utilities)
+
+專案中包含一些實用的開發工具（位於根目錄的 `.html` 檔案），可以幫助您驗證資料的完整性：
+
+- `invalidMediaChecker.html`: 用於檢查音檔連結是否有效。
+- `table-extractor.html`: 用於從應用程式中匯出帶有附加元數據的 CSV 檔案。
