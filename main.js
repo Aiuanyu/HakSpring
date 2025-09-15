@@ -1826,60 +1826,46 @@ function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
   }
 
-  function isWebKit() {
-    const ua = navigator.userAgent;
-    // This is a more robust way to detect WebKit-based browsers (like Safari, SigmaOS)
-    // while excluding Chrome and other Chromium-based browsers.
-    return ua.includes('AppleWebKit') && !ua.includes('Chrome');
-  }
-
   function adjustRubyFontSize(rubyElement) {
-    if (!isFirefox() && !isWebKit()) return;
-
-    requestAnimationFrame(() => {
-        const tdElement = rubyElement.closest('td');
-        if (!tdElement) return;
-
+    if (!isFirefox()) return;
+    const tdElement = rubyElement.closest('td');
+    if (!tdElement) return;
+    rubyElement.style.fontSize = '';
+    const forcedStyle = window.getComputedStyle(rubyElement);
+    const currentFontSize = parseFloat(forcedStyle.fontSize);
+    const rubyWidth = rubyElement.scrollWidth;
+    const computedTdStyle = window.getComputedStyle(tdElement);
+    const isCardMode = computedTdStyle.display === 'block';
+    let availableWidth;
+    const buffer = 5;
+    if (isCardMode) {
+      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
+      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+    } else {
+      availableWidth = tdElement.clientWidth - buffer;
+    }
+    if (rubyWidth > availableWidth) {
+      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
+      const minSize = 10;
+      newSize = Math.max(newSize, minSize);
+      if (newSize < currentFontSize) {
+        if (rubyElement.style.fontSize !== `${newSize}px`) {
+          rubyElement.style.fontSize = `${newSize}px`;
+        }
+      } else {
+        if (rubyElement.style.fontSize) {
+          rubyElement.style.fontSize = '';
+        }
+      }
+    } else {
+      if (rubyElement.style.fontSize) {
         rubyElement.style.fontSize = '';
-        const forcedStyle = window.getComputedStyle(rubyElement);
-        const currentFontSize = parseFloat(forcedStyle.fontSize);
-        const rubyWidth = rubyElement.scrollWidth;
-        const computedTdStyle = window.getComputedStyle(tdElement);
-        const isCardMode = computedTdStyle.display === 'block';
-        let availableWidth;
-        const buffer = 5;
-
-        if (isCardMode) {
-          const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
-          availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
-        } else {
-          availableWidth = tdElement.clientWidth - buffer;
-        }
-
-        if (rubyWidth > availableWidth) {
-          let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
-          const minSize = 10;
-          newSize = Math.max(newSize, minSize);
-
-          if (newSize < currentFontSize) {
-            if (rubyElement.style.fontSize !== `${newSize}px`) {
-              rubyElement.style.fontSize = `${newSize}px`;
-            }
-          } else {
-            if (rubyElement.style.fontSize) {
-              rubyElement.style.fontSize = '';
-            }
-          }
-        } else {
-          if (rubyElement.style.fontSize) {
-            rubyElement.style.fontSize = '';
-          }
-        }
-    });
+      }
+    }
   }
 
   function adjustAllRubyFontSizes(containerElement) {
-    if (!isFirefox() && !isWebKit()) return;
+    if (!isFirefox()) return;
     const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
     rubyElements.forEach((rubyElement) => {
       rubyElement.style.fontSize = '';
