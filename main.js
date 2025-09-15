@@ -1433,7 +1433,11 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         const ruby = document.createElement('ruby');
         ruby.innerHTML = highlight.word ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>') : line['客家語'];
         const rt = document.createElement('rt');
-        rt.textContent = formatPhoneticForDisplay(line['客語標音_顯示']);
+        let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+        if (selectedDialect === '大埔') {
+            phoneticText = getDapuSandhiHtml(phoneticText);
+        }
+        rt.innerHTML = phoneticText;
         ruby.appendChild(rt);
         td2.appendChild(ruby);
         td2.appendChild(document.createElement('br'));
@@ -1604,10 +1608,6 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             currentTable.appendChild(row);
         }
     });
-
-    if (document.querySelector('#search-popup input[name="dialect"]:checked').value === '大埔') {
-        applyDapuSandhiToGenerated();
-    }
 
     if (totalPages > 1) {
         const paginationContainer = document.createElement('div');
@@ -2612,7 +2612,11 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         const ruby = document.createElement('ruby');
         ruby.textContent = line.客家語;
         const rt = document.createElement('rt');
-        rt.textContent = formatPhoneticForDisplay(line['客語標音_顯示']);
+        let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+        if (dialectInfo.腔 === '大') {
+            phoneticText = getDapuSandhiHtml(phoneticText);
+        }
+        rt.innerHTML = phoneticText;
         ruby.appendChild(rt);
         td2.appendChild(ruby);
         td2.appendChild(document.createElement('br'));
@@ -2683,10 +2687,6 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         tbody.prepend(fragment);
     } else {
         tbody.appendChild(fragment);
-    }
-    
-    if (dialectInfo.腔 === '大') {
-        setTimeout(() => { applyDapuSandhiToGenerated(); }, 0);
     }
     
     setTimeout(() => handleResizeActions(), 50);
