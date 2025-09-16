@@ -896,6 +896,10 @@ input:checked + .slider:before {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* 加一條細線分界 */
   }
 
+  /* --- 調整表格所有行背景，確保在 Firefox 中有正確个底色 --- */
+  tr {
+    background-color: var(--dark-background-color);
+  }
   /* --- 調整表格偶數行背景 --- */
   tr:nth-child(even) {
     background-color: var(--dark-surface-color); /* 使用元件表面顏色 */
