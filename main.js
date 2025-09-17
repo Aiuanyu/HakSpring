@@ -822,7 +822,7 @@ function getKeyNameFromPath(filePath) {
 
 async function fetchAndCacheDataInDB(db, newVersion) {
     const loadingText = document.getElementById('loading-text');
-    loadingText.textContent = '正在下載並處理最新資料...';
+    loadingText.textContent = '有新資料，當在該下載處理...';
     const CHUNK_SIZE = 500;
 
     try {
@@ -875,7 +875,7 @@ async function fetchAndCacheDataInDB(db, newVersion) {
                 fileStore.put(dataToStore, keyName);
             }
             const progress = Math.round(((index + 1) / DATA_FILES_TO_CACHE.length) * 100);
-            loadingText.textContent = `正在處理最新資料... (${progress}%)`;
+            loadingText.textContent = `當在該處理最新資料... (${progress}%)`;
         }
         
         // 等待交易完成
@@ -902,7 +902,7 @@ async function fetchAndCacheDataInDB(db, newVersion) {
 
 async function loadDataFromDB(db) {
     const loadingText = document.getElementById('loading-text');
-    loadingText.textContent = '正在從快取載入資料...';
+    loadingText.textContent = '遽啊讀本機資料黏時就好...';
     
     try {
         // [修正] 直接遍歷檔案列表，並在迴圈內呼叫工具函式
@@ -942,7 +942,7 @@ async function loadDataFromDB(db) {
         console.log('所有資料已從快取載入。');
     } catch (error) {
         console.error('從快取載入資料失敗:', error);
-        loadingText.textContent = '從快取載入資料失敗，請重新整理頁面。';
+        loadingText.textContent = '對本機載入資料失敗，請重新整理頁面。';
         throw error;
     }
 }
@@ -956,7 +956,7 @@ async function initializeApp() {
     const mainContent = document.getElementById('main-content');
 
     if (!window.indexedDB) {
-        loadingText.textContent = '您的瀏覽器版本過舊，不支援此應用程式所需的快取技術。請更新您的瀏覽器。';
+        loadingText.textContent = '若个瀏覽器版本忒舊，無支援這網站程式需要个快取技術。請更新若个瀏覽器。';
         return;
     }
 
@@ -965,7 +965,7 @@ async function initializeApp() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('force-refresh')) {
             console.warn('偵測到 ?force-refresh 參數，正在強制清除 IndexedDB...');
-            loadingText.textContent = '正在強制清除快取...';
+            loadingText.textContent = '當在該強制清除快取...';
             
             // 刪除整個資料庫以確保完全乾淨
             await new Promise((resolve, reject) => {
@@ -989,7 +989,7 @@ async function initializeApp() {
 
         // --- 新增的錯誤處理 START ---
         if (!serverVersionResponse.ok) {
-            loadingText.textContent = '錯誤：無法取得版本控制檔 (data/data_version.json)，請檢查檔案是否存在且路徑正確。';
+            loadingText.textContent = '毋著：無法度拿著版本控制檔 (data/data_version.json)，請檢查檔案敢有在、路徑有著無。';
             throw new Error('Failed to fetch server version file. Status: ' + serverVersionResponse.status);
         }
 
@@ -998,7 +998,7 @@ async function initializeApp() {
 
         // 檢查版本號本身是否有效
         if (!serverVersion) {
-            loadingText.textContent = '錯誤：版本控制檔 (data/data_version.json) 內容格式不正確，缺少 "version" 欄位。';
+            loadingText.textContent = '毋著：版本控制檔 (data/data_version.json) 內容格式毋著，欠 "version" 欄位。';
             throw new Error('Invalid version data in data_version.json.');
         }
         // --- 新增的錯誤處理 END ---
