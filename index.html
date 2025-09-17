@@ -19,6 +19,53 @@
     <link rel="stylesheet" href="style.css" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
+    <script>
+      if (window.location.hostname === 'aiuanyu.github.io') {
+        var newUrl = 'https://hakspring.pages.dev' + window.location.pathname + window.location.search + window.location.hash;
+
+        // Stop the browser from loading anything else.
+        // This is not guaranteed to work on all browsers, but it's a good first attempt.
+        try { window.stop(); } catch (e) { console.error(e); }
+
+        // Replace the entire document with a redirection notice.
+        // This is a drastic measure, but it ensures that no other scripts or resources are loaded.
+        document.documentElement.innerHTML = `
+          <head>
+            <meta charset="utf-8" />
+            <title>網域搬家，當在該轉址...</title>
+            <style>
+              body {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: sans-serif;
+                background-color: #f9f9f9;
+                text-align: center;
+              }
+              a { color: #007bff; }
+            </style>
+          </head>
+          <body>
+            <h1>網域搬家囉！</h1>
+            <p>為著提供還較穩定个服務，客源翠个網址已經搬家了。</p>
+            <p>3 秒後會自動同你轉去新網域...</p>
+            <p>
+              <a href="${newUrl}">${newUrl.split('?')[0]}</a>
+            </p>
+          </body>
+        `;
+
+        setTimeout(function() {
+          window.location.replace(newUrl);
+        }, 3000);
+
+        // Throwing an error can help stop script execution in some browsers.
+        throw new Error('Redirecting to new domain to prevent further execution.');
+      }
+    </script>
     <script type="text/javascript" src="main.js" defer></script>
     <script type="text/javascript" src="js/romanizer.js" defer></script>
     <script
