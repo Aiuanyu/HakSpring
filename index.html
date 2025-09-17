@@ -21,7 +21,12 @@
 
     <script>
       if (window.location.hostname === 'aiuanyu.github.io') {
-        var newUrl = 'https://hakspring.pages.dev' + window.location.pathname + window.location.search + window.location.hash;
+        var originalPath = window.location.pathname;
+        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+        if (newPath === '') {
+            newPath = '/';
+        }
+        var newUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
 
         // Stop the browser from loading anything else.
         // This is not guaranteed to work on all browsers, but it's a good first attempt.
