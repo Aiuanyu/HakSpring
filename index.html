@@ -50,8 +50,22 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-  
-    gtag('config', 'G-GR13HH1VXW');
+
+    // Dynamic GA Tracking ID based on hostname
+    var gaId;
+    var hostname = window.location.hostname;
+
+    if (hostname.includes('hakspring.pages.dev')) {
+      // IMPORTANT: Please replace this placeholder with your actual Cloudflare Pages GA ID
+      gaId = 'G-XXXXXXXXXX';
+    } else {
+      // Default GA ID for aiuanyu.github.io
+      gaId = 'G-GR13HH1VXW';
+    }
+
+    if (gaId) {
+      gtag('config', gaId);
+    }
   </script>
   
   <body>
