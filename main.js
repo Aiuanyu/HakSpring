@@ -1648,6 +1648,17 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
   
 
+  function handleLearningPanelVisibility() {
+    const learningPanel = document.getElementById('learningSelectionPanel');
+    if (!learningPanel) return;
+
+    if (window.innerWidth < 768) {
+      learningPanel.open = false;
+    } else {
+      learningPanel.open = true;
+    }
+  }
+
   /**
  * 動態調整 #header 內主要元素 (#progressDropdown, #progressDetails) 的字體大小，
  * 檢查 #header 是否發生橫向溢出 (overflow)，如果是，則縮小字體。
@@ -1874,6 +1885,7 @@ function isFirefox() {
   }
 
   function handleResizeActions() {
+    handleLearningPanelVisibility();
     const contentContainer = document.getElementById('generated');
     if (contentContainer) {
         adjustAllRubyFontSizes(contentContainer);
