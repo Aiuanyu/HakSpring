@@ -175,7 +175,7 @@ body * {
 td {
   padding: 1em; /*max-width: 60vw;*/
 }
-tr:nth-child(even) {
+tr:nth-child(even) td {
   background-color: rgba(103, 140, 63, 0.5);
 }
 a {
@@ -897,11 +897,10 @@ input:checked + .slider:before {
   }
 
   /* --- 調整表格所有行背景，確保在 Firefox 中有正確个底色 --- */
-  tr {
+  tr:nth-child(odd) td {
     background-color: var(--dark-background-color);
   }
-  /* --- 調整表格偶數行背景 --- */
-  tr:nth-child(even) {
+  tr:nth-child(even) td {
     background-color: var(--dark-surface-color); /* 使用元件表面顏色 */
   }
   /* 確保表格文字顏色正確 */
@@ -1152,7 +1151,7 @@ input:checked + .slider:before {
   }
 
   /* 移除偶數行个特殊背景 */
-  #generated tr:nth-child(even) {
+  #generated tr:nth-child(even) td {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
@@ -1252,10 +1251,12 @@ input:checked + .slider:before {
   @media (prefers-color-scheme: dark) {
     #generated tr {
       border-color: rgba(255, 255, 255, 0.2);
-      background-color: var(--dark-surface-color);
     }
-    #generated tr:nth-child(even) {
-       /* background-color: var(--dark-surface-color); */ /* <-- 移除通用背景色 */
+    #generated tr:nth-child(odd) td {
+      background-color: var(--dark-background-color);
+    }
+    #generated tr:nth-child(even) td {
+       background-color: var(--dark-surface-color);
     }
     #generated td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
