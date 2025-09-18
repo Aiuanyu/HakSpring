@@ -82,6 +82,25 @@ function handleDomainMigration() {
         }
         .migration-container h1 { font-size: 2.2em; }
       }
+      @media (max-width: 400px), (max-height: 760px) {
+        .migration-container {
+          padding: 1.5em;
+          gap: 1em;
+        }
+        .migration-image {
+          max-width: 120px;
+        }
+        .migration-container h1 {
+          font-size: 1.5em;
+        }
+        .migration-container p {
+          font-size: 1em;
+        }
+        #migrationBtn {
+          font-size: 1em;
+          padding: 0.6em 1.2em;
+        }
+      }
     </style>
     <div class="migration-container">
       <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
