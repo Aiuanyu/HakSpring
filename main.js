@@ -101,6 +101,35 @@ function handleDomainMigration() {
           padding: 0.6em 1.2em;
         }
       }
+    @media (prefers-color-scheme: dark) {
+        body {
+            background-color: #1a1a1a;
+        }
+        .migration-container {
+            background-color: #2c2c2c;
+            padding: 2em;
+            border-radius: 12px;
+        }
+        .migration-container h1 {
+            color: #e0e0e0;
+        }
+        .migration-container p {
+            color: #b0b0b0;
+        }
+        .migration-container a {
+            color: #90caf9;
+        }
+        #migrationBtn {
+            background-color: #90caf9;
+            color: #121212;
+        }
+        #migrationBtn:hover {
+            background-color: #a9d6fc;
+        }
+        .migration-image {
+            border: 2px solid #444;
+        }
+    }
     </style>
     <div class="migration-container">
       <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
