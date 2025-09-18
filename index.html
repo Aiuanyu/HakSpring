@@ -13,8 +13,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x1
+92.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x5
+12.png">
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="style.css" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
@@ -26,16 +28,19 @@
 
         var newHost = 'https://hakspring.pages.dev';
         var originalPath = window.location.pathname;
-        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index
+\.html/, '');
         if (newPath === '') newPath = '/';
         var newBaseUrl = newHost + newPath;
 
         // Replace the entire document with a migration notice.
-        // This ensures that no other scripts or resources from the original app are loaded.
+        // This ensures that no other scripts or resources from the original app
+ are loaded.
         document.documentElement.innerHTML = `
           <head>
             <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0
+" />
             <title>網域徙竇，來款包袱</title>
             <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
             <style>
@@ -45,7 +50,8 @@
                 align-items: center;
                 height: 100vh;
                 margin: 0;
-                font-family: 'tauhu-oo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                font-family: 'tauhu-oo', -apple-system, BlinkMacSystemFont, 'Seg
+oe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                 background-color: #f0f2f5;
                 text-align: center;
                 padding: 1.5em;
@@ -77,7 +83,8 @@
                 align-items: center;
               }
               h1 { font-size: 2.2em; margin-bottom: 0.5em; color: #1c1e21; }
-              p { margin: 0.5em 0; font-size: 1.2em; color: #555; max-width: 450px; line-height: 1.6; }
+              p { margin: 0.5em 0; font-size: 1.2em; color: #555; max-width: 450
+px; line-height: 1.6; }
               .new-url {
                 font-size: 1.1em;
                 background-color: #e7f3ff;
@@ -85,7 +92,8 @@
                 border-radius: 6px;
                 margin: 1em 0;
               }
-              .new-url a { color: #0056b3; text-decoration: none; font-weight: 600; }
+              .new-url a { color: #0056b3; text-decoration: none; font-weight: 6
+00; }
               .new-url a:hover { text-decoration: underline; }
               #migrateBtn {
                 font-family: 'tauhu-oo', sans-serif;
@@ -107,56 +115,59 @@
           </head>
           <body>
             <div class="container">
-              <img src="img/20250918-return.png" alt="Domain Migration" class="redirect-image">
+              <img src="img/20250918-return.png" alt="Domain Migration" class="r
+edirect-image">
               <div class="text-content">
                 <h1>網域徙竇 lió！</h1>
                 <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。<br>
                   這下會盡量同你个進度、設定款起來，共下運過去。</p>
-                <p class="new-url">新網址：<a href="${newBaseUrl}">${newHost}</a></p>
+                <p class="new-url">新網址：<a href="${newBaseUrl}">${newHost}</a></p
+>
                 <button id="migrateBtn">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
               </div>
             </div>
+            <script>
+              var migrateBtn = document.getElementById('migrateBtn');
+              if (migrateBtn) {
+                // The newBaseUrl is available from the parent script's scope.
+                var newUrl = '${newBaseUrl}';
+
+                migrateBtn.addEventListener('click', function() {
+                  var keysToMigrate = [
+                    'hakkaBookmarks',
+                    'dontShowInfoModalAgain',
+                    'lastSearchMode',
+                    'lastSearchDialect',
+                    'hideInfoModal'
+                  ];
+                  var migrationData = {};
+                  keysToMigrate.forEach(function(key) {
+                    var value = localStorage.getItem(key);
+                    if (value !== null) {
+                      migrationData[key] = value;
+                    }
+                  });
+
+                  var finalUrl = newUrl;
+                  if (Object.keys(migrationData).length > 0) {
+                    try {
+                      var encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
+                      var searchParams = new URLSearchParams(window.location.search);
+                      searchParams.set('migrateData', encodedData);
+                      finalUrl = newUrl.split('?')[0] + '?' + searchParams.toString();
+                    } catch (e) {
+                      console.error("Could not process migration data:", e);
+                      // Fallback to redirecting without data if encoding fails
+                    }
+                  }
+
+                  window.location.href = finalUrl;
+                });
+              }
+            <\/script>
           </body>
         `;
 
-        // After rendering the new HTML, find the button and add the migration logic
-        var migrateBtn = document.getElementById('migrateBtn');
-        if (migrateBtn) {
-          migrateBtn.addEventListener('click', function() {
-            var keysToMigrate = [
-              'hakkaBookmarks',
-              'dontShowInfoModalAgain',
-              'lastSearchMode',
-              'lastSearchDialect',
-              'hideInfoModal'
-            ];
-            var migrationData = {};
-            keysToMigrate.forEach(function(key) {
-              var value = localStorage.getItem(key);
-              if (value !== null) {
-                migrationData[key] = value;
-              }
-            });
-
-            var finalUrl = newBaseUrl;
-            if (Object.keys(migrationData).length > 0) {
-              // btoa is a simple way to encode, but for robustness, especially with Unicode, a better function might be needed.
-              // However, for the specified keys, their values are likely simple strings ('true', '四縣', etc.) or JSON that doesn't break btoa.
-              var encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
-
-              // Append the migration data to the URL.
-              // It's assumed the new site (hakspring.pages.dev) will have logic to handle this query parameter.
-              var searchParams = new URLSearchParams(window.location.search);
-              searchParams.set('migrateData', encodedData);
-              finalUrl = newBaseUrl.split('?')[0] + '?' + searchParams.toString();
-            }
-
-            window.location.href = finalUrl;
-          });
-        }
-
-        // Throw an error to help stop script execution in some browsers.
-        throw new Error('Redirecting to new domain; halting further script execution on this page.');
       }
     </script>
     <script type="text/javascript" src="main.js" defer></script>
@@ -171,7 +182,8 @@
       #loading-indicator {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(255, 255, 255, 0.9);
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        display: flex; flex-direction: column; justify-content: center; align-it
+ems: center;
         z-index: 9999;
       }
       #loading-text { font-size: 1.2em; margin-top: 20px; color: #333; }
@@ -180,12 +192,14 @@
         border-radius: 50%; width: 60px; height: 60px;
         animation: spin 1.5s linear infinite;
       }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate
+(360deg); } }
     </style>
   </head>
 
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"><
+/script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -207,7 +221,7 @@
       gtag('config', gaId);
     }
   </script>
-  
+
   <body>
     <div id="loading-indicator">
       <div class="spinner"></div>
@@ -219,8 +233,10 @@
       <select id="progressDropdown">
         <option selected disabled>擇進前个進度</option>
       </select>
-      <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
-      <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
+      <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></
+button>
+      <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-sq
+uare"></i></button>
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
       <div id="search-container">
         <input type="text" id="search-input" placeholder="查語詞" />
@@ -228,8 +244,10 @@
           <div id="dialect-selection">
             <p>請擇腔調：</p>
             <div class="dialect-row">
-              <label><input type="radio" name="dialect" value="四縣" checked /> 四縣</label>
-              <label><input type="radio" name="dialect" value="南四縣" /> 南四縣</label>
+              <label><input type="radio" name="dialect" value="四縣" checked />
+四縣</label>
+              <label><input type="radio" name="dialect" value="南四縣" /> 南四縣</labe
+l>
             </div>
             <label><input type="radio" name="dialect" value="海陸" /> 海陸</label>
             <label><input type="radio" name="dialect" value="大埔" /> 大埔</label>
@@ -238,8 +256,10 @@
           </div>
           <div id="search-mode-selection">
             <p>請擇查詢模式：</p>
-            <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字／拼音）</label>
-            <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
+            <label><input type="radio" name="search-mode" value="客家語" checked />
+ 尋客詞（做得打漢字／拼音）</label>
+            <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還
+係例句翻譯</label>
           </div>
         </div>
       </div>
@@ -471,21 +491,26 @@
             <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
             <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
           </select>
-          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關
+閉">&times;</button>
         </div>
         <div class="modal-body">
           <!-- 【新增】Undo/Redo 控制按鈕 -->
           <div id="romanizer-history-controls">
-            <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
-            <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+            <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i clas
+s="fas fa-undo"></i></button>
+            <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i clas
+s="fas fa-redo"></i></button>
           </div>
           <div id="romanizer-output-container">
             <div id="romanizer-output"></div>
-            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
+            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa
+-copy"></i></button>
           </div>
           <div id="segmentation-workspace"></div>
           <div class="romanizer-section">
-            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
+            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"><
+/textarea>
             <button id="romanizer-start-btn">開始斷詞轉換</button>
           </div>
         </div>
@@ -512,7 +537,8 @@
 
     <!-- Selection Pronunciation Popup -->
     <div id="selectionPopupBackdrop" style="display: none;"></div>
-    <div id="selectionPopup" role="dialog" aria-modal="true" aria-labelledby="selectionPopupTitle" tabindex="-1" style="display: none;">
+    <div id="selectionPopup" role="dialog" aria-modal="true" aria-labelledby="se
+lectionPopupTitle" tabindex="-1" style="display: none;">
       <div class="popup-header">
         <h4 id="selectionPopupTitle">擇詞讀音結果</h4>
         <button id="selectionPopupCloseBtn" aria-label="關閉">&times;</button>
@@ -523,7 +549,8 @@
             <input type="checkbox" id="showOtherAccentsToggle">
             <span class="slider round"></span>
           </label>
-          <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label>
+          <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label
+>
         </div>
       </div>
       <div id="selectionPopupContent">
@@ -536,7 +563,8 @@
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
-          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關
+忒">&times;</button>
         </div>
         <div class="modal-body" id="info-content"></div>
         <div class="modal-footer">
