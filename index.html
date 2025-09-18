@@ -19,6 +19,103 @@
     <link rel="stylesheet" href="style.css" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
+    <script>
+      if (window.location.hostname === 'aiuanyu.github.io') {
+        var originalPath = window.location.pathname;
+        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+        if (newPath === '') {
+            newPath = '/';
+        }
+        var newUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
+
+        // Stop the browser from loading anything else.
+        // This is not guaranteed to work on all browsers, but it's a good first attempt.
+        try { window.stop(); } catch (e) { console.error(e); }
+
+        // Replace the entire document with a redirection notice.
+        // This is a drastic measure, but it ensures that no other scripts or resources are loaded.
+        document.documentElement.innerHTML = `
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>網域搬家，當在該轉址...</title>
+            <style>
+              body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background-color: #f9f9f9;
+                text-align: center;
+                padding: 1em;
+                box-sizing: border-box;
+              }
+              .container {
+                display: flex;
+                flex-direction: column; /* Default for mobile */
+                align-items: center;
+                gap: 2em;
+                max-width: 900px;
+              }
+              .redirect-image {
+                max-width: 250px;
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1 / 1;
+                border-radius: 12px;
+                object-fit: cover;
+              }
+              .text-content {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              }
+              h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+              p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+              a { color: #007bff; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+
+              /* Media query for wide screens */
+              @media (min-width: 600px) {
+                .container {
+                  flex-direction: row; /* Side-by-side on wide screens */
+                  text-align: left;
+                }
+                .text-content {
+                  align-items: flex-start;
+                }
+                .redirect-image {
+                  max-width: 200px; /* A bit larger on desktop */
+                }
+                h1 { font-size: 2.2em; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <img src="img/20250918-return.png" alt="Redirecting..." class="redirect-image">
+              <div class="text-content">
+                <h1>網域徙竇 lió！</h1>
+                <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
+                <p>3 秒後會自動同你轉去新網域...</p>
+                <p>
+                  <a href="${newUrl}">${newUrl.split('?')[0]}</a>
+                </p>
+              </div>
+            </div>
+          </body>
+        `;
+
+        setTimeout(function() {
+          window.location.replace(newUrl);
+        }, 3000);
+
+        // Throwing an error can help stop script execution in some browsers.
+        throw new Error('Redirecting to new domain to prevent further execution.');
+      }
+    </script>
     <script type="text/javascript" src="main.js" defer></script>
     <script type="text/javascript" src="js/romanizer.js" defer></script>
     <script
