@@ -1,16 +1,16 @@
 function handleDomainMigration() {
-  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev') {
+  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev') {
     return false;
   }
 
   // Create the overlay
   const overlay = document.createElement('div');
+  overlay.id = 'migration-overlay'; // Add ID for styling
   overlay.style.position = 'fixed';
   overlay.style.top = '0';
   overlay.style.left = '0';
   overlay.style.width = '100vw';
   overlay.style.height = '100vh';
-  overlay.style.backgroundColor = '#f0f2f5';
   overlay.style.zIndex = '999999';
   overlay.style.display = 'flex';
   overlay.style.justifyContent = 'center';
@@ -26,111 +26,6 @@ function handleDomainMigration() {
 
   // Define the HTML content for the overlay
   overlay.innerHTML = `
-    <style>
-      .migration-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2em;
-        max-width: 900px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        text-align: center;
-      }
-      .migration-image {
-        max-width: 250px;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 1 / 1;
-        border-radius: 12px;
-        object-fit: cover;
-      }
-      .migration-text-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      .migration-container h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-      .migration-container p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
-      .migration-container a { color: #007bff; text-decoration: none; }
-      .migration-container a:hover { text-decoration: underline; }
-      #migrationBtn {
-        font-family: 'tauhu-oo', sans-serif;
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #fff;
-        background-color: #007bff;
-        border: none;
-        padding: 0.8em 1.5em;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin-top: 1em;
-      }
-      #migrationBtn:hover {
-        background-color: #0056b3;
-      }
-      @media (min-width: 600px) {
-        .migration-container {
-          flex-direction: row;
-          text-align: left;
-        }
-        .migration-text-content {
-          align-items: flex-start;
-        }
-        .migration-image {
-          max-width: 350px;
-        }
-        .migration-container h1 { font-size: 2.2em; }
-      }
-      @media (max-width: 400px), (max-height: 760px) {
-        .migration-container {
-          padding: 1em;
-          gap: 1em;
-        }
-        .migration-image {
-          max-width: 200px;
-        }
-        .migration-container h1 {
-          font-size: 1.5em;
-        }
-        .migration-container p {
-          font-size: 1em;
-        }
-        #migrationBtn {
-          font-size: 1em;
-          padding: 0.6em 1.2em;
-        }
-      }
-    @media (prefers-color-scheme: dark) {
-        body {
-            background-color: #1a1a1a;
-        }
-        .migration-container {
-            background-color: #2c2c2c;
-            padding: 2em;
-            border-radius: 12px;
-        }
-        .migration-container h1 {
-            color: #e0e0e0;
-        }
-        .migration-container p {
-            color: #b0b0b0;
-        }
-        .migration-container a {
-            color: #90caf9;
-        }
-        #migrationBtn {
-            background-color: #90caf9;
-            color: #121212;
-        }
-        #migrationBtn:hover {
-            background-color: #a9d6fc;
-        }
-        .migration-image {
-            border: 2px solid #444;
-        }
-    }
-    </style>
     <div class="migration-container">
       <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
       <div class="migration-text-content">
