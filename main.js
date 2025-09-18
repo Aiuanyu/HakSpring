@@ -1096,7 +1096,48 @@ async function loadDataFromDB(db) {
 
 // --- Application Initialization ---
 
+function handleDataImport() {
+  if (window.location.hostname !== 'hakspring.pages.dev') {
+    return;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const migrateData = urlParams.get('migrateData');
+
+  if (migrateData) {
+    try {
+      const decodedData = atob(migrateData);
+      const parsedData = JSON.parse(decodedData);
+
+      console.log('Received migration data:', parsedData);
+
+      for (const key in parsedData) {
+        if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+          let value = parsedData[key];
+          // Bookmarks are an object, so they need to be stringified for localStorage
+          if (key === 'hakkaBookmarks' && typeof value === 'object') {
+            value = JSON.stringify(value);
+          }
+          localStorage.setItem(key, value);
+          console.log(`Imported "${key}" into localStorage.`);
+        }
+      }
+
+      // Clean the URL
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.delete('migrateData');
+      history.replaceState({}, document.title, newUrl.toString());
+
+      console.log('Data import successful and URL cleaned.');
+
+    } catch (e) {
+      console.error('Failed to parse or import migration data:', e);
+    }
+  }
+}
+
 async function initializeApp() {
+  handleDataImport();
   if (handleDomainMigration()) {
     const loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) {
