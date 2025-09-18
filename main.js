@@ -116,19 +116,31 @@ function handleDomainMigration() {
         }
       });
 
+      console.log('Migration Data Collected:', migrationData);
       let finalUrl = newBaseUrl;
       if (Object.keys(migrationData).length > 0) {
         try {
-          const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
+          const jsonString = JSON.stringify(migrationData);
+          console.log('Migration JSON string length:', jsonString.length);
+          const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+          console.log('Base64 encoded data length:', encodedData.length);
+
           const searchParams = new URLSearchParams(window.location.search);
           searchParams.set('migrateData', encodedData);
           finalUrl = newBaseUrl.split('?')[0] + '?' + searchParams.toString();
+
+          console.log('Final URL length:', finalUrl.length);
+          console.log('Final URL:', finalUrl);
+
         } catch (e) {
           console.error("Could not process migration data:", e);
         }
       }
 
-      window.location.href = finalUrl;
+      // Redirect after a short delay to allow logs to be read
+      setTimeout(() => {
+        window.location.href = finalUrl;
+      }, 100);
     });
   }
 
