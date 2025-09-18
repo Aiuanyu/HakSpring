@@ -84,11 +84,12 @@ function handleDomainMigration() {
       }
       @media (max-width: 400px), (max-height: 760px) {
         .migration-container {
-          padding: 1.5em;
+          padding: 1em;
           gap: 1em;
+          font-size: 5vw;
         }
         .migration-image {
-          max-width: 120px;
+          max-width: 200px;
         }
         .migration-container h1 {
           font-size: 1.5em;
