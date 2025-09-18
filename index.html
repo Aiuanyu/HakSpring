@@ -28,6 +28,21 @@
         }
         var newUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
 
+        // --- START PROGRESS MIGRATION ---
+        try {
+          var progressData = localStorage.getItem('hakkaBookmarks');
+          if (progressData) {
+            var encodedProgress = encodeURIComponent(progressData);
+            // Ensure we append correctly whether other params exist or not
+            var separator = newUrl.includes('?') ? '&' : '?';
+            newUrl += separator + 'progress=' + encodedProgress;
+            console.log('Hakka bookmarks found, preparing for migration.');
+          }
+        } catch (e) {
+          console.error('Could not process hakkaBookmarks for migration:', e);
+        }
+        // --- END PROGRESS MIGRATION ---
+
         // Stop the browser from loading anything else.
         // This is not guaranteed to work on all browsers, but it's a good first attempt.
         try { window.stop(); } catch (e) { console.error(e); }
@@ -116,6 +131,61 @@
         throw new Error('Redirecting to new domain to prevent further execution.');
       }
     </script>
+
+    <!-- Progress Migration Import Script -->
+    <script>
+      (function() {
+        try {
+          // Only run this logic on the new domain
+          if (window.location.hostname.includes('hakspring.pages.dev')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const progressData = urlParams.get('progress');
+
+            if (progressData) {
+              const decodedData = decodeURIComponent(progressData);
+              const importedBookmarks = JSON.parse(decodedData);
+
+              if (Array.isArray(importedBookmarks) && importedBookmarks.length > 0) {
+                const existingBookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+
+                const bookmarkMap = new Map();
+
+                // Add existing bookmarks to the map first
+                existingBookmarks.forEach(b => {
+                  const key = `${b.tableName}||${b.cat}`;
+                  bookmarkMap.set(key, b);
+                });
+
+                // Add imported bookmarks, overwriting existing ones if they have a newer timestamp
+                importedBookmarks.forEach(b => {
+                  const key = `${b.tableName}||${b.cat}`;
+                  const existing = bookmarkMap.get(key);
+                  if (!existing || b.timestamp > existing.timestamp) {
+                    bookmarkMap.set(key, b);
+                  }
+                });
+
+                const mergedBookmarks = Array.from(bookmarkMap.values());
+                mergedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
+                const finalBookmarks = mergedBookmarks.slice(0, 10);
+
+                localStorage.setItem('hakkaBookmarks', JSON.stringify(finalBookmarks));
+                console.log('Successfully migrated and merged ' + finalBookmarks.length + ' bookmarks.');
+
+                // Clean the URL by removing the 'progress' parameter
+                urlParams.delete('progress');
+                const newSearch = urlParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+                history.replaceState(null, '', newUrl);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to process progress migration:', e);
+        }
+      })();
+    </script>
+
     <script type="text/javascript" src="main.js" defer></script>
     <script type="text/javascript" src="js/romanizer.js" defer></script>
     <script
