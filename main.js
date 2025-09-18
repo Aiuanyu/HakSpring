@@ -18,7 +18,7 @@ function handleDomainMigration() {
   overlay.style.padding = '1.5em';
   overlay.style.boxSizing = 'border-box';
 
-  const newHost = 'https://feature-data-migration-promp.hakspring.pages.dev';
+  const newHost = 'https://hakspring.pages.dev';
   const originalPath = window.location.pathname;
   let newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
   if (newPath === '') newPath = '/';
@@ -1111,8 +1111,6 @@ function handleDataImport() {
       const decodedData = decodeURIComponent(escape(atob(migrateData)));
       const parsedData = JSON.parse(decodedData);
 
-      console.log('Received migration data:', parsedData);
-
       for (const key in parsedData) {
         if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
           let value = parsedData[key];
@@ -1121,7 +1119,6 @@ function handleDataImport() {
             value = JSON.stringify(value);
           }
           localStorage.setItem(key, value);
-          console.log(`Imported "${key}" into localStorage.`);
         }
       }
 
@@ -1129,8 +1126,6 @@ function handleDataImport() {
       const newUrl = new URL(window.location);
       newUrl.searchParams.delete('migrateData');
       history.replaceState({}, document.title, newUrl.toString());
-
-      console.log('Data import successful and URL cleaned.');
 
     } catch (e) {
       console.error('Failed to parse or import migration data:', e);
