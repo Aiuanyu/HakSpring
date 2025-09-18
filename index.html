@@ -21,11 +21,9 @@
 
     <script>
       if (window.location.hostname === 'aiuanyu.github.io') {
-        // Stop further script execution and resource loading where possible
-        try { window.stop(); } catch (e) { console.error('window.stop() failed', e); }
-
         // Use a less destructive method: an overlay instead of replacing the whole DOM.
         // This avoids conflicts with browser extensions that inject scripts.
+        // We wait for DOMContentLoaded to ensure document.body is available.
         document.addEventListener('DOMContentLoaded', function() {
           // 1. Calculate base path and URL
           var originalPath = window.location.pathname;
