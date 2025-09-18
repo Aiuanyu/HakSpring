@@ -21,82 +21,67 @@
 
     <script>
       if (window.location.hostname === 'aiuanyu.github.io') {
-        // Use document.write to completely replace the page as it's parsing.
-        // This prevents the original page's scripts (main.js, etc.) from loading.
-        var originalPath = window.location.pathname;
-        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
-        if (newPath === '') {
-            newPath = '/';
-        }
-        var baseUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
+        // Reverting to the safer overlay method and implementing the user's debug suggestion.
+        document.addEventListener('DOMContentLoaded', function() {
+          var originalPath = window.location.pathname;
+          var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+          if (newPath === '') {
+              newPath = '/';
+          }
+          var baseUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
 
-        document.write(`
-          <html>
-            <head>
-              <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>網域搬家，請確認...</title>
-              <style>
-                body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 1em; box-sizing: border-box; }
-                .container { display: flex; flex-direction: column; align-items: center; gap: 2em; max-width: 900px; }
-                .redirect-image { max-width: 250px; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 12px; object-fit: cover; }
-                .text-content { display: flex; flex-direction: column; justify-content: center; }
-                h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-                p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
-                a { color: #007bff; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-                .migrate-button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; margin-top: 1em; }
-                .migrate-button:hover { background-color: #0056b3; }
-                @media (min-width: 600px) {
-                  .container { flex-direction: row; text-align: left; }
-                  .text-content { align-items: flex-start; }
-                  .redirect-image { max-width: 200px; }
-                  h1 { font-size: 2.2em; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <img src="img/20250918-return.png" alt="Redirecting..." class="redirect-image">
-                <div class="text-content">
-                  <h1>網域徙竇 lió！</h1>
-                  <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
-                  <p>
-                    <a href="${baseUrl.split('?')[0]}">${baseUrl.split('?')[0]}</a>
-                  </p>
-                  <button id="migrateBtn" class="migrate-button">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
-                </div>
+          var overlay = document.createElement('div');
+          overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f9f9f9; z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 1em; box-sizing: border-box;';
+
+          overlay.innerHTML = `
+            <style>
+              .migrate-container { display: flex; flex-direction: column; align-items: center; gap: 2em; max-width: 900px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; text-align: center; }
+              .migrate-image { max-width: 250px; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 12px; object-fit: cover; }
+              .migrate-text-content { display: flex; flex-direction: column; justify-content: center; }
+              .migrate-h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+              .migrate-p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+              .migrate-a { color: #007bff; text-decoration: none; }
+              .migrate-a:hover { text-decoration: underline; }
+              .migrate-button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; margin-top: 1em; }
+              .migrate-button:hover { background-color: #0056b3; }
+              @media (min-width: 600px) {
+                .migrate-container { flex-direction: row; text-align: left; }
+                .migrate-text-content { align-items: flex-start; }
+                .migrate-image { max-width: 200px; }
+                .migrate-h1 { font-size: 2.2em; }
+              }
+            </style>
+            <div class="migrate-container">
+              <img src="img/20250918-return.png" alt="Redirecting..." class="migrate-image">
+              <div class="migrate-text-content">
+                <h1 class="migrate-h1">網域徙竇 lió！</h1>
+                <p class="migrate-p">為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
+                <p class="migrate-p">
+                  <a class="migrate-a" href="${baseUrl.split('?')[0]}">${baseUrl.split('?')[0]}</a>
+                </p>
+                <button id="migrateBtn" class="migrate-button">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
               </div>
-              <script>
-                document.getElementById('migrateBtn').addEventListener('click', function() {
-                  var finalUrl = '${baseUrl}';
-                  try {
-                    // Debugging Step 1: Add a test key to localStorage.
-                    localStorage.setItem('test', '客源翠陪你');
-                    var testData = localStorage.getItem('test');
-                    if (testData) {
-                      var encodedTest = encodeURIComponent(testData);
-                      var separator = finalUrl.includes('?') ? '&' : '?';
-                      finalUrl += separator + 'test_progress=' + encodedTest;
-                    }
+            </div>
+          `;
+          document.body.appendChild(overlay);
 
-                    // Original migration logic
-                    var progressData = localStorage.getItem('hakkaBookmarks');
-                    if (progressData) {
-                      var encodedProgress = encodeURIComponent(progressData);
-                      var separator = finalUrl.includes('?') ? '&' : '?';
-                      finalUrl += separator + 'progress=' + encodedProgress;
-                      console.log('Hakka bookmarks found, preparing for migration.');
-                    }
-                  } catch (e) {
-                    console.error('Could not process data for migration:', e);
-                  }
-                  window.location.replace(finalUrl);
-                });
-              <\/script>
-            </body>
-          </html>
-        `);
+          document.getElementById('migrateBtn').addEventListener('click', function() {
+              var finalUrl = baseUrl;
+              try {
+                // Per user's debug request, set and get a simple test key.
+                localStorage.setItem('test', '客源翠陪你');
+                var testData = localStorage.getItem('test');
+                if (testData) {
+                  var encodedTest = encodeURIComponent(testData);
+                  var separator = finalUrl.includes('?') ? '&' : '?';
+                  finalUrl += separator + 'test_progress=' + encodedTest;
+                }
+              } catch (e) {
+                console.error('Could not process test data for migration:', e);
+              }
+              window.location.replace(finalUrl);
+          });
+        });
       }
     </script>
 
@@ -108,53 +93,20 @@
           if (window.location.hostname.includes('hakspring.pages.dev')) {
             const urlParams = new URLSearchParams(window.location.search);
 
-            // Debugging Step 2: Check for the test key.
+            // Per user's debug request, only check for the test key to isolate the problem.
             const testData = urlParams.get('test_progress');
             if (testData) {
               const decodedTest = decodeURIComponent(testData);
               localStorage.setItem('test', decodedTest);
               console.log('Successfully migrated test key with value: ' + decodedTest);
-            }
 
-            const progressData = urlParams.get('progress');
-
-            if (progressData) {
-              const decodedData = decodeURIComponent(progressData);
-              const importedBookmarks = JSON.parse(decodedData);
-
-              if (Array.isArray(importedBookmarks) && importedBookmarks.length > 0) {
-                const existingBookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-
-                const bookmarkMap = new Map();
-
-                // Add existing bookmarks to the map first
-                existingBookmarks.forEach(b => {
-                  const key = `${b.tableName}||${b.cat}`;
-                  bookmarkMap.set(key, b);
-                });
-
-                // Add imported bookmarks, overwriting existing ones if they have a newer timestamp
-                importedBookmarks.forEach(b => {
-                  const key = `${b.tableName}||${b.cat}`;
-                  const existing = bookmarkMap.get(key);
-                  if (!existing || b.timestamp > existing.timestamp) {
-                    bookmarkMap.set(key, b);
-                  }
-                });
-
-                const mergedBookmarks = Array.from(bookmarkMap.values());
-                mergedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
-                const finalBookmarks = mergedBookmarks.slice(0, 10);
-
-                localStorage.setItem('hakkaBookmarks', JSON.stringify(finalBookmarks));
-                console.log('Successfully migrated and merged ' + finalBookmarks.length + ' bookmarks.');
-
-                // Clean the URL by removing the 'progress' parameter
-                urlParams.delete('progress');
-                const newSearch = urlParams.toString();
-                const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
-                history.replaceState(null, '', newUrl);
-              }
+              // Clean the URL
+              urlParams.delete('test_progress');
+              // Also clean the old param, just in case.
+              urlParams.delete('progress');
+              const newSearch = urlParams.toString();
+              const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+              history.replaceState(null, '', newUrl);
             }
           }
         } catch (e) {
