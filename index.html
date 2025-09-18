@@ -32,7 +32,8 @@
         // Stop other scripts from loading
         try { window.stop(); } catch (e) { console.error(e); }
 
-        // 2. Generate new HTML with the button
+        // 2. Generate new HTML that includes the necessary script within it.
+        // This is critical because the original script's context is destroyed.
         document.documentElement.innerHTML = `
           <head>
             <meta charset="utf-8" />
@@ -69,27 +70,27 @@
                 <button id="migrateBtn" class="migrate-button">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
               </div>
             </div>
+            <script>
+              document.getElementById('migrateBtn').addEventListener('click', function() {
+                var finalUrl = '${baseUrl}';
+                try {
+                  var progressData = localStorage.getItem('hakkaBookmarks');
+                  if (progressData) {
+                    var encodedProgress = encodeURIComponent(progressData);
+                    var separator = finalUrl.includes('?') ? '&' : '?';
+                    finalUrl += separator + 'progress=' + encodedProgress;
+                    console.log('Hakka bookmarks found, preparing for migration.');
+                  }
+                } catch (e) {
+                  console.error('Could not process hakkaBookmarks for migration:', e);
+                }
+                window.location.replace(finalUrl);
+              });
+            <\/script>
           </body>
         `;
 
-        // 3. Add event listener to the new button
-        document.getElementById('migrateBtn').addEventListener('click', function() {
-            var finalUrl = baseUrl;
-            try {
-              var progressData = localStorage.getItem('hakkaBookmarks');
-              if (progressData) {
-                var encodedProgress = encodeURIComponent(progressData);
-                var separator = finalUrl.includes('?') ? '&' : '?';
-                finalUrl += separator + 'progress=' + encodedProgress;
-                console.log('Hakka bookmarks found, preparing for migration.');
-              }
-            } catch (e) {
-              console.error('Could not process hakkaBookmarks for migration:', e);
-            }
-            window.location.replace(finalUrl);
-        });
-
-        // 4. Throw an error to help stop script execution in some browsers.
+        // 3. Throw an error to help stop the original script from continuing.
         throw new Error('Redirecting to new domain via user action to prevent further execution.');
       }
     </script>
