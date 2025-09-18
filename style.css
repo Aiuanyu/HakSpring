@@ -39,6 +39,31 @@
   }
 }
 
+/* --- Loading Indicator Styles --- */
+#loading-indicator {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  z-index: 9999;
+}
+#loading-text {
+  font-size: 1.2em;
+  margin-top: 20px;
+  color: #333;
+}
+.spinner {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1.5s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
 :root {
   --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
@@ -887,6 +912,18 @@ input:checked + .slider:before {
   /* 確保所有子元素也繼承基本文字顏色 */
   body * {
      color: inherit; /* 繼承 body 設定个顏色 */
+  }
+
+  /* --- Loading Indicator Dark Mode --- */
+  #loading-indicator {
+    background-color: rgba(31, 31, 31, 0.95); /* Based on --dark-background-color */
+  }
+  #loading-text {
+    color: var(--main-text-color);
+  }
+  .spinner {
+    border-color: var(--dark-surface-color);
+    border-top-color: #3498db; /* Keep the accent color */
   }
 
   /* --- 針對夜間模式調整 header 背景 --- */
@@ -2264,5 +2301,113 @@ mark {
   #romanizerContainer .modal-header .modal-close-btn {
     /* 將關閉按鈕推到最右片 */
     margin-left: auto;
+  }
+}
+/* --- Migration Overlay Styles --- */
+#migration-overlay {
+  background-color: #f0f2f5;
+}
+.migration-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2em;
+  max-width: 900px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+}
+.migration-image {
+  max-width: 250px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.migration-text-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.migration-container h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+.migration-container p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+.migration-container a { color: #007bff; text-decoration: none; }
+.migration-container a:hover { text-decoration: underline; }
+#migrationBtn {
+  font-family: 'tauhu-oo', sans-serif;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  padding: 0.8em 1.5em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1em;
+}
+#migrationBtn:hover {
+  background-color: #0056b3;
+}
+@media (min-width: 600px) {
+  .migration-container {
+    flex-direction: row;
+    text-align: left;
+  }
+  .migration-text-content {
+    align-items: flex-start;
+  }
+  .migration-image {
+    max-width: 350px;
+  }
+  .migration-container h1 { font-size: 2.2em; }
+}
+@media (max-width: 400px), (max-height: 760px) {
+  .migration-container {
+    padding: 1em;
+    gap: 1em;
+  }
+  .migration-image {
+    max-width: 200px;
+  }
+  .migration-container h1 {
+    font-size: 1.5em;
+  }
+  .migration-container p {
+    font-size: 1em;
+  }
+  #migrationBtn {
+    font-size: 1em;
+    padding: 0.6em 1.2em;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  #migration-overlay {
+    background-color: var(--dark-background-color);
+  }
+  .migration-container {
+      background-color: var(--dark-surface-color);
+      padding: 2em;
+      border-radius: 12px;
+  }
+  .migration-container h1 {
+      color: var(--main-text-color);
+  }
+  .migration-container p {
+      color: var(--main-text-color);
+      opacity: 0.85;
+  }
+  .migration-container a {
+      color: var(--dark-link-color);
+  }
+  #migrationBtn {
+      background-color: var(--dark-link-color);
+      color: var(--dark-button-text-color);
+  }
+  #migrationBtn:hover {
+      background-color: #a9d6fc;
+  }
+  .migration-image {
+      border: 2px solid var(--dark-surface-color);
   }
 }
