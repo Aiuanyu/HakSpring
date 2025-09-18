@@ -86,7 +86,6 @@ function handleDomainMigration() {
         .migration-container {
           padding: 1em;
           gap: 1em;
-          font-size: 5vw;
         }
         .migration-image {
           max-width: 200px;
