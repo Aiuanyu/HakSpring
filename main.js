@@ -18,7 +18,7 @@ function handleDomainMigration() {
   overlay.style.padding = '1.5em';
   overlay.style.boxSizing = 'border-box';
 
-  const newHost = 'https://hakspring.pages.dev';
+  const newHost = 'https://feature-data-migration-promp.hakspring.pages.dev';
   const originalPath = window.location.pathname;
   let newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
   if (newPath === '') newPath = '/';
@@ -1097,7 +1097,8 @@ async function loadDataFromDB(db) {
 // --- Application Initialization ---
 
 function handleDataImport() {
-  if (window.location.hostname !== 'hakspring.pages.dev') {
+  // Allow import on both the final domain and the preview domain
+  if (window.location.hostname !== 'hakspring.pages.dev' && window.location.hostname !== 'feature-data-migration-promp.hakspring.pages.dev') {
     return;
   }
 
