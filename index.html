@@ -21,75 +21,73 @@
 
     <script>
       if (window.location.hostname === 'aiuanyu.github.io') {
-        // 1. Calculate base path and URL
-        var originalPath = window.location.pathname;
-        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
-        if (newPath === '') {
-            newPath = '/';
-        }
-        var baseUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
+        // Stop further script execution and resource loading where possible
+        try { window.stop(); } catch (e) { console.error('window.stop() failed', e); }
 
-        // Stop other scripts from loading
-        try { window.stop(); } catch (e) { console.error(e); }
+        // Use a less destructive method: an overlay instead of replacing the whole DOM.
+        // This avoids conflicts with browser extensions that inject scripts.
+        document.addEventListener('DOMContentLoaded', function() {
+          // 1. Calculate base path and URL
+          var originalPath = window.location.pathname;
+          var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+          if (newPath === '') {
+              newPath = '/';
+          }
+          var baseUrl = 'https://hakspring.pages.dev' + newPath + window.location.search + window.location.hash;
 
-        // 2. Generate new HTML that includes the necessary script within it.
-        // This is critical because the original script's context is destroyed.
-        document.documentElement.innerHTML = `
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>網域搬家，請確認...</title>
+          // 2. Create and inject an overlay
+          var overlay = document.createElement('div');
+          overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f9f9f9; z-index: 999999; display: flex; justify-content: center; align-items: center; padding: 1em; box-sizing: border-box;';
+
+          overlay.innerHTML = `
             <style>
-              body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 1em; box-sizing: border-box; }
-              .container { display: flex; flex-direction: column; align-items: center; gap: 2em; max-width: 900px; }
-              .redirect-image { max-width: 250px; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 12px; object-fit: cover; }
-              .text-content { display: flex; flex-direction: column; justify-content: center; }
-              h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-              p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
-              a { color: #007bff; text-decoration: none; }
-              a:hover { text-decoration: underline; }
+              .migrate-container { display: flex; flex-direction: column; align-items: center; gap: 2em; max-width: 900px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; text-align: center; }
+              .migrate-image { max-width: 250px; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 12px; object-fit: cover; }
+              .migrate-text-content { display: flex; flex-direction: column; justify-content: center; }
+              .migrate-h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+              .migrate-p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+              .migrate-a { color: #007bff; text-decoration: none; }
+              .migrate-a:hover { text-decoration: underline; }
               .migrate-button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; margin-top: 1em; }
               .migrate-button:hover { background-color: #0056b3; }
               @media (min-width: 600px) {
-                .container { flex-direction: row; text-align: left; }
-                .text-content { align-items: flex-start; }
-                .redirect-image { max-width: 200px; }
-                h1 { font-size: 2.2em; }
+                .migrate-container { flex-direction: row; text-align: left; }
+                .migrate-text-content { align-items: flex-start; }
+                .migrate-image { max-width: 200px; }
+                .migrate-h1 { font-size: 2.2em; }
               }
             </style>
-          </head>
-          <body>
-            <div class="container">
-              <img src="img/20250918-return.png" alt="Redirecting..." class="redirect-image">
-              <div class="text-content">
-                <h1>網域徙竇 lió！</h1>
-                <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
-                <p>
-                  <a href="${baseUrl.split('?')[0]}">${baseUrl.split('?')[0]}</a>
+            <div class="migrate-container">
+              <img src="img/20250918-return.png" alt="Redirecting..." class="migrate-image">
+              <div class="migrate-text-content">
+                <h1 class="migrate-h1">網域徙竇 lió！</h1>
+                <p class="migrate-p">為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
+                <p class="migrate-p">
+                  <a class="migrate-a" href="${baseUrl.split('?')[0]}">${baseUrl.split('?')[0]}</a>
                 </p>
                 <button id="migrateBtn" class="migrate-button">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
               </div>
             </div>
-            <script>
-              document.getElementById('migrateBtn').addEventListener('click', function() {
-                var finalUrl = '${baseUrl}';
-                try {
-                  var progressData = localStorage.getItem('hakkaBookmarks');
-                  if (progressData) {
-                    var encodedProgress = encodeURIComponent(progressData);
-                    var separator = finalUrl.includes('?') ? '&' : '?';
-                    finalUrl += separator + 'progress=' + encodedProgress;
-                    console.log('Hakka bookmarks found, preparing for migration.');
-                  }
-                } catch (e) {
-                  console.error('Could not process hakkaBookmarks for migration:', e);
-                }
-                window.location.replace(finalUrl);
-              });
-            <\/script>
-          </body>
-        `;
+          `;
+          document.body.appendChild(overlay);
 
+          // 3. Add event listener to the new button
+          document.getElementById('migrateBtn').addEventListener('click', function() {
+              var finalUrl = baseUrl;
+              try {
+                var progressData = localStorage.getItem('hakkaBookmarks');
+                if (progressData) {
+                  var encodedProgress = encodeURIComponent(progressData);
+                  var separator = finalUrl.includes('?') ? '&' : '?';
+                  finalUrl += separator + 'progress=' + encodedProgress;
+                  console.log('Hakka bookmarks found, preparing for migration.');
+                }
+              } catch (e) {
+                console.error('Could not process hakkaBookmarks for migration:', e);
+              }
+              window.location.replace(finalUrl);
+          });
+        });
       }
     </script>
 
