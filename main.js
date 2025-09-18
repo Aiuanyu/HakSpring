@@ -78,7 +78,7 @@ function handleDomainMigration() {
           align-items: flex-start;
         }
         .migration-image {
-          max-width: 200px;
+          max-width: 350px;
         }
         .migration-container h1 { font-size: 2.2em; }
       }
