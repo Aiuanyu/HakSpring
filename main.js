@@ -1,3 +1,141 @@
+function handleDomainMigration() {
+  if (window.location.hostname !== 'aiuanyu.github.io') {
+    return false;
+  }
+
+  // Create the overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.backgroundColor = '#f0f2f5';
+  overlay.style.zIndex = '999999';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.padding = '1.5em';
+  overlay.style.boxSizing = 'border-box';
+
+  const newHost = 'https://hakspring.pages.dev';
+  const originalPath = window.location.pathname;
+  let newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+  if (newPath === '') newPath = '/';
+  const newBaseUrl = newHost + newPath;
+
+  // Define the HTML content for the overlay
+  overlay.innerHTML = `
+    <style>
+      .migration-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5em;
+        max-width: 900px;
+        background: #fff;
+        padding: 2.5em;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-family: 'tauhu-oo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        text-align: center;
+      }
+      .migration-image {
+        max-width: 150px;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+      .migration-text-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .migration-container h1 { font-size: 2.2em; margin-bottom: 0.5em; color: #1c1e21; }
+      .migration-container p { margin: 0.5em 0; font-size: 1.2em; color: #555; max-width: 450px; line-height: 1.6; }
+      .migration-new-url {
+        font-size: 1.1em;
+        background-color: #e7f3ff;
+        padding: 0.5em 1em;
+        border-radius: 6px;
+        margin: 1em 0;
+      }
+      .migration-new-url a { color: #0056b3; text-decoration: none; font-weight: 600; }
+      .migration-new-url a:hover { text-decoration: underline; }
+      #migrationBtn {
+        font-family: 'tauhu-oo', sans-serif;
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        padding: 0.8em 1.5em;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 1em;
+      }
+      #migrationBtn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+    <div class="migration-container">
+      <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
+      <div class="migration-text-content">
+        <h1>網域徙竇 lió！</h1>
+        <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。<br>
+          這下會盡量同你个進度、設定款起來，共下運過去。</p>
+        <p class="migration-new-url">新網址：<a href="${newBaseUrl}" target="_blank">${newHost}</a></p>
+        <button id="migrationBtn">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
+      </div>
+    </div>
+  `;
+
+  // Append to the body
+  document.body.appendChild(overlay);
+
+  // Add the event listener
+  const migrateBtn = document.getElementById('migrationBtn');
+  if (migrateBtn) {
+    migrateBtn.addEventListener('click', function() {
+      const keysToMigrate = [
+        'hakkaBookmarks',
+        'dontShowInfoModalAgain',
+        'lastSearchMode',
+        'lastSearchDialect',
+        'hideInfoModal'
+      ];
+      const migrationData = {};
+      keysToMigrate.forEach(function(key) {
+        const value = localStorage.getItem(key);
+        if (value !== null) {
+          migrationData[key] = value;
+        }
+      });
+
+      let finalUrl = newBaseUrl;
+      if (Object.keys(migrationData).length > 0) {
+        try {
+          const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
+          const searchParams = new URLSearchParams(window.location.search);
+          searchParams.set('migrateData', encodedData);
+          finalUrl = newBaseUrl.split('?')[0] + '?' + searchParams.toString();
+        } catch (e) {
+          console.error("Could not process migration data:", e);
+        }
+      }
+
+      window.location.href = finalUrl;
+    });
+  }
+
+  // Signal that the app should not continue initializing
+  return true;
+}
+
 // Agent Jules was here.
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
@@ -951,6 +1089,13 @@ async function loadDataFromDB(db) {
 // --- Application Initialization ---
 
 async function initializeApp() {
+  if (handleDomainMigration()) {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+    }
+    return;
+  }
     const loadingIndicator = document.getElementById('loading-indicator');
     const loadingText = document.getElementById('loading-text');
     const mainContent = document.getElementById('main-content');
