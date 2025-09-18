@@ -31,17 +31,13 @@ function handleDomainMigration() {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1.5em;
+        gap: 2em;
         max-width: 900px;
-        background: #fff;
-        padding: 2.5em;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        font-family: 'tauhu-oo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         text-align: center;
       }
       .migration-image {
-        max-width: 150px;
+        max-width: 250px;
         width: 100%;
         height: auto;
         aspect-ratio: 1 / 1;
@@ -52,22 +48,14 @@ function handleDomainMigration() {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
       }
-      .migration-container h1 { font-size: 2.2em; margin-bottom: 0.5em; color: #1c1e21; }
-      .migration-container p { margin: 0.5em 0; font-size: 1.2em; color: #555; max-width: 450px; line-height: 1.6; }
-      .migration-new-url {
-        font-size: 1.1em;
-        background-color: #e7f3ff;
-        padding: 0.5em 1em;
-        border-radius: 6px;
-        margin: 1em 0;
-      }
-      .migration-new-url a { color: #0056b3; text-decoration: none; font-weight: 600; }
-      .migration-new-url a:hover { text-decoration: underline; }
+      .migration-container h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+      .migration-container p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+      .migration-container a { color: #007bff; text-decoration: none; }
+      .migration-container a:hover { text-decoration: underline; }
       #migrationBtn {
         font-family: 'tauhu-oo', sans-serif;
-        font-size: 1.3em;
+        font-size: 1.2em;
         font-weight: bold;
         color: #fff;
         background-color: #007bff;
@@ -81,14 +69,26 @@ function handleDomainMigration() {
       #migrationBtn:hover {
         background-color: #0056b3;
       }
+      @media (min-width: 600px) {
+        .migration-container {
+          flex-direction: row;
+          text-align: left;
+        }
+        .migration-text-content {
+          align-items: flex-start;
+        }
+        .migration-image {
+          max-width: 200px;
+        }
+        .migration-container h1 { font-size: 2.2em; }
+      }
     </style>
     <div class="migration-container">
       <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
       <div class="migration-text-content">
         <h1>網域徙竇 lió！</h1>
-        <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。<br>
-          這下會盡量同你个進度、設定款起來，共下運過去。</p>
-        <p class="migration-new-url">新網址：<a href="${newBaseUrl}" target="_blank">${newHost}</a></p>
+        <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
+        <p>請撳下面个撳鈕，同你个進度、設定款起來，共下運過去。</p>
         <button id="migrationBtn">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
       </div>
     </div>
@@ -110,37 +110,33 @@ function handleDomainMigration() {
       ];
       const migrationData = {};
       keysToMigrate.forEach(function(key) {
-        const value = localStorage.getItem(key);
+        let value = localStorage.getItem(key);
         if (value !== null) {
+          // The "hakkaBookmarks" key contains a JSON string, which should be parsed before being re-encoded.
+          if (key === 'hakkaBookmarks') {
+            try {
+              value = JSON.parse(value);
+            } catch (e) {
+              console.error('Could not parse hakkaBookmarks from localStorage. Sending as raw string.', e);
+            }
+          }
           migrationData[key] = value;
         }
       });
 
-      console.log('Migration Data Collected:', migrationData);
       let finalUrl = newBaseUrl;
       if (Object.keys(migrationData).length > 0) {
         try {
-          const jsonString = JSON.stringify(migrationData);
-          console.log('Migration JSON string length:', jsonString.length);
-          const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
-          console.log('Base64 encoded data length:', encodedData.length);
-
+          const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
           const searchParams = new URLSearchParams(window.location.search);
           searchParams.set('migrateData', encodedData);
           finalUrl = newBaseUrl.split('?')[0] + '?' + searchParams.toString();
-
-          console.log('Final URL length:', finalUrl.length);
-          console.log('Final URL:', finalUrl);
-
         } catch (e) {
           console.error("Could not process migration data:", e);
         }
       }
 
-      // Redirect after a short delay to allow logs to be read
-      setTimeout(() => {
-        window.location.href = finalUrl;
-      }, 100);
+      window.location.href = finalUrl;
     });
   }
 
