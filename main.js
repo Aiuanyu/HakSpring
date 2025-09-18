@@ -1107,7 +1107,8 @@ function handleDataImport() {
 
   if (migrateData) {
     try {
-      const decodedData = atob(migrateData);
+      // The `unescape(encodeURIComponent())` trick on the sending side must be reversed on the receiving side.
+      const decodedData = decodeURIComponent(escape(atob(migrateData)));
       const parsedData = JSON.parse(decodedData);
 
       console.log('Received migration data:', parsedData);
