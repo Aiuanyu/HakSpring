@@ -28,14 +28,12 @@
 
         var newHost = 'https://hakspring.pages.dev';
         var originalPath = window.location.pathname;
-        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index
-\.html/, '');
+        var newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
         if (newPath === '') newPath = '/';
         var newBaseUrl = newHost + newPath;
 
         // Replace the entire document with a migration notice.
-        // This ensures that no other scripts or resources from the original app
- are loaded.
+        // This ensures that no other scripts or resources from the original app are loaded.
         document.documentElement.innerHTML = `
           <head>
             <meta charset="utf-8" />
@@ -151,13 +149,10 @@ edirect-image">
                   var finalUrl = newUrl;
                   if (Object.keys(migrationData).length > 0) {
                     try {
-                      var encodedData = btoa(unescape(encodeURIComponent(JSON.st
-ringify(migrationData))));
-                      var searchParams = new URLSearchParams(window.location.sea
-rch);
+                      var encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
+                      var searchParams = new URLSearchParams(window.location.search);
                       searchParams.set('migrateData', encodedData);
-                      finalUrl = newUrl.split('?')[0] + '?' + searchParams.toStr
-ing();
+                      finalUrl = newUrl.split('?')[0] + '?' + searchParams.toString();
                     } catch (e) {
                       console.error("Could not process migration data:", e);
                       // Fallback to redirecting without data if encoding fails
@@ -185,8 +180,7 @@ ing();
       #loading-indicator {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(255, 255, 255, 0.9);
-        display: flex; flex-direction: column; justify-content: center; align-it
-ems: center;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
         z-index: 9999;
       }
       #loading-text { font-size: 1.2em; margin-top: 20px; color: #333; }
@@ -201,8 +195,7 @@ ems: center;
   </head>
 
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"><
-/script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
