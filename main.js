@@ -136,36 +136,7 @@ function handleDomainMigration() {
         }
       }
 
-      // --- FINAL DEBUGGING STEP ---
-      // Instead of redirecting, display the URL for manual verification.
-      this.disabled = true;
-      this.textContent = '請複製下面个網址，在新分頁打開';
-
-      const resultDiv = document.createElement('div');
-      resultDiv.style.marginTop = '1em';
-      resultDiv.style.width = '100%';
-
-      const urlTextarea = document.createElement('textarea');
-      urlTextarea.value = finalUrl;
-      urlTextarea.style.width = '100%';
-      urlTextarea.style.padding = '10px';
-      urlTextarea.style.fontSize = '14px';
-      urlTextarea.style.minHeight = '100px';
-      urlTextarea.style.wordBreak = 'break-all';
-      urlTextarea.readOnly = true;
-
-      resultDiv.appendChild(urlTextarea);
-
-      const textContentDiv = this.parentElement;
-      textContentDiv.appendChild(resultDiv);
-
-      urlTextarea.select();
-      try {
-        document.execCommand('copy');
-        this.textContent = '網址已經複製！請在新分頁貼上。';
-      } catch (err) {
-        console.warn('Automatic copy failed. Please copy manually.');
-      }
+      window.location.href = finalUrl;
     });
   }
 
