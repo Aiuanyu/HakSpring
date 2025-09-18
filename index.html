@@ -54,11 +54,15 @@
     // Dynamic GA Tracking ID based on hostname
     var hostname = window.location.hostname;
 
-    // Only configure Google Analytics on the new domain (hakspring.pages.dev)
-    // and not on the old domains that show the migration overlay.
     if (hostname.includes('hakspring.pages.dev')) {
-      var gaId = 'G-CJ92SYFZG3'; // Cloudflare Pages hakspring.pages.dev GA ID
-      gtag('config', gaId);
+      // On the new domain, use the standard configuration.
+      gtag('config', 'G-CJ92SYFZG3');
+    } else {
+      // On the old domain (which shows the migration overlay), keep pageview
+      // tracking but disable automatic scroll tracking to prevent errors.
+      gtag('config', 'G-GR13HH1VXW', {
+        'scroll_events': false
+      });
     }
   </script>
 
