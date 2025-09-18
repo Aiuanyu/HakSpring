@@ -1,3 +1,168 @@
+function handleDomainMigration() {
+  if (window.location.hostname !== 'aiuanyu.github.io') {
+    return false;
+  }
+
+  // Create the overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.backgroundColor = '#f0f2f5';
+  overlay.style.zIndex = '999999';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.padding = '1.5em';
+  overlay.style.boxSizing = 'border-box';
+
+  const newHost = 'https://hakspring.pages.dev';
+  const originalPath = window.location.pathname;
+  let newPath = originalPath.replace(/^\/HakSpring/, '').replace(/^\/index\.html/, '');
+  if (newPath === '') newPath = '/';
+  const newBaseUrl = newHost + newPath;
+
+  // Define the HTML content for the overlay
+  overlay.innerHTML = `
+    <style>
+      .migration-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+        max-width: 900px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        text-align: center;
+      }
+      .migration-image {
+        max-width: 250px;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+      .migration-text-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .migration-container h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+      .migration-container p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
+      .migration-container a { color: #007bff; text-decoration: none; }
+      .migration-container a:hover { text-decoration: underline; }
+      #migrationBtn {
+        font-family: 'tauhu-oo', sans-serif;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        padding: 0.8em 1.5em;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 1em;
+      }
+      #migrationBtn:hover {
+        background-color: #0056b3;
+      }
+      @media (min-width: 600px) {
+        .migration-container {
+          flex-direction: row;
+          text-align: left;
+        }
+        .migration-text-content {
+          align-items: flex-start;
+        }
+        .migration-image {
+          max-width: 200px;
+        }
+        .migration-container h1 { font-size: 2.2em; }
+      }
+      @media (max-width: 400px), (max-height: 760px) {
+        .migration-container {
+          padding: 1em;
+          gap: 1em;
+        }
+        .migration-image {
+          max-width: 200px;
+        }
+        .migration-container h1 {
+          font-size: 1.5em;
+        }
+        .migration-container p {
+          font-size: 1em;
+        }
+        #migrationBtn {
+          font-size: 1em;
+          padding: 0.6em 1.2em;
+        }
+      }
+    </style>
+    <div class="migration-container">
+      <img src="img/20250918-return.png" alt="Domain Migration" class="migration-image">
+      <div class="migration-text-content">
+        <h1>網域徙竇 lió！</h1>
+        <p>為著提供還較穩定个服務，客源翠个網址既經徙竇吔。</p>
+        <p>請撳下面个撳鈕，同你个進度、設定款起來，共下運過去。</p>
+        <button id="migrationBtn">知哩！同吾進度行李款好，渡𠊎(ngǎi)去新竇！</button>
+      </div>
+    </div>
+  `;
+
+  // Append to the body
+  document.body.appendChild(overlay);
+
+  // Add the event listener
+  const migrateBtn = document.getElementById('migrationBtn');
+  if (migrateBtn) {
+    migrateBtn.addEventListener('click', function() {
+      const keysToMigrate = [
+        'hakkaBookmarks',
+        'dontShowInfoModalAgain',
+        'lastSearchMode',
+        'lastSearchDialect',
+        'hideInfoModal'
+      ];
+      const migrationData = {};
+      keysToMigrate.forEach(function(key) {
+        let value = localStorage.getItem(key);
+        if (value !== null) {
+          // The "hakkaBookmarks" key contains a JSON string, which should be parsed before being re-encoded.
+          if (key === 'hakkaBookmarks') {
+            try {
+              value = JSON.parse(value);
+            } catch (e) {
+              console.error('Could not parse hakkaBookmarks from localStorage. Sending as raw string.', e);
+            }
+          }
+          migrationData[key] = value;
+        }
+      });
+
+      let finalUrl = newBaseUrl;
+      if (Object.keys(migrationData).length > 0) {
+        try {
+          const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(migrationData))));
+          const searchParams = new URLSearchParams(window.location.search);
+          searchParams.set('migrateData', encodedData);
+          finalUrl = newBaseUrl.split('?')[0] + '?' + searchParams.toString();
+        } catch (e) {
+          console.error("Could not process migration data:", e);
+        }
+      }
+
+      window.location.href = finalUrl;
+    });
+  }
+
+  // Signal that the app should not continue initializing
+  return true;
+}
+
 // Agent Jules was here.
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
@@ -950,7 +1115,52 @@ async function loadDataFromDB(db) {
 
 // --- Application Initialization ---
 
+function handleDataImport() {
+  // Allow import on both the final domain and the preview domain
+  if (window.location.hostname !== 'hakspring.pages.dev' && window.location.hostname !== 'feature-data-migration-promp.hakspring.pages.dev') {
+    return;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const migrateData = urlParams.get('migrateData');
+
+  if (migrateData) {
+    try {
+      // The `unescape(encodeURIComponent())` trick on the sending side must be reversed on the receiving side.
+      const decodedData = decodeURIComponent(escape(atob(migrateData)));
+      const parsedData = JSON.parse(decodedData);
+
+      for (const key in parsedData) {
+        if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+          let value = parsedData[key];
+          // Bookmarks are an object, so they need to be stringified for localStorage
+          if (key === 'hakkaBookmarks' && typeof value === 'object') {
+            value = JSON.stringify(value);
+          }
+          localStorage.setItem(key, value);
+        }
+      }
+
+      // Clean the URL
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.delete('migrateData');
+      history.replaceState({}, document.title, newUrl.toString());
+
+    } catch (e) {
+      console.error('Failed to parse or import migration data:', e);
+    }
+  }
+}
+
 async function initializeApp() {
+  handleDataImport();
+  if (handleDomainMigration()) {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+    }
+    return;
+  }
     const loadingIndicator = document.getElementById('loading-indicator');
     const loadingText = document.getElementById('loading-text');
     const mainContent = document.getElementById('main-content');
