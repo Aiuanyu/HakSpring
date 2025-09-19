@@ -2053,7 +2053,7 @@ function isFirefox() {
   }
   const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
 
-  function handleResizeActions() {
+  function repositionViewport() {
     // --- 新增：處理螢幕闊度改變時个捲動 ---
     if (isPlaying) {
       const nowPlayingRow = document.getElementById('nowPlaying');
@@ -2250,8 +2250,6 @@ function isFirefox() {
       setTimeout(() => button.blur(), 300);
     }
   });
-
-  window.addEventListener('resize', debounce(handleResizeActions, 250));
 
   
 // --- 新增：更新網頁標題函式 ---
@@ -3614,8 +3612,18 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
-  window.addEventListener('resize', handleResizeActions);
-  handleResizeActions();
+  const debouncedRepositionViewport = debounce(repositionViewport, 150);
+
+  // Set up a ResizeObserver to handle font size changes and other layout shifts
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(debouncedRepositionViewport);
+    resizeObserver.observe(document.body, { box: 'border-box' });
+  }
+  // Always listen to the resize event as a fallback and for window resizes
+  window.addEventListener('resize', debouncedRepositionViewport);
+
+  // Initial call to set things right
+  repositionViewport();
 }
 
 // Start the application
