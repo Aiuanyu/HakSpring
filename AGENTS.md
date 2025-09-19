@@ -45,6 +45,27 @@
 - `invalidMediaChecker.html`: 用於檢查音檔連結是否有效。
 - `table-extractor.html`: 用於從應用程式中匯出帶有附加元數據的 CSV 檔案。
 
+## Agent Coding Conventions
+- **Preserve existing comments:** When modifying code, do not remove or alter existing comments unless they are clearly outdated or incorrect. If you rewrite a block of code, make sure to carry over the original comments.
+
+## UI 元件慣例
+
+### Modal 視窗
+
+- **加新个 Modal**：若愛加上新个全螢幕 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。
+- **HTML 結構**：新 modal 愛有一个根元素，包含 `.modal-overlay` class，還有一個子元素包含 `.modal-dialog` class。Dialog 內部愛有 `.modal-header`、`.modal-body`，還做得選愛無愛加 `.modal-footer`。
+- **CSS 樣式**：為著確保樣式一致，愛將新 modal 个 ID 加到 `style.css` 裡肚既有个群組選擇器。這包含基本樣式、暗色主題樣式，還有其他共享屬性。
+- **JavaScript 邏輯**：顯示／隱藏 modal 个邏輯愛寫在 `main.js` 个 `initializeAppUI` 函式裡肚。用 `style.display = 'flex'` 來顯示 modal，用 `style.display = 'none'` 來隱藏。
+
+### 頁首按鈕
+
+- **樣式**：加到主要頁首（`<h3>` id=`header`）个按鈕，樣式愛一致。愛將新按鈕个 ID 加到 `style.css` 裡肚个群組選擇器（`#infoButton, #showRomanizerBtn, ...`），來套用正確个基本摎懸停樣式。
+
+### 協助說明內容
+
+- **用 Markdown 做內容**：Modal 裡肚个協助說明文字或其他靜態內容，愛獨立建立 `.md` 檔案，放在專案个根目錄（例如 `info.md`, `lookup.md`）。
+- **動態載入**：這兜內容愛在執行个時節，用 `fetch` API 摎 `marked.js` library（專案既經包含）來載入並渲染到 modal 裡肚。恁樣做做得將內容摎 HTML 結構分開。
+
 ## 詳細文件參考 (Detailed Documentation Reference)
 
 本檔案是專案的快速入門指南。更詳細的設計與架構文件，請參考以下的 DeepWiki 頁面：
