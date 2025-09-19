@@ -3271,6 +3271,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const levelParam = urlParams.get('level');
     const categoryParam = urlParams.get('category');
     const rowParam = urlParams.get('row');
+    const romParam = urlParams.get('rom');
     successfullyLoadedFromUrl = false;
 
     if (musiidParam && caParam) {
@@ -3381,6 +3382,22 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         }
       } else {
         console.error('URL 處理錯誤：無法從參數映射腔調或級別:', dialectParam, levelParam);
+      }
+    } else if (romParam) {
+      const romanizerInput = document.getElementById('romanizer-input');
+      const showRomanizerBtn = document.getElementById('showRomanizerBtn');
+
+      if (romanizerInput && showRomanizerBtn) {
+        const dialectParam = urlParams.get('kiong');
+        if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
+          currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
+        } else {
+          const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+          currentActiveMainDialectName = (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) ? lastUsedDialect : '四縣';
+        }
+
+        showRomanizerBtn.click();
+        romanizerInput.value = decodeURIComponent(romParam);
       }
     }
   }
