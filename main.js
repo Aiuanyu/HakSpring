@@ -133,6 +133,7 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
+let lastCenteredRow = null; // <-- 新增：為著螢幕闊度改變時節定位
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -1380,6 +1381,7 @@ function initializeAppUI() {
 
 
   function performSearch(page = 1, itemsPerPage = 50) {
+    lastCenteredRow = null; // <-- 新增：重設中央列追蹤器
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
     const keyword = searchInput.value.trim();
@@ -2007,7 +2009,61 @@ function isFirefox() {
     });
   }
 
+  // --- 新增：持續追蹤畫面中央个表格列，為著畫面闊度改變个時節定位 ---
+  function updateLastCenteredRow() {
+    // 1. 只在學習模式 (有表格) 時運作
+    const table = document.getElementById('category-table');
+    if (!table || isPlaying) {
+      lastCenteredRow = null;
+      return;
+    }
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (rows.length === 0) {
+      lastCenteredRow = null;
+      return;
+    }
+
+    // 2. 計算視窗中央點
+    const viewportCenterY = window.innerHeight / 2;
+
+    let closestRow = null;
+    let smallestDistance = Infinity;
+
+    // 3. 尋離中央點最近个列
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect();
+      // 跳過不在視窗內个列
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        continue;
+      }
+
+      const rowCenterY = rect.top + rect.height / 2;
+      const distance = Math.abs(viewportCenterY - rowCenterY);
+
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    // 4. 更新全域變數
+    if (closestRow) {
+      lastCenteredRow = closestRow;
+    }
+  }
+  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
+
   function handleResizeActions() {
+    // --- 新增：處理螢幕闊度改變時个捲動 ---
+    if (isPlaying) {
+      const nowPlayingRow = document.getElementById('nowPlaying');
+      if (nowPlayingRow) {
+        nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+      lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // --- 原本个 handleResizeActions 內容 ---
     const contentContainer = document.getElementById('generated');
     if (contentContainer) {
         adjustAllRubyFontSizes(contentContainer);
@@ -2417,6 +2473,7 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 // --- generate() 函式從這裡開始 ---
 function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name);
+  lastCenteredRow = null; // <-- 新增：重設中央列追蹤器
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
 
   document.querySelectorAll('.radioItem').forEach((label) => {
@@ -2601,6 +2658,7 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     isPlaying = false;
     isPaused = false;
     window.removeEventListener('scroll', scrollHandler); // Remove old listener
+    window.removeEventListener('scroll', debouncedUpdateLastCenteredRow); // <-- 新增：移除舊个中央列追蹤器
 
     // 2. Filter data and handle empty category
     activeCategoryData = vocabularyArray.filter((line) => line.分類 && line.分類.includes(category));
@@ -2637,6 +2695,9 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     if (totalResults > ITEMS_PER_LOAD) {
         window.addEventListener('scroll', scrollHandler);
     }
+
+    // 7. Setup centered row tracking for resize
+    window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
 
     // 7. Handle auto-play for the specific row if requested
     if (autoPlayTargetRowId) {
