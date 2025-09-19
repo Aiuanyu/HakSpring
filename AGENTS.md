@@ -45,6 +45,9 @@
 - `invalidMediaChecker.html`: 用於檢查音檔連結是否有效。
 - `table-extractor.html`: 用於從應用程式中匯出帶有附加元數據的 CSV 檔案。
 
+## 字詞代號
+- `Romaine` = `Romanizer`、「蘿蔓生菜」= 羅馬字轉換工具模組
+
 ## Agent Coding Conventions
 - **Preserve existing comments:** When modifying code, do not remove or alter existing comments unless they are clearly outdated or incorrect. If you rewrite a block of code, make sure to carry over the original comments.
 
