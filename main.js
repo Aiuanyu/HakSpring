@@ -1400,7 +1400,7 @@ function initializeAppUI() {
         return;
     }
 
-    searchContainer.classList.remove('active');
+    searchPopup.style.display = 'none';
     searchInput.blur();
 
     const learningPanel = document.getElementById('learningSelectionPanel');
