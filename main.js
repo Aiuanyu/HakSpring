@@ -1331,7 +1331,7 @@ function initializeAppUI() {
 
         const dialectLevelCodes = extractDialectLevelCodes(tableName);
         if (dialectLevelCodes) {
-            const shareURL = `${baseURL}index.html?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
+            const shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
             const linkElement = document.createElement('a');
             linkElement.href = shareURL;
             linkElement.textContent = `#${rowId} (${percentage}%)`;
@@ -1497,7 +1497,7 @@ function initializeAppUI() {
 
     let summaryText = `在${searchMode === '客家語' ? '客文' : '華文'}部分尋「${keyword}」，`;
 
-    const newUrl = new URL(window.location);
+    const newUrl = getBaseUrlWithoutIndex();
     newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
     newUrl.searchParams.set('ca', keyword);
     newUrl.searchParams.set('bidsu', itemsPerPage.toString());
@@ -2386,6 +2386,18 @@ function updateSearchDialect(dialectName) {
 
 // 加入新的可選參數：initialCategory, targetRowId
 /**
+ * [新增] 取得目前頁面的基底 URL，並確保路徑中不包含 index.html。
+ * @returns {URL} 一個新的 URL 物件。
+ */
+function getBaseUrlWithoutIndex() {
+  const url = new URL(window.location.href);
+  if (url.pathname.endsWith('/index.html')) {
+      url.pathname = url.pathname.slice(0, -10); // 拿掉 "index.html"
+  }
+  return url;
+}
+
+/**
  * [新增] 根據當前的腔調級別和類別，更新瀏覽器 URL 並新增一筆歷史紀錄。
  * @param {object} dialectInfo - 包含腔調級別資訊的物件。
  * @param {string} selectedCategory - 使用者選擇的類別名稱。
@@ -2393,7 +2405,7 @@ function updateSearchDialect(dialectName) {
 function updateUrlForCategory(dialectInfo, selectedCategory) {
   const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
   if (dialectLevelCodes) {
-      const newUrl = new URL(window.location.href);
+      const newUrl = getBaseUrlWithoutIndex();
       newUrl.searchParams.set('dialect', dialectLevelCodes.dialect);
       newUrl.searchParams.set('level', dialectLevelCodes.level);
       newUrl.searchParams.set('category', selectedCategory);
