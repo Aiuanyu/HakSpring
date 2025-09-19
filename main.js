@@ -1382,6 +1382,9 @@ function initializeAppUI() {
   function performSearch(page = 1, itemsPerPage = 50) {
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
+    searchContainer.classList.remove('active');
+    searchInput.blur();
+
     const keyword = searchInput.value.trim();
 
     if (keyword.length > 0 && isRomanizedHakka(keyword)) {
@@ -1399,9 +1402,6 @@ function initializeAppUI() {
         updateResultsSummaryVisibility();
         return;
     }
-
-    searchContainer.classList.remove('active');
-    searchInput.blur();
 
     const learningPanel = document.getElementById('learningSelectionPanel');
     if (learningPanel) {
@@ -3441,9 +3441,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const triggerSearchOnChange = () => {
         localStorage.setItem('lastSearchDialect', document.querySelector('#search-popup input[name="dialect"]:checked').value);
         localStorage.setItem('lastSearchMode', document.querySelector('#search-popup input[name="search-mode"]:checked').value);
-        if (searchInput.value.trim()) {
-            performSearch();
-        }
+        performSearch();
     };
 
     searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
