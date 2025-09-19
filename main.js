@@ -1405,7 +1405,13 @@ function initializeAppUI() {
 
     const learningPanel = document.getElementById('learningSelectionPanel');
     if (learningPanel) {
-        learningPanel.open = false;
+        // As per user request, only close on narrow screens.
+        if (window.innerWidth <= 768) {
+            console.log(`[HakSpring Debug] Narrow screen detected (width: ${window.innerWidth}px). Closing learning panel.`);
+            learningPanel.open = false;
+        } else {
+            console.log(`[HakSpring Debug] Wide screen detected (width: ${window.innerWidth}px). Keeping learning panel open.`);
+        }
     }
 
     currentActiveMainDialectName = selectedDialect;
