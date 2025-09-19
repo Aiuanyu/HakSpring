@@ -133,6 +133,8 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
+let lastCenteredRow = null;
+let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -1190,6 +1192,108 @@ function initializeAppUI() {
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
 
+  function updateLastCenteredRow() {
+    if (isRepositioning) return;
+
+    const table = document.getElementById('category-table');
+    if (!table || isPlaying) {
+      lastCenteredRow = null;
+      return;
+    }
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (rows.length === 0) {
+      lastCenteredRow = null;
+      return;
+    }
+
+    const viewportCenterY = window.innerHeight / 2;
+    let closestRow = null;
+    let smallestDistance = Infinity;
+
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+
+      const rowCenterY = rect.top + rect.height / 2;
+      const distance = Math.abs(viewportCenterY - rowCenterY);
+
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    if (closestRow) {
+      lastCenteredRow = closestRow;
+    }
+  }
+  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
+
+  function repositionViewport() {
+    isRepositioning = true;
+
+    if (isPlaying) {
+      const nowPlayingRow = document.getElementById('nowPlaying');
+      if (nowPlayingRow) {
+        nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+      lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Re-run the original layout adjustment logic from handleResizeActions
+    const contentContainer = document.getElementById('generated');
+    if (contentContainer) {
+        adjustAllRubyFontSizes(contentContainer);
+    }
+    const rubies = document.querySelectorAll('ruby');
+    rubies.forEach(ruby => {
+      const rt = ruby.querySelector('rt');
+      if (rt) {
+        if (rt.offsetWidth > ruby.offsetWidth) {
+          const scale = ruby.offsetWidth / rt.offsetWidth;
+          rt.style.transform = `scaleX(${scale * 0.95})`;
+          rt.style.transformOrigin = 'left';
+        } else {
+          rt.style.transform = 'none';
+        }
+      }
+    });
+    adjustHeaderFontSizeOnOverflow();
+    adjustResultsSummaryFontSize();
+    if (activeSelectionPopup) {
+      const popupEl = document.getElementById('selectionPopup');
+      if (popupEl && popupEl.style.display === 'block') {
+        let rectToUse = null;
+        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+        } else if (lastRectForPopupPositioning) {
+          rectToUse = lastRectForPopupPositioning;
+        }
+
+        if (rectToUse) {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
+                return;
+              }
+              let currentRect = rectToUse;
+              if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+                   currentRect = lastAnchorElementForPopup.getBoundingClientRect();
+              }
+              updatePopupPosition(popupEl, currentRect);
+            }, 100);
+          });
+        }
+      }
+    }
+
+    setTimeout(() => {
+      isRepositioning = false;
+    }, 300);
+  }
+  const debouncedRepositionViewport = debounce(repositionViewport, 150);
+
   // All data variables from the included JS files
   const allData = {
     '四縣': [window['四基'], window['四初'], window['四中'], window['四中高'], window['四高']],
@@ -1380,6 +1484,7 @@ function initializeAppUI() {
 
 
   function performSearch(page = 1, itemsPerPage = 50) {
+    lastCenteredRow = null;
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
     const keyword = searchInput.value.trim();
@@ -1769,7 +1874,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     updateResultsSummaryVisibility();
 
-    setTimeout(() => handleResizeActions(), 0); // Trigger font size adjustment after table is rendered
+    setTimeout(() => repositionViewport(), 0); // Trigger font size adjustment after table is rendered
 
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
@@ -2007,56 +2112,6 @@ function isFirefox() {
     });
   }
 
-  function handleResizeActions() {
-    const contentContainer = document.getElementById('generated');
-    if (contentContainer) {
-        adjustAllRubyFontSizes(contentContainer);
-    }
-
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach(ruby => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        if (rt.offsetWidth > ruby.offsetWidth) {
-          const scale = ruby.offsetWidth / rt.offsetWidth;
-          rt.style.transform = `scaleX(${scale * 0.95})`;
-          rt.style.transformOrigin = 'left';
-        } else {
-          rt.style.transform = 'none';
-        }
-      }
-    });
-
-    adjustHeaderFontSizeOnOverflow();
-    adjustResultsSummaryFontSize();
-
-    if (activeSelectionPopup) {
-      const popupEl = document.getElementById('selectionPopup');
-      if (popupEl && popupEl.style.display === 'block') {
-        let rectToUse = null;
-        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
-        } else if (lastRectForPopupPositioning) {
-          rectToUse = lastRectForPopupPositioning;
-        }
-
-        if (rectToUse) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
-                return;
-              }
-              let currentRect = rectToUse;
-              if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-                   currentRect = lastAnchorElementForPopup.getBoundingClientRect();
-              }
-              updatePopupPosition(popupEl, currentRect);
-            }, 100);
-          });
-        }
-      }
-    }
-  }
 
   
 
@@ -2195,9 +2250,17 @@ function isFirefox() {
     }
   });
 
-  window.addEventListener('resize', debounce(handleResizeActions, 250));
+  // Set up a ResizeObserver to handle font size changes and other layout shifts
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(debouncedRepositionViewport);
+    resizeObserver.observe(document.body, { box: 'border-box' });
+  }
+  // Always listen to the resize event as a fallback and for window resizes
+  window.addEventListener('resize', debouncedRepositionViewport);
 
-  
+  // Initial call to set things right
+  repositionViewport();
+
 // --- 新增：更新網頁標題函式 ---
 const BASE_TITLE = '客源翠 HakSpring';
 function updatePageTitle(titleParts = []) {
@@ -2416,6 +2479,7 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 
 // --- generate() 函式從這裡開始 ---
 function generate(content, initialCategory = null, targetRowId = null) {
+  lastCenteredRow = null;
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
 
@@ -2601,6 +2665,7 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     isPlaying = false;
     isPaused = false;
     window.removeEventListener('scroll', scrollHandler); // Remove old listener
+    window.removeEventListener('scroll', debouncedUpdateLastCenteredRow);
 
     // 2. Filter data and handle empty category
     activeCategoryData = vocabularyArray.filter((line) => line.分類 && line.分類.includes(category));
@@ -2636,6 +2701,13 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     // 6. Setup infinite scroll
     if (totalResults > ITEMS_PER_LOAD) {
         window.addEventListener('scroll', scrollHandler);
+    }
+    window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
+
+    // Initialize the centered row tracker
+    const table = document.getElementById('category-table');
+    if (table) {
+        lastCenteredRow = table.querySelector('tbody tr');
     }
 
     // 7. Handle auto-play for the specific row if requested
@@ -2823,7 +2895,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         tbody.appendChild(fragment);
     }
     
-    setTimeout(() => handleResizeActions(), 50);
+    setTimeout(() => repositionViewport(), 50);
 }
 
 function scrollHandler() {
@@ -3553,8 +3625,16 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
-  window.addEventListener('resize', handleResizeActions);
-  handleResizeActions();
+  // Set up a ResizeObserver to handle font size changes and other layout shifts
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(debouncedRepositionViewport);
+    resizeObserver.observe(document.body, { box: 'border-box' });
+  }
+  // Always listen to the resize event as a fallback and for window resizes
+  window.addEventListener('resize', debouncedRepositionViewport);
+
+  // Initial call to set things right
+  repositionViewport();
 }
 
 // Start the application
