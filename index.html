@@ -84,6 +84,7 @@
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
       <div id="search-container">
         <input type="text" id="search-input" placeholder="查語詞" />
+        <button id="lookupHelpBtn" title="查詞說明"><i class="fas fa-question-circle"></i></button>
         <div id="search-popup">
           <div id="dialect-selection">
             <p>請擇腔調：</p>
@@ -407,6 +408,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Lookup Help Modal -->
+    <div id="lookupHelpModal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h4 id="lookupHelpModalTitle" class="modal-title">查詞說明</h4>
+          <button id="lookupHelpModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+        </div>
+        <div class="modal-body" id="lookup-help-content"></div>
+      </div>
+    </div>
+
     </div> <!-- End of main-content div -->
   </body>
 </html>

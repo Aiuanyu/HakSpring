@@ -738,63 +738,6 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
   }
 }
 
-/**
- * Converts a string with numeric tones (e.g., "vun113 sii53") into a string with diacritics.
- * @param {string} query The input string.
- * @param {string} dialect The current dialect to check for specific tone maps.
- * @returns {string} The converted string.
- */
-function convertNumericTones(query, dialect) {
-    if (!query || !window.toneMappingData) {
-        return query;
-    }
-
-    const { vowel_priority, default_tones, dialect_maps } = window.toneMappingData;
-
-    // Regex to find a syllable followed by a tone number
-    return query.replace(/([a-z]+)(\d+)/gi, (match, syllable, tone) => {
-        let toneMap = default_tones[tone];
-
-        // Check for dialect-specific overrides
-        if (dialect_maps[dialect] && dialect_maps[dialect][tone]) {
-            toneMap = dialect_maps[dialect][tone];
-        }
-
-        if (!toneMap) {
-            return match; // Return original if tone not found
-        }
-
-        let bestVowel = '';
-        let bestVowelIndex = -1;
-
-        // Find the vowel to apply the tone to based on priority
-        for (const vowel of vowel_priority) {
-            const index = syllable.toLowerCase().indexOf(vowel);
-            if (index > -1) {
-                bestVowel = vowel;
-                bestVowelIndex = index;
-                break;
-            }
-        }
-
-        if (bestVowelIndex === -1) {
-            return syllable; // No vowel found, return syllable as is
-        }
-
-        const replacementVowel = toneMap[bestVowel];
-        if (!replacementVowel) {
-            return syllable; // No mapping for this vowel
-        }
-
-        // Reconstruct the syllable with the toned vowel
-        const originalChar = syllable[bestVowelIndex];
-        const isUpperCase = originalChar === originalChar.toUpperCase();
-        const finalReplacement = isUpperCase ? replacementVowel.toUpperCase() : replacementVowel;
-
-        return syllable.substring(0, bestVowelIndex) + finalReplacement + syllable.substring(bestVowelIndex + 1);
-    });
-}
-
 function normalizePhonetics(text) {
     if (!text) return '';
     return text
@@ -1544,26 +1487,9 @@ function initializeAppUI() {
   function performSearch(page = 1, itemsPerPage = 50) {
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
-    let keyword = searchInput.value.trim();
-    const numericToneRegex = /[a-z]+\d+/i;
+    const keyword = searchInput.value.trim();
 
-    if (numericToneRegex.test(keyword)) {
-        const dialectToChar = {
-            '四縣': '四',
-            '南四縣': '南',
-            '海陸': '海',
-            '大埔': '大',
-            '饒平': '平',
-            '詔安': '安'
-        };
-        const dialectChar = dialectToChar[selectedDialect] || '四';
-        keyword = convertNumericTones(keyword, dialectChar);
-        searchMode = '客家語';
-        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
-        if (hakkaModeRadio) {
-            hakkaModeRadio.checked = true;
-        }
-    } else if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
         searchMode = '客家語';
         const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
         if (hakkaModeRadio) {
@@ -3712,6 +3638,37 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   window.addEventListener('resize', handleResizeActions);
   handleResizeActions();
+
+  // --- Lookup Help Modal Logic ---
+  const lookupHelpBtn = document.getElementById('lookupHelpBtn');
+  const lookupHelpModal = document.getElementById('lookupHelpModal');
+  const lookupHelpModalCloseBtn = document.getElementById('lookupHelpModalCloseBtn');
+
+  if (lookupHelpBtn && lookupHelpModal && lookupHelpModalCloseBtn) {
+    lookupHelpBtn.addEventListener('click', () => {
+      fetch('lookup.md')
+        .then(response => response.text())
+        .then(markdown => {
+          document.getElementById('lookup-help-content').innerHTML = marked.parse(markdown);
+          lookupHelpModal.style.display = 'flex';
+        })
+        .catch(error => {
+          document.getElementById('lookup-help-content').innerHTML = '<p>說明文件載入失敗。</p>';
+          lookupHelpModal.style.display = 'flex';
+        });
+    });
+
+    const closeLookupHelpModal = () => {
+      lookupHelpModal.style.display = 'none';
+    };
+
+    lookupHelpModalCloseBtn.addEventListener('click', closeLookupHelpModal);
+    lookupHelpModal.addEventListener('click', (event) => {
+      if (event.target === lookupHelpModal) {
+        closeLookupHelpModal();
+      }
+    });
+  }
 }
 
 // Start the application
