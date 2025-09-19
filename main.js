@@ -3398,6 +3398,11 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
         showRomanizerBtn.click();
         romanizerInput.value = decodeURIComponent(romParam);
+
+        const learningPanel = document.getElementById('learningSelectionPanel');
+        if (learningPanel) {
+            learningPanel.open = false;
+        }
       }
     }
   }
