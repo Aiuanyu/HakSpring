@@ -133,6 +133,8 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
+let lastCenteredRow = null;
+let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -2056,11 +2058,6 @@ function isFirefox() {
         }
       }
     }
-
-    // Re-attach the listener after a delay to allow the viewport to settle
-    setTimeout(() => {
-        window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
-    }, 200);
   }
 
   
@@ -3558,16 +3555,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
-  // Set up a ResizeObserver to handle font size changes and other layout shifts
-  if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(prepareForReposition);
-    resizeObserver.observe(document.body, { box: 'border-box' });
-  }
-  // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', prepareForReposition);
-
-  // Initial call to set things right
-  repositionViewport();
+  window.addEventListener('resize', handleResizeActions);
+  handleResizeActions();
 }
 
 // Start the application
