@@ -797,6 +797,7 @@ input:checked + .slider:before {
 
 #search-popup {
   display: none; /* 預設隱藏 */
+  position: relative; /* Make it a positioning context for the help button */
   position: absolute;
   top: 100%; /* 在輸入框下方 */
   right: 0;
@@ -812,6 +813,15 @@ input:checked + .slider:before {
 
 #search-container.active #search-popup {
   display: block; /* 當容器有 active class 時顯示 */
+}
+
+#lookupHelpBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  /* Reset some of the default button styles inherited from the header */
+  padding: 2px 5px;
+  font-size: 1rem;
 }
 
 #dialect-selection, #search-mode-selection {
@@ -1451,8 +1461,16 @@ input:checked + .slider:before {
     color: #fff;
   }
 
+  #infoModal .modal-body h3,
   #lookupHelpModal .modal-body h3 {
     margin-top: 0;
+  }
+
+  #infoModal .modal-body h4,
+  #lookupHelpModal .modal-body h4 {
+    margin-top: 1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.2em;
   }
 }
 
