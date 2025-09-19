@@ -2058,10 +2058,10 @@ function isFirefox() {
     if (isPlaying) {
       const nowPlayingRow = document.getElementById('nowPlaying');
       if (nowPlayingRow) {
-        nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        nowPlayingRow.scrollIntoView({ behavior: 'instant', block: 'center' });
       }
     } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
-      lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      lastCenteredRow.scrollIntoView({ behavior: 'instant', block: 'center' });
     }
     // --- 原本个 handleResizeActions 內容 ---
     const contentContainer = document.getElementById('generated');
@@ -2685,6 +2685,12 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     // 4. Render the initial chunk of items (no return value handled)
     renderCategoryItems(initialItems, dialectInfo, category, true, totalResults, autoPlayTargetRowId);
     
+    // --- 新增：初始化中央列，以處理還無捲動就縮放个情況 ---
+    const table = document.getElementById('category-table');
+    if (table) {
+        lastCenteredRow = table.querySelector('tbody tr');
+    }
+
     // 5. Setup controls and event listeners
     setupPlaybackControls(dialectInfo, category, totalResults, autoPlayTargetRowId);
     setupDynamicEventListeners(dialectInfo, category);
