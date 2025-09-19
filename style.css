@@ -1363,10 +1363,11 @@ input:checked + .slider:before {
   max-height: 700px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 避免 iframe 載入前內容溢出 */
+  overflow: hidden;
 }
 
-#infoModal .modal-header {
+#infoModal .modal-header,
+#lookupHelpModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1375,7 +1376,8 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
-#infoModal .modal-title {
+#infoModal .modal-title,
+#lookupHelpModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -1384,6 +1386,7 @@ input:checked + .slider:before {
 }
 
 #infoModal .modal-close-btn,
+#lookupHelpModal .modal-close-btn,
 #romanizerContainer .modal-close-btn {
   background: none;
   border: none;
@@ -1396,16 +1399,19 @@ input:checked + .slider:before {
 }
 #infoModal .modal-close-btn:hover,
 #infoModal .modal-close-btn:focus-visible,
+#lookupHelpModal .modal-close-btn:hover,
+#lookupHelpModal .modal-close-btn:focus-visible,
 #romanizerContainer .modal-close-btn:hover,
 #romanizerContainer .modal-close-btn:focus-visible {
   color: #333;
 }
 
-#infoModal .modal-body {
-  padding: 0; /* iframe 內容由 info.html 自行處理 padding */
+#infoModal .modal-body,
+#lookupHelpModal .modal-body {
+  padding: 20px 30px;
   flex-grow: 1;
-  overflow: hidden; /* iframe 容器 */
-  -webkit-overflow-scrolling: touch; /* iOS iframe 內容順暢捲動 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 #infoModal .modal-body iframe {
@@ -1443,6 +1449,10 @@ input:checked + .slider:before {
   #romanizerContainer .modal-close-btn:hover,
   #romanizerContainer .modal-close-btn:focus-visible {
     color: #fff;
+  }
+
+  #lookupHelpModal .modal-body h3 {
+    margin-top: 0;
   }
 }
 
