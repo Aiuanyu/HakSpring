@@ -1312,7 +1312,8 @@ input:checked + .slider:before {
 
 /* Info Button in Header */
 #infoButton,
-#showRomanizerBtn {
+#showRomanizerBtn,
+#lookupHelpBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1334,7 +1335,8 @@ input:checked + .slider:before {
 }
 
 /* Info Modal Styles */
-#infoModal.modal-overlay {
+#infoModal.modal-overlay,
+#lookupHelpModal.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -1349,7 +1351,8 @@ input:checked + .slider:before {
   box-sizing: border-box;
 }
 
-#infoModal .modal-dialog {
+#infoModal .modal-dialog,
+#lookupHelpModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
