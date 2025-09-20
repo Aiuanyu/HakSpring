@@ -1382,8 +1382,6 @@ input:checked + .slider:before {
   display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
-}
-
   padding: 20px;
   box-sizing: border-box;
 }
