@@ -2134,6 +2134,7 @@ mark {
   flex-direction: column;
   flex-grow: 1;
   overflow-y: auto; /* Allow content to scroll */
+  min-height: 0; /* Fix for flexbox overflow */
 }
 
 #romanizer-output-container {
