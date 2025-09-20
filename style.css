@@ -1379,11 +1379,17 @@ input:checked + .slider:before {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.65);
   z-index: 1050;
-  display: none; /* Controlled by JS */
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
+}
+
   padding: 20px;
   box-sizing: border-box;
+}
+
+.modal-overlay.is-visible {
+  display: flex; /* Shown when is-visible class is present */
 }
 
 /* Info Modal Dialog Specific Styles */
