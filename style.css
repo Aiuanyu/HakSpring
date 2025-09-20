@@ -1460,10 +1460,12 @@ input:checked + .slider:before {
     color: var(--focus-glow-color);
   }
 
-  #infoModal.modal-overlay {
+  .modal-overlay {
     background-color: rgba(0, 0, 0, 0.75);
   }
-  #infoModal .modal-dialog {
+
+  #infoModal .modal-dialog,
+  #romanizerContainer .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
   #infoModal .modal-header {
@@ -2227,11 +2229,6 @@ mark {
 
 /* --- Dark Mode for Romanizer Container --- */
 @media (prefers-color-scheme: dark) {
-  #romanizerContainer {
-    background-color: var(--dark-background-color);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
   #romanizerContainer .romanizer-content {
     background-color: var(--dark-surface-color, #2c2c2c);
     color: var(--main-text-color);

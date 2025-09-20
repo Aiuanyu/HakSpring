@@ -166,11 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  window.hideRomanizer = function() {
+  function hideRomanizer() {
     if (romanizerContainer) {
       romanizerContainer.style.display = 'none';
     }
   }
+  window.hideRomanizer = hideRomanizer;
   
   function handleSegmentClick(event) {
         const target = event.target;
