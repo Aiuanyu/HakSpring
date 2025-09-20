@@ -1196,7 +1196,7 @@ function initializeAppUI() {
     if (isRepositioning) return;
 
     const table = document.getElementById('category-table');
-    if (!table || isPlaying) {
+    if (!table || (isPlaying && !isPaused)) {
       lastCenteredRow = null;
       return;
     }
@@ -1234,7 +1234,7 @@ function initializeAppUI() {
 
     // Defer the scrolling to prevent race conditions with layout reflow.
     setTimeout(() => {
-      if (isPlaying) {
+      if (isPlaying && !isPaused) {
         const nowPlayingRow = document.getElementById('nowPlaying');
         if (nowPlayingRow) {
           nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
