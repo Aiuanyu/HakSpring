@@ -1203,7 +1203,12 @@ function initializeAppUI() {
       lastCenteredRow = closestRow;
     }
   }
-  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
+
+  const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 100;
+  const DEBOUNCE_REPOSITION_ACTIONS_MS = 150;
+  const REPOSITION_FLAG_RESET_DELAY_MS = 300;
+
+  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, DEBOUNCE_UPDATE_CENTERED_ROW_MS);
 
   const debouncedRepositionActions = debounce(() => {
     // This contains the actual logic, which is debounced.
@@ -1260,16 +1265,17 @@ function initializeAppUI() {
                    currentRect = lastAnchorElementForPopup.getBoundingClientRect();
               }
               updatePopupPosition(popupEl, currentRect);
-            }, 100);
+            }, DEBOUNCE_UPDATE_CENTERED_ROW_MS);
           });
         }
       }
     }
-
+    
+    // 注意：這 300 毫秒个延遲係一隻經驗值，用來等「滑溜捲動」動畫做核。假使動畫時間較長，恁樣做可能會無罅穩當。
     setTimeout(() => {
       isRepositioning = false;
-    }, 300);
-  }, 150);
+    }, REPOSITION_FLAG_RESET_DELAY_MS);
+  }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
   function repositionViewport() {
     // This function is called directly by the event listener.
