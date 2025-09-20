@@ -2080,9 +2080,8 @@ mark {
   box-shadow: 0 5px 20px rgba(0,0,0,0.3);
   width: 80vw;
   max-width: 900px;
-  /* Let height be determined by content */
-  /* height: 80vh; */
-  /* max-height: 700px; */
+  height: 85vh; /* Set height to enable scrolling */
+  max-height: 800px; /* Set max-height */
   display: flex;
   flex-direction: column;
   overflow: hidden; /* 避免 iframe 載入前內容溢出 */
@@ -2134,7 +2133,7 @@ mark {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  /* overflow-y: hidden; */ /* Let the content define the height */
+  overflow-y: auto; /* Allow content to scroll */
 }
 
 #romanizer-output-container {
@@ -2168,7 +2167,6 @@ mark {
   border: 1px dashed #ccc;
   padding: 15px;
   flex-grow: 1;
-  /* overflow-y: auto; */ /* Allow modal to grow */
   margin-bottom: 15px;
   line-height: 2.5;
 }
