@@ -3215,7 +3215,10 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
                 currentAudio?.play().catch((e) => console.error('恢復播放失敗:', e));
                 isPaused = false;
                 this.innerHTML = '<i class="fas fa-pause"></i>';
-                if (nowPlayingRow) nowPlayingRow.classList.remove('paused-playback');
+                if (nowPlayingRow) {
+                    nowPlayingRow.classList.remove('paused-playback');
+                    nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             } else {
                 currentAudio?.pause();
                 isPaused = true;
