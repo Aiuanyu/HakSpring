@@ -2065,24 +2065,29 @@ mark {
   }
 }
 
-#romanizerContainer {
-  padding: 20px;
-  margin: 1.5em 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  display: none; /* Controlled by JS */
+
+#romanizerContainer .modal-dialog {
+  background-color: #fff;
+  color: var(--main-text-color);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  width: 80vw;
+  max-width: 900px;
+  /* Let height be determined by content */
+  /* height: 80vh; */
+  /* max-height: 700px; */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 避免 iframe 載入前內容溢出 */
 }
 
 #romanizerContainer .romanizer-content {
-  background-color: #fff;
+  background-color: transparent; /* Now handled by modal-dialog */
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  max-width: 900px; /* <-- 新增：限制最大闊度 */
-  margin: 0 auto;   /* <-- 新增：水平置中 */
+  flex-grow: 1; /* Allow content to fill dialog */
 }
 
 /* 【新增】Romanizer 連詞模式選擇器樣式 */
@@ -2122,7 +2127,7 @@ mark {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  overflow-y: hidden; /* Prevent double scrollbars */
+  /* overflow-y: hidden; */ /* Let the content define the height */
 }
 
 #romanizer-output-container {
@@ -2156,7 +2161,7 @@ mark {
   border: 1px dashed #ccc;
   padding: 15px;
   flex-grow: 1;
-  overflow-y: auto;
+  /* overflow-y: auto; */ /* Allow modal to grow */
   margin-bottom: 15px;
   line-height: 2.5;
 }

@@ -151,8 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Functions ---
   function showRomanizer() {
     if (romanizerContainer) {
-      romanizerContainer.style.display = 'block';
-      romanizerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      romanizerContainer.style.display = 'flex';
       if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
         const mainDialect = currentActiveMainDialectName;
         const isValidOption = Array.from(romanizerDialectSelector.options).some(opt => opt.value === mainDialect);
