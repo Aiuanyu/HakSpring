@@ -1402,7 +1402,7 @@ input:checked + .slider:before {
   max-height: 700px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 避免 iframe 載入前內容溢出 */
+  /* overflow: hidden; */ /* This was causing the scroll issue */
 }
 
 #infoModal .modal-header {
