@@ -133,8 +133,6 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
-let lastCenteredRow = null;
-let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -1772,7 +1770,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     updateResultsSummaryVisibility();
 
-    setTimeout(() => triggerLayoutUpdate(), 0); // Trigger font size adjustment after table is rendered
+    setTimeout(() => handleResizeActions(), 0); // Trigger font size adjustment after table is rendered
 
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
@@ -2010,48 +2008,39 @@ function isFirefox() {
     });
   }
 
-  function updateLastCenteredRow() {
-    if (isRepositioning) return;
 
-    const table = document.getElementById('category-table');
-    if (!table || (isPlaying && !isPaused)) {
-      lastCenteredRow = null;
-      return;
+
+
+
+
+
+
+  const handleResizeActions = debounce(() => {
+    // --- Part 1: Capture the state BEFORE making changes ---
+    let closestRowBeforeResize = null;
+    // Only bother finding the center row if we're not in active playback.
+    if (!isPlaying || isPaused) {
+        const table = document.getElementById('category-table');
+        if (table) {
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            if (rows.length > 0) {
+                const viewportCenterY = window.innerHeight / 2;
+                let smallestDistance = Infinity;
+                for (const row of rows) {
+                    const rect = row.getBoundingClientRect();
+                    if (rect.height === 0) continue; // Skip invisible rows
+                    const rowCenterY = rect.top + rect.height / 2;
+                    const distance = Math.abs(viewportCenterY - rowCenterY);
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestRowBeforeResize = row;
+                    }
+                }
+            }
+        }
     }
-    const rows = Array.from(table.querySelectorAll('tbody tr'));
-    if (rows.length === 0) {
-      lastCenteredRow = null;
-      return;
-    }
 
-    const viewportCenterY = window.innerHeight / 2;
-    let closestRow = null;
-    let smallestDistance = Infinity;
-
-    for (const row of rows) {
-      const rect = row.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
-
-      const rowCenterY = rect.top + rect.height / 2;
-      const distance = Math.abs(viewportCenterY - rowCenterY);
-
-      if (distance < smallestDistance) {
-        smallestDistance = distance;
-        closestRow = row;
-      }
-    }
-
-    if (closestRow) {
-      lastCenteredRow = closestRow;
-    }
-  }
-  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
-
-  const debouncedLayoutUpdateActions = debounce(async () => {
-    // This contains the actual logic, which is debounced.
-
-    // Run synchronous layout adjustments first
-    const contentContainer = document.getElementById('generated');
+    // --- Part 2: Perform all synchronous layout adjustments ---
     if (contentContainer) {
         adjustAllRubyFontSizes(contentContainer);
     }
@@ -2071,75 +2060,34 @@ function isFirefox() {
     adjustHeaderFontSizeOnOverflow();
     adjustResultsSummaryFontSize();
 
-    // Create promises for the asynchronous actions
-    const scrollPromise = new Promise(resolve => {
-        requestAnimationFrame(() => {
-            if (isPlaying && !isPaused) {
-                const nowPlayingRow = document.getElementById('nowPlaying');
-                if (nowPlayingRow) {
-                    nowPlayingRow.scrollIntoView({ behavior: 'instant', block: 'center' });
-                }
-            } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
-                lastCenteredRow.scrollIntoView({ behavior: 'instant', block: 'center' });
-            }
-            resolve();
-        });
-    });
-
-    const popupPromise = new Promise(resolve => {
-        if (activeSelectionPopup) {
-            const popupEl = document.getElementById('selectionPopup');
-            if (popupEl && popupEl.style.display === 'block') {
-                let rectToUse = null;
-                if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-                    rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
-                } else if (lastRectForPopupPositioning) {
-                    rectToUse = lastRectForPopupPositioning;
-                }
-
-                if (rectToUse) {
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
-                                return resolve();
-                            }
-                            let currentRect = rectToUse;
-                            if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-                                currentRect = lastAnchorElementForPopup.getBoundingClientRect();
-                            }
-                            updatePopupPosition(popupEl, currentRect);
-                            resolve();
-                        }, 100);
-                    });
-                } else {
-                    resolve();
-                }
-            } else {
-                resolve();
-            }
-        } else {
-            resolve();
+    if (activeSelectionPopup) {
+      const popupEl = document.getElementById('selectionPopup');
+      if (popupEl && popupEl.style.display === 'block') {
+        let rectToUse = null;
+        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+        } else if (lastRectForPopupPositioning) {
+          rectToUse = lastRectForPopupPositioning;
         }
-    });
+        if (rectToUse) {
+          updatePopupPosition(popupEl, rectToUse);
+        }
+      }
+    }
 
-    await Promise.all([scrollPromise, popupPromise]);
-
-    // Reset the flag only after all async operations are considered complete
-    isRepositioning = false;
-  }, 150);
-
-  function triggerLayoutUpdate() {
-    // This function is called directly by the event listener.
-    // It sets the flag immediately and then calls the debounced actions.
-    isRepositioning = true;
-    debouncedLayoutUpdateActions();
-  }
-
-  
-
-  
-
-  
+    // --- Part 3: Perform the scroll action ---
+    // Use a timeout to ensure all layout adjustments have been painted by the browser.
+    setTimeout(() => {
+        if (isPlaying && !isPaused) {
+            const nowPlayingRow = document.getElementById('nowPlaying');
+            if (nowPlayingRow) {
+                nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else if (closestRowBeforeResize && document.body.contains(closestRowBeforeResize)) {
+            closestRowBeforeResize.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50); // A small delay is safer.
+  }, 150); // Debounce the entire handler
 
   const debouncedMobileSelectionHandler = debounce(function() {
     const selection = window.getSelection();
@@ -2898,7 +2846,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         tbody.appendChild(fragment);
     }
     
-    setTimeout(() => triggerLayoutUpdate(), 50);
+    setTimeout(() => handleResizeActions(), 50);
 }
 
 function scrollHandler() {
@@ -3217,7 +3165,7 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
                 this.innerHTML = '<i class="fas fa-pause"></i>';
                 if (nowPlayingRow) {
                     nowPlayingRow.classList.remove('paused-playback');
-                    triggerLayoutUpdate();
+                    handleResizeActions();
                 }
             } else {
                 currentAudio?.pause();
@@ -3631,17 +3579,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
-  window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
-  // Set up a ResizeObserver to handle font size changes and other layout shifts
-  if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(triggerLayoutUpdate);
-    resizeObserver.observe(mainContent, { box: 'border-box' });
-  }
-  // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', triggerLayoutUpdate);
-
-  // Initial call to set things right
-  triggerLayoutUpdate();
+  window.addEventListener('resize', handleResizeActions);
+  handleResizeActions(); // Initial call
 }
 
 // Start the application
