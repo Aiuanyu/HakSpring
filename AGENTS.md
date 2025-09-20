@@ -95,7 +95,3 @@
 - [Reference and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8-reference-and-configuration)
 	- [URL Patterns and Data Formats](https://deepwiki.com/Aiuanyu/HakSpring/8.1-url-patterns-and-data-formats)
 	- [Supporting Assets and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8.2-supporting-assets-and-configuration)
-
-## Branching and Communication
-
-If you need to create a new branch for your work (e.g., to recover from an error or start a clean implementation), you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays.
