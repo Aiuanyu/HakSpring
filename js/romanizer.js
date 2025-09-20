@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function hideRomanizer() {
+  window.hideRomanizer = function() {
     if (romanizerContainer) {
       romanizerContainer.style.display = 'none';
     }

@@ -2115,6 +2115,12 @@ function isFirefox() {
           infoModal.style.display = 'none';
           if (infoButton) infoButton.focus();
           console.log('Global hotkey: Escape pressed, closing info modal.');
+      } else if (typeof window.hideRomanizer === 'function' && document.getElementById('romanizerContainer').style.display === 'flex') {
+          event.preventDefault();
+          window.hideRomanizer();
+          const showRomanizerBtn = document.getElementById('showRomanizerBtn');
+          if (showRomanizerBtn) showRomanizerBtn.focus();
+          console.log('Global hotkey: Escape pressed, closing romanizer modal.');
       } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
         if (activeElement) {
           activeElement.blur();
