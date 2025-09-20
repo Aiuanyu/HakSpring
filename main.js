@@ -2015,80 +2015,6 @@ function isFirefox() {
 
 
 
-  const handleResizeActions = debounce(() => {
-    // --- Part 1: Capture the state BEFORE making changes ---
-    let closestRowBeforeResize = null;
-    // Only bother finding the center row if we're not in active playback.
-    if (!isPlaying || isPaused) {
-        const table = document.getElementById('category-table');
-        if (table) {
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
-            if (rows.length > 0) {
-                const viewportCenterY = window.innerHeight / 2;
-                let smallestDistance = Infinity;
-                for (const row of rows) {
-                    const rect = row.getBoundingClientRect();
-                    if (rect.height === 0) continue; // Skip invisible rows
-                    const rowCenterY = rect.top + rect.height / 2;
-                    const distance = Math.abs(viewportCenterY - rowCenterY);
-                    if (distance < smallestDistance) {
-                        smallestDistance = distance;
-                        closestRowBeforeResize = row;
-                    }
-                }
-            }
-        }
-    }
-
-    // --- Part 2: Perform all synchronous layout adjustments ---
-    if (contentContainer) {
-        adjustAllRubyFontSizes(contentContainer);
-    }
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach(ruby => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        if (rt.offsetWidth > ruby.offsetWidth) {
-          const scale = ruby.offsetWidth / rt.offsetWidth;
-          rt.style.transform = `scaleX(${scale * 0.95})`;
-          rt.style.transformOrigin = 'left';
-        } else {
-          rt.style.transform = 'none';
-        }
-      }
-    });
-    adjustHeaderFontSizeOnOverflow();
-    adjustResultsSummaryFontSize();
-
-    if (activeSelectionPopup) {
-      const popupEl = document.getElementById('selectionPopup');
-      if (popupEl && popupEl.style.display === 'block') {
-        let rectToUse = null;
-        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
-        } else if (lastRectForPopupPositioning) {
-          rectToUse = lastRectForPopupPositioning;
-        }
-        if (rectToUse) {
-          updatePopupPosition(popupEl, rectToUse);
-        }
-      }
-    }
-
-    // --- Part 3: Perform the scroll action ---
-    // Use a timeout to ensure all layout adjustments have been painted by the browser.
-    setTimeout(() => {
-        if (isPlaying && !isPaused) {
-            const nowPlayingRow = document.getElementById('nowPlaying');
-            if (nowPlayingRow) {
-                nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        } else if (closestRowBeforeResize && document.body.contains(closestRowBeforeResize)) {
-            closestRowBeforeResize.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 50); // A small delay is safer.
-  }, 150); // Debounce the entire handler
-
   const debouncedMobileSelectionHandler = debounce(function() {
     const selection = window.getSelection();
     const contentContainer = document.getElementById('generated');
@@ -3251,6 +3177,81 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
          startPlayingFromIndex(itemIndex);
     }
 }
+
+  const handleResizeActions = debounce(() => {
+    const contentContainer = document.getElementById('generated');
+    // --- Part 1: Capture the state BEFORE making changes ---
+    let closestRowBeforeResize = null;
+    // Only bother finding the center row if we're not in active playback.
+    if (!isPlaying || isPaused) {
+        const table = document.getElementById('category-table');
+        if (table) {
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            if (rows.length > 0) {
+                const viewportCenterY = window.innerHeight / 2;
+                let smallestDistance = Infinity;
+                for (const row of rows) {
+                    const rect = row.getBoundingClientRect();
+                    if (rect.height === 0) continue; // Skip invisible rows
+                    const rowCenterY = rect.top + rect.height / 2;
+                    const distance = Math.abs(viewportCenterY - rowCenterY);
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestRowBeforeResize = row;
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Part 2: Perform all synchronous layout adjustments ---
+    if (contentContainer) {
+        adjustAllRubyFontSizes(contentContainer);
+    }
+    const rubies = document.querySelectorAll('ruby');
+    rubies.forEach(ruby => {
+      const rt = ruby.querySelector('rt');
+      if (rt) {
+        if (rt.offsetWidth > ruby.offsetWidth) {
+          const scale = ruby.offsetWidth / rt.offsetWidth;
+          rt.style.transform = `scaleX(${scale * 0.95})`;
+          rt.style.transformOrigin = 'left';
+        } else {
+          rt.style.transform = 'none';
+        }
+      }
+    });
+    adjustHeaderFontSizeOnOverflow();
+    adjustResultsSummaryFontSize();
+
+    if (activeSelectionPopup) {
+      const popupEl = document.getElementById('selectionPopup');
+      if (popupEl && popupEl.style.display === 'block') {
+        let rectToUse = null;
+        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+        } else if (lastRectForPopupPositioning) {
+          rectToUse = lastRectForPopupPositioning;
+        }
+        if (rectToUse) {
+          updatePopupPosition(popupEl, rectToUse);
+        }
+      }
+    }
+
+    // --- Part 3: Perform the scroll action ---
+    // Use a timeout to ensure all layout adjustments have been painted by the browser.
+    setTimeout(() => {
+        if (isPlaying && !isPaused) {
+            const nowPlayingRow = document.getElementById('nowPlaying');
+            if (nowPlayingRow) {
+                nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else if (closestRowBeforeResize && document.body.contains(closestRowBeforeResize)) {
+            closestRowBeforeResize.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50); // A small delay is safer.
+  }, 250); // Debounce the entire handler
 
   preprocessAllData(); // <-- 確保這一行被執行
 
