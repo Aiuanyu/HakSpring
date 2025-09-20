@@ -1170,6 +1170,7 @@ function initializeAppUI() {
 
   let successfullyLoadedFromUrl = false;
 
+  const mainContent = document.getElementById('main-content');
   const resultsSummaryContainer = document.getElementById('results-summary');
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
@@ -2072,18 +2073,17 @@ function isFirefox() {
 
     // Create promises for the asynchronous actions
     const scrollPromise = new Promise(resolve => {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             if (isPlaying && !isPaused) {
                 const nowPlayingRow = document.getElementById('nowPlaying');
                 if (nowPlayingRow) {
-                    nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    nowPlayingRow.scrollIntoView({ behavior: 'instant', block: 'center' });
                 }
             } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
-                lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                lastCenteredRow.scrollIntoView({ behavior: 'instant', block: 'center' });
             }
-            // Approximate scroll completion
-            setTimeout(resolve, 250);
-        }, 0);
+            resolve();
+        });
     });
 
     const popupPromise = new Promise(resolve => {
