@@ -822,6 +822,7 @@ input:checked + .slider:before {
 
 #search-popup {
   display: none; /* 預設隱藏 */
+  position: relative; /* Make it a positioning context for the help button */
   position: absolute;
   top: 100%; /* 在輸入框下方 */
   right: 0;
@@ -837,6 +838,15 @@ input:checked + .slider:before {
 
 #search-container.active #search-popup {
   display: block; /* 當容器有 active class 時顯示 */
+}
+
+#lookupHelpBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  /* Reset some of the default button styles inherited from the header */
+  padding: 2px 5px;
+  font-size: 1rem;
 }
 
 #dialect-selection, #search-mode-selection {
@@ -1349,7 +1359,8 @@ input:checked + .slider:before {
 
 /* Info Button in Header */
 #infoButton,
-#showRomanizerBtn {
+#showRomanizerBtn,
+#lookupHelpBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1371,7 +1382,8 @@ input:checked + .slider:before {
 }
 
 /* Info Modal Styles */
-#infoModal.modal-overlay {
+#infoModal.modal-overlay,
+#lookupHelpModal.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -1386,7 +1398,8 @@ input:checked + .slider:before {
   box-sizing: border-box;
 }
 
-#infoModal .modal-dialog {
+#infoModal .modal-dialog,
+#lookupHelpModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
@@ -1397,10 +1410,11 @@ input:checked + .slider:before {
   max-height: 700px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 避免 iframe 載入前內容溢出 */
+  overflow: hidden;
 }
 
-#infoModal .modal-header {
+#infoModal .modal-header,
+#lookupHelpModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1409,7 +1423,8 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
-#infoModal .modal-title {
+#infoModal .modal-title,
+#lookupHelpModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -1418,6 +1433,7 @@ input:checked + .slider:before {
 }
 
 #infoModal .modal-close-btn,
+#lookupHelpModal .modal-close-btn,
 #romanizerContainer .modal-close-btn {
   background: none;
   border: none;
@@ -1430,16 +1446,19 @@ input:checked + .slider:before {
 }
 #infoModal .modal-close-btn:hover,
 #infoModal .modal-close-btn:focus-visible,
+#lookupHelpModal .modal-close-btn:hover,
+#lookupHelpModal .modal-close-btn:focus-visible,
 #romanizerContainer .modal-close-btn:hover,
 #romanizerContainer .modal-close-btn:focus-visible {
   color: #333;
 }
 
-#infoModal .modal-body {
-  padding: 0; /* iframe 內容由 info.html 自行處理 padding */
+#infoModal .modal-body,
+#lookupHelpModal .modal-body {
+  padding: 20px 30px;
   flex-grow: 1;
-  overflow: hidden; /* iframe 容器 */
-  -webkit-overflow-scrolling: touch; /* iOS iframe 內容順暢捲動 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 #infoModal .modal-body iframe {
@@ -1451,32 +1470,64 @@ input:checked + .slider:before {
 /* Dark Mode for Info Modal */
 @media (prefers-color-scheme: dark) {
   #infoButton,
-  #showRomanizerBtn {
+  #showRomanizerBtn,
+  #lookupHelpBtn {
     color: var(--main-text-color);
   }
   #infoButton:hover i,
-  #showRomanizerBtn:hover i {
+  #showRomanizerBtn:hover i,
+  #lookupHelpBtn:hover i {
     color: var(--focus-glow-color);
   }
 
-  #infoModal.modal-overlay {
+  #infoModal.modal-overlay,
+  #lookupHelpModal.modal-overlay {
     background-color: rgba(0, 0, 0, 0.75);
   }
-  #infoModal .modal-dialog {
+
+  #infoModal .modal-dialog,
+  #lookupHelpModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
-  #infoModal .modal-header {
+
+  #infoModal .modal-header,
+  #lookupHelpModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
+
   #infoModal .modal-close-btn,
+  #lookupHelpModal .modal-close-btn,
   #romanizerContainer .modal-close-btn {
     color: #aaa;
   }
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
+  #lookupHelpModal .modal-close-btn:hover,
+  #lookupHelpModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
   #romanizerContainer .modal-close-btn:focus-visible {
     color: #fff;
+  }
+
+  #infoModal .modal-body h1,
+  #lookupHelpModal .modal-body h1 {
+    border-bottom-color: rgba(255, 255, 255, 0.3);
+  }
+
+  #infoModal .modal-body a,
+  #lookupHelpModal .modal-body a {
+    color: var(--dark-link-color);
+  }
+
+  #infoModal .modal-footer,
+  #lookupHelpModal .modal-footer {
+    background-color: #343a40;
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+
+  #infoModal .modal-footer label,
+  #lookupHelpModal .modal-footer label {
+    color: var(--main-text-color);
   }
 }
 
@@ -1761,7 +1812,8 @@ mark {
 }
 
 /* --- Info Modal Styles --- */
-#infoModal .modal-body {
+#infoModal .modal-body,
+#lookupHelpModal .modal-body {
   max-height: 70vh; /* 設定最大高度，例如視窗高度的 70% */
   overflow-y: auto; /* 當內容超過最大高度時，顯示垂直捲動軸 */
   padding: 20px 30px; /* 增加內距，上下 20px，左右 30px */
@@ -1769,43 +1821,54 @@ mark {
 }
 
 #infoModal .modal-body h1,
+#lookupHelpModal .modal-body h1,
 #infoModal .modal-body h2,
-#infoModal .modal-body h3 {
+#lookupHelpModal .modal-body h2,
+#infoModal .modal-body h3,
+#lookupHelpModal .modal-body h3 {
   margin-top: 1.5em;
   margin-bottom: 0.8em;
   color: var(--main-text-color); /* 確保標題顏色與主題一致 */
 }
 
-#infoModal .modal-body h1 {
+#infoModal .modal-body h1,
+#lookupHelpModal .modal-body h1 {
   font-size: 1.8rem;
   border-bottom: 2px solid var(--main-text-color);
   padding-bottom: 0.3em;
 }
 
-#infoModal .modal-body h2 {
+#infoModal .modal-body h2,
+#lookupHelpModal .modal-body h2 {
   font-size: 1.5rem;
 }
 
 #infoModal .modal-body p,
-#infoModal .modal-body li {
+#lookupHelpModal .modal-body p,
+#infoModal .modal-body li,
+#lookupHelpModal .modal-body li {
   font-size: 1rem;
   margin-bottom: 0.8em;
 }
 
-#infoModal .modal-body ul {
+#infoModal .modal-body ul,
+#lookupHelpModal .modal-body ul {
   padding-left: 25px; /* 讓清單項目有內縮 */
 }
 
-#infoModal .modal-body a {
+#infoModal .modal-body a,
+#lookupHelpModal .modal-body a {
   color: #007bff; /* 使用較亮的藍色讓連結更明顯 */
   text-decoration: underline;
 }
 
-#infoModal .modal-body a:hover {
+#infoModal .modal-body a:hover,
+#lookupHelpModal .modal-body a:hover {
   color: #0056b3;
 }
 
-#infoModal .modal-body hr {
+#infoModal .modal-body hr,
+#lookupHelpModal .modal-body hr {
   border: 0;
   border-top: 1px solid #ccc;
   margin: 2em 0;

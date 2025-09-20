@@ -3567,6 +3567,37 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   window.addEventListener('resize', handleResizeActions);
   handleResizeActions();
+
+  // --- Lookup Help Modal Logic ---
+  const lookupHelpBtn = document.getElementById('lookupHelpBtn');
+  const lookupHelpModal = document.getElementById('lookupHelpModal');
+  const lookupHelpModalCloseBtn = document.getElementById('lookupHelpModalCloseBtn');
+
+  if (lookupHelpBtn && lookupHelpModal && lookupHelpModalCloseBtn) {
+    lookupHelpBtn.addEventListener('click', () => {
+      fetch('lookup.md')
+        .then(response => response.text())
+        .then(markdown => {
+          document.getElementById('lookup-help-content').innerHTML = marked.parse(markdown);
+          lookupHelpModal.style.display = 'flex';
+        })
+        .catch(error => {
+          document.getElementById('lookup-help-content').innerHTML = '<p>說明文件載入失敗。</p>';
+          lookupHelpModal.style.display = 'flex';
+        });
+    });
+
+    const closeLookupHelpModal = () => {
+      lookupHelpModal.style.display = 'none';
+    };
+
+    lookupHelpModalCloseBtn.addEventListener('click', closeLookupHelpModal);
+    lookupHelpModal.addEventListener('click', (event) => {
+      if (event.target === lookupHelpModal) {
+        closeLookupHelpModal();
+      }
+    });
+  }
 }
 
 // Start the application
