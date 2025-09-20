@@ -1232,14 +1232,17 @@ function initializeAppUI() {
   function repositionViewport() {
     isRepositioning = true;
 
-    if (isPlaying) {
-      const nowPlayingRow = document.getElementById('nowPlaying');
-      if (nowPlayingRow) {
-        nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Defer the scrolling to prevent race conditions with layout reflow.
+    setTimeout(() => {
+      if (isPlaying) {
+        const nowPlayingRow = document.getElementById('nowPlaying');
+        if (nowPlayingRow) {
+          nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+        lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
-      lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    }, 0);
 
     // Re-run the original layout adjustment logic from handleResizeActions
     const contentContainer = document.getElementById('generated');
