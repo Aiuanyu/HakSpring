@@ -178,7 +178,7 @@ ruby.sandhi-高降變 {
     color: red;
 }
 ruby.sandhi-中平變 {
-    color: green;
+    color: orange;
 }
 ruby.sandhi-低升變 {
     color: blue;
@@ -357,7 +357,7 @@ audio[data-skip='true'] {
   background-color: #76ad67;
 }
 .大埔 {
-  background-color: orange;
+  background-color: #5898a9;
 }
 .饒平 {
   background-color: #834fa1;
@@ -955,10 +955,6 @@ input:checked + .slider:before {
     color: var(--main-text-color); /* 區塊內文字用淺色 */
     border: 1px solid rgba(255, 255, 255, 0.2); /* 加點邊框增加區別 */
     border-radius: 5px; /* 加圓角 */
-  }
-  .大埔 {
-    background-color: lightgreen;
-    filter: none;
   }
   .dialect > span[data-varname] > a {
     color: #fff; /* 腔調內連結用白色較清楚 */
