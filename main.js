@@ -133,6 +133,8 @@ let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
+let lastCenteredRow = null;
+let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -1166,6 +1168,132 @@ function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log("Initializing UI...");
 
+  function updateLastCenteredRow() {
+    if (isRepositioning) return;
+
+    const table = document.getElementById('category-table');
+    if (!table || (isPlaying && !isPaused)) {
+      lastCenteredRow = null;
+      return;
+    }
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (rows.length === 0) {
+      lastCenteredRow = null;
+      return;
+    }
+
+    const viewportCenterY = window.innerHeight / 2;
+    let closestRow = null;
+    let smallestDistance = Infinity;
+
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+
+      const rowCenterY = rect.top + rect.height / 2;
+      const distance = Math.abs(viewportCenterY - rowCenterY);
+
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    if (closestRow) {
+      lastCenteredRow = closestRow;
+    }
+  }
+  const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
+
+  const debouncedLayoutUpdateActions = debounce(async () => {
+    // This contains the actual logic, which is debounced.
+
+    // Run synchronous layout adjustments first
+    const contentContainer = document.getElementById('generated');
+    if (contentContainer) {
+        adjustAllRubyFontSizes(contentContainer);
+    }
+    const rubies = document.querySelectorAll('ruby');
+    rubies.forEach(ruby => {
+      const rt = ruby.querySelector('rt');
+      if (rt) {
+        if (rt.offsetWidth > ruby.offsetWidth) {
+          const scale = ruby.offsetWidth / rt.offsetWidth;
+          rt.style.transform = `scaleX(${scale * 0.95})`;
+          rt.style.transformOrigin = 'left';
+        } else {
+          rt.style.transform = 'none';
+        }
+      }
+    });
+    adjustHeaderFontSizeOnOverflow();
+    adjustResultsSummaryFontSize();
+
+    // Create promises for the asynchronous actions
+    const scrollPromise = new Promise(resolve => {
+        setTimeout(() => {
+            if (isPlaying && !isPaused) {
+                const nowPlayingRow = document.getElementById('nowPlaying');
+                if (nowPlayingRow) {
+                    nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+                lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            // Approximate scroll completion
+            setTimeout(resolve, 250);
+        }, 0);
+    });
+
+    const popupPromise = new Promise(resolve => {
+        if (activeSelectionPopup) {
+            const popupEl = document.getElementById('selectionPopup');
+            if (popupEl && popupEl.style.display === 'block') {
+                let rectToUse = null;
+                if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+                    rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
+                } else if (lastRectForPopupPositioning) {
+                    rectToUse = lastRectForPopupPositioning;
+                }
+
+                if (rectToUse) {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
+                                return resolve();
+                            }
+                            let currentRect = rectToUse;
+                            if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
+                                currentRect = lastAnchorElementForPopup.getBoundingClientRect();
+                            }
+                            updatePopupPosition(popupEl, currentRect);
+                            resolve();
+                        }, 100);
+                    });
+                } else {
+                    resolve();
+                }
+            } else {
+                resolve();
+            }
+        } else {
+            resolve();
+        }
+    });
+
+    await Promise.all([scrollPromise, popupPromise]);
+
+    // Reset the flag only after all async operations are considered complete
+    isRepositioning = false;
+  }, 150);
+
+  function triggerLayoutUpdate() {
+    // This function is called directly by the event listener.
+    // It sets the flag immediately and then calls the debounced actions.
+    isRepositioning = true;
+    debouncedLayoutUpdateActions();
+  }
+
   let successfullyLoadedFromUrl = false;
 
   const resultsSummaryContainer = document.getElementById('results-summary');
@@ -1769,7 +1897,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     updateResultsSummaryVisibility();
 
-    setTimeout(() => handleResizeActions(), 0); // Trigger font size adjustment after table is rendered
+    setTimeout(() => triggerLayoutUpdate(), 0); // Trigger font size adjustment after table is rendered
 
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
@@ -2007,56 +2135,6 @@ function isFirefox() {
     });
   }
 
-  function handleResizeActions() {
-    const contentContainer = document.getElementById('generated');
-    if (contentContainer) {
-        adjustAllRubyFontSizes(contentContainer);
-    }
-
-    const rubies = document.querySelectorAll('ruby');
-    rubies.forEach(ruby => {
-      const rt = ruby.querySelector('rt');
-      if (rt) {
-        if (rt.offsetWidth > ruby.offsetWidth) {
-          const scale = ruby.offsetWidth / rt.offsetWidth;
-          rt.style.transform = `scaleX(${scale * 0.95})`;
-          rt.style.transformOrigin = 'left';
-        } else {
-          rt.style.transform = 'none';
-        }
-      }
-    });
-
-    adjustHeaderFontSizeOnOverflow();
-    adjustResultsSummaryFontSize();
-
-    if (activeSelectionPopup) {
-      const popupEl = document.getElementById('selectionPopup');
-      if (popupEl && popupEl.style.display === 'block') {
-        let rectToUse = null;
-        if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-          rectToUse = lastAnchorElementForPopup.getBoundingClientRect();
-        } else if (lastRectForPopupPositioning) {
-          rectToUse = lastRectForPopupPositioning;
-        }
-
-        if (rectToUse) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              if (lastAnchorElementForPopup && !document.body.contains(lastAnchorElementForPopup)) {
-                return;
-              }
-              let currentRect = rectToUse;
-              if (lastAnchorElementForPopup && document.body.contains(lastAnchorElementForPopup)) {
-                   currentRect = lastAnchorElementForPopup.getBoundingClientRect();
-              }
-              updatePopupPosition(popupEl, currentRect);
-            }, 100);
-          });
-        }
-      }
-    }
-  }
 
   
 
@@ -2195,7 +2273,6 @@ function isFirefox() {
     }
   });
 
-  window.addEventListener('resize', debounce(handleResizeActions, 250));
 
   
 // --- 新增：更新網頁標題函式 ---
@@ -2823,7 +2900,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         tbody.appendChild(fragment);
     }
     
-    setTimeout(() => handleResizeActions(), 50);
+    setTimeout(() => triggerLayoutUpdate(), 50);
 }
 
 function scrollHandler() {
@@ -3140,7 +3217,10 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
                 currentAudio?.play().catch((e) => console.error('恢復播放失敗:', e));
                 isPaused = false;
                 this.innerHTML = '<i class="fas fa-pause"></i>';
-                if (nowPlayingRow) nowPlayingRow.classList.remove('paused-playback');
+                if (nowPlayingRow) {
+                    nowPlayingRow.classList.remove('paused-playback');
+                    triggerLayoutUpdate();
+                }
             } else {
                 currentAudio?.pause();
                 isPaused = true;
@@ -3553,8 +3633,17 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
-  window.addEventListener('resize', handleResizeActions);
-  handleResizeActions();
+  window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
+  // Set up a ResizeObserver to handle font size changes and other layout shifts
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(triggerLayoutUpdate);
+    resizeObserver.observe(mainContent, { box: 'border-box' });
+  }
+  // Always listen to the resize event as a fallback and for window resizes
+  window.addEventListener('resize', triggerLayoutUpdate);
+
+  // Initial call to set things right
+  triggerLayoutUpdate();
 }
 
 // Start the application
