@@ -1370,22 +1370,23 @@ input:checked + .slider:before {
   color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
 }
 
-/* Info Modal Styles */
-#infoModal.modal-overlay {
+/* Modal Overlay Styles */
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.65);
-  z-index: 1050; /* 比 selectionPopup 高 */
-  display: none; /* 預設隱藏 */
+  z-index: 1050;
+  display: none; /* Controlled by JS */
   align-items: center;
   justify-content: center;
-  padding: 20px; /* 針對細螢幕加 padding */
+  padding: 20px;
   box-sizing: border-box;
 }
 
+/* Info Modal Dialog Specific Styles */
 #infoModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
@@ -2196,6 +2197,7 @@ mark {
   border: 1px solid #ccc;
   border-radius: 5px;
   resize: vertical;
+  box-sizing: border-box; /* Fix width overflow */
 }
 
 #romanizer-start-btn {
