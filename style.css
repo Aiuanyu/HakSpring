@@ -2084,6 +2084,7 @@ mark {
   max-height: 800px; /* Set max-height */
   display: flex;
   flex-direction: column;
+  overflow-y: auto; /* Make the dialog itself scroll */
 }
 
 #romanizerContainer .romanizer-content {
@@ -2132,8 +2133,6 @@ mark {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  overflow-y: auto; /* Allow content to scroll */
-  min-height: 0; /* Fix for flexbox overflow */
 }
 
 #romanizer-output-container {
