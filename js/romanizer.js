@@ -151,8 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Functions ---
   function showRomanizer() {
     if (romanizerContainer) {
-      romanizerContainer.style.display = 'block';
-      romanizerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      romanizerContainer.classList.add('is-visible');
       if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
         const mainDialect = currentActiveMainDialectName;
         const isValidOption = Array.from(romanizerDialectSelector.options).some(opt => opt.value === mainDialect);
@@ -169,10 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function hideRomanizer() {
     if (romanizerContainer) {
-      romanizerContainer.style.display = 'none';
+      romanizerContainer.classList.remove('is-visible');
     }
   }
   
+  document.addEventListener('closeRomanizer', hideRomanizer);
+
   function handleSegmentClick(event) {
         const target = event.target;
         const resegmentBtn = target.closest('.resegment-btn');

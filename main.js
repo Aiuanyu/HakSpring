@@ -1189,6 +1189,7 @@ function initializeAppUI() {
   const infoButton = document.getElementById('infoButton');
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
+  const romanizerContainer = document.getElementById('romanizerContainer');
 
   // All data variables from the included JS files
   const allData = {
@@ -2110,11 +2111,17 @@ function isFirefox() {
         const backdropEl = document.getElementById('selectionPopupBackdrop');
         hidePronunciationPopup(popupEl, backdropEl);
         console.log('Global hotkey: Escape pressed, closing selection popup.');
-      } else if (infoModal && (infoModal.style.display === 'flex' || infoModal.style.display === 'block')) {
+      } else if (infoModal && infoModal.classList.contains('is-visible')) {
           event.preventDefault();
-          infoModal.style.display = 'none';
+          infoModal.classList.remove('is-visible');
           if (infoButton) infoButton.focus();
           console.log('Global hotkey: Escape pressed, closing info modal.');
+      } else if (romanizerContainer && romanizerContainer.classList.contains('is-visible')) {
+          event.preventDefault();
+          document.dispatchEvent(new CustomEvent('closeRomanizer'));
+          const showRomanizerBtn = document.getElementById('showRomanizerBtn');
+          if (showRomanizerBtn) showRomanizerBtn.focus();
+          console.log('Global hotkey: Escape pressed, closing romanizer modal via custom event.');
       } else if (isGeneralInputLikeFocused && activeElement && activeElement.tagName !== 'BODY') {
         if (activeElement) {
           activeElement.blur();
@@ -3430,17 +3437,17 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       });
     const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
     if (!dontShowAgain) {
-      infoModal.style.display = 'flex';
+      infoModal.classList.add('is-visible');
     }
     infoButton.addEventListener('click', () => {
-      infoModal.style.display = 'flex';
+      infoModal.classList.add('is-visible');
       trackEvent('open', 'InfoModal', 'click_info_button');
     });
     const closeInfoModal = () => {
       if (document.getElementById('dontShowInfoModalAgain').checked) {
         localStorage.setItem('dontShowInfoModalAgain', 'true');
       }
-      infoModal.style.display = 'none';
+      infoModal.classList.remove('is-visible');
     };
     infoModalCloseBtn.addEventListener('click', closeInfoModal);
     infoModal.addEventListener('click', (event) => {

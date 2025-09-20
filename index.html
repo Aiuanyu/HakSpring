@@ -297,41 +297,43 @@
     </details>
 
     <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
-    <div id="romanizerContainer" style="display: none;">
-      <div class="romanizer-content">
-        <div class="modal-header">
-          <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
-          <select id="romanizer-dialect-selector">
-            <option selected disabled>擇腔調</option>
-            <option>四縣</option>
-            <option>海陸</option>
-            <option>大埔</option>
-            <option>饒平</option>
-            <option>詔安</option>
-            <option>南四縣</option>
-          </select>
-          <!-- 【新增】連詞模式選擇器 -->
-          <select id="romanizer-joining-mode-selector">
-            <option value="none" selected>"liěncǐi fóngsìid"（詞中無空格）</option>
-            <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
-            <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
-          </select>
-          <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
-        </div>
-        <div class="modal-body">
-          <!-- 【新增】Undo/Redo 控制按鈕 -->
-          <div id="romanizer-history-controls">
-            <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
-            <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+    <div id="romanizerContainer" class="modal-overlay">
+      <div class="modal-dialog">
+        <div class="romanizer-content">
+          <div class="modal-header">
+            <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
+            <select id="romanizer-dialect-selector">
+              <option selected disabled>擇腔調</option>
+              <option>四縣</option>
+              <option>海陸</option>
+              <option>大埔</option>
+              <option>饒平</option>
+              <option>詔安</option>
+              <option>南四縣</option>
+            </select>
+            <!-- 【新增】連詞模式選擇器 -->
+            <select id="romanizer-joining-mode-selector">
+              <option value="none" selected>"liěncǐi fóngsìid"（詞中無空格）</option>
+              <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
+              <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
+            </select>
+            <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
           </div>
-          <div id="romanizer-output-container">
-            <div id="romanizer-output"></div>
-            <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
-          </div>
-          <div id="segmentation-workspace"></div>
-          <div class="romanizer-section">
-            <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
-            <button id="romanizer-start-btn">開始斷詞轉換</button>
+          <div class="modal-body">
+            <!-- 【新增】Undo/Redo 控制按鈕 -->
+            <div id="romanizer-history-controls">
+              <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+              <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+            </div>
+            <div id="romanizer-output-container">
+              <div id="romanizer-output"></div>
+              <button id="copy-romanizer-result-btn" title="複製結果"><i class="fas fa-copy"></i></button>
+            </div>
+            <div id="segmentation-workspace"></div>
+            <div class="romanizer-section">
+              <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
+              <button id="romanizer-start-btn">開始斷詞轉換</button>
+            </div>
           </div>
         </div>
       </div>
@@ -377,7 +379,7 @@
     </div>
 
     <!-- Info Modal -->
-    <div id="infoModal" class="modal-overlay" style="display: none;">
+    <div id="infoModal" class="modal-overlay">
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
