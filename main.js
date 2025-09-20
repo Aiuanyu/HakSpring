@@ -1168,30 +1168,6 @@ function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log("Initializing UI...");
 
-  let successfullyLoadedFromUrl = false;
-
-  const resultsSummaryContainer = document.getElementById('results-summary');
-  const searchContainer = document.getElementById('search-container');
-  const searchInput = document.getElementById('search-input');
-  const searchPopup = document.getElementById('search-popup');
-  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
-  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
-  const progressDropdown = document.getElementById('progressDropdown');
-  const progressDetailsSpan = document.getElementById('progressDetails');
-  const contentContainer = document.getElementById('generated');
-  const header = document.getElementById('header');
-  const backToTopButton = document.getElementById('backToTopBtn');
-  const autoplayModal = document.getElementById('autoplayModal');
-  const modalContent = autoplayModal ? autoplayModal.querySelector('.modal-content') : null;
-  const dialectLevelLinks = document.querySelectorAll('.dialect a');
-  const selectionPopup = document.getElementById('selectionPopup');
-  const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-  const selectionPopupContent = document.getElementById('selectionPopupContent');
-  const selectionPopupCloseBtn = document.getElementById('selectionPopupCloseBtn');
-  const infoButton = document.getElementById('infoButton');
-  const infoModal = document.getElementById('infoModal');
-  const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
-
   function updateLastCenteredRow() {
     if (isRepositioning) return;
 
@@ -1229,9 +1205,8 @@ function initializeAppUI() {
   }
   const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, 100);
 
-  function repositionViewport() {
-    isRepositioning = true;
-
+  const debouncedRepositionActions = debounce(() => {
+    // This contains the actual logic, which is debounced.
     // Defer the scrolling to prevent race conditions with layout reflow.
     setTimeout(() => {
       if (isPlaying && !isPaused) {
@@ -1244,7 +1219,7 @@ function initializeAppUI() {
       }
     }, 0);
 
-    // Re-run the original layout adjustment logic from handleResizeActions
+    // Re-run the original layout adjustment logic
     const contentContainer = document.getElementById('generated');
     if (contentContainer) {
         adjustAllRubyFontSizes(contentContainer);
@@ -1294,8 +1269,38 @@ function initializeAppUI() {
     setTimeout(() => {
       isRepositioning = false;
     }, 300);
+  }, 150);
+
+  function repositionViewport() {
+    // This function is called directly by the event listener.
+    // It sets the flag immediately and then calls the debounced actions.
+    isRepositioning = true;
+    debouncedRepositionActions();
   }
-  const debouncedRepositionViewport = debounce(repositionViewport, 150);
+
+  let successfullyLoadedFromUrl = false;
+
+  const resultsSummaryContainer = document.getElementById('results-summary');
+  const searchContainer = document.getElementById('search-container');
+  const searchInput = document.getElementById('search-input');
+  const searchPopup = document.getElementById('search-popup');
+  const searchDialectRadios = document.querySelectorAll('#search-popup input[name="dialect"]');
+  const searchModeRadios = document.querySelectorAll('#search-popup input[name="search-mode"]');
+  const progressDropdown = document.getElementById('progressDropdown');
+  const progressDetailsSpan = document.getElementById('progressDetails');
+  const contentContainer = document.getElementById('generated');
+  const header = document.getElementById('header');
+  const backToTopButton = document.getElementById('backToTopBtn');
+  const autoplayModal = document.getElementById('autoplayModal');
+  const modalContent = autoplayModal ? autoplayModal.querySelector('.modal-content') : null;
+  const dialectLevelLinks = document.querySelectorAll('.dialect a');
+  const selectionPopup = document.getElementById('selectionPopup');
+  const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
+  const selectionPopupContent = document.getElementById('selectionPopupContent');
+  const selectionPopupCloseBtn = document.getElementById('selectionPopupCloseBtn');
+  const infoButton = document.getElementById('infoButton');
+  const infoModal = document.getElementById('infoModal');
+  const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
 
   // All data variables from the included JS files
   const allData = {
@@ -1487,7 +1492,6 @@ function initializeAppUI() {
 
 
   function performSearch(page = 1, itemsPerPage = 50) {
-    lastCenteredRow = null;
     const selectedDialect = document.querySelector('#search-popup input[name="dialect"]:checked').value;
     let searchMode = document.querySelector('#search-popup input[name="search-mode"]:checked').value;
     const keyword = searchInput.value.trim();
@@ -2253,16 +2257,7 @@ function isFirefox() {
     }
   });
 
-  // Set up a ResizeObserver to handle font size changes and other layout shifts
-  if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(debouncedRepositionViewport);
-    resizeObserver.observe(document.body, { box: 'border-box' });
-  }
-  // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', debouncedRepositionViewport);
 
-  // Initial call to set things right
-  repositionViewport();
 
 // --- 新增：更新網頁標題函式 ---
 const BASE_TITLE = '客源翠 HakSpring';
@@ -2482,7 +2477,6 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 
 // --- generate() 函式從這裡開始 ---
 function generate(content, initialCategory = null, targetRowId = null) {
-  lastCenteredRow = null;
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
 
@@ -2668,7 +2662,6 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     isPlaying = false;
     isPaused = false;
     window.removeEventListener('scroll', scrollHandler); // Remove old listener
-    window.removeEventListener('scroll', debouncedUpdateLastCenteredRow);
 
     // 2. Filter data and handle empty category
     activeCategoryData = vocabularyArray.filter((line) => line.分類 && line.分類.includes(category));
@@ -2704,13 +2697,6 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     // 6. Setup infinite scroll
     if (totalResults > ITEMS_PER_LOAD) {
         window.addEventListener('scroll', scrollHandler);
-    }
-    window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
-
-    // Initialize the centered row tracker
-    const table = document.getElementById('category-table');
-    if (table) {
-        lastCenteredRow = table.querySelector('tbody tr');
     }
 
     // 7. Handle auto-play for the specific row if requested
@@ -3631,13 +3617,14 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
   });
 
+  window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
   // Set up a ResizeObserver to handle font size changes and other layout shifts
   if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(debouncedRepositionViewport);
+    const resizeObserver = new ResizeObserver(repositionViewport);
     resizeObserver.observe(document.body, { box: 'border-box' });
   }
   // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', debouncedRepositionViewport);
+  window.addEventListener('resize', repositionViewport);
 
   // Initial call to set things right
   repositionViewport();
