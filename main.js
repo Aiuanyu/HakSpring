@@ -136,6 +136,7 @@ let isLoadingMoreItems = false;
 let lastCenteredRow = null;
 let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
+let isDebugMode = false;
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
@@ -225,6 +226,7 @@ function isSourceMatchingDialect(source, dialect) {
 }
 
 function findPronunciationsInAllDataAsync(searchText, callback) {
+  if (isDebugMode) console.log('[DEBUG] findPronunciationsInAllDataAsync called with:', searchText);
   if (!searchText || searchText.trim().length === 0) {
     callback([]);
     return;
@@ -268,6 +270,7 @@ function findPronunciationsInAllDataAsync(searchText, callback) {
     if (i < terms.length) {
       setTimeout(processChunk, 0); // Schedule next chunk
     } else {
+      if (isDebugMode) console.log('[DEBUG] findPronunciationsInAllDataAsync finished. Found readings:', foundReadings);
       callback(foundReadings); // All done
     }
   }
@@ -529,6 +532,7 @@ function applyDapuSandhiToGenerated() {
 }
 
 function showPronunciationPopup(selectedText, readings, anchorElementOrRect, callbackOnSelect, contextualDialect = null) {
+  if (isDebugMode) console.log(`[DEBUG] showPronunciationPopup called with text: "${selectedText}"`);
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
   const backdropEl = document.getElementById('selectionPopupBackdrop');
@@ -663,32 +667,48 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 }
 
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
+  if (isDebugMode) console.log('[DEBUG] handleTextSelectionInSentence triggered.');
   // This function is triggered on mouseup. We use a short timeout to let the
   // browser finalize the selection before we inspect it.
   setTimeout(() => {
     const selection = window.getSelection();
+    if (isDebugMode) console.log('[DEBUG] Selection object:', selection);
     // Ignore clicks without selection.
     if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+      if (isDebugMode) console.log('[DEBUG] Selection was empty or collapsed. Exiting.');
       return;
     }
 
     const anchorNode = selection.anchorNode;
-    if (!anchorNode) return;
+    if (isDebugMode) console.log('[DEBUG] Anchor Node:', anchorNode, 'Focus Node:', selection.focusNode);
+    if (!anchorNode) {
+        if (isDebugMode) console.log('[DEBUG] No anchor node found. Exiting.');
+        return;
+    }
 
     // The anchorNode is often a text node. We need its parent element to find the sentence.
     const parentElement = anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
+    if (isDebugMode) console.log('[DEBUG] Parent Element of anchor node:', parentElement);
     let sentenceSpan = parentElement.closest('span.sentence');
+    if (isDebugMode) console.log('[DEBUG] Result of parentElement.closest("span.sentence"):', sentenceSpan);
 
     // As a fallback (e.g., if selection is backwards), try the focus node.
     if (!sentenceSpan && selection.focusNode) {
+        if (isDebugMode) console.log('[DEBUG] No sentence span found from anchor. Trying focus node as fallback.');
         const focusParentElement = selection.focusNode.nodeType === Node.TEXT_NODE ? selection.focusNode.parentElement : selection.focusNode;
+        if (isDebugMode) console.log('[DEBUG] Parent Element of focus node:', focusParentElement);
         sentenceSpan = focusParentElement.closest('span.sentence');
+        if (isDebugMode) console.log('[DEBUG] Result of focusParentElement.closest("span.sentence"):', sentenceSpan);
     }
 
     // Ensure the selection is actually within a sentence in the generated content area.
-    if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
+    if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) {
+        if (isDebugMode) console.log('[DEBUG] No valid sentence span found in the generated area. Exiting.');
+        return;
+    }
 
     const selectedText = selection.toString().trim();
+    if (isDebugMode) console.log(`[DEBUG] Selected Text: "${selectedText}"`);
     if (selectedText.length > 0) {
       // Prefer anchoring the popup to a stable element rather than the selection rectangle,
       // as the element is more stable during screen resizes.
@@ -705,6 +725,7 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
       if (!anchorElement) {
         anchorElement = sentenceSpan;
       }
+      if (isDebugMode) console.log('[DEBUG] Anchor Element for popup:', anchorElement);
 
       if (anchorElement) {
          showPronunciationPopup(selectedText, null, anchorElement, null);
@@ -1248,6 +1269,12 @@ async function initializeApp() {
 function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log("Initializing UI...");
+
+  const urlParamsForDebug = new URLSearchParams(window.location.search);
+  if (urlParamsForDebug.get('debug') === 'true') {
+    isDebugMode = true;
+    console.log('%c[DEBUG MODE ENABLED]', 'color: #ff4500; font-weight: bold; font-size: 1.2em;');
+  }
 
   function updateLastCenteredRow() {
     if (isRepositioning) return;
