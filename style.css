@@ -537,6 +537,9 @@ span[data-varname].active-dialect-level {
 }
 
 .popup-controls { /* 新增：控制項容器 */
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Add space between items */
   padding-bottom: 10px;
   margin-bottom: 10px;
   border-bottom: 1px solid #eee;
