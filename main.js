@@ -45,10 +45,10 @@ function handleDomainMigration() {
   if (migrateBtn) {
     migrateBtn.addEventListener('click', function() {
       const keysToMigrate = [
-        'hakkaBookmarks',
-        'dontShowInfoModalAgain',
-        'lastSearchMode',
-        'lastSearchDialect',
+        LOCAL_STORAGE_BOOKMARKS,
+        LOCAL_STORAGE_HIDE_INFO_MODAL,
+        LOCAL_STORAGE_SEARCH_MODE,
+        LOCAL_STORAGE_SEARCH_DIALECT,
         'hideInfoModal'
       ];
       const migrationData = {};
@@ -56,7 +56,7 @@ function handleDomainMigration() {
         let value = localStorage.getItem(key);
         if (value !== null) {
           // The "hakkaBookmarks" key contains a JSON string, which should be parsed before being re-encoded.
-          if (key === 'hakkaBookmarks') {
+          if (key === LOCAL_STORAGE_BOOKMARKS) {
             try {
               value = JSON.parse(value);
             } catch (e) {
@@ -107,6 +107,29 @@ const DB_NAME = 'HakkaDataDB';
 const DB_VERSION = 1;
 const STORE_FILES = 'data_files';
 const STORE_VERSION = 'version_info';
+
+// --- App-wide Constants ---
+const SEARCH_MODE_HAKKA = '客家語';
+const SEARCH_MODE_MANDARIN = '華語';
+const SEARCH_MODE_HAKKA_CODE = 'hak';
+const SEARCH_MODE_MANDARIN_CODE = 'zh';
+
+const URL_PARAM_SEARCH_MODE = 'musiid';
+const URL_PARAM_SEARCH_DIALECT = 'kiong';
+const URL_PARAM_SEARCH_QUERY = 'ca';
+const URL_PARAM_ITEMS_PER_PAGE = 'bidsu';
+const URL_PARAM_PAGE_NUMBER = 'iab';
+const URL_PARAM_LEARN_DIALECT = 'dialect';
+const URL_PARAM_LEARN_LEVEL = 'level';
+const URL_PARAM_LEARN_CATEGORY = 'category';
+const URL_PARAM_LEARN_ROW = 'row';
+const URL_PARAM_ROMANIZER = 'rom';
+
+const LOCAL_STORAGE_SEARCH_MODE = 'lastSearchMode';
+const LOCAL_STORAGE_SEARCH_DIALECT = 'lastSearchDialect';
+const LOCAL_STORAGE_BOOKMARKS = 'hakkaBookmarks';
+const LOCAL_STORAGE_HIDE_INFO_MODAL = 'dontShowInfoModalAgain';
+const LOCAL_STORAGE_LEGACY_HIDE_INFO = 'hideInfoModal';
 
 // --- 全域變數 ---
 let isCrossCategoryPlaying = false; // 標記是否正在進行跨類別連續播放
@@ -1054,7 +1077,7 @@ function handleDataImport() {
         if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
           let value = parsedData[key];
           // Bookmarks are an object, so they need to be stringified for localStorage
-          if (key === 'hakkaBookmarks' && typeof value === 'object') {
+          if (key === LOCAL_STORAGE_BOOKMARKS && typeof value === 'object') {
             value = JSON.stringify(value);
           }
           localStorage.setItem(key, value);
@@ -1331,7 +1354,7 @@ function initializeAppUI() {
 
     const previousValue = progressDropdown.value;
 
-    const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    const bookmarks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_BOOKMARKS)) || [];
 
     progressDropdown.innerHTML = '<option selected disabled>擇進前个進度</option>';
     if (bookmarks.length === 0 && progressDetailsSpan) {
@@ -1375,7 +1398,7 @@ function initializeAppUI() {
     tableName,
     isPlayingContext = false
   ) {
-    let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    let bookmarks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_BOOKMARKS)) || [];
     const newBookmark = {
       rowId: rowId,
       percentage: percentage,
@@ -1423,7 +1446,7 @@ function initializeAppUI() {
     }
 
     // 4. 儲存更新後的紀錄
-    localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+    localStorage.setItem(LOCAL_STORAGE_BOOKMARKS, JSON.stringify(bookmarks));
 
     // 5. 更新下拉選單 UI
     updateProgressDropdown();
@@ -1444,7 +1467,7 @@ function initializeAppUI() {
 
         const dialectLevelCodes = extractDialectLevelCodes(tableName);
         if (dialectLevelCodes) {
-            const shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
+            const shareURL = `${baseURL}?${URL_PARAM_LEARN_DIALECT}=${dialectLevelCodes.dialect}&${URL_PARAM_LEARN_LEVEL}=${dialectLevelCodes.level}&${URL_PARAM_LEARN_CATEGORY}=${category}&${URL_PARAM_LEARN_ROW}=${rowId}`;
             const linkElement = document.createElement('a');
             linkElement.href = shareURL;
             linkElement.textContent = `#${rowId} (${percentage}%)`;
@@ -1498,8 +1521,8 @@ function initializeAppUI() {
     const keyword = searchInput.value.trim();
 
     if (keyword.length > 0 && isRomanizedHakka(keyword)) {
-        searchMode = '客家語';
-        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+        searchMode = SEARCH_MODE_HAKKA;
+        const hakkaModeRadio = document.querySelector(`input[name="search-mode"][value="${SEARCH_MODE_HAKKA}"]`);
         if (hakkaModeRadio) {
             hakkaModeRadio.checked = true;
         }
@@ -1550,7 +1573,7 @@ function initializeAppUI() {
 
 
     let results;
-    if (searchMode === '客家語') {
+    if (searchMode === SEARCH_MODE_HAKKA) {
         const lowerCaseKeyword = keyword.toLowerCase();
         const precisePhoneticRegex = /^([a-z]+[0-9]+(\s+|$))+$/i;
 
@@ -1585,7 +1608,7 @@ function initializeAppUI() {
     }
 
     const getCategoryRank = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === SEARCH_MODE_HAKKA) {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 1;
             if (inWord || inPhonetics) return 2;
@@ -1608,14 +1631,14 @@ function initializeAppUI() {
         return 0;
     });
 
-    let summaryText = `在${searchMode === '客家語' ? '客文' : '華文'}部分尋「${keyword}」，`;
+    let summaryText = `在${searchMode === SEARCH_MODE_HAKKA ? '客文' : '華文'}部分尋「${keyword}」，`;
 
     const newUrl = getBaseUrlWithoutIndex();
-    newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
-    newUrl.searchParams.set('ca', keyword);
-    newUrl.searchParams.set('bidsu', itemsPerPage.toString());
-    newUrl.searchParams.set('iab', page.toString());
-    newUrl.searchParams.set('kiong', DIALECT_NAME_TO_CODE[selectedDialect]);
+    newUrl.searchParams.set(URL_PARAM_SEARCH_MODE, searchMode === SEARCH_MODE_HAKKA ? SEARCH_MODE_HAKKA_CODE : SEARCH_MODE_MANDARIN_CODE);
+    newUrl.searchParams.set(URL_PARAM_SEARCH_QUERY, keyword);
+    newUrl.searchParams.set(URL_PARAM_ITEMS_PER_PAGE, itemsPerPage.toString());
+    newUrl.searchParams.set(URL_PARAM_PAGE_NUMBER, page.toString());
+    newUrl.searchParams.set(URL_PARAM_SEARCH_DIALECT, DIALECT_NAME_TO_CODE[selectedDialect]);
     history.pushState({}, '', newUrl);
 
     displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page, itemsPerPage);
@@ -1634,7 +1657,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     const endIndex = startIndex + itemsPerPage;
     const paginatedResults = results.slice(startIndex, endIndex);
 
-    const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+    const searchModeText = searchMode === SEARCH_MODE_HAKKA ? '客文' : '華文';
     updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
 
     if (totalResults === 0) {
@@ -1819,7 +1842,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     };
 
     const getCategoryKey = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === SEARCH_MODE_HAKKA) {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 'both';
             if (inWord || inPhonetics) return 'word_only';
@@ -2214,7 +2237,7 @@ function isFirefox() {
           if (progressDropdown && progressDropdown.options.length > 1) {
             event.preventDefault();
             const selectedValue = progressDropdown.options[1].value;
-            const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+            const bookmarks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_BOOKMARKS)) || [];
             const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
             if (firstBookmark) {
@@ -2439,7 +2462,7 @@ function updateSearchDialect(dialectName) {
   if (!dialectName) return;
 
   // 1. 更新 localStorage
-  localStorage.setItem('lastSearchDialect', dialectName);
+  localStorage.setItem(LOCAL_STORAGE_SEARCH_DIALECT, dialectName);
   console.log(`學習模式觸發：查詞腔調已更新並儲存到 localStorage: "${dialectName}"`);
 
   // 2. 更新查詞 popup 裡肚个 radio button
@@ -2474,17 +2497,17 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
   const dialectLevelCodes = extractDialectLevelCodes(dialectInfo.fullLvlName);
   if (dialectLevelCodes) {
       const newUrl = getBaseUrlWithoutIndex();
-      newUrl.searchParams.set('dialect', dialectLevelCodes.dialect);
-      newUrl.searchParams.set('level', dialectLevelCodes.level);
-      newUrl.searchParams.set('category', selectedCategory);
+      newUrl.searchParams.set(URL_PARAM_LEARN_DIALECT, dialectLevelCodes.dialect);
+      newUrl.searchParams.set(URL_PARAM_LEARN_LEVEL, dialectLevelCodes.level);
+      newUrl.searchParams.set(URL_PARAM_LEARN_CATEGORY, selectedCategory);
       
       // 拿忒所有其他無相關个參數，確保 URL 淨俐
-      newUrl.searchParams.delete('row');
-      newUrl.searchParams.delete('musiid');
-      newUrl.searchParams.delete('ca');
-      newUrl.searchParams.delete('bidsu');
-      newUrl.searchParams.delete('iab');
-      newUrl.searchParams.delete('kiong');
+      newUrl.searchParams.delete(URL_PARAM_LEARN_ROW);
+      newUrl.searchParams.delete(URL_PARAM_SEARCH_MODE);
+      newUrl.searchParams.delete(URL_PARAM_SEARCH_QUERY);
+      newUrl.searchParams.delete(URL_PARAM_ITEMS_PER_PAGE);
+      newUrl.searchParams.delete(URL_PARAM_PAGE_NUMBER);
+      newUrl.searchParams.delete(URL_PARAM_SEARCH_DIALECT);
 
       // 只有在產生的新 URL 和當前 URL 不同的情況下，才執行 pushState
       if (newUrl.toString() !== window.location.href) {
@@ -3024,13 +3047,13 @@ function playAudio(itemIndex, sessionId) {
     // --- 檢查是否已播完目前類別的所有項目 ---
     if (itemIndex >= activeCategoryData.length) {
         // --- 關鍵修正：還原舊版邏輯，在跳轉前刪除已完成類別的書籤 ---
-        let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+        let bookmarks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_BOOKMARKS)) || [];
         // 【變數路徑修正】直接從 g_currentDialectInfo 存取屬性
         const previousBookmarkIndex = bookmarks.findIndex((bm) => bm.tableName === g_currentDialectInfo.fullLvlName && bm.cat === g_currentCategory);
         if (previousBookmarkIndex > -1) {
             console.log(`移除已完成類別的書籤: ${g_currentDialectInfo.fullLvlName} - ${g_currentCategory}`);
             bookmarks.splice(previousBookmarkIndex, 1);
-            localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+            localStorage.setItem(LOCAL_STORAGE_BOOKMARKS, JSON.stringify(bookmarks));
             updateProgressDropdown();
         }
 
@@ -3331,8 +3354,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   function handleUrlChange() {
     const urlParams = new URLSearchParams(window.location.search);
-    const kiongParam = urlParams.get('kiong');
-    const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+    const kiongParam = urlParams.get(URL_PARAM_SEARCH_DIALECT);
+    const lastUsedDialect = localStorage.getItem(LOCAL_STORAGE_SEARCH_DIALECT);
     let dialectToSelect = '';
     if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
       dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
@@ -3346,29 +3369,25 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       radioToSelect.checked = true;
     }
 
-    const musiidParam = urlParams.get('musiid');
-    const lastMode = localStorage.getItem('lastSearchMode');
-    let searchModeValue = '';
-    if (musiidParam) {
-      searchModeValue = musiidParam === 'hak' ? '客家語' : '華語';
-    } else if (lastMode) {
-      searchModeValue = lastMode;
-    } else {
-      searchModeValue = '客家語';
-    }
+    const musiidParam = urlParams.get(URL_PARAM_SEARCH_MODE);
+    const lastMode = localStorage.getItem(LOCAL_STORAGE_SEARCH_MODE);
+    const searchModeValue = musiidParam
+      ? (musiidParam === SEARCH_MODE_HAKKA_CODE ? SEARCH_MODE_HAKKA : SEARCH_MODE_MANDARIN)
+      : (lastMode || SEARCH_MODE_HAKKA);
+
     const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
     if (modeRadio) {
       modeRadio.checked = true;
     }
 
-    const caParam = urlParams.get('ca');
-    const bidsuParam = urlParams.get('bidsu');
-    const iabParam = urlParams.get('iab');
-    const dialectParam = urlParams.get('dialect');
-    const levelParam = urlParams.get('level');
-    const categoryParam = urlParams.get('category');
-    const rowParam = urlParams.get('row');
-    const romParam = urlParams.get('rom');
+    const caParam = urlParams.get(URL_PARAM_SEARCH_QUERY);
+    const bidsuParam = urlParams.get(URL_PARAM_ITEMS_PER_PAGE);
+    const iabParam = urlParams.get(URL_PARAM_PAGE_NUMBER);
+    const dialectParam = urlParams.get(URL_PARAM_LEARN_DIALECT);
+    const levelParam = urlParams.get(URL_PARAM_LEARN_LEVEL);
+    const categoryParam = urlParams.get(URL_PARAM_LEARN_CATEGORY);
+    const rowParam = urlParams.get(URL_PARAM_LEARN_ROW);
+    const romParam = urlParams.get(URL_PARAM_ROMANIZER);
     successfullyLoadedFromUrl = false;
 
     if (musiidParam && caParam) {
@@ -3378,7 +3397,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       performSearch(page, itemsPerPage);
     } else if (dialectParam && levelParam && categoryParam) {
       loadedViaUrlParams = true; // 標記是透過 URL 載入
-      const rowParam = urlParams.get('row'); // 獲取 row 參數備用
+      const rowParam = urlParams.get(URL_PARAM_LEARN_ROW); // 獲取 row 參數備用
       
       let dialectName = '';
       let levelName = '';
@@ -3470,11 +3489,11 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       const showRomanizerBtn = document.getElementById('showRomanizerBtn');
 
       if (romanizerInput && showRomanizerBtn) {
-        const dialectParam = urlParams.get('kiong');
+        const dialectParam = urlParams.get(URL_PARAM_SEARCH_DIALECT);
         if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
           currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
         } else {
-          const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+          const lastUsedDialect = localStorage.getItem(LOCAL_STORAGE_SEARCH_DIALECT);
           currentActiveMainDialectName = (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) ? lastUsedDialect : '四縣';
         }
 
@@ -3498,7 +3517,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       }).catch(error => {
         document.getElementById('info-content').innerHTML = '<p>說明文件載入失敗。</p>';
       });
-    const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
+    const dontShowAgain = localStorage.getItem(LOCAL_STORAGE_HIDE_INFO_MODAL);
     if (!dontShowAgain) {
       infoModal.classList.add('is-visible');
     }
@@ -3508,7 +3527,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
     const closeInfoModal = () => {
       if (document.getElementById('dontShowInfoModalAgain').checked) {
-        localStorage.setItem('dontShowInfoModalAgain', 'true');
+        localStorage.setItem(LOCAL_STORAGE_HIDE_INFO_MODAL, 'true');
       }
       infoModal.classList.remove('is-visible');
     };
@@ -3543,8 +3562,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       }
     });
     const triggerSearchOnChange = () => {
-        localStorage.setItem('lastSearchDialect', document.querySelector('#search-popup input[name="dialect"]:checked').value);
-        localStorage.setItem('lastSearchMode', document.querySelector('#search-popup input[name="search-mode"]:checked').value);
+        localStorage.setItem(LOCAL_STORAGE_SEARCH_DIALECT, document.querySelector('#search-popup input[name="dialect"]:checked').value);
+        localStorage.setItem(LOCAL_STORAGE_SEARCH_MODE, document.querySelector('#search-popup input[name="search-mode"]:checked').value);
         if (searchInput.value.trim()) {
             performSearch();
         }
@@ -3609,7 +3628,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const selectedValue = this.value;
 
     if (selectedValue && selectedValue !== '擇進前个進度') {
-      const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      const bookmarks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_BOOKMARKS)) || [];
       // [修正] 先從 bookmarks 陣列中找到完整的書籤物件
       const selectedBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
