@@ -347,15 +347,18 @@ function updatePopupPosition(popupEl, selectionRect) {
 }
 
 function getDapuSandhiHtml(htmlContent) {
-    // This function processes a string containing romanization and returns a new
-    // string with Dapu sandhi rules applied, wrapped in <ruby> tags.
-    // It is designed to be called from multiple places.
+    const BLOCKING_PUNCTUATION = '()（）【】';
+    const SKIPPABLE_PUNCTUATION = '\\s、';
+    const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
+
+    const TOKENIZER_REGEX = new RegExp(`[^<>` + ALL_PUNCTUATION_CHARS + `]+|[${SKIPPABLE_PUNCTUATION}]+|[${BLOCKING_PUNCTUATION}]+`, 'g');
+    const SKIPPABLE_REGEX = new RegExp(`^[${SKIPPABLE_PUNCTUATION}]+$`);
+    const BLOCKING_REGEX = new RegExp(`^[${BLOCKING_PUNCTUATION}]+$`);
 
     const sandhiRubyRegex = /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
     let preliminaryTokens = [];
     let lastIndex = 0;
 
-    // First, separate existing sandhi rubies from the rest of the text.
     htmlContent.replace(sandhiRubyRegex, (match, offset) => {
         if (offset > lastIndex) {
             preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
@@ -368,13 +371,11 @@ function getDapuSandhiHtml(htmlContent) {
         preliminaryTokens.push(htmlContent.substring(lastIndex));
     }
 
-    // Tokenize the non-ruby parts of the text.
     const tokens = preliminaryTokens.flatMap(token => {
         if (token.startsWith("<ruby class=\"sandhi-")) {
-            return [token]; // Keep existing sandhi rubies as is.
+            return [token];
         }
-        // This regex splits the string into syllables and punctuation.
-        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+        return token.match(TOKENIZER_REGEX) || [];
     }).filter(t => t && t.length > 0);
 
     let modifiedTokens = [];
@@ -383,20 +384,17 @@ function getDapuSandhiHtml(htmlContent) {
     for (let i = 0; i < tokens.length; i++) {
         let currentToken = tokens[i];
 
-        // Skip tokens that are already sandhi-fied or are just whitespace/punctuation.
-        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(currentToken) || BLOCKING_REGEX.test(currentToken)) {
             modifiedTokens.push(currentToken);
             continue;
         }
 
-        // Find the next actual syllable, skipping over punctuation.
         let nextWordToken = "";
         for (let j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(tokens[j])) {
                 continue;
             }
-            // Stop if we hit parentheses, as they block sandhi.
-            if (tokens[j] === '(' || tokens[j] === '（') {
+            if (BLOCKING_REGEX.test(tokens[j])) {
                 nextWordToken = "";
                 break;
             }
@@ -404,8 +402,7 @@ function getDapuSandhiHtml(htmlContent) {
             break;
         }
 
-        // Conditions that prevent sandhi application.
-        if (currentToken.length === 0 || !nextWordToken || currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+        if (currentToken.length === 0 || !nextWordToken) {
             modifiedTokens.push(currentToken);
             continue;
         }
@@ -413,17 +410,14 @@ function getDapuSandhiHtml(htmlContent) {
         let newTone = null;
         let rubyClass = null;
 
-        // Rule 1: Dapu High-falling dissimilation (高降異化)
         if (currentToken.match(/[àèìòù](?![bdg])/) && nextWordToken.match(/[àèìòùâêîôû]/)) {
             newTone = '55';
             rubyClass = 'sandhi-高降變';
         }
-        // Rule 2: Dapu Mid-level tone change (中平變)
         else if (currentToken.match(/[āēīōū]/) && nextWordToken.match(/[ǎěǐǒǔâêîôû]/)) {
             newTone = '35';
             rubyClass = 'sandhi-中平變';
         }
-        // Rule 3: Dapu Low-rising dissimilation (低升異化)
         else if (currentToken.match(/[ǎěǐǒǔ]/) && nextWordToken.match(/[ǎěǐǒǔ]/)) {
             newTone = '33';
             rubyClass = 'sandhi-低升變';
@@ -446,7 +440,7 @@ function getDapuSandhiHtml(htmlContent) {
     if (hasActualModification) {
         return modifiedTokens.join('');
     } else {
-        return htmlContent; // Return original content if no changes were made.
+        return htmlContent;
     }
 }
 
