@@ -3601,9 +3601,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         });
         targetSpan.classList.add('active-dialect-level');
 
-        document.querySelectorAll('.radioItem').forEach((label) => {
-          label.classList.remove('active-category');
-        });
+        // GCA：這段程式碼 document.querySelectorAll('.radioItem').forEach(...) 是多餘的。
+        // 在下面呼叫的 generate(dataObject) 函式中，其開頭已經包含了移除所有 .radioItem 元素 active-category class 的邏輯。為了避免程式碼重複並提升可維護性，依 GCA 建議將這三行刪除。
 
         generate(dataObject);
 
