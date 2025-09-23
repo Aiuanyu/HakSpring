@@ -3730,7 +3730,11 @@ function exportData() {
 
   // --- 產生並顯示 URL ---
   try {
-    const encodedData = btoa(unescape(encodeURIComponent(jsonStringForUrl)));
+    // GCA 建議：使用 TextEncoder 來處理 Unicode 字元，較 btoa(unescape(encodeURIComponent(...))) 可靠
+    const uint8Array = new TextEncoder().encode(jsonStringForUrl);
+    const binaryString = String.fromCharCode.apply(null, uint8Array);
+    const encodedData = btoa(binaryString);
+
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('migrateData', encodedData);
     exportTextArea.value = newUrl.toString();
@@ -3773,6 +3777,11 @@ async function importData() {
     return;
   }
 
+  // 1. 加入安全警告
+  if (!confirm('匯入資料會覆蓋現有設定，且來源不明个檔案可能帶來風險。確定愛繼續無？')) {
+    return;
+  }
+
   let dataString = '';
 
   if (file) {
@@ -3794,7 +3803,10 @@ async function importData() {
         const urlParams = new URLSearchParams(dataString.split('?')[1]);
         const migrateData = urlParams.get('migrateData');
         if (migrateData) {
-            const decodedData = decodeURIComponent(escape(atob(migrateData)));
+            // 2. 使用較穩健个 TextDecoder 來解碼
+            const binaryString = atob(migrateData);
+            const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+            const decodedData = new TextDecoder().decode(bytes);
             parsedData = JSON.parse(decodedData);
         } else {
             throw new Error('URL 裡肚尋無 migrateData 參數。');
@@ -3804,16 +3816,17 @@ async function importData() {
         parsedData = JSON.parse(dataString);
     }
 
-
     // --- 還原資料到 localStorage ---
+    const validKeys = ['hakkaBookmarks', 'dontShowInfoModalAgain', 'lastSearchMode', 'lastSearchDialect'];
     for (const key in parsedData) {
-      if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+      // 3. 基本个 key 驗證
+      if (validKeys.includes(key) && Object.prototype.hasOwnProperty.call(parsedData, key)) {
         let value = parsedData[key];
         // 如果值係一個物件 (例如 hakkaBookmarks)，愛將佢轉做字串再儲存
-        if (typeof value === 'object') {
+        if (typeof value === 'object' && value !== null) {
           value = JSON.stringify(value);
         }
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, String(value));
       }
     }
 
