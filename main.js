@@ -3348,14 +3348,10 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
     const musiidParam = urlParams.get('musiid');
     const lastMode = localStorage.getItem('lastSearchMode');
-    let searchModeValue = '';
-    if (musiidParam) {
-      searchModeValue = musiidParam === 'hak' ? '客家語' : '華語';
-    } else if (lastMode) {
-      searchModeValue = lastMode;
-    } else {
-      searchModeValue = '客家語';
-    }
+    const searchModeValue = musiidParam
+      ? (musiidParam === 'hak' ? '客家語' : '華語')
+      : (lastMode || '客家語');
+
     const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
     if (modeRadio) {
       modeRadio.checked = true;
