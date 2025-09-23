@@ -537,9 +537,30 @@ span[data-varname].active-dialect-level {
 }
 
 .popup-controls { /* 新增：控制項容器 */
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Add space between items */
   padding-bottom: 10px;
   margin-bottom: 10px;
   border-bottom: 1px solid #eee;
+}
+
+.popup-romanizer-btn {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #495057;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--title-font);
+}
+
+.popup-romanizer-btn:hover {
+  background-color: #dee2e6;
 }
 
 /* Toggle Switch Styles */
@@ -767,6 +788,16 @@ input:checked + .slider:before {
   .popup-substitute-btn:hover {
     background-color: rgba(144, 202, 249, 0.15);
     border-color: var(--dark-link-color);
+  }
+
+  .popup-romanizer-btn {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #e9ecef;
+  }
+
+  .popup-romanizer-btn:hover {
+    background-color: #495057;
   }
 }
 
