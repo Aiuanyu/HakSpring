@@ -66,7 +66,6 @@
       </select>
       <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
       <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
-      <button id="dataManagementBtn" title="資料管理（備份／還原）"><i class="fas fa-database"></i></button>
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
       <div id="search-container">
         <input type="text" id="search-input" placeholder="查語詞" />
@@ -384,7 +383,10 @@
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
-          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+          <div class="modal-header-buttons">
+            <button id="dataManagementBtn" title="資料管理（備份／還原）"><i class="fas fa-database"></i></button>
+            <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+          </div>
         </div>
         <div class="modal-body" id="info-content"></div>
         <div class="modal-footer">

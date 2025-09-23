@@ -1478,6 +1478,12 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
+.modal-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 #infoModal .modal-title {
   margin: 0;
   font-size: 1.3em;
