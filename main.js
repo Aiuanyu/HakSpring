@@ -224,6 +224,57 @@ function isSourceMatchingDialect(source, dialect) {
   return source.startsWith(dialect);
 }
 
+function findPronunciationsInAllDataAsync(searchText, callback) {
+  if (!searchText || searchText.trim().length === 0) {
+    callback([]);
+    return;
+  }
+
+  const normalizedSearchText = searchText.trim();
+  let foundReadings = [];
+  const uniqueEntries = new Set();
+  const terms = Object.keys(indexedDataCache);
+  let i = 0;
+  const chunkSize = 500; // Process in chunks to avoid blocking
+
+  function processChunk() {
+    const end = Math.min(i + chunkSize, terms.length);
+    for (; i < end; i++) {
+      const term = terms[i];
+      if (term.includes(normalizedSearchText)) {
+        if (term === normalizedSearchText) {
+           const exactMatches = JSON.parse(JSON.stringify(indexedDataCache[term]));
+           exactMatches.forEach(reading => {
+              reading.isExactMatch = true;
+              const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
+              if (!uniqueEntries.has(entryKey)) {
+                  foundReadings.push(reading);
+                  uniqueEntries.add(entryKey);
+              }
+           });
+        } else {
+           indexedDataCache[term].forEach(reading => {
+              const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
+              if (!uniqueEntries.has(entryKey)) {
+                  const partialMatchReading = { ...JSON.parse(JSON.stringify(reading)), isExactMatch: false };
+                  foundReadings.push(partialMatchReading);
+                  uniqueEntries.add(entryKey);
+              }
+           });
+        }
+      }
+    }
+
+    if (i < terms.length) {
+      setTimeout(processChunk, 0); // Schedule next chunk
+    } else {
+      callback(foundReadings); // All done
+    }
+  }
+
+  processChunk();
+}
+
 function findPronunciationsInAllData(searchText) {
   if (!searchText || searchText.trim().length === 0) return [];
   const normalizedSearchText = searchText.trim();
@@ -517,9 +568,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
   popupEl.focus();
 
   // Defer the actual data processing
-  setTimeout(() => {
-    const allReadings = readings || findPronunciationsInAllData(selectedText);
-
+  findPronunciationsInAllDataAsync(selectedText, (allReadings) => {
     function renderPronunciationList() {
       contentEl.innerHTML = '';
       const showAllAccents = showOtherAccentsToggle.checked;
@@ -584,8 +633,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
     renderPronunciationList(); // Initial render
     showOtherAccentsToggle.onchange = renderPronunciationList; // Re-render on toggle change
-
-  }, 0); // End of setTimeout
+  });
 
   const romanizerBtn = document.getElementById('selectionPopupRomanizerBtn');
   if (romanizerBtn) {
