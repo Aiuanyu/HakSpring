@@ -318,6 +318,45 @@ button.playFromThisRow.ongoing i {
 button.playFromThisRow.ended i {
   background-color: red !important;
 }
+
+/* --- 【新增】循環播放按鈕樣式 --- */
+#loopCategoryBtn.active i {
+  background-color: #ff8c00 !important; /* 暗橘色表示 active */
+  color: white;
+}
+
+.loop-one-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+}
+.loop-one-btn i {
+  cursor: pointer;
+  background: #8a2be2; /* 藍紫色 */
+  color: wheat;
+  box-shadow: 2px 2px #9932cc; /* 中蘭花紫 */
+  border-radius: 0.3em;
+  padding: 0.5em;
+}
+.loop-one-btn.looping i {
+  background-color: #ff4500 !important; /* 橘紅色表示 looping */
+  color: white;
+}
+
+tr.looping-row {
+  background-color: rgba(255, 105, 180, 0.4); /* 粉紅色背景 */
+  animation: pulse-pink-effect 2s infinite ease-in-out;
+}
+
+@keyframes pulse-pink-effect {
+  0% { background-color: rgba(255, 105, 180, 0.4); }
+  50% { background-color: rgba(255, 105, 180, 0.2); }
+  100% { background-color: rgba(255, 105, 180, 0.4); }
+}
+
+
 .playFromThisRow {
   background: none;
   border: none;
@@ -1047,6 +1086,27 @@ input:checked + .slider:before {
   #backToTopBtn i {
       color: var(--main-text-color);
   }
+
+  /* 【新增】暗黑模式循環按鈕樣式 */
+  #loopCategoryBtn.active i {
+    background-color: #e67e22 !important; /* 較亮的橘色 */
+  }
+  .loop-one-btn i {
+    background: #9b59b6; /* 較亮的紫色 */
+    box-shadow: 2px 2px #8e44ad;
+  }
+  .loop-one-btn.looping i {
+    background-color: #e74c3c !important; /* 較亮的紅色 */
+  }
+  tr.looping-row {
+    animation: pulse-dark-pink-effect 2s infinite ease-in-out;
+  }
+  @keyframes pulse-dark-pink-effect {
+    0% { background-color: rgba(231, 76, 60, 0.4); }
+    50% { background-color: rgba(231, 76, 60, 0.2); }
+    100% { background-color: rgba(231, 76, 60, 0.4); }
+  }
+
 
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
