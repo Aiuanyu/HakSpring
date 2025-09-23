@@ -545,6 +545,24 @@ span[data-varname].active-dialect-level {
   border-bottom: 1px solid #eee;
 }
 
+.popup-romanizer-btn {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #495057;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--title-font);
+}
+
+.popup-romanizer-btn:hover {
+  background-color: #dee2e6;
+}
+
 /* Toggle Switch Styles */
 .popup-toggle-switch {
   display: flex;
@@ -770,6 +788,16 @@ input:checked + .slider:before {
   .popup-substitute-btn:hover {
     background-color: rgba(144, 202, 249, 0.15);
     border-color: var(--dark-link-color);
+  }
+
+  .popup-romanizer-btn {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #e9ecef;
+  }
+
+  .popup-romanizer-btn:hover {
+    background-color: #495057;
   }
 }
 

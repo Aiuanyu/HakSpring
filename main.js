@@ -615,33 +615,35 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 }
 
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
-  let target = event.target;
-  let sentenceSpan = target.closest('span.sentence');
-  if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
-  const selection = window.getSelection();
-  if (selection.rangeCount > 0) {
-    const selectedText = selection.toString().trim();
-    if (selectedText.length > 0) {
-      const readings = findPronunciationsInAllData(selectedText);
-      let anchorElement = null;
-      const trElement = sentenceSpan.closest('tr');
-      if (trElement) {
-        const exampleTd = trElement.cells[2];
-        if (exampleTd) {
-          anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+  setTimeout(() => {
+    let target = event.target;
+    let sentenceSpan = target.closest('span.sentence');
+    if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const selectedText = selection.toString().trim();
+      if (selectedText.length > 0) {
+        const readings = findPronunciationsInAllData(selectedText);
+        let anchorElement = null;
+        const trElement = sentenceSpan.closest('tr');
+        if (trElement) {
+          const exampleTd = trElement.cells[2];
+          if (exampleTd) {
+            anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+          }
+        }
+        if (!anchorElement) {
+          anchorElement = sentenceSpan;
+        }
+        if (anchorElement) {
+          showPronunciationPopup(selectedText, readings, anchorElement, null);
+        } else {
+          const rect = selection.getRangeAt(0).getBoundingClientRect();
+          showPronunciationPopup(selectedText, readings, rect, null);
         }
       }
-      if (!anchorElement) {
-        anchorElement = sentenceSpan;
-      }
-      if (anchorElement) {
-        showPronunciationPopup(selectedText, readings, anchorElement, null);
-      } else {
-        const rect = selection.getRangeAt(0).getBoundingClientRect();
-        showPronunciationPopup(selectedText, readings, rect, null);
-      }
     }
-  }
+  }, 0);
 }
 
 function normalizePhonetics(text) {
