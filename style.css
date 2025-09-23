@@ -143,7 +143,7 @@
 }
 
 /* Mine */
-#generated td:nth-of-type(2),
+td[data-label="詞彙"],
 .pronunciation-text {
   ruby {
     font-family: var(--title-font) !important;
@@ -1184,17 +1184,17 @@ input:checked + .slider:before {
 
 /* --- 響應式表格：疊起來个樣式 (螢幕闊度 <= 768px) --- */
 @media screen and (max-width: 768px) {
-  #generated table {
+  #generated table, #comparison-table {
     border: none; /* 移除表格外框 */
     width: 100%; /* 確保表格寬度 */
   }
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
-  #generated thead {
+  #generated thead, #comparison-table thead {
     display: none;
   }
 
-  #generated tr {
+  #generated tr, #comparison-table tr {
     display: block; /* 分歸列變做區塊元素 */
     margin-bottom: 1.5em; /* 列之間个間距 */
     border: 1px solid rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5); /* 加淡色框線，像卡片樣 */
@@ -1204,11 +1204,11 @@ input:checked + .slider:before {
   }
 
   /* 移除偶數行个特殊背景 */
-  #generated tr:nth-child(even) {
+  #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
-  #generated td {
+  #generated td, #comparison-table td {
     display: block; /* 分儲存格變做區塊元素 */
     text-align: left !important; /* 強制靠左對齊 */
     padding-left: 15%; /* 留空間分標籤 */
@@ -1220,12 +1220,12 @@ input:checked + .slider:before {
     max-width: 90vw !important; /* 覆蓋原本个 max-width */
   }
 
-  #generated td:last-child {
+  #generated td:last-child, #comparison-table td:last-child {
     border-bottom: none; /* 最尾一格毋使底線 */
   }
 
   /* 用 ::before 顯示標籤 */
-  #generated td::before {
+  #generated td::before, #comparison-table td::before {
     content: attr(data-label); /* 讀取 data-label 內容 */
     position: absolute;
     left: 10px; /* 標籤靠左 */
@@ -1238,28 +1238,28 @@ input:checked + .slider:before {
   }
 
   /* 調整特定欄位个樣式 */
-  #generated td.no {
+  #generated td.no, #comparison-table td.no {
     font-size: 1.1em; /* 編號做得放大一息仔 */
     padding-left: 10px; /* 編號毋使恁多左邊距 */
     text-align: left !important;
   }
-  #generated td.no::before {
+  #generated td.no::before, #comparison-table td.no::before {
      display: none; /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
-  #generated td.no br {
+  #generated td.no br, #comparison-table td.no br {
     display: none; /* 編號欄位毋使換行 */
   }
 
   /* 調整詞彙欄位个標音 */
-  #generated td[data-label="詞彙"] ruby {
+  #generated td[data-label="詞彙"] ruby, #comparison-table td[data-label="詞彙"] ruby {
     font-size: 1.3em; /* 調整字體大小 */
   }
-   #generated td[data-label="詞彙"] rt {
+   #generated td[data-label="詞彙"] rt, #comparison-table td[data-label="詞彙"] rt {
      font-size: 0.8em; /* 標音相對縮小 */
    }
 
   /* 調整音檔控制項 */
-  #generated audio.media {
+  #generated audio.media, #comparison-table audio.media {
     max-width: 100%; /* 音檔控制項做得較闊 */
     /* height: auto; */ /* <-- 移除 auto */
     height: 1em; /* <-- 設定固定高度 */
@@ -1267,23 +1267,23 @@ input:checked + .slider:before {
   }
 
   /* 調整備註樣式 */
-  #generated .notes {
+  #generated .notes, #comparison-table .notes {
     margin-top: 5px;
     margin-left: 5px;
     display: inline-block; /* 避免佔歸行 */
   }
 
   /* 調整播放按鈕 */
-  #generated .playFromThisRow {
+  #generated .playFromThisRow, #comparison-table .playFromThisRow {
     margin-left: 5px;
   }
 
   /* 確保 nowPlaying 樣式在卡片模式下正確應用 */
-  #generated tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
+  #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
       background-color: rgba(var(--iMazinGrace-1-rgb), 0.5); /* <-- 明確重新設定背景色，莫 !important 啦！就係你造成動畫失效！ */
       transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
   }
-  #generated tr#nowPlaying.paused-playback {
+  #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
     /* background-color: transparent !important; */ /* 動畫會處理背景 */
     animation: pulse-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
   }
@@ -1302,32 +1302,32 @@ input:checked + .slider:before {
 
   /* 暗夜模式下个調整 */
   @media (prefers-color-scheme: dark) {
-    #generated tr {
+    #generated tr, #comparison-table tr {
       border-color: rgba(255, 255, 255, 0.2);
       background-color: var(--dark-surface-color);
     }
-    #generated tr:nth-child(even) {
+    #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
        /* background-color: var(--dark-surface-color); */ /* <-- 移除通用背景色 */
     }
-    #generated td {
+    #generated td, #comparison-table td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
     }
-    #generated td::before {
+    #generated td::before, #comparison-table td::before {
       color: var(--main-text-color);
     }
 
     /* 確保 nowPlaying 樣式在暗夜卡片模式下正確應用 */
-    #generated tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
+    #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
         background-color: var(--dark-now-playing-bg); /* <-- 明確重新設定暗夜背景色，加 !important */
         transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
     }
-    #generated tr#nowPlaying.paused-playback {
+    #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
   }
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
-  #generated td.empty-sentence-cell {
+  #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
     display: none;
   }
 }

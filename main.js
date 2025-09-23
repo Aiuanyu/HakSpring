@@ -3759,6 +3759,7 @@ function showCrossDialectComparison(line, dialectInfo) {
         const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
         if (selectionPopup && selectionPopupContent && selectionPopupBackdrop) {
           table.addEventListener('mouseup', (event) => {
+            // Pass the modal's content area as the container context
             handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentArea);
           });
         }
@@ -3771,6 +3772,7 @@ function showCrossDialectComparison(line, dialectInfo) {
 
 function createComparisonRow(line, dialectInfo) {
     const item = document.createElement('tr');
+    item.className = dialectInfo.腔名; // Add dialect class for styling
 
     // TD1: Dialect Name
     const td1 = document.createElement('td');
