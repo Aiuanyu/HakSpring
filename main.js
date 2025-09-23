@@ -3559,24 +3559,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
     searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
     searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
-    // 初始載入時，根據 URL 參數 > localStorage > 預設值 的順序設定查詞腔調
-    const urlParams = new URLSearchParams(window.location.search);
-    const kiongParam = urlParams.get('kiong');
-    const lastDialect = localStorage.getItem('lastSearchDialect');
-    let dialectToSelect = '';
-
-    if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
-      dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
-    } else if (lastDialect && DIALECT_NAME_TO_CODE[lastDialect]) {
-      dialectToSelect = lastDialect;
-    } else {
-      dialectToSelect = '四縣'; // 預設值
-    }
-
-    const radioToSelect = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToSelect}"]`);
-    if (radioToSelect) {
-      radioToSelect.checked = true;
-    }
     const lastMode = localStorage.getItem('lastSearchMode');
     if (lastMode) {
       const radioToCheck = document.querySelector(`#search-popup input[name="search-mode"][value="${lastMode}"]`);
