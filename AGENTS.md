@@ -51,6 +51,10 @@
 ## Agent Coding Conventions
 - **Preserve existing comments:** When modifying code, do not remove or alter existing comments unless they are clearly outdated or incorrect. If you rewrite a block of code, make sure to carry over the original comments.
 
+## 檔案操作慣例 (File Operation Conventions)
+- **確認檔案存在**: 在執行任何建立新檔案的指令（例如 `create_file`）之前，必須先用 `ls` 指令確認該檔案是否已存在。
+- **理解使用者意圖**: 若目標檔案已存在，應先用 `read_file` 讀取其內容。必須理解使用者的意圖很可能是要「修改」或「新增內容」到現有檔案，而不是完全「覆寫」。除非使用者明確指示要覆寫，否則應優先考慮使用 `replace_with_git_merge_diff` 或其他非破壞性的方式進行修改。
+
 ## UI 元件慣例
 
 ### Modal 視窗
