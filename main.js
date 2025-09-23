@@ -600,33 +600,44 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 }
 
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
-  let target = event.target;
-  let sentenceSpan = target.closest('span.sentence');
-  if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
-  const selection = window.getSelection();
-  if (selection.rangeCount > 0) {
-    const selectedText = selection.toString().trim();
-    if (selectedText.length > 0 && selectedText.length <= 15) {
-      const readings = findPronunciationsInAllData(selectedText);
-      let anchorElement = null;
-      const trElement = sentenceSpan.closest('tr');
-      if (trElement) {
-        const exampleTd = trElement.cells[2];
-        if (exampleTd) {
-          anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+    let target = event.target;
+    let sentenceSpan = target.closest('span.sentence');
+    if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
+
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const selectedText = selection.toString().trim();
+        if (selectedText.length > 0 && selectedText.length <= 15) {
+            const readings = findPronunciationsInAllData(selectedText);
+            let anchorElement = null;
+            let contextualDialect = null;
+
+            const trElement = sentenceSpan.closest('tr');
+            if (trElement) {
+                // Check if it's an accordion row and get its dialect
+                if (trElement.classList.contains('accordion-row')) {
+                    const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
+                    if (dialectClass) {
+                        contextualDialect = dialectClass;
+                    }
+                }
+                const exampleTd = trElement.cells[2];
+                if (exampleTd) {
+                    anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
+                }
+            }
+            if (!anchorElement) {
+                anchorElement = sentenceSpan;
+            }
+
+            if (anchorElement) {
+                showPronunciationPopup(selectedText, readings, anchorElement, null, contextualDialect);
+            } else {
+                const rect = selection.getRangeAt(0).getBoundingClientRect();
+                showPronunciationPopup(selectedText, readings, rect, null, contextualDialect);
+            }
         }
-      }
-      if (!anchorElement) {
-        anchorElement = sentenceSpan;
-      }
-      if (anchorElement) {
-        showPronunciationPopup(selectedText, readings, anchorElement, null);
-      } else {
-        const rect = selection.getRangeAt(0).getBoundingClientRect();
-        showPronunciationPopup(selectedText, readings, rect, null);
-      }
     }
-  }
 }
 
 function normalizePhonetics(text) {
@@ -1302,8 +1313,6 @@ function initializeAppUI() {
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
   const romanizerContainer = document.getElementById('romanizerContainer');
-  const crossDialectModal = document.getElementById('crossDialectModal');
-  const crossDialectModalCloseBtn = document.getElementById('crossDialectModalCloseBtn');
 
   // All data variables from the included JS files
   const allData = {
@@ -2820,9 +2829,9 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         const crossDialectBtn = document.createElement('button');
         crossDialectBtn.className = 'crossDialectBtn';
         crossDialectBtn.title = '跨腔調對照';
-        crossDialectBtn.innerHTML = '<i class="fas fa-exchange-alt"></i>';
-        crossDialectBtn.addEventListener('click', () => {
-          showCrossDialectComparison(line, dialectInfo);
+        crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
+        crossDialectBtn.addEventListener('click', (event) => {
+          toggleAccordion(event, line, dialectInfo);
         });
         td1.appendChild(crossDialectBtn);
 
@@ -3532,17 +3541,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
-  if (crossDialectModal && crossDialectModalCloseBtn) {
-    const closeCrossDialectModal = () => {
-      crossDialectModal.classList.remove('is-visible');
-    };
-    crossDialectModalCloseBtn.addEventListener('click', closeCrossDialectModal);
-    crossDialectModal.addEventListener('click', (event) => {
-      if (event.target === crossDialectModal) {
-        closeCrossDialectModal();
-      }
-    });
-  }
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
     const closePopup = () => {
@@ -3689,11 +3687,32 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   repositionViewport();
 }
 
-function showCrossDialectComparison(line, dialectInfo) {
-    const modal = document.getElementById('crossDialectModal');
-    const modalTitle = document.getElementById('crossDialectModalTitle');
-    const contentArea = document.getElementById('cross-dialect-content');
-    if (!modal || !contentArea || !modalTitle) return;
+function toggleAccordion(event, line, dialectInfo) {
+    const clickedButton = event.currentTarget;
+    const parentRow = clickedButton.closest('tr');
+    const wasOpen = parentRow.classList.contains('accordion-parent');
+
+    // Close any currently open accordion
+    document.querySelectorAll('.accordion-parent').forEach(row => {
+        row.classList.remove('accordion-parent');
+        const button = row.querySelector('.crossDialectBtn i');
+        if (button) button.className = 'fas fa-plus-circle';
+    });
+    document.querySelectorAll('.accordion-row').forEach(row => row.remove());
+
+    if (wasOpen) {
+        // It was open, so we just closed it. Nothing more to do.
+        return;
+    }
+
+    // Pause autoplay if it's running
+    const stopButton = document.getElementById('stopBtn');
+    if (isPlaying && stopButton) {
+        stopButton.click();
+    }
+
+    parentRow.classList.add('accordion-parent');
+    clickedButton.querySelector('i').className = 'fas fa-minus-circle';
 
     const lineId = line.編號;
     const currentLevel = dialectInfo.級;
@@ -3706,30 +3725,25 @@ function showCrossDialectComparison(line, dialectInfo) {
         '安': { name: '詔安', dataVar: '安' + currentLevel },
     };
 
-    modalTitle.textContent = `「${line.客家語}」(${lineId}) 跨腔調對照`;
-    contentArea.innerHTML = ''; // Clear previous content
-
-    const table = document.createElement('table');
-    table.id = 'comparison-table'; // Use a different ID to avoid conflicts if needed
-    table.setAttribute('width', '100%');
-    const tbody = table.createTBody();
-
-    let resultsFound = false;
+    let nextRow = parentRow.nextSibling;
 
     accents.forEach(accentKey => {
+        // Don't show the original dialect's row in the accordion
+        if (accentKey === dialectInfo.腔) {
+            return;
+        }
+
         const accentInfo = accentMap[accentKey];
         const dataObject = window[accentInfo.dataVar];
         if (dataObject && dataObject.content) {
             const foundItem = dataObject.content.find(item => item.編號 === lineId);
             if (foundItem) {
-                resultsFound = true;
-                // This is a simplified dialectInfo for the row creation function
                 const itemDialectInfo = {
                     腔: accentKey,
                     級: currentLevel,
                     腔名: accentInfo.name,
-                    級名: dialectInfo.級名, // Assumes level name is the same
-                    檔腔: dialectInfo.檔腔, // This needs to be mapped
+                    級名: dialectInfo.級名,
+                    檔腔: '', // Mapped below
                     檔級: dialectInfo.檔級,
                     目錄級: dialectInfo.目錄級,
                     目錄另級: dialectInfo.目錄另級,
@@ -3737,7 +3751,6 @@ function showCrossDialectComparison(line, dialectInfo) {
                     fullLvlName: `${accentInfo.name}${dialectInfo.級名}`,
                     例外音檔: window[`${currentLevel}例外音檔`] || []
                 };
-                // This is complex, so we need a proper mapping
                 switch(itemDialectInfo.腔) {
                     case '四': itemDialectInfo.檔腔 = 'si'; break;
                     case '海': itemDialectInfo.檔腔 = 'ha'; break;
@@ -3745,36 +3758,19 @@ function showCrossDialectComparison(line, dialectInfo) {
                     case '平': itemDialectInfo.檔腔 = 'rh'; break;
                     case '安': itemDialectInfo.檔腔 = 'zh'; break;
                 }
-                const row = createComparisonRow(foundItem, itemDialectInfo);
-                tbody.appendChild(row);
+                const newRow = createComparisonRow(foundItem, itemDialectInfo);
+                newRow.classList.add('accordion-row');
+                parentRow.parentNode.insertBefore(newRow, nextRow);
             }
         }
     });
-
-    if (resultsFound) {
-        contentArea.appendChild(table);
-        // Add the event listener for the selection popup
-        const selectionPopup = document.getElementById('selectionPopup');
-        const selectionPopupContent = document.getElementById('selectionPopupContent');
-        const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
-        if (selectionPopup && selectionPopupContent && selectionPopupBackdrop) {
-          table.addEventListener('mouseup', (event) => {
-            // Pass the modal's content area as the container context
-            handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentArea);
-          });
-        }
-    } else {
-        contentArea.innerHTML = '<p>尋無其他腔調个對應資料。</p>';
-    }
-
-    modal.classList.add('is-visible');
 }
 
 function createComparisonRow(line, dialectInfo) {
     const item = document.createElement('tr');
     item.className = dialectInfo.腔名; // Add dialect class for styling
 
-    // TD1: Dialect Name
+    // TD1: Dialect Name (replaces number/buttons)
     const td1 = document.createElement('td');
     td1.className = 'no';
     td1.dataset.label = '腔調';
@@ -3826,7 +3822,7 @@ function createComparisonRow(line, dialectInfo) {
         // No audio
     } else {
         const audio1 = document.createElement('audio');
-        audio1.className = 'media'; audio1.controls = true; audio1.preload = 'none';
+        audio1.className = 'media accordion-audio'; audio1.controls = true; audio1.preload = 'none';
         let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
         if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
             wordAudioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
@@ -3859,7 +3855,7 @@ function createComparisonRow(line, dialectInfo) {
             // No audio
         } else {
             const audio2 = document.createElement('audio');
-            audio2.className = 'media'; audio2.controls = true; audio2.preload = 'none';
+            audio2.className = 'media accordion-audio'; audio2.controls = true; audio2.preload = 'none';
             audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
             td3.appendChild(audio2);
         }
