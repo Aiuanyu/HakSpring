@@ -578,6 +578,20 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
   }
   showOtherAccentsToggle.onchange = renderPronunciationList;
   renderPronunciationList();
+
+  const romanizerBtn = document.getElementById('selectionPopupRomanizerBtn');
+  if (romanizerBtn) {
+    romanizerBtn.onclick = (e) => {
+      e.stopPropagation();
+      const romanizerInput = document.getElementById('romanizer-input');
+      if (romanizerInput && typeof showRomanizer === 'function') {
+        romanizerInput.value = selectedText;
+        showRomanizer();
+        hidePronunciationPopup(popupEl, backdropEl);
+      }
+    };
+  }
+
   popupEl.style.display = 'block';
   backdropEl.style.display = 'block';
   activeSelectionPopup = true;
@@ -606,7 +620,7 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
   const selection = window.getSelection();
   if (selection.rangeCount > 0) {
     const selectedText = selection.toString().trim();
-    if (selectedText.length > 0 && selectedText.length <= 15) {
+    if (selectedText.length > 0) {
       const readings = findPronunciationsInAllData(selectedText);
       let anchorElement = null;
       const trElement = sentenceSpan.closest('tr');
