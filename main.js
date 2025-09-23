@@ -351,7 +351,7 @@ function getDapuSandhiHtml(htmlContent) {
     const SKIPPABLE_PUNCTUATION = '\\s、';
     const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
-    const TOKENIZER_REGEX = new RegExp(`[^<>` + ALL_PUNCTUATION_CHARS + `]+|[${ALL_PUNCTUATION_CHARS}]+`, 'g');
+    const TOKENIZER_REGEX = new RegExp(`[^<>` + ALL_PUNCTUATION_CHARS + `]+|[${SKIPPABLE_PUNCTUATION}]+|[${BLOCKING_PUNCTUATION}]+`, 'g');
     const SKIPPABLE_REGEX = new RegExp(`^[${SKIPPABLE_PUNCTUATION}]+$`);
     const BLOCKING_REGEX = new RegExp(`^[${BLOCKING_PUNCTUATION}]+$`);
 
