@@ -3347,6 +3347,20 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
 
     const musiidParam = urlParams.get('musiid');
+    const lastMode = localStorage.getItem('lastSearchMode');
+    let searchModeValue = '';
+    if (musiidParam) {
+      searchModeValue = musiidParam === 'hak' ? '客家語' : '華語';
+    } else if (lastMode) {
+      searchModeValue = lastMode;
+    } else {
+      searchModeValue = '客家語';
+    }
+    const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
+    if (modeRadio) {
+      modeRadio.checked = true;
+    }
+
     const caParam = urlParams.get('ca');
     const bidsuParam = urlParams.get('bidsu');
     const iabParam = urlParams.get('iab');
@@ -3358,23 +3372,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     successfullyLoadedFromUrl = false;
 
     if (musiidParam && caParam) {
-      const searchModeValue = musiidParam === 'hak' ? '客家語' : '華語';
       const itemsPerPage = parseInt(bidsuParam) || 50;
       const page = parseInt(iabParam) || 1;
-      let dialectToUseForSearch = '四縣';
-      const kiongFromUrl = urlParams.get('kiong');
-      if (kiongFromUrl && DIALECT_CODE_TO_NAME[kiongFromUrl]) {
-        dialectToUseForSearch = DIALECT_CODE_TO_NAME[kiongFromUrl];
-      } else {
-        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
-        if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
-          dialectToUseForSearch = lastUsedDialect;
-        }
-      }
-      const dialectRadio = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToUseForSearch}"]`);
-      if (dialectRadio) dialectRadio.checked = true;
-      const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
-      if (modeRadio) modeRadio.checked = true;
       searchInput.value = caParam;
       performSearch(page, itemsPerPage);
     } else if (dialectParam && levelParam && categoryParam) {
@@ -3553,11 +3552,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
     searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
     searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
-    const lastMode = localStorage.getItem('lastSearchMode');
-    if (lastMode) {
-      const radioToCheck = document.querySelector(`#search-popup input[name="search-mode"][value="${lastMode}"]`);
-      if (radioToCheck) radioToCheck.checked = true;
-    }
     searchInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') performSearch();
     });
