@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>客源翠 HakSpring：詞典+分類學習</title>
     <meta property="og:title" content="客源翠 HakSpring：詞典+分類學習" />
-    <meta property="og:description" content="客話詞典、認證詞彙分類放送學習網站" />
+    <meta property="og:description" content="客話詞典、認證詞彙分類學習網站" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://hakspring.pages.dev/" />
     <meta property="og:image" content="og-image.png" />
@@ -62,16 +62,16 @@
     <h2>客源翠 HakSpring：你个客援隊／客研隊。詞典+分類學習</h2>
     <h3 id="header">
       <select id="progressDropdown">
-        <option selected disabled>擇進前个進度</option>
+        <option selected disabled>擇先前个進度</option>
       </select>
-      <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
-      <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
+      <button id="infoButton" title="看說明"><i class="fas fa-info-circle"></i></button>
+      <button id="showRomanizerBtn" title="客語羅馬字轉換"><i class="fas fa-pen-to-square"></i></button>
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
       <div id="search-container">
-        <input type="text" id="search-input" placeholder="查語詞" />
+        <input type="text" id="search-input" placeholder="尋詞" />
         <div id="search-popup">
           <div id="dialect-selection">
-            <p>請擇腔調：</p>
+            <p>請選腔調：</p>
             <div class="dialect-row">
               <label><input type="radio" name="dialect" value="四縣" checked /> 四縣</label>
               <label><input type="radio" name="dialect" value="南四縣" /> 南四縣</label>
@@ -82,9 +82,9 @@
             <label><input type="radio" name="dialect" value="詔安" /> 詔安</label>
           </div>
           <div id="search-mode-selection">
-            <p>請擇查詢模式：</p>
-            <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字／拼音）</label>
-            <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
+            <p>請選查詢模式：</p>
+            <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字或拼音）</label>
+            <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義或例句翻譯</label>
           </div>
         </div>
       </div>
@@ -93,9 +93,9 @@
     <div id="learning-mode-controls">
 
     <details id="learningSelectionPanel" open>
-      <summary>認證詞彙學習主控板</summary>
+      <summary>認證詞彙學習</summary>
       <p>
-        先擇腔調摎級別，
+        先選腔調和級別，
         <span class="dialect 四縣">
           四縣：
           <span data-varname="四基"><a href="#">基礎</a></span>
@@ -139,7 +139,7 @@
       </p>
       <!-- 多謝 https://webspe.net/tools/en/radio-button/ -->
       <div id="cat-panel">
-        再擇類別：
+        再選類別：
         <label class="radioItem">
           <input
             type="radio"
@@ -147,7 +147,7 @@
             value="人體與醫療"
             class="radioButton"
           />
-          人體與醫療
+          人體同醫療
         </label>
         <label class="radioItem">
           <input
@@ -156,7 +156,7 @@
             value="心理活動與感覺"
             class="radioButton"
           />
-          心理活動與感覺
+          心理活動同感覺
         </label>
         <label class="radioItem">
           <input type="radio" name="category" value="代詞" class="radioButton" />
@@ -169,7 +169,7 @@
             value="外在活動與動作"
             class="radioButton"
           />
-          外在活動與動作
+          外在活動同動作
         </label>
         <label class="radioItem">
           <input type="radio" name="category" value="生物" class="radioButton" />
@@ -182,7 +182,7 @@
             value="自然與景觀"
             class="radioButton"
           />
-          自然與景觀
+          自然同景觀
         </label>
         <label class="radioItem">
           <input
@@ -191,7 +191,7 @@
             value="事物狀態與變化"
             class="radioButton"
           />
-          事物狀態與變化
+          事物狀態同變化
         </label>
         <label class="radioItem">
           <input
@@ -209,7 +209,7 @@
             value="抽象概念與形容"
             class="radioButton"
           />
-          抽象概念與形容
+          抽象概念同形容
         </label>
         <label class="radioItem">
           <input
@@ -218,7 +218,7 @@
             value="法律、政治與軍事"
             class="radioButton"
           />
-          法律、政治與軍事
+          法律、政治同軍事
         </label>
         <label class="radioItem">
           <input
@@ -227,7 +227,7 @@
             value="社會關係與行為"
             class="radioButton"
           />
-          社會關係與行為
+          社會關係同行為
         </label>
         <label class="radioItem">
           <input
@@ -236,7 +236,7 @@
             value="時空與情狀副詞"
             class="radioButton"
           />
-          時空與情狀副詞
+          時空同情狀副詞
         </label>
         <label class="radioItem">
           <input
@@ -254,7 +254,7 @@
             value="通訊、建設與交通"
             class="radioButton"
           />
-          通訊、建設與交通
+          通訊、建設同交通
         </label>
         <label class="radioItem">
           <input
@@ -263,7 +263,7 @@
             value="歲時祭儀、習俗與宗教"
             class="radioButton"
           />
-          歲時祭儀、習俗與宗教
+          歲時祭儀、習俗同宗教
         </label>
         <label class="radioItem">
           <input
@@ -281,7 +281,7 @@
             value="職業與經濟"
             class="radioButton"
           />
-          職業與經濟
+          職業同經濟
         </label>
         <label class="radioItem">
           <input
@@ -290,7 +290,7 @@
             value="藝文與教育"
             class="radioButton"
           />
-          藝文與教育
+          藝文同教育
         </label>
         </div>
       </div>
@@ -301,9 +301,9 @@
       <div class="modal-dialog">
         <div class="romanizer-content">
           <div class="modal-header">
-            <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
+            <h2>蘿蔓生菜 - 客語羅馬字轉換</h2>
             <select id="romanizer-dialect-selector">
-              <option selected disabled>擇腔調</option>
+              <option selected disabled>選腔調</option>
               <option>四縣</option>
               <option>海陸</option>
               <option>大埔</option>
@@ -313,16 +313,16 @@
             </select>
             <!-- 【新增】連詞模式選擇器 -->
             <select id="romanizer-joining-mode-selector">
-              <option value="none" selected>"liěncǐi fóngsìid"（詞中無空格）</option>
-              <option value="hyphen">"liěn-cǐi fóng-sìid"（詞中用連-字-號）</option>
-              <option value="space">"liěn cǐi fóng sìid"（詞中空 格）</option>
+              <option value="none" selected>"liěncǐi fóngsìid"（詞內無空白）</option>
+              <option value="hyphen">"liěn-cǐi fóng-sìid"（詞內用連字號）</option>
+              <option value="space">"liěn cǐi fóng sìid"（詞內有空白）</option>
             </select>
             <button id="romanizerCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
           </div>
           <div class="modal-body">
             <!-- 【新增】Undo/Redo 控制按鈕 -->
             <div id="romanizer-history-controls">
-              <button id="romanizer-undo-btn" title="復原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+              <button id="romanizer-undo-btn" title="還原 (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
               <button id="romanizer-redo-btn" title="重做 (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
             </div>
             <div id="romanizer-output-container">
@@ -331,7 +331,7 @@
             </div>
             <div id="segmentation-workspace"></div>
             <div class="romanizer-section">
-              <textarea id="romanizer-input" placeholder="請在這位輸入還係貼入想愛轉換个客語詞句……"></textarea>
+              <textarea id="romanizer-input" placeholder="請在此處輸入或貼上想轉換个客語詞句…"></textarea>
               <button id="romanizer-start-btn">開始斷詞轉換</button>
             </div>
           </div>
@@ -343,7 +343,7 @@
     <div id="results-summary"></div>
     <div id="generated"></div>
 
-    <button id="backToTopBtn" title="歸頂高">
+    <button id="backToTopBtn" title="回頂項">
       <i class="fas fa-arrow-up"></i>
     </button>
 
@@ -351,7 +351,7 @@
     <div id="autoplayModal" style="display: none;">
       <div class="modal-backdrop"></div>
       <div class="modal-content">
-        <p>網址裡肚偵測著自動放送个進度，<br>請點這位開始<br><br>係講無愛自動放送這隻進度，<br>請點邊脣烏陰所在</p>
+        <p>網址內偵測著自動播放个進度，<br>請點此處開始<br><br>若無愛自動播放這進度，<br>請點旁邊烏暗所在</p>
         <!-- 你也可以選擇加入一個明確的按鈕 -->
         <!-- <button id="startAutoplayBtn">開始播放</button> -->
       </div>
@@ -361,7 +361,7 @@
     <div id="selectionPopupBackdrop" style="display: none;"></div>
     <div id="selectionPopup" role="dialog" aria-modal="true" aria-labelledby="selectionPopupTitle" tabindex="-1" style="display: none;">
       <div class="popup-header">
-        <h4 id="selectionPopupTitle">擇詞讀音結果</h4>
+        <h4 id="selectionPopupTitle">選詞讀音結果</h4>
         <button id="selectionPopupCloseBtn" aria-label="關閉">&times;</button>
       </div>
       <div class="popup-controls">
@@ -370,7 +370,7 @@
             <input type="checkbox" id="showOtherAccentsToggle">
             <span class="slider round"></span>
           </label>
-          <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label>
+          <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔調</label>
         </div>
       </div>
       <div id="selectionPopupContent">
@@ -382,14 +382,14 @@
     <div id="infoModal" class="modal-overlay">
       <div class="modal-dialog">
         <div class="modal-header">
-          <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
+          <h4 id="infoModalTitle" class="modal-title">重要說明請先看</h4>
           <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
         </div>
         <div class="modal-body" id="info-content"></div>
         <div class="modal-footer">
           <label for="dontShowInfoModalAgain">
             <input type="checkbox" id="dontShowInfoModalAgain">
-            看忒吔，下擺毋使自動跳出
+            看過吔，下次無使自動跳出
           </label>
         </div>
       </div>
