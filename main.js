@@ -3559,11 +3559,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
     searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
     searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
-    const lastDialect = localStorage.getItem('lastSearchDialect');
-    if (lastDialect) {
-      const radioToCheck = document.querySelector(`#search-popup input[name="dialect"][value="${lastDialect}"]`);
-      if (radioToCheck) radioToCheck.checked = true;
-    }
     const lastMode = localStorage.getItem('lastSearchMode');
     if (lastMode) {
       const radioToCheck = document.querySelector(`#search-popup input[name="search-mode"][value="${lastMode}"]`);
