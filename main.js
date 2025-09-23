@@ -483,10 +483,13 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
   const backdropEl = document.getElementById('selectionPopupBackdrop');
   const showOtherAccentsToggle = document.getElementById('showOtherAccentsToggle');
   const popupTitleElement = document.getElementById('selectionPopupTitle');
+
   if (!popupEl || !contentEl || !backdropEl || !showOtherAccentsToggle || !popupTitleElement) return;
+
   lastAnchorElementForPopup = null;
   lastRectForPopupPositioning = null;
   let initialRect;
+
   if (anchorElementOrRect instanceof HTMLElement) {
     lastAnchorElementForPopup = anchorElementOrRect;
     initialRect = lastAnchorElementForPopup.getBoundingClientRect();
@@ -498,86 +501,91 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
     popupEl.style.top = '50%';
     popupEl.style.transform = 'translate(-50%, -50%)';
   }
+
   popupTitleElement.textContent = `尋「${selectedText}」个讀音`;
   showOtherAccentsToggle.checked = false;
-  function renderPronunciationList() {
-    contentEl.innerHTML = '';
-    const showAllAccents = showOtherAccentsToggle.checked;
-    let currentDialect = contextualDialect || currentActiveMainDialectName || '四縣';
-    let displayReadings = [...readings];
-    if (!showAllAccents) {
-      displayReadings = displayReadings.filter(r => isSourceMatchingDialect(r.source, currentDialect));
-    }
-    displayReadings.sort((a, b) => {
-      if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
-      const aSyllables = countSyllables(a.pronunciation);
-      const bSyllables = countSyllables(b.pronunciation);
-      if (aSyllables !== bSyllables) return aSyllables - bSyllables;
-      if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
-      return a.source.localeCompare(b.source);
-    });
-    if (displayReadings.length > 0) {
-      const accordionContainer = document.createElement('div');
-      accordionContainer.className = 'accordion-container';
-      displayReadings.forEach(reading => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'accordion-item';
-        const headerBtn = document.createElement('button');
-        headerBtn.className = 'accordion-header';
 
-        const sandhiResult = getSandhiPronunciation(reading.pronunciation, reading.source);
+  // Show loading state immediately
+  contentEl.innerHTML = '<p>當在尋讀音...</p>';
+  popupEl.style.display = 'block';
+  backdropEl.style.display = 'block';
+  activeSelectionPopup = true;
 
-        let headerText;
-        if (sandhiResult) {
-            // If sandhi is applied, use the returned HTML which contains the correct classes.
-            headerText = `<span class="pronunciation-text">${sandhiResult.sandhi}</span>`;
-        } else {
-            // Otherwise, show the original pronunciation.
-            headerText = `<span class="pronunciation-text">${reading.pronunciation}</span>`;
-        }
+  if (initialRect) {
+    updatePopupPosition(popupEl, initialRect);
+  }
+  popupEl.focus();
 
-        if (!reading.isExactMatch) {
-          headerText += ` (詞目: ${reading.originalTerm})`;
-        }
+  // Defer the actual data processing
+  setTimeout(() => {
+    const allReadings = readings || findPronunciationsInAllData(selectedText);
 
-        const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
-        let audioElementHTML = '';
-        if (audioUrl) {
-          audioElementHTML = `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>`;
-        }
-        let substituteButtonHTML = '';
-        if (typeof callbackOnSelect === 'function') {
-          substituteButtonHTML = `<button class="popup-substitute-btn" title="選用這个讀音"><i class="fas fa-arrow-up-from-bracket"></i></button>`;
-        }
-        headerBtn.innerHTML = `<div class="accordion-header-content">${headerText}<span class="pronunciation-source">(${reading.source})</span></div><div class="accordion-header-controls">${audioElementHTML}${substituteButtonHTML}<span class="indicator">+</span></div>`;
-        const panelDiv = document.createElement('div');
-        panelDiv.className = 'accordion-panel';
-        panelDiv.innerHTML = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
-        itemDiv.appendChild(headerBtn);
-        itemDiv.appendChild(panelDiv);
-        accordionContainer.appendChild(itemDiv);
-        const playButton = headerBtn.querySelector('.popup-audio-play-btn');
-        if (playButton) {
-          playButton.addEventListener('click', (e) => { e.stopPropagation(); const header = playButton.closest('.accordion-header'); const panel = header ? header.nextElementSibling : null; if (header && panel && !header.classList.contains('active')) { header.classList.add('active'); const indicator = header.querySelector('.indicator'); panel.style.maxHeight = panel.scrollHeight + "px"; if (indicator) indicator.textContent = '−'; } const audioSrc = playButton.dataset.audioSrc; if (audioSrc) { if (window.currentPopupAudio && typeof window.currentPopupAudio.pause === 'function') { window.currentPopupAudio.pause(); window.currentPopupAudio.currentTime = 0; } window.currentPopupAudio = new Audio(audioSrc); const iconElement = playButton.querySelector('i'); const originalIconClasses = iconElement ? iconElement.className : ''; if (iconElement) iconElement.className = 'fas fa-spinner fa-spin'; window.currentPopupAudio.play().catch(err => { console.error("播放 popup 音檔失敗:", err); if (iconElement) iconElement.className = originalIconClasses; }); window.currentPopupAudio.onended = () => { if (iconElement) iconElement.className = originalIconClasses; window.currentPopupAudio = null; }; window.currentPopupAudio.onerror = () => { if (iconElement) iconElement.className = originalIconClasses; window.currentPopupAudio = null; }; } });
-        }
-        const substituteBtn = headerBtn.querySelector('.popup-substitute-btn');
-        if (substituteBtn) {
-          substituteBtn.addEventListener('click', (e) => { e.stopPropagation(); if (typeof callbackOnSelect === 'function') { const selectedPhonetic = reading.pronunciation; callbackOnSelect(anchorElementOrRect, selectedPhonetic); hidePronunciationPopup(popupEl, backdropEl); } });
-        }
-        headerBtn.addEventListener('click', () => { headerBtn.classList.toggle('active'); const indicator = headerBtn.querySelector('.indicator'); if (panelDiv.style.maxHeight) { panelDiv.style.maxHeight = null; if (indicator) indicator.textContent = '+'; } else { panelDiv.style.maxHeight = panelDiv.scrollHeight + "px"; if (indicator) indicator.textContent = '−'; } });
+    function renderPronunciationList() {
+      contentEl.innerHTML = '';
+      const showAllAccents = showOtherAccentsToggle.checked;
+      let currentDialect = contextualDialect || currentActiveMainDialectName || '四縣';
+      let displayReadings = [...allReadings];
+
+      if (!showAllAccents) {
+        displayReadings = displayReadings.filter(r => isSourceMatchingDialect(r.source, currentDialect));
+      }
+
+      displayReadings.sort((a, b) => {
+        if (a.isExactMatch !== b.isExactMatch) return a.isExactMatch ? -1 : 1;
+        const aSyllables = countSyllables(a.pronunciation);
+        const bSyllables = countSyllables(b.pronunciation);
+        if (aSyllables !== bSyllables) return aSyllables - bSyllables;
+        if (a.originalTerm !== b.originalTerm) return a.originalTerm.localeCompare(b.originalTerm);
+        return a.source.localeCompare(b.source);
       });
-      contentEl.appendChild(accordionContainer);
-    } else {
-      if (readings.length === 0) {
-        contentEl.innerHTML = `<p class="popup-not-found">在所有腔調中都尋無「${selectedText}」个讀音。<br>請試看啊重新斷詞，或者縮短尋个字詞。</p>`;
+
+      if (displayReadings.length > 0) {
+        const accordionContainer = document.createElement('div');
+        accordionContainer.className = 'accordion-container';
+        displayReadings.forEach(reading => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'accordion-item';
+            const headerBtn = document.createElement('button');
+            headerBtn.className = 'accordion-header';
+            const sandhiResult = getSandhiPronunciation(reading.pronunciation, reading.source);
+            let headerText = sandhiResult ? `<span class="pronunciation-text">${sandhiResult.sandhi}</span>` : `<span class="pronunciation-text">${reading.pronunciation}</span>`;
+            if (!reading.isExactMatch) {
+              headerText += ` (詞目: ${reading.originalTerm})`;
+            }
+            const audioUrl = reading.audioDetails ? constructAudioUrlForPopup(reading.audioDetails.lineData, reading.audioDetails.dialectInfo) : null;
+            let audioElementHTML = audioUrl ? `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>` : '';
+            let substituteButtonHTML = (typeof callbackOnSelect === 'function') ? `<button class="popup-substitute-btn" title="選用這个讀音"><i class="fas fa-arrow-up-from-bracket"></i></button>` : '';
+
+            headerBtn.innerHTML = `<div class="accordion-header-content">${headerText}<span class="pronunciation-source">(${reading.source})</span></div><div class="accordion-header-controls">${audioElementHTML}${substituteButtonHTML}<span class="indicator">+</span></div>`;
+            const panelDiv = document.createElement('div');
+            panelDiv.className = 'accordion-panel';
+            panelDiv.innerHTML = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
+
+            itemDiv.appendChild(headerBtn);
+            itemDiv.appendChild(panelDiv);
+            accordionContainer.appendChild(itemDiv);
+
+            const playButton = headerBtn.querySelector('.popup-audio-play-btn');
+            if (playButton) {
+              playButton.addEventListener('click', (e) => { e.stopPropagation(); const audioSrc = playButton.dataset.audioSrc; if(audioSrc) { if(window.currentPopupAudio) window.currentPopupAudio.pause(); window.currentPopupAudio = new Audio(audioSrc); window.currentPopupAudio.play(); } });
+            }
+            const substituteBtn = headerBtn.querySelector('.popup-substitute-btn');
+            if (substituteBtn) {
+              substituteBtn.addEventListener('click', (e) => { e.stopPropagation(); callbackOnSelect(anchorElementOrRect, reading.pronunciation); hidePronunciationPopup(popupEl, backdropEl); });
+            }
+            headerBtn.addEventListener('click', () => { headerBtn.classList.toggle('active'); const indicator = headerBtn.querySelector('.indicator'); if (panelDiv.style.maxHeight) { panelDiv.style.maxHeight = null; if(indicator) indicator.textContent = '+'; } else { panelDiv.style.maxHeight = panelDiv.scrollHeight + "px"; if(indicator) indicator.textContent = '−'; } });
+        });
+        contentEl.appendChild(accordionContainer);
       } else {
         const dialectName = currentDialect === '四縣' ? '四縣或南四縣' : currentDialect;
-        contentEl.innerHTML = `<p class="popup-not-found">在「${dialectName}」腔頭尋無讀音。<br>請試看啊打開「顯示其他腔頭」。</p>`;
+        contentEl.innerHTML = allReadings.length === 0 ? `<p class="popup-not-found">在所有腔調中都尋無「${selectedText}」个讀音。<br>請試看啊重新斷詞，或者縮短尋个字詞。</p>` : `<p class="popup-not-found">在「${dialectName}」腔頭尋無讀音。<br>請試看啊打開「顯示其他腔頭」。</p>`;
       }
     }
-  }
-  showOtherAccentsToggle.onchange = renderPronunciationList;
-  renderPronunciationList();
+
+    renderPronunciationList(); // Initial render
+    showOtherAccentsToggle.onchange = renderPronunciationList; // Re-render on toggle change
+
+  }, 0); // End of setTimeout
 
   const romanizerBtn = document.getElementById('selectionPopupRomanizerBtn');
   if (romanizerBtn) {
@@ -592,14 +600,6 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       }
     };
   }
-
-  popupEl.style.display = 'block';
-  backdropEl.style.display = 'block';
-  activeSelectionPopup = true;
-  if (initialRect) {
-    updatePopupPosition(popupEl, initialRect);
-  }
-  popupEl.focus();
 }
 
 function hidePronunciationPopup(popupEl, backdropEl) {
@@ -623,7 +623,6 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
     if (selection.rangeCount > 0) {
       const selectedText = selection.toString().trim();
       if (selectedText.length > 0) {
-        const readings = findPronunciationsInAllData(selectedText);
         let anchorElement = null;
         const trElement = sentenceSpan.closest('tr');
         if (trElement) {
@@ -636,10 +635,10 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
           anchorElement = sentenceSpan;
         }
         if (anchorElement) {
-          showPronunciationPopup(selectedText, readings, anchorElement, null);
+        showPronunciationPopup(selectedText, null, anchorElement, null);
         } else {
           const rect = selection.getRangeAt(0).getBoundingClientRect();
-          showPronunciationPopup(selectedText, readings, rect, null);
+        showPronunciationPopup(selectedText, null, rect, null);
         }
       }
     }
