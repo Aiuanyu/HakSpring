@@ -1312,6 +1312,12 @@ input:checked + .slider:before {
   #generated td.empty-sentence-cell {
     display: none;
   }
+
+  /* --- 新增：在手機仔畫面藏起來 Romanizer 入口 --- */
+  #showRomanizerBtn,
+  #romanizerContainer {
+    display: none !important;
+  }
 }
 
 
