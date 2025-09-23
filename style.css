@@ -481,12 +481,12 @@ tr#nowPlaying.paused-playback {
 
 /* 選中的「腔別+級別」連結容器樣式 */
 span[data-varname].active-dialect-level {
-  border: 2px solid #dc3545; /* 紅色邊框 */
   border-radius: 8px;       /* 圓角 */
   padding: 3px 6px;         /* 微調內距，讓框線不要太貼近文字 */
-  background-color: rgba(220, 53, 69, 0.5); /* 新增：淡淡的紅色背景 (紅底效果) */
-  box-shadow: 0 0 5px rgba(220, 53, 69, 0.5); /* 可選：加上淡淡的紅色光暈 */
-  /* 確保背景色和文字顏色不受影響或按需調整 */
+  /* 移除舊的背景色和紅色邊框，改用更通用、更顯眼个樣式 */
+  border: 2px solid #FFD700; /* 用金色邊框，在各種底色上都較顯眼 */
+  box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7); /* 用金色光暈來強化效果 */
+  background-color: rgba(255, 255, 255, 0.2); /* 加一層淡淡的白色透明背景，增加可讀性 */
 }
 /* --- 新增：為 span[data-varname] 設定基本樣式以避免跳動 --- */
 .dialect > span[data-varname] { /* 直接選取內層的 span */
@@ -961,9 +961,10 @@ input:checked + .slider:before {
   }
   /* 選中个腔調級別 */
   span[data-varname].active-dialect-level {
-    border-color: var(--dark-active-border-color);
-    background-color: rgba(220, 53, 69, 0.3); /* 背景透明度降低 */
-    box-shadow: 0 0 8px rgba(220, 53, 69, 0.6); /* 光暈加強 */
+    /* 暗夜模式下用同樣个金色，但光暈做得較亮來確保對比 */
+    border-color: #FFD700;
+    box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.8);
+    background-color: rgba(255, 255, 255, 0.25); /* 白色透明背景做得較亮一息仔 */
   }
    /* 確保 span[data-varname] 基本樣式在暗模式下也適用 */
   .dialect > span[data-varname] {
