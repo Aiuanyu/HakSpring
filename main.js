@@ -1498,8 +1498,8 @@ function initializeAppUI() {
     const keyword = searchInput.value.trim();
 
     if (keyword.length > 0 && isRomanizedHakka(keyword)) {
-        searchMode = '客家語';
-        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+        searchMode = '客話';
+        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客話"]');
         if (hakkaModeRadio) {
             hakkaModeRadio.checked = true;
         }
@@ -1550,7 +1550,7 @@ function initializeAppUI() {
 
 
     let results;
-    if (searchMode === '客家語') {
+    if (searchMode === '客話') {
         const lowerCaseKeyword = keyword.toLowerCase();
         const precisePhoneticRegex = /^([a-z]+[0-9]+(\s+|$))+$/i;
 
@@ -1585,7 +1585,7 @@ function initializeAppUI() {
     }
 
     const getCategoryRank = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === '客話') {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 1;
             if (inWord || inPhonetics) return 2;
@@ -1608,10 +1608,10 @@ function initializeAppUI() {
         return 0;
     });
 
-    let summaryText = `在${searchMode === '客家語' ? '客文' : '華文'}部分尋「${keyword}」，`;
+    let summaryText = `在${searchMode === '客話' ? '客文' : '華文'}部分尋「${keyword}」，`;
 
     const newUrl = getBaseUrlWithoutIndex();
-    newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
+    newUrl.searchParams.set('musiid', searchMode === '客話' ? 'hak' : 'zh');
     newUrl.searchParams.set('ca', keyword);
     newUrl.searchParams.set('bidsu', itemsPerPage.toString());
     newUrl.searchParams.set('iab', page.toString());
@@ -1634,7 +1634,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     const endIndex = startIndex + itemsPerPage;
     const paginatedResults = results.slice(startIndex, endIndex);
 
-    const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+    const searchModeText = searchMode === '客話' ? '客文' : '華文';
     updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
 
     if (totalResults === 0) {
@@ -1806,7 +1806,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     let currentTable = null;
 
     const categoryConfig = {
-        '客家語': {
+        '客話': {
             'both': { title: '詞、句裡肚都有：', highlight: { word: true, sentence: true, meaning: false, translation: false } },
             'word_only': { title: '淨詞彙裡肚有：', highlight: { word: true, sentence: false, meaning: false, translation: false } },
             'sentence_only': { title: '僅例句裡肚有：', highlight: { word: false, sentence: true, meaning: false, translation: false } }
@@ -1819,7 +1819,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     };
 
     const getCategoryKey = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === '客話') {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 'both';
             if (inWord || inPhonetics) return 'word_only';
@@ -3349,8 +3349,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const musiidParam = urlParams.get('musiid');
     const lastMode = localStorage.getItem('lastSearchMode');
     const searchModeValue = musiidParam
-      ? (musiidParam === 'hak' ? '客家語' : '華語')
-      : (lastMode || '客家語');
+      ? (musiidParam === 'hak' ? '客話' : '華語')
+      : (lastMode || '客話');
 
     const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
     if (modeRadio) {
