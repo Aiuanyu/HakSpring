@@ -3690,72 +3690,188 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 }
 
 function showCrossDialectComparison(line, dialectInfo) {
-  const modal = document.getElementById('crossDialectModal');
-  const modalTitle = document.getElementById('crossDialectModalTitle');
-  const contentArea = document.getElementById('cross-dialect-content');
-  if (!modal || !contentArea || !modalTitle) return;
+    const modal = document.getElementById('crossDialectModal');
+    const modalTitle = document.getElementById('crossDialectModalTitle');
+    const contentArea = document.getElementById('cross-dialect-content');
+    if (!modal || !contentArea || !modalTitle) return;
 
-  const lineId = line.編號;
-  const currentLevel = dialectInfo.級;
-  const accents = ['四', '海', '大', '平', '安'];
-  const accentFullNames = {'四': '四縣', '海': '海陸', '大': '大埔', '平': '饒平', '安': '詔安'};
+    const lineId = line.編號;
+    const currentLevel = dialectInfo.級;
+    const accents = ['四', '海', '大', '平', '安'];
+    const accentMap = {
+        '四': { name: '四縣', dataVar: '四' + currentLevel },
+        '海': { name: '海陸', dataVar: '海' + currentLevel },
+        '大': { name: '大埔', dataVar: '大' + currentLevel },
+        '平': { name: '饒平', dataVar: '平' + currentLevel },
+        '安': { name: '詔安', dataVar: '安' + currentLevel },
+    };
 
-  modalTitle.textContent = `「${line.客家語}」(${lineId}) 跨腔調對照`;
+    modalTitle.textContent = `「${line.客家語}」(${lineId}) 跨腔調對照`;
+    contentArea.innerHTML = ''; // Clear previous content
 
-  let comparisonResults = [];
+    const table = document.createElement('table');
+    table.id = 'comparison-table'; // Use a different ID to avoid conflicts if needed
+    table.setAttribute('width', '100%');
+    const tbody = table.createTBody();
 
-  accents.forEach(accent => {
-    const dataVarName = `${accent}${currentLevel}`;
-    const dataObject = window[dataVarName];
-    if (dataObject && dataObject.content) {
-      const foundItem = dataObject.content.find(item => item.編號 === lineId);
-      if (foundItem) {
-        comparisonResults.push({
-          accent: accentFullNames[accent],
-          data: foundItem
-        });
-      }
-    }
-  });
+    let resultsFound = false;
 
-  if (comparisonResults.length > 0) {
-    let tableHTML = '<table id="cross-dialect-table">';
-    tableHTML += '<thead><tr><th>腔調</th><th>詞彙</th><th>例句</th></tr></thead>';
-    tableHTML += '<tbody>';
-
-    comparisonResults.forEach(result => {
-      const item = result.data;
-      let phoneticText = formatPhoneticForDisplay(item['客語標音_顯示']);
-      if (result.accent === '大埔') {
-          phoneticText = getDapuSandhiHtml(phoneticText);
-      }
-
-      tableHTML += `
-        <tr>
-          <td data-label="腔調">${result.accent}</td>
-          <td data-label="詞彙">
-            <ruby>${item.客家語}<rt>${phoneticText}</rt></ruby>
-            <br>
-            <span>${item.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
-          </td>
-          <td data-label="例句">
-            ${item.例句 && item.例句.trim() !== '' ? `
-              <span class="sentence">${item.例句.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
-              <br>
-              <span>${item.翻譯.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
-            ` : '無'}
-          </td>
-        </tr>
-      `;
+    accents.forEach(accentKey => {
+        const accentInfo = accentMap[accentKey];
+        const dataObject = window[accentInfo.dataVar];
+        if (dataObject && dataObject.content) {
+            const foundItem = dataObject.content.find(item => item.編號 === lineId);
+            if (foundItem) {
+                resultsFound = true;
+                // This is a simplified dialectInfo for the row creation function
+                const itemDialectInfo = {
+                    腔: accentKey,
+                    級: currentLevel,
+                    腔名: accentInfo.name,
+                    級名: dialectInfo.級名, // Assumes level name is the same
+                    檔腔: dialectInfo.檔腔, // This needs to be mapped
+                    檔級: dialectInfo.檔級,
+                    目錄級: dialectInfo.目錄級,
+                    目錄另級: dialectInfo.目錄另級,
+                    generalMediaYr: '112',
+                    fullLvlName: `${accentInfo.name}${dialectInfo.級名}`,
+                    例外音檔: window[`${currentLevel}例外音檔`] || []
+                };
+                // This is complex, so we need a proper mapping
+                switch(itemDialectInfo.腔) {
+                    case '四': itemDialectInfo.檔腔 = 'si'; break;
+                    case '海': itemDialectInfo.檔腔 = 'ha'; break;
+                    case '大': itemDialectInfo.檔腔 = 'da'; break;
+                    case '平': itemDialectInfo.檔腔 = 'rh'; break;
+                    case '安': itemDialectInfo.檔腔 = 'zh'; break;
+                }
+                const row = createComparisonRow(foundItem, itemDialectInfo);
+                tbody.appendChild(row);
+            }
+        }
     });
 
-    tableHTML += '</tbody></table>';
-    contentArea.innerHTML = tableHTML;
-  } else {
-    contentArea.innerHTML = '<p>尋無其他腔調个對應資料。</p>';
-  }
+    if (resultsFound) {
+        contentArea.appendChild(table);
+        // Add the event listener for the selection popup
+        const selectionPopup = document.getElementById('selectionPopup');
+        const selectionPopupContent = document.getElementById('selectionPopupContent');
+        const selectionPopupBackdrop = document.getElementById('selectionPopupBackdrop');
+        if (selectionPopup && selectionPopupContent && selectionPopupBackdrop) {
+          table.addEventListener('mouseup', (event) => {
+            handleTextSelectionInSentence(event, selectionPopup, selectionPopupContent, selectionPopupBackdrop, contentArea);
+          });
+        }
+    } else {
+        contentArea.innerHTML = '<p>尋無其他腔調个對應資料。</p>';
+    }
 
-  modal.classList.add('is-visible');
+    modal.classList.add('is-visible');
+}
+
+function createComparisonRow(line, dialectInfo) {
+    const item = document.createElement('tr');
+
+    // TD1: Dialect Name
+    const td1 = document.createElement('td');
+    td1.className = 'no';
+    td1.dataset.label = '腔調';
+    const sourceSpan = document.createElement('span');
+    sourceSpan.className = `dialect ${dialectInfo.腔名}`;
+    sourceSpan.textContent = dialectInfo.腔名;
+    td1.appendChild(sourceSpan);
+    item.appendChild(td1);
+
+    // This logic is heavily borrowed from renderCategoryItems
+    const missingAudioInfo = typeof getMissingAudioInfo === 'function' ? getMissingAudioInfo(dialectInfo.fullLvlName, line.分類, line.編號) : null;
+    let mediaYr = dialectInfo.generalMediaYr;
+    let pre112Insertion詞 = '', pre112Insertion句 = '';
+    let 詞目錄級 = dialectInfo.目錄級, 句目錄級 = dialectInfo.目錄級;
+    let mediaNo = '';
+    var no = line.編號.split('-');
+    if (no[0] <= 9) no[0] = '0' + no[0];
+    if (dialectInfo.級 === '初') no[0] = '0' + no[0];
+    if (no[1] <= 9) no[1] = '0' + no[1];
+    if (no[1] <= 99) no[1] = '0' + no[1];
+    mediaNo = no[1];
+    const index = dialectInfo.例外音檔.findIndex(([編號]) => 編號 === line.編號);
+    if (index !== -1) {
+        const matchedElement = dialectInfo.例外音檔[index];
+        mediaYr = matchedElement[1]; mediaNo = matchedElement[2];
+        pre112Insertion詞 = 'w/'; pre112Insertion句 = 's/';
+        if (dialectInfo.目錄另級 !== undefined) {
+            詞目錄級 = dialectInfo.目錄另級; 句目錄級 = dialectInfo.目錄另級;
+        }
+    }
+    const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+    const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+
+    // TD2: Vocabulary
+    const td2 = document.createElement('td');
+    td2.dataset.label = '詞彙';
+    const ruby = document.createElement('ruby');
+    ruby.textContent = line.客家語;
+    const rt = document.createElement('rt');
+    let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+    if (dialectInfo.腔 === '大') {
+        phoneticText = getDapuSandhiHtml(phoneticText);
+    }
+    rt.innerHTML = phoneticText;
+    ruby.appendChild(rt);
+    td2.appendChild(ruby);
+    td2.appendChild(document.createElement('br'));
+    if (missingAudioInfo && missingAudioInfo.word === false) {
+        // No audio
+    } else {
+        const audio1 = document.createElement('audio');
+        audio1.className = 'media'; audio1.controls = true; audio1.preload = 'none';
+        let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+        if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
+            wordAudioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+        }
+        audio1.src = wordAudioSrc;
+        td2.appendChild(audio1);
+    }
+    td2.appendChild(document.createElement('br'));
+    const meaningSpan = document.createElement('span');
+    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
+    td2.appendChild(meaningSpan);
+    if (line.備註 && line.備註.trim() !== '') {
+        const notesP = document.createElement('p');
+        notesP.className = 'notes';
+        notesP.textContent = `（${line.備註}）`;
+        td2.appendChild(notesP);
+    }
+    item.appendChild(td2);
+
+    // TD3: Example Sentence
+    const td3 = document.createElement('td');
+    td3.dataset.label = '例句';
+    if (line.例句 && line.例句.trim() !== '') {
+        const sentenceSpan = document.createElement('span');
+        sentenceSpan.className = 'sentence';
+        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+        td3.appendChild(sentenceSpan);
+        td3.appendChild(document.createElement('br'));
+        if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
+            // No audio
+        } else {
+            const audio2 = document.createElement('audio');
+            audio2.className = 'media'; audio2.controls = true; audio2.preload = 'none';
+            audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+            td3.appendChild(audio2);
+        }
+        td3.appendChild(document.createElement('br'));
+        const translationText = document.createElement('span');
+        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
+        td3.appendChild(translationText);
+    } else {
+        td3.classList.add('empty-sentence-cell');
+        td3.textContent = '無';
+    }
+    item.appendChild(td3);
+
+    return item;
 }
 
 // Start the application

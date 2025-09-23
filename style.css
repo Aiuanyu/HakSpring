@@ -1602,32 +1602,6 @@ tr.ios-autoplay-instruction td::before {
   -webkit-overflow-scrolling: touch;
 }
 
-#cross-dialect-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-#cross-dialect-table th,
-#cross-dialect-table td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-  vertical-align: top;
-}
-
-#cross-dialect-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-#cross-dialect-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-#cross-dialect-table td[data-label="詞彙"] ruby {
-  font-size: 1.2em;
-}
-
 @media (prefers-color-scheme: dark) {
   #crossDialectModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
@@ -1641,16 +1615,6 @@ tr.ios-autoplay-instruction td::before {
   #crossDialectModal .modal-close-btn:hover,
   #crossDialectModal .modal-close-btn:focus-visible {
     color: #fff;
-  }
-  #cross-dialect-table th,
-  #cross-dialect-table td {
-    border-color: #444;
-  }
-  #cross-dialect-table th {
-    background-color: #333;
-  }
-  #cross-dialect-table tr:nth-child(even) {
-    background-color: #282828;
   }
 }
 
