@@ -471,6 +471,7 @@ function getSandhiPronunciation(pronunciation, dialect) {
     // If no sandhi applies or it's not the right dialect, return null.
     return null;
 }
+window.getSandhiPronunciation = getSandhiPronunciation;
 
 function applyDapuSandhiToGenerated() {
     const rtElements = document.querySelectorAll('#generated rt');

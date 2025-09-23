@@ -487,44 +487,83 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function populateSegmentGroup(container, romanizedText, sourceSpan) {
-        container.innerHTML = '';
-        const tokens = tokenizeRomanization(romanizedText);
-    
-        tokens.forEach(token => {
-            if (!/[【】（）()\/]/.test(token)) {
-                // 【新邏輯】淨產生音節个 wrapper，毋產生連接符號
-                const wrapper = document.createElement('span');
-                wrapper.className = 'syllable-wrapper';
-                if (sourceSpan.classList.contains('just-substituted')) {
-                    wrapper.classList.add('substituted-by-user');
-                }
-                if (sourceSpan.dataset.noCapitalize) {
-                    wrapper.dataset.noCapitalize = 'true';
-                }
-                wrapper.appendChild(document.createTextNode(token));
-    
-                const uppercaseBtn = document.createElement('button');
-                uppercaseBtn.className = 'uppercase-btn';
-                uppercaseBtn.textContent = 'U';
-                uppercaseBtn.setAttribute('aria-label', `將 ${token} 轉做大寫`);
-    
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                deleteBtn.setAttribute('aria-label', `刪除 ${token}`);
-    
-                wrapper.appendChild(uppercaseBtn);
-                wrapper.appendChild(deleteBtn);
-                container.appendChild(wrapper);
-            } else {
-                // 分隔符號 (像【】) 還係愛保留
-                const separatorSpan = document.createElement('span');
-                separatorSpan.className = 'separator';
-                separatorSpan.textContent = token;
-                container.appendChild(separatorSpan);
-            }
-        });
+    container.innerHTML = '';
+
+    // Check for Dapu sandhi and get the potentially HTML-formatted text
+    let textToProcess = romanizedText;
+    if (romanizerSelectedDialect === '大埔' && typeof window.getSandhiPronunciation === 'function') {
+        const sandhiResult = window.getSandhiPronunciation(romanizedText, romanizerSelectedDialect);
+        if (sandhiResult && sandhiResult.sandhi) {
+            textToProcess = sandhiResult.sandhi;
+        }
     }
+
+    // Use a temporary div to parse the text, whether it's plain or HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = textToProcess;
+
+    const fragment = document.createDocumentFragment();
+    Array.from(tempDiv.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            // If it's a text node, it contains one or more syllables/punctuations that need tokenizing
+            const tokens = tokenizeRomanization(node.textContent);
+            tokens.forEach(token => {
+                if (!/[【】（）()\/]/.test(token)) {
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'syllable-wrapper';
+                    if (sourceSpan.classList.contains('just-substituted')) {
+                        wrapper.classList.add('substituted-by-user');
+                    }
+                    if (sourceSpan.dataset.noCapitalize) {
+                        wrapper.dataset.noCapitalize = 'true';
+                    }
+                    wrapper.appendChild(document.createTextNode(token));
+
+                    const uppercaseBtn = document.createElement('button');
+                    uppercaseBtn.className = 'uppercase-btn';
+                    uppercaseBtn.textContent = 'U';
+                    uppercaseBtn.setAttribute('aria-label', `將 ${token} 轉做大寫`);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.setAttribute('aria-label', `刪除 ${token}`);
+
+                    wrapper.appendChild(uppercaseBtn);
+                    wrapper.appendChild(deleteBtn);
+                    fragment.appendChild(wrapper);
+                } else {
+                    const separatorSpan = document.createElement('span');
+                    separatorSpan.className = 'separator';
+                    separatorSpan.textContent = token;
+                    fragment.appendChild(separatorSpan);
+                }
+            });
+        } else if (node.nodeName === 'RUBY') {
+            // It's a sandhi syllable, already wrapped in <ruby>.
+            const wrapper = node.cloneNode(true);
+            const token = wrapper.textContent;
+
+            const uppercaseBtn = document.createElement('button');
+            uppercaseBtn.className = 'uppercase-btn';
+            uppercaseBtn.textContent = 'U';
+            uppercaseBtn.setAttribute('aria-label', `將 ${token} 轉做大寫`);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+            deleteBtn.setAttribute('aria-label', `刪除 ${token}`);
+
+            wrapper.appendChild(uppercaseBtn);
+            wrapper.appendChild(deleteBtn);
+            fragment.appendChild(wrapper);
+        } else {
+            // For any other nodes (likely just separators that were already spans), just append them
+            fragment.appendChild(node.cloneNode(true));
+        }
+    });
+    container.appendChild(fragment);
+  }
 
   function applyCapitalizationRules() {
     if (!romanizerOutput) return;
