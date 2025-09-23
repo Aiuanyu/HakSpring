@@ -66,6 +66,7 @@
       </select>
       <button id="infoButton" title="看說明文件"><i class="fas fa-info-circle"></i></button>
       <button id="showRomanizerBtn" title="客語羅馬字轉換工具"><i class="fas fa-pen-to-square"></i></button>
+      <button id="dataManagementBtn" title="資料管理（備份／還原）"><i class="fas fa-database"></i></button>
       <span id="progressDetails"></span> <!-- <--- 在這裡加入這個 span -->
       <div id="search-container">
         <input type="text" id="search-input" placeholder="查語詞" />
@@ -395,5 +396,31 @@
       </div>
     </div>
     </div> <!-- End of main-content div -->
+
+    <!-- Data Management Modal -->
+    <div id="dataManagementModal" class="modal-overlay">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h4 id="dataManagementModalTitle" class="modal-title">資料管理（備份／還原）</h4>
+          <button id="dataManagementModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
+        </div>
+        <div class="modal-body" id="data-management-content">
+          <div class="data-section">
+            <h4><i class="fas fa-upload"></i> 匯出 (備份)</h4>
+            <p>請點下面个按鈕來產生備份資料。做得將內容複製起來，或者下載備份檔。</p>
+            <button id="exportDataBtn">產生並下載備份</button>
+            <textarea id="exportDataTextArea" readonly placeholder="備份資料會顯示在這位..."></textarea>
+          </div>
+          <div class="data-section">
+            <h4><i class="fas fa-download"></i> 匯入 (還原)</h4>
+            <p>請選擇 .json 備份檔，或者直接將備份資料貼到下面个橫框。</p>
+            <input type="file" id="importDataFile" accept=".json, .txt"/>
+            <textarea id="importDataTextArea" placeholder="將備份資料貼在這位..."></textarea>
+            <button id="importDataBtn">還原資料</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>
