@@ -3586,10 +3586,31 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   dialectLevelLinks.forEach(function (link) {
     link.addEventListener('click', function (e) {
       e.preventDefault();
-      var varName = this.parentNode.dataset.varname;
-      var dataObject = window[varName]; // *** 關鍵修正 ***
+
+      const targetSpan = this.closest('span[data-varname]');
+      if (!targetSpan) {
+        console.error('Could not find parent span with data-varname:', this);
+        return;
+      }
+      const varName = targetSpan.dataset.varname;
+      const dataObject = window[varName];
+
       if (dataObject) {
+        document.querySelectorAll('span[data-varname]').forEach((span) => {
+          span.classList.remove('active-dialect-level');
+        });
+        targetSpan.classList.add('active-dialect-level');
+
+        document.querySelectorAll('.radioItem').forEach((label) => {
+          label.classList.remove('active-category');
+        });
+
         generate(dataObject);
+
+        const catPanel = document.getElementById('cat-panel');
+        if (catPanel) {
+          catPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       } else {
         console.error(`找不到資料物件: ${varName}`);
       }
