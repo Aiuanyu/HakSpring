@@ -583,10 +583,11 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
   if (romanizerBtn) {
     romanizerBtn.onclick = (e) => {
       e.stopPropagation();
+      const mainRomanizerBtn = document.getElementById('showRomanizerBtn');
       const romanizerInput = document.getElementById('romanizer-input');
-      if (romanizerInput && typeof showRomanizer === 'function') {
+      if (mainRomanizerBtn && romanizerInput) {
         romanizerInput.value = selectedText;
-        showRomanizer();
+        mainRomanizerBtn.click();
         hidePronunciationPopup(popupEl, backdropEl);
       }
     };
@@ -703,7 +704,7 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0 && lastSelectionRectForMobile) {
       const selectedText = selection.toString().trim();
-      if (selectedText.length > 0 && selectedText.length <= 15) {
+      if (selectedText.length > 0) {
         const readings = findPronunciationsInAllData(selectedText);
         showPronunciationPopup(selectedText, readings, lastSelectionRectForMobile, null);
         hideMobileLookupButton();
@@ -2154,7 +2155,7 @@ function isFirefox() {
       } else if (commonAncestorContainer.parentNode) {
         sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
       }
-      if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0 && selectedText.length <= 15) {
+      if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0) {
         if (!activeSelectionPopup) {
           const rect = range.getBoundingClientRect();
           showMobileLookupButton(rect);

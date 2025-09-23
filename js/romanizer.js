@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Functions ---
-  window.showRomanizer = function() {
+  function showRomanizer() {
     if (romanizerContainer) {
       romanizerContainer.classList.add('is-visible');
       if (typeof currentActiveMainDialectName !== 'undefined' && romanizerDialectSelector) {
