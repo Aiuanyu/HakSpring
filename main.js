@@ -3725,10 +3725,20 @@ function exportData() {
     }
   });
 
-  const jsonString = JSON.stringify(exportData, null, 2); // Pretty print JSON
-  exportTextArea.value = jsonString;
-  exportTextArea.readOnly = true;
+  const jsonString = JSON.stringify(exportData, null, 2); // Pretty print JSON for the downloadable file
+  const jsonStringForUrl = JSON.stringify(exportData); // No pretty print for URL
 
+  // --- 產生並顯示 URL ---
+  try {
+    const encodedData = btoa(unescape(encodeURIComponent(jsonStringForUrl)));
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('migrateData', encodedData);
+    exportTextArea.value = newUrl.toString();
+  } catch (e) {
+    console.error("無法處理遷移資料:", e);
+    exportTextArea.value = "產生 URL 失敗。請改用下載个檔案。";
+  }
+  exportTextArea.readOnly = true;
 
   // --- 觸發下載 ---
   const blob = new Blob([jsonString], { type: 'application/json' });
