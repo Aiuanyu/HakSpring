@@ -1302,6 +1302,7 @@ function initializeAppUI() {
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
   const romanizerContainer = document.getElementById('romanizerContainer');
+  initializeDataManagement(); // <-- 【新增】呼叫新的初始化函式
 
   // All data variables from the included JS files
   const allData = {
@@ -3663,6 +3664,161 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   // Initial call to set things right
   repositionViewport();
 }
+
+// --- 【新增】資料管理 (備份/還原) 功能 ---
+function initializeDataManagement() {
+  const dataManagementBtn = document.getElementById('dataManagementBtn');
+  const dataManagementModal = document.getElementById('dataManagementModal');
+  const dataManagementModalCloseBtn = document.getElementById('dataManagementModalCloseBtn');
+  const exportDataBtn = document.getElementById('exportDataBtn');
+  const importDataBtn = document.getElementById('importDataBtn');
+
+  if (!dataManagementBtn || !dataManagementModal || !dataManagementModalCloseBtn || !exportDataBtn || !importDataBtn) {
+    console.error('一個或多個資料管理 UI 元件未尋著。');
+    return;
+  }
+
+  // --- 事件監聽器 ---
+  dataManagementBtn.addEventListener('click', () => {
+    dataManagementModal.style.display = 'flex';
+  });
+
+  const closeModal = () => {
+    dataManagementModal.style.display = 'none';
+  };
+
+  dataManagementModalCloseBtn.addEventListener('click', closeModal);
+  dataManagementModal.addEventListener('click', (event) => {
+    if (event.target === dataManagementModal) {
+      closeModal();
+    }
+  });
+
+  exportDataBtn.addEventListener('click', exportData);
+  importDataBtn.addEventListener('click', importData);
+}
+
+/**
+ * 匯出使用者資料
+ */
+function exportData() {
+  const exportTextArea = document.getElementById('exportDataTextArea');
+  const keysToExport = [
+    'hakkaBookmarks',
+    'dontShowInfoModalAgain',
+    'lastSearchMode',
+    'lastSearchDialect'
+    // 'hideInfoModal' is often redundant with 'dontShowInfoModalAgain', so we can omit it.
+  ];
+
+  const exportData = {};
+  keysToExport.forEach(key => {
+    const value = localStorage.getItem(key);
+    if (value !== null) {
+      try {
+        // Attempt to parse JSON strings to store them as objects/arrays
+        exportData[key] = JSON.parse(value);
+      } catch (e) {
+        // If it's not a valid JSON, store as a plain string
+        exportData[key] = value;
+      }
+    }
+  });
+
+  const jsonString = JSON.stringify(exportData, null, 2); // Pretty print JSON
+  exportTextArea.value = jsonString;
+  exportTextArea.readOnly = true;
+
+
+  // --- 觸發下載 ---
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+
+  // 建立有日期个檔案名
+  const date = new Date();
+  const dateString = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+  a.download = `hakspring-backup-${dateString}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert('備份檔已產生並開始下載。');
+}
+
+/**
+ * 匯入使用者資料
+ */
+async function importData() {
+  const fileInput = document.getElementById('importDataFile');
+  const textArea = document.getElementById('importDataTextArea');
+  const file = fileInput.files[0];
+  const textValue = textArea.value.trim();
+
+  if (!file && textValue === '') {
+    alert('請選擇一個備份檔，或在橫框內貼上備份資料。');
+    return;
+  }
+
+  let dataString = '';
+
+  if (file) {
+    try {
+      dataString = await file.text();
+    } catch (error) {
+      console.error('讀取檔案失敗:', error);
+      alert('讀取檔案失敗，請確定檔案係無係有效。');
+      return;
+    }
+  } else {
+    dataString = textValue;
+  }
+
+  try {
+    let parsedData;
+    // 檢查係無係貼上了完整个 URL
+    if (dataString.includes('?migrateData=')) {
+        const urlParams = new URLSearchParams(dataString.split('?')[1]);
+        const migrateData = urlParams.get('migrateData');
+        if (migrateData) {
+            const decodedData = decodeURIComponent(escape(atob(migrateData)));
+            parsedData = JSON.parse(decodedData);
+        } else {
+            throw new Error('URL 裡肚尋無 migrateData 參數。');
+        }
+    } else {
+        // 當作淨 JSON 資料來處理
+        parsedData = JSON.parse(dataString);
+    }
+
+
+    // --- 還原資料到 localStorage ---
+    for (const key in parsedData) {
+      if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+        let value = parsedData[key];
+        // 如果值係一個物件 (例如 hakkaBookmarks)，愛將佢轉做字串再儲存
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+        localStorage.setItem(key, value);
+      }
+    }
+
+    alert('資料還原成功！網站會重新載入來套用新設定。');
+
+    // 關閉 modal 並重新載入頁面
+    document.getElementById('dataManagementModal').style.display = 'none';
+    location.reload();
+
+  } catch (error) {
+    console.error('匯入資料失敗:', error);
+    alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
+  }
+}
+
 
 // Start the application
 initializeApp();
