@@ -241,8 +241,26 @@ a {
   border: none;
   cursor: pointer;
 }
+.bookmarkBtn,
+.crossDialectBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+}
 .bookmarkBtn i {
   color: var(--iMazinGrace-1) !important;
+}
+.crossDialectBtn i {
+  color: #4a67a1 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .crossDialectBtn i {
+    color: #8cb3d9 !important;
+  }
 }
 #generated td:nth-of-type(2) {
   text-align: center;
@@ -1528,6 +1546,112 @@ tr.ios-autoplay-instruction td::before {
   cursor: pointer;
   font-size: 0.9em;
   color: #212529;
+}
+
+/* Cross-Dialect Modal Specific Styles */
+#crossDialectModal .modal-dialog {
+  background-color: #fdfdfd;
+  color: var(--main-text-color);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  width: 90vw;
+  max-width: 1000px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#crossDialectModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+#crossDialectModal .modal-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  font-family: var(--title-font);
+  color: inherit;
+}
+
+#crossDialectModal .modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+#crossDialectModal .modal-close-btn:hover,
+#crossDialectModal .modal-close-btn:focus-visible {
+  color: #333;
+}
+
+#crossDialectModal .modal-body {
+  padding: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#cross-dialect-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#cross-dialect-table th,
+#cross-dialect-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+#cross-dialect-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+#cross-dialect-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#cross-dialect-table td[data-label="詞彙"] ruby {
+  font-size: 1.2em;
+}
+
+@media (prefers-color-scheme: dark) {
+  #crossDialectModal .modal-dialog {
+    background-color: var(--dark-surface-color, #2c2c2c);
+  }
+  #crossDialectModal .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+  #crossDialectModal .modal-close-btn {
+    color: #aaa;
+  }
+  #crossDialectModal .modal-close-btn:hover,
+  #crossDialectModal .modal-close-btn:focus-visible {
+    color: #fff;
+  }
+  #cross-dialect-table th,
+  #cross-dialect-table td {
+    border-color: #444;
+  }
+  #cross-dialect-table th {
+    background-color: #333;
+  }
+  #cross-dialect-table tr:nth-child(even) {
+    background-color: #282828;
+  }
 }
 
 #infoModal .modal-footer input[type="checkbox"] {

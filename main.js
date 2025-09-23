@@ -1302,6 +1302,8 @@ function initializeAppUI() {
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
   const romanizerContainer = document.getElementById('romanizerContainer');
+  const crossDialectModal = document.getElementById('crossDialectModal');
+  const crossDialectModalCloseBtn = document.getElementById('crossDialectModalCloseBtn');
 
   // All data variables from the included JS files
   const allData = {
@@ -2813,6 +2815,17 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         bookmarkBtn.dataset.rowId = originalRowId;
         bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
         td1.appendChild(bookmarkBtn);
+
+        // Add the cross-dialect comparison button
+        const crossDialectBtn = document.createElement('button');
+        crossDialectBtn.className = 'crossDialectBtn';
+        crossDialectBtn.title = '跨腔調對照';
+        crossDialectBtn.innerHTML = '<i class="fas fa-exchange-alt"></i>';
+        crossDialectBtn.addEventListener('click', () => {
+          showCrossDialectComparison(line, dialectInfo);
+        });
+        td1.appendChild(crossDialectBtn);
+
         const playBtn = document.createElement('button');
         playBtn.className = 'playFromThisRow';
         playBtn.dataset.rowId = originalRowId;
@@ -3519,6 +3532,18 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
+  if (crossDialectModal && crossDialectModalCloseBtn) {
+    const closeCrossDialectModal = () => {
+      crossDialectModal.classList.remove('is-visible');
+    };
+    crossDialectModalCloseBtn.addEventListener('click', closeCrossDialectModal);
+    crossDialectModal.addEventListener('click', (event) => {
+      if (event.target === crossDialectModal) {
+        closeCrossDialectModal();
+      }
+    });
+  }
+
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
     const closePopup = () => {
       selectionPopup.style.display = 'none';
@@ -3662,6 +3687,75 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   // Initial call to set things right
   repositionViewport();
+}
+
+function showCrossDialectComparison(line, dialectInfo) {
+  const modal = document.getElementById('crossDialectModal');
+  const modalTitle = document.getElementById('crossDialectModalTitle');
+  const contentArea = document.getElementById('cross-dialect-content');
+  if (!modal || !contentArea || !modalTitle) return;
+
+  const lineId = line.編號;
+  const currentLevel = dialectInfo.級;
+  const accents = ['四', '海', '大', '平', '安'];
+  const accentFullNames = {'四': '四縣', '海': '海陸', '大': '大埔', '平': '饒平', '安': '詔安'};
+
+  modalTitle.textContent = `「${line.客家語}」(${lineId}) 跨腔調對照`;
+
+  let comparisonResults = [];
+
+  accents.forEach(accent => {
+    const dataVarName = `${accent}${currentLevel}`;
+    const dataObject = window[dataVarName];
+    if (dataObject && dataObject.content) {
+      const foundItem = dataObject.content.find(item => item.編號 === lineId);
+      if (foundItem) {
+        comparisonResults.push({
+          accent: accentFullNames[accent],
+          data: foundItem
+        });
+      }
+    }
+  });
+
+  if (comparisonResults.length > 0) {
+    let tableHTML = '<table id="cross-dialect-table">';
+    tableHTML += '<thead><tr><th>腔調</th><th>詞彙</th><th>例句</th></tr></thead>';
+    tableHTML += '<tbody>';
+
+    comparisonResults.forEach(result => {
+      const item = result.data;
+      let phoneticText = formatPhoneticForDisplay(item['客語標音_顯示']);
+      if (result.accent === '大埔') {
+          phoneticText = getDapuSandhiHtml(phoneticText);
+      }
+
+      tableHTML += `
+        <tr>
+          <td data-label="腔調">${result.accent}</td>
+          <td data-label="詞彙">
+            <ruby>${item.客家語}<rt>${phoneticText}</rt></ruby>
+            <br>
+            <span>${item.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
+          </td>
+          <td data-label="例句">
+            ${item.例句 && item.例句.trim() !== '' ? `
+              <span class="sentence">${item.例句.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
+              <br>
+              <span>${item.翻譯.replace(/"/g, '').replace(/\n/g, '<br>')}</span>
+            ` : '無'}
+          </td>
+        </tr>
+      `;
+    });
+
+    tableHTML += '</tbody></table>';
+    contentArea.innerHTML = tableHTML;
+  } else {
+    contentArea.innerHTML = '<p>尋無其他腔調个對應資料。</p>';
+  }
+
+  modal.classList.add('is-visible');
 }
 
 // Start the application
