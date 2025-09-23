@@ -374,7 +374,7 @@ function getDapuSandhiHtml(htmlContent) {
             return [token]; // Keep existing sandhi rubies as is.
         }
         // This regex splits the string into syllables and punctuation.
-        return token.match(/[^<>\s、]+|[\s、]+/g) || [];
+        return token.match(/[^<>\s、()【】]+|[\s、()【】]+/g) || [];
     }).filter(t => t && t.length > 0);
 
     let modifiedTokens = [];
