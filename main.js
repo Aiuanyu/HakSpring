@@ -615,8 +615,8 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 }
 
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
+  const target = event.target;
   setTimeout(() => {
-    let target = event.target;
     let sentenceSpan = target.closest('span.sentence');
     if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
     const selection = window.getSelection();
