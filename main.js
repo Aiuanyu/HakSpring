@@ -384,7 +384,7 @@ function getDapuSandhiHtml(htmlContent) {
         let currentToken = tokens[i];
 
         // Skip tokens that are already sandhi-fied or are just whitespace/punctuation.
-        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、]+$/)) {
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || currentToken.match(/^[\s、()（）【】]+$/)) {
             modifiedTokens.push(currentToken);
             continue;
         }
@@ -392,11 +392,11 @@ function getDapuSandhiHtml(htmlContent) {
         // Find the next actual syllable, skipping over punctuation.
         let nextWordToken = "";
         for (let j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、]+$/)) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || tokens[j].match(/^[\s、()（）【】]+$/)) {
                 continue;
             }
             // Stop if we hit parentheses, as they block sandhi.
-            if (tokens[j] === '(' || tokens[j] === '（') {
+            if (tokens[j] === '(' || tokens[j] === '（' || tokens[j] === '【') {
                 nextWordToken = "";
                 break;
             }
@@ -405,7 +405,7 @@ function getDapuSandhiHtml(htmlContent) {
         }
 
         // Conditions that prevent sandhi application.
-        if (currentToken.length === 0 || !nextWordToken || currentToken.includes(')') || currentToken.includes('）') || nextWordToken.includes('(') || nextWordToken.includes('（')) {
+        if (currentToken.length === 0 || !nextWordToken || currentToken.includes(')') || currentToken.includes('）') || currentToken.includes('】') || currentToken.includes('(') || currentToken.includes('（') || currentToken.includes('【')) {
             modifiedTokens.push(currentToken);
             continue;
         }
