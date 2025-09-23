@@ -320,8 +320,8 @@ button.playFromThisRow.ended i {
 }
 
 /* --- 【新增】循環播放按鈕樣式 --- */
-#loopCategoryBtn.active i {
-  background-color: #ff8c00 !important; /* 暗橘色表示 active */
+button#loopCategoryBtn.active i {
+  background-color: #ff8c00; /* 暗橘色表示 active */
   color: white;
 }
 
@@ -341,7 +341,7 @@ button.playFromThisRow.ended i {
   padding: 0.5em;
 }
 .loop-one-btn.looping i {
-  background-color: #ff4500 !important; /* 橘紅色表示 looping */
+  background-color: #ff4500; /* 橘紅色表示 looping */
   color: white;
 }
 
@@ -1088,15 +1088,15 @@ input:checked + .slider:before {
   }
 
   /* 【新增】暗黑模式循環按鈕樣式 */
-  #loopCategoryBtn.active i {
-    background-color: #e67e22 !important; /* 較亮的橘色 */
+  button#loopCategoryBtn.active i {
+    background-color: #e67e22; /* 較亮的橘色 */
   }
   .loop-one-btn i {
     background: #9b59b6; /* 較亮的紫色 */
     box-shadow: 2px 2px #8e44ad;
   }
   .loop-one-btn.looping i {
-    background-color: #e74c3c !important; /* 較亮的紅色 */
+    background-color: #e74c3c; /* 較亮的紅色 */
   }
   tr.looping-row {
     animation: pulse-dark-pink-effect 2s infinite ease-in-out;

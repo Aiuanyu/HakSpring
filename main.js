@@ -3055,8 +3055,9 @@ function playAudio(itemIndex, sessionId) {
         // --- 【新增】檢查分類循環模式 ---
         if (isCategoryLooping) {
             console.log(`分類循環模式開啟中，重新播放類別: ${g_currentCategory}`);
-            // 直接從頭播放，並確保傳遞同一個對談 ID
-            setTimeout(() => playAudio(0, sessionId), 100); // 短暫延遲再開始
+            // 短暫延遲再開始，避免函式呼叫堆疊過深或UI反應不及
+            const CATEGORY_LOOP_RESTART_DELAY = 100;
+            setTimeout(() => playAudio(0, sessionId), CATEGORY_LOOP_RESTART_DELAY);
             return;
         }
 
@@ -3220,6 +3221,9 @@ function stopPlayback() {
  * @param {HTMLElement} button - 被點擊的 .loop-one-btn 按鈕。
  */
 function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
+    const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
+    const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
+
     stopPlayback();
     stopSingleWordLoop();
 
@@ -3238,11 +3242,11 @@ function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
             sentenceAudio.currentTime = 0;
             sentenceAudio.play().catch(e => {
                 console.error('單詞循環播放例句失敗:', e);
-                setTimeout(playWord, 500);
+                setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO);
             });
-            sentenceAudio.addEventListener('ended', () => setTimeout(playWord, 500), { once: true, signal });
+            sentenceAudio.addEventListener('ended', () => setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO), { once: true, signal });
         } else {
-            setTimeout(playWord, 1000);
+            setTimeout(playWord, LOOP_DELAY_WITHOUT_AUDIO);
         }
     };
 
