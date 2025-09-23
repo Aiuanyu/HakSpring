@@ -137,6 +137,12 @@ let lastCenteredRow = null;
 let isRepositioning = false;
 const ITEMS_PER_LOAD = 20;
 
+// --- 【新增】循環播放相關全域變數 ---
+let isCategoryLooping = false; // 用於分類循環
+let isSingleWordLooping = false; // 用於單詞循環
+let singleLoopingAudio = { word: null, sentence: null, row: null, button: null }; // 儲存單詞循環的元素
+let singleLoopAbortController = new AbortController(); // 用於中斷單詞循環
+
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
 let g_currentDialectInfo = null;
@@ -2820,6 +2826,14 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         playBtn.title = '從此列播放';
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
         td1.appendChild(playBtn);
+
+        const loopOneBtn = document.createElement('button');
+        loopOneBtn.className = 'loop-one-btn';
+        loopOneBtn.dataset.rowId = originalRowId;
+        loopOneBtn.title = '循環播放此行';
+        loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
+        td1.appendChild(loopOneBtn);
+
         item.appendChild(td1);
 
         const td2 = document.createElement('td');
@@ -3039,6 +3053,15 @@ function playAudio(itemIndex, sessionId) {
         currentCategoryIndex = categoryList.indexOf(g_currentCategory);
         const nextCategoryIndex = currentCategoryIndex + 1;
 
+        // --- 【新增】檢查分類循環模式 ---
+        if (isCategoryLooping) {
+            console.log(`分類循環模式開啟中，重新播放類別: ${g_currentCategory}`);
+            // 短暫延遲再開始，避免函式呼叫堆疊過深或UI反應不及
+            const CATEGORY_LOOP_RESTART_DELAY = 100;
+            setTimeout(() => playAudio(0, sessionId), CATEGORY_LOOP_RESTART_DELAY);
+            return;
+        }
+
         // --- 檢查是否還有下一個類別 ---
         if (nextCategoryIndex < categoryList.length) {
             const nextCategoryValue = categoryList[nextCategoryIndex];
@@ -3143,6 +3166,7 @@ function playEndOfPlayback() {
     currentAudio = null;
     currentAudioIndex = 0;
     removeNowPlaying();
+    stopSingleWordLoop(); // 【新增】停止單詞循環
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3190,6 +3214,89 @@ function stopPlayback() {
     }
 }
 
+/**
+ * 【新增】開始單詞循環播放。
+ * @param {HTMLAudioElement} wordAudio - 詞彙音檔元素。
+ * @param {HTMLAudioElement} sentenceAudio - 例句音檔元素。
+ * @param {HTMLElement} row - 對應的 <tr> 元素。
+ * @param {HTMLElement} button - 被點擊的 .loop-one-btn 按鈕。
+ */
+function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
+    const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
+    const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
+
+    stopPlayback();
+    stopSingleWordLoop();
+
+    isSingleWordLooping = true;
+    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button };
+    singleLoopAbortController = new AbortController();
+    const signal = singleLoopAbortController.signal;
+
+    button.innerHTML = '<i class="fas fa-stop"></i>';
+    button.classList.add('looping');
+    row.classList.add('looping-row');
+
+    const playSentence = () => {
+        if (!isSingleWordLooping || signal.aborted) return;
+        if (sentenceAudio && sentenceAudio.src) {
+            sentenceAudio.currentTime = 0;
+            sentenceAudio.play().catch(e => {
+                console.error('單詞循環播放例句失敗:', e);
+                setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO);
+            });
+            sentenceAudio.addEventListener('ended', () => setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO), { once: true, signal });
+        } else {
+            setTimeout(playWord, LOOP_DELAY_WITHOUT_AUDIO);
+        }
+    };
+
+    const playWord = () => {
+        if (!isSingleWordLooping || signal.aborted) return;
+        if (wordAudio && wordAudio.src) {
+            wordAudio.currentTime = 0;
+            wordAudio.play().catch(e => {
+                console.error('單詞循環播放詞彙失敗:', e);
+                playSentence();
+            });
+            wordAudio.addEventListener('ended', playSentence, { once: true, signal });
+        } else {
+            playSentence();
+        }
+    };
+
+    playWord(); // 首次啟動
+}
+
+/**
+ * 【新增】停止單詞循環播放。
+ */
+function stopSingleWordLoop() {
+    if (!isSingleWordLooping) return;
+
+    singleLoopAbortController.abort();
+
+    if (singleLoopingAudio.word) {
+        singleLoopingAudio.word.pause();
+        singleLoopingAudio.word.currentTime = 0;
+    }
+    if (singleLoopingAudio.sentence) {
+        singleLoopingAudio.sentence.pause();
+        singleLoopingAudio.sentence.currentTime = 0;
+    }
+
+    if (singleLoopingAudio.button) {
+        singleLoopingAudio.button.innerHTML = '<i class="fas fa-repeat"></i>';
+        singleLoopingAudio.button.classList.remove('looping');
+    }
+    if (singleLoopingAudio.row) {
+        singleLoopingAudio.row.classList.remove('looping-row');
+    }
+
+    isSingleWordLooping = false;
+    singleLoopingAudio = { word: null, sentence: null, row: null, button: null };
+}
+
 function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetRowId) {
     const resultsSummaryContainer = document.getElementById('results-summary');
     if (!resultsSummaryContainer) return;
@@ -3205,6 +3312,7 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
         <button id="playAllBtn" title="依序播放" style="display: none;"><i class="fas fa-play"></i></button>
         <button id="pauseResumeBtn" title="暫停/繼續"><i class="fas fa-pause"></i></button>
         <button id="stopBtn" title="停止"><i class="fas fa-stop"></i></button>
+        <button id="loopCategoryBtn" title="循環播放這个類別"><i class="fas fa-sync-alt"></i></button>
     `;
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -3241,6 +3349,18 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
             }
         };
     }
+
+    const loopCategoryButton = document.getElementById('loopCategoryBtn');
+    if (loopCategoryButton) {
+        // Init style from global state
+        if(isCategoryLooping) loopCategoryButton.classList.add('active');
+
+        loopCategoryButton.onclick = function () {
+            isCategoryLooping = !isCategoryLooping;
+            this.classList.toggle('active', isCategoryLooping);
+            console.log(`分類循環模式已 ${isCategoryLooping ? '開啟' : '關閉'}`);
+        };
+    }
 }
 
 function setupDynamicEventListeners(dialectInfo, category) {
@@ -3251,10 +3371,26 @@ function setupDynamicEventListeners(dialectInfo, category) {
         const target = event.target;
         const playButton = target.closest('.playFromThisRow');
         const bookmarkButton = target.closest('.bookmarkBtn');
+        const loopOneButton = target.closest('.loop-one-btn');
+
+        if (loopOneButton) {
+            const row = loopOneButton.closest('tr');
+            if (!row) return;
+
+            if (isSingleWordLooping && singleLoopingAudio.row === row) {
+                stopSingleWordLoop();
+            } else {
+                const audioElements = row.querySelectorAll('audio.media');
+                const wordAudio = audioElements[0];
+                const sentenceAudio = audioElements[1];
+                startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton);
+            }
+            return;
+        }
 
         if (playButton) {
+            stopSingleWordLoop(); // 確保點擊單列播放時，停止單詞循環
             const rowId = playButton.dataset.rowId;
-            // 直接在完整的資料陣列中尋找索引，這就是最關鍵的修正
             const itemIndex = activeCategoryData.findIndex(item => item.編號.split('-')[1] === rowId);
             
             if (itemIndex !== -1) {
@@ -3274,13 +3410,13 @@ function setupDynamicEventListeners(dialectInfo, category) {
         }
 
         if (bookmarkButton) {
-            const rowId = bookmarkButton.dataset.rowId; // 取得不補零的 ID
+            const rowId = bookmarkButton.dataset.rowId;
             const targetIndex = activeCategoryData.findIndex(item => item.編號.split('-')[1] === rowId);
             if (targetIndex !== -1) {
                 const totalRows = activeCategoryData.length;
                 const percentage = ((targetIndex + 1) / totalRows * 100).toFixed(2);
-                const paddedRowId = padRowIdForLegacy(rowId); // <-- 關鍵：補零
-                saveBookmark(paddedRowId, percentage, category, dialectInfo.fullLvlName); // <-- 儲存補零後的 ID
+                const paddedRowId = padRowIdForLegacy(rowId);
+                saveBookmark(paddedRowId, percentage, category, dialectInfo.fullLvlName);
             }
             return;
         }
