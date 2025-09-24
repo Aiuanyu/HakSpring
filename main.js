@@ -250,26 +250,16 @@ function findPronunciationsInAllDataAsync(searchText, callback) {
     for (; i < end; i++) {
       const term = terms[i];
       if (term.includes(normalizedSearchText)) {
-        if (term === normalizedSearchText) {
-           const exactMatches = JSON.parse(JSON.stringify(indexedDataCache[term]));
-           exactMatches.forEach(reading => {
-              reading.isExactMatch = true;
-              const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
-              if (!uniqueEntries.has(entryKey)) {
-                  foundReadings.push(reading);
-                  uniqueEntries.add(entryKey);
-              }
-           });
-        } else {
-           indexedDataCache[term].forEach(reading => {
-              const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
-              if (!uniqueEntries.has(entryKey)) {
-                  const partialMatchReading = { ...JSON.parse(JSON.stringify(reading)), isExactMatch: false };
-                  foundReadings.push(partialMatchReading);
-                  uniqueEntries.add(entryKey);
-              }
-           });
-        }
+        const isExact = term === normalizedSearchText;
+        const readings = JSON.parse(JSON.stringify(indexedDataCache[term])); // 一擺 clone 好歸个陣列
+        readings.forEach(reading => {
+            reading.isExactMatch = isExact;
+            const entryKey = `${reading.pronunciation}|${reading.source}|${reading.originalTerm}`;
+            if (!uniqueEntries.has(entryKey)) {
+                foundReadings.push(reading);
+                uniqueEntries.add(entryKey);
+            }
+        });
       }
     }
 
@@ -626,11 +616,49 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
             const playButton = headerBtn.querySelector('.popup-audio-play-btn');
             if (playButton) {
-              playButton.addEventListener('click', (e) => { e.stopPropagation(); const audioSrc = playButton.dataset.audioSrc; if(audioSrc) { if(window.currentPopupAudio) window.currentPopupAudio.pause(); window.currentPopupAudio = new Audio(audioSrc); window.currentPopupAudio.play(); } });
+              playButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // 保持 stopPropagation 以避免 headerBtn 也響應
+                const header = playButton.closest('.accordion-header');
+                const panel = header ? header.nextElementSibling : null;
+                if (header && panel && !header.classList.contains('active')) {
+                  header.classList.add('active');
+                  const indicator = header.querySelector('.indicator');
+                  panel.style.maxHeight = panel.scrollHeight + "px";
+                  if (indicator) indicator.textContent = '−';
+                }
+                const audioSrc = playButton.dataset.audioSrc;
+                if (audioSrc) {
+                  if (window.currentPopupAudio) {
+                    window.currentPopupAudio.pause();
+                  }
+
+                  const audio = new Audio(audioSrc);
+                  window.currentPopupAudio = audio;
+
+                  const icon = playButton.querySelector('i');
+                  const originalIconClass = icon ? icon.className : 'fas fa-volume-up';
+
+                  if (icon) icon.className = 'fas fa-spinner fa-spin'; // Loading spinner
+
+                  audio.play().then(() => {
+                    if (icon) icon.className = originalIconClass; // Reset on play
+                  }).catch(err => {
+                    console.error("Audio playback error:", err);
+                    if (icon) icon.className = 'fas fa-exclamation-circle'; // Error icon
+                    setTimeout(() => {
+                      if (icon) icon.className = originalIconClass;
+                    }, 2000);
+                  });
+
+                  audio.addEventListener('ended', () => {
+                      if (icon) icon.className = originalIconClass;
+                  });
+                }
+              });
             }
             const substituteBtn = headerBtn.querySelector('.popup-substitute-btn');
             if (substituteBtn) {
-              substituteBtn.addEventListener('click', (e) => { e.stopPropagation(); callbackOnSelect(anchorElementOrRect, reading.pronunciation); hidePronunciationPopup(popupEl, backdropEl); });
+              substituteBtn.addEventListener('click', (e) => { e.stopPropagation(); if (typeof callbackOnSelect === 'function') { callbackOnSelect(anchorElementOrRect, reading.pronunciation); hidePronunciationPopup(popupEl, backdropEl); } });
             }
             headerBtn.addEventListener('click', () => { headerBtn.classList.toggle('active'); const indicator = headerBtn.querySelector('.indicator'); if (panelDiv.style.maxHeight) { panelDiv.style.maxHeight = null; if(indicator) indicator.textContent = '+'; } else { panelDiv.style.maxHeight = panelDiv.scrollHeight + "px"; if(indicator) indicator.textContent = '−'; } });
         });
