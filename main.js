@@ -225,6 +225,7 @@ function isSourceMatchingDialect(source, dialect) {
 }
 
 function findPronunciationsInAllDataAsync(searchText, callback) {
+  console.log('findPronunciationsInAllDataAsync called with:', searchText);
   if (!searchText || searchText.trim().length === 0) {
     callback([]);
     return;
@@ -268,6 +269,7 @@ function findPronunciationsInAllDataAsync(searchText, callback) {
     if (i < terms.length) {
       setTimeout(processChunk, 0); // Schedule next chunk
     } else {
+      console.log('findPronunciationsInAllDataAsync returned:', foundReadings);
       callback(foundReadings); // All done
     }
   }
@@ -569,6 +571,7 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
 
   // Defer the actual data processing
   findPronunciationsInAllDataAsync(selectedText, (allReadings) => {
+    console.log('renderPronunciationList called with allReadings:', allReadings);
     function renderPronunciationList() {
       contentEl.innerHTML = '';
       const showAllAccents = showOtherAccentsToggle.checked;
