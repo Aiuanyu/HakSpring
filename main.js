@@ -680,6 +680,11 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       const mainRomanizerBtn = document.getElementById('showRomanizerBtn');
       const romanizerInput = document.getElementById('romanizer-input');
       if (mainRomanizerBtn && romanizerInput) {
+        if (contextualDialect) {
+          // The romanizer uses this global variable to set its initial dialect.
+          currentActiveMainDialectName = contextualDialect;
+          console.log(`Setting Romanizer dialect context to: ${contextualDialect}`);
+        }
         romanizerInput.value = selectedText;
         mainRomanizerBtn.click();
         hidePronunciationPopup(popupEl, backdropEl);
@@ -730,9 +735,22 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
         return;
       }
 
+      let contextualDialect = null;
+      const trElement = sentenceSpan.closest('tr');
+      if (trElement) {
+        // Check if it's an accordion row and get its dialect from the class name
+        if (trElement.classList.contains('accordion-row')) {
+          const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
+          if (dialectClass) {
+            contextualDialect = dialectClass;
+            console.log('Contextual dialect from accordion row:', contextualDialect);
+          }
+        }
+      }
+
       console.log('Calling showPronunciationPopup for text:', selectedText); // 新增：確認會呼叫 popup
       const rect = selection.getRangeAt(0).getBoundingClientRect();
-      showPronunciationPopup(selectedText, null, rect, null);
+      showPronunciationPopup(selectedText, null, rect, null, contextualDialect);
 
     } else {
         console.log('No selection range found.'); // 新增：檢查有毋有選取範圍
