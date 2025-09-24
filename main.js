@@ -3692,7 +3692,7 @@ function toggleAccordion(event, line, dialectInfo) {
     const parentRow = clickedButton.closest('tr');
     const wasOpen = parentRow.classList.contains('accordion-parent');
 
-    // Close any currently open accordion
+    // Always close any currently open accordion first
     document.querySelectorAll('.accordion-parent').forEach(row => {
         row.classList.remove('accordion-parent');
         const button = row.querySelector('.crossDialectBtn i');
@@ -3700,8 +3700,8 @@ function toggleAccordion(event, line, dialectInfo) {
     });
     document.querySelectorAll('.accordion-row').forEach(row => row.remove());
 
+    // If the one we clicked was already open, we just want to close it, so we're done.
     if (wasOpen) {
-        // It was open, so we just closed it. Nothing more to do.
         return;
     }
 
@@ -3726,6 +3726,7 @@ function toggleAccordion(event, line, dialectInfo) {
     };
 
     let nextRow = parentRow.nextSibling;
+    let createdRows = [];
 
     accents.forEach(accentKey => {
         // Don't show the original dialect's row in the accordion
@@ -3761,9 +3762,15 @@ function toggleAccordion(event, line, dialectInfo) {
                 const newRow = createComparisonRow(foundItem, itemDialectInfo);
                 newRow.classList.add('accordion-row');
                 parentRow.parentNode.insertBefore(newRow, nextRow);
+                createdRows.push(newRow);
             }
         }
     });
+
+    // Add class to the last created row for styling
+    if (createdRows.length > 0) {
+        createdRows[createdRows.length - 1].classList.add('accordion-row-last');
+    }
 }
 
 function createComparisonRow(line, dialectInfo) {

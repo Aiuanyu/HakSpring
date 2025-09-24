@@ -268,12 +268,39 @@ a {
 }
 
 tr.accordion-parent {
-  outline: 3px solid orange;
+  border-top: 2px solid orange;
+  border-left: 2px solid orange;
+  border-right: 2px solid orange;
 }
 
 tr.accordion-row {
-  /* Inherits most styles, but we can add specifics */
   filter: brightness(95%);
+  border-left: 2px solid orange;
+  border-right: 2px solid orange;
+  border-top: none;
+}
+
+tr.accordion-row-last {
+  border-bottom: 2px solid orange;
+}
+
+@media screen and (max-width: 768px) {
+  tr.accordion-parent,
+  tr.accordion-row {
+    margin-bottom: 0;
+    border-radius: 0;
+    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
+  }
+  tr.accordion-parent {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  tr.accordion-row-last {
+    margin-bottom: 1.5em;
+    border-bottom: 2px solid orange;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
 }
 #generated td:nth-of-type(2) {
   text-align: center;
