@@ -285,7 +285,7 @@ tr.accordion-row-last > td {
 
 tr.accordion-row {
   filter: brightness(95%);
-  color: white;
+  color: white !important;
 }
 
 tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {

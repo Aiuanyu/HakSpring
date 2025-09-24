@@ -3773,7 +3773,9 @@ function toggleAccordion(event, line, dialectInfo) {
     }
 
     // Scroll the parent row into view after the accordion is opened or closed
-    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+        parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 }
 
 function createComparisonRow(line, dialectInfo) {
