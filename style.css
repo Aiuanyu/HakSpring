@@ -253,6 +253,9 @@ a {
 .bookmarkBtn i {
   color: var(--iMazinGrace-1) !important;
 }
+.crossDialectBtn {
+  font-size: 1.5em;
+}
 .crossDialectBtn i {
   color: #4a67a1 !important;
   transition: transform 0.3s ease;
@@ -268,21 +271,37 @@ a {
 }
 
 tr.accordion-parent > td {
-  border-top: 2px solid orange;
+  border-top: 5px solid orange;
 }
 tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
-  border-left: 2px solid orange;
+  border-left: 5px solid orange;
 }
 tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
-  border-right: 2px solid orange;
+  border-right: 5px solid orange;
 }
 tr.accordion-row-last > td {
-  border-bottom: 2px solid orange;
+  border-bottom: 5px solid orange;
 }
 
 tr.accordion-row {
   filter: brightness(95%);
 }
+
+tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
+    color: white;
+}
+tr.accordion-row.四縣 { background-color: #678d3f; }
+tr.accordion-row.海陸 { background-color: #76ad67; }
+tr.accordion-row.大埔 { background-color: #5898a9; }
+tr.accordion-row.饒平 { background-color: #834fa1; }
+tr.accordion-row.詔安 { background-color: #974a47; }
+
+@media (prefers-color-scheme: dark) {
+    tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
+        filter: brightness(0.8) saturate(0.9);
+    }
+}
+
 
 @media screen and (max-width: 768px) {
   #generated tr.accordion-parent,
@@ -290,19 +309,23 @@ tr.accordion-row {
     margin-bottom: 0;
     border-radius: 0;
     border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
-    border-left: 2px solid orange;
-    border-right: 2px solid orange;
+    border-left: 5px solid orange;
+    border-right: 5px solid orange;
   }
   #generated tr.accordion-parent {
-    border-top: 2px solid orange;
+    border-top: 5px solid orange;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
   }
   #generated tr.accordion-row-last {
     margin-bottom: 1.5em;
-    border-bottom: 2px solid orange;
+    border-bottom: 5px solid orange;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
+  }
+  #generated tr.accordion-parent td,
+  #generated tr.accordion-row td {
+      border: none !important;
   }
 }
 #generated td:nth-of-type(2) {
