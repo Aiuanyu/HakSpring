@@ -3880,7 +3880,6 @@ function createComparisonRow(line, dialectInfo) {
         td3.appendChild(translationText);
     } else {
         td3.classList.add('empty-sentence-cell');
-        td3.textContent = '無';
     }
     item.appendChild(td3);
 

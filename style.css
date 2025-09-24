@@ -282,6 +282,18 @@ tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
 tr.accordion-row-last > td {
   border-bottom: 5px solid orange;
 }
+tr.accordion-parent > td:first-child {
+  border-top-left-radius: 8px;
+}
+tr.accordion-parent > td:last-child {
+  border-top-right-radius: 8px;
+}
+tr.accordion-row-last > td:first-child {
+  border-bottom-left-radius: 8px;
+}
+tr.accordion-row-last > td:last-child {
+  border-bottom-right-radius: 8px;
+}
 
 tr.accordion-row * {
   color: white !important;
@@ -331,6 +343,11 @@ tr.accordion-row.詔安 { background-color: #974a47; }
   #generated tr.accordion-row td {
       border: none !important;
   }
+  #generated tr.accordion-row.四縣 { background-color: #678d3f !important; }
+  #generated tr.accordion-row.海陸 { background-color: #76ad67 !important; }
+  #generated tr.accordion-row.大埔 { background-color: #5898a9 !important; }
+  #generated tr.accordion-row.饒平 { background-color: #834fa1 !important; }
+  #generated tr.accordion-row.詔安 { background-color: #974a47 !important; }
 }
 #generated td:nth-of-type(2) {
   text-align: center;
