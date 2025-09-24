@@ -77,6 +77,10 @@
   --focus-glow-color: rgba(59, 130, 246, 0.65); /* 日時頭用較亮个藍色 */
   --focus-glow-blur: 6px;
   --focus-glow-spread: 1px;
+  --popup-btn-bg: #e9ecef;
+  --popup-btn-border: #ced4da;
+  --popup-btn-text: #495057;
+  --popup-btn-bg-hover: #dee2e6;
 }
 
 /* radio button style from <https: //webspe.net/tools/en/radio-button/> */
@@ -681,9 +685,30 @@ span[data-varname].active-dialect-level {
 }
 
 .popup-controls { /* 新增：控制項容器 */
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Add space between items */
   padding-bottom: 10px;
   margin-bottom: 10px;
   border-bottom: 1px solid #eee;
+}
+
+.popup-romanizer-btn {
+  background-color: var(--popup-btn-bg);
+  border: 1px solid var(--popup-btn-border);
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: var(--popup-btn-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--title-font);
+}
+
+.popup-romanizer-btn:hover {
+  background-color: var(--popup-btn-bg-hover);
 }
 
 /* Toggle Switch Styles */
@@ -912,6 +937,16 @@ input:checked + .slider:before {
     background-color: rgba(144, 202, 249, 0.15);
     border-color: var(--dark-link-color);
   }
+
+  .popup-romanizer-btn {
+    background-color: var(--popup-btn-bg);
+    border-color: var(--popup-btn-border);
+    color: var(--popup-btn-text);
+  }
+
+  .popup-romanizer-btn:hover {
+    background-color: var(--popup-btn-bg-hover);
+  }
 }
 
 .accordion-panel {
@@ -1046,6 +1081,10 @@ input:checked + .slider:before {
     /* --- Focus Glow Variables (Dark Mode) --- */
     --focus-glow-color: rgba(96, 165, 250, 0.75); /* 暗夜模式用較亮、較飽和个藍色 */
     /* --focus-glow-blur and --focus-glow-spread 會承接 :root 个設定 */
+    --popup-btn-bg: #343a40;
+    --popup-btn-border: #495057;
+    --popup-btn-text: #e9ecef;
+    --popup-btn-bg-hover: #495057;
   }
 
   body {
