@@ -2255,6 +2255,40 @@ function isFirefox() {
     });
   }
 
+/**
+ * 【為 Romanizer 新增】動態調整 Romanizer output 區个字體大小，專為 Firefox 設計。
+ * 這隻函式會檢查內容係無係溢出，假使係，就逐步縮小字體。
+ */
+function adjustRomanizerOutputFontSize() {
+  if (!isFirefox()) return;
+
+  const outputContainer = document.getElementById('romanizer-output-container');
+  const outputElement = document.getElementById('romanizer-output');
+
+  if (!outputContainer || !outputElement) return;
+
+  // 步驟 1: 重設字體大小，來拿到佢「自然」个闊度
+  outputElement.style.fontSize = '';
+
+  // 步驟 2: 強制瀏覽器重新計算樣式
+  // GCA 建議：這行做得拿忒，因為下背个 offsetWidth 會觸發重繪
+  // window.getComputedStyle(outputElement).fontSize;
+
+  const containerWidth = outputContainer.clientWidth;
+  const contentWidth = outputElement.scrollWidth;
+  const buffer = 1; // 1px 个緩衝
+
+  if (contentWidth > containerWidth + buffer) {
+    const originalFontSize = parseFloat(window.getComputedStyle(outputElement).fontSize);
+    let newSize = (containerWidth / contentWidth) * originalFontSize;
+    const minSize = 10; // 設定一个合理个最小字體大小
+
+    newSize = Math.max(newSize, minSize); // 確保字體做毋得忒細
+
+    outputElement.style.fontSize = `${newSize}px`;
+  }
+}
+
 
   
 

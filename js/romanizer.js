@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
         updateJoiningSeparators();
         applyPunctuationSpacing(); // 【新】加上這行
+        if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
       }
     });
   }
@@ -163,6 +164,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 【新】加上 GA 事件追蹤
       trackEvent('open', 'Romaine', 'open_container');
+
+      // 【新】為 Firefox 調整字體大小
+      if (typeof adjustRomanizerOutputFontSize === 'function') {
+        // 延遲執行，確保 modal 顯示動畫完成後再計算闊度
+        setTimeout(adjustRomanizerOutputFontSize, 150);
+      }
     }
   }
 
@@ -383,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         applyCapitalizationRules();
         updateJoiningSeparators();
         applyPunctuationSpacing();
+        if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
     
         // 【舊个還原邏輯已刪除】
     
@@ -440,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCapitalizationRules();
             updateJoiningSeparators();
             applyPunctuationSpacing();
+            if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
     
             saveState();
         } else {
@@ -718,6 +727,7 @@ function updateJoiningSeparators() {
     applyCapitalizationRules();
     updateJoiningSeparators();
     applyPunctuationSpacing(); // 【新】加上這行
+    if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
     saveState(true);
 
     document.querySelectorAll('#segmentation-workspace .just-substituted').forEach(el => {
@@ -759,6 +769,7 @@ function updateJoiningSeparators() {
       applyCapitalizationRules();
       updateJoiningSeparators();
       applyPunctuationSpacing(); // 【新】加上這行
+      if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
     }
   }
 
@@ -771,6 +782,7 @@ function updateJoiningSeparators() {
       applyCapitalizationRules();
       updateJoiningSeparators();
       applyPunctuationSpacing(); // 【新】加上這行
+      if (typeof adjustRomanizerOutputFontSize === 'function') adjustRomanizerOutputFontSize();
     }
   }
 
