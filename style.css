@@ -285,6 +285,7 @@ tr.accordion-row-last > td {
 
 tr.accordion-row {
   filter: brightness(95%);
+  color: white;
 }
 
 tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
@@ -1245,6 +1246,31 @@ input:checked + .slider:before {
 
   mark {
     background-color: var(--dark-primary-accent);
+  }
+
+  /* Brighter orange for dark mode accordion borders */
+  tr.accordion-parent > td {
+    border-top-color: #FFC107;
+  }
+  tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
+    border-left-color: #FFC107;
+  }
+  tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
+    border-right-color: #FFC107;
+  }
+  tr.accordion-row-last > td {
+    border-bottom-color: #FFC107;
+  }
+  #generated tr.accordion-parent,
+  #generated tr.accordion-row {
+    border-left-color: #FFC107;
+    border-right-color: #FFC107;
+  }
+  #generated tr.accordion-parent {
+    border-top-color: #FFC107;
+  }
+  #generated tr.accordion-row-last {
+    border-bottom-color: #FFC107;
   }
 }
 
