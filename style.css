@@ -423,6 +423,45 @@ button.playFromThisRow.ongoing i {
 button.playFromThisRow.ended i {
   background-color: red !important;
 }
+
+/* --- 【新增】循環播放按鈕樣式 --- */
+button#loopCategoryBtn.active i {
+  background-color: #ff8c00; /* 暗橘色表示 active */
+  color: white;
+}
+
+.loop-one-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+}
+.loop-one-btn i {
+  cursor: pointer;
+  background: #8a2be2; /* 藍紫色 */
+  color: wheat;
+  box-shadow: 2px 2px #9932cc; /* 中蘭花紫 */
+  border-radius: 0.3em;
+  padding: 0.5em;
+}
+.loop-one-btn.looping i {
+  background-color: #ff4500; /* 橘紅色表示 looping */
+  color: white;
+}
+
+tr.looping-row {
+  background-color: rgba(255, 105, 180, 0.4); /* 粉紅色背景 */
+  animation: pulse-pink-effect 2s infinite ease-in-out;
+}
+
+@keyframes pulse-pink-effect {
+  0% { background-color: rgba(255, 105, 180, 0.4); }
+  50% { background-color: rgba(255, 105, 180, 0.2); }
+  100% { background-color: rgba(255, 105, 180, 0.4); }
+}
+
+
 .playFromThisRow {
   background: none;
   border: none;
@@ -1153,6 +1192,27 @@ input:checked + .slider:before {
       color: var(--main-text-color);
   }
 
+  /* 【新增】暗黑模式循環按鈕樣式 */
+  button#loopCategoryBtn.active i {
+    background-color: #e67e22; /* 較亮的橘色 */
+  }
+  .loop-one-btn i {
+    background: #9b59b6; /* 較亮的紫色 */
+    box-shadow: 2px 2px #8e44ad;
+  }
+  .loop-one-btn.looping i {
+    background-color: #e74c3c; /* 較亮的紅色 */
+  }
+  tr.looping-row {
+    animation: pulse-dark-pink-effect 2s infinite ease-in-out;
+  }
+  @keyframes pulse-dark-pink-effect {
+    0% { background-color: rgba(231, 76, 60, 0.4); }
+    50% { background-color: rgba(231, 76, 60, 0.2); }
+    100% { background-color: rgba(231, 76, 60, 0.4); }
+  }
+
+
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
   .pronunciation-text {
@@ -1480,7 +1540,8 @@ input:checked + .slider:before {
 
 /* Info Button in Header */
 #infoButton,
-#showRomanizerBtn {
+#showRomanizerBtn,
+#dataManagementBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1492,12 +1553,14 @@ input:checked + .slider:before {
   flex-shrink: 0; /* 避免被壓縮 */
 }
 #infoButton i,
-#showRomanizerBtn i {
+#showRomanizerBtn i,
+#dataManagementBtn i {
   color: inherit;
 }
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
-#showRomanizerBtn:hover i { /* 單獨處理 hover 效果 */
+#showRomanizerBtn:hover i,
+#dataManagementBtn:hover i { /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
 }
 
@@ -1545,6 +1608,12 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
+.modal-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 #infoModal .modal-title {
   margin: 0;
   font-size: 1.3em;
@@ -1587,11 +1656,13 @@ input:checked + .slider:before {
 /* Dark Mode for Info Modal */
 @media (prefers-color-scheme: dark) {
   #infoButton,
-  #showRomanizerBtn {
+  #showRomanizerBtn,
+  #dataManagementBtn {
     color: var(--main-text-color);
   }
   #infoButton:hover i,
-  #showRomanizerBtn:hover i {
+  #showRomanizerBtn:hover i,
+  #dataManagementBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -1600,21 +1671,146 @@ input:checked + .slider:before {
   }
 
   #infoModal .modal-dialog,
-  #romanizerContainer .modal-dialog {
+  #romanizerContainer .modal-dialog,
+  #dataManagementModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
-  #infoModal .modal-header {
+  #infoModal .modal-header,
+  #dataManagementModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
   #infoModal .modal-close-btn,
-  #romanizerContainer .modal-close-btn {
+  #romanizerContainer .modal-close-btn,
+  #dataManagementModal .modal-close-btn {
     color: #aaa;
   }
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
-  #romanizerContainer .modal-close-btn:focus-visible {
+  #romanizerContainer .modal-close-btn:focus-visible,
+  #dataManagementModal .modal-close-btn:hover,
+  #dataManagementModal .modal-close-btn:focus-visible {
     color: #fff;
+  }
+}
+
+/* --- Data Management Modal Styles --- */
+#dataManagementModal .modal-dialog {
+  background-color: #fff;
+  color: var(--main-text-color);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  width: 90vw;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#dataManagementModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+#dataManagementModal .modal-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  font-family: var(--title-font);
+  color: inherit;
+}
+
+#dataManagementModal .modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+#dataManagementModal .modal-close-btn:hover,
+#dataManagementModal .modal-close-btn:focus-visible {
+  color: #333;
+}
+
+#dataManagementModal .modal-body {
+  padding: 20px 30px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.data-section {
+  margin-bottom: 25px;
+}
+.data-section:last-child {
+  margin-bottom: 0;
+}
+
+.data-section h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--iMazinGrace-1);
+  padding-bottom: 5px;
+}
+.data-section h4 i {
+  margin-right: 8px;
+}
+
+.data-section p {
+  font-size: 0.9em;
+  margin-bottom: 15px;
+}
+
+#dataManagementModal textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: 'Operator Mono', monospace;
+  font-size: 0.85em;
+  margin-top: 10px;
+}
+
+#dataManagementModal button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+#dataManagementModal button:hover {
+  background-color: #0056b3;
+}
+
+#importDataFile {
+  display: block;
+  margin-bottom: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #dataManagementModal textarea {
+    background-color: var(--dark-background-color, #1f1f1f);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--main-text-color);
+  }
+
+  #dataManagementModal button {
+    background-color: var(--dark-link-color);
+    color: var(--dark-button-text-color, #1f1f1f);
+  }
+  #dataManagementModal button:hover {
+    background-color: #a9d6fc;
   }
 }
 
