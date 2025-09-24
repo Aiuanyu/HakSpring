@@ -60,8 +60,6 @@
 
 ## UI 元件慣例
 
-- **暗色主題支援 (Dark Mode Support)**：所有新个 GUI 元件（例如按鈕、彈出視窗、面板）都愛包含對應个暗色主題樣式 (`@media (prefers-color-scheme: dark)`)，來確保視覺風格一致。
-
 ### Modal 視窗
 
 - **加新个 Modal**：若愛加上新个全螢幕 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。

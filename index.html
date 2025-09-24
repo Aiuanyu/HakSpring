@@ -83,7 +83,7 @@
           </div>
           <div id="search-mode-selection">
             <p>請擇查詢模式：</p>
-            <label><input type="radio" name="search-mode" value="客話" checked /> 尋客詞（做得打漢字／拼音）</label>
+            <label><input type="radio" name="search-mode" value="客家語" checked /> 尋客詞（做得打漢字／拼音）</label>
             <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
           </div>
         </div>
@@ -372,9 +372,6 @@
           </label>
           <label for="showOtherAccentsToggle" class="toggle-label">顯示其他腔頭</label>
         </div>
-        <button id="selectionPopupRomanizerBtn" class="popup-romanizer-btn" title="用 Romanizer 處理">
-          <i class="fas fa-pen-to-square"></i> Romanizer
-        </button>
       </div>
       <div id="selectionPopupContent">
         <!-- JavaScript will fill this -->
@@ -386,10 +383,7 @@
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 id="infoModalTitle" class="modal-title">重要使用說明請先看</h4>
-          <div class="modal-header-buttons">
-            <button id="dataManagementBtn" title="資料管理（備份／還原）"><i class="fas fa-database"></i></button>
-            <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
-          </div>
+          <button id="infoModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
         </div>
         <div class="modal-body" id="info-content"></div>
         <div class="modal-footer">
@@ -400,33 +394,6 @@
         </div>
       </div>
     </div>
-
     </div> <!-- End of main-content div -->
-
-    <!-- Data Management Modal -->
-    <div id="dataManagementModal" class="modal-overlay">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h4 id="dataManagementModalTitle" class="modal-title">資料管理（備份／還原）</h4>
-          <button id="dataManagementModalCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
-        </div>
-        <div class="modal-body" id="data-management-content">
-          <div class="data-section">
-            <h4><i class="fas fa-upload"></i> 匯出 (備份)</h4>
-            <p>請點下面个按鈕來產生備份資料。做得將內容複製起來，或者下載備份檔。</p>
-            <button id="exportDataBtn">產生並下載備份</button>
-            <textarea id="exportDataTextArea" readonly placeholder="備份資料會顯示在這位..."></textarea>
-          </div>
-          <div class="data-section">
-            <h4><i class="fas fa-download"></i> 匯入 (還原)</h4>
-            <p>請選擇 .json 備份檔，或者直接將備份資料貼到下面个橫框。</p>
-            <input type="file" id="importDataFile" accept=".json, .txt"/>
-            <textarea id="importDataTextArea" placeholder="將備份資料貼在這位..."></textarea>
-            <button id="importDataBtn">還原資料</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </body>
 </html>
