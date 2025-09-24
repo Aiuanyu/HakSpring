@@ -1541,6 +1541,14 @@ input:checked + .slider:before {
   #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
     display: none;
   }
+
+}
+
+/* --- Hide Romanizer on mobile devices based on JS detection --- */
+.mobile-device #showRomanizerBtn,
+.mobile-device #romanizerContainer,
+.mobile-device #selectionPopupRomanizerBtn {
+  display: none;
 }
 
 
