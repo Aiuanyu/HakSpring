@@ -666,32 +666,41 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 }
 
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
-  const target = event.target;
   setTimeout(() => {
-    let sentenceSpan = target.closest('span.sentence');
-    if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) return;
     const selection = window.getSelection();
+    console.log('handleTextSelectionInSentence triggered.'); // 新增：確認函式有被觸發
+
     if (selection.rangeCount > 0) {
       const selectedText = selection.toString().trim();
-      if (selectedText.length > 0) {
-        let anchorElement = null;
-        const trElement = sentenceSpan.closest('tr');
-        if (trElement) {
-          const exampleTd = trElement.cells[2];
-          if (exampleTd) {
-            anchorElement = exampleTd.querySelector('audio.media:not([data-skip="true"])');
-          }
-        }
-        if (!anchorElement) {
-          anchorElement = sentenceSpan;
-        }
-        if (anchorElement) {
-        showPronunciationPopup(selectedText, null, anchorElement, null);
-        } else {
-          const rect = selection.getRangeAt(0).getBoundingClientRect();
-        showPronunciationPopup(selectedText, null, rect, null);
-        }
+      console.log('Selected text length:', selectedText.length, 'Text:', selectedText); // 新增：檢查選取文字个長度摎內容
+      if (selectedText.length === 0) {
+        console.log('Selected text is empty after trim.'); // 新增：檢查選取文字係毋係空个
+        return;
       }
+
+      const range = selection.getRangeAt(0);
+      const commonAncestor = range.commonAncestorContainer;
+      console.log('commonAncestor:', commonAncestor);
+
+      let sentenceSpan = null;
+      if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
+          sentenceSpan = commonAncestor.closest('span.sentence');
+      } else {
+          sentenceSpan = commonAncestor.parentNode.closest('span.sentence');
+      }
+      console.log('sentenceSpan:', sentenceSpan); // 新增：檢查 sentenceSpan 係麼个
+
+      if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) {
+        console.log('Returning early: Not a sentence span or not in generated area.'); // 新增：檢查係毋係因為這隻條件結束
+        return;
+      }
+
+      console.log('Calling showPronunciationPopup for text:', selectedText); // 新增：確認會呼叫 popup
+      const rect = selection.getRangeAt(0).getBoundingClientRect();
+      showPronunciationPopup(selectedText, null, rect, null);
+
+    } else {
+        console.log('No selection range found.'); // 新增：檢查有毋有選取範圍
     }
   }, 0);
 }
