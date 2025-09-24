@@ -135,6 +135,7 @@ let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
 let lastCenteredRow = null;
 let isRepositioning = false;
+let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
 
 let g_audioElementsList = [];
@@ -1283,6 +1284,7 @@ function initializeAppUI() {
   }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
   function repositionViewport() {
+    if (g_isAccordionScrolling) return; // Don't reposition if accordion is scrolling
     // This function is called directly by the event listener.
     // It sets the flag immediately and then calls the debounced actions.
     isRepositioning = true;
@@ -3772,10 +3774,11 @@ function toggleAccordion(event, line, dialectInfo) {
         createdRows[createdRows.length - 1].classList.add('accordion-row-last');
     }
 
-    // Scroll the parent row into view after the accordion is opened or closed
+    g_isAccordionScrolling = true;
+    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
-        parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+        g_isAccordionScrolling = false;
+    }, 500); // Wait for scroll animation to finish
 }
 
 function createComparisonRow(line, dialectInfo) {

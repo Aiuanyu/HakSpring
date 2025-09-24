@@ -283,9 +283,12 @@ tr.accordion-row-last > td {
   border-bottom: 5px solid orange;
 }
 
+tr.accordion-row * {
+  color: white !important;
+}
+
 tr.accordion-row {
   filter: brightness(95%);
-  color: white !important;
 }
 
 tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
