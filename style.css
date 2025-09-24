@@ -1312,13 +1312,13 @@ input:checked + .slider:before {
   #generated td.empty-sentence-cell {
     display: none;
   }
+}
 
-  /* --- 新增：在手機仔畫面藏起來 Romanizer 入口 --- */
-  #showRomanizerBtn,
-  #romanizerContainer,
-  #selectionPopupRomanizerBtn {
-    display: none !important;
-  }
+/* --- Hide Romanizer on mobile devices based on JS detection --- */
+.mobile-device #showRomanizerBtn,
+.mobile-device #romanizerContainer,
+.mobile-device #selectionPopupRomanizerBtn {
+  display: none;
 }
 
 

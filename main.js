@@ -1162,6 +1162,10 @@ function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log("Initializing UI...");
 
+  if (isMobileDevice()) {
+    document.body.classList.add('mobile-device');
+  }
+
   function updateLastCenteredRow() {
     if (isRepositioning) return;
 
