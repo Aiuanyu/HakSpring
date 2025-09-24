@@ -680,6 +680,11 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       const mainRomanizerBtn = document.getElementById('showRomanizerBtn');
       const romanizerInput = document.getElementById('romanizer-input');
       if (mainRomanizerBtn && romanizerInput) {
+        if (contextualDialect) {
+          // The romanizer uses this global variable to set its initial dialect.
+          currentActiveMainDialectName = contextualDialect;
+          console.log(`Setting Romanizer dialect context to: ${contextualDialect}`);
+        }
         romanizerInput.value = selectedText;
         mainRomanizerBtn.click();
         hidePronunciationPopup(popupEl, backdropEl);
