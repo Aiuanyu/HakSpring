@@ -1548,7 +1548,7 @@ input:checked + .slider:before {
 .mobile-device #showRomanizerBtn,
 .mobile-device #romanizerContainer,
 .mobile-device #selectionPopupRomanizerBtn {
-  display: none !important;
+  display: none;
 }
 
 
