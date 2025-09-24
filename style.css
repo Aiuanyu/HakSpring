@@ -77,10 +77,6 @@
   --focus-glow-color: rgba(59, 130, 246, 0.65); /* 日時頭用較亮个藍色 */
   --focus-glow-blur: 6px;
   --focus-glow-spread: 1px;
-  --popup-btn-bg: #e9ecef;
-  --popup-btn-border: #ced4da;
-  --popup-btn-text: #495057;
-  --popup-btn-bg-hover: #dee2e6;
 }
 
 /* radio button style from <https: //webspe.net/tools/en/radio-button/> */
@@ -147,7 +143,7 @@
 }
 
 /* Mine */
-td[data-label="詞彙"],
+#generated td:nth-of-type(2),
 .pronunciation-text {
   ruby {
     font-family: var(--title-font) !important;
@@ -245,113 +241,8 @@ a {
   border: none;
   cursor: pointer;
 }
-.bookmarkBtn,
-.crossDialectBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin: 0 3px;
-  vertical-align: middle;
-}
 .bookmarkBtn i {
   color: var(--iMazinGrace-1) !important;
-}
-.crossDialectBtn {
-  font-size: 1.5em;
-}
-.crossDialectBtn i {
-  color: #4a67a1 !important;
-  transition: transform 0.3s ease;
-}
-.accordion-parent .crossDialectBtn i {
-  transform: rotate(135deg);
-}
-
-@media (prefers-color-scheme: dark) {
-  .crossDialectBtn i {
-    color: #8cb3d9 !important;
-  }
-}
-
-tr.accordion-parent > td {
-  border-top: 5px solid orange;
-}
-tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
-  border-left: 5px solid orange;
-}
-tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
-  border-right: 5px solid orange;
-}
-tr.accordion-row-last > td {
-  border-bottom: 5px solid orange;
-}
-tr.accordion-parent > td:first-child {
-  border-top-left-radius: 8px;
-}
-tr.accordion-parent > td:last-child {
-  border-top-right-radius: 8px;
-}
-tr.accordion-row-last > td:first-child {
-  border-bottom-left-radius: 8px;
-}
-tr.accordion-row-last > td:last-child {
-  border-bottom-right-radius: 8px;
-}
-
-tr.accordion-row * {
-  color: white !important;
-}
-
-tr.accordion-row {
-  filter: brightness(95%);
-}
-
-tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
-    color: white;
-}
-tr.accordion-row.四縣 { background-color: #678d3f; }
-tr.accordion-row.海陸 { background-color: #76ad67; }
-tr.accordion-row.大埔 { background-color: #5898a9; }
-tr.accordion-row.饒平 { background-color: #834fa1; }
-tr.accordion-row.詔安 { background-color: #974a47; }
-
-@media (prefers-color-scheme: dark) {
-    tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
-        filter: brightness(0.8) saturate(0.9);
-    }
-}
-
-
-@media screen and (max-width: 768px) {
-  #generated tr.accordion-parent,
-  #generated tr.accordion-row {
-    margin-bottom: 0;
-    border-radius: 0;
-    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
-    border-left: 5px solid orange;
-    border-right: 5px solid orange;
-  }
-  #generated tr.accordion-parent {
-    border-top: 5px solid orange;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-  }
-  #generated tr.accordion-row-last {
-    margin-bottom: 1.5em;
-    border-bottom: 5px solid orange;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-  #generated tr.accordion-parent td,
-  #generated tr.accordion-row td {
-      border: none !important;
-  }
-  #generated tr.accordion-row.四縣 { background-color: #678d3f !important; }
-  #generated tr.accordion-row.海陸 { background-color: #76ad67 !important; }
-  #generated tr.accordion-row.大埔 { background-color: #5898a9 !important; }
-  #generated tr.accordion-row.饒平 { background-color: #834fa1 !important; }
-  #generated tr.accordion-row.詔安 { background-color: #974a47 !important; }
 }
 #generated td:nth-of-type(2) {
   text-align: center;
@@ -427,45 +318,6 @@ button.playFromThisRow.ongoing i {
 button.playFromThisRow.ended i {
   background-color: red !important;
 }
-
-/* --- 【新增】循環播放按鈕樣式 --- */
-button#loopCategoryBtn.active i {
-  background-color: #ff8c00; /* 暗橘色表示 active */
-  color: white;
-}
-
-.loop-one-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0 3px;
-  vertical-align: middle;
-}
-.loop-one-btn i {
-  cursor: pointer;
-  background: #8a2be2; /* 藍紫色 */
-  color: wheat;
-  box-shadow: 2px 2px #9932cc; /* 中蘭花紫 */
-  border-radius: 0.3em;
-  padding: 0.5em;
-}
-.loop-one-btn.looping i {
-  background-color: #ff4500; /* 橘紅色表示 looping */
-  color: white;
-}
-
-tr.looping-row {
-  background-color: rgba(255, 105, 180, 0.4); /* 粉紅色背景 */
-  animation: pulse-pink-effect 2s infinite ease-in-out;
-}
-
-@keyframes pulse-pink-effect {
-  0% { background-color: rgba(255, 105, 180, 0.4); }
-  50% { background-color: rgba(255, 105, 180, 0.2); }
-  100% { background-color: rgba(255, 105, 180, 0.4); }
-}
-
-
 .playFromThisRow {
   background: none;
   border: none;
@@ -685,30 +537,9 @@ span[data-varname].active-dialect-level {
 }
 
 .popup-controls { /* 新增：控制項容器 */
-  display: flex;
-  align-items: center;
-  gap: 15px; /* Add space between items */
   padding-bottom: 10px;
   margin-bottom: 10px;
   border-bottom: 1px solid #eee;
-}
-
-.popup-romanizer-btn {
-  background-color: var(--popup-btn-bg);
-  border: 1px solid var(--popup-btn-border);
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 0.9em;
-  color: var(--popup-btn-text);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--title-font);
-}
-
-.popup-romanizer-btn:hover {
-  background-color: var(--popup-btn-bg-hover);
 }
 
 /* Toggle Switch Styles */
@@ -937,16 +768,6 @@ input:checked + .slider:before {
     background-color: rgba(144, 202, 249, 0.15);
     border-color: var(--dark-link-color);
   }
-
-  .popup-romanizer-btn {
-    background-color: var(--popup-btn-bg);
-    border-color: var(--popup-btn-border);
-    color: var(--popup-btn-text);
-  }
-
-  .popup-romanizer-btn:hover {
-    background-color: var(--popup-btn-bg-hover);
-  }
 }
 
 .accordion-panel {
@@ -1081,10 +902,6 @@ input:checked + .slider:before {
     /* --- Focus Glow Variables (Dark Mode) --- */
     --focus-glow-color: rgba(96, 165, 250, 0.75); /* 暗夜模式用較亮、較飽和个藍色 */
     /* --focus-glow-blur and --focus-glow-spread 會承接 :root 个設定 */
-    --popup-btn-bg: #343a40;
-    --popup-btn-border: #495057;
-    --popup-btn-text: #e9ecef;
-    --popup-btn-bg-hover: #495057;
   }
 
   body {
@@ -1231,27 +1048,6 @@ input:checked + .slider:before {
       color: var(--main-text-color);
   }
 
-  /* 【新增】暗黑模式循環按鈕樣式 */
-  button#loopCategoryBtn.active i {
-    background-color: #e67e22; /* 較亮的橘色 */
-  }
-  .loop-one-btn i {
-    background: #9b59b6; /* 較亮的紫色 */
-    box-shadow: 2px 2px #8e44ad;
-  }
-  .loop-one-btn.looping i {
-    background-color: #e74c3c; /* 較亮的紅色 */
-  }
-  tr.looping-row {
-    animation: pulse-dark-pink-effect 2s infinite ease-in-out;
-  }
-  @keyframes pulse-dark-pink-effect {
-    0% { background-color: rgba(231, 76, 60, 0.4); }
-    50% { background-color: rgba(231, 76, 60, 0.2); }
-    100% { background-color: rgba(231, 76, 60, 0.4); }
-  }
-
-
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
   .pronunciation-text {
@@ -1366,46 +1162,21 @@ input:checked + .slider:before {
   mark {
     background-color: var(--dark-primary-accent);
   }
-
-  /* Brighter orange for dark mode accordion borders */
-  tr.accordion-parent > td {
-    border-top-color: #FFC107;
-  }
-  tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
-    border-left-color: #FFC107;
-  }
-  tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
-    border-right-color: #FFC107;
-  }
-  tr.accordion-row-last > td {
-    border-bottom-color: #FFC107;
-  }
-  #generated tr.accordion-parent,
-  #generated tr.accordion-row {
-    border-left-color: #FFC107;
-    border-right-color: #FFC107;
-  }
-  #generated tr.accordion-parent {
-    border-top-color: #FFC107;
-  }
-  #generated tr.accordion-row-last {
-    border-bottom-color: #FFC107;
-  }
 }
 
 /* --- 響應式表格：疊起來个樣式 (螢幕闊度 <= 768px) --- */
 @media screen and (max-width: 768px) {
-  #generated table, #comparison-table {
+  #generated table {
     border: none; /* 移除表格外框 */
     width: 100%; /* 確保表格寬度 */
   }
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
-  #generated thead, #comparison-table thead {
+  #generated thead {
     display: none;
   }
 
-  #generated tr, #comparison-table tr {
+  #generated tr {
     display: block; /* 分歸列變做區塊元素 */
     margin-bottom: 1.5em; /* 列之間个間距 */
     border: 1px solid rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5); /* 加淡色框線，像卡片樣 */
@@ -1415,11 +1186,11 @@ input:checked + .slider:before {
   }
 
   /* 移除偶數行个特殊背景 */
-  #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
+  #generated tr:nth-child(even) {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
-  #generated td, #comparison-table td {
+  #generated td {
     display: block; /* 分儲存格變做區塊元素 */
     text-align: left !important; /* 強制靠左對齊 */
     padding-left: 15%; /* 留空間分標籤 */
@@ -1431,12 +1202,12 @@ input:checked + .slider:before {
     max-width: 90vw !important; /* 覆蓋原本个 max-width */
   }
 
-  #generated td:last-child, #comparison-table td:last-child {
+  #generated td:last-child {
     border-bottom: none; /* 最尾一格毋使底線 */
   }
 
   /* 用 ::before 顯示標籤 */
-  #generated td::before, #comparison-table td::before {
+  #generated td::before {
     content: attr(data-label); /* 讀取 data-label 內容 */
     position: absolute;
     left: 10px; /* 標籤靠左 */
@@ -1449,28 +1220,28 @@ input:checked + .slider:before {
   }
 
   /* 調整特定欄位个樣式 */
-  #generated td.no, #comparison-table td.no {
+  #generated td.no {
     font-size: 1.1em; /* 編號做得放大一息仔 */
     padding-left: 10px; /* 編號毋使恁多左邊距 */
     text-align: left !important;
   }
-  #generated td.no::before, #comparison-table td.no::before {
+  #generated td.no::before {
      display: none; /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
-  #generated td.no br, #comparison-table td.no br {
+  #generated td.no br {
     display: none; /* 編號欄位毋使換行 */
   }
 
   /* 調整詞彙欄位个標音 */
-  #generated td[data-label="詞彙"] ruby, #comparison-table td[data-label="詞彙"] ruby {
+  #generated td[data-label="詞彙"] ruby {
     font-size: 1.3em; /* 調整字體大小 */
   }
-   #generated td[data-label="詞彙"] rt, #comparison-table td[data-label="詞彙"] rt {
+   #generated td[data-label="詞彙"] rt {
      font-size: 0.8em; /* 標音相對縮小 */
    }
 
   /* 調整音檔控制項 */
-  #generated audio.media, #comparison-table audio.media {
+  #generated audio.media {
     max-width: 100%; /* 音檔控制項做得較闊 */
     /* height: auto; */ /* <-- 移除 auto */
     height: 1em; /* <-- 設定固定高度 */
@@ -1478,23 +1249,23 @@ input:checked + .slider:before {
   }
 
   /* 調整備註樣式 */
-  #generated .notes, #comparison-table .notes {
+  #generated .notes {
     margin-top: 5px;
     margin-left: 5px;
     display: inline-block; /* 避免佔歸行 */
   }
 
   /* 調整播放按鈕 */
-  #generated .playFromThisRow, #comparison-table .playFromThisRow {
+  #generated .playFromThisRow {
     margin-left: 5px;
   }
 
   /* 確保 nowPlaying 樣式在卡片模式下正確應用 */
-  #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
+  #generated tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
       background-color: rgba(var(--iMazinGrace-1-rgb), 0.5); /* <-- 明確重新設定背景色，莫 !important 啦！就係你造成動畫失效！ */
       transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
   }
-  #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
+  #generated tr#nowPlaying.paused-playback {
     /* background-color: transparent !important; */ /* 動畫會處理背景 */
     animation: pulse-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
   }
@@ -1513,35 +1284,34 @@ input:checked + .slider:before {
 
   /* 暗夜模式下个調整 */
   @media (prefers-color-scheme: dark) {
-    #generated tr, #comparison-table tr {
+    #generated tr {
       border-color: rgba(255, 255, 255, 0.2);
       background-color: var(--dark-surface-color);
     }
-    #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
+    #generated tr:nth-child(even) {
        /* background-color: var(--dark-surface-color); */ /* <-- 移除通用背景色 */
     }
-    #generated td, #comparison-table td {
+    #generated td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
     }
-    #generated td::before, #comparison-table td::before {
+    #generated td::before {
       color: var(--main-text-color);
     }
 
     /* 確保 nowPlaying 樣式在暗夜卡片模式下正確應用 */
-    #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
+    #generated tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
         background-color: var(--dark-now-playing-bg); /* <-- 明確重新設定暗夜背景色，加 !important */
         transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
     }
-    #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
+    #generated tr#nowPlaying.paused-playback {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
   }
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
-  #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
+  #generated td.empty-sentence-cell {
     display: none;
   }
-
 }
 
 /* --- Hide Romanizer on mobile devices based on JS detection --- */
@@ -1587,8 +1357,7 @@ input:checked + .slider:before {
 
 /* Info Button in Header */
 #infoButton,
-#showRomanizerBtn,
-#dataManagementBtn {
+#showRomanizerBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -1600,14 +1369,12 @@ input:checked + .slider:before {
   flex-shrink: 0; /* 避免被壓縮 */
 }
 #infoButton i,
-#showRomanizerBtn i,
-#dataManagementBtn i {
+#showRomanizerBtn i {
   color: inherit;
 }
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
-#showRomanizerBtn:hover i,
-#dataManagementBtn:hover i { /* 單獨處理 hover 效果 */
+#showRomanizerBtn:hover i { /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
 }
 
@@ -1655,12 +1422,6 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
-.modal-header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
 #infoModal .modal-title {
   margin: 0;
   font-size: 1.3em;
@@ -1703,13 +1464,11 @@ input:checked + .slider:before {
 /* Dark Mode for Info Modal */
 @media (prefers-color-scheme: dark) {
   #infoButton,
-  #showRomanizerBtn,
-  #dataManagementBtn {
+  #showRomanizerBtn {
     color: var(--main-text-color);
   }
   #infoButton:hover i,
-  #showRomanizerBtn:hover i,
-  #dataManagementBtn:hover i {
+  #showRomanizerBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -1718,146 +1477,21 @@ input:checked + .slider:before {
   }
 
   #infoModal .modal-dialog,
-  #romanizerContainer .modal-dialog,
-  #dataManagementModal .modal-dialog {
+  #romanizerContainer .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
-  #infoModal .modal-header,
-  #dataManagementModal .modal-header {
+  #infoModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
   #infoModal .modal-close-btn,
-  #romanizerContainer .modal-close-btn,
-  #dataManagementModal .modal-close-btn {
+  #romanizerContainer .modal-close-btn {
     color: #aaa;
   }
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
-  #romanizerContainer .modal-close-btn:focus-visible,
-  #dataManagementModal .modal-close-btn:hover,
-  #dataManagementModal .modal-close-btn:focus-visible {
+  #romanizerContainer .modal-close-btn:focus-visible {
     color: #fff;
-  }
-}
-
-/* --- Data Management Modal Styles --- */
-#dataManagementModal .modal-dialog {
-  background-color: #fff;
-  color: var(--main-text-color);
-  border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-  width: 90vw;
-  max-width: 600px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-}
-
-#dataManagementModal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid #e0e0e0;
-  flex-shrink: 0;
-}
-
-#dataManagementModal .modal-title {
-  margin: 0;
-  font-size: 1.3em;
-  font-weight: 600;
-  font-family: var(--title-font);
-  color: inherit;
-}
-
-#dataManagementModal .modal-close-btn {
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #888;
-  cursor: pointer;
-  padding: 0 5px;
-  line-height: 1;
-}
-#dataManagementModal .modal-close-btn:hover,
-#dataManagementModal .modal-close-btn:focus-visible {
-  color: #333;
-}
-
-#dataManagementModal .modal-body {
-  padding: 20px 30px;
-  overflow-y: auto;
-  line-height: 1.6;
-}
-
-.data-section {
-  margin-bottom: 25px;
-}
-.data-section:last-child {
-  margin-bottom: 0;
-}
-
-.data-section h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  border-bottom: 2px solid var(--iMazinGrace-1);
-  padding-bottom: 5px;
-}
-.data-section h4 i {
-  margin-right: 8px;
-}
-
-.data-section p {
-  font-size: 0.9em;
-  margin-bottom: 15px;
-}
-
-#dataManagementModal textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: vertical;
-  box-sizing: border-box;
-  font-family: 'Operator Mono', monospace;
-  font-size: 0.85em;
-  margin-top: 10px;
-}
-
-#dataManagementModal button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-#dataManagementModal button:hover {
-  background-color: #0056b3;
-}
-
-#importDataFile {
-  display: block;
-  margin-bottom: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-  #dataManagementModal textarea {
-    background-color: var(--dark-background-color, #1f1f1f);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: var(--main-text-color);
-  }
-
-  #dataManagementModal button {
-    background-color: var(--dark-link-color);
-    color: var(--dark-button-text-color, #1f1f1f);
-  }
-  #dataManagementModal button:hover {
-    background-color: #a9d6fc;
   }
 }
 
@@ -1902,7 +1536,6 @@ tr.ios-autoplay-instruction td::before {
   font-size: 0.9em;
   color: #212529;
 }
-
 
 #infoModal .modal-footer input[type="checkbox"] {
   margin-right: 10px;
