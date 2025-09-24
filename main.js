@@ -135,7 +135,14 @@ let lastLoadedIndex = 0;
 let isLoadingMoreItems = false;
 let lastCenteredRow = null;
 let isRepositioning = false;
+let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
+
+// --- 【新增】循環播放相關全域變數 ---
+let isCategoryLooping = false; // 用於分類循環
+let isSingleWordLooping = false; // 用於單詞循環
+let singleLoopingAudio = { word: null, sentence: null, row: null, button: null }; // 儲存單詞循環的元素
+let singleLoopAbortController = new AbortController(); // 用於中斷單詞循環
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
@@ -1348,6 +1355,7 @@ function initializeAppUI() {
   }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
   function repositionViewport() {
+    if (g_isAccordionScrolling) return; // Don't reposition if accordion is scrolling
     // This function is called directly by the event listener.
     // It sets the flag immediately and then calls the debounced actions.
     isRepositioning = true;
@@ -1378,6 +1386,7 @@ function initializeAppUI() {
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
   const romanizerContainer = document.getElementById('romanizerContainer');
+  initializeDataManagement(); // <-- 【新增】呼叫新的初始化函式
 
   // All data variables from the included JS files
   const allData = {
@@ -1574,8 +1583,8 @@ function initializeAppUI() {
     const keyword = searchInput.value.trim();
 
     if (keyword.length > 0 && isRomanizedHakka(keyword)) {
-        searchMode = '客家語';
-        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客家語"]');
+        searchMode = '客話';
+        const hakkaModeRadio = document.querySelector('input[name="search-mode"][value="客話"]');
         if (hakkaModeRadio) {
             hakkaModeRadio.checked = true;
         }
@@ -1626,7 +1635,7 @@ function initializeAppUI() {
 
 
     let results;
-    if (searchMode === '客家語') {
+    if (searchMode === '客話') {
         const lowerCaseKeyword = keyword.toLowerCase();
         const precisePhoneticRegex = /^([a-z]+[0-9]+(\s+|$))+$/i;
 
@@ -1661,7 +1670,7 @@ function initializeAppUI() {
     }
 
     const getCategoryRank = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === '客話') {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 1;
             if (inWord || inPhonetics) return 2;
@@ -1684,10 +1693,10 @@ function initializeAppUI() {
         return 0;
     });
 
-    let summaryText = `在${searchMode === '客家語' ? '客文' : '華文'}部分尋「${keyword}」，`;
+    let summaryText = `在${searchMode === '客話' ? '客文' : '華文'}部分尋「${keyword}」，`;
 
     const newUrl = getBaseUrlWithoutIndex();
-    newUrl.searchParams.set('musiid', searchMode === '客家語' ? 'hak' : 'zh');
+    newUrl.searchParams.set('musiid', searchMode === '客話' ? 'hak' : 'zh');
     newUrl.searchParams.set('ca', keyword);
     newUrl.searchParams.set('bidsu', itemsPerPage.toString());
     newUrl.searchParams.set('iab', page.toString());
@@ -1710,7 +1719,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     const endIndex = startIndex + itemsPerPage;
     const paginatedResults = results.slice(startIndex, endIndex);
 
-    const searchModeText = searchMode === '客家語' ? '客文' : '華文';
+    const searchModeText = searchMode === '客話' ? '客文' : '華文';
     updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
 
     if (totalResults === 0) {
@@ -1882,7 +1891,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     let currentTable = null;
 
     const categoryConfig = {
-        '客家語': {
+        '客話': {
             'both': { title: '詞、句裡肚都有：', highlight: { word: true, sentence: true, meaning: false, translation: false } },
             'word_only': { title: '淨詞彙裡肚有：', highlight: { word: true, sentence: false, meaning: false, translation: false } },
             'sentence_only': { title: '僅例句裡肚有：', highlight: { word: false, sentence: true, meaning: false, translation: false } }
@@ -1895,7 +1904,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     };
 
     const getCategoryKey = (item, mode) => {
-        if (mode === '客家語') {
+        if (mode === '客話') {
             const { inWord, inSentence, inPhonetics } = item._match;
             if ((inWord || inPhonetics) && inSentence) return 'both';
             if (inWord || inPhonetics) return 'word_only';
@@ -2889,12 +2898,31 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         bookmarkBtn.dataset.rowId = originalRowId;
         bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
         td1.appendChild(bookmarkBtn);
+
+        // Add the cross-dialect comparison button
+        const crossDialectBtn = document.createElement('button');
+        crossDialectBtn.className = 'crossDialectBtn';
+        crossDialectBtn.title = '跨腔調對照';
+        crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
+        crossDialectBtn.addEventListener('click', (event) => {
+          toggleAccordion(event, line, dialectInfo);
+        });
+        td1.appendChild(crossDialectBtn);
+
         const playBtn = document.createElement('button');
         playBtn.className = 'playFromThisRow';
         playBtn.dataset.rowId = originalRowId;
         playBtn.title = '從此列播放';
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
         td1.appendChild(playBtn);
+
+        const loopOneBtn = document.createElement('button');
+        loopOneBtn.className = 'loop-one-btn';
+        loopOneBtn.dataset.rowId = originalRowId;
+        loopOneBtn.title = '循環播放此行';
+        loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
+        td1.appendChild(loopOneBtn);
+
         item.appendChild(td1);
 
         const td2 = document.createElement('td');
@@ -3114,6 +3142,15 @@ function playAudio(itemIndex, sessionId) {
         currentCategoryIndex = categoryList.indexOf(g_currentCategory);
         const nextCategoryIndex = currentCategoryIndex + 1;
 
+        // --- 【新增】檢查分類循環模式 ---
+        if (isCategoryLooping) {
+            console.log(`分類循環模式開啟中，重新播放類別: ${g_currentCategory}`);
+            // 短暫延遲再開始，避免函式呼叫堆疊過深或UI反應不及
+            const CATEGORY_LOOP_RESTART_DELAY = 100;
+            setTimeout(() => playAudio(0, sessionId), CATEGORY_LOOP_RESTART_DELAY);
+            return;
+        }
+
         // --- 檢查是否還有下一個類別 ---
         if (nextCategoryIndex < categoryList.length) {
             const nextCategoryValue = categoryList[nextCategoryIndex];
@@ -3218,6 +3255,7 @@ function playEndOfPlayback() {
     currentAudio = null;
     currentAudioIndex = 0;
     removeNowPlaying();
+    stopSingleWordLoop(); // 【新增】停止單詞循環
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3265,6 +3303,89 @@ function stopPlayback() {
     }
 }
 
+/**
+ * 【新增】開始單詞循環播放。
+ * @param {HTMLAudioElement} wordAudio - 詞彙音檔元素。
+ * @param {HTMLAudioElement} sentenceAudio - 例句音檔元素。
+ * @param {HTMLElement} row - 對應的 <tr> 元素。
+ * @param {HTMLElement} button - 被點擊的 .loop-one-btn 按鈕。
+ */
+function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
+    const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
+    const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
+
+    stopPlayback();
+    stopSingleWordLoop();
+
+    isSingleWordLooping = true;
+    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button };
+    singleLoopAbortController = new AbortController();
+    const signal = singleLoopAbortController.signal;
+
+    button.innerHTML = '<i class="fas fa-stop"></i>';
+    button.classList.add('looping');
+    row.classList.add('looping-row');
+
+    const playSentence = () => {
+        if (!isSingleWordLooping || signal.aborted) return;
+        if (sentenceAudio && sentenceAudio.src) {
+            sentenceAudio.currentTime = 0;
+            sentenceAudio.play().catch(e => {
+                console.error('單詞循環播放例句失敗:', e);
+                setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO);
+            });
+            sentenceAudio.addEventListener('ended', () => setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO), { once: true, signal });
+        } else {
+            setTimeout(playWord, LOOP_DELAY_WITHOUT_AUDIO);
+        }
+    };
+
+    const playWord = () => {
+        if (!isSingleWordLooping || signal.aborted) return;
+        if (wordAudio && wordAudio.src) {
+            wordAudio.currentTime = 0;
+            wordAudio.play().catch(e => {
+                console.error('單詞循環播放詞彙失敗:', e);
+                playSentence();
+            });
+            wordAudio.addEventListener('ended', playSentence, { once: true, signal });
+        } else {
+            playSentence();
+        }
+    };
+
+    playWord(); // 首次啟動
+}
+
+/**
+ * 【新增】停止單詞循環播放。
+ */
+function stopSingleWordLoop() {
+    if (!isSingleWordLooping) return;
+
+    singleLoopAbortController.abort();
+
+    if (singleLoopingAudio.word) {
+        singleLoopingAudio.word.pause();
+        singleLoopingAudio.word.currentTime = 0;
+    }
+    if (singleLoopingAudio.sentence) {
+        singleLoopingAudio.sentence.pause();
+        singleLoopingAudio.sentence.currentTime = 0;
+    }
+
+    if (singleLoopingAudio.button) {
+        singleLoopingAudio.button.innerHTML = '<i class="fas fa-repeat"></i>';
+        singleLoopingAudio.button.classList.remove('looping');
+    }
+    if (singleLoopingAudio.row) {
+        singleLoopingAudio.row.classList.remove('looping-row');
+    }
+
+    isSingleWordLooping = false;
+    singleLoopingAudio = { word: null, sentence: null, row: null, button: null };
+}
+
 function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetRowId) {
     const resultsSummaryContainer = document.getElementById('results-summary');
     if (!resultsSummaryContainer) return;
@@ -3280,6 +3401,7 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
         <button id="playAllBtn" title="依序播放" style="display: none;"><i class="fas fa-play"></i></button>
         <button id="pauseResumeBtn" title="暫停/繼續"><i class="fas fa-pause"></i></button>
         <button id="stopBtn" title="停止"><i class="fas fa-stop"></i></button>
+        <button id="loopCategoryBtn" title="循環播放這个類別"><i class="fas fa-sync-alt"></i></button>
     `;
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -3316,6 +3438,18 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
             }
         };
     }
+
+    const loopCategoryButton = document.getElementById('loopCategoryBtn');
+    if (loopCategoryButton) {
+        // Init style from global state
+        if(isCategoryLooping) loopCategoryButton.classList.add('active');
+
+        loopCategoryButton.onclick = function () {
+            isCategoryLooping = !isCategoryLooping;
+            this.classList.toggle('active', isCategoryLooping);
+            console.log(`分類循環模式已 ${isCategoryLooping ? '開啟' : '關閉'}`);
+        };
+    }
 }
 
 function setupDynamicEventListeners(dialectInfo, category) {
@@ -3326,10 +3460,26 @@ function setupDynamicEventListeners(dialectInfo, category) {
         const target = event.target;
         const playButton = target.closest('.playFromThisRow');
         const bookmarkButton = target.closest('.bookmarkBtn');
+        const loopOneButton = target.closest('.loop-one-btn');
+
+        if (loopOneButton) {
+            const row = loopOneButton.closest('tr');
+            if (!row) return;
+
+            if (isSingleWordLooping && singleLoopingAudio.row === row) {
+                stopSingleWordLoop();
+            } else {
+                const audioElements = row.querySelectorAll('audio.media');
+                const wordAudio = audioElements[0];
+                const sentenceAudio = audioElements[1];
+                startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton);
+            }
+            return;
+        }
 
         if (playButton) {
+            stopSingleWordLoop(); // 確保點擊單列播放時，停止單詞循環
             const rowId = playButton.dataset.rowId;
-            // 直接在完整的資料陣列中尋找索引，這就是最關鍵的修正
             const itemIndex = activeCategoryData.findIndex(item => item.編號.split('-')[1] === rowId);
             
             if (itemIndex !== -1) {
@@ -3349,13 +3499,13 @@ function setupDynamicEventListeners(dialectInfo, category) {
         }
 
         if (bookmarkButton) {
-            const rowId = bookmarkButton.dataset.rowId; // 取得不補零的 ID
+            const rowId = bookmarkButton.dataset.rowId;
             const targetIndex = activeCategoryData.findIndex(item => item.編號.split('-')[1] === rowId);
             if (targetIndex !== -1) {
                 const totalRows = activeCategoryData.length;
                 const percentage = ((targetIndex + 1) / totalRows * 100).toFixed(2);
-                const paddedRowId = padRowIdForLegacy(rowId); // <-- 關鍵：補零
-                saveBookmark(paddedRowId, percentage, category, dialectInfo.fullLvlName); // <-- 儲存補零後的 ID
+                const paddedRowId = padRowIdForLegacy(rowId);
+                saveBookmark(paddedRowId, percentage, category, dialectInfo.fullLvlName);
             }
             return;
         }
@@ -3423,6 +3573,16 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
 
     const musiidParam = urlParams.get('musiid');
+    const lastMode = localStorage.getItem('lastSearchMode');
+    const searchModeValue = musiidParam
+      ? (musiidParam === 'hak' ? '客話' : '華語')
+      : (lastMode || '客話');
+
+    const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
+    if (modeRadio) {
+      modeRadio.checked = true;
+    }
+
     const caParam = urlParams.get('ca');
     const bidsuParam = urlParams.get('bidsu');
     const iabParam = urlParams.get('iab');
@@ -3434,23 +3594,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     successfullyLoadedFromUrl = false;
 
     if (musiidParam && caParam) {
-      const searchModeValue = musiidParam === 'hak' ? '客家語' : '華語';
       const itemsPerPage = parseInt(bidsuParam) || 50;
       const page = parseInt(iabParam) || 1;
-      let dialectToUseForSearch = '四縣';
-      const kiongFromUrl = urlParams.get('kiong');
-      if (kiongFromUrl && DIALECT_CODE_TO_NAME[kiongFromUrl]) {
-        dialectToUseForSearch = DIALECT_CODE_TO_NAME[kiongFromUrl];
-      } else {
-        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
-        if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
-          dialectToUseForSearch = lastUsedDialect;
-        }
-      }
-      const dialectRadio = document.querySelector(`#search-popup input[name="dialect"][value="${dialectToUseForSearch}"]`);
-      if (dialectRadio) dialectRadio.checked = true;
-      const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
-      if (modeRadio) modeRadio.checked = true;
       searchInput.value = caParam;
       performSearch(page, itemsPerPage);
     } else if (dialectParam && levelParam && categoryParam) {
@@ -3595,6 +3740,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
+
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
     const closePopup = () => {
       selectionPopup.style.display = 'none';
@@ -3629,11 +3775,6 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
     searchDialectRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
     searchModeRadios.forEach(radio => radio.addEventListener('change', triggerSearchOnChange));
-    const lastMode = localStorage.getItem('lastSearchMode');
-    if (lastMode) {
-      const radioToCheck = document.querySelector(`#search-popup input[name="search-mode"][value="${lastMode}"]`);
-      if (radioToCheck) radioToCheck.checked = true;
-    }
     searchInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') performSearch();
     });
@@ -3738,6 +3879,380 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   // Initial call to set things right
   repositionViewport();
+}
+
+function toggleAccordion(event, line, dialectInfo) {
+    const clickedButton = event.currentTarget;
+    const parentRow = clickedButton.closest('tr');
+    const wasOpen = parentRow.classList.contains('accordion-parent');
+
+    // Always close any currently open accordion first
+    document.querySelectorAll('.accordion-parent').forEach(row => {
+        row.classList.remove('accordion-parent');
+        const button = row.querySelector('.crossDialectBtn i');
+        if (button) button.className = 'fas fa-plus-circle';
+    });
+    document.querySelectorAll('.accordion-row').forEach(row => row.remove());
+
+    // If the one we clicked was already open, we just want to close it, so we're done.
+    if (wasOpen) {
+        return;
+    }
+
+    // Pause autoplay if it's running
+    const stopButton = document.getElementById('stopBtn');
+    if (isPlaying && stopButton) {
+        stopButton.click();
+    }
+
+    parentRow.classList.add('accordion-parent');
+    clickedButton.querySelector('i').className = 'fas fa-minus-circle';
+
+    const lineId = line.編號;
+    const currentLevel = dialectInfo.級;
+    const accents = ['四', '海', '大', '平', '安'];
+    const accentMap = {
+        '四': { name: '四縣', dataVar: '四' + currentLevel },
+        '海': { name: '海陸', dataVar: '海' + currentLevel },
+        '大': { name: '大埔', dataVar: '大' + currentLevel },
+        '平': { name: '饒平', dataVar: '平' + currentLevel },
+        '安': { name: '詔安', dataVar: '安' + currentLevel },
+    };
+
+    let nextRow = parentRow.nextSibling;
+    let createdRows = [];
+
+    accents.forEach(accentKey => {
+        // Don't show the original dialect's row in the accordion
+        if (accentKey === dialectInfo.腔) {
+            return;
+        }
+
+        const accentInfo = accentMap[accentKey];
+        const dataObject = window[accentInfo.dataVar];
+        if (dataObject && dataObject.content) {
+            const foundItem = dataObject.content.find(item => item.編號 === lineId);
+            if (foundItem) {
+                const itemDialectInfo = {
+                    腔: accentKey,
+                    級: currentLevel,
+                    腔名: accentInfo.name,
+                    級名: dialectInfo.級名,
+                    檔腔: '', // Mapped below
+                    檔級: dialectInfo.檔級,
+                    目錄級: dialectInfo.目錄級,
+                    目錄另級: dialectInfo.目錄另級,
+                    generalMediaYr: '112',
+                    fullLvlName: `${accentInfo.name}${dialectInfo.級名}`,
+                    例外音檔: window[`${currentLevel}例外音檔`] || []
+                };
+                switch(itemDialectInfo.腔) {
+                    case '四': itemDialectInfo.檔腔 = 'si'; break;
+                    case '海': itemDialectInfo.檔腔 = 'ha'; break;
+                    case '大': itemDialectInfo.檔腔 = 'da'; break;
+                    case '平': itemDialectInfo.檔腔 = 'rh'; break;
+                    case '安': itemDialectInfo.檔腔 = 'zh'; break;
+                }
+                const newRow = createComparisonRow(foundItem, itemDialectInfo);
+                newRow.classList.add('accordion-row');
+                parentRow.parentNode.insertBefore(newRow, nextRow);
+                createdRows.push(newRow);
+            }
+        }
+    });
+
+    // Add class to the last created row for styling
+    if (createdRows.length > 0) {
+        createdRows[createdRows.length - 1].classList.add('accordion-row-last');
+    }
+
+    g_isAccordionScrolling = true;
+    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+        g_isAccordionScrolling = false;
+    }, 500); // Wait for scroll animation to finish
+}
+
+function createComparisonRow(line, dialectInfo) {
+    const item = document.createElement('tr');
+    item.className = dialectInfo.腔名; // Add dialect class for styling
+
+    // TD1: Dialect Name (replaces number/buttons)
+    const td1 = document.createElement('td');
+    td1.className = 'no';
+    td1.dataset.label = '腔調';
+    const sourceSpan = document.createElement('span');
+    sourceSpan.className = `dialect ${dialectInfo.腔名}`;
+    sourceSpan.textContent = dialectInfo.腔名;
+    td1.appendChild(sourceSpan);
+    item.appendChild(td1);
+
+    // This logic is heavily borrowed from renderCategoryItems
+    const missingAudioInfo = typeof getMissingAudioInfo === 'function' ? getMissingAudioInfo(dialectInfo.fullLvlName, line.分類, line.編號) : null;
+    let mediaYr = dialectInfo.generalMediaYr;
+    let pre112Insertion詞 = '', pre112Insertion句 = '';
+    let 詞目錄級 = dialectInfo.目錄級, 句目錄級 = dialectInfo.目錄級;
+    let mediaNo = '';
+    var no = line.編號.split('-');
+    if (no[0] <= 9) no[0] = '0' + no[0];
+    if (dialectInfo.級 === '初') no[0] = '0' + no[0];
+    if (no[1] <= 9) no[1] = '0' + no[1];
+    if (no[1] <= 99) no[1] = '0' + no[1];
+    mediaNo = no[1];
+    const index = dialectInfo.例外音檔.findIndex(([編號]) => 編號 === line.編號);
+    if (index !== -1) {
+        const matchedElement = dialectInfo.例外音檔[index];
+        mediaYr = matchedElement[1]; mediaNo = matchedElement[2];
+        pre112Insertion詞 = 'w/'; pre112Insertion句 = 's/';
+        if (dialectInfo.目錄另級 !== undefined) {
+            詞目錄級 = dialectInfo.目錄另級; 句目錄級 = dialectInfo.目錄另級;
+        }
+    }
+    const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+    const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+
+    // TD2: Vocabulary
+    const td2 = document.createElement('td');
+    td2.dataset.label = '詞彙';
+    const ruby = document.createElement('ruby');
+    ruby.textContent = line.客家語;
+    const rt = document.createElement('rt');
+    let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+    if (dialectInfo.腔 === '大') {
+        phoneticText = getDapuSandhiHtml(phoneticText);
+    }
+    rt.innerHTML = phoneticText;
+    ruby.appendChild(rt);
+    td2.appendChild(ruby);
+    td2.appendChild(document.createElement('br'));
+    if (missingAudioInfo && missingAudioInfo.word === false) {
+        // No audio
+    } else {
+        const audio1 = document.createElement('audio');
+        audio1.className = 'media accordion-audio'; audio1.controls = true; audio1.preload = 'none';
+        let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+        if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
+            wordAudioSrc = 'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+        }
+        audio1.src = wordAudioSrc;
+        td2.appendChild(audio1);
+    }
+    td2.appendChild(document.createElement('br'));
+    const meaningSpan = document.createElement('span');
+    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
+    td2.appendChild(meaningSpan);
+    if (line.備註 && line.備註.trim() !== '') {
+        const notesP = document.createElement('p');
+        notesP.className = 'notes';
+        notesP.textContent = `（${line.備註}）`;
+        td2.appendChild(notesP);
+    }
+    item.appendChild(td2);
+
+    // TD3: Example Sentence
+    const td3 = document.createElement('td');
+    td3.dataset.label = '例句';
+    if (line.例句 && line.例句.trim() !== '') {
+        const sentenceSpan = document.createElement('span');
+        sentenceSpan.className = 'sentence';
+        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+        td3.appendChild(sentenceSpan);
+        td3.appendChild(document.createElement('br'));
+        if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
+            // No audio
+        } else {
+            const audio2 = document.createElement('audio');
+            audio2.className = 'media accordion-audio'; audio2.controls = true; audio2.preload = 'none';
+            audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+            td3.appendChild(audio2);
+        }
+        td3.appendChild(document.createElement('br'));
+        const translationText = document.createElement('span');
+        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
+        td3.appendChild(translationText);
+    } else {
+        td3.classList.add('empty-sentence-cell');
+    }
+    item.appendChild(td3);
+
+    return item;
+}
+
+// --- 【新增】資料管理 (備份/還原) 功能 ---
+function initializeDataManagement() {
+  const dataManagementBtn = document.getElementById('dataManagementBtn');
+  const dataManagementModal = document.getElementById('dataManagementModal');
+  const dataManagementModalCloseBtn = document.getElementById('dataManagementModalCloseBtn');
+  const exportDataBtn = document.getElementById('exportDataBtn');
+  const importDataBtn = document.getElementById('importDataBtn');
+
+  if (!dataManagementBtn || !dataManagementModal || !dataManagementModalCloseBtn || !exportDataBtn || !importDataBtn) {
+    console.error('一個或多個資料管理 UI 元件未尋著。');
+    return;
+  }
+
+  // --- 事件監聽器 ---
+  dataManagementBtn.addEventListener('click', () => {
+    dataManagementModal.style.display = 'flex';
+  });
+
+  const closeModal = () => {
+    dataManagementModal.style.display = 'none';
+  };
+
+  dataManagementModalCloseBtn.addEventListener('click', closeModal);
+  dataManagementModal.addEventListener('click', (event) => {
+    if (event.target === dataManagementModal) {
+      closeModal();
+    }
+  });
+
+  exportDataBtn.addEventListener('click', exportData);
+  importDataBtn.addEventListener('click', importData);
+}
+
+/**
+ * 匯出使用者資料
+ */
+function exportData() {
+  const exportTextArea = document.getElementById('exportDataTextArea');
+  const keysToExport = [
+    'hakkaBookmarks',
+    'dontShowInfoModalAgain',
+    'lastSearchMode',
+    'lastSearchDialect'
+    // 'hideInfoModal' is often redundant with 'dontShowInfoModalAgain', so we can omit it.
+  ];
+
+  const exportData = {};
+  keysToExport.forEach(key => {
+    const value = localStorage.getItem(key);
+    if (value !== null) {
+      try {
+        // Attempt to parse JSON strings to store them as objects/arrays
+        exportData[key] = JSON.parse(value);
+      } catch (e) {
+        // If it's not a valid JSON, store as a plain string
+        exportData[key] = value;
+      }
+    }
+  });
+
+  const jsonString = JSON.stringify(exportData, null, 2); // Pretty print JSON for the downloadable file
+  const jsonStringForUrl = JSON.stringify(exportData); // No pretty print for URL
+
+  // --- 產生並顯示 URL ---
+  try {
+    // GCA 建議：使用 TextEncoder 來處理 Unicode 字元，較 btoa(unescape(encodeURIComponent(...))) 可靠
+    const uint8Array = new TextEncoder().encode(jsonStringForUrl);
+    const binaryString = String.fromCharCode.apply(null, uint8Array);
+    const encodedData = btoa(binaryString);
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('migrateData', encodedData);
+    exportTextArea.value = newUrl.toString();
+  } catch (e) {
+    console.error("無法處理遷移資料:", e);
+    exportTextArea.value = "產生 URL 失敗。請改用下載个檔案。";
+  }
+  exportTextArea.readOnly = true;
+
+  // --- 觸發下載 ---
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+
+  // 建立有日期个檔案名
+  const date = new Date();
+  const dateString = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+  a.download = `hakspring-backup-${dateString}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert('備份檔已產生並開始下載。');
+}
+
+/**
+ * 匯入使用者資料
+ */
+async function importData() {
+  const fileInput = document.getElementById('importDataFile');
+  const textArea = document.getElementById('importDataTextArea');
+  const file = fileInput.files[0];
+  const textValue = textArea.value.trim();
+
+  if (!file && textValue === '') {
+    alert('請選擇一個備份檔，或在橫框內貼上備份資料。');
+    return;
+  }
+
+  // 1. 加入安全警告
+  if (!confirm('匯入資料會覆蓋現有設定，且來源不明个檔案可能帶來風險。確定愛繼續無？')) {
+    return;
+  }
+
+  let dataString = '';
+
+  if (file) {
+    try {
+      dataString = await file.text();
+    } catch (error) {
+      console.error('讀取檔案失敗:', error);
+      alert('讀取檔案失敗，請確定檔案係無係有效。');
+      return;
+    }
+  } else {
+    dataString = textValue;
+  }
+
+  try {
+    let parsedData;
+    // 檢查係無係貼上了完整个 URL
+    if (dataString.includes('?migrateData=')) {
+        const urlParams = new URLSearchParams(dataString.split('?')[1]);
+        const migrateData = urlParams.get('migrateData');
+        if (migrateData) {
+            // 2. 使用較穩健个 TextDecoder 來解碼
+            const binaryString = atob(migrateData);
+            const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+            const decodedData = new TextDecoder().decode(bytes);
+            parsedData = JSON.parse(decodedData);
+        } else {
+            throw new Error('URL 裡肚尋無 migrateData 參數。');
+        }
+    } else {
+        // 當作淨 JSON 資料來處理
+        parsedData = JSON.parse(dataString);
+    }
+
+    // --- 還原資料到 localStorage ---
+    const validKeys = ['hakkaBookmarks', 'dontShowInfoModalAgain', 'lastSearchMode', 'lastSearchDialect'];
+    for (const key in parsedData) {
+      // 3. 基本个 key 驗證
+      if (validKeys.includes(key) && Object.prototype.hasOwnProperty.call(parsedData, key)) {
+        let value = parsedData[key];
+        // 如果值係一個物件 (例如 hakkaBookmarks)，愛將佢轉做字串再儲存
+        if (typeof value === 'object' && value !== null) {
+          value = JSON.stringify(value);
+        }
+        localStorage.setItem(key, String(value));
+      }
+    }
+
+    alert('資料還原成功！網站會重新載入來套用新設定。');
+
+    // 關閉 modal 並重新載入頁面
+    document.getElementById('dataManagementModal').style.display = 'none';
+    location.reload();
+
+  } catch (error) {
+    console.error('匯入資料失敗:', error);
+    alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
+  }
 }
 
 // Start the application
