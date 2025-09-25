@@ -4016,8 +4016,10 @@ function toggleAccordion(event, line, dialectInfo) {
         createdRows[createdRows.length - 1].classList.add('accordion-row-last');
     }
 
+    g_isAccordionScrolling = true;
+
     // 【新】在插入新行後，立即為 Firefox 重新計算 Ruby 字體大小
-    // 直接呼叫 adjustAllRubyFontSizes，避免觸發 repositionViewport 中心的捲動邏輯
+    // 這必須在設定 g_isAccordionScrolling = true 之後做，來避免觸發 repositionViewport 造成捲動競爭
     if (isFirefox() && createdRows.length > 0) {
       const contentContainer = document.getElementById('generated');
       if (contentContainer) {
@@ -4025,7 +4027,6 @@ function toggleAccordion(event, line, dialectInfo) {
       }
     }
 
-    g_isAccordionScrolling = true;
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
         g_isAccordionScrolling = false;
