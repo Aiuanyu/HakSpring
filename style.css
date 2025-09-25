@@ -1691,6 +1691,7 @@ input:checked + .slider:before {
   padding: 20px 30px;
   flex-grow: 1;
   overflow-y: auto;
+  overflow-wrap: break-word;
   -webkit-overflow-scrolling: touch;
   line-height: 1.7;
 }
