@@ -1389,7 +1389,7 @@ input:checked + .slider:before {
     border-top-color: #FFC107;
   }
   #generated tr.accordion-row-last {
-    border-bottom: 5px solid #FFC107;
+    border-bottom-color: #FFC107;
   }
 }
 
