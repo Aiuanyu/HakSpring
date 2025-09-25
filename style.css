@@ -1543,11 +1543,7 @@ input:checked + .slider:before {
   }
 
   #generated tr.accordion-row {
-    display: table-row;
-  }
-
-  #generated tr.accordion-row td {
-    display: table-cell;
+    display: block;
   }
 
 }
