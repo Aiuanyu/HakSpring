@@ -2615,6 +2615,7 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
       
       // 拿忒所有其他無相關个參數，確保 URL 淨俐
       newUrl.searchParams.delete('row');
+      newUrl.searchParams.delete('musiid');
       newUrl.searchParams.delete('ca');
       newUrl.searchParams.delete('bidsu');
       newUrl.searchParams.delete('iab');
@@ -3626,6 +3627,10 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const searchModeValue = musiidParam
       ? (musiidParam === 'hak' ? '客話' : '華語')
       : (lastMode || '客話');
+
+    if (musiidParam) {
+      localStorage.setItem('lastSearchMode', searchModeValue);
+    }
 
     const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
     if (modeRadio) {
