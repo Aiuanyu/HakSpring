@@ -2615,7 +2615,6 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
       
       // 拿忒所有其他無相關个參數，確保 URL 淨俐
       newUrl.searchParams.delete('row');
-      newUrl.searchParams.delete('musiid');
       newUrl.searchParams.delete('ca');
       newUrl.searchParams.delete('bidsu');
       newUrl.searchParams.delete('iab');
