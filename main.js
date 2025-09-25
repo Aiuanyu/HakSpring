@@ -4016,11 +4016,18 @@ function toggleAccordion(event, line, dialectInfo) {
         createdRows[createdRows.length - 1].classList.add('accordion-row-last');
     }
 
-    g_isAccordionScrolling = true;
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    g_isAccordionScrolling = true;
+
     setTimeout(() => {
+        if (createdRows.length > 0) { // The check for Firefox is already in adjustAllRubyFontSizes.
+            const contentContainer = document.getElementById('generated');
+            if (contentContainer) {
+                adjustAllRubyFontSizes(contentContainer);
+            }
+        }
         g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+    }, 500);
 }
 
 function createComparisonRow(line, dialectInfo) {
