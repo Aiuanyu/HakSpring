@@ -4016,11 +4016,24 @@ function toggleAccordion(event, line, dialectInfo) {
         createdRows[createdRows.length - 1].classList.add('accordion-row-last');
     }
 
-    g_isAccordionScrolling = true;
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    g_isAccordionScrolling = true;
+
     setTimeout(() => {
-        g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+        try {
+            // The adjustAllRubyFontSizes function has its own check for Firefox.
+            // We just need to call it if new rows were created.
+            if (createdRows.length > 0) {
+                const contentContainer = document.getElementById('generated');
+                if (contentContainer) {
+                    adjustAllRubyFontSizes(contentContainer);
+                }
+            }
+        } finally {
+            // This flag MUST be reset to re-enable viewport repositioning on resize.
+            g_isAccordionScrolling = false;
+        }
+    }, 500);
 }
 
 function createComparisonRow(line, dialectInfo) {
