@@ -4017,20 +4017,29 @@ function toggleAccordion(event, line, dialectInfo) {
     }
 
     g_isAccordionScrolling = true;
+    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // 【新】在插入新行後，立即為 Firefox 重新計算 Ruby 字體大小
-    // 這必須在設定 g_isAccordionScrolling = true 之後做，來避免觸發 repositionViewport 造成捲動競爭
-    if (isFirefox() && createdRows.length > 0) {
-      const contentContainer = document.getElementById('generated');
-      if (contentContainer) {
-        adjustAllRubyFontSizes(contentContainer);
-      }
+    // 【最終修正】使用 IntersectionObserver 來取代 setTimeout，確保在捲動動畫完成後才調整字體
+    if (isFirefox() && createdRows.length > 0 && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, observerInstance) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const contentContainer = document.getElementById('generated');
+                    if (contentContainer) {
+                        adjustAllRubyFontSizes(contentContainer);
+                    }
+                    // 任務完成後，停止觀察
+                    observerInstance.unobserve(parentRow);
+                }
+            });
+        }, { threshold: 1.0 }); // 1.0 表示目標元素完全可見時觸發
+
+        observer.observe(parentRow);
     }
 
-    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
         g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+    }, 500); // 保持這個 setTimeout 來重設旗標
 }
 
 function createComparisonRow(line, dialectInfo) {
