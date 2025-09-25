@@ -170,6 +170,10 @@ function trackEvent(action, category, label) {
   }
 }
 
+function isFirefox() {
+    return navigator.userAgent.toLowerCase().includes('firefox');
+}
+
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
 
 /**
@@ -2204,10 +2208,6 @@ function adjustResultsSummaryFontSize() {
     }
 }
 
-function isFirefox() {
-    return navigator.userAgent.toLowerCase().includes('firefox');
-  }
-
   function adjustRubyFontSize(rubyElement) {
     if (!isFirefox()) return;
     const tdElement = rubyElement.closest('td');
@@ -4020,7 +4020,7 @@ function toggleAccordion(event, line, dialectInfo) {
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
         try {
-            if (isFirefox() && createdRows.length > 0) {
+            if (createdRows.length > 0) {
                 const contentContainer = document.getElementById('generated');
                 if (contentContainer) {
                     adjustAllRubyFontSizes(contentContainer);
