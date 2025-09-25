@@ -4017,8 +4017,12 @@ function toggleAccordion(event, line, dialectInfo) {
     }
 
     // 【新】在插入新行後，立即為 Firefox 重新計算 Ruby 字體大小
-    if (isFirefox()) {
-      repositionViewport();
+    // 直接呼叫 adjustAllRubyFontSizes，避免觸發 repositionViewport 中心的捲動邏輯
+    if (isFirefox() && createdRows.length > 0) {
+      const contentContainer = document.getElementById('generated');
+      if (contentContainer) {
+        adjustAllRubyFontSizes(contentContainer);
+      }
     }
 
     g_isAccordionScrolling = true;
