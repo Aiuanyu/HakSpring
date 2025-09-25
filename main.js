@@ -1337,19 +1337,21 @@ function initializeAppUI() {
 
   const debouncedUpdateLastCenteredRow = debounce(updateLastCenteredRow, DEBOUNCE_UPDATE_CENTERED_ROW_MS);
 
-  const debouncedRepositionActions = debounce(() => {
+  const debouncedRepositionActions = debounce((isAccordionAction = false) => {
     // This contains the actual logic, which is debounced.
     // Defer the scrolling to prevent race conditions with layout reflow.
-    setTimeout(() => {
-      if (isPlaying && !isPaused) {
-        const nowPlayingRow = document.getElementById('nowPlaying');
-        if (nowPlayingRow) {
-          nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
-        lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 0);
+    if (!isAccordionAction) {
+        setTimeout(() => {
+          if (isPlaying && !isPaused) {
+            const nowPlayingRow = document.getElementById('nowPlaying');
+            if (nowPlayingRow) {
+              nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+            lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 0);
+    }
 
     // Re-run the original layout adjustment logic
     const contentContainer = document.getElementById('generated');
@@ -1404,12 +1406,10 @@ function initializeAppUI() {
     }, REPOSITION_FLAG_RESET_DELAY_MS);
   }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
-  function repositionViewport() {
-    if (g_isAccordionScrolling) return; // Don't reposition if accordion is scrolling
-    // This function is called directly by the event listener.
-    // It sets the flag immediately and then calls the debounced actions.
+  function repositionViewport(isAccordionAction = false) {
+    if (g_isAccordionScrolling && !isAccordionAction) return;
     isRepositioning = true;
-    debouncedRepositionActions();
+    debouncedRepositionActions(isAccordionAction);
   }
 
   let successfullyLoadedFromUrl = false;
@@ -4016,17 +4016,20 @@ function toggleAccordion(event, line, dialectInfo) {
         createdRows[createdRows.length - 1].classList.add('accordion-row-last');
     }
 
-    g_isAccordionScrolling = true;
+    // 【最終解決方案】
+    // 1. 先捲動到目標，這會觸發 ResizeObserver
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // 2. 呼叫一個特別版本个 repositioning，它只會調整字體大小，但會跳過捲動
+    if (isFirefox()) {
+      repositionViewport(true);
+    }
+
+    // 3. 設定旗標，讓一般个 repositioning 監聽器暫時失效
+    g_isAccordionScrolling = true;
     setTimeout(() => {
-        if (isFirefox() && createdRows.length > 0) {
-            const contentContainer = document.getElementById('generated');
-            if (contentContainer) {
-                adjustAllRubyFontSizes(contentContainer);
-            }
-        }
         g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+    }, 500);
 }
 
 function createComparisonRow(line, dialectInfo) {
