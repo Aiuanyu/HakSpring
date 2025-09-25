@@ -4019,8 +4019,21 @@ function toggleAccordion(event, line, dialectInfo) {
     g_isAccordionScrolling = true;
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
-        g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+        try {
+            if (isFirefox() && createdRows.length > 0) {
+                const contentContainer = document.getElementById('generated');
+                if (contentContainer) {
+                    adjustAllRubyFontSizes(contentContainer);
+                }
+            }
+        }
+        catch (e) {
+            console.error("Error adjusting ruby font sizes:", e);
+        }
+        finally {
+            g_isAccordionScrolling = false;
+        }
+    }, 500);
 }
 
 function createComparisonRow(line, dialectInfo) {
