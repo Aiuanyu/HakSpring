@@ -3612,6 +3612,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     let dialectToSelect = '';
     if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
       dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
+      localStorage.setItem('lastSearchDialect', dialectToSelect);
     } else if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
       dialectToSelect = lastUsedDialect;
     } else {
