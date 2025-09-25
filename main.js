@@ -170,6 +170,57 @@ function trackEvent(action, category, label) {
   }
 }
 
+function isFirefox() {
+    return navigator.userAgent.toLowerCase().includes('firefox');
+}
+
+function adjustRubyFontSize(rubyElement) {
+    if (!isFirefox()) return;
+    const tdElement = rubyElement.closest('td');
+    if (!tdElement) return;
+    rubyElement.style.fontSize = '';
+    const forcedStyle = window.getComputedStyle(rubyElement);
+    const currentFontSize = parseFloat(forcedStyle.fontSize);
+    const rubyWidth = rubyElement.scrollWidth;
+    const computedTdStyle = window.getComputedStyle(tdElement);
+    const isCardMode = computedTdStyle.display === 'block';
+    let availableWidth;
+    const buffer = 5;
+    if (isCardMode) {
+      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
+      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+    } else {
+      availableWidth = tdElement.clientWidth - buffer;
+    }
+    if (rubyWidth > availableWidth) {
+      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
+      const minSize = 10;
+      newSize = Math.max(newSize, minSize);
+      if (newSize < currentFontSize) {
+        if (rubyElement.style.fontSize !== `${newSize}px`) {
+          rubyElement.style.fontSize = `${newSize}px`;
+        }
+      } else {
+        if (rubyElement.style.fontSize) {
+          rubyElement.style.fontSize = '';
+        }
+      }
+    } else {
+      if (rubyElement.style.fontSize) {
+        rubyElement.style.fontSize = '';
+      }
+    }
+}
+
+function adjustAllRubyFontSizes(containerElement) {
+    if (!isFirefox()) return;
+    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
+    rubyElements.forEach((rubyElement) => {
+      rubyElement.style.fontSize = '';
+      adjustRubyFontSize(rubyElement);
+    });
+}
+
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
 
 /**
@@ -2204,56 +2255,6 @@ function adjustResultsSummaryFontSize() {
     }
 }
 
-function isFirefox() {
-    return navigator.userAgent.toLowerCase().includes('firefox');
-  }
-
-  function adjustRubyFontSize(rubyElement) {
-    if (!isFirefox()) return;
-    const tdElement = rubyElement.closest('td');
-    if (!tdElement) return;
-    rubyElement.style.fontSize = '';
-    const forcedStyle = window.getComputedStyle(rubyElement);
-    const currentFontSize = parseFloat(forcedStyle.fontSize);
-    const rubyWidth = rubyElement.scrollWidth;
-    const computedTdStyle = window.getComputedStyle(tdElement);
-    const isCardMode = computedTdStyle.display === 'block';
-    let availableWidth;
-    const buffer = 5;
-    if (isCardMode) {
-      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
-      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
-    } else {
-      availableWidth = tdElement.clientWidth - buffer;
-    }
-    if (rubyWidth > availableWidth) {
-      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
-      const minSize = 10;
-      newSize = Math.max(newSize, minSize);
-      if (newSize < currentFontSize) {
-        if (rubyElement.style.fontSize !== `${newSize}px`) {
-          rubyElement.style.fontSize = `${newSize}px`;
-        }
-      } else {
-        if (rubyElement.style.fontSize) {
-          rubyElement.style.fontSize = '';
-        }
-      }
-    } else {
-      if (rubyElement.style.fontSize) {
-        rubyElement.style.fontSize = '';
-      }
-    }
-  }
-
-  function adjustAllRubyFontSizes(containerElement) {
-    if (!isFirefox()) return;
-    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
-    rubyElements.forEach((rubyElement) => {
-      rubyElement.style.fontSize = '';
-      adjustRubyFontSize(rubyElement);
-    });
-  }
 
 
   
@@ -4019,8 +4020,21 @@ function toggleAccordion(event, line, dialectInfo) {
     g_isAccordionScrolling = true;
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => {
-        g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+        try {
+            if (createdRows.length > 0) {
+                const contentContainer = document.getElementById('generated');
+                if (contentContainer) {
+                    adjustAllRubyFontSizes(contentContainer);
+                }
+            }
+        }
+        catch (e) {
+            console.error("Error adjusting ruby font sizes:", e);
+        }
+        finally {
+            g_isAccordionScrolling = false;
+        }
+    }, 500);
 }
 
 function createComparisonRow(line, dialectInfo) {
