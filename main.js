@@ -3517,6 +3517,9 @@ function startSingleWordLoop(wordAudio, sentenceAudio, row, button, trackData) {
     const signal = singleLoopAbortController.signal;
 
     updateMediaSession(trackData, g_currentDialectInfo, true); // Update media session for single loop
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "playing";
+    }
 
     button.innerHTML = '<i class="fas fa-stop"></i>';
     button.classList.add('looping');
