@@ -194,6 +194,7 @@ let isCategoryLooping = false; // 用於分類循環
 let isSingleWordLooping = false; // 用於單詞循環
 let singleLoopingAudio = { word: null, sentence: null, row: null, button: null }; // 儲存單詞循環的元素
 let singleLoopAbortController = new AbortController(); // 用於中斷單詞循環
+let g_mainPlaybackIndexBeforeLoop = null;
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
@@ -230,8 +231,9 @@ function updateMediaSession(track, dialectInfo) {
         artist: `${dialectInfo.fullLvlName} - ${g_currentCategory}`,
         album: '客源翠 HakSpring',
         artwork: [
-            { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '宣傳圖.png', type: 'image/png' },
             { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
         ]
     });
 
@@ -3454,7 +3456,13 @@ function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
     const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
     const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
 
-    stopPlayback();
+    // --- BUG FIX: Save main playback state before starting loop ---
+    if (isPlaying) {
+        g_mainPlaybackIndexBeforeLoop = currentAudioIndex;
+        stopPlayback();
+    }
+    // --- End of BUG FIX ---
+
     stopSingleWordLoop();
 
     isSingleWordLooping = true;
@@ -3549,9 +3557,17 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
 
     if (pauseResumeButton) {
         pauseResumeButton.onclick = function () {
-            if (!isPlaying) { // 如果已停止，按此鈕等於從頭播放
-                 startPlayingFromIndex(0);
-                 return;
+            if (!isPlaying) { // If stopped, decide where to resume from.
+                if (g_mainPlaybackIndexBeforeLoop !== null) {
+                    // If playback was interrupted by a single loop, resume from where it left off.
+                    const resumeIndex = g_mainPlaybackIndexBeforeLoop;
+                    g_mainPlaybackIndexBeforeLoop = null; // Reset the flag
+                    startPlayingFromIndex(resumeIndex);
+                } else {
+                    // Otherwise, start from the beginning of the category.
+                    startPlayingFromIndex(0);
+                }
+                return;
             }
             const nowPlayingRow = document.getElementById('nowPlaying');
             if (isPaused) {
