@@ -88,6 +88,56 @@ function handleDomainMigration() {
 }
 
 // Agent Jules was here.
+function isFirefox() {
+    return navigator.userAgent.toLowerCase().includes('firefox');
+}
+
+function adjustRubyFontSize(rubyElement) {
+    if (!isFirefox()) return;
+    const tdElement = rubyElement.closest('td');
+    if (!tdElement) return;
+    rubyElement.style.fontSize = '';
+    const forcedStyle = window.getComputedStyle(rubyElement);
+    const currentFontSize = parseFloat(forcedStyle.fontSize);
+    const rubyWidth = rubyElement.scrollWidth;
+    const computedTdStyle = window.getComputedStyle(tdElement);
+    const isCardMode = computedTdStyle.display === 'block';
+    let availableWidth;
+    const buffer = 5;
+    if (isCardMode) {
+      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
+      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+    } else {
+      availableWidth = tdElement.clientWidth - buffer;
+    }
+    if (rubyWidth > availableWidth) {
+      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
+      const minSize = 10;
+      newSize = Math.max(newSize, minSize);
+      if (newSize < currentFontSize) {
+        if (rubyElement.style.fontSize !== `${newSize}px`) {
+          rubyElement.style.fontSize = `${newSize}px`;
+        }
+      } else {
+        if (rubyElement.style.fontSize) {
+          rubyElement.style.fontSize = '';
+        }
+      }
+    } else {
+      if (rubyElement.style.fontSize) {
+        rubyElement.style.fontSize = '';
+      }
+    }
+}
+
+function adjustAllRubyFontSizes(containerElement) {
+    if (!isFirefox()) return;
+    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
+    rubyElements.forEach((rubyElement) => {
+      rubyElement.style.fontSize = '';
+      adjustRubyFontSize(rubyElement);
+    });
+}
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
   'data/cert/113四基.json', 'data/cert/113四初.json', 'data/cert/113四中.json', 'data/cert/113四中高.json', 'data/cert/113四高.json',
@@ -2182,58 +2232,6 @@ function adjustResultsSummaryFontSize() {
     }
 }
 
-function isFirefox() {
-    return navigator.userAgent.toLowerCase().includes('firefox');
-  }
-
-  function adjustRubyFontSize(rubyElement) {
-    if (!isFirefox()) return;
-    const tdElement = rubyElement.closest('td');
-    if (!tdElement) return;
-    rubyElement.style.fontSize = '';
-    const forcedStyle = window.getComputedStyle(rubyElement);
-    const currentFontSize = parseFloat(forcedStyle.fontSize);
-    const rubyWidth = rubyElement.scrollWidth;
-    const computedTdStyle = window.getComputedStyle(tdElement);
-    const isCardMode = computedTdStyle.display === 'block';
-    let availableWidth;
-    const buffer = 5;
-    if (isCardMode) {
-      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
-      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
-    } else {
-      availableWidth = tdElement.clientWidth - buffer;
-    }
-    if (rubyWidth > availableWidth) {
-      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
-      const minSize = 10;
-      newSize = Math.max(newSize, minSize);
-      if (newSize < currentFontSize) {
-        if (rubyElement.style.fontSize !== `${newSize}px`) {
-          rubyElement.style.fontSize = `${newSize}px`;
-        }
-      } else {
-        if (rubyElement.style.fontSize) {
-          rubyElement.style.fontSize = '';
-        }
-      }
-    } else {
-      if (rubyElement.style.fontSize) {
-        rubyElement.style.fontSize = '';
-      }
-    }
-  }
-
-  function adjustAllRubyFontSizes(containerElement) {
-    if (!isFirefox()) return;
-    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
-    rubyElements.forEach((rubyElement) => {
-      rubyElement.style.fontSize = '';
-      adjustRubyFontSize(rubyElement);
-    });
-  }
-
-
   
 
   
@@ -4028,10 +4026,21 @@ function toggleAccordion(event, line, dialectInfo) {
     }
 
     g_isAccordionScrolling = true;
-    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => {
-        g_isAccordionScrolling = false;
-    }, 500); // Wait for scroll animation to finish
+    try {
+        if (isFirefox()) {
+            const table = parentRow.closest('table');
+            if (table) {
+                adjustAllRubyFontSizes(table);
+            }
+        }
+        parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+        console.error("Error during accordion toggle:", e);
+    } finally {
+        setTimeout(() => {
+            g_isAccordionScrolling = false;
+        }, 500); // Wait for scroll animation to finish
+    }
 }
 
 function createComparisonRow(line, dialectInfo) {
