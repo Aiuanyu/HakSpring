@@ -578,7 +578,7 @@ function updatePopupPosition(popupEl, selectionRect) {
 
 function getDapuSandhiHtml(htmlContent) {
     const BLOCKING_PUNCTUATION = '()（）【】';
-    const SKIPPABLE_PUNCTUATION = '\s、';
+    const SKIPPABLE_PUNCTUATION = '\\s、';
     const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
     const TOKENIZER_REGEX = new RegExp(`[^<>` + ALL_PUNCTUATION_CHARS + `]+|[${SKIPPABLE_PUNCTUATION}]+|[${BLOCKING_PUNCTUATION}]+`, 'g');
@@ -602,7 +602,7 @@ function getDapuSandhiHtml(htmlContent) {
     }
 
     const tokens = preliminaryTokens.flatMap(token => {
-        if (token.startsWith("<ruby class="sandhi-")) {
+        if (token.startsWith("<ruby class=\"sandhi-")) {
             return [token];
         }
         return token.match(TOKENIZER_REGEX) || [];
@@ -614,14 +614,14 @@ function getDapuSandhiHtml(htmlContent) {
     for (let i = 0; i < tokens.length; i++) {
         let currentToken = tokens[i];
 
-        if (currentToken.startsWith("<ruby class="sandhi-") || SKIPPABLE_REGEX.test(currentToken) || BLOCKING_REGEX.test(currentToken)) {
+        if (currentToken.startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(currentToken) || BLOCKING_REGEX.test(currentToken)) {
             modifiedTokens.push(currentToken);
             continue;
         }
 
         let nextWordToken = "";
         for (let j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].startsWith("<ruby class="sandhi-") || SKIPPABLE_REGEX.test(tokens[j])) {
+            if (tokens[j].startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(tokens[j])) {
                 continue;
             }
             if (BLOCKING_REGEX.test(tokens[j])) {
@@ -930,11 +930,11 @@ function normalizePhonetics(text) {
 }
 
 function isRomanizedHakka(text) {
-  const hasChinese = /[一-龥]/.test(text);
+  const hasChinese = /[\u4e00-\u9fa5]/.test(text);
   if (hasChinese) {
     return false;
   }
-  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-']+$/.test(text);
+  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\']+$/.test(text);
   if (!isRoman) {
     return false;
   }
@@ -1088,8 +1088,7 @@ function dbClear(db, storeName) {
  */
 function parseUnifiedCsv(csvString) {
   if (!csvString) return [];
-  const rows = csvString.trim().split('
-');
+  const rows = csvString.trim().split('\n');
   if (rows.length < 2) return [];
 
   const headers = rows[0].split(',');
@@ -1104,10 +1103,9 @@ function parseUnifiedCsv(csvString) {
       if (headers[j]) {
         let value = values[j] || '';
         // 拿掉頭尾可能个引號
-        value = value.replace(/^"|"$/g, '');
+        value = value.replace(/^\"|\"$/g, '');
         // 將 <br> 標籤轉回換行符，再做解碼
-        value = value.replace(/<br>/g, '
-');
+        value = value.replace(/<br>/g, '\n');
         // --- FIX: 拿掉無必要且會造成錯誤个 decodeURIComponent ---
         obj[headers[j]] = value;
       }
@@ -2033,8 +2031,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             td2.appendChild(document.createElement('br'));
         }
         const meaningText = document.createElement('span');
-        const processedMeaning = line['華語詞義'].replace(/"/g, '').replace(/
-/g, '<br>');
+        const processedMeaning = line['華語詞義'].replace(/"/g, '').replace(/\n/g, '<br>');
         meaningText.innerHTML = highlight.meaning ? processedMeaning.replace(highlightRegex, '<mark>$1</mark>') : processedMeaning;
         td2.appendChild(meaningText);
         if (line.備註 && line.備註.trim() !== '') {
@@ -2050,8 +2047,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         if (line['例句'] && line['例句'].trim() !== '') {
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
-            sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/
-/g, '<br>');
+            sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
 
@@ -2083,8 +2079,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
             td3.appendChild(document.createElement('br'));
             const translationText = document.createElement('span');
-            translationText.innerHTML = (highlight.translation ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>') : line['翻譯']).replace(/"/g, '').replace(/
-/g, '<br>');
+            translationText.innerHTML = (highlight.translation ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>') : line['翻譯']).replace(/"/g, '').replace(/\n/g, '<br>');
             td3.appendChild(translationText);
         } else {
           td3.classList.add('empty-sentence-cell');
@@ -2545,7 +2540,7 @@ function preprocessAllData() {
         }
       });
     
-      // 步驟 2: 根據已解析的資料，建立索引 (這部分邏輯與您原本の程式碼相同)
+      // 步驟 2: 根據已解析的資料，建立索引 (這部分邏輯與您原本的程式碼相同)
       for (const dataVarName in preprocessedDataCache) {
         const vocabularyArray = preprocessedDataCache[dataVarName];
         const isGipData = dataVarName.startsWith('教典');
@@ -3051,8 +3046,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         }
         td2.appendChild(document.createElement('br'));
         const meaningSpan = document.createElement('span');
-        meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/
-/g, '<br>');
+        meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
         td2.appendChild(meaningSpan);
         if (line.備註 && line.備註.trim() !== '') {
             const notesP = document.createElement('p');
@@ -3067,8 +3061,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         if (line.例句 && line.例句.trim() !== '') {
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
-            sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/
-/g, '<br>');
+            sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
             if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
@@ -3084,8 +3077,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
             }
             td3.appendChild(document.createElement('br'));
             const translationText = document.createElement('span');
-            translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/
-/g, '<br>');
+            translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
             td3.appendChild(translationText);
         } else {
             td3.classList.add('empty-sentence-cell');
@@ -4146,8 +4138,7 @@ function createComparisonRow(line, dialectInfo) {
     }
     td2.appendChild(document.createElement('br'));
     const meaningSpan = document.createElement('span');
-    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/
-/g, '<br>');
+    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
     td2.appendChild(meaningSpan);
     if (line.備註 && line.備註.trim() !== '') {
         const notesP = document.createElement('p');
@@ -4163,8 +4154,7 @@ function createComparisonRow(line, dialectInfo) {
     if (line.例句 && line.例句.trim() !== '') {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
-        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/
-/g, '<br>');
+        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
         td3.appendChild(sentenceSpan);
         td3.appendChild(document.createElement('br'));
         if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
@@ -4177,8 +4167,7 @@ function createComparisonRow(line, dialectInfo) {
         }
         td3.appendChild(document.createElement('br'));
         const translationText = document.createElement('span');
-        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/
-/g, '<br>');
+        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
         td3.appendChild(translationText);
     } else {
         td3.classList.add('empty-sentence-cell');
@@ -4361,10 +4350,7 @@ async function importData() {
 
   } catch (error) {
     console.error('匯入資料失敗:', error);
-    alert(`資料匯入失敗：
-${error.message}
-
-請檢查資料格式敢有正確。`);
+    alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
   }
 }
 
