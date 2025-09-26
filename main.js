@@ -137,6 +137,7 @@ let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
+const SCROLL_ANIMATION_DURATION_MS = 500;
 
 // --- 【新增】循環播放相關全域變數 ---
 let isCategoryLooping = false; // 用於分類循環
@@ -175,6 +176,10 @@ function isFirefox() {
 }
 
 function adjustRubyFontSize(rubyElement) {
+    const BUFFER_PX = 5;
+    const MIN_FONT_SIZE_PX = 10;
+    const CARD_MODE_BUFFER_MULTIPLIER = 3;
+
     if (!isFirefox()) return;
     const tdElement = rubyElement.closest('td');
     if (!tdElement) return;
@@ -185,40 +190,34 @@ function adjustRubyFontSize(rubyElement) {
     const computedTdStyle = window.getComputedStyle(tdElement);
     const isCardMode = computedTdStyle.display === 'block';
     let availableWidth;
-    const buffer = 5;
     if (isCardMode) {
       const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
-      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+      availableWidth = tdElement.clientWidth - paddingLeftPx - BUFFER_PX * CARD_MODE_BUFFER_MULTIPLIER;
     } else {
-      availableWidth = tdElement.clientWidth - buffer;
+      availableWidth = tdElement.clientWidth - BUFFER_PX;
     }
     if (rubyWidth > availableWidth) {
       let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
-      const minSize = 10;
-      newSize = Math.max(newSize, minSize);
+      newSize = Math.max(newSize, MIN_FONT_SIZE_PX);
       if (newSize < currentFontSize) {
+        // Set the new smaller size and exit.
         if (rubyElement.style.fontSize !== `${newSize}px`) {
           rubyElement.style.fontSize = `${newSize}px`;
         }
-      } else {
-        if (rubyElement.style.fontSize) {
-          rubyElement.style.fontSize = '';
-        }
+        return;
       }
-    } else {
-      if (rubyElement.style.fontSize) {
-        rubyElement.style.fontSize = '';
-      }
+    }
+    // In all other cases (no overflow, or new size isn't smaller),
+    // reset any previously set inline font size.
+    if (rubyElement.style.fontSize) {
+      rubyElement.style.fontSize = '';
     }
 }
 
 function adjustAllRubyFontSizes(containerElement) {
     if (!isFirefox()) return;
     const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
-    rubyElements.forEach((rubyElement) => {
-      rubyElement.style.fontSize = '';
-      adjustRubyFontSize(rubyElement);
-    });
+    rubyElements.forEach(adjustRubyFontSize);
 }
 
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
@@ -4034,7 +4033,7 @@ function toggleAccordion(event, line, dialectInfo) {
         finally {
             g_isAccordionScrolling = false;
         }
-    }, 500);
+    }, SCROLL_ANIMATION_DURATION_MS);
 }
 
 function createComparisonRow(line, dialectInfo) {
