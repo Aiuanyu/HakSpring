@@ -200,6 +200,7 @@ let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
 let g_currentDialectInfo = null;
 let g_currentCategory = '';
+let g_currentLevelData = []; // Store the full data for the current level
 let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
 
@@ -226,9 +227,13 @@ function updateMediaSession(track, dialectInfo) {
         return;
     }
 
+    // --- New: Calculate overall progress ---
+    const overallIndex = g_currentLevelData.findIndex(item => item.編號 === track.編號);
+    const overallPercentage = (overallIndex + 1) / g_currentLevelData.length * 100;
+
     navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.客家語,
-        artist: `${dialectInfo.fullLvlName} - ${g_currentCategory}`,
+        title: `${track.客家語} (${track.編號})`,
+        artist: `${dialectInfo.fullLvlName} - ${g_currentCategory} (${overallPercentage.toFixed(1)}%)`,
         album: '客源翠 HakSpring',
         artwork: [
             { src: '宣傳圖.png', type: 'image/png' },
@@ -2693,6 +2698,7 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
+  g_currentLevelData = content.content; // Store the full level data
 
   document.querySelectorAll('.radioItem').forEach((label) => {
     label.classList.remove('active-category');
