@@ -164,41 +164,9 @@ function toggleSearchAccordion(clickedButton, line) {
         return;
     }
 
-    // --- Start: Re-engineered logic to build dialectInfo ---
-    const 腔 = sourceName.substring(0, 1); // e.g., '四'
-    const 級 = sourceName.substring(1);   // e.g., '中高'
-
-    let selected例外音檔;
-    switch (級) {
-        case '基': selected例外音檔 = window['基例外音檔'] || []; break;
-        case '初': selected例外音檔 = window['初例外音檔'] || []; break;
-        case '中': selected例外音檔 = window['中例外音檔'] || []; break;
-        case '中高': selected例外音檔 = window['中高例外音檔'] || []; break;
-        case '高': selected例外音檔 = window['高例外音檔'] || []; break;
-        default: selected例外音檔 = [];
-    }
-
-    let 腔名, 級名, 檔腔, 檔級 = '', 目錄級, 目錄另級;
-    switch (腔) {
-        case '四': 檔腔 = 'si'; 腔名 = '四縣'; break;
-        case '海': 檔腔 = 'ha'; 腔名 = '海陸'; break;
-        case '大': 檔腔 = 'da'; 腔名 = '大埔'; break;
-        case '平': 檔腔 = 'rh'; 腔名 = '饒平'; break;
-        case '安': 檔腔 = 'zh'; 腔名 = '詔安'; break;
-    }
-    switch (級) {
-        case '基': 目錄級 = '5'; 目錄另級 = '1'; 級名 = '基礎級'; break;
-        case '初': 目錄級 = '1'; 級名 = '初級'; break;
-        case '中': 目錄級 = '2'; 檔級 = '1'; 級名 = '中級'; break;
-        case '中高': 目錄級 = '3'; 檔級 = '2'; 級名 = '中高級'; break;
-        case '高': 目錄級 = '4'; 檔級 = '3'; 級名 = '高級'; break;
-    }
-
-    const originalDialectInfo = {
-        腔, 級, 例外音檔: selected例外音檔, fullLvlName: 腔名 + 級名, generalMediaYr: '112',
-        目錄級, 目錄另級, 檔腔, 檔級, 腔名, 級名,
-    };
-    // --- End: Re-engineered logic ---
+    const 腔 = sourceName.substring(0, 1);
+    const 級 = sourceName.substring(1);
+    const originalDialectInfo = getDialectInfo(腔, 級);
 
     const accents = ['四', '海', '大', '平', '安'];
     const accentMap = {
@@ -222,19 +190,7 @@ function toggleSearchAccordion(clickedButton, line) {
         if (dataObject && dataObject.content) {
             const foundItem = dataObject.content.find(item => item.編號 === lineId);
             if (foundItem) {
-                // Construct dialectInfo for the comparison row, using the same logic as the original
-                const itemDialectInfo = { ...originalDialectInfo }; // Start with a copy
-                itemDialectInfo.腔 = accentKey;
-                itemDialectInfo.腔名 = accentInfo.name;
-                itemDialectInfo.fullLvlName = `${accentInfo.name}${originalDialectInfo.級名}`;
-                switch(itemDialectInfo.腔) {
-                    case '四': itemDialectInfo.檔腔 = 'si'; break;
-                    case '海': itemDialectInfo.檔腔 = 'ha'; break;
-                    case '大': itemDialectInfo.檔腔 = 'da'; break;
-                    case '平': itemDialectInfo.檔腔 = 'rh'; break;
-                    case '安': itemDialectInfo.檔腔 = 'zh'; break;
-                }
-
+                const itemDialectInfo = getDialectInfo(accentKey, 級);
                 const newRow = createComparisonRow(foundItem, itemDialectInfo);
                 newRow.classList.add('accordion-row');
                 parentRow.parentNode.insertBefore(newRow, nextRow);
@@ -334,6 +290,46 @@ let g_currentDialectInfo = null;
 let g_currentCategory = '';
 let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
+let g_currentSearchResults = [];
+
+const LEVEL_TO_EXCEPTION_FILE = {
+    '基': '基例外音檔',
+    '初': '初例外音檔',
+    '中': '中例外音檔',
+    '中高': '中高例外音檔',
+    '高': '高例外音檔',
+};
+
+const ACCENT_INFO = {
+    '四': { 檔腔: 'si', 腔名: '四縣' },
+    '海': { 檔腔: 'ha', 腔名: '海陸' },
+    '大': { 檔腔: 'da', 腔名: '大埔' },
+    '平': { 檔腔: 'rh', 腔名: '饒平' },
+    '安': { 檔腔: 'zh', 腔名: '詔安' },
+};
+
+const LEVEL_INFO = {
+    '基': { 目錄級: '5', 目錄另級: '1', 檔級: '', 級名: '基礎級' },
+    '初': { 目錄級: '1', 檔級: '', 級名: '初級' },
+    '中': { 目錄級: '2', 檔級: '1', 級名: '中級' },
+    '中高': { 目錄級: '3', 檔級: '2', 級名: '中高級' },
+    '高': { 目錄級: '4', 檔級: '3', 級名: '高級' },
+};
+
+function getDialectInfo(腔, 級) {
+    const selected例外音檔 = window[LEVEL_TO_EXCEPTION_FILE[級]] || [];
+    const { 檔腔, 腔名 } = ACCENT_INFO[腔] || { 檔腔: '', 腔名: '' };
+    const { 目錄級, 目錄另級, 檔級, 級名 } = LEVEL_INFO[級] || { 目錄級: '', 目錄另級: undefined, 檔級: '', 級名: ''};
+
+    if (!腔名 || !級名) {
+        console.warn(`Could not get full dialect info for 腔: ${腔}, 級: ${級}`);
+    }
+
+    return {
+        腔, 級, 例外音檔: selected例外音檔, fullLvlName: 腔名 + 級名, generalMediaYr: '112',
+        目錄級, 目錄另級, 檔腔, 檔級, 腔名, 級名,
+    };
+}
 
 /**
  * 將事件傳送分 Google Analytics。
@@ -582,7 +578,7 @@ function updatePopupPosition(popupEl, selectionRect) {
 
 function getDapuSandhiHtml(htmlContent) {
     const BLOCKING_PUNCTUATION = '()（）【】';
-    const SKIPPABLE_PUNCTUATION = '\\s、';
+    const SKIPPABLE_PUNCTUATION = '\s、';
     const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
     const TOKENIZER_REGEX = new RegExp(`[^<>` + ALL_PUNCTUATION_CHARS + `]+|[${SKIPPABLE_PUNCTUATION}]+|[${BLOCKING_PUNCTUATION}]+`, 'g');
@@ -606,7 +602,7 @@ function getDapuSandhiHtml(htmlContent) {
     }
 
     const tokens = preliminaryTokens.flatMap(token => {
-        if (token.startsWith("<ruby class=\"sandhi-")) {
+        if (token.startsWith("<ruby class="sandhi-")) {
             return [token];
         }
         return token.match(TOKENIZER_REGEX) || [];
@@ -618,14 +614,14 @@ function getDapuSandhiHtml(htmlContent) {
     for (let i = 0; i < tokens.length; i++) {
         let currentToken = tokens[i];
 
-        if (currentToken.startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(currentToken) || BLOCKING_REGEX.test(currentToken)) {
+        if (currentToken.startsWith("<ruby class="sandhi-") || SKIPPABLE_REGEX.test(currentToken) || BLOCKING_REGEX.test(currentToken)) {
             modifiedTokens.push(currentToken);
             continue;
         }
 
         let nextWordToken = "";
         for (let j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].startsWith("<ruby class=\"sandhi-") || SKIPPABLE_REGEX.test(tokens[j])) {
+            if (tokens[j].startsWith("<ruby class="sandhi-") || SKIPPABLE_REGEX.test(tokens[j])) {
                 continue;
             }
             if (BLOCKING_REGEX.test(tokens[j])) {
@@ -934,11 +930,11 @@ function normalizePhonetics(text) {
 }
 
 function isRomanizedHakka(text) {
-  const hasChinese = /[\u4e00-\u9fa5]/.test(text);
+  const hasChinese = /[一-龥]/.test(text);
   if (hasChinese) {
     return false;
   }
-  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\']+$/.test(text);
+  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-']+$/.test(text);
   if (!isRoman) {
     return false;
   }
@@ -1092,7 +1088,8 @@ function dbClear(db, storeName) {
  */
 function parseUnifiedCsv(csvString) {
   if (!csvString) return [];
-  const rows = csvString.trim().split('\n');
+  const rows = csvString.trim().split('
+');
   if (rows.length < 2) return [];
 
   const headers = rows[0].split(',');
@@ -1107,9 +1104,10 @@ function parseUnifiedCsv(csvString) {
       if (headers[j]) {
         let value = values[j] || '';
         // 拿掉頭尾可能个引號
-        value = value.replace(/^\"|\"$/g, '');
+        value = value.replace(/^"|"$/g, '');
         // 將 <br> 標籤轉回換行符，再做解碼
-        value = value.replace(/<br>/g, '\n');
+        value = value.replace(/<br>/g, '
+');
         // --- FIX: 拿掉無必要且會造成錯誤个 decodeURIComponent ---
         obj[headers[j]] = value;
       }
@@ -1918,6 +1916,7 @@ function initializeAppUI() {
 }
 
 function displayQueryResults(results, keyword, searchMode, summaryText, selectedDialect, page = 1, itemsPerPage = 50) {
+    g_currentSearchResults = results; // Store results globally
     let globalRowIndex = (page - 1) * itemsPerPage;
     const contentContainer = document.getElementById('generated');
     const resultsSummaryContainer = document.getElementById('results-summary');
@@ -1941,7 +1940,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
 
-    const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
+    const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\]/g, '\$&')})`, 'ig');
 
     const createResultRow = (line, highlight, rowIndex) => {
         globalRowIndex++;
@@ -1960,7 +1959,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         td1.appendChild(document.createElement('br'));
 
         if (line.sourceType === 'cert' && line.編號) {
-            const noText = document.createTextNode(line.編號 + '\u00A0');
+            const noText = document.createTextNode(line.編號 + ' ');
             td1.appendChild(noText);
 
             const crossDialectBtn = document.createElement('button');
@@ -1997,32 +1996,21 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             audioSrc = "https://hakkadict.moe.edu.tw/static/audio/" + (line['詞目音檔名'].endsWith('.mp3') ? line['詞目音檔名'] : line['詞目音檔名'] + '.mp3');
         } else if (line.sourceType === 'cert') {
             const sourceName = line.sourceName;
-            let 腔 = sourceName.substring(0, 1);
-            let 級 = sourceName.substring(1);
-            let selected例外音檔;
-            switch (級) {
-                case '基': selected例外音檔 = window.基例外音檔 || []; break;
-                case '初': selected例外音檔 = window.初例外音檔 || []; break;
-                case '中': selected例外音檔 = window.中例外音檔 || []; break;
-                case '中高': selected例外音檔 = window.中高例外音檔 || []; break;
-                case '高': selected例外音檔 = window.高例外音檔 || []; break;
-                default: selected例外音檔 = [];
-            }
-            const 例外音檔 = selected例外音檔;
-            var 目錄級, 目錄另級, 檔腔, 檔級 = '';
-            switch (腔) { case '四': 檔腔 = 'si'; break; case '海': 檔腔 = 'ha'; break; case '大': 檔腔 = 'da'; break; case '平': 檔腔 = 'rh'; break; case '安': 檔腔 = 'zh'; break; }
-            switch (級) { case '基': 目錄級 = '5'; 目錄另級 = '1'; break; case '初': 目錄級 = '1'; break; case '中': 目錄級 = '2'; 檔級 = '1'; break; case '中高': 目錄級 = '3'; 檔級 = '2'; break; case '高': 目錄級 = '4'; 檔級 = '3'; break; }
+            const 腔 = sourceName.substring(0, 1);
+            const 級 = sourceName.substring(1);
+            const dialectInfo = getDialectInfo(腔, 級);
+
             const missingAudioInfo = typeof getMissingAudioInfo === 'function' ? getMissingAudioInfo(fullSourceName, line.分類, line.編號) : null;
-            let mediaYr = '112', pre112Insertion詞 = '', 詞目錄級 = 目錄級, mediaNo = '';
+            let mediaYr = '112', pre112Insertion詞 = '', 詞目錄級 = dialectInfo.目錄級, mediaNo = '';
             var no = line.編號.split('-');
             if (no[0] <= 9) no[0] = '0' + no[0]; if (級 === '初') no[0] = '0' + no[0]; if (no[1] <= 9) no[1] = '0' + no[1]; if (no[1] <= 99) no[1] = '0' + no[1]; mediaNo = no[1];
-            const index = 例外音檔.findIndex(([編號]) => 編號 === line.編號);
+            const index = dialectInfo.例外音檔.findIndex(([編號]) => 編號 === line.編號);
             if (index !== -1) {
-                const matchedElement = 例外音檔[index];
+                const matchedElement = dialectInfo.例外音檔[index];
                 mediaYr = matchedElement[1]; mediaNo = matchedElement[2]; pre112Insertion詞 = 'w/';
-                if (目錄另級 !== undefined) { 詞目錄級 = 目錄另級; }
+                if (dialectInfo.目錄另級 !== undefined) { 詞目錄級 = dialectInfo.目錄另級; }
             }
-            const 詞目錄 = `${詞目錄級}/${檔腔}/${pre112Insertion詞}${檔級}${檔腔}`;
+            const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
             let wordAudioActuallyMissing = missingAudioInfo && missingAudioInfo.word === false;
             if (!wordAudioActuallyMissing) {
                 audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
@@ -2045,7 +2033,8 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             td2.appendChild(document.createElement('br'));
         }
         const meaningText = document.createElement('span');
-        const processedMeaning = line['華語詞義'].replace(/"/g, '').replace(/\n/g, '<br>');
+        const processedMeaning = line['華語詞義'].replace(/"/g, '').replace(/
+/g, '<br>');
         meaningText.innerHTML = highlight.meaning ? processedMeaning.replace(highlightRegex, '<mark>$1</mark>') : processedMeaning;
         td2.appendChild(meaningText);
         if (line.備註 && line.備註.trim() !== '') {
@@ -2061,30 +2050,28 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         if (line['例句'] && line['例句'].trim() !== '') {
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
-            sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
+            sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/
+/g, '<br>');
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
 
             if (line.sourceType === 'cert') {
                 const sourceName = line.sourceName;
-                let 腔 = sourceName.substring(0, 1); let 級 = sourceName.substring(1);
-                let selected例外音檔;
-                switch (級) { case '基': selected例外音檔 = window.基例外音檔 || []; break; case '初': selected例外音檔 = window.初例外音檔 || []; break; case '中': selected例外音檔 = window.中例外音檔 || []; break; case '中高': selected例外音檔 = window.中高例外音檔 || []; break; case '高': selected例外音檔 = window.高例外音檔 || []; break; default: selected例外音檔 = []; }
-                const 例外音檔 = selected例外音檔;
-                var 目錄級, 目錄另級, 檔腔, 檔級 = '';
-                switch (腔) { case '四': 檔腔 = 'si'; break; case '海': 檔腔 = 'ha'; break; case '大': 檔腔 = 'da'; break; case '平': 檔腔 = 'rh'; break; case '安': 檔腔 = 'zh'; break; }
-                switch (級) { case '基': 目錄級 = '5'; 目錄另級 = '1'; break; case '初': 目錄級 = '1'; break; case '中': 目錄級 = '2'; 檔級 = '1'; break; case '中高': 目錄級 = '3'; 檔級 = '2'; break; case '高': 目錄級 = '4'; 檔級 = '3'; break; }
+                const 腔 = sourceName.substring(0, 1);
+                const 級 = sourceName.substring(1);
+                const dialectInfo = getDialectInfo(腔, 級);
+
                 const missingAudioInfo = typeof getMissingAudioInfo === 'function' ? getMissingAudioInfo(fullSourceName, line.分類, line.編號) : null;
-                let mediaYr = '112', pre112Insertion句 = '', 句目錄級 = 目錄級, mediaNo = '';
+                let mediaYr = '112', pre112Insertion句 = '', 句目錄級 = dialectInfo.目錄級, mediaNo = '';
                 var no = line.編號.split('-');
                 if (no[0] <= 9) no[0] = '0' + no[0]; if (級 === '初') no[0] = '0' + no[0]; if (no[1] <= 9) no[1] = '0' + no[1]; if (no[1] <= 99) no[1] = '0' + no[1]; mediaNo = no[1];
-                const index = 例外音檔.findIndex(([編號]) => 編號 === line.編號);
+                const index = dialectInfo.例外音檔.findIndex(([編號]) => 編號 === line.編號);
                 if (index !== -1) {
-                    const matchedElement = 例外音檔[index];
+                    const matchedElement = dialectInfo.例外音檔[index];
                     mediaYr = matchedElement[1]; mediaNo = matchedElement[2]; pre112Insertion句 = 's/';
-                    if (目錄另級 !== undefined) { 句目錄級 = 目錄另級; }
+                    if (dialectInfo.目錄另級 !== undefined) { 句目錄級 = dialectInfo.目錄另級; }
                 }
-                const 句目錄 = `${句目錄級}/${檔腔}/${pre112Insertion句}${檔級}${檔腔}`;
+                const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
                 let sentenceAudioActuallyMissing = (missingAudioInfo && missingAudioInfo.sentence === false) || 級 === '高';
                 if (!sentenceAudioActuallyMissing) {
                     const audio2 = document.createElement('audio');
@@ -2096,7 +2083,8 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
             td3.appendChild(document.createElement('br'));
             const translationText = document.createElement('span');
-            translationText.innerHTML = (highlight.translation ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>') : line['翻譯']).replace(/"/g, '').replace(/\n/g, '<br>');
+            translationText.innerHTML = (highlight.translation ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>') : line['翻譯']).replace(/"/g, '').replace(/
+/g, '<br>');
             td3.appendChild(translationText);
         } else {
           td3.classList.add('empty-sentence-cell');
@@ -2184,16 +2172,6 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     }
 
     updateResultsSummaryVisibility();
-
-    contentContainer.addEventListener('click', function(event) {
-        const button = event.target.closest('.crossDialectBtn');
-        if (button) {
-            const rowIndex = parseInt(button.dataset.rowIndex, 10);
-            if (!isNaN(rowIndex) && results[rowIndex]) {
-                toggleSearchAccordion(button, results[rowIndex]);
-            }
-        }
-    });
 
     setTimeout(() => repositionViewport(), 0); // Trigger font size adjustment after table is rendered
 
@@ -2776,95 +2754,14 @@ function generate(content, initialCategory = null, targetRowId = null) {
     if (progressDetailsSpan) progressDetailsSpan.textContent = '';
   }
 
-  let 腔 = content.name.substring(0, 1);
-  let 級 = content.name.substring(1);
+  const 腔 = content.name.substring(0, 1);
+  const 級 = content.name.substring(1);
+  const dialectInfo = getDialectInfo(腔, 級);
 
-  let selected例外音檔;
-  switch (級) {
-    case '基': selected例外音檔 = window['基例外音檔'] || []; break;
-    case '初': selected例外音檔 = window['初例外音檔'] || []; break;
-    case '中': selected例外音檔 = window['中例外音檔'] || []; break;
-    case '中高': selected例外音檔 = window['中高例外音檔'] || []; break;
-    case '高': selected例外音檔 = window['高例外音檔'] || []; break;
-    default:
-      console.error(`未知的級別簡稱: ${級}，無法載入例外音檔。`);
-      selected例外音檔 = [];
+  if (dialectInfo.腔名) {
+      currentActiveMainDialectName = dialectInfo.腔名;
+      updateSearchDialect(dialectInfo.腔名);
   }
-  const 例外音檔 = selected例外音檔;
-
-  var fullLvlName;
-  const generalMediaYr = '112';
-  var 目錄級;
-  var 目錄另級;
-  var 腔名;
-  var 級名;
-  var 檔腔;
-  var 檔級 = '';
-
-  switch (腔) {
-    case '四':
-      檔腔 = 'si';
-      腔名 = '四縣';
-      currentActiveMainDialectName = '四縣';
-      updateSearchDialect('四縣');
-      break;
-    case '海':
-      檔腔 = 'ha';
-      腔名 = '海陸';
-      currentActiveMainDialectName = '海陸';
-      updateSearchDialect('海陸');
-      break;
-    case '大':
-      檔腔 = 'da';
-      腔名 = '大埔';
-      currentActiveMainDialectName = '大埔';
-      updateSearchDialect('大埔');
-      break;
-    case '平':
-      檔腔 = 'rh';
-      腔名 = '饒平';
-      currentActiveMainDialectName = '饒平';
-      updateSearchDialect('饒平');
-      break;
-    case '安':
-      檔腔 = 'zh';
-      腔名 = '詔安';
-      currentActiveMainDialectName = '詔安';
-      updateSearchDialect('詔安');
-      break;
-    default:
-      currentActiveMainDialectName = '';
-      break;
-  }
-  switch (級) {
-    case '基':
-      目錄級 = '5';
-      目錄另級 = '1';
-      級名 = '基礎級';
-      break;
-    case '初':
-      目錄級 = '1';
-      級名 = '初級';
-      break;
-    case '中':
-      目錄級 = '2';
-      檔級 = '1';
-      級名 = '中級';
-      break;
-    case '中高':
-      目錄級 = '3';
-      檔級 = '2';
-      級名 = '中高級';
-      break;
-    case '高':
-      目錄級 = '4';
-      檔級 = '3';
-      級名 = '高級';
-      break;
-    default:
-      break;
-  }
-  fullLvlName = 腔名 + 級名;
 
   // --- 在底下加入這一行，確保 categoryList 總是更新的 ---
   categoryList = Array.from(document.querySelectorAll('input[name="category"]')).map(radio => radio.value);
@@ -2884,10 +2781,6 @@ function generate(content, initialCategory = null, targetRowId = null) {
 
   var radios = document.querySelectorAll('input[name="category"]');
   const radioLabels = document.querySelectorAll('.radioItem');
-
-  const dialectInfo = {
-    腔, 級, 例外音檔, fullLvlName, generalMediaYr, 目錄級, 目錄另級, 檔腔, 檔級, 腔名, 級名,
-  };
 
   radios.forEach(function (radio) {
     radio.addEventListener('change', function () {
@@ -3094,7 +2987,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         const anchor = document.createElement('a');
         anchor.name = originalRowId;
         td1.appendChild(anchor);
-        td1.appendChild(document.createTextNode(line.編號 + '\u00A0'));
+        td1.appendChild(document.createTextNode(line.編號 + ' '));
         const bookmarkBtn = document.createElement('button');
         bookmarkBtn.className = 'bookmarkBtn';
         bookmarkBtn.dataset.rowId = originalRowId;
@@ -3158,7 +3051,8 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         }
         td2.appendChild(document.createElement('br'));
         const meaningSpan = document.createElement('span');
-        meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
+        meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/
+/g, '<br>');
         td2.appendChild(meaningSpan);
         if (line.備註 && line.備註.trim() !== '') {
             const notesP = document.createElement('p');
@@ -3173,7 +3067,8 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         if (line.例句 && line.例句.trim() !== '') {
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
-            sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+            sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/
+/g, '<br>');
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
             if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
@@ -3189,7 +3084,8 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
             }
             td3.appendChild(document.createElement('br'));
             const translationText = document.createElement('span');
-            translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
+            translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/
+/g, '<br>');
             td3.appendChild(translationText);
         } else {
             td3.classList.add('empty-sentence-cell');
@@ -4088,6 +3984,16 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
 
   // Initial call to set things right
   repositionViewport();
+
+  contentContainer.addEventListener('click', function(event) {
+      const button = event.target.closest('.crossDialectBtn');
+      if (button) {
+          const rowIndex = parseInt(button.dataset.rowIndex, 10);
+          if (!isNaN(rowIndex) && g_currentSearchResults[rowIndex]) {
+              toggleSearchAccordion(button, g_currentSearchResults[rowIndex]);
+          }
+      }
+  });
 }
 
 function toggleAccordion(event, line, dialectInfo) {
@@ -4142,26 +4048,7 @@ function toggleAccordion(event, line, dialectInfo) {
         if (dataObject && dataObject.content) {
             const foundItem = dataObject.content.find(item => item.編號 === lineId);
             if (foundItem) {
-                const itemDialectInfo = {
-                    腔: accentKey,
-                    級: currentLevel,
-                    腔名: accentInfo.name,
-                    級名: dialectInfo.級名,
-                    檔腔: '', // Mapped below
-                    檔級: dialectInfo.檔級,
-                    目錄級: dialectInfo.目錄級,
-                    目錄另級: dialectInfo.目錄另級,
-                    generalMediaYr: '112',
-                    fullLvlName: `${accentInfo.name}${dialectInfo.級名}`,
-                    例外音檔: window[`${currentLevel}例外音檔`] || []
-                };
-                switch(itemDialectInfo.腔) {
-                    case '四': itemDialectInfo.檔腔 = 'si'; break;
-                    case '海': itemDialectInfo.檔腔 = 'ha'; break;
-                    case '大': itemDialectInfo.檔腔 = 'da'; break;
-                    case '平': itemDialectInfo.檔腔 = 'rh'; break;
-                    case '安': itemDialectInfo.檔腔 = 'zh'; break;
-                }
+                const itemDialectInfo = getDialectInfo(accentKey, currentLevel);
                 const newRow = createComparisonRow(foundItem, itemDialectInfo);
                 newRow.classList.add('accordion-row');
                 parentRow.parentNode.insertBefore(newRow, nextRow);
@@ -4259,7 +4146,8 @@ function createComparisonRow(line, dialectInfo) {
     }
     td2.appendChild(document.createElement('br'));
     const meaningSpan = document.createElement('span');
-    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/\n/g, '<br>');
+    meaningSpan.innerHTML = line.華語詞義.replace(/"/g, '').replace(/
+/g, '<br>');
     td2.appendChild(meaningSpan);
     if (line.備註 && line.備註.trim() !== '') {
         const notesP = document.createElement('p');
@@ -4275,7 +4163,8 @@ function createComparisonRow(line, dialectInfo) {
     if (line.例句 && line.例句.trim() !== '') {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
-        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+        sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/
+/g, '<br>');
         td3.appendChild(sentenceSpan);
         td3.appendChild(document.createElement('br'));
         if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
@@ -4288,7 +4177,8 @@ function createComparisonRow(line, dialectInfo) {
         }
         td3.appendChild(document.createElement('br'));
         const translationText = document.createElement('span');
-        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/\n/g, '<br>');
+        translationText.innerHTML = line.翻譯.replace(/"/g, '').replace(/
+/g, '<br>');
         td3.appendChild(translationText);
     } else {
         td3.classList.add('empty-sentence-cell');
@@ -4471,7 +4361,10 @@ async function importData() {
 
   } catch (error) {
     console.error('匯入資料失敗:', error);
-    alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
+    alert(`資料匯入失敗：
+${error.message}
+
+請檢查資料格式敢有正確。`);
   }
 }
 
