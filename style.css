@@ -1542,6 +1542,10 @@ input:checked + .slider:before {
     display: none;
   }
 
+  #generated tr.accordion-row {
+    display: block;
+  }
+
 }
 
 /* --- Hide Romanizer on mobile devices based on JS detection --- */
