@@ -1940,7 +1940,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
 
-    const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\]/g, '\$&')})`, 'ig');
+    const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
     const createResultRow = (line, highlight, rowIndex) => {
         globalRowIndex++;
