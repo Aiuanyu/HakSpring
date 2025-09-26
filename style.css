@@ -326,6 +326,7 @@ tr.accordion-row.詔安 { background-color: #974a47; }
 @media screen and (max-width: 768px) {
   #generated tr.accordion-parent,
   #generated tr.accordion-row {
+    display: block; /* GCA：這行係為著修復手機仔頂高 accordion 無法顯示个問題 */
     margin-bottom: 0;
     border-radius: 0;
     border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);

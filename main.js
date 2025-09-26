@@ -127,6 +127,7 @@ let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 D
 let preprocessedDataCache = {};
 let indexedDataCache = {}; // <-- 新增此索引快取物件
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
+let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
 let isNavigatingViaCode = false; // <--- 在這裡新增這一行
 let activeCategoryData = [];
@@ -708,52 +709,30 @@ function hidePronunciationPopup(popupEl, backdropEl) {
 function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, generatedArea) {
   setTimeout(() => {
     const selection = window.getSelection();
-    console.log('handleTextSelectionInSentence triggered.'); // 新增：確認函式有被觸發
-
     if (selection.rangeCount > 0) {
       const selectedText = selection.toString().trim();
-      console.log('Selected text length:', selectedText.length, 'Text:', selectedText); // 新增：檢查選取文字个長度摎內容
       if (selectedText.length === 0) {
-        console.log('Selected text is empty after trim.'); // 新增：檢查選取文字係毋係空个
         return;
       }
-
       const range = selection.getRangeAt(0);
       const commonAncestor = range.commonAncestorContainer;
-      console.log('commonAncestor:', commonAncestor);
-
-      let sentenceSpan = null;
-      if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
-          sentenceSpan = commonAncestor.closest('span.sentence');
-      } else {
-          sentenceSpan = commonAncestor.parentNode.closest('span.sentence');
-      }
-      console.log('sentenceSpan:', sentenceSpan); // 新增：檢查 sentenceSpan 係麼个
-
-      if (!sentenceSpan || !generatedArea.contains(sentenceSpan)) {
-        console.log('Returning early: Not a sentence span or not in generated area.'); // 新增：檢查係毋係因為這隻條件結束
+      const trElement = commonAncestor.nodeType === Node.ELEMENT_NODE ? commonAncestor.closest('tr') : commonAncestor.parentNode.closest('tr');
+      if (!trElement || !generatedArea.contains(trElement)) {
         return;
       }
-
       let contextualDialect = null;
-      const trElement = sentenceSpan.closest('tr');
-      if (trElement) {
-        // Check if it's an accordion row and get its dialect from the class name
-        if (trElement.classList.contains('accordion-row')) {
-          const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
-          if (dialectClass) {
-            contextualDialect = dialectClass;
-            console.log('Contextual dialect from accordion row:', contextualDialect);
-          }
+      if (trElement.classList.contains('accordion-row')) {
+        const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
+        if (dialectClass) {
+          contextualDialect = dialectClass;
+        }
+      } else if (trElement.closest('#category-table')) {
+        if (g_currentDialectInfo && g_currentDialectInfo.腔名) {
+          contextualDialect = g_currentDialectInfo.腔名;
         }
       }
-
-      console.log('Calling showPronunciationPopup for text:', selectedText); // 新增：確認會呼叫 popup
-      const rect = selection.getRangeAt(0).getBoundingClientRect();
+      const rect = range.getBoundingClientRect();
       showPronunciationPopup(selectedText, null, rect, null, contextualDialect);
-
-    } else {
-        console.log('No selection range found.'); // 新增：檢查有毋有選取範圍
     }
   }, 0);
 }
@@ -819,8 +798,7 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
     if (selection && selection.toString().trim().length > 0 && lastSelectionRectForMobile) {
       const selectedText = selection.toString().trim();
       if (selectedText.length > 0) {
-        const readings = findPronunciationsInAllData(selectedText);
-        showPronunciationPopup(selectedText, readings, lastSelectionRectForMobile, null);
+        showPronunciationPopup(selectedText, null, lastSelectionRectForMobile, null, lastContextualDialectForMobile);
         hideMobileLookupButton();
       }
     } else {
@@ -2265,17 +2243,25 @@ function isFirefox() {
   const debouncedMobileSelectionHandler = debounce(function() {
     const selection = window.getSelection();
     const contentContainer = document.getElementById('generated');
+    lastContextualDialectForMobile = null;
     if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
       const range = selection.getRangeAt(0);
       const selectedText = selection.toString().trim();
       const commonAncestorContainer = range.commonAncestorContainer;
-      let sentenceSpan = null;
-      if (commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
-        sentenceSpan = commonAncestorContainer.closest('span.sentence');
-      } else if (commonAncestorContainer.parentNode) {
-        sentenceSpan = commonAncestorContainer.parentNode.closest('span.sentence');
-      }
-      if (sentenceSpan && contentContainer && contentContainer.contains(sentenceSpan) && selectedText.length > 0) {
+      const trElement = commonAncestorContainer.nodeType === Node.ELEMENT_NODE ? commonAncestorContainer.closest('tr') : commonAncestorContainer.parentNode.closest('tr');
+      if (trElement && contentContainer.contains(trElement) && selectedText.length > 0) {
+        let contextualDialect = null;
+        if (trElement.classList.contains('accordion-row')) {
+          const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
+          if (dialectClass) {
+            contextualDialect = dialectClass;
+          }
+        } else if (trElement.closest('#category-table')) {
+          if (g_currentDialectInfo && g_currentDialectInfo.腔名) {
+            contextualDialect = g_currentDialectInfo.腔名;
+          }
+        }
+        lastContextualDialectForMobile = contextualDialect;
         if (!activeSelectionPopup) {
           const rect = range.getBoundingClientRect();
           showMobileLookupButton(rect);
