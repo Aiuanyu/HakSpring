@@ -88,6 +88,56 @@ function handleDomainMigration() {
 }
 
 // Agent Jules was here.
+function isFirefox() {
+    return navigator.userAgent.toLowerCase().includes('firefox');
+}
+
+function adjustRubyFontSize(rubyElement) {
+    if (!isFirefox()) return;
+    const tdElement = rubyElement.closest('td');
+    if (!tdElement) return;
+    rubyElement.style.fontSize = '';
+    const forcedStyle = window.getComputedStyle(rubyElement);
+    const currentFontSize = parseFloat(forcedStyle.fontSize);
+    const rubyWidth = rubyElement.scrollWidth;
+    const computedTdStyle = window.getComputedStyle(tdElement);
+    const isCardMode = computedTdStyle.display === 'block';
+    let availableWidth;
+    const buffer = 5;
+    if (isCardMode) {
+      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
+      availableWidth = tdElement.clientWidth - paddingLeftPx - buffer * 3;
+    } else {
+      availableWidth = tdElement.clientWidth - buffer;
+    }
+    if (rubyWidth > availableWidth) {
+      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
+      const minSize = 10;
+      newSize = Math.max(newSize, minSize);
+      if (newSize < currentFontSize) {
+        if (rubyElement.style.fontSize !== `${newSize}px`) {
+          rubyElement.style.fontSize = `${newSize}px`;
+        }
+      } else {
+        if (rubyElement.style.fontSize) {
+          rubyElement.style.fontSize = '';
+        }
+      }
+    } else {
+      if (rubyElement.style.fontSize) {
+        rubyElement.style.fontSize = '';
+      }
+    }
+}
+
+function adjustAllRubyFontSizes(containerElement) {
+    if (!isFirefox()) return;
+    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
+    rubyElements.forEach((rubyElement) => {
+      rubyElement.style.fontSize = '';
+      adjustRubyFontSize(rubyElement);
+    });
+}
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
   'data/cert/113四基.json', 'data/cert/113四初.json', 'data/cert/113四中.json', 'data/cert/113四中高.json', 'data/cert/113四高.json',
@@ -137,7 +187,6 @@ let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
-const SCROLL_ANIMATION_DURATION_MS = 500;
 
 // --- 【新增】循環播放相關全域變數 ---
 let isCategoryLooping = false; // 用於分類循環
@@ -169,55 +218,6 @@ function trackEvent(action, category, label) {
   } else {
     console.warn('gtag function not found. GA event not sent.');
   }
-}
-
-function isFirefox() {
-    return navigator.userAgent.toLowerCase().includes('firefox');
-}
-
-function adjustRubyFontSize(rubyElement) {
-    const BUFFER_PX = 5;
-    const MIN_FONT_SIZE_PX = 10;
-    const CARD_MODE_BUFFER_MULTIPLIER = 3;
-
-    if (!isFirefox()) return;
-    const tdElement = rubyElement.closest('td');
-    if (!tdElement) return;
-    rubyElement.style.fontSize = '';
-    const forcedStyle = window.getComputedStyle(rubyElement);
-    const currentFontSize = parseFloat(forcedStyle.fontSize);
-    const rubyWidth = rubyElement.scrollWidth;
-    const computedTdStyle = window.getComputedStyle(tdElement);
-    const isCardMode = computedTdStyle.display === 'block';
-    let availableWidth;
-    if (isCardMode) {
-      const paddingLeftPx = parseFloat(computedTdStyle.paddingLeft);
-      availableWidth = tdElement.clientWidth - paddingLeftPx - BUFFER_PX * CARD_MODE_BUFFER_MULTIPLIER;
-    } else {
-      availableWidth = tdElement.clientWidth - BUFFER_PX;
-    }
-    if (rubyWidth > availableWidth) {
-      let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
-      newSize = Math.max(newSize, MIN_FONT_SIZE_PX);
-      if (newSize < currentFontSize) {
-        // Set the new smaller size and exit.
-        if (rubyElement.style.fontSize !== `${newSize}px`) {
-          rubyElement.style.fontSize = `${newSize}px`;
-        }
-        return;
-      }
-    }
-    // In all other cases (no overflow, or new size isn't smaller),
-    // reset any previously set inline font size.
-    if (rubyElement.style.fontSize) {
-      rubyElement.style.fontSize = '';
-    }
-}
-
-function adjustAllRubyFontSizes(containerElement) {
-    if (!isFirefox()) return;
-    const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
-    rubyElements.forEach(adjustRubyFontSize);
 }
 
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
@@ -2254,8 +2254,6 @@ function adjustResultsSummaryFontSize() {
     }
 }
 
-
-
   
 
   
@@ -4017,23 +4015,21 @@ function toggleAccordion(event, line, dialectInfo) {
     }
 
     g_isAccordionScrolling = true;
-    parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => {
-        try {
-            if (createdRows.length > 0) {
-                const contentContainer = document.getElementById('generated');
-                if (contentContainer) {
-                    adjustAllRubyFontSizes(contentContainer);
-                }
+    try {
+        if (isFirefox()) {
+            const table = parentRow.closest('table');
+            if (table) {
+                adjustAllRubyFontSizes(table);
             }
         }
-        catch (e) {
-            console.error("Error adjusting ruby font sizes:", e);
-        }
-        finally {
+        parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+        console.error("Error during accordion toggle:", e);
+    } finally {
+        setTimeout(() => {
             g_isAccordionScrolling = false;
-        }
-    }, SCROLL_ANIMATION_DURATION_MS);
+        }, 500); // Wait for scroll animation to finish
+    }
 }
 
 function createComparisonRow(line, dialectInfo) {
