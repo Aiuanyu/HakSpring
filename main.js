@@ -2545,7 +2545,7 @@ function preprocessAllData() {
         }
       });
     
-      // 步驟 2: 根據已解析的資料，建立索引 (這部分邏輯與您原本的程式碼相同)
+      // 步驟 2: 根據已解析的資料，建立索引 (這部分邏輯與您原本の程式碼相同)
       for (const dataVarName in preprocessedDataCache) {
         const vocabularyArray = preprocessedDataCache[dataVarName];
         const isGipData = dataVarName.startsWith('教典');
