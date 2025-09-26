@@ -2830,32 +2830,11 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
 
             const emptyCategoryAudio = new Audio('empty_category.mp3');
 
-            const playNextCategory = () => {
-                currentCategoryIndex = categoryList.indexOf(g_currentCategory);
-                const nextCategoryIndex = currentCategoryIndex + 1;
-
-                if (nextCategoryIndex < categoryList.length) {
-                    const nextCategoryValue = categoryList[nextCategoryIndex];
-                    const nextRadioButton = document.querySelector(`input[name="category"][value="${nextCategoryValue}"]`);
-                    if (nextRadioButton) {
-                        console.log(`Skipping to next category: ${nextCategoryValue}`);
-                        isCrossCategoryPlaying = true; // Ensure flag is maintained
-                        nextRadioButton.click();
-                    } else {
-                        console.error("Could not find radio button for next category, stopping playback.");
-                        playEndOfPlayback(); // Couldn't find next button
-                    }
-                } else {
-                    console.log("All categories have been played.");
-                    playEndOfPlayback(); // End of all categories
-                }
-            };
-
             // Play the sound, then advance. If sound fails, advance immediately.
-            emptyCategoryAudio.addEventListener('ended', playNextCategory);
+            emptyCategoryAudio.addEventListener('ended', advanceToNextCategory);
             emptyCategoryAudio.play().catch(err => {
                 console.error("Could not play empty_category.mp3, skipping directly.", err);
-                playNextCategory();
+                advanceToNextCategory();
             });
 
         } else {
@@ -3227,35 +3206,7 @@ function playAudio(itemIndex, sessionId) {
             updateProgressDropdown();
         }
 
-        // 取得目前類別在列表中的索引
-        currentCategoryIndex = categoryList.indexOf(g_currentCategory);
-        const nextCategoryIndex = currentCategoryIndex + 1;
-
-        // --- 【新增】檢查分類循環模式 ---
-        if (isCategoryLooping) {
-            console.log(`分類循環模式開啟中，重新播放類別: ${g_currentCategory}`);
-            // 短暫延遲再開始，避免函式呼叫堆疊過深或UI反應不及
-            const CATEGORY_LOOP_RESTART_DELAY = 100;
-            setTimeout(() => playAudio(0, sessionId), CATEGORY_LOOP_RESTART_DELAY);
-            return;
-        }
-
-        // --- 檢查是否還有下一個類別 ---
-        if (nextCategoryIndex < categoryList.length) {
-            const nextCategoryValue = categoryList[nextCategoryIndex];
-            const nextRadioButton = document.querySelector(`input[name="category"][value="${nextCategoryValue}"]`);
-            if (nextRadioButton) {
-                console.log(`類別 ${g_currentCategory} 播放完畢，跳至下一個類別: ${nextCategoryValue}`);
-                isCrossCategoryPlaying = true; // 設定跨類別播放旗標
-                nextRadioButton.click(); // 透過點擊觸發 generate 和 buildTable...
-            } else {
-                playEndOfPlayback(); // 找不到按鈕，只好結束
-            }
-        } else {
-            // --- 所有類別都已播完，真正結束 ---
-            console.log("所有類別播放完畢。");
-            playEndOfPlayback();
-        }
+        advanceToNextCategory();
         return;
     }
 
@@ -3389,6 +3340,41 @@ function stopPlayback() {
     if (stopButton) {
         stopButton.classList.add('ended');
         stopButton.classList.remove('ongoing');
+    }
+}
+
+/**
+ * [新增] 處理前進到下一個播放類別的共享邏輯。
+ */
+function advanceToNextCategory() {
+    // 取得目前類別在列表中的索引
+    currentCategoryIndex = categoryList.indexOf(g_currentCategory);
+    const nextCategoryIndex = currentCategoryIndex + 1;
+
+    // --- 【新增】檢查分類循環模式 ---
+    if (isCategoryLooping) {
+        console.log(`分類循環模式開啟中，重新播放類別: ${g_currentCategory}`);
+        const CATEGORY_LOOP_RESTART_DELAY = 100;
+        setTimeout(() => playAudio(0, playbackSessionId), CATEGORY_LOOP_RESTART_DELAY);
+        return;
+    }
+
+    // --- 檢查是否還有下一個類別 ---
+    if (nextCategoryIndex < categoryList.length) {
+        const nextCategoryValue = categoryList[nextCategoryIndex];
+        const nextRadioButton = document.querySelector(`input[name="category"][value="${nextCategoryValue}"]`);
+        if (nextRadioButton) {
+            console.log(`類別 ${g_currentCategory} 播放完畢，跳至下一個類別: ${nextCategoryValue}`);
+            isCrossCategoryPlaying = true; // 設定跨類別播放旗標
+            nextRadioButton.click(); // 透過點擊觸發 generate 和 buildTable...
+        } else {
+            console.error("Could not find radio button for next category, stopping playback.");
+            playEndOfPlayback(); // 找不到按鈕，只好結束
+        }
+    } else {
+        // --- 所有類別都已播完，真正結束 ---
+        console.log("所有類別播放完畢。");
+        playEndOfPlayback();
     }
 }
 
