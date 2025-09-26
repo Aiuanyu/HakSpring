@@ -202,6 +202,66 @@ let g_currentCategory = '';
 let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
 
+// --- Media Session API Integration ---
+
+/**
+ * Updates the Media Session API with the current track's metadata and sets up action handlers.
+ * @param {object} track - The current track object from the playlist.
+ * @param {object} dialectInfo - Information about the current dialect and level.
+ */
+function updateMediaSession(track, dialectInfo) {
+    if (!('mediaSession' in navigator)) {
+        return;
+    }
+
+    // Clear metadata and handlers if playback is finished (track is null)
+    if (!track) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.playbackState = "none";
+        return;
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.客家語,
+        artist: `${dialectInfo.fullLvlName} - ${g_currentCategory}`,
+        album: '客源翠 HakSpring',
+        artwork: [
+            { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+        ]
+    });
+
+    // Action Handlers
+    const playNextItem = () => playAudio(currentAudioIndex + 1, playbackSessionId);
+    const playPreviousItem = () => playAudio(currentAudioIndex - 1, playbackSessionId);
+
+    navigator.mediaSession.setActionHandler('play', () => {
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton && isPaused) {
+            pauseResumeButton.click();
+        }
+        navigator.mediaSession.playbackState = "playing";
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton && !isPaused) {
+            pauseResumeButton.click();
+        }
+        navigator.mediaSession.playbackState = "paused";
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', playNextItem);
+    navigator.mediaSession.setActionHandler('previoustrack', playPreviousItem);
+}
+
+// --- End of Media Session API Integration ---
+
+
 /**
  * 將事件傳送分 Google Analytics。
  * @param {string} action - 事件動作 (例如 'open', 'click')。
@@ -1230,6 +1290,20 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
+  // --- 註冊 Service Worker ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered successfully with scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
+  // --- 註冊結束 ---
+
   handleDataImport();
   if (handleDomainMigration()) {
     const loadingIndicator = document.getElementById('loading-indicator');
@@ -3234,6 +3308,11 @@ function playAudio(itemIndex, sessionId) {
       saveBookmark(paddedRowId, percentage, g_currentCategory, g_currentDialectInfo.fullLvlName, true);
     }
 
+    // --- 【整合 Media Session】 ---
+    updateMediaSession(currentItemData, g_currentDialectInfo);
+    navigator.mediaSession.playbackState = "playing";
+    // --- 【整合結束】 ---
+
     const audioElementsInRow = Array.from(targetRow.querySelectorAll('audio.media'));
     const wordAudio = audioElementsInRow[0];
     const sentenceAudio = audioElementsInRow[1];
@@ -3280,6 +3359,7 @@ function playEndOfPlayback() {
     currentAudioIndex = 0;
     removeNowPlaying();
     stopSingleWordLoop(); // 【新增】停止單詞循環
+    updateMediaSession(null); // --- 【整合 Media Session】 ---
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3313,6 +3393,7 @@ function stopPlayback() {
     currentAudio = null;
     currentAudioIndex = 0;
     removeNowPlaying();
+    updateMediaSession(null); // --- 【整合 Media Session】 ---
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3481,11 +3562,13 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
                     nowPlayingRow.classList.remove('paused-playback');
                     nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
             } else {
                 currentAudio?.pause();
                 isPaused = true;
                 this.innerHTML = '<i class="fas fa-play"></i>';
                 if (nowPlayingRow) nowPlayingRow.classList.add('paused-playback');
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
             }
         };
     }
