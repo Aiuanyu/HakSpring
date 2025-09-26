@@ -211,7 +211,7 @@ let playbackSessionId = null; // <-- 【新增此行】
  * @param {object} track - The current track object from the playlist.
  * @param {object} dialectInfo - Information about the current dialect and level.
  */
-function updateMediaSession(track, dialectInfo) {
+function updateMediaSession(track, dialectInfo, isSingleLoop = false) {
     if (!('mediaSession' in navigator)) {
         return;
     }
@@ -231,9 +231,20 @@ function updateMediaSession(track, dialectInfo) {
     const overallIndex = g_currentLevelData.findIndex(item => item.編號 === track.編號);
     const overallPercentage = (overallIndex + 1) / g_currentLevelData.length * 100;
 
+    let title = `${track.客家語} (${track.編號})`;
+    if (isSingleLoop) {
+        title = `[反覆] ${title}`;
+    }
+
+    let artist = `${dialectInfo.fullLvlName} - ${g_currentCategory}`;
+    if (isCategoryLooping) { // Read global state for category loop
+        artist = `[反覆] ${artist}`;
+    }
+    artist = `${artist} (${overallPercentage.toFixed(1)}%)`;
+
     navigator.mediaSession.metadata = new MediaMetadata({
-        title: `${track.客家語} (${track.編號})`,
-        artist: `${dialectInfo.fullLvlName} - ${g_currentCategory} (${overallPercentage.toFixed(1)}%)`,
+        title: title,
+        artist: artist,
         album: '客源翠 HakSpring',
         artwork: [
             { src: '宣傳圖.png', type: 'image/png' },
@@ -3346,7 +3357,7 @@ function playAudio(itemIndex, sessionId) {
     }
 
     // --- 【整合 Media Session】 ---
-    updateMediaSession(currentItemData, g_currentDialectInfo);
+    updateMediaSession(currentItemData, g_currentDialectInfo, false); // Explicitly set single loop to false
     navigator.mediaSession.playbackState = "playing";
     // --- 【整合結束】 ---
 
@@ -3487,7 +3498,7 @@ function advanceToNextCategory() {
  * @param {HTMLElement} row - 對應的 <tr> 元素。
  * @param {HTMLElement} button - 被點擊的 .loop-one-btn 按鈕。
  */
-function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
+function startSingleWordLoop(wordAudio, sentenceAudio, row, button, trackData) {
     const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
     const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
 
@@ -3501,9 +3512,11 @@ function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
     stopSingleWordLoop();
 
     isSingleWordLooping = true;
-    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button };
+    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button, track: trackData };
     singleLoopAbortController = new AbortController();
     const signal = singleLoopAbortController.signal;
+
+    updateMediaSession(trackData, g_currentDialectInfo, true); // Update media session for single loop
 
     button.innerHTML = '<i class="fas fa-stop"></i>';
     button.classList.add('looping');
@@ -3565,8 +3578,10 @@ function stopSingleWordLoop() {
         singleLoopingAudio.row.classList.remove('looping-row');
     }
 
+    updateMediaSession(null); // Clear media session when stopping loop
+
     isSingleWordLooping = false;
-    singleLoopingAudio = { word: null, sentence: null, row: null, button: null };
+    singleLoopingAudio = { word: null, sentence: null, row: null, button: null, track: null };
 }
 
 function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetRowId) {
@@ -3662,10 +3677,16 @@ function setupDynamicEventListeners(dialectInfo, category) {
             if (isSingleWordLooping && singleLoopingAudio.row === row) {
                 stopSingleWordLoop();
             } else {
-                const audioElements = row.querySelectorAll('audio.media');
-                const wordAudio = audioElements[0];
-                const sentenceAudio = audioElements[1];
-                startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton);
+                const rowId = loopOneButton.dataset.rowId;
+                const trackData = activeCategoryData.find(item => item.編號.split('-')[1] === rowId);
+                if (trackData) {
+                    const audioElements = row.querySelectorAll('audio.media');
+                    const wordAudio = audioElements[0];
+                    const sentenceAudio = audioElements[1];
+                    startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton, trackData);
+                } else {
+                    console.error("Could not find track data for single word loop.");
+                }
             }
             return;
         }
