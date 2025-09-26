@@ -2702,18 +2702,26 @@ function generate(content, initialCategory = null, targetRowId = null) {
 
   // --- BUG FIX: Sort level data according to UI category order for correct progress calculation ---
   const categoryOrder = Array.from(document.querySelectorAll('#cat-panel input[name="category"]')).map(radio => radio.value);
+
+  const getSortIndex = (itemCategories) => {
+      if (!itemCategories) return categoryOrder.length; // Put items without category at the end
+      for(let i = 0; i < categoryOrder.length; i++) {
+          if (itemCategories.includes(categoryOrder[i])) {
+              return i;
+          }
+      }
+      return categoryOrder.length; // If no match found, put at the end
+  };
+
   g_currentLevelData.sort((a, b) => {
-      const categoryA = a.分類;
-      const categoryB = b.分類;
-      const indexA = categoryOrder.indexOf(categoryA);
-      const indexB = categoryOrder.indexOf(categoryB);
+      const indexA = getSortIndex(a.分類);
+      const indexB = getSortIndex(b.分類);
 
       if (indexA !== indexB) {
-          // If categories are different, sort by the UI order.
           return indexA - indexB;
       }
 
-      // If categories are the same, sort by the original '編號' to maintain internal order.
+      // If primary categories are the same, sort by the original '編號' to maintain internal order.
       const [catPartA, numPartA] = a.編號.split('-').map(Number);
       const [catPartB, numPartB] = b.編號.split('-').map(Number);
       if (catPartA !== catPartB) {
@@ -2827,8 +2835,6 @@ function generate(content, initialCategory = null, targetRowId = null) {
   var contentContainer = document.getElementById('generated');
   contentContainer.innerHTML = '';
 
-  const arr = content.content; // After the loadDataFromDB fix, content.content is always the pre-parsed array.
-
   const catPanel = document.getElementById('cat-panel');
   if (catPanel) {
     const catPanelClone = catPanel.cloneNode(true);
@@ -2861,7 +2867,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
             currentLabel.classList.add('active-category');
           }
           
-          buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
+          buildTableAndSetupPlayback(selectedCategory, g_currentLevelData, dialectInfo);
         }
       }
     });
@@ -2879,7 +2885,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
       // --- 【關鍵修正】在這裡手動呼叫 URL 更新函式 ---
       updateUrlForCategory(dialectInfo, initialCategory);
 
-      buildTableAndSetupPlayback(initialCategory, arr, dialectInfo, targetRowId);
+      buildTableAndSetupPlayback(initialCategory, g_currentLevelData, dialectInfo, targetRowId);
     } else {
       console.warn('找不到要自動選擇的類別按鈕:', initialCategory);
     }
