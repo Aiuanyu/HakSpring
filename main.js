@@ -194,13 +194,91 @@ let isCategoryLooping = false; // 用於分類循環
 let isSingleWordLooping = false; // 用於單詞循環
 let singleLoopingAudio = { word: null, sentence: null, row: null, button: null }; // 儲存單詞循環的元素
 let singleLoopAbortController = new AbortController(); // 用於中斷單詞循環
+let g_mainPlaybackIndexBeforeLoop = null;
 
 let g_audioElementsList = [];
 let g_bookmarkButtonsList = [];
 let g_currentDialectInfo = null;
 let g_currentCategory = '';
+let g_currentLevelData = []; // Store the full data for the current level
 let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
+
+// --- Media Session API Integration ---
+
+/**
+ * Updates the Media Session API with the current track's metadata and sets up action handlers.
+ * @param {object} track - The current track object from the playlist.
+ * @param {object} dialectInfo - Information about the current dialect and level.
+ */
+function updateMediaSession(track, dialectInfo, isSingleLoop = false) {
+    if (!('mediaSession' in navigator)) {
+        return;
+    }
+
+    // Clear metadata and handlers if playback is finished (track is null)
+    if (!track) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.playbackState = "none";
+        return;
+    }
+
+    // --- New: Calculate overall progress ---
+    const overallIndex = g_currentLevelData.findIndex(item => item.編號 === track.編號);
+    const overallPercentage = (overallIndex + 1) / g_currentLevelData.length * 100;
+
+    let title = `${track.客家語} (${track.編號})`;
+    if (isSingleLoop) {
+        title = `[反覆] ${title}`;
+    }
+
+    let artist = `${dialectInfo.fullLvlName} - ${g_currentCategory}`;
+    if (isCategoryLooping) { // Read global state for category loop
+        artist = `[反覆] ${artist}`;
+    }
+    artist = `${artist} (${overallPercentage.toFixed(1)}%)`;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: artist,
+        album: '客源翠 HakSpring',
+        artwork: [
+            { src: '宣傳圖.png', type: 'image/png' },
+            { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+        ]
+    });
+
+    // Action Handlers
+    const playNextItem = () => playAudio(currentAudioIndex + 1, playbackSessionId);
+    const playPreviousItem = () => playAudio(currentAudioIndex - 1, playbackSessionId);
+
+    navigator.mediaSession.setActionHandler('play', () => {
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton && isPaused) {
+            pauseResumeButton.click();
+        }
+        navigator.mediaSession.playbackState = "playing";
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+        const pauseResumeButton = document.getElementById('pauseResumeBtn');
+        if (pauseResumeButton && !isPaused) {
+            pauseResumeButton.click();
+        }
+        navigator.mediaSession.playbackState = "paused";
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', playNextItem);
+    navigator.mediaSession.setActionHandler('previoustrack', playPreviousItem);
+}
+
+// --- End of Media Session API Integration ---
+
 
 /**
  * 將事件傳送分 Google Analytics。
@@ -1230,6 +1308,20 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
+  // --- 註冊 Service Worker ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered successfully with scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
+  // --- 註冊結束 ---
+
   handleDataImport();
   if (handleDomainMigration()) {
     const loadingIndicator = document.getElementById('loading-indicator');
@@ -2617,6 +2709,38 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
+  g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
+
+  // --- BUG FIX: Sort level data according to UI category order for correct progress calculation ---
+  const categoryOrder = Array.from(document.querySelectorAll('#cat-panel input[name="category"]')).map(radio => radio.value);
+
+  const getSortIndex = (itemCategories) => {
+      if (!itemCategories) return categoryOrder.length; // Put items without category at the end
+      for(let i = 0; i < categoryOrder.length; i++) {
+          if (itemCategories.includes(categoryOrder[i])) {
+              return i;
+          }
+      }
+      return categoryOrder.length; // If no match found, put at the end
+  };
+
+  g_currentLevelData.sort((a, b) => {
+      const indexA = getSortIndex(a.分類);
+      const indexB = getSortIndex(b.分類);
+
+      if (indexA !== indexB) {
+          return indexA - indexB;
+      }
+
+      // If primary categories are the same, sort by the original '編號' to maintain internal order.
+      const [catPartA, numPartA] = a.編號.split('-').map(Number);
+      const [catPartB, numPartB] = b.編號.split('-').map(Number);
+      if (catPartA !== catPartB) {
+          return catPartA - catPartB;
+      }
+      return numPartA - numPartB;
+  });
+  // --- End of BUG FIX ---
 
   document.querySelectorAll('.radioItem').forEach((label) => {
     label.classList.remove('active-category');
@@ -2722,8 +2846,6 @@ function generate(content, initialCategory = null, targetRowId = null) {
   var contentContainer = document.getElementById('generated');
   contentContainer.innerHTML = '';
 
-  const arr = content.content; // After the loadDataFromDB fix, content.content is always the pre-parsed array.
-
   const catPanel = document.getElementById('cat-panel');
   if (catPanel) {
     const catPanelClone = catPanel.cloneNode(true);
@@ -2756,7 +2878,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
             currentLabel.classList.add('active-category');
           }
           
-          buildTableAndSetupPlayback(selectedCategory, arr, dialectInfo);
+          buildTableAndSetupPlayback(selectedCategory, g_currentLevelData, dialectInfo);
         }
       }
     });
@@ -2774,7 +2896,7 @@ function generate(content, initialCategory = null, targetRowId = null) {
       // --- 【關鍵修正】在這裡手動呼叫 URL 更新函式 ---
       updateUrlForCategory(dialectInfo, initialCategory);
 
-      buildTableAndSetupPlayback(initialCategory, arr, dialectInfo, targetRowId);
+      buildTableAndSetupPlayback(initialCategory, g_currentLevelData, dialectInfo, targetRowId);
     } else {
       console.warn('找不到要自動選擇的類別按鈕:', initialCategory);
     }
@@ -3234,6 +3356,11 @@ function playAudio(itemIndex, sessionId) {
       saveBookmark(paddedRowId, percentage, g_currentCategory, g_currentDialectInfo.fullLvlName, true);
     }
 
+    // --- 【整合 Media Session】 ---
+    updateMediaSession(currentItemData, g_currentDialectInfo, false); // Explicitly set single loop to false
+    navigator.mediaSession.playbackState = "playing";
+    // --- 【整合結束】 ---
+
     const audioElementsInRow = Array.from(targetRow.querySelectorAll('audio.media'));
     const wordAudio = audioElementsInRow[0];
     const sentenceAudio = audioElementsInRow[1];
@@ -3280,6 +3407,7 @@ function playEndOfPlayback() {
     currentAudioIndex = 0;
     removeNowPlaying();
     stopSingleWordLoop(); // 【新增】停止單詞循環
+    updateMediaSession(null); // --- 【整合 Media Session】 ---
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3313,6 +3441,7 @@ function stopPlayback() {
     currentAudio = null;
     currentAudioIndex = 0;
     removeNowPlaying();
+    updateMediaSession(null); // --- 【整合 Media Session】 ---
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
@@ -3369,17 +3498,28 @@ function advanceToNextCategory() {
  * @param {HTMLElement} row - 對應的 <tr> 元素。
  * @param {HTMLElement} button - 被點擊的 .loop-one-btn 按鈕。
  */
-function startSingleWordLoop(wordAudio, sentenceAudio, row, button) {
+function startSingleWordLoop(wordAudio, sentenceAudio, row, button, trackData) {
     const LOOP_DELAY_BETWEEN_AUDIO = 500; // 詞與句之間播放的延遲
     const LOOP_DELAY_WITHOUT_AUDIO = 1000; // 當其中一個音檔不存在時的循環延遲
 
-    stopPlayback();
+    // --- BUG FIX: Save main playback state before starting loop ---
+    if (isPlaying) {
+        g_mainPlaybackIndexBeforeLoop = currentAudioIndex;
+        stopPlayback();
+    }
+    // --- End of BUG FIX ---
+
     stopSingleWordLoop();
 
     isSingleWordLooping = true;
-    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button };
+    singleLoopingAudio = { word: wordAudio, sentence: sentenceAudio, row: row, button: button, track: trackData };
     singleLoopAbortController = new AbortController();
     const signal = singleLoopAbortController.signal;
+
+    updateMediaSession(trackData, g_currentDialectInfo, true); // Update media session for single loop
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "playing";
+    }
 
     button.innerHTML = '<i class="fas fa-stop"></i>';
     button.classList.add('looping');
@@ -3441,8 +3581,10 @@ function stopSingleWordLoop() {
         singleLoopingAudio.row.classList.remove('looping-row');
     }
 
+    updateMediaSession(null); // Clear media session when stopping loop
+
     isSingleWordLooping = false;
-    singleLoopingAudio = { word: null, sentence: null, row: null, button: null };
+    singleLoopingAudio = { word: null, sentence: null, row: null, button: null, track: null };
 }
 
 function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetRowId) {
@@ -3468,9 +3610,17 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
 
     if (pauseResumeButton) {
         pauseResumeButton.onclick = function () {
-            if (!isPlaying) { // 如果已停止，按此鈕等於從頭播放
-                 startPlayingFromIndex(0);
-                 return;
+            if (!isPlaying) { // If stopped, decide where to resume from.
+                if (g_mainPlaybackIndexBeforeLoop !== null) {
+                    // If playback was interrupted by a single loop, resume from where it left off.
+                    const resumeIndex = g_mainPlaybackIndexBeforeLoop;
+                    g_mainPlaybackIndexBeforeLoop = null; // Reset the flag
+                    startPlayingFromIndex(resumeIndex);
+                } else {
+                    // Otherwise, start from the beginning of the category.
+                    startPlayingFromIndex(0);
+                }
+                return;
             }
             const nowPlayingRow = document.getElementById('nowPlaying');
             if (isPaused) {
@@ -3481,11 +3631,13 @@ function setupPlaybackControls(dialectInfo, category, totalRows, autoPlayTargetR
                     nowPlayingRow.classList.remove('paused-playback');
                     nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
             } else {
                 currentAudio?.pause();
                 isPaused = true;
                 this.innerHTML = '<i class="fas fa-play"></i>';
                 if (nowPlayingRow) nowPlayingRow.classList.add('paused-playback');
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
             }
         };
     }
@@ -3528,10 +3680,16 @@ function setupDynamicEventListeners(dialectInfo, category) {
             if (isSingleWordLooping && singleLoopingAudio.row === row) {
                 stopSingleWordLoop();
             } else {
-                const audioElements = row.querySelectorAll('audio.media');
-                const wordAudio = audioElements[0];
-                const sentenceAudio = audioElements[1];
-                startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton);
+                const rowId = loopOneButton.dataset.rowId;
+                const trackData = activeCategoryData.find(item => item.編號.split('-')[1] === rowId);
+                if (trackData) {
+                    const audioElements = row.querySelectorAll('audio.media');
+                    const wordAudio = audioElements[0];
+                    const sentenceAudio = audioElements[1];
+                    startSingleWordLoop(wordAudio, sentenceAudio, row, loopOneButton, trackData);
+                } else {
+                    console.error("Could not find track data for single word loop.");
+                }
             }
             return;
         }
