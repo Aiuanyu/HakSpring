@@ -130,6 +130,139 @@ function adjustRubyFontSize(rubyElement) {
     }
 }
 
+function toggleSearchAccordion(clickedButton, line) {
+    const parentRow = clickedButton.closest('tr');
+    const wasOpen = parentRow.classList.contains('accordion-parent');
+
+    // Always close any currently open accordion first
+    document.querySelectorAll('.accordion-parent').forEach(row => {
+        row.classList.remove('accordion-parent');
+        const button = row.querySelector('.crossDialectBtn i');
+        if (button) button.className = 'fas fa-plus-circle';
+    });
+    document.querySelectorAll('.accordion-row').forEach(row => row.remove());
+
+    // If the one we clicked was already open, we just want to close it, so we're done.
+    if (wasOpen) {
+        return;
+    }
+
+    // Pause autoplay if it's running
+    const stopButton = document.getElementById('stopBtn');
+    if (isPlaying && stopButton) {
+        stopButton.click();
+    }
+
+    parentRow.classList.add('accordion-parent');
+    clickedButton.querySelector('i').className = 'fas fa-minus-circle';
+
+    const lineId = line.編號;
+    const { sourceName } = line; // e.g., "四中高"
+
+    if (!sourceName || sourceName.length < 2) {
+        console.error("Invalid sourceName for search accordion:", sourceName);
+        return;
+    }
+
+    // --- Start: Re-engineered logic to build dialectInfo ---
+    const 腔 = sourceName.substring(0, 1); // e.g., '四'
+    const 級 = sourceName.substring(1);   // e.g., '中高'
+
+    let selected例外音檔;
+    switch (級) {
+        case '基': selected例外音檔 = window['基例外音檔'] || []; break;
+        case '初': selected例外音檔 = window['初例外音檔'] || []; break;
+        case '中': selected例外音檔 = window['中例外音檔'] || []; break;
+        case '中高': selected例外音檔 = window['中高例外音檔'] || []; break;
+        case '高': selected例外音檔 = window['高例外音檔'] || []; break;
+        default: selected例外音檔 = [];
+    }
+
+    let 腔名, 級名, 檔腔, 檔級 = '', 目錄級, 目錄另級;
+    switch (腔) {
+        case '四': 檔腔 = 'si'; 腔名 = '四縣'; break;
+        case '海': 檔腔 = 'ha'; 腔名 = '海陸'; break;
+        case '大': 檔腔 = 'da'; 腔名 = '大埔'; break;
+        case '平': 檔腔 = 'rh'; 腔名 = '饒平'; break;
+        case '安': 檔腔 = 'zh'; 腔名 = '詔安'; break;
+    }
+    switch (級) {
+        case '基': 目錄級 = '5'; 目錄另級 = '1'; 級名 = '基礎級'; break;
+        case '初': 目錄級 = '1'; 級名 = '初級'; break;
+        case '中': 目錄級 = '2'; 檔級 = '1'; 級名 = '中級'; break;
+        case '中高': 目錄級 = '3'; 檔級 = '2'; 級名 = '中高級'; break;
+        case '高': 目錄級 = '4'; 檔級 = '3'; 級名 = '高級'; break;
+    }
+
+    const originalDialectInfo = {
+        腔, 級, 例外音檔: selected例外音檔, fullLvlName: 腔名 + 級名, generalMediaYr: '112',
+        目錄級, 目錄另級, 檔腔, 檔級, 腔名, 級名,
+    };
+    // --- End: Re-engineered logic ---
+
+    const accents = ['四', '海', '大', '平', '安'];
+    const accentMap = {
+        '四': { name: '四縣', dataVar: '四' + 級 },
+        '海': { name: '海陸', dataVar: '海' + 級 },
+        '大': { name: '大埔', dataVar: '大' + 級 },
+        '平': { name: '饒平', dataVar: '平' + 級 },
+        '安': { name: '詔安', dataVar: '安' + 級 },
+    };
+
+    let nextRow = parentRow.nextSibling;
+    let createdRows = [];
+
+    accents.forEach(accentKey => {
+        if (accentKey === originalDialectInfo.腔) {
+            return;
+        }
+
+        const accentInfo = accentMap[accentKey];
+        const dataObject = window[accentInfo.dataVar];
+        if (dataObject && dataObject.content) {
+            const foundItem = dataObject.content.find(item => item.編號 === lineId);
+            if (foundItem) {
+                // Construct dialectInfo for the comparison row, using the same logic as the original
+                const itemDialectInfo = { ...originalDialectInfo }; // Start with a copy
+                itemDialectInfo.腔 = accentKey;
+                itemDialectInfo.腔名 = accentInfo.name;
+                itemDialectInfo.fullLvlName = `${accentInfo.name}${originalDialectInfo.級名}`;
+                switch(itemDialectInfo.腔) {
+                    case '四': itemDialectInfo.檔腔 = 'si'; break;
+                    case '海': itemDialectInfo.檔腔 = 'ha'; break;
+                    case '大': itemDialectInfo.檔腔 = 'da'; break;
+                    case '平': itemDialectInfo.檔腔 = 'rh'; break;
+                    case '安': itemDialectInfo.檔腔 = 'zh'; break;
+                }
+
+                const newRow = createComparisonRow(foundItem, itemDialectInfo);
+                newRow.classList.add('accordion-row');
+                parentRow.parentNode.insertBefore(newRow, nextRow);
+                createdRows.push(newRow);
+            }
+        }
+    });
+
+    if (createdRows.length > 0) {
+        createdRows[createdRows.length - 1].classList.add('accordion-row-last');
+    }
+
+    g_isAccordionScrolling = true;
+    try {
+        if (isFirefox()) {
+            const table = parentRow.closest('table');
+            if (table) {
+                adjustAllRubyFontSizes(table);
+            }
+        }
+        parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+        console.error("Error during search accordion toggle:", e);
+    } finally {
+        setTimeout(() => { g_isAccordionScrolling = false; }, 500);
+    }
+}
+
 function adjustAllRubyFontSizes(containerElement) {
     if (!isFirefox()) return;
     const rubyElements = containerElement.querySelectorAll('td[data-label="詞彙"] ruby');
@@ -1810,7 +1943,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
-    const createResultRow = (line, highlight) => {
+    const createResultRow = (line, highlight, rowIndex) => {
         globalRowIndex++;
         if (!line || !line['客家語']) return null;
 
@@ -1829,6 +1962,13 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         if (line.sourceType === 'cert' && line.編號) {
             const noText = document.createTextNode(line.編號 + '\u00A0');
             td1.appendChild(noText);
+
+            const crossDialectBtn = document.createElement('button');
+            crossDialectBtn.className = 'crossDialectBtn';
+            crossDialectBtn.title = '跨腔調對照';
+            crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
+            crossDialectBtn.dataset.rowIndex = rowIndex;
+            td1.appendChild(crossDialectBtn);
         }
 
         const sourceSpan = document.createElement('span');
@@ -1996,7 +2136,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         return null;
     };
 
-    paginatedResults.forEach(line => {
+    paginatedResults.forEach((line, index) => {
         const categoryKey = getCategoryKey(line, searchMode);
         if (!categoryKey) return;
 
@@ -2013,7 +2153,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         }
 
         const config = categoryConfig[searchMode][categoryKey];
-        const row = createResultRow(line, config.highlight);
+        const row = createResultRow(line, config.highlight, startIndex + index);
         if (row && currentTable) {
             currentTable.appendChild(row);
         }
@@ -2044,6 +2184,16 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     }
 
     updateResultsSummaryVisibility();
+
+    contentContainer.addEventListener('click', function(event) {
+        const button = event.target.closest('.crossDialectBtn');
+        if (button) {
+            const rowIndex = parseInt(button.dataset.rowIndex, 10);
+            if (!isNaN(rowIndex) && results[rowIndex]) {
+                toggleSearchAccordion(button, results[rowIndex]);
+            }
+        }
+    });
 
     setTimeout(() => repositionViewport(), 0); // Trigger font size adjustment after table is rendered
 
