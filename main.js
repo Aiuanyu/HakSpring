@@ -2822,10 +2822,49 @@ function buildTableAndSetupPlayback(category, vocabularyArray, dialectInfo, auto
     const totalResults = activeCategoryData.length;
 
     if (totalResults === 0) {
-        contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容。</p>`;
-        document.querySelector('#audioControls')?.remove();
-        updateResultsSummaryVisibility();
-        return;
+        // If in cross-category playback mode, handle advancing automatically
+        if (isCrossCategoryPlaying) {
+            console.log(`Category "${category}" is empty, playing notification and skipping.`);
+            contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容，馬上跳到下一類...</p>`;
+            updateResultsSummaryVisibility(); // Update summary to show the message
+
+            const emptyCategoryAudio = new Audio('empty_category.mp3');
+
+            const playNextCategory = () => {
+                currentCategoryIndex = categoryList.indexOf(g_currentCategory);
+                const nextCategoryIndex = currentCategoryIndex + 1;
+
+                if (nextCategoryIndex < categoryList.length) {
+                    const nextCategoryValue = categoryList[nextCategoryIndex];
+                    const nextRadioButton = document.querySelector(`input[name="category"][value="${nextCategoryValue}"]`);
+                    if (nextRadioButton) {
+                        console.log(`Skipping to next category: ${nextCategoryValue}`);
+                        isCrossCategoryPlaying = true; // Ensure flag is maintained
+                        nextRadioButton.click();
+                    } else {
+                        console.error("Could not find radio button for next category, stopping playback.");
+                        playEndOfPlayback(); // Couldn't find next button
+                    }
+                } else {
+                    console.log("All categories have been played.");
+                    playEndOfPlayback(); // End of all categories
+                }
+            };
+
+            // Play the sound, then advance. If sound fails, advance immediately.
+            emptyCategoryAudio.addEventListener('ended', playNextCategory);
+            emptyCategoryAudio.play().catch(err => {
+                console.error("Could not play empty_category.mp3, skipping directly.", err);
+                playNextCategory();
+            });
+
+        } else {
+            // Original behavior when not in continuous play mode
+            contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容。</p>`;
+            document.querySelector('#audioControls')?.remove();
+            updateResultsSummaryVisibility();
+        }
+        return; // Important to stop further execution for this empty category
     }
 
     // 3. Determine initial rendering range
