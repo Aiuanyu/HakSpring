@@ -2698,7 +2698,30 @@ function updateUrlForCategory(dialectInfo, selectedCategory) {
 function generate(content, initialCategory = null, targetRowId = null) {
   console.log('Generate called for:', content.name);
   currentActiveDialectLevelFullName = getFullLevelName(content.name);
-  g_currentLevelData = content.content; // Store the full level data
+  g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
+
+  // --- BUG FIX: Sort level data according to UI category order for correct progress calculation ---
+  const categoryOrder = Array.from(document.querySelectorAll('#cat-panel input[name="category"]')).map(radio => radio.value);
+  g_currentLevelData.sort((a, b) => {
+      const categoryA = a.分類;
+      const categoryB = b.分類;
+      const indexA = categoryOrder.indexOf(categoryA);
+      const indexB = categoryOrder.indexOf(categoryB);
+
+      if (indexA !== indexB) {
+          // If categories are different, sort by the UI order.
+          return indexA - indexB;
+      }
+
+      // If categories are the same, sort by the original '編號' to maintain internal order.
+      const [catPartA, numPartA] = a.編號.split('-').map(Number);
+      const [catPartB, numPartB] = b.編號.split('-').map(Number);
+      if (catPartA !== catPartB) {
+          return catPartA - catPartB;
+      }
+      return numPartA - numPartB;
+  });
+  // --- End of BUG FIX ---
 
   document.querySelectorAll('.radioItem').forEach((label) => {
     label.classList.remove('active-category');
