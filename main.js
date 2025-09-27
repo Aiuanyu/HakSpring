@@ -2448,7 +2448,7 @@ function adjustResultsSummaryFontSize() {
     let needsLineBreak = false;
 
     // --- 2. First pass: Try to fit on a single line by shrinking font ---
-    for (let i = 0; i < 30; i++) { // Safety break
+    for (let i = 0; i < 30; i++) {
         if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
             break; // Text fits
         }
@@ -2461,7 +2461,7 @@ function adjustResultsSummaryFontSize() {
         summaryText.style.fontSize = `${currentSize}px`;
     }
 
-    // --- 3. If needed, insert <br> and shrink to fit original single-line height ---
+    // --- 3. If needed, insert <br> and shrink to fit original height ---
     if (needsLineBreak) {
         let text = summaryText.dataset.originalText;
         let breakPoint = -1;
@@ -2476,19 +2476,21 @@ function adjustResultsSummaryFontSize() {
 
         if (breakPoint > 0) {
             summaryText.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
+            const tightLineHeight = 1.1;
+            summaryText.style.lineHeight = tightLineHeight.toString();
 
-            // --- 4. Second pass: Shrink font and line-height to fit the original height ---
-            currentSize = initialFontSize; // Start shrinking from the initial size again
-            for (let i = 0; i < 50; i++) { // More iterations might be needed
-                if (summaryText.scrollHeight <= initialHeight + buffer) {
-                    break; // It fits within the original height
+            // --- 4. Second pass: Shrink font based on CALCULATED height ---
+            currentSize = initialFontSize;
+            for (let i = 0; i < 50; i++) {
+                const calculatedHeight = currentSize * tightLineHeight * 2;
+                if (calculatedHeight <= initialHeight + buffer) {
+                    break;
                 }
                 if (currentSize <= minFontSize) {
-                    break; // Reached minimum size
+                    break;
                 }
                 currentSize -= 0.5;
                 summaryText.style.fontSize = `${currentSize}px`;
-                summaryText.style.lineHeight = '1.1'; // Use a tight line-height
             }
         }
     }
