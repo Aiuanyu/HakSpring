@@ -1055,7 +1055,8 @@ input:checked + .slider:before {
   justify-content: center; /* 水平置中 */
   align-items: center;    /* 垂直置中 */
   gap: 15px;              /* 項目之間个距離 */
-  flex-wrap: wrap; /* Allow items to wrap */
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 #summary-text-content {
