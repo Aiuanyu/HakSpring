@@ -2024,11 +2024,13 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
 
     if (totalResults === 0) {
         resultsSummaryContainer.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+    resultsSummaryContainer.dataset.originalText = resultsSummaryContainer.textContent;
         updateResultsSummaryVisibility();
         return;
     }
 
     resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+  resultsSummaryContainer.dataset.originalText = resultsSummaryContainer.textContent;
 
     const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
@@ -2422,27 +2424,65 @@ function calculateTotalRequiredWidth(headerElement) {
 
 function adjustResultsSummaryFontSize() {
     const summary = document.getElementById('results-summary');
-    if (!summary || summary.style.display === 'none') return;
+    if (!summary || summary.style.display === 'none' || !summary.dataset.originalText) {
+        return;
+    }
 
-    // Reset font size to default to get natural width
+    // --- 1. Reset to original single-line state ---
+    summary.innerHTML = summary.dataset.originalText;
     summary.style.fontSize = '';
-    
-    // Force browser to recalculate styles
-    window.getComputedStyle(summary).fontSize;
+    summary.style.lineHeight = '';
 
+    // --- 2. Get initial values and set thresholds ---
+    window.getComputedStyle(summary).fontSize; // Force style recalculation
     const initialFontSize = parseFloat(window.getComputedStyle(summary).fontSize);
-    const minFontSize = 10; // Minimum font size in pixels
-    const buffer = 2; // A small buffer to prevent floating point inaccuracies
+    const minFontSize = 10; // Absolute minimum font size in pixels
+    const breakThreshold = 16; // Approx. 2vw on a medium screen, threshold to insert <br>
+    const buffer = 2; // A small buffer for floating point inaccuracies
 
-    if (summary.scrollWidth > summary.clientWidth + buffer) {
-        let currentSize = initialFontSize;
-        // Loop to reduce font size
-        for (let i = 0; i < 30 && (summary.scrollWidth > summary.clientWidth + buffer); i++) {
-            if (currentSize <= minFontSize) {
-                break; // Stop if we've reached the minimum size
+    let currentSize = initialFontSize;
+    let needsLineBreak = false;
+
+    // --- 3. First pass: Try to fit on a single line by shrinking font ---
+    for (let i = 0; i < 30; i++) { // Safety break after 30 iterations
+        if (summary.scrollWidth <= summary.clientWidth + buffer) {
+            break; // Text fits
+        }
+        if (currentSize <= breakThreshold) {
+            needsLineBreak = true;
+            break; // Font is too small, trigger line break
+        }
+        if (currentSize <= minFontSize) {
+            break; // Reached absolute minimum
+        }
+        currentSize -= 0.5;
+        summary.style.fontSize = `${currentSize}px`;
+    }
+
+    // --- 4. If needed, insert <br> and readjust font size for two lines ---
+    if (needsLineBreak) {
+        let text = summary.dataset.originalText;
+        // Find the first colon or comma to break the line
+        const breakPoint = text.indexOf('：') + 1 || text.indexOf(',') + 1;
+
+        if (breakPoint > 0) {
+            summary.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
+            summary.style.lineHeight = '1.2'; // Apply a tighter line height
+
+            // --- 5. Second pass: Find the new optimal font size for two lines ---
+            summary.style.fontSize = ''; // Reset to find max possible size
+            currentSize = initialFontSize;
+
+            for (let i = 0; i < 30; i++) { // Safety break
+                if (summary.scrollWidth <= summary.clientWidth + buffer) {
+                    break; // Text fits
+                }
+                if (currentSize <= minFontSize) {
+                    break; // Reached absolute minimum
+                }
+                currentSize -= 0.5;
+                summary.style.fontSize = `${currentSize}px`;
             }
-            currentSize -= 0.5; // Reduce by 0.5px
-            summary.style.fontSize = `${currentSize}px`;
         }
     }
 }
@@ -3049,6 +3089,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
                 summaryText += ` (${totalResults})`;
             }
             resultsSummaryContainer.textContent = summaryText;
+            resultsSummaryContainer.dataset.originalText = summaryText;
             if (!autoPlayTargetRowId) {
                 resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
