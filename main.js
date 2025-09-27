@@ -3356,7 +3356,6 @@ function startPlayingFromIndex(itemIndex) {
  * @param {number} itemIndex - 在 activeCategoryData 中的索引。
  */
 function playAudio(itemIndex, sessionId) {
-    // 【新增此區塊】在函式最開頭驗證對談 ID
     if (sessionId !== playbackSessionId) {
         console.log(`一個過時的播放對談 (ID: ${sessionId}) 被攔截，不予執行。`);
         return;
@@ -3364,29 +3363,21 @@ function playAudio(itemIndex, sessionId) {
 
     if (!isPlaying) return;
 
-    // --- 檢查是否已播完目前類別的所有項目 ---
     if (itemIndex >= activeCategoryData.length) {
-        // --- 關鍵修正：還原舊版邏輯，在跳轉前刪除已完成類別的書籤 ---
         let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-        // 【變數路徑修正】直接從 g_currentDialectInfo 存取屬性
         const previousBookmarkIndex = bookmarks.findIndex((bm) => bm.tableName === g_currentDialectInfo.fullLvlName && bm.cat === g_currentCategory);
         if (previousBookmarkIndex > -1) {
-            console.log(`移除已完成類別的書籤: ${g_currentDialectInfo.fullLvlName} - ${g_currentCategory}`);
             bookmarks.splice(previousBookmarkIndex, 1);
             localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
             updateProgressDropdown();
         }
-
         advanceToNextCategory();
         return;
     }
 
-    // --- 【新增】播放器同步預載入機制 ---
     const PRELOAD_THRESHOLD = 5;
-    // 檢查是否接近已載入項目的結尾，且還有更多項目未載入，且目前不在載入中
     if ((itemIndex >= lastLoadedIndex - PRELOAD_THRESHOLD) && (lastLoadedIndex < activeCategoryData.length) && !isLoadingMoreItems) {
-        console.log(`[Autoplay Preload] Index: ${itemIndex}, LastLoaded: ${lastLoadedIndex}. Triggering load.`);
-        isLoadingMoreItems = true; // 防止重複觸發
+        isLoadingMoreItems = true;
         const start = lastLoadedIndex;
         const end = Math.min(start + ITEMS_PER_LOAD, activeCategoryData.length);
         if (start < end) {
@@ -3394,22 +3385,19 @@ function playAudio(itemIndex, sessionId) {
             renderCategoryItems(itemsToRender, g_currentDialectInfo, g_currentCategory, false, activeCategoryData.length, null, false);
             lastLoadedIndex = end;
         }
-        isLoadingMoreItems = false; // 完成後重設旗標
+        isLoadingMoreItems = false;
     }
 
     currentAudioIndex = itemIndex;
     const currentItemData = activeCategoryData[itemIndex];
     const rowId = currentItemData.編號.split('-')[1];
-
     const targetRow = document.querySelector(`a[name="${rowId}"]`)?.closest('tr');
 
     if (!targetRow) {
-        console.warn(`項目 #${itemIndex} (ID: ${rowId}) 不在畫面上，播放停止。`);
-        stopPlayback(); // 使用無聲的停止
+        stopPlayback();
         return;
     }
 
-    // 更新 UI 並儲存書籤
     addNowPlaying(targetRow);
     targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const bookmarkButton = targetRow.querySelector('.bookmarkBtn');
@@ -3421,59 +3409,31 @@ function playAudio(itemIndex, sessionId) {
       saveBookmark(paddedRowId, percentage, g_currentCategory, g_currentDialectInfo.fullLvlName, true);
     }
 
-    // --- 【整合 Media Session】 ---
-    updateMediaSession(currentItemData, g_currentDialectInfo, false); // Explicitly set single loop to false
-    navigator.mediaSession.playbackState = "playing";
-    // --- 【整合結束】 ---
+    updateMediaSession(currentItemData, g_currentDialectInfo, false);
 
     const audioElementsInRow = Array.from(targetRow.querySelectorAll('audio.media'));
     const wordAudio = audioElementsInRow[0];
     const sentenceAudio = audioElementsInRow[1];
     const signal = audioAbortController.signal;
 
-    if (isIOS()) {
-        const playNext = () => playAudio(currentAudioIndex + 1, sessionId);
+    const playNextItem = () => playAudio(currentAudioIndex + 1, sessionId);
 
-        const playSentenceThenNext = () => {
-            if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
-                currentAudio = sentenceAudio;
-                sentenceAudio.addEventListener('ended', playNext, { once: true, signal });
-                sentenceAudio.play().catch(e => { console.error('iOS: Play sentence audio failed', e); playNext(); });
-            } else {
-                playNext();
-            }
-        };
-
-        if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
-            currentAudio = wordAudio;
-            wordAudio.addEventListener('ended', playSentenceThenNext, { once: true, signal });
-            wordAudio.play().catch(e => { console.error('iOS: Play word audio failed', e); playSentenceThenNext(); });
+    const playSentence = () => {
+        if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
+            currentAudio = sentenceAudio;
+            sentenceAudio.play().catch(e => { console.error('播放例句音檔失敗', e); playNextItem(); });
+            sentenceAudio.addEventListener('ended', playNextItem, { once: true, signal });
         } else {
-            playSentenceThenNext();
+            playNextItem();
         }
+    };
+
+    if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
+        currentAudio = wordAudio;
+        wordAudio.play().catch(e => { console.error('播放詞彙音檔失敗', e); playSentence(); });
+        wordAudio.addEventListener('ended', playSentence, { once: true, signal });
     } else {
-        const playNextItem = () => {
-            // 【修改此行】將 sessionId 傳遞下去
-            playAudio(currentAudioIndex + 1, sessionId);
-        };
-
-        const playSentence = () => {
-            if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
-                currentAudio = sentenceAudio;
-                currentAudio.play().catch(e => { console.error('播放例句音檔失敗', e); playNextItem(); });
-                currentAudio.addEventListener('ended', playNextItem, { once: true, signal });
-            } else {
-                playNextItem();
-            }
-        };
-
-        if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
-            currentAudio = wordAudio;
-            currentAudio.play().catch(e => { console.error('播放詞彙音檔失敗', e); playSentence(); });
-            currentAudio.addEventListener('ended', playSentence, { once: true, signal });
-        } else {
-            playSentence();
-        }
+        playSentence();
     }
 }
 
