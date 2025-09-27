@@ -655,7 +655,7 @@ function updatePopupPosition(popupEl, selectionRect) {
 }
 
 function getDapuSandhiHtml(htmlContent) {
-    const BLOCKING_PUNCTUATION = '()（）【】';
+    const BLOCKING_PUNCTUATION = '()（）【】/';
     const SKIPPABLE_PUNCTUATION = '\\s、';
     const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
