@@ -1,5 +1,5 @@
 function handleDomainMigration() {
-  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev') {
+  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev' && window.location.hostname !== 'fix-migration-page-scroll.hakspring.pages.dev') {
     return false;
   }
 
