@@ -1726,8 +1726,7 @@ input:checked + .slider:before {
 
   #infoModal .modal-dialog,
   #whatsNewModal .modal-dialog,
-  #romanizerContainer .modal-dialog,
-  #dataManagementModal .modal-dialog {
+  #romanizerContainer .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
   #infoModal .modal-header,
@@ -1858,6 +1857,9 @@ input:checked + .slider:before {
 }
 
 @media (prefers-color-scheme: dark) {
+  #dataManagementModal .modal-dialog {
+      background-color: var(--dark-surface-color, #2c2c2c);
+  }
   #dataManagementModal textarea {
     background-color: var(--dark-background-color, #1f1f1f);
     border-color: rgba(255, 255, 255, 0.2);
