@@ -1465,6 +1465,13 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
+  // --- 【Jules 修正 iOS 捲動問題】 ---
+  // 手動設定捲動位置，避免瀏覽器自動處理，這在 iOS 上常會造成問題
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  // --- 【修正結束】 ---
+
   // --- 註冊 Service Worker (iOS 除外) ---
   if ('serviceWorker' in navigator && !isIOS()) {
     window.addEventListener('load', () => {
