@@ -2433,69 +2433,36 @@ function adjustResultsSummaryFontSize() {
         return;
     }
 
-    // --- 1. Reset to original single-line state ---
-    summaryText.innerHTML = summaryText.dataset.originalText;
+    // --- 1. Reset text and font size ---
+    summaryText.textContent = summaryText.dataset.originalText;
     summaryText.style.fontSize = '';
-    summaryText.style.lineHeight = '';
+    summaryText.style.lineHeight = '1.5'; // Reset to default line height
 
-    // --- 2. Get initial values and set thresholds ---
+    // --- 2. Get initial values ---
     window.getComputedStyle(summaryText).fontSize; // Force style recalculation
     const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
-    const minFontSize = 10; // Absolute minimum font size in pixels
-    const breakThreshold = 16;
+    const minFontSize = 12; // A reasonable minimum font size
     const buffer = 2;
 
     let currentSize = initialFontSize;
-    let needsLineBreak = false;
 
-    // --- 3. First pass: Try to fit on a single line by shrinking font ---
-    for (let i = 0; i < 30; i++) {
-        if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
+    // --- 3. Shrink font size until content fits within the element's bounds ---
+    for (let i = 0; i < 30; i++) { // Safety break
+        // The CSS `flex-wrap: wrap` will handle line breaks. We just need to ensure
+        // the content's scroll height does not exceed the element's client height.
+        if (summaryText.scrollHeight <= summaryText.clientHeight + buffer) {
             break; // Text fits
         }
-        if (currentSize <= breakThreshold) {
-            needsLineBreak = true;
-            break;
-        }
         if (currentSize <= minFontSize) {
-            break;
+            break; // Reached minimum size
         }
         currentSize -= 0.5;
         summaryText.style.fontSize = `${currentSize}px`;
     }
 
-    // --- 4. If needed, insert <br> and readjust font size for two lines ---
-    if (needsLineBreak) {
-        let text = summaryText.dataset.originalText;
-        let breakPoint = -1;
-        const colonIndex = text.indexOf('\uff1a'); // Full-width colon
-        const commaIndex = text.indexOf('，'); // Full-width comma
-
-        if (colonIndex > -1) {
-            breakPoint = colonIndex + 1;
-        } else if (commaIndex > -1) {
-            breakPoint = commaIndex + 1;
-        }
-
-        if (breakPoint > 0) {
-            summaryText.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
-            summaryText.style.lineHeight = '1.2';
-
-            // --- 5. Second pass: Find the new optimal font size for two lines ---
-            summaryText.style.fontSize = ''; // Reset to find max possible size
-            currentSize = initialFontSize;
-
-            for (let i = 0; i < 30; i++) {
-                if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
-                    break;
-                }
-                if (currentSize <= minFontSize) {
-                    break;
-                }
-                currentSize -= 0.5;
-                summaryText.style.fontSize = `${currentSize}px`;
-            }
-        }
+    // If it's wrapped to two lines, tighten the line-height
+    if (summaryText.getClientRects().length > 1) {
+        summaryText.style.lineHeight = '1.2';
     }
 }
 
