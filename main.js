@@ -1411,6 +1411,69 @@ async function loadDataFromDB(db) {
 }
 
 
+// --- What's New Modal Logic ---
+const whatsNewModal = document.getElementById('whatsNewModal');
+const whatsNewModalCloseBtn = document.getElementById('whatsNewModalCloseBtn');
+const whatsNewContent = document.getElementById('whats-new-content');
+let newLastModified = null; // Variable to hold the new Last-Modified date
+
+async function checkWhatsNew() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('whatsnew') === 'see') {
+    showWhatsNewModal(true); // Force show
+    return;
+  }
+
+  try {
+    const response = await fetch('whatsnew.md', { method: 'HEAD', cache: 'no-store' });
+    if (!response.ok) {
+      console.error('Could not fetch whatsnew.md header.');
+      return;
+    }
+
+    const serverLastModified = response.headers.get('Last-Modified');
+    const localLastModified = localStorage.getItem('whatsNewLastModified');
+
+    if (serverLastModified && serverLastModified !== localLastModified) {
+      console.log('New whatsnew.md detected. Showing modal.');
+      showWhatsNewModal();
+    } else {
+      console.log('whatsnew.md is up to date.');
+    }
+  } catch (error) {
+    console.error('Error checking for whatsnew.md update:', error);
+  }
+}
+
+const showWhatsNewModal = (force = false) => {
+  fetch('whatsnew.md', { cache: 'no-store' }) // Ensure fresh fetch
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      newLastModified = response.headers.get('Last-Modified'); // Store the header value
+      return response.text();
+    })
+    .then(markdown => {
+      whatsNewContent.innerHTML = marked.parse(markdown);
+      whatsNewModal.classList.add('is-visible');
+    })
+    .catch(error => {
+      console.error('Failed to load whatsnew.md:', error);
+      if (force) { // Only show error if forced, otherwise fail silently
+        whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
+        whatsNewModal.classList.add('is-visible');
+      }
+    });
+};
+
+const closeWhatsNewModal = () => {
+  if (newLastModified) {
+    localStorage.setItem('whatsNewLastModified', newLastModified);
+    console.log('Updated whatsNewLastModified in localStorage:', newLastModified);
+  }
+  whatsNewModal.classList.remove('is-visible');
+};
+// --- End of What's New Modal Logic Definitions ---
+
 // --- Application Initialization ---
 
 function handleDataImport() {
@@ -4010,68 +4073,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
-  // --- What's New Modal Logic (Refactored for automatic detection) ---
-  const whatsNewModal = document.getElementById('whatsNewModal');
-  const whatsNewModalCloseBtn = document.getElementById('whatsNewModalCloseBtn');
-  const whatsNewContent = document.getElementById('whats-new-content');
-  let newLastModified = null; // Variable to hold the new Last-Modified date
-
-  async function checkWhatsNew() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('whatsnew') === 'see') {
-      showWhatsNewModal(true); // Force show
-      return;
-    }
-
-    try {
-      const response = await fetch('whatsnew.md', { method: 'HEAD', cache: 'no-store' });
-      if (!response.ok) {
-        console.error('Could not fetch whatsnew.md header.');
-        return;
-      }
-
-      const serverLastModified = response.headers.get('Last-Modified');
-      const localLastModified = localStorage.getItem('whatsNewLastModified');
-
-      if (serverLastModified && serverLastModified !== localLastModified) {
-        console.log('New whatsnew.md detected. Showing modal.');
-        showWhatsNewModal();
-      } else {
-        console.log('whatsnew.md is up to date.');
-      }
-    } catch (error) {
-      console.error('Error checking for whatsnew.md update:', error);
-    }
-  }
-
-  const showWhatsNewModal = (force = false) => {
-    fetch('whatsnew.md', { cache: 'no-store' }) // Ensure fresh fetch
-      .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        newLastModified = response.headers.get('Last-Modified'); // Store the header value
-        return response.text();
-      })
-      .then(markdown => {
-        whatsNewContent.innerHTML = marked.parse(markdown);
-        whatsNewModal.classList.add('is-visible');
-      })
-      .catch(error => {
-        console.error('Failed to load whatsnew.md:', error);
-        if (force) { // Only show error if forced, otherwise fail silently
-          whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
-          whatsNewModal.classList.add('is-visible');
-        }
-      });
-  };
-
-  const closeWhatsNewModal = () => {
-    if (newLastModified) {
-      localStorage.setItem('whatsNewLastModified', newLastModified);
-      console.log('Updated whatsNewLastModified in localStorage:', newLastModified);
-    }
-    whatsNewModal.classList.remove('is-visible');
-  };
-
+  // --- What's New Modal Event Listeners ---
   if (whatsNewModal && whatsNewModalCloseBtn && whatsNewContent) {
     whatsNewModalCloseBtn.addEventListener('click', closeWhatsNewModal);
     whatsNewModal.addEventListener('click', (event) => {
@@ -4104,7 +4106,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       });
     }
   }
-  // --- End of What's New Modal Logic ---
+  // --- End of What's New Modal Event Listeners ---
 
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
