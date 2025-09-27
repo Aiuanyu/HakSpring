@@ -88,6 +88,19 @@ function handleDomainMigration() {
 }
 
 // Agent Jules was here.
+function isIOS() {
+  return [
+    'iPad Simulator',
+    'iPhone Simulator',
+    'iPod Simulator',
+    'iPad',
+    'iPhone',
+    'iPod'
+  ].includes(navigator.platform)
+  // Also, iPad on iOS 13 detection
+  || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+}
+
 function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
 }
@@ -1451,6 +1464,19 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
+  // --- 註冊 Service Worker (iOS 除外) ---
+  if ('serviceWorker' in navigator && !isIOS()) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered successfully with scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
+
   handleDataImport();
   if (handleDomainMigration()) {
     const loadingIndicator = document.getElementById('loading-indicator');
