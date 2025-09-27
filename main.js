@@ -1411,11 +1411,8 @@ async function loadDataFromDB(db) {
 }
 
 
-// --- What's New Modal Logic ---
-const whatsNewModal = document.getElementById('whatsNewModal');
-const whatsNewModalCloseBtn = document.getElementById('whatsNewModalCloseBtn');
-const whatsNewContent = document.getElementById('whats-new-content');
-let newLastModified = null; // Variable to hold the new Last-Modified date
+// --- What's New Modal Logic (Embedded Version) ---
+let newWhatsNewVersion = null; // To hold the version from the fetched file
 
 async function checkWhatsNew() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -1425,65 +1422,62 @@ async function checkWhatsNew() {
   }
 
   try {
-    // Add cache-busting query parameter
     const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
-    const response = await fetch(cacheBustUrl, { method: 'HEAD' });
-
+    const response = await fetch(cacheBustUrl);
     if (!response.ok) {
-      console.error('Could not fetch whatsnew.md header.');
-      return;
+      throw new Error('Failed to fetch whatsnew.md');
     }
+    const markdownContent = await response.text();
 
-    const serverLastModifiedString = response.headers.get('Last-Modified');
-    const localLastModifiedString = localStorage.getItem('whatsNewLastModified');
+    // Extract version from <!-- version: 12345 -->
+    const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
+    const serverVersion = versionMatch ? parseInt(versionMatch[1], 10) : 0;
 
-    if (serverLastModifiedString) {
-      const serverDate = new Date(serverLastModifiedString);
-      const localDate = localLastModifiedString ? new Date(localLastModifiedString) : null;
+    const localVersion = parseInt(localStorage.getItem('whatsNewVersion') || '0', 10);
 
-      // Compare time values. Show modal if local date is missing or server date is newer.
-      if (!localDate || serverDate.getTime() > localDate.getTime()) {
-        console.log('New whatsnew.md detected. Showing modal.');
-        showWhatsNewModal();
-      } else {
-        console.log('whatsnew.md is up to date.');
-      }
+    if (serverVersion > localVersion) {
+      console.log(`New whatsnew.md version detected. Server: ${serverVersion}, Local: ${localVersion}. Showing modal.`);
+      newWhatsNewVersion = serverVersion; // Set the new version to be saved on close
+      document.getElementById('whats-new-content').innerHTML = marked.parse(markdownContent);
+      document.getElementById('whatsNewModal').classList.add('is-visible');
+    } else {
+      console.log('whatsnew.md is up to date.');
     }
   } catch (error) {
     console.error('Error checking for whatsnew.md update:', error);
   }
 }
 
-const showWhatsNewModal = (force = false) => {
-  // Add cache-busting query parameter to the content fetch as well
-  const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
-  fetch(cacheBustUrl)
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      newLastModified = response.headers.get('Last-Modified'); // Store the header value
-      return response.text();
-    })
-    .then(markdown => {
-      whatsNewContent.innerHTML = marked.parse(markdown);
-      whatsNewModal.classList.add('is-visible');
-    })
-    .catch(error => {
-      console.error('Failed to load whatsnew.md:', error);
-      if (force) { // Only show error if forced, otherwise fail silently
-        whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
-        whatsNewModal.classList.add('is-visible');
-      }
-    });
+// This function is now only for forcing the modal open, e.g., from a link.
+const showWhatsNewModal = async (force = false) => {
+  if (!force) return;
+
+  try {
+    const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
+    const response = await fetch(cacheBustUrl);
+    if (!response.ok) throw new Error('Network response was not ok');
+
+    const markdownContent = await response.text();
+    const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
+    newWhatsNewVersion = versionMatch ? parseInt(versionMatch[1], 10) : null;
+
+    document.getElementById('whats-new-content').innerHTML = marked.parse(markdownContent);
+    document.getElementById('whatsNewModal').classList.add('is-visible');
+  } catch (error) {
+    console.error('Failed to load whatsnew.md:', error);
+    document.getElementById('whats-new-content').innerHTML = '<p>最新消息載入失敗。</p>';
+    document.getElementById('whatsNewModal').classList.add('is-visible');
+  }
 };
 
 const closeWhatsNewModal = () => {
-  if (newLastModified) {
-    localStorage.setItem('whatsNewLastModified', newLastModified);
-    console.log('Updated whatsNewLastModified in localStorage:', newLastModified);
+  if (newWhatsNewVersion) {
+    localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
+    console.log('Updated whatsNewVersion in localStorage:', newWhatsNewVersion);
   }
-  whatsNewModal.classList.remove('is-visible');
+  document.getElementById('whatsNewModal').classList.remove('is-visible');
 };
-// --- End of What's New Modal Logic Definitions ---
+// --- End of What's New Modal Logic ---
 
 // --- Application Initialization ---
 

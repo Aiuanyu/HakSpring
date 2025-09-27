@@ -20,15 +20,8 @@ self.addEventListener('activate', (event) => {
 // --- Fetch Event for Caching ---
 
 self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // For whatsnew.md, always go to the network and bypass any cache.
-  if (requestUrl.pathname.endsWith('/whatsnew.md')) {
-    event.respondWith(
-      fetch(event.request, { cache: 'no-store' })
-    );
   // We only want to cache audio files.
-  } else if (requestUrl.pathname.endsWith('.mp3')) {
+  if (event.request.url.endsWith('.mp3')) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(event.request).then((response) => {
