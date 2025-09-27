@@ -2433,7 +2433,7 @@ function adjustResultsSummaryFontSize() {
         return;
     }
 
-    // --- 1. Reset styles and get original state ---
+    // --- 1. Reset styles and get initial state ---
     summaryText.innerHTML = summaryText.dataset.originalText;
     summaryText.style.fontSize = '';
     summaryText.style.lineHeight = '';
@@ -2442,7 +2442,7 @@ function adjustResultsSummaryFontSize() {
     const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
     const initialHeight = summaryContainer.clientHeight;
     const minFontSize = 10;
-    const breakThreshold = 16; // Font size at which we consider breaking the line
+    const breakThreshold = 16;
     const buffer = 2;
     let currentSize = initialFontSize;
     let needsLineBreak = false;
