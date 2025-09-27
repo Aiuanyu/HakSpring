@@ -2490,7 +2490,7 @@ function adjustResultsSummaryFontSize() {
                 }
                 currentSize -= 0.5;
                 summaryText.style.fontSize = `${currentSize}px`;
-                summaryText.style.lineHeight = '1.1'; // Use a tight line-height
+                summaryText.style.lineHeight = '1.0'; // Use a tighter line-height
             }
         }
     }
@@ -3098,7 +3098,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
                 summaryText += ` (${totalResults})`;
             }
             summaryTextContent.textContent = summaryText;
-            summaryTextContent.dataset.originalText = summaryText;
+            summaryTextContent.dataset.originalText = summaryText; // Set data attribute with the full text
             const resultsSummaryContainer = document.getElementById('results-summary');
             if (resultsSummaryContainer && !autoPlayTargetRowId) {
                 resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
