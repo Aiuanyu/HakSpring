@@ -277,6 +277,9 @@ let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
+let g_summary_minFontSize = 10;
+let g_summary_breakThreshold = 16;
+let g_summary_tightLineHeight = 1.1;
 
 // --- 【新增】循環播放相關全域變數 ---
 let isCategoryLooping = false; // 用於分類循環
@@ -2448,8 +2451,8 @@ function adjustResultsSummaryFontSize() {
     window.getComputedStyle(summaryText).fontSize;
 
     const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
-    const minFontSize = 10;
-    const breakThreshold = 16;
+    const minFontSize = g_summary_minFontSize;
+    const breakThreshold = g_summary_breakThreshold;
     const containerWidth = summaryText.clientWidth;
     let currentSize = initialFontSize;
     let needsLineBreak = false;
@@ -2501,7 +2504,7 @@ function adjustResultsSummaryFontSize() {
             }
             summaryText.innerHTML = `${line1}<br>${line2}`;
             summaryText.style.whiteSpace = 'normal';
-            summaryText.style.lineHeight = '1.1';
+            summaryText.style.lineHeight = g_summary_tightLineHeight.toString();
         }
     }
 
