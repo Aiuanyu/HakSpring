@@ -4009,6 +4009,48 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
+  // --- What's New Modal Logic ---
+  const whatsNewModal = document.getElementById('whatsNewModal');
+  const whatsNewModalCloseBtn = document.getElementById('whatsNewModalCloseBtn');
+  const whatsNewContent = document.getElementById('whats-new-content');
+  const whatsNewReadFlag = 'whatsNewRead_20250927'; // Unique flag for this message
+
+  if (whatsNewModal && whatsNewModalCloseBtn && whatsNewContent) {
+    const hasReadWhatsNew = localStorage.getItem(whatsNewReadFlag);
+
+    if (!hasReadWhatsNew) {
+      fetch('whatsnew.md')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.text();
+        })
+        .then(markdown => {
+          whatsNewContent.innerHTML = marked.parse(markdown);
+          // Show the modal only after content is loaded
+          whatsNewModal.classList.add('is-visible');
+        })
+        .catch(error => {
+          console.error('Failed to load whatsnew.md:', error);
+          whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
+        });
+    }
+
+    const closeWhatsNewModal = () => {
+      localStorage.setItem(whatsNewReadFlag, 'true');
+      whatsNewModal.classList.remove('is-visible');
+    };
+
+    whatsNewModalCloseBtn.addEventListener('click', closeWhatsNewModal);
+    whatsNewModal.addEventListener('click', (event) => {
+      if (event.target === whatsNewModal) {
+        closeWhatsNewModal();
+      }
+    });
+  }
+  // --- End of What's New Modal Logic ---
+
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
     const closePopup = () => {
