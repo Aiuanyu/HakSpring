@@ -2482,8 +2482,8 @@ function adjustResultsSummaryFontSize() {
             // --- 4. Second pass: Shrink font and line-height to fit the original height ---
             currentSize = initialFontSize; // Start shrinking from the initial size again
             for (let i = 0; i < 50; i++) { // More iterations might be needed
-                if (summaryText.scrollHeight <= initialHeight + buffer) {
-                    break; // It fits within the original height
+                if (summaryText.scrollHeight <= initialHeight + buffer && summaryText.getClientRects().length <= 2) {
+                    break; // It fits within the original height and is at most 2 lines
                 }
                 if (currentSize <= minFontSize) {
                     break; // Reached minimum size
