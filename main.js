@@ -291,6 +291,9 @@ let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
 const ITEMS_PER_LOAD = 20;
+let g_summary_minFontSize = 10;
+let g_summary_breakThreshold = 16;
+let g_summary_tightLineHeight = 1.1;
 
 // --- 【新增】循環播放相關全域變數 ---
 let isCategoryLooping = false; // 用於分類循環
@@ -1698,6 +1701,7 @@ function initializeAppUI() {
   let successfullyLoadedFromUrl = false;
 
   const resultsSummaryContainer = document.getElementById('results-summary');
+  const summaryTextContent = document.getElementById('summary-text-content');
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const searchPopup = document.getElementById('search-popup');
@@ -1924,7 +1928,10 @@ function initializeAppUI() {
     }
 
     if (!keyword) {
-        if (resultsSummaryContainer) resultsSummaryContainer.textContent = '';
+        if (summaryTextContent) {
+            summaryTextContent.textContent = '';
+            summaryTextContent.dataset.originalText = '';
+        }
         contentContainer.innerHTML = '<p style="text-align: center;">請輸入關鍵字</p>';
         updatePageTitle();
         updateResultsSummaryVisibility();
@@ -2043,7 +2050,6 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     g_currentSearchResults = results; // Store results globally
     let globalRowIndex = (page - 1) * itemsPerPage;
     const contentContainer = document.getElementById('generated');
-    const resultsSummaryContainer = document.getElementById('results-summary');
     contentContainer.innerHTML = '';
     document.querySelector('#audioControls')?.remove();
 
@@ -2057,12 +2063,14 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
 
     if (totalResults === 0) {
-        resultsSummaryContainer.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+        summaryTextContent.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+        summaryTextContent.dataset.originalText = summaryTextContent.textContent;
         updateResultsSummaryVisibility();
         return;
     }
 
-    resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+    summaryTextContent.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+    summaryTextContent.dataset.originalText = summaryTextContent.textContent;
 
     const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
@@ -2455,30 +2463,88 @@ function calculateTotalRequiredWidth(headerElement) {
 }
 
 function adjustResultsSummaryFontSize() {
-    const summary = document.getElementById('results-summary');
-    if (!summary || summary.style.display === 'none') return;
+    const summaryContainer = document.getElementById('results-summary');
+    const summaryText = document.getElementById('summary-text-content');
 
-    // Reset font size to default to get natural width
-    summary.style.fontSize = '';
-    
-    // Force browser to recalculate styles
-    window.getComputedStyle(summary).fontSize;
+    if (!summaryContainer || !summaryText || summaryContainer.style.display === 'none' || !summaryText.dataset.originalText) {
+        return;
+    }
 
-    const initialFontSize = parseFloat(window.getComputedStyle(summary).fontSize);
-    const minFontSize = 10; // Minimum font size in pixels
-    const buffer = 2; // A small buffer to prevent floating point inaccuracies
+    // --- 1. Create a hidden helper for reliable measurement ---
+    let helper = document.createElement('span');
+    helper.style.position = 'absolute';
+    helper.style.left = '-9999px';
+    helper.style.whiteSpace = 'nowrap';
+    document.body.appendChild(helper);
 
-    if (summary.scrollWidth > summary.clientWidth + buffer) {
-        let currentSize = initialFontSize;
-        // Loop to reduce font size
-        for (let i = 0; i < 30 && (summary.scrollWidth > summary.clientWidth + buffer); i++) {
-            if (currentSize <= minFontSize) {
-                break; // Stop if we've reached the minimum size
+    // --- 2. Reset styles and get initial state ---
+    summaryText.innerHTML = summaryText.dataset.originalText;
+    summaryText.style.fontSize = '';
+    summaryText.style.lineHeight = '';
+    summaryText.style.whiteSpace = 'nowrap';
+    window.getComputedStyle(summaryText).fontSize;
+
+    const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
+    const minFontSize = g_summary_minFontSize;
+    const breakThreshold = g_summary_breakThreshold;
+    const containerWidth = summaryText.clientWidth;
+    let currentSize = initialFontSize;
+    let needsLineBreak = false;
+
+    // --- 3. First Pass: Use helper to find single-line font size ---
+    helper.style.font = window.getComputedStyle(summaryText).font;
+    helper.innerHTML = summaryText.dataset.originalText;
+
+    for (let i = 0; i < 30; i++) {
+        helper.style.fontSize = `${currentSize}px`;
+        if (helper.scrollWidth <= containerWidth) {
+            break;
+        }
+        if (currentSize <= breakThreshold) {
+            needsLineBreak = true;
+            break;
+        }
+        if (currentSize <= minFontSize) break;
+        currentSize -= 0.5;
+    }
+
+    // --- 4. If line break is needed, find the best two-line font size ---
+    if (needsLineBreak) {
+        let text = summaryText.dataset.originalText;
+        let breakPoint = -1;
+        const colonIndex = text.indexOf('\uff1a');
+        const commaIndex = text.indexOf('，');
+
+        if (colonIndex > -1) breakPoint = colonIndex + 1;
+        else if (commaIndex > -1) breakPoint = commaIndex + 1;
+
+        if (breakPoint > 0) {
+            const line1 = text.substring(0, breakPoint);
+            const line2 = text.substring(breakPoint).trim();
+
+            currentSize = initialFontSize; // Reset for second pass
+            for (let i = 0; i < 30; i++) {
+                helper.style.fontSize = `${currentSize}px`;
+                helper.innerHTML = line1;
+                const width1 = helper.scrollWidth;
+                helper.innerHTML = line2;
+                const width2 = helper.scrollWidth;
+
+                if (Math.max(width1, width2) <= containerWidth) {
+                    break;
+                }
+                if (currentSize <= minFontSize) break;
+                currentSize -= 0.5;
             }
-            currentSize -= 0.5; // Reduce by 0.5px
-            summary.style.fontSize = `${currentSize}px`;
+            summaryText.innerHTML = `${line1}<br>${line2}`;
+            summaryText.style.whiteSpace = 'normal';
+            summaryText.style.lineHeight = g_summary_tightLineHeight.toString();
         }
     }
+
+    // --- 5. Apply the final calculated font size and clean up ---
+    summaryText.style.fontSize = `${currentSize}px`;
+    document.body.removeChild(helper);
 }
 
   
@@ -2711,13 +2777,13 @@ function preprocessAllData() {
 // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
 function updateResultsSummaryVisibility() {
   const resultsSummaryContainer = document.getElementById('results-summary');
-  if (!resultsSummaryContainer) return; // 確保元素存在
+  const summaryTextContent = document.getElementById('summary-text-content');
+  if (!resultsSummaryContainer || !summaryTextContent) return;
 
-  // 檢查 #results-summary 自身係無係有實際个內容 (trim() 會拿忒頭尾空白)
-  if (resultsSummaryContainer.textContent.trim() !== '') {
-    resultsSummaryContainer.style.display = 'flex'; // 有內容就顯示，並啟用 Flexbox 佈局
+  if (summaryTextContent.textContent.trim() !== '') {
+    resultsSummaryContainer.style.display = 'flex';
   } else {
-    resultsSummaryContainer.style.display = 'none'; // 無內容就隱藏
+    resultsSummaryContainer.style.display = 'none';
   }
 }
 
@@ -3076,14 +3142,16 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         contentContainer.innerHTML = '';
         document.querySelector('#audioControls')?.remove();
         
-        const resultsSummaryContainer = document.getElementById('results-summary');
-        if (resultsSummaryContainer) {
+        const summaryTextContent = document.getElementById('summary-text-content');
+        if (summaryTextContent) {
             let summaryText = `${dialectInfo.fullLvlName}：${category}`;
             if (totalResults > 0) {
                 summaryText += ` (${totalResults})`;
             }
-            resultsSummaryContainer.textContent = summaryText;
-            if (!autoPlayTargetRowId) {
+            summaryTextContent.textContent = summaryText;
+            summaryTextContent.dataset.originalText = summaryText; // Set data attribute with the full text
+            const resultsSummaryContainer = document.getElementById('results-summary');
+            if (resultsSummaryContainer && !autoPlayTargetRowId) {
                 resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
