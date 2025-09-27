@@ -1451,20 +1451,6 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
-  // --- 註冊 Service Worker ---
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registered successfully with scope:', registration.scope);
-        })
-        .catch(error => {
-          console.error('Service Worker registration failed:', error);
-        });
-    });
-  }
-  // --- 註冊結束 ---
-
   handleDataImport();
   if (handleDomainMigration()) {
     const loadingIndicator = document.getElementById('loading-indicator');
