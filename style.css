@@ -1046,7 +1046,7 @@ input:checked + .slider:before {
   top: 80px; /* Adjust this value based on your header's height */
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(5px);
-  padding: 12px 20px;
+  padding: 5px 20px;
   margin-bottom: 10px;
   z-index: 5;
   font-weight: bold;
