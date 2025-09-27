@@ -2433,25 +2433,35 @@ function adjustResultsSummaryFontSize() {
         return;
     }
 
-    // --- 1. Reset styles and get original state ---
+    // --- 1. Create a hidden helper for reliable measurement ---
+    let helper = document.createElement('span');
+    helper.style.position = 'absolute';
+    helper.style.left = '-9999px';
+    helper.style.whiteSpace = 'nowrap';
+    document.body.appendChild(helper);
+
+    // --- 2. Reset styles and get initial state ---
     summaryText.innerHTML = summaryText.dataset.originalText;
     summaryText.style.fontSize = '';
     summaryText.style.lineHeight = '';
-    summaryText.style.whiteSpace = 'nowrap'; // Ensure single-line for measurement
-    window.getComputedStyle(summaryText).fontSize; // Force style recalculation
+    summaryText.style.whiteSpace = 'nowrap';
+    window.getComputedStyle(summaryText).fontSize;
 
     const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
-    const initialHeight = summaryContainer.clientHeight;
     const minFontSize = 10;
     const breakThreshold = 16;
-    const buffer = 2;
+    const containerWidth = summaryText.clientWidth;
     let currentSize = initialFontSize;
     let needsLineBreak = false;
 
-    // --- 2. First pass: Try to fit on a single line by shrinking font ---
-    for (let i = 0; i < 30; i++) { // Safety break
-        if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
-            break; // Text fits
+    // --- 3. First Pass: Use helper to find single-line font size ---
+    helper.style.font = window.getComputedStyle(summaryText).font;
+    helper.innerHTML = summaryText.dataset.originalText;
+
+    for (let i = 0; i < 30; i++) {
+        helper.style.fontSize = `${currentSize}px`;
+        if (helper.scrollWidth <= containerWidth) {
+            break;
         }
         if (currentSize <= breakThreshold) {
             needsLineBreak = true;
@@ -2459,41 +2469,45 @@ function adjustResultsSummaryFontSize() {
         }
         if (currentSize <= minFontSize) break;
         currentSize -= 0.5;
-        summaryText.style.fontSize = `${currentSize}px`;
     }
 
-    // --- 3. If needed, insert <br> and shrink to fit original single-line height ---
+    // --- 4. If line break is needed, find the best two-line font size ---
     if (needsLineBreak) {
         let text = summaryText.dataset.originalText;
         let breakPoint = -1;
-        const colonIndex = text.indexOf('\uff1a'); // Full-width colon
+        const colonIndex = text.indexOf('\uff1a');
         const commaIndex = text.indexOf('，');
 
-        if (colonIndex > -1) {
-            breakPoint = colonIndex + 1;
-        } else if (commaIndex > -1) {
-            breakPoint = commaIndex + 1;
-        }
+        if (colonIndex > -1) breakPoint = colonIndex + 1;
+        else if (commaIndex > -1) breakPoint = commaIndex + 1;
 
         if (breakPoint > 0) {
-            summaryText.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
-            summaryText.style.whiteSpace = 'normal'; // Allow wrapping within the span
+            const line1 = text.substring(0, breakPoint);
+            const line2 = text.substring(breakPoint).trim();
 
-            // --- 4. Second pass: Shrink font and line-height to fit the original height ---
-            currentSize = initialFontSize; // Start shrinking from the initial size again
-            for (let i = 0; i < 50; i++) { // More iterations might be needed
-                if (summaryText.scrollHeight <= initialHeight + buffer && summaryText.getClientRects().length <= 2) {
-                    break; // It fits within the original height and is at most 2 lines
+            currentSize = initialFontSize; // Reset for second pass
+            for (let i = 0; i < 30; i++) {
+                helper.style.fontSize = `${currentSize}px`;
+                helper.innerHTML = line1;
+                const width1 = helper.scrollWidth;
+                helper.innerHTML = line2;
+                const width2 = helper.scrollWidth;
+
+                if (Math.max(width1, width2) <= containerWidth) {
+                    break;
                 }
-                if (currentSize <= minFontSize) {
-                    break; // Reached minimum size
-                }
+                if (currentSize <= minFontSize) break;
                 currentSize -= 0.5;
-                summaryText.style.fontSize = `${currentSize}px`;
-                summaryText.style.lineHeight = '1.0'; // Use a tighter line-height
             }
+            summaryText.innerHTML = `${line1}<br>${line2}`;
+            summaryText.style.whiteSpace = 'normal';
+            summaryText.style.lineHeight = '1.1';
         }
     }
+
+    // --- 5. Apply the final calculated font size and clean up ---
+    summaryText.style.fontSize = `${currentSize}px`;
+    document.body.removeChild(helper);
 }
 
   
