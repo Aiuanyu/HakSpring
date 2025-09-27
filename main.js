@@ -1664,6 +1664,7 @@ function initializeAppUI() {
   let successfullyLoadedFromUrl = false;
 
   const resultsSummaryContainer = document.getElementById('results-summary');
+  const summaryTextContent = document.getElementById('summary-text-content');
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const searchPopup = document.getElementById('search-popup');
@@ -1890,7 +1891,10 @@ function initializeAppUI() {
     }
 
     if (!keyword) {
-        if (resultsSummaryContainer) resultsSummaryContainer.textContent = '';
+        if (summaryTextContent) {
+            summaryTextContent.textContent = '';
+            summaryTextContent.dataset.originalText = '';
+        }
         contentContainer.innerHTML = '<p style="text-align: center;">請輸入關鍵字</p>';
         updatePageTitle();
         updateResultsSummaryVisibility();
@@ -2009,7 +2013,6 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     g_currentSearchResults = results; // Store results globally
     let globalRowIndex = (page - 1) * itemsPerPage;
     const contentContainer = document.getElementById('generated');
-    const resultsSummaryContainer = document.getElementById('results-summary');
     contentContainer.innerHTML = '';
     document.querySelector('#audioControls')?.remove();
 
@@ -2023,14 +2026,14 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
     updatePageTitle([`${selectedDialect}尋「${keyword}」（${searchModeText}）`]);
 
     if (totalResults === 0) {
-        resultsSummaryContainer.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
-    resultsSummaryContainer.dataset.originalText = resultsSummaryContainer.textContent;
+        summaryTextContent.textContent = summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+        summaryTextContent.dataset.originalText = summaryTextContent.textContent;
         updateResultsSummaryVisibility();
         return;
     }
 
-    resultsSummaryContainer.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
-  resultsSummaryContainer.dataset.originalText = resultsSummaryContainer.textContent;
+    summaryTextContent.textContent = summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+    summaryTextContent.dataset.originalText = summaryTextContent.textContent;
 
     const highlightRegex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
 
@@ -2423,55 +2426,51 @@ function calculateTotalRequiredWidth(headerElement) {
 }
 
 function adjustResultsSummaryFontSize() {
-    const summary = document.getElementById('results-summary');
-    if (!summary || summary.style.display === 'none' || !summary.dataset.originalText) {
+    const summaryContainer = document.getElementById('results-summary');
+    const summaryText = document.getElementById('summary-text-content');
+
+    if (!summaryContainer || !summaryText || summaryContainer.style.display === 'none' || !summaryText.dataset.originalText) {
         return;
     }
 
-    const audioControls = summary.querySelector('#audioControls');
-    if (audioControls) {
-        audioControls.remove(); // Temporarily remove controls
-    }
-
     // --- 1. Reset to original single-line state ---
-    summary.innerHTML = summary.dataset.originalText;
-    summary.style.fontSize = '';
-    summary.style.lineHeight = '';
+    summaryText.innerHTML = summaryText.dataset.originalText;
+    summaryText.style.fontSize = '';
+    summaryText.style.lineHeight = '';
 
     // --- 2. Get initial values and set thresholds ---
-    window.getComputedStyle(summary).fontSize; // Force style recalculation
-    const initialFontSize = parseFloat(window.getComputedStyle(summary).fontSize);
+    window.getComputedStyle(summaryText).fontSize; // Force style recalculation
+    const initialFontSize = parseFloat(window.getComputedStyle(summaryText).fontSize);
     const minFontSize = 10; // Absolute minimum font size in pixels
-    const breakThreshold = 16; // Approx. 2vw on a medium screen, threshold to insert <br>
-    const buffer = 2; // A small buffer for floating point inaccuracies
+    const breakThreshold = 16;
+    const buffer = 2;
 
     let currentSize = initialFontSize;
     let needsLineBreak = false;
 
     // --- 3. First pass: Try to fit on a single line by shrinking font ---
-    for (let i = 0; i < 30; i++) { // Safety break after 30 iterations
-        if (summary.scrollWidth <= summary.clientWidth + buffer) {
+    for (let i = 0; i < 30; i++) {
+        if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
             break; // Text fits
         }
         if (currentSize <= breakThreshold) {
             needsLineBreak = true;
-            break; // Font is too small, trigger line break
+            break;
         }
         if (currentSize <= minFontSize) {
-            break; // Reached absolute minimum
+            break;
         }
         currentSize -= 0.5;
-        summary.style.fontSize = `${currentSize}px`;
+        summaryText.style.fontSize = `${currentSize}px`;
     }
 
     // --- 4. If needed, insert <br> and readjust font size for two lines ---
     if (needsLineBreak) {
-        let text = summary.dataset.originalText;
+        let text = summaryText.dataset.originalText;
         let breakPoint = -1;
         const colonIndex = text.indexOf('\uff1a'); // Full-width colon
-        const commaIndex = text.indexOf('，'); // Use full-width comma
+        const commaIndex = text.indexOf('，'); // Full-width comma
 
-        // Prioritize breaking at the colon for category view, then comma for search view
         if (colonIndex > -1) {
             breakPoint = colonIndex + 1;
         } else if (commaIndex > -1) {
@@ -2479,29 +2478,24 @@ function adjustResultsSummaryFontSize() {
         }
 
         if (breakPoint > 0) {
-            summary.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
-            summary.style.lineHeight = '1.2'; // Apply a tighter line height
+            summaryText.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
+            summaryText.style.lineHeight = '1.2';
 
             // --- 5. Second pass: Find the new optimal font size for two lines ---
-            summary.style.fontSize = ''; // Reset to find max possible size
+            summaryText.style.fontSize = ''; // Reset to find max possible size
             currentSize = initialFontSize;
 
-            for (let i = 0; i < 30; i++) { // Safety break
-                if (summary.scrollWidth <= summary.clientWidth + buffer) {
-                    break; // Text fits
+            for (let i = 0; i < 30; i++) {
+                if (summaryText.scrollWidth <= summaryText.clientWidth + buffer) {
+                    break;
                 }
                 if (currentSize <= minFontSize) {
-                    break; // Reached absolute minimum
+                    break;
                 }
                 currentSize -= 0.5;
-                summary.style.fontSize = `${currentSize}px`;
+                summaryText.style.fontSize = `${currentSize}px`;
             }
         }
-    }
-
-    // --- 6. Re-append the audio controls if they were present ---
-    if (audioControls) {
-        summary.appendChild(audioControls);
     }
 }
 
@@ -2735,13 +2729,13 @@ function preprocessAllData() {
 // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---
 function updateResultsSummaryVisibility() {
   const resultsSummaryContainer = document.getElementById('results-summary');
-  if (!resultsSummaryContainer) return; // 確保元素存在
+  const summaryTextContent = document.getElementById('summary-text-content');
+  if (!resultsSummaryContainer || !summaryTextContent) return;
 
-  // 檢查 #results-summary 自身係無係有實際个內容 (trim() 會拿忒頭尾空白)
-  if (resultsSummaryContainer.textContent.trim() !== '') {
-    resultsSummaryContainer.style.display = 'flex'; // 有內容就顯示，並啟用 Flexbox 佈局
+  if (summaryTextContent.textContent.trim() !== '') {
+    resultsSummaryContainer.style.display = 'flex';
   } else {
-    resultsSummaryContainer.style.display = 'none'; // 無內容就隱藏
+    resultsSummaryContainer.style.display = 'none';
   }
 }
 
@@ -3100,15 +3094,16 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         contentContainer.innerHTML = '';
         document.querySelector('#audioControls')?.remove();
         
-        const resultsSummaryContainer = document.getElementById('results-summary');
-        if (resultsSummaryContainer) {
+        const summaryTextContent = document.getElementById('summary-text-content');
+        if (summaryTextContent) {
             let summaryText = `${dialectInfo.fullLvlName}：${category}`;
             if (totalResults > 0) {
                 summaryText += ` (${totalResults})`;
             }
-            resultsSummaryContainer.textContent = summaryText;
-            resultsSummaryContainer.dataset.originalText = summaryText;
-            if (!autoPlayTargetRowId) {
+            summaryTextContent.textContent = summaryText;
+            summaryTextContent.dataset.originalText = summaryText;
+            const resultsSummaryContainer = document.getElementById('results-summary');
+            if (resultsSummaryContainer && !autoPlayTargetRowId) {
                 resultsSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
