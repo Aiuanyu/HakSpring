@@ -2468,7 +2468,7 @@ function adjustResultsSummaryFontSize() {
     if (needsLineBreak) {
         let text = summary.dataset.originalText;
         let breakPoint = -1;
-        const colonIndex = text.indexOf('：');
+        const colonIndex = text.indexOf('\uff1a'); // Full-width colon
         const commaIndex = text.indexOf('，'); // Use full-width comma
 
         // Prioritize breaking at the colon for category view, then comma for search view
