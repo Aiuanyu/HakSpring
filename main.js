@@ -2428,6 +2428,11 @@ function adjustResultsSummaryFontSize() {
         return;
     }
 
+    const audioControls = summary.querySelector('#audioControls');
+    if (audioControls) {
+        audioControls.remove(); // Temporarily remove controls
+    }
+
     // --- 1. Reset to original single-line state ---
     summary.innerHTML = summary.dataset.originalText;
     summary.style.fontSize = '';
@@ -2484,6 +2489,11 @@ function adjustResultsSummaryFontSize() {
                 summary.style.fontSize = `${currentSize}px`;
             }
         }
+    }
+
+    // --- 6. Re-append the audio controls if they were present ---
+    if (audioControls) {
+        summary.appendChild(audioControls);
     }
 }
 
