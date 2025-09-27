@@ -1635,8 +1635,9 @@ input:checked + .slider:before {
   display: flex; /* Shown when is-visible class is present */
 }
 
-/* Info Modal Dialog Specific Styles */
-#infoModal .modal-dialog {
+/* Modal Dialog Specific Styles */
+#infoModal .modal-dialog,
+#whatsNewModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
@@ -1650,7 +1651,8 @@ input:checked + .slider:before {
   overflow: hidden; /* 避免 iframe 載入前內容溢出 */
 }
 
-#infoModal .modal-header {
+#infoModal .modal-header,
+#whatsNewModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1665,7 +1667,8 @@ input:checked + .slider:before {
   gap: 15px;
 }
 
-#infoModal .modal-title {
+#infoModal .modal-title,
+#whatsNewModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -1674,6 +1677,7 @@ input:checked + .slider:before {
 }
 
 #infoModal .modal-close-btn,
+#whatsNewModal .modal-close-btn,
 #romanizerContainer .modal-close-btn {
   background: none;
   border: none;
@@ -1686,12 +1690,15 @@ input:checked + .slider:before {
 }
 #infoModal .modal-close-btn:hover,
 #infoModal .modal-close-btn:focus-visible,
+#whatsNewModal .modal-close-btn:hover,
+#whatsNewModal .modal-close-btn:focus-visible,
 #romanizerContainer .modal-close-btn:hover,
 #romanizerContainer .modal-close-btn:focus-visible {
   color: #333;
 }
 
-#infoModal .modal-body {
+#infoModal .modal-body,
+#whatsNewModal .modal-body {
   padding: 20px 30px;
   flex-grow: 1;
   overflow-y: auto;
@@ -1700,7 +1707,7 @@ input:checked + .slider:before {
   line-height: 1.7;
 }
 
-/* Dark Mode for Info Modal */
+/* Dark Mode for Modals */
 @media (prefers-color-scheme: dark) {
   #infoButton,
   #showRomanizerBtn,
@@ -1718,21 +1725,26 @@ input:checked + .slider:before {
   }
 
   #infoModal .modal-dialog,
+  #whatsNewModal .modal-dialog,
   #romanizerContainer .modal-dialog,
   #dataManagementModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
   #infoModal .modal-header,
+  #whatsNewModal .modal-header,
   #dataManagementModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
   #infoModal .modal-close-btn,
+  #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
   #dataManagementModal .modal-close-btn {
     color: #aaa;
   }
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
+  #whatsNewModal .modal-close-btn:hover,
+  #whatsNewModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
   #romanizerContainer .modal-close-btn:focus-visible,
   #dataManagementModal .modal-close-btn:hover,
