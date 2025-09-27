@@ -4048,6 +4048,30 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         closeWhatsNewModal();
       }
     });
+
+    // Navigation between Info and What's New
+    const infoContent = document.getElementById('info-content');
+    if (infoContent) {
+      infoContent.addEventListener('click', (event) => {
+        const target = event.target.closest('a');
+        if (target && target.getAttribute('href') === '#show-whats-new') {
+          event.preventDefault();
+          infoModal.classList.remove('is-visible');
+          whatsNewModal.classList.add('is-visible');
+        }
+      });
+    }
+
+    if (whatsNewContent) {
+      whatsNewContent.addEventListener('click', (event) => {
+        const target = event.target.closest('a');
+        if (target && target.getAttribute('href') === '#show-info') {
+          event.preventDefault();
+          whatsNewModal.classList.remove('is-visible');
+          infoModal.classList.add('is-visible');
+        }
+      });
+    }
   }
   // --- End of What's New Modal Logic ---
 
