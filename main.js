@@ -689,6 +689,35 @@ function getDapuSandhiHtml(htmlContent) {
     let modifiedTokens = [];
     let hasActualModification = false;
 
+    const applySandhiRule = (variant, next) => {
+        let newTone = null;
+        let rubyClass = null;
+
+        if (variant.match(/[àèìòù](?![bdg])/) && next.match(/[àèìòùâêîôû]/)) {
+            newTone = '55';
+            rubyClass = 'sandhi-高降變';
+        }
+        else if (variant.match(/[āēīōū]/) && next.match(/[ǎěǐǒǔâêîôû]/)) {
+            newTone = '35';
+            rubyClass = 'sandhi-中平變';
+        }
+        else if (variant.match(/[ǎěǐǒǔ]/) && next.match(/[ǎěǐǒǔ]/)) {
+            newTone = '33';
+            rubyClass = 'sandhi-低升變';
+        }
+
+        if (newTone && rubyClass) {
+            let rubyElement = document.createElement('ruby');
+            rubyElement.className = rubyClass;
+            rubyElement.textContent = variant;
+            let rtInnerElement = document.createElement('rt');
+            rtInnerElement.textContent = newTone;
+            rubyElement.appendChild(rtInnerElement);
+            return rubyElement.outerHTML;
+        }
+        return variant;
+    };
+
     for (let i = 0; i < tokens.length; i++) {
         let currentToken = tokens[i];
 
@@ -715,34 +744,19 @@ function getDapuSandhiHtml(htmlContent) {
             continue;
         }
 
-        let newTone = null;
-        let rubyClass = null;
-
-        if (currentToken.match(/[àèìòù](?![bdg])/) && nextWordToken.match(/[àèìòùâêîôû]/)) {
-            newTone = '55';
-            rubyClass = 'sandhi-高降變';
-        }
-        else if (currentToken.match(/[āēīōū]/) && nextWordToken.match(/[ǎěǐǒǔâêîôû]/)) {
-            newTone = '35';
-            rubyClass = 'sandhi-中平變';
-        }
-        else if (currentToken.match(/[ǎěǐǒǔ]/) && nextWordToken.match(/[ǎěǐǒǔ]/)) {
-            newTone = '33';
-            rubyClass = 'sandhi-低升變';
-        }
-
-        if (newTone && rubyClass) {
-            let rubyElement = document.createElement('ruby');
-            rubyElement.className = rubyClass;
-            rubyElement.textContent = currentToken;
-            let rtInnerElement = document.createElement('rt');
-            rtInnerElement.textContent = newTone;
-            rubyElement.appendChild(rtInnerElement);
-            modifiedTokens.push(rubyElement.outerHTML);
-            hasActualModification = true;
+        let finalToken;
+        if (currentToken.includes('/')) {
+            const variants = currentToken.split('/');
+            const processedVariants = variants.map(variant => applySandhiRule(variant, nextWordToken));
+            finalToken = processedVariants.join('/');
         } else {
-            modifiedTokens.push(currentToken);
+            finalToken = applySandhiRule(currentToken, nextWordToken);
         }
+
+        if (finalToken !== currentToken) {
+            hasActualModification = true;
+        }
+        modifiedTokens.push(finalToken);
     }
 
     if (hasActualModification) {
