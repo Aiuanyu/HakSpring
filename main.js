@@ -88,6 +88,20 @@ function handleDomainMigration() {
 }
 
 // Agent Jules was here.
+function isIOS() {
+  // Using navigator.userAgent is more robust than the deprecated navigator.platform.
+  // This regex covers iPhones, iPads, iPods, and their simulators.
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Also, iPad on iOS 13+ detection, which may report as a Mac.
+  const isModernIPad = (
+    navigator.userAgent.includes("Mac") &&
+    "ontouchend" in document
+  );
+
+  return isIOSDevice || isModernIPad;
+}
+
 function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
 }
@@ -1451,8 +1465,8 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
-  // --- 註冊 Service Worker ---
-  if ('serviceWorker' in navigator) {
+  // --- 註冊 Service Worker (iOS 除外) ---
+  if ('serviceWorker' in navigator && !isIOS()) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('service-worker.js')
         .then(registration => {
@@ -1463,7 +1477,6 @@ async function initializeApp() {
         });
     });
   }
-  // --- 註冊結束 ---
 
   handleDataImport();
   if (handleDomainMigration()) {
