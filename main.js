@@ -1,5 +1,5 @@
 function handleDomainMigration() {
-  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev') {
+  if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev' && window.location.hostname !== 'fix-migration-page-scroll.hakspring.pages.dev') {
     return false;
   }
 
@@ -14,7 +14,6 @@ function handleDomainMigration() {
   overlay.style.zIndex = '999999';
   overlay.style.display = 'flex';
   overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
   overlay.style.padding = '1.5em';
   overlay.style.boxSizing = 'border-box';
 
