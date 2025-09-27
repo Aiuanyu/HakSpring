@@ -88,6 +88,19 @@ function handleDomainMigration() {
 }
 
 // Agent Jules was here.
+function isIOS() {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+}
+
 function isFirefox() {
     return navigator.userAgent.toLowerCase().includes('firefox');
 }
@@ -341,7 +354,7 @@ function getDialectInfo(腔, 級) {
  * @param {object} dialectInfo - Information about the current dialect and level.
  */
 function updateMediaSession(track, dialectInfo, isSingleLoop = false) {
-    if (!('mediaSession' in navigator)) {
+    if (!('mediaSession' in navigator) || isIOS()) {
         return;
     }
 
