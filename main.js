@@ -1425,7 +1425,10 @@ async function checkWhatsNew() {
   }
 
   try {
-    const response = await fetch('whatsnew.md', { method: 'HEAD', cache: 'no-store' });
+    // Add cache-busting query parameter
+    const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
+    const response = await fetch(cacheBustUrl, { method: 'HEAD' });
+
     if (!response.ok) {
       console.error('Could not fetch whatsnew.md header.');
       return;
@@ -1452,7 +1455,9 @@ async function checkWhatsNew() {
 }
 
 const showWhatsNewModal = (force = false) => {
-  fetch('whatsnew.md', { cache: 'no-store' }) // Ensure fresh fetch
+  // Add cache-busting query parameter to the content fetch as well
+  const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
+  fetch(cacheBustUrl)
     .then(response => {
       if (!response.ok) throw new Error('Network response was not ok');
       newLastModified = response.headers.get('Last-Modified'); // Store the header value
