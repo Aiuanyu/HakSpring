@@ -64,6 +64,34 @@
         label {
             margin-right: 10px;
         }
+
+        /* --- Dark Mode Styles --- */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: var(--dark-background-color, #1f1f1f);
+                color: var(--main-text-color, #e0e0e0);
+            }
+            select, button {
+                background-color: var(--dark-surface-color, #2c2c2c);
+                color: var(--main-text-color, #e0e0e0);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            button {
+                background-color: var(--popup-btn-bg, #343a40);
+                border-color: var(--popup-btn-border, #495057);
+                color: var(--popup-btn-text, #e9ecef);
+            }
+            button:hover {
+                background-color: var(--popup-btn-bg-hover, #495057);
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            #status {
+                color: #aaa; /* Lighter grey for status text in dark mode */
+            }
+        }
     </style>
 </head>
 <body>
