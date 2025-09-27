@@ -3431,27 +3431,49 @@ function playAudio(itemIndex, sessionId) {
     const sentenceAudio = audioElementsInRow[1];
     const signal = audioAbortController.signal;
 
-    const playNextItem = () => {
-        // 【修改此行】將 sessionId 傳遞下去
-        playAudio(currentAudioIndex + 1, sessionId);
-    };
+    if (isIOS()) {
+        const playNext = () => playAudio(currentAudioIndex + 1, sessionId);
 
-    const playSentence = () => {
-        if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
-            currentAudio = sentenceAudio;
-            currentAudio.play().catch(e => { console.error('播放例句音檔失敗', e); playNextItem(); });
-            currentAudio.addEventListener('ended', playNextItem, { once: true, signal });
+        const playSentenceThenNext = () => {
+            if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
+                currentAudio = sentenceAudio;
+                sentenceAudio.addEventListener('ended', playNext, { once: true, signal });
+                sentenceAudio.play().catch(e => { console.error('iOS: Play sentence audio failed', e); playNext(); });
+            } else {
+                playNext();
+            }
+        };
+
+        if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
+            currentAudio = wordAudio;
+            wordAudio.addEventListener('ended', playSentenceThenNext, { once: true, signal });
+            wordAudio.play().catch(e => { console.error('iOS: Play word audio failed', e); playSentenceThenNext(); });
         } else {
-            playNextItem();
+            playSentenceThenNext();
         }
-    };
-
-    if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
-        currentAudio = wordAudio;
-        currentAudio.play().catch(e => { console.error('播放詞彙音檔失敗', e); playSentence(); });
-        currentAudio.addEventListener('ended', playSentence, { once: true, signal });
     } else {
-        playSentence();
+        const playNextItem = () => {
+            // 【修改此行】將 sessionId 傳遞下去
+            playAudio(currentAudioIndex + 1, sessionId);
+        };
+
+        const playSentence = () => {
+            if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
+                currentAudio = sentenceAudio;
+                currentAudio.play().catch(e => { console.error('播放例句音檔失敗', e); playNextItem(); });
+                currentAudio.addEventListener('ended', playNextItem, { once: true, signal });
+            } else {
+                playNextItem();
+            }
+        };
+
+        if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
+            currentAudio = wordAudio;
+            currentAudio.play().catch(e => { console.error('播放詞彙音檔失敗', e); playSentence(); });
+            currentAudio.addEventListener('ended', playSentence, { once: true, signal });
+        } else {
+            playSentence();
+        }
     }
 }
 
