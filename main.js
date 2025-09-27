@@ -4016,9 +4016,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   const whatsNewReadFlag = 'whatsNewRead_20250927'; // Unique flag for this message
 
   if (whatsNewModal && whatsNewModalCloseBtn && whatsNewContent) {
-    const hasReadWhatsNew = localStorage.getItem(whatsNewReadFlag);
-
-    if (!hasReadWhatsNew) {
+    const showWhatsNewModal = () => {
       fetch('whatsnew.md')
         .then(response => {
           if (!response.ok) {
@@ -4028,13 +4026,23 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         })
         .then(markdown => {
           whatsNewContent.innerHTML = marked.parse(markdown);
-          // Show the modal only after content is loaded
           whatsNewModal.classList.add('is-visible');
         })
         .catch(error => {
           console.error('Failed to load whatsnew.md:', error);
           whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
+          whatsNewModal.classList.add('is-visible'); // Show modal even on error
         });
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('whatsnew') === 'see') {
+      showWhatsNewModal();
+    } else {
+      const hasReadWhatsNew = localStorage.getItem(whatsNewReadFlag);
+      if (!hasReadWhatsNew) {
+        showWhatsNewModal();
+      }
     }
 
     const closeWhatsNewModal = () => {
@@ -4057,7 +4065,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         if (target && target.getAttribute('href') === '#show-whats-new') {
           event.preventDefault();
           infoModal.classList.remove('is-visible');
-          whatsNewModal.classList.add('is-visible');
+          showWhatsNewModal();
         }
       });
     }
