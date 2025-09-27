@@ -14,7 +14,6 @@ function handleDomainMigration() {
   overlay.style.zIndex = '999999';
   overlay.style.display = 'flex';
   overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
   overlay.style.padding = '1.5em';
   overlay.style.boxSizing = 'border-box';
 

@@ -2691,6 +2691,8 @@ mark {
 /* --- Migration Overlay Styles --- */
 #migration-overlay {
   background-color: #f0f2f5;
+  overflow-y: auto;
+  align-items: flex-start;
 }
 .migration-container {
   display: flex;
