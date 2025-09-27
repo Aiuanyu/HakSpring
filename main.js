@@ -1431,14 +1431,20 @@ async function checkWhatsNew() {
       return;
     }
 
-    const serverLastModified = response.headers.get('Last-Modified');
-    const localLastModified = localStorage.getItem('whatsNewLastModified');
+    const serverLastModifiedString = response.headers.get('Last-Modified');
+    const localLastModifiedString = localStorage.getItem('whatsNewLastModified');
 
-    if (serverLastModified && serverLastModified !== localLastModified) {
-      console.log('New whatsnew.md detected. Showing modal.');
-      showWhatsNewModal();
-    } else {
-      console.log('whatsnew.md is up to date.');
+    if (serverLastModifiedString) {
+      const serverDate = new Date(serverLastModifiedString);
+      const localDate = localLastModifiedString ? new Date(localLastModifiedString) : null;
+
+      // Compare time values. Show modal if local date is missing or server date is newer.
+      if (!localDate || serverDate.getTime() > localDate.getTime()) {
+        console.log('New whatsnew.md detected. Showing modal.');
+        showWhatsNewModal();
+      } else {
+        console.log('whatsnew.md is up to date.');
+      }
     }
   } catch (error) {
     console.error('Error checking for whatsnew.md update:', error);
