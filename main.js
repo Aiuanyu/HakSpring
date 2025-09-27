@@ -2467,8 +2467,16 @@ function adjustResultsSummaryFontSize() {
     // --- 4. If needed, insert <br> and readjust font size for two lines ---
     if (needsLineBreak) {
         let text = summary.dataset.originalText;
-        // Find the first colon or comma to break the line
-        const breakPoint = text.indexOf('：') + 1 || text.indexOf(',') + 1;
+        let breakPoint = -1;
+        const colonIndex = text.indexOf('：');
+        const commaIndex = text.indexOf('，'); // Use full-width comma
+
+        // Prioritize breaking at the colon for category view, then comma for search view
+        if (colonIndex > -1) {
+            breakPoint = colonIndex + 1;
+        } else if (commaIndex > -1) {
+            breakPoint = commaIndex + 1;
+        }
 
         if (breakPoint > 0) {
             summary.innerHTML = text.substring(0, breakPoint) + '<br>' + text.substring(breakPoint).trim();
