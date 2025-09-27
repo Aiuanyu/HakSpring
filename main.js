@@ -89,16 +89,17 @@ function handleDomainMigration() {
 
 // Agent Jules was here.
 function isIOS() {
-  return [
-    'iPad Simulator',
-    'iPhone Simulator',
-    'iPod Simulator',
-    'iPad',
-    'iPhone',
-    'iPod'
-  ].includes(navigator.platform)
-  // Also, iPad on iOS 13 detection
-  || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+  // Using navigator.userAgent is more robust than the deprecated navigator.platform.
+  // This regex covers iPhones, iPads, iPods, and their simulators.
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Also, iPad on iOS 13+ detection, which may report as a Mac.
+  const isModernIPad = (
+    navigator.userAgent.includes("Mac") &&
+    "ontouchend" in document
+  );
+
+  return isIOSDevice || isModernIPad;
 }
 
 function isFirefox() {
