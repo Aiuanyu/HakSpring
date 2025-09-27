@@ -1411,74 +1411,6 @@ async function loadDataFromDB(db) {
 }
 
 
-// --- What's New Modal Logic (Embedded Version) ---
-let newWhatsNewVersion = null; // To hold the version from the fetched file
-
-async function checkWhatsNew() {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('whatsnew') === 'see') {
-    showWhatsNewModal(true); // Force show
-    return;
-  }
-
-  try {
-    const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
-    const response = await fetch(cacheBustUrl);
-    if (!response.ok) {
-      throw new Error('Failed to fetch whatsnew.md');
-    }
-    const markdownContent = await response.text();
-
-    // Extract version from <!-- version: 12345 -->
-    const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
-    const serverVersion = versionMatch ? parseInt(versionMatch[1], 10) : 0;
-
-    const localVersion = parseInt(localStorage.getItem('whatsNewVersion') || '0', 10);
-
-    if (serverVersion > localVersion) {
-      console.log(`New whatsnew.md version detected. Server: ${serverVersion}, Local: ${localVersion}. Showing modal.`);
-      newWhatsNewVersion = serverVersion; // Set the new version to be saved on close
-      document.getElementById('whats-new-content').innerHTML = marked.parse(markdownContent);
-      document.getElementById('whatsNewModal').classList.add('is-visible');
-    } else {
-      console.log('whatsnew.md is up to date.');
-    }
-  } catch (error) {
-    console.error('Error checking for whatsnew.md update:', error);
-  }
-}
-
-// This function is now only for forcing the modal open, e.g., from a link.
-const showWhatsNewModal = async (force = false) => {
-  if (!force) return;
-
-  try {
-    const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
-    const response = await fetch(cacheBustUrl);
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    const markdownContent = await response.text();
-    const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
-    newWhatsNewVersion = versionMatch ? parseInt(versionMatch[1], 10) : null;
-
-    document.getElementById('whats-new-content').innerHTML = marked.parse(markdownContent);
-    document.getElementById('whatsNewModal').classList.add('is-visible');
-  } catch (error) {
-    console.error('Failed to load whatsnew.md:', error);
-    document.getElementById('whats-new-content').innerHTML = '<p>最新消息載入失敗。</p>';
-    document.getElementById('whatsNewModal').classList.add('is-visible');
-  }
-};
-
-const closeWhatsNewModal = () => {
-  if (newWhatsNewVersion) {
-    localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
-    console.log('Updated whatsNewVersion in localStorage:', newWhatsNewVersion);
-  }
-  document.getElementById('whatsNewModal').classList.remove('is-visible');
-};
-// --- End of What's New Modal Logic ---
-
 // --- Application Initialization ---
 
 function handleDataImport() {
@@ -1606,7 +1538,6 @@ async function initializeApp() {
         await loadDataFromDB(db);
         
         initializeAppUI();
-        checkWhatsNew(); // Check for "What's New" updates
 
         // Hide loading indicator and show main content
         loadingIndicator.style.display = 'none';
@@ -4078,16 +4009,66 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
   }
 
-  // --- What's New Modal Event Listeners ---
+  // --- What's New Modal Logic ---
+  const whatsNewModal = document.getElementById('whatsNewModal');
+  const whatsNewModalCloseBtn = document.getElementById('whatsNewModalCloseBtn');
+  const whatsNewContent = document.getElementById('whats-new-content');
+  let newWhatsNewVersion = null;
+
+  async function checkWhatsNew() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('whatsnew') === 'see') {
+      showWhatsNewModal(true);
+      return;
+    }
+    try {
+      const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
+      const response = await fetch(cacheBustUrl);
+      if (!response.ok) throw new Error('Failed to fetch whatsnew.md');
+      const markdownContent = await response.text();
+      const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
+      const serverVersion = versionMatch ? parseInt(versionMatch[1], 10) : 0;
+      const localVersion = parseInt(localStorage.getItem('whatsNewVersion') || '0', 10);
+      if (serverVersion > localVersion) {
+        newWhatsNewVersion = serverVersion;
+        whatsNewContent.innerHTML = marked.parse(markdownContent);
+        whatsNewModal.classList.add('is-visible');
+      }
+    } catch (error) {
+      console.error('Error checking for whatsnew.md update:', error);
+    }
+  }
+
+  const showWhatsNewModal = async (force = false) => {
+    if (!force) return;
+    try {
+      const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
+      const response = await fetch(cacheBustUrl);
+      if (!response.ok) throw new Error('Network response was not ok');
+      const markdownContent = await response.text();
+      const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
+      newWhatsNewVersion = versionMatch ? parseInt(versionMatch[1], 10) : null;
+      whatsNewContent.innerHTML = marked.parse(markdownContent);
+      whatsNewModal.classList.add('is-visible');
+    } catch (error) {
+      console.error('Failed to load whatsnew.md:', error);
+      whatsNewContent.innerHTML = '<p>最新消息載入失敗。</p>';
+      whatsNewModal.classList.add('is-visible');
+    }
+  };
+
+  const closeWhatsNewModal = () => {
+    if (newWhatsNewVersion) {
+      localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
+    }
+    whatsNewModal.classList.remove('is-visible');
+  };
+
   if (whatsNewModal && whatsNewModalCloseBtn && whatsNewContent) {
     whatsNewModalCloseBtn.addEventListener('click', closeWhatsNewModal);
     whatsNewModal.addEventListener('click', (event) => {
-      if (event.target === whatsNewModal) {
-        closeWhatsNewModal();
-      }
+      if (event.target === whatsNewModal) closeWhatsNewModal();
     });
-
-    // Navigation between Info and What's New modals
     const infoContent = document.getElementById('info-content');
     if (infoContent) {
       infoContent.addEventListener('click', (event) => {
@@ -4095,23 +4076,24 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         if (target && target.getAttribute('href') === '#show-whats-new') {
           event.preventDefault();
           infoModal.classList.remove('is-visible');
-          showWhatsNewModal(true); // Force show when clicked from info
+          showWhatsNewModal(true);
         }
       });
     }
-
     if (whatsNewContent) {
       whatsNewContent.addEventListener('click', (event) => {
         const target = event.target.closest('a');
         if (target && target.getAttribute('href') === '#show-info') {
           event.preventDefault();
-          closeWhatsNewModal(); // Close current modal first
+          closeWhatsNewModal();
           infoModal.classList.add('is-visible');
         }
       });
     }
   }
-  // --- End of What's New Modal Event Listeners ---
+
+  checkWhatsNew();
+  // --- End of What's New Modal Logic ---
 
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
