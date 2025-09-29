@@ -1080,7 +1080,8 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
   mobileLookupButton.innerHTML = '尋讀音 <i class="fas fa-search"></i>';
   mobileLookupButton.style.display = 'none';
   document.body.appendChild(mobileLookupButton);
-  mobileLookupButton.addEventListener('click', () => {
+
+  const handleLookup = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0 && lastSelectionRectForMobile) {
       const selectedText = selection.toString().trim();
@@ -1091,7 +1092,20 @@ function createMobileLookupButton(popupEl, contentEl, backdropEl) {
     } else {
       hideMobileLookupButton();
     }
-  });
+  };
+
+  if (isIOS()) {
+    // For iOS, `touchend` is more reliable than `click` for dynamically added elements.
+    // We also prevent default on `touchstart` to avoid issues like double-tap-to-zoom
+    // and to make the interaction feel more responsive.
+    mobileLookupButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+    });
+    mobileLookupButton.addEventListener('touchend', handleLookup);
+  } else {
+    // For other devices, `click` works just fine.
+    mobileLookupButton.addEventListener('click', handleLookup);
+  }
 }
 
 function showMobileLookupButton(selectionRect) {
