@@ -1427,9 +1427,9 @@ input:checked + .slider:before {
 
   #generated td, #comparison-table td {
     display: block; /* 分儲存格變做區塊元素 */
-    text-align: left !important; /* 強制靠左對齊 */
-    padding-left: 15%; /* 留空間分標籤 */
-    position: relative; /* 設定相對定位，分 ::before 好定位 */
+    text-align: center !important; /* 強制置中對齊 */
+    padding-left: 0; /* 歸零，標籤改做置中 */
+    /* position: relative; */ /* ::before 毋再用絕對定位，就毋使這隻屬性 */
     border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3); /* 加底線分隔 */
     padding-top: 0.5em;
     padding-bottom: 0.5em;
@@ -1444,14 +1444,13 @@ input:checked + .slider:before {
   /* 用 ::before 顯示標籤 */
   #generated td::before, #comparison-table td::before {
     content: attr(data-label); /* 讀取 data-label 內容 */
-    position: absolute;
-    left: 10px; /* 標籤靠左 */
-    width: 10%; /* 標籤闊度 */
-    padding-right: 10px; /* 標籤右邊留白 */
+    /* position: absolute; */ /* 毋再用絕對定位 */
+    display: block; /* 改做區塊元素，分佢獨立佔一行，好置中 */
     font-weight: bold;
     white-space: nowrap; /* 標籤毋換行 */
     color: var(--main-text-color); /* 確保標籤顏色 */
     font-size: 0.7em; /* Aiuanyu：狹螢幕个 data-label 字毋使恁大 *//* 會㖸死，「真人寫个」還愛特別註明 */
+    margin-bottom: 0.3em; /* 同下背个內容隔開一息仔 */
   }
 
   /* 調整特定欄位个樣式 */
