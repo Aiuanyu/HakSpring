@@ -4090,20 +4090,44 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       }).catch(error => {
         document.getElementById('info-content').innerHTML = '<p>說明文件載入失敗。</p>';
       });
-    const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
-    if (!dontShowAgain) {
-      infoModal.classList.add('is-visible');
+
+    const INFO_MODAL_MIGRATION_VERSION = '20251009';
+    const hasSeenMigrationMessage = localStorage.getItem('infoModalLastSeenVersion') === INFO_MODAL_MIGRATION_VERSION;
+    const dontShowAgainIsChecked = localStorage.getItem('dontShowInfoModalAgain') === 'true';
+
+    let showOnLoad = false;
+    // For the new domain, we have special logic.
+    if (window.location.hostname.includes('pages.dev')) {
+        // We ONLY hide it if they've seen the new message AND checked the box.
+        // Otherwise, we force it to show.
+        if (!hasSeenMigrationMessage || !dontShowAgainIsChecked) {
+            showOnLoad = true;
+        }
+    } else {
+        // For old domains, keep the original simple logic.
+        if (!dontShowAgainIsChecked) {
+            showOnLoad = true;
+        }
     }
+
+    if (showOnLoad) {
+        infoModal.classList.add('is-visible');
+    }
+
     infoButton.addEventListener('click', () => {
       infoModal.classList.add('is-visible');
       trackEvent('open', 'InfoModal', 'click_info_button');
     });
+
     const closeInfoModal = () => {
       if (document.getElementById('dontShowInfoModalAgain').checked) {
         localStorage.setItem('dontShowInfoModalAgain', 'true');
+        // When closing with the box checked, we also record that they've seen this specific version.
+        localStorage.setItem('infoModalLastSeenVersion', INFO_MODAL_MIGRATION_VERSION);
       }
       infoModal.classList.remove('is-visible');
     };
+
     infoModalCloseBtn.addEventListener('click', closeInfoModal);
     infoModal.addEventListener('click', (event) => {
       if (event.target === infoModal) closeInfoModal();

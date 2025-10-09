@@ -1,3 +1,8 @@
+> [!WARNING]
+> **20251009**
+>
+> 來到 hakspring.pages.dev 後，就不要再回去用 aiuanyu.github.io 了，才不會一直被舊的進度遷移覆蓋
+
 [**>>> 最新消息 <<<**](#show-whats-new)
 
 # HakSpring!「客源翠」♥
