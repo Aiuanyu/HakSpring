@@ -1445,7 +1445,8 @@ async function loadDataFromDB(db) {
 
 function handleDataImport() {
   // Allow import on both the final domain and the preview domain
-  if (window.location.hostname !== 'hakspring.pages.dev' && window.location.hostname !== 'feature-data-migration-promp.hakspring.pages.dev') {
+  const allowedHostnames = ['hakspring.pages.dev', 'feature-data-migration-promp.hakspring.pages.dev', 'fix-migration-page-scroll.hakspring.pages.dev', '']; // Allow empty hostname for file://
+  if (!allowedHostnames.includes(window.location.hostname)) {
     return;
   }
 
@@ -1458,14 +1459,62 @@ function handleDataImport() {
       const decodedData = decodeURIComponent(escape(atob(migrateData)));
       const parsedData = JSON.parse(decodedData);
 
+      // --- Smart Bookmark Merging Logic ---
+      if (parsedData.hakkaBookmarks) {
+        const migratedBookmarks = Array.isArray(parsedData.hakkaBookmarks) ? parsedData.hakkaBookmarks : [];
+        const localBookmarksRaw = localStorage.getItem('hakkaBookmarks');
+
+        if (localBookmarksRaw) {
+          // If local bookmarks exist, merge them
+          let localBookmarks = [];
+          try {
+            const parsedLocal = JSON.parse(localBookmarksRaw);
+            // Ensure the parsed data is an array
+            if (Array.isArray(parsedLocal)) {
+              localBookmarks = parsedLocal;
+            } else {
+              console.warn('Local bookmarks are not an array, they will be overwritten.');
+            }
+          } catch (e) {
+            console.error('Failed to parse local bookmarks, they will be overwritten.', e);
+          }
+          const combinedBookmarks = [...localBookmarks, ...migratedBookmarks];
+
+          const bookmarkMap = new Map();
+          combinedBookmarks.forEach(bm => {
+            const key = `${bm.tableName}||${bm.cat}`;
+            const existing = bookmarkMap.get(key);
+            if (!existing || bm.timestamp > existing.timestamp) {
+              bookmarkMap.set(key, bm);
+            }
+          });
+
+          let mergedBookmarks = Array.from(bookmarkMap.values());
+          mergedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
+
+          if (mergedBookmarks.length > 10) {
+            mergedBookmarks = mergedBookmarks.slice(0, 10);
+          }
+
+          localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+          console.log('Bookmarks merged successfully.');
+
+        } else {
+          // If no local bookmarks, just use the migrated ones
+          localStorage.setItem('hakkaBookmarks', JSON.stringify(migratedBookmarks));
+          console.log('No local bookmarks found, imported migrated bookmarks.');
+        }
+
+        // Remove the key from parsedData so it's not processed again
+        delete parsedData.hakkaBookmarks;
+      }
+
+      // --- Handle other settings (overwrite) ---
       for (const key in parsedData) {
         if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
           let value = parsedData[key];
-          // Bookmarks are an object, so they need to be stringified for localStorage
-          if (key === 'hakkaBookmarks' && typeof value === 'object') {
-            value = JSON.stringify(value);
-          }
-          localStorage.setItem(key, value);
+          // Other values are directly set
+          localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : value);
         }
       }
 
