@@ -1466,7 +1466,18 @@ function handleDataImport() {
 
         if (localBookmarksRaw) {
           // If local bookmarks exist, merge them
-          const localBookmarks = JSON.parse(localBookmarksRaw);
+          let localBookmarks = [];
+          try {
+            const parsedLocal = JSON.parse(localBookmarksRaw);
+            // Ensure the parsed data is an array
+            if (Array.isArray(parsedLocal)) {
+              localBookmarks = parsedLocal;
+            } else {
+              console.warn('Local bookmarks are not an array, they will be overwritten.');
+            }
+          } catch (e) {
+            console.error('Failed to parse local bookmarks, they will be overwritten.', e);
+          }
           const combinedBookmarks = [...localBookmarks, ...migratedBookmarks];
 
           const bookmarkMap = new Map();
