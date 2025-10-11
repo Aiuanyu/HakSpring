@@ -4,8 +4,8 @@
 # 「客源翠 HakSpring」新消息
 20251009 14:01
 
-### 9/17 進前就有用个人，請改用 `hakspring.pages.dev` 網址斯好 lió
-#### 嗨～大自家～對客源翠的舊網址 `aiuanyu.github.io`，都會自動遷移舊進度過來。而新網址的進度也會受到保護。但之後大家可以就直接使用 `hakspring.pages.dev` 囉～
+### 9/17 進前就有用个人，請改用 [hakspring.pages.dev](https://hakspring.pages.dev/) 網址斯好 lió
+#### 嗨～大自家～客源翠的舊網址 `aiuanyu.github.io` 已經設計打包舊進度過來。而新網址的進度也會受到保護。這項遷移只需要做一次就好，之後大家可以直接用 [hakspring.pages.dev](https://hakspring.pages.dev/) 網址（可加入書籤／最愛或桌面捷徑）～
 
 - 2025/10/09 [新] 對舊網址搬徙過來个時節，會保護新進度
 - 2025/9/29 [整好] iOS「長按」客話例句个字詞 →「查讀音」正常運作
