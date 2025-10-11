@@ -197,6 +197,18 @@ body * {
   line-height: 1.8em;
   color: var(--main-text-color);
 }
+
+#main-content h2 a {
+    text-decoration: none;
+    display: block;
+}
+
+#main-content h2 img {
+    height: 1.8em;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 10px;
+}
 /*table {
   table-layout: fixed;
   width: 100%;
