@@ -198,9 +198,32 @@ body * {
   color: var(--main-text-color);
 }
 
+.title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#main-content h2 {
+    margin-right: 1em;
+}
+
 #main-content h2 a {
     text-decoration: none;
     display: block;
+}
+
+@media screen and (max-width: 768px) {
+    .title-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    #main-content h2 {
+        margin-right: 0;
+        margin-bottom: 0.5em;
+    }
 }
 
 #main-content h2 img {
