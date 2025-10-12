@@ -58,9 +58,6 @@ def build_trie(words):
     """從一組詞彙建立 Trie 樹。"""
     root = {}
     for word in words:
-        # 過濾掉太短的詞，避免斷出無意義的單字
-        if len(word) < 2:
-            continue
         node = root
         for char in word:
             node = node.setdefault(char, {})
