@@ -4404,6 +4404,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
           }
       }
   });
+
+  displayGitCommitInfo();
 }
 
 function toggleAccordion(event, line, dialectInfo) {
@@ -4769,6 +4771,36 @@ async function importData() {
   } catch (error) {
     console.error('匯入資料失敗:', error);
     alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
+  }
+}
+
+async function displayGitCommitInfo() {
+  const commitInfoDiv = document.getElementById('commit-info');
+  if (!commitInfoDiv) {
+    console.error('Commit info div not found.');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://api.github.com/repos/aiuanyu/HakSpring/commits?per_page=1');
+    if (!response.ok) {
+      throw new Error(`GitHub API request failed: ${response.status}`);
+    }
+    const commits = await response.json();
+    if (commits.length > 0) {
+      const lastCommit = commits[0];
+      const commitDate = new Date(lastCommit.commit.committer.date);
+      const commitUrl = lastCommit.html_url;
+      const commitSha = lastCommit.sha.substring(0, 7);
+
+      // Format date to YYYY-MM-DD HH:mm
+      const formattedDate = `${commitDate.getFullYear()}-${String(commitDate.getMonth() + 1).padStart(2, '0')}-${String(commitDate.getDate()).padStart(2, '0')} ${String(commitDate.getHours()).padStart(2, '0')}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+
+      commitInfoDiv.innerHTML = `網站最後更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
+    }
+  } catch (error) {
+    console.error('Error fetching commit info:', error);
+    commitInfoDiv.textContent = '無法取得更新資訊。';
   }
 }
 

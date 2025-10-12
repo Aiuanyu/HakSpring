@@ -470,6 +470,23 @@ button.playFromThisRow.ended i {
   background-color: red !important;
 }
 
+/* --- Page Footer --- */
+#page-footer {
+  text-align: center;
+  padding: 1em;
+  font-size: 0.8rem;
+  color: #6c757d; /* A muted text color */
+}
+
+#page-footer a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+#page-footer a:hover {
+  text-decoration: underline;
+}
+
 /* --- 【新增】循環播放按鈕樣式 --- */
 button#loopCategoryBtn.active i {
   background-color: #ff8c00; /* 暗橘色表示 active */
@@ -1584,6 +1601,15 @@ input:checked + .slider:before {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
+
+  /* --- Dark Mode Footer --- */
+  #page-footer {
+    color: #a0a0a0; /* Lighter grey for dark background */
+  }
+
+  #page-footer a {
+    color: #58a6ff; /* A pleasant blue for dark mode */
+  }
   }
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
   #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
