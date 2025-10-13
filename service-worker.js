@@ -97,16 +97,20 @@ self.addEventListener('fetch', (event) => {
     return; // Done with audio
   }
 
-  // Strategy for all other requests: Cache-first, falling back to network
+  // Strategy for all other requests: Cache-first, falling back to network, then caching the new response.
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      // If the request is in the cache, return it.
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // If not in cache, go to the network.
-      return fetch(request);
+      return cachedResponse || fetch(request).then((networkResponse) => {
+        // Check if we received a valid response
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(STATIC_CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+            console.log('SW: Cached new static resource:', request.url);
+          });
+        }
+        return networkResponse;
+      });
     })
   );
 });

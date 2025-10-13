@@ -48,9 +48,14 @@ Tauri 係一隻用 Rust 為後端、任何前端框架為介面个跨平台應�
     *   啟用 JavaScript: `webView.getSettings().setJavaScriptEnabled(true);`
     *   處理離線功能: 因為網站有離線功能，愛確定 WebView 有啟用本地儲存 (DOM Storage) 摎 IndexedDB。
         ```java
+        // 啟用 DOM Storage API，這係 localStorage 摎 sessionStorage 需要个
         webView.getSettings().setDomStorageEnabled(true);
+
+        // 啟用 IndexedDB。setDatabaseEnabled() 主要係為著舊版个 Web SQL，這隻 API 目前既經棄用。
+        // IndexedDB 在啟用 JavaScript 後通常就會自動支援。
         webView.getSettings().setDatabaseEnabled(true);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            // 這行係為著 API 19 (KitKat) 以前个版本設定 Web SQL 路徑，目前已罕見。
             webView.getSettings().setDatabasePath("/data/data/" + this.getPackageName() + "/databases/");
         }
         ```
@@ -102,8 +107,13 @@ Tauri 係一隻用 Rust 為後端、任何前端框架為介面个跨平台應�
             override func viewDidLoad() {
                 super.viewDidLoad()
 
-                let myURL = URL(string:"https://gohakka.org/hak-ka-source-sui/") // 請換成網站个 URL
-                let myRequest = URLRequest(url: myURL!)
+                // 用 guard let 安全地處理 URL，避免因無效 URL 造成閃退
+                guard let myURL = URL(string:"https://gohakka.org/hak-ka-source-sui/") else { // 請換成網站个 URL
+                    print("Error: Invalid URL")
+                    return
+                }
+
+                let myRequest = URLRequest(url: myURL)
                 webView.load(myRequest)
             }
         }
@@ -137,7 +147,7 @@ PWA 係分網站做得像原生 App 一樣安裝到電腦桌面或手機主畫�
 1.  **檢查 Service Worker**: 確定 `service-worker.js` 有正確快取所有必要个檔案，提供良好个離線體驗。
 2.  **建立 Web App Manifest**: 這隻專案目前無 `manifest.json`，愛加一隻。這隻檔案會定義 App 个名稱、圖示、啟動畫面等。
     *   建立一隻 `manifest.json` 檔案。
-    *   在 `index.html` 裡肚連結佢：`<link rel="manifest" href="/manifest.json">`
+    *   在 `index.html` 裡肚連結佢：`<link rel="manifest" href="manifest.json">`
 3.  **設定 `manifest.json`**:
     ```json
     {
@@ -145,12 +155,12 @@ PWA 係分網站做得像原生 App 一樣安裝到電腦桌面或手機主畫�
       "name": "客源翠 HakSpring",
       "icons": [
         {
-          "src": "/android-chrome-192x192.png",
+          "src": "android-chrome-192x192.png",
           "type": "image/png",
           "sizes": "192x192"
         },
         {
-          "src": "/android-chrome-512x512.png",
+          "src": "android-chrome-512x512.png",
           "type": "image/png",
           "sizes": "512x512"
         }
