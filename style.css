@@ -470,20 +470,19 @@ button.playFromThisRow.ended i {
   background-color: red !important;
 }
 
-/* --- Page Footer --- */
-#page-footer {
-  text-align: center;
-  padding: 1em;
+/* --- Commit Info in Modal --- */
+#commit-info-modal {
   font-size: 0.8rem;
-  color: #6c757d; /* A muted text color */
+  color: #6c757d;
+  margin-left: auto; /* Push to the right */
 }
 
-#page-footer a {
+#commit-info-modal a {
   color: #007bff;
   text-decoration: none;
 }
 
-#page-footer a:hover {
+#commit-info-modal a:hover {
   text-decoration: underline;
 }
 
@@ -1602,13 +1601,13 @@ input:checked + .slider:before {
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
 
-  /* --- Dark Mode Footer --- */
-  #page-footer {
-    color: #a0a0a0; /* Lighter grey for dark background */
+  /* --- Dark Mode Commit Info in Modal --- */
+  #commit-info-modal {
+    color: #a0a0a0;
   }
 
-  #page-footer a {
-    color: #58a6ff; /* A pleasant blue for dark mode */
+  #commit-info-modal a {
+    color: #58a6ff;
   }
   }
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */

@@ -4775,9 +4775,9 @@ async function importData() {
 }
 
 async function displayGitCommitInfo() {
-  const commitInfoDiv = document.getElementById('commit-info');
-  if (!commitInfoDiv) {
-    console.error('Commit info div not found.');
+  const commitInfoSpan = document.getElementById('commit-info-modal');
+  if (!commitInfoSpan) {
+    console.error('Commit info span in modal not found.');
     return;
   }
 
@@ -4793,14 +4793,14 @@ async function displayGitCommitInfo() {
       const commitUrl = lastCommit.html_url;
       const commitSha = lastCommit.sha.substring(0, 7);
 
-      // Format date to YYYY-MM-DD HH:mm
-      const formattedDate = `${commitDate.getFullYear()}-${String(commitDate.getMonth() + 1).padStart(2, '0')}-${String(commitDate.getDate()).padStart(2, '0')} ${String(commitDate.getHours()).padStart(2, '0')}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+      // Format date to YYYYMMDD H:mm
+      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
 
-      commitInfoDiv.innerHTML = `網站最後更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
+      commitInfoSpan.innerHTML = `網站最後更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
     }
   } catch (error) {
     console.error('Error fetching commit info:', error);
-    commitInfoDiv.textContent = '無法取得更新資訊。';
+    commitInfoSpan.textContent = '無法取得更新資訊。';
   }
 }
 
