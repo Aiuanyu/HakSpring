@@ -474,7 +474,6 @@ button.playFromThisRow.ended i {
 #commit-info-modal {
   font-size: 0.8rem;
   color: #6c757d;
-  margin-left: auto; /* Push to the right */
 }
 
 #commit-info-modal a {
@@ -1975,11 +1974,13 @@ tr.ios-autoplay-instruction td::before {
 
 /* Info Modal Footer Styles */
 #infoModal .modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 20px;
   border-top: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   flex-shrink: 0;
-  text-align: left;
 }
 
 #infoModal .modal-footer label {
