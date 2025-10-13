@@ -4796,7 +4796,7 @@ async function displayGitCommitInfo() {
       // Format date to YYYYMMDD H:mm
       const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
 
-      commitInfoSpan.innerHTML = `網站最後更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
+      commitInfoSpan.innerHTML = `網站更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
     }
   } catch (error) {
     console.error('Error fetching commit info:', error);
