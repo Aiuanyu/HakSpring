@@ -472,6 +472,7 @@ button.playFromThisRow.ended i {
 
 /* --- Commit Info in Modal --- */
 #commit-info-modal {
+  display: inline-block;
   font-size: 0.8rem;
   color: #6c757d;
   background-color: #f0f0f0;
