@@ -4774,6 +4774,8 @@ async function importData() {
   }
 }
 
+const GITHUB_COMMIT_API_URL = 'https://api.github.com/repos/aiuanyu/HakSpring/commits?per_page=1';
+
 async function displayGitCommitInfo() {
   const commitInfoSpan = document.getElementById('commit-info-modal');
   if (!commitInfoSpan) {
@@ -4782,7 +4784,7 @@ async function displayGitCommitInfo() {
   }
 
   try {
-    const response = await fetch('https://api.github.com/repos/aiuanyu/HakSpring/commits?per_page=1');
+    const response = await fetch(GITHUB_COMMIT_API_URL);
     if (!response.ok) {
       throw new Error(`GitHub API request failed: ${response.status}`);
     }
@@ -4793,10 +4795,16 @@ async function displayGitCommitInfo() {
       const commitUrl = lastCommit.html_url;
       const commitSha = lastCommit.sha.substring(0, 7);
 
-      // Format date to YYYYMMDD H:mm
-      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+      // Format date to YYYYMMDD HH:mm
+      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${String(commitDate.getHours()).padStart(2, '0')}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
 
-      commitInfoSpan.innerHTML = `網站更新：<a href="${commitUrl}" target="_blank" rel="noopener noreferrer">${formattedDate} (${commitSha})</a>`;
+      commitInfoSpan.textContent = '網站更新：';
+      const link = document.createElement('a');
+      link.href = commitUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `${formattedDate} (${commitSha})`;
+      commitInfoSpan.appendChild(link);
     }
   } catch (error) {
     console.error('Error fetching commit info:', error);
