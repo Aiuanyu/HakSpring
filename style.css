@@ -470,6 +470,25 @@ button.playFromThisRow.ended i {
   background-color: red !important;
 }
 
+/* --- Commit Info in Modal --- */
+#commit-info-modal {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: #6c757d;
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+#commit-info-modal a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+#commit-info-modal a:hover {
+  text-decoration: underline;
+}
+
 /* --- 【新增】循環播放按鈕樣式 --- */
 button#loopCategoryBtn.active i {
   background-color: #ff8c00; /* 暗橘色表示 active */
@@ -1584,7 +1603,9 @@ input:checked + .slider:before {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
-  }
+
+}
+}
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
   #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
     display: none;
@@ -1950,11 +1971,13 @@ tr.ios-autoplay-instruction td::before {
 
 /* Info Modal Footer Styles */
 #infoModal .modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 20px;
   border-top: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   flex-shrink: 0;
-  text-align: left;
 }
 
 #infoModal .modal-footer label {
@@ -1981,6 +2004,16 @@ tr.ios-autoplay-instruction td::before {
   }
   #infoModal .modal-footer label {
     color: var(--main-text-color);
+  }
+
+  /* --- Dark Mode Commit Info in Modal --- */
+  #commit-info-modal {
+    color: #d0d0d0;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #commit-info-modal a {
+    color: #58a6ff;
   }
 }
 

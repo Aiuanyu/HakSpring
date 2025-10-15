@@ -4404,6 +4404,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
           }
       }
   });
+
+  displayGitCommitInfo();
 }
 
 function toggleAccordion(event, line, dialectInfo) {
@@ -4769,6 +4771,67 @@ async function importData() {
   } catch (error) {
     console.error('匯入資料失敗:', error);
     alert(`資料匯入失敗：\n${error.message}\n\n請檢查資料格式敢有正確。`);
+  }
+}
+
+const GITHUB_COMMIT_API_URL = 'https://api.github.com/repos/aiuanyu/HakSpring/commits?per_page=1';
+
+async function displayGitCommitInfo() {
+  const commitInfoSpan = document.getElementById('commit-info-modal');
+  if (!commitInfoSpan) {
+    console.error('Commit info span in modal not found.');
+    return;
+  }
+
+  const displayFromCommit = (commit) => {
+    const commitDate = new Date(commit.commit.committer.date);
+    const commitUrl = commit.html_url;
+    const commitSha = commit.sha.substring(0, 7);
+    const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+    commitInfoSpan.textContent = '網站更新：';
+    const link = document.createElement('a');
+    link.href = commitUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = `${formattedDate} (${commitSha})`;
+    commitInfoSpan.appendChild(link);
+  };
+
+  const CACHE_KEY = 'gitCommitInfo';
+  const CACHE_EXPIRATION = 5 * 60 * 1000; // 5 minutes
+
+  try {
+    const cachedItem = sessionStorage.getItem(CACHE_KEY);
+    if (cachedItem) {
+      const { commit, timestamp } = JSON.parse(cachedItem);
+      if (Date.now() - timestamp < CACHE_EXPIRATION) {
+        console.log('Displaying commit info from cache.');
+        displayFromCommit(commit);
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to read commit info from cache', e);
+  }
+
+  try {
+    const response = await fetch(GITHUB_COMMIT_API_URL);
+    if (!response.ok) {
+      throw new Error(`GitHub API request failed: ${response.status}`);
+    }
+    const commits = await response.json();
+    if (commits.length > 0) {
+      const lastCommit = commits[0];
+      displayFromCommit(lastCommit);
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ commit: lastCommit, timestamp: Date.now() }));
+      } catch (e) {
+        console.error('Failed to save commit info to sessionStorage', e);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching commit info:', error);
+    commitInfoSpan.textContent = '無法取得更新資訊。';
   }
 }
 
