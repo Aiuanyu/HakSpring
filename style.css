@@ -1613,6 +1613,7 @@ input:checked + .slider:before {
   #commit-info-modal a {
     color: #58a6ff;
   }
+}
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
   #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
     display: none;
