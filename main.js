@@ -4783,6 +4783,37 @@ async function displayGitCommitInfo() {
     return;
   }
 
+  const displayFromCommit = (commit) => {
+    const commitDate = new Date(commit.commit.committer.date);
+    const commitUrl = commit.html_url;
+    const commitSha = commit.sha.substring(0, 7);
+    const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+    commitInfoSpan.textContent = '網站更新：';
+    const link = document.createElement('a');
+    link.href = commitUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = `${formattedDate} (${commitSha})`;
+    commitInfoSpan.appendChild(link);
+  };
+
+  const CACHE_KEY = 'gitCommitInfo';
+  const CACHE_EXPIRATION = 5 * 60 * 1000; // 5 minutes
+
+  try {
+    const cachedItem = sessionStorage.getItem(CACHE_KEY);
+    if (cachedItem) {
+      const { commit, timestamp } = JSON.parse(cachedItem);
+      if (Date.now() - timestamp < CACHE_EXPIRATION) {
+        console.log('Displaying commit info from cache.');
+        displayFromCommit(commit);
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to read commit info from cache', e);
+  }
+
   try {
     const response = await fetch(GITHUB_COMMIT_API_URL);
     if (!response.ok) {
@@ -4791,20 +4822,12 @@ async function displayGitCommitInfo() {
     const commits = await response.json();
     if (commits.length > 0) {
       const lastCommit = commits[0];
-      const commitDate = new Date(lastCommit.commit.committer.date);
-      const commitUrl = lastCommit.html_url;
-      const commitSha = lastCommit.sha.substring(0, 7);
-
-      // Format date to YYYYMMDD H:mm
-      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
-
-      commitInfoSpan.textContent = '網站更新：';
-      const link = document.createElement('a');
-      link.href = commitUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = `${formattedDate} (${commitSha})`;
-      commitInfoSpan.appendChild(link);
+      displayFromCommit(lastCommit);
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ commit: lastCommit, timestamp: Date.now() }));
+      } catch (e) {
+        console.error('Failed to save commit info to sessionStorage', e);
+      }
     }
   } catch (error) {
     console.error('Error fetching commit info:', error);
