@@ -4795,8 +4795,8 @@ async function displayGitCommitInfo() {
       const commitUrl = lastCommit.html_url;
       const commitSha = lastCommit.sha.substring(0, 7);
 
-      // Format date to YYYYMMDD HH:mm
-      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${String(commitDate.getHours()).padStart(2, '0')}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
+      // Format date to YYYYMMDD H:mm
+      const formattedDate = `${commitDate.getFullYear()}${String(commitDate.getMonth() + 1).padStart(2, '0')}${String(commitDate.getDate()).padStart(2, '0')} ${commitDate.getHours()}:${String(commitDate.getMinutes()).padStart(2, '0')}`;
 
       commitInfoSpan.textContent = '網站更新：';
       const link = document.createElement('a');
