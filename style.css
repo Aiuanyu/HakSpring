@@ -1604,15 +1604,6 @@ input:checked + .slider:before {
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
     }
 
-  /* --- Dark Mode Commit Info in Modal --- */
-  #commit-info-modal {
-    color: #d0d0d0;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  #commit-info-modal a {
-    color: #58a6ff;
-  }
 }
 }
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
@@ -2013,6 +2004,16 @@ tr.ios-autoplay-instruction td::before {
   }
   #infoModal .modal-footer label {
     color: var(--main-text-color);
+  }
+
+  /* --- Dark Mode Commit Info in Modal --- */
+  #commit-info-modal {
+    color: #d0d0d0;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #commit-info-modal a {
+    color: #58a6ff;
   }
 }
 
