@@ -1624,6 +1624,15 @@ input:checked + .slider:before {
   display: none;
 }
 
+/* As a fallback, hide the Romaine button on small screens using a media query */
+@media screen and (max-width: 768px) {
+  #showRomanizerBtn,
+  #romanizerContainer,
+  #selectionPopupRomanizerBtn {
+    display: none;
+  }
+}
+
 
 /* --- 手機版查詞按鈕樣式 (Mobile Lookup Button Styles) --- */
 #mobileLookupBtn {
