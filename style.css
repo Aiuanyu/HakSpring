@@ -1618,10 +1618,19 @@ input:checked + .slider:before {
 }
 
 /* --- Hide Romanizer on mobile devices based on JS detection --- */
-body.mobile-device #showRomanizerBtn,
-body.mobile-device #romanizerContainer,
-body.mobile-device #selectionPopupRomanizerBtn {
+.mobile-device #showRomanizerBtn,
+.mobile-device #romanizerContainer,
+.mobile-device #selectionPopupRomanizerBtn {
   display: none;
+}
+
+/* As a fallback, hide the Romaine button on small screens using a media query */
+@media screen and (max-width: 768px) {
+  #showRomanizerBtn,
+  #romanizerContainer,
+  #selectionPopupRomanizerBtn {
+    display: none;
+  }
 }
 
 
@@ -1970,8 +1979,7 @@ tr.ios-autoplay-instruction td::before {
 }
 
 /* Info Modal Footer Styles */
-#infoModal .modal-footer,
-#whatsNewModal .modal-footer {
+#infoModal .modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1979,10 +1987,6 @@ tr.ios-autoplay-instruction td::before {
   border-top: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   flex-shrink: 0;
-}
-
-#whatsNewModal .modal-footer {
-  justify-content: flex-end;
 }
 
 #infoModal .modal-footer label {
@@ -2003,8 +2007,7 @@ tr.ios-autoplay-instruction td::before {
 
 /* Dark Mode for Info Modal Footer */
 @media (prefers-color-scheme: dark) {
-  #infoModal .modal-footer,
-  #whatsNewModal .modal-footer {
+  #infoModal .modal-footer {
     background-color: #343a40;
     border-top-color: rgba(255, 255, 255, 0.15);
   }
