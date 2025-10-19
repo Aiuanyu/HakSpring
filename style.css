@@ -1618,10 +1618,10 @@ input:checked + .slider:before {
 }
 
 /* --- Hide Romanizer on mobile devices based on JS detection --- */
-.mobile-device #showRomanizerBtn,
-.mobile-device #romanizerContainer,
-.mobile-device #selectionPopupRomanizerBtn {
-  display: none !important;
+body.mobile-device #showRomanizerBtn,
+body.mobile-device #romanizerContainer,
+body.mobile-device #selectionPopupRomanizerBtn {
+  display: none;
 }
 
 
@@ -1994,8 +1994,7 @@ tr.ios-autoplay-instruction td::before {
 }
 
 
-#infoModal .modal-footer input[type="checkbox"],
-#whatsNewModal .modal-footer input[type="checkbox"] {
+#infoModal .modal-footer input[type="checkbox"] {
   margin-right: 10px;
   width: 16px;
   height: 16px;
