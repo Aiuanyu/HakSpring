@@ -1070,7 +1070,16 @@ function debounce(func, wait, immediate) {
 }
 
 function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // Standard mobile user agent check
+  const isLegacyMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  // iPad on iOS 13+ may report as a Mac. We can detect it by checking for touch capabilities.
+  const isModernIPad = (
+    navigator.userAgent.includes("Mac") &&
+    "ontouchend" in document
+  );
+
+  return isLegacyMobile || isModernIPad;
 }
 
 function createMobileLookupButton(popupEl, contentEl, backdropEl) {

@@ -1621,7 +1621,7 @@ input:checked + .slider:before {
 .mobile-device #showRomanizerBtn,
 .mobile-device #romanizerContainer,
 .mobile-device #selectionPopupRomanizerBtn {
-  display: none;
+  display: none !important;
 }
 
 
@@ -1970,7 +1970,8 @@ tr.ios-autoplay-instruction td::before {
 }
 
 /* Info Modal Footer Styles */
-#infoModal .modal-footer {
+#infoModal .modal-footer,
+#whatsNewModal .modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1978,6 +1979,10 @@ tr.ios-autoplay-instruction td::before {
   border-top: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   flex-shrink: 0;
+}
+
+#whatsNewModal .modal-footer {
+  justify-content: flex-end;
 }
 
 #infoModal .modal-footer label {
@@ -1989,7 +1994,8 @@ tr.ios-autoplay-instruction td::before {
 }
 
 
-#infoModal .modal-footer input[type="checkbox"] {
+#infoModal .modal-footer input[type="checkbox"],
+#whatsNewModal .modal-footer input[type="checkbox"] {
   margin-right: 10px;
   width: 16px;
   height: 16px;
@@ -1998,7 +2004,8 @@ tr.ios-autoplay-instruction td::before {
 
 /* Dark Mode for Info Modal Footer */
 @media (prefers-color-scheme: dark) {
-  #infoModal .modal-footer {
+  #infoModal .modal-footer,
+  #whatsNewModal .modal-footer {
     background-color: #343a40;
     border-top-color: rgba(255, 255, 255, 0.15);
   }
