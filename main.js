@@ -1003,7 +1003,13 @@ function handleTextSelectionInSentence(event, popupEl, contentEl, backdropEl, ge
       }
       const range = selection.getRangeAt(0);
       const commonAncestor = range.commonAncestorContainer;
-      const trElement = commonAncestor.nodeType === Node.ELEMENT_NODE ? commonAncestor.closest('tr') : commonAncestor.parentNode.closest('tr');
+
+      const sentenceElement = (commonAncestor.nodeType === Node.ELEMENT_NODE ? commonAncestor : commonAncestor.parentElement).closest('.sentence');
+      if (!sentenceElement) {
+        return;
+      }
+
+      const trElement = sentenceElement.closest('tr');
       if (!trElement || !generatedArea.contains(trElement)) {
         return;
       }
