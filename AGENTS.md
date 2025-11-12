@@ -105,6 +105,11 @@
 	- [URL Patterns and Data Formats](https://deepwiki.com/Aiuanyu/HakSpring/8.1-url-patterns-and-data-formats)
 	- [Supporting Assets and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8.2-supporting-assets-and-configuration)
 
+## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
+- **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。
+- **使用精確的刪除指令 (Use Precise Deletion Commands)**: 清理暫存檔案時，**必須**使用明確指向該目錄的指令 (例如 `rm -rf /home/jules/verification`)，避免使用廣泛影響整個版本庫的指令 (如 `git clean`)。
+- **強制執行 Dry Run (Mandatory Dry Run)**: 在使用任何具有破壞性的 `git` 指令（特別是 `git clean`）之前，**必須**先加上 `-n` 或 `--dry-run` 旗標來預覽將被影響的檔案列表。只有在確認列表內容完全符合預期後，才能執行真正的刪除指令。
+
 ## Branching and Communication
 
 If you need to create a new branch for your work (e.g., to recover from an error or start a clean implementation), you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays. **For follow-up work by the same Jules task/chat, you should commit to the existing branch used in the same task/chat to avoid creating unnecessary new branches.**
