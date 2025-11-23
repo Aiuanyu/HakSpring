@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2025-11-23",
+    "last_updated": "2025-11-23",
+    "total_corrections": 1,
+    "learning_sessions": 1
+  },
+  "corrections": [
+    {
+      "id": 1,
+      "date": "2025-11-23",
+      "source_text": "社會中",
+      "my_translation": "社會中",
+      "correct_translation": "社會裡肚",
+      "category": "詞彙-方位詞",
+      "lesson": "「中」在客語通常翻譯為「裡肚」，表示「在...裡面」的意思。不要直接用華語的「中」。",
+      "examples": [
+        "在學校裡肚",
+        "在房間裡肚",
+        "在社會裡肚"
+      ],
+      "confidence": "high",
+      "user_notes": "中→裡肚，這是客語的習慣用法"
+    }
+  ],
+  "patterns": [
+    {
+      "id": 1,
+      "pattern_name": "在{地點}中",
+      "chinese_pattern": "在{地點}中",
+      "hakka_pattern": "在{地點}裡肚",
+      "occurrences": 1,
+      "confidence": "medium",
+      "examples": [
+        {
+          "chinese": "在社會中",
+          "hakka": "在社會裡肚"
+        }
+      ]
+    }
+  ],
+  "vocabulary_updates": {
+    "中": {
+      "preferred_translation": "裡肚",
+      "context": "方位詞，表示「在...裡面」",
+      "avoid": "中（不要直接用華語的「中」）",
+      "note": "客語習慣用「裡肚」而非「中」",
+      "examples": [
+        "社會裡肚",
+        "學校裡肚"
+      ]
+    }
+  },
+  "common_mistakes": [
+    {
+      "mistake": "直接使用華語的方位詞「中」",
+      "correct_approach": "使用客語的「裡肚」",
+      "frequency": 1
+    }
+  ]
+}
