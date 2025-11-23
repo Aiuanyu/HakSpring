@@ -45,6 +45,7 @@ function handleDomainMigration() {
     migrateBtn.addEventListener('click', function() {
       const keysToMigrate = [
         'hakkaBookmarks',
+        'reviewList',
         'dontShowInfoModalAgain',
         'lastSearchMode',
         'lastSearchDialect',
@@ -1957,6 +1958,91 @@ function initializeAppUI() {
     }
   }
 
+  // ========== Review List (加強復習清單) Management Functions ==========
+
+  /**
+   * Add an item to the review list
+   * @param {Object} item - The item to add, should contain all necessary data for display
+   */
+  function addToReviewList(item) {
+    let reviewList = JSON.parse(localStorage.getItem('reviewList')) || [];
+
+    // Generate a unique ID for the item
+    const itemId = generateReviewItemId(item);
+
+    // Check if item already exists
+    const existingIndex = reviewList.findIndex(i => i.id === itemId);
+    if (existingIndex > -1) {
+      // Item already in list, update timestamp and move to front
+      reviewList.splice(existingIndex, 1);
+    }
+
+    // Add item to the front of the list
+    const reviewItem = {
+      id: itemId,
+      ...item,
+      timestamp: Date.now()
+    };
+    reviewList.unshift(reviewItem);
+
+    // Save to localStorage
+    localStorage.setItem('reviewList', JSON.stringify(reviewList));
+
+    return true;
+  }
+
+  /**
+   * Remove an item from the review list
+   * @param {String} itemId - The ID of the item to remove
+   */
+  function removeFromReviewList(itemId) {
+    let reviewList = JSON.parse(localStorage.getItem('reviewList')) || [];
+    const filteredList = reviewList.filter(i => i.id !== itemId);
+    localStorage.setItem('reviewList', JSON.stringify(filteredList));
+    return true;
+  }
+
+  /**
+   * Get the review list
+   * @returns {Array} The review list
+   */
+  function getReviewList() {
+    return JSON.parse(localStorage.getItem('reviewList')) || [];
+  }
+
+  /**
+   * Check if an item is in the review list
+   * @param {String} itemId - The ID of the item to check
+   * @returns {Boolean} True if the item is in the list
+   */
+  function isInReviewList(itemId) {
+    const reviewList = getReviewList();
+    return reviewList.some(i => i.id === itemId);
+  }
+
+  /**
+   * Generate a unique ID for a review item
+   * @param {Object} item - The item data
+   * @returns {String} A unique ID
+   */
+  function generateReviewItemId(item) {
+    // Use a combination of fields to create a unique ID
+    const parts = [];
+    if (item.編號) parts.push(item.編號);
+    if (item.客家語) parts.push(item.客家語);
+    if (item.sourceType) parts.push(item.sourceType);
+    if (item.sourceName) parts.push(item.sourceName);
+
+    // If no parts, use a random ID
+    if (parts.length === 0) {
+      return 'review-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    return parts.join('|');
+  }
+
+  // ========== End of Review List Management Functions ==========
+
   function mapTableNameToDataVar(tableName) {
     if (!tableName) return null;
     let simplified = tableName.replace('級', '');
@@ -2179,6 +2265,14 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             td1.appendChild(crossDialectBtn);
         }
 
+        // Add collect button for all query results
+        const collectBtn = document.createElement('button');
+        collectBtn.className = 'collectBtn';
+        collectBtn.title = '加入復習清單';
+        collectBtn.innerHTML = '<i class="fas fa-star"></i>';
+        collectBtn.dataset.queryResultIndex = rowIndex;
+        td1.appendChild(collectBtn);
+
         const sourceSpan = document.createElement('span');
         sourceSpan.className = `source-tag ${line.sourceType}-source`;
         let fullSourceName = getFullLevelName(line.sourceName);
@@ -2387,10 +2481,258 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
         firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 100);
+
+    // Setup event listeners for query result collectBtn
+    // Remove any existing listener to avoid duplicates
+    if (contentContainer._queryResultClickHandler) {
+        contentContainer.removeEventListener('click', contentContainer._queryResultClickHandler);
+    }
+    contentContainer._queryResultClickHandler = function(event) {
+        const collectButton = event.target.closest('.collectBtn');
+        if (collectButton && collectButton.dataset.queryResultIndex !== undefined) {
+            const rowIndex = parseInt(collectButton.dataset.queryResultIndex);
+            const startIndex = (page - 1) * itemsPerPage;
+            const actualIndex = rowIndex - startIndex;
+            if (actualIndex >= 0 && actualIndex < paginatedResults.length) {
+                const item = paginatedResults[actualIndex];
+                const success = addToReviewList(item);
+                if (success) {
+                    collectButton.classList.add('collected');
+                    collectButton.innerHTML = '<i class="fas fa-star"></i>';
+                    console.log('已加入復習清單:', item.客家語);
+                }
+            }
+        }
+    };
+    contentContainer.addEventListener('click', contentContainer._queryResultClickHandler);
+}
+
+/**
+ * Display the review list page
+ * @param {number} page - Current page number
+ * @param {number} itemsPerPage - Number of items per page
+ */
+function displayReviewList(page = 1, itemsPerPage = 50) {
+    const contentContainer = document.getElementById('generated');
+    const summaryTextContent = document.getElementById('summary-text-content');
+
+    if (!contentContainer || !summaryTextContent) {
+        console.error('Required containers not found');
+        return;
+    }
+
+    // Get review list from localStorage
+    const reviewList = getReviewList();
+    const totalResults = reviewList.length;
+
+    // Clear previous content
+    contentContainer.innerHTML = '';
+    summaryTextContent.textContent = `加強復習清單：共 ${totalResults} 筆`;
+    summaryTextContent.dataset.originalText = summaryTextContent.textContent;
+
+    if (totalResults === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = '復習清單空空个，請在認證詞彙或查詞結果中點擊星星按鈕來加入項目。';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '2em';
+        contentContainer.appendChild(emptyMessage);
+        updateResultsSummaryVisibility();
+        return;
+    }
+
+    // Calculate pagination
+    const totalPages = Math.ceil(totalResults / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalResults);
+    const paginatedResults = reviewList.slice(startIndex, endIndex);
+
+    // Create table
+    const table = document.createElement('table');
+    table.id = 'review-table';
+    table.setAttribute('width', '100%');
+
+    let globalRowIndex = startIndex;
+
+    const createReviewRow = (item, rowIndex) => {
+        globalRowIndex++;
+        if (!item || !item.客家語) return null;
+
+        const row = document.createElement('tr');
+        row.dataset.reviewId = item.id;
+
+        // Column 1: Number and actions
+        const td1 = document.createElement('td');
+        td1.className = 'no';
+        td1.dataset.label = '編號';
+
+        const seqNum = document.createElement('span');
+        seqNum.className = 'result-sequence-number';
+        seqNum.textContent = globalRowIndex;
+        td1.appendChild(seqNum);
+        td1.appendChild(document.createElement('br'));
+
+        if (item.編號) {
+            const noText = document.createTextNode(item.編號 + ' ');
+            td1.appendChild(noText);
+        }
+
+        // Remove from review list button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'removeFromReviewBtn';
+        removeBtn.title = '從復習清單移除';
+        removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        removeBtn.dataset.reviewId = item.id;
+        td1.appendChild(removeBtn);
+
+        const sourceSpan = document.createElement('span');
+        sourceSpan.className = `source-tag ${item.sourceType || 'gip'}-source`;
+        const fullSourceName = item.sourceName ? getFullLevelName(item.sourceName) : 'GIP';
+        sourceSpan.textContent = `(${fullSourceName})`;
+        td1.appendChild(sourceSpan);
+        row.appendChild(td1);
+
+        // Column 2: Vocabulary
+        const td2 = document.createElement('td');
+        td2.dataset.label = '詞彙';
+        const ruby = document.createElement('ruby');
+        ruby.textContent = item.客家語;
+        const rt = document.createElement('rt');
+        let phoneticText = formatPhoneticForDisplay(item.客語標音_顯示 || '');
+        rt.innerHTML = phoneticText;
+        ruby.appendChild(rt);
+        td2.appendChild(ruby);
+
+        // Audio if available
+        if (item.詞彙音檔 && item.sourceType === 'cert') {
+            td2.appendChild(document.createElement('br'));
+            const audio1 = document.createElement('audio');
+            audio1.className = 'media';
+            audio1.controls = true;
+            audio1.preload = 'none';
+            audio1.src = item.詞彙音檔;
+            td2.appendChild(audio1);
+        }
+
+        td2.appendChild(document.createElement('br'));
+        const meaningSpan = document.createElement('span');
+        meaningSpan.className = 'meaning';
+        meaningSpan.textContent = item.華語詞義 || '';
+        td2.appendChild(meaningSpan);
+
+        if (item.備註) {
+            td2.appendChild(document.createElement('br'));
+            const remarkSpan = document.createElement('span');
+            remarkSpan.className = 'remark';
+            remarkSpan.textContent = item.備註;
+            td2.appendChild(remarkSpan);
+        }
+        row.appendChild(td2);
+
+        // Column 3: Example sentence
+        const td3 = document.createElement('td');
+        td3.dataset.label = '例句';
+        if (item.例句 && item.例句.trim() !== '') {
+            const sentenceSpan = document.createElement('span');
+            sentenceSpan.className = 'sentence';
+            sentenceSpan.innerHTML = item.例句.replace(/\n/g, '<br>');
+            td3.appendChild(sentenceSpan);
+            td3.appendChild(document.createElement('br'));
+
+            // Sentence audio if available
+            if (item.例句音檔 && item.sourceType === 'cert') {
+                const audio2 = document.createElement('audio');
+                audio2.className = 'media';
+                audio2.controls = true;
+                audio2.preload = 'none';
+                audio2.src = item.例句音檔;
+                td3.appendChild(audio2);
+                td3.appendChild(document.createElement('br'));
+            }
+
+            const translationText = document.createElement('span');
+            translationText.innerHTML = (item.翻譯 || '').replace(/"/g, '').replace(/\n/g, '<br>');
+            td3.appendChild(translationText);
+        } else {
+            td3.classList.add('empty-sentence-cell');
+        }
+        row.appendChild(td3);
+
+        return row;
+    };
+
+    // Render all rows
+    paginatedResults.forEach((item, index) => {
+        const row = createReviewRow(item, startIndex + index);
+        if (row) {
+            table.appendChild(row);
+        }
+    });
+
+    contentContainer.appendChild(table);
+
+    // Add pagination if needed
+    if (totalPages > 1) {
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination-container';
+        for (let i = 1; i <= totalPages; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.textContent = i;
+            pageButton.className = 'page-button';
+            if (i === page) {
+                pageButton.classList.add('active');
+            }
+            pageButton.addEventListener('click', () => {
+                const newUrl = getBaseUrlWithoutIndex();
+                newUrl.searchParams.set('review', 'true');
+                newUrl.searchParams.set('page', i.toString());
+                history.pushState({}, '', newUrl);
+                displayReviewList(i, itemsPerPage);
+                setTimeout(() => {
+                    const firstResultElement = document.querySelector('#generated > table');
+                    if (firstResultElement) {
+                        firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            });
+            paginationContainer.appendChild(pageButton);
+        }
+        contentContainer.appendChild(paginationContainer);
+    }
+
+    updateResultsSummaryVisibility();
+
+    setTimeout(() => repositionViewport(), 0);
+
+    setTimeout(() => {
+        const firstResultElement = contentContainer.querySelector('table');
+        if (firstResultElement) {
+            firstResultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+
+    // Setup event listeners for remove buttons
+    if (contentContainer._reviewListClickHandler) {
+        contentContainer.removeEventListener('click', contentContainer._reviewListClickHandler);
+    }
+    contentContainer._reviewListClickHandler = function(event) {
+        const removeButton = event.target.closest('.removeFromReviewBtn');
+        if (removeButton) {
+            const itemId = removeButton.dataset.reviewId;
+            const confirmed = confirm('確定愛從復習清單移除這個項目無？');
+            if (confirmed) {
+                removeFromReviewList(itemId);
+                // Refresh the display
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentPage = parseInt(urlParams.get('page')) || 1;
+                displayReviewList(currentPage, itemsPerPage);
+            }
+        }
+    };
+    contentContainer.addEventListener('click', contentContainer._reviewListClickHandler);
 }
 
 
-  
+
 
   /**
  * 動態調整 #header 內主要元素 (#progressDropdown, #progressDetails) 的字體大小，
@@ -3284,11 +3626,12 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
         anchor.name = originalRowId;
         td1.appendChild(anchor);
         td1.appendChild(document.createTextNode(line.編號 + ' '));
-        const bookmarkBtn = document.createElement('button');
-        bookmarkBtn.className = 'bookmarkBtn';
-        bookmarkBtn.dataset.rowId = originalRowId;
-        bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
-        td1.appendChild(bookmarkBtn);
+        const collectBtn = document.createElement('button');
+        collectBtn.className = 'collectBtn';
+        collectBtn.dataset.rowId = originalRowId;
+        collectBtn.title = '加入復習清單';
+        collectBtn.innerHTML = '<i class="fas fa-star"></i>';
+        td1.appendChild(collectBtn);
 
         // Add the cross-dialect comparison button
         const crossDialectBtn = document.createElement('button');
@@ -3887,7 +4230,7 @@ function setupDynamicEventListeners(dialectInfo, category) {
     contentContainer.onclick = function(event) {
         const target = event.target;
         const playButton = target.closest('.playFromThisRow');
-        const bookmarkButton = target.closest('.bookmarkBtn');
+        const collectButton = target.closest('.collectBtn');
         const loopOneButton = target.closest('.loop-one-btn');
 
         if (loopOneButton) {
@@ -3932,14 +4275,20 @@ function setupDynamicEventListeners(dialectInfo, category) {
             return;
         }
 
-        if (bookmarkButton) {
-            const rowId = bookmarkButton.dataset.rowId;
+        if (collectButton) {
+            const rowId = collectButton.dataset.rowId;
             const targetIndex = activeCategoryData.findIndex(item => item.編號.split('-')[1] === rowId);
             if (targetIndex !== -1) {
-                const totalRows = activeCategoryData.length;
-                const percentage = ((targetIndex + 1) / totalRows * 100).toFixed(2);
-                const paddedRowId = padRowIdForLegacy(rowId);
-                saveBookmark(paddedRowId, percentage, category, dialectInfo.fullLvlName);
+                const item = activeCategoryData[targetIndex];
+                // Add to review list instead of saving bookmark
+                const success = addToReviewList(item);
+                if (success) {
+                    // Visual feedback
+                    collectButton.classList.add('collected');
+                    collectButton.innerHTML = '<i class="fas fa-star"></i>';
+                    // Optional: Show a brief notification
+                    console.log('已加入復習清單:', item.客家語);
+                }
             }
             return;
         }
@@ -4025,7 +4374,15 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const categoryParam = urlParams.get('category');
     const rowParam = urlParams.get('row');
     const romParam = urlParams.get('rom');
+    const reviewParam = urlParams.get('review');
     successfullyLoadedFromUrl = false;
+
+    // Check for review list page
+    if (reviewParam === 'true') {
+      const page = parseInt(urlParams.get('page')) || 1;
+      displayReviewList(page, 50);
+      return;
+    }
 
     if (musiidParam && caParam) {
       const itemsPerPage = parseInt(bidsuParam) || 50;
@@ -4171,6 +4528,20 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     infoModalCloseBtn.addEventListener('click', closeInfoModal);
     infoModal.addEventListener('click', (event) => {
       if (event.target === infoModal) closeInfoModal();
+    });
+  }
+
+  // --- Review List Button Logic ---
+  const reviewListBtn = document.getElementById('reviewListBtn');
+  if (reviewListBtn) {
+    reviewListBtn.addEventListener('click', () => {
+      // Navigate to review list page
+      const newUrl = getBaseUrlWithoutIndex();
+      newUrl.searchParams.set('review', 'true');
+      newUrl.searchParams.set('page', '1');
+      history.pushState({}, '', newUrl);
+      displayReviewList(1, 50);
+      trackEvent('open', 'ReviewList', 'click_review_button');
     });
   }
 
@@ -4652,6 +5023,7 @@ function exportData() {
   const exportTextArea = document.getElementById('exportDataTextArea');
   const keysToExport = [
     'hakkaBookmarks',
+    'reviewList',
     'dontShowInfoModalAgain',
     'lastSearchMode',
     'lastSearchDialect'

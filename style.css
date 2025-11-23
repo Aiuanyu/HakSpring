@@ -282,12 +282,41 @@ a {
   gap: 10px; /* 項目之間的間距 */
   font-family: var(--title-font);
 }
-.bookmarkBtn {
+.collectBtn {
   background: none;
   border: none;
   cursor: pointer;
+  font-size: 1.3em;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
 }
-.bookmarkBtn,
+.collectBtn:hover {
+  transform: scale(1.15);
+}
+.collectBtn i {
+  color: #ff9800 !important;
+}
+.collectBtn.collected i {
+  color: #ffc107 !important;
+}
+.removeFromReviewBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+.removeFromReviewBtn:hover {
+  transform: scale(1.15);
+}
+.removeFromReviewBtn i {
+  color: #f44336 !important;
+}
 .crossDialectBtn {
   background: none;
   border: none;
@@ -295,9 +324,6 @@ a {
   padding: 0;
   margin: 0 3px;
   vertical-align: middle;
-}
-.bookmarkBtn i {
-  color: var(--iMazinGrace-1) !important;
 }
 .crossDialectBtn {
   font-size: 1.5em;
