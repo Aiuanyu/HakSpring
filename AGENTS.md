@@ -112,4 +112,17 @@
 
 ## Branching and Communication
 
-If you need to create a new branch for your work (e.g., to recover from an error or start a clean implementation), you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays. **For follow-up work by the same Jules task/chat, you should commit to the existing branch used in the same task/chat to avoid creating unnecessary new branches.**
+**CRITICAL: Always use the existing branch for the same task/PR/issue.** Do NOT create new branches with suffixes like `-1`, `-2`, `-3` unless explicitly instructed by the user.
+
+If you are continuing work on an existing PR or issue:
+1. **Check which branch the PR is using** (e.g., `ai-collab-start-1`)
+2. **Use that exact same branch** for all subsequent commits
+3. **Synchronize your local branch** with `git fetch` and `git reset --hard origin/<branch-name>` if needed
+4. **NEVER create a new branch** like `ai-collab-start-1-1` or `ai-collab-start-1-2` just because you need to sync or recover
+
+Only create a completely new branch if:
+- The user explicitly requests a new branch
+- You are starting work on a completely different feature/issue
+- The original branch has been deleted or is permanently broken
+
+If you must create a new branch for exceptional reasons, you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays.
