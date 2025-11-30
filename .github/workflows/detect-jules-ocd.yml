@@ -1,0 +1,173 @@
+name: 偵測 Jules 的強迫症分支
+
+on:
+  push:
+    branches:
+      - 'ai-collab-start-*-[0-9]*'  # 偵測 -1, -2, -3 等分支
+      - 'ft/*-[0-9]*'
+      - 'feat/*-[0-9]*'
+      - 'fix/*-[0-9]*'
+
+jobs:
+  detect-ocd-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要完整歷史來比較
+
+      - name: 分析分支
+        id: analyze
+        run: |
+          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "current_branch=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
+
+          # 找出基礎分支（移除後綴數字）
+          BASE_BRANCH=$(echo "$CURRENT_BRANCH" | sed 's/-[0-9]*$//')
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+
+          # 檢查基礎分支是否存在
+          if git rev-parse "origin/$BASE_BRANCH" >/dev/null 2>&1; then
+            echo "base_exists=true" >> $GITHUB_OUTPUT
+
+            # 計算差異
+            COMMIT_COUNT=$(git rev-list --count origin/$BASE_BRANCH..HEAD)
+            echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+            FILES_CHANGED=$(git diff --name-only origin/$BASE_BRANCH...HEAD | wc -l)
+            echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
+
+            # 列出修改的檔案
+            FILES_LIST=$(git diff --name-only origin/$BASE_BRANCH...HEAD | head -10)
+            echo "files_list<<EOF" >> $GITHUB_OUTPUT
+            echo "$FILES_LIST" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            # 判斷是否為垃圾分支
+            if [ "$FILES_CHANGED" -eq 0 ]; then
+              echo "is_garbage=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_garbage=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "base_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 找出相關的 PR
+        id: find-pr
+        if: steps.analyze.outputs.base_exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const baseBranch = '${{ steps.analyze.outputs.base_branch }}';
+
+            // 找出使用基礎分支的 PR
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${baseBranch}`,
+              state: 'open'
+            });
+
+            if (prs.length > 0) {
+              core.setOutput('pr_number', prs[0].number);
+              core.setOutput('pr_found', 'true');
+            } else {
+              core.setOutput('pr_found', 'false');
+            }
+
+      - name: 在 PR 留言（垃圾分支）
+        if: |
+          steps.analyze.outputs.base_exists == 'true' &&
+          steps.analyze.outputs.is_garbage == 'true' &&
+          steps.find-pr.outputs.pr_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.find-pr.outputs.pr_number }},
+              body: `## 🚨 偵測到 Jules 的強迫症發作
+
+**垃圾分支警告**：\`${{ steps.analyze.outputs.current_branch }}\`
+
+這個分支有 ${{ steps.analyze.outputs.commit_count }} 個 commits，但**沒有任何檔案改動**，是個垃圾分支！
+
+### 建議動作
+
+\`\`\`bash
+# 直接刪除這個垃圾分支
+git push origin --delete ${{ steps.analyze.outputs.current_branch }}
+\`\`\`
+
+### 給 Jules 的提醒
+
+請閱讀 [AGENTS.md](https://github.com/${{ github.repository }}/blob/main/AGENTS.md#branching-and-communication) 的分支管理規則：
+
+> **CRITICAL: Always use the existing branch for the same task/PR/issue.**
+
+下次請直接在 \`${{ steps.analyze.outputs.base_branch }}\` 分支工作，不要建立新分支！
+`
+            });
+
+      - name: 在 PR 留言（有真實改動）
+        if: |
+          steps.analyze.outputs.base_exists == 'true' &&
+          steps.analyze.outputs.is_garbage == 'false' &&
+          steps.find-pr.outputs.pr_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const filesList = `${{ steps.analyze.outputs.files_list }}`;
+            const filesMarkdown = filesList.split('\n').map(f => `- \`${f}\``).join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.find-pr.outputs.pr_number }},
+              body: `## 🔧 偵測到 Jules 的強迫症分支（有改動）
+
+**分支**：\`${{ steps.analyze.outputs.current_branch }}\`
+**應該使用**：\`${{ steps.analyze.outputs.base_branch }}\`
+
+### 📊 改動統計
+
+- **Commits**：${{ steps.analyze.outputs.commit_count }} 個
+- **檔案**：${{ steps.analyze.outputs.files_changed }} 個
+
+### 📝 修改的檔案
+
+${filesMarkdown}
+
+### ✅ 快速修復指令
+
+\`\`\`bash
+# 方案 1：手動執行（推薦）
+git push origin ${{ steps.analyze.outputs.current_branch }}:${{ steps.analyze.outputs.base_branch }} --force
+git push origin --delete ${{ steps.analyze.outputs.current_branch }}
+\`\`\`
+
+\`\`\`bash
+# 方案 2：使用自動化腳本
+./auto-fix-jules.sh ${{ steps.analyze.outputs.base_branch }}
+\`\`\`
+
+### 📚 給 Jules 的提醒
+
+請閱讀 [AGENTS.md 分支管理規則](https://github.com/${{ github.repository }}/blob/main/AGENTS.md#branching-and-communication)，下次請直接在現有分支工作！
+`
+            });
+
+      - name: 通知使用者（沒有找到 PR）
+        if: |
+          steps.analyze.outputs.base_exists == 'true' &&
+          steps.find-pr.outputs.pr_found == 'false'
+        run: |
+          echo "::notice::偵測到 Jules 分支 ${{ steps.analyze.outputs.current_branch }}，但沒有找到對應的 PR"
