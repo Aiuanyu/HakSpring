@@ -309,6 +309,7 @@ let g_currentLevelData = []; // Store the full data for the current level
 let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
 let g_currentSearchResults = [];
+let translationEngine = null;
 
 const LEVEL_TO_EXCEPTION_FILE = {
     '基': '基例外音檔',
@@ -979,6 +980,34 @@ function showPronunciationPopup(selectedText, readings, anchorElementOrRect, cal
       }
     };
   }
+
+  const translateBtn = document.getElementById('selectionPopupTranslateBtn');
+  if (translateBtn) {
+    translateBtn.onclick = async (e) => {
+      e.stopPropagation();
+      if (translationEngine) {
+        const targetDialect = document.getElementById('targetDialectSelector').value;
+        const translatedText = translationEngine.translate(selectedText, contextualDialect, targetDialect);
+        const selectionPopupContent = document.getElementById('selectionPopupContent');
+        const translationPopupContent = document.getElementById('translationPopupContent');
+        const translationResult = document.getElementById('translationResult');
+        selectionPopupContent.style.display = 'none';
+        translationPopupContent.style.display = 'block';
+        translationResult.textContent = translatedText;
+      }
+    };
+  }
+
+  const backToPronunciationBtn = document.getElementById('backToPronunciationBtn');
+  if (backToPronunciationBtn) {
+    backToPronunciationBtn.onclick = (e) => {
+      e.stopPropagation();
+      const selectionPopupContent = document.getElementById('selectionPopupContent');
+      const translationPopupContent = document.getElementById('translationPopupContent');
+      selectionPopupContent.style.display = 'block';
+      translationPopupContent.style.display = 'none';
+    };
+  }
 }
 
 function hidePronunciationPopup(popupEl, backdropEl) {
@@ -1636,6 +1665,9 @@ async function initializeApp() {
         }
 
         await loadDataFromDB(db);
+
+        translationEngine = new TranslationEngine();
+        await translationEngine.initialize();
         
         initializeAppUI();
 

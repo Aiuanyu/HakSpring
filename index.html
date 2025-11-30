@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="style.css" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
+    <script type="text/javascript" src="js/translation/data_processor.js" defer></script>
+    <script type="text/javascript" src="js/translation/phonology.js" defer></script>
+    <script type="text/javascript" src="js/translation/engine.js" defer></script>
     <script type="text/javascript" src="main.js" defer></script>
     <script type="text/javascript" src="js/romanizer.js" defer></script>
     <script
@@ -378,9 +381,24 @@
         <button id="selectionPopupRomanizerBtn" class="popup-romanizer-btn" title="用 Romanizer 處理">
           <i class="fas fa-pen-to-square"></i> Romanizer
         </button>
+        <button id="selectionPopupTranslateBtn" class="popup-translate-btn" title="翻譯這段文本">
+            <i class="fas fa-language"></i> 翻譯
+        </button>
       </div>
       <div id="selectionPopupContent">
         <!-- JavaScript will fill this -->
+      </div>
+      <div id="translationPopupContent" style="display: none;">
+        <button id="backToPronunciationBtn" title="返回發音"><i class="fas fa-arrow-left"></i></button>
+        <p id="translationResult"></p>
+        <select id="targetDialectSelector">
+            <option value="海陸">海陸</option>
+            <option value="四縣">四縣</option>
+            <option value="大埔">大埔</option>
+            <option value="饒平">饒平</option>
+            <option value="詔安">詔安</option>
+            <option value="南四縣">南四縣</option>
+        </select>
       </div>
     </div>
 
