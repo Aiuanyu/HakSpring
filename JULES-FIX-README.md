@@ -26,12 +26,13 @@ Jules (google-labs-jules bot) 有個壞習慣：每次工作都會建立新分�
 **功能**：
 - ✅ 自動偵測所有 `-1`, `-2`, `-3` 後綴分支
 - ✅ 分析哪些是垃圾分支（只有空 commit）
-- ✅ 自動 merge 有真實改動的分支
-- ✅ 修復格式問題（如 `\n` 字面字串）
-- ✅ 提供一鍵刪除垃圾分支的指令
+- ✅ 互動式詢問是否刪除垃圾分支
+- ✅ 互動式詢問是否 merge 有真實改動的分支
+- ✅ 自動修復格式問題（如 `\n` 字面字串）
 
 **互動式操作**：
-腳本會詢問你每個分支要不要修復，你可以選擇 `y` (修復)、`n` (跳過) 或 `s` (跳過)。
+- 垃圾分支：詢問是否刪除 (y/n)
+- 有改動的分支：詢問是否 merge (y/n/s=skip)
 
 ---
 
@@ -84,14 +85,45 @@ $ ./scripts/auto-fix-jules.sh ai-collab-start-1
      1	ai-collab-start-1-1
      2	ai-collab-start-1-2
      3	ai-collab-start-1-3
-     4	ai-collab-start-1-4
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📝 分析分支：ai-collab-start-1-1
+
+❌ 這是垃圾分支（沒有新 commits）
+
+要刪除這個垃圾分支嗎？(y/n) y
+🗑️  正在刪除 ai-collab-start-1-1...
+✅ 已刪除 ai-collab-start-1-1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 分析分支：ai-collab-start-1-2
+
+❌ 這是垃圾分支（只有空 commits）
+   Commits:
+   cc14c42 chore: Confirm local workspace is synchronized
+
+要刪除這個垃圾分支嗎？(y/n) y
+🗑️  正在刪除 ai-collab-start-1-2...
+✅ 已刪除 ai-collab-start-1-2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 分析分支：ai-collab-start-1-3
+
+✅ 發現真的改動！
+
+📝 新增的 commits：
+   5c3156c docs: Create user guide for Romanizer
+
+📄 修改的檔案：
+   romanizer-guide.md
+
+要把 ai-collab-start-1-3 的改動 merge 回 ai-collab-start-1 嗎？(y/n/s=skip) y
+
+🔧 開始修復...
 ...
 ```
 
-腳本會逐一分析，詢問你是否要修復。
+腳本會逐一分析，對垃圾分支詢問是否刪除，對有改動的分支詢問是否 merge。
 
 ---
 

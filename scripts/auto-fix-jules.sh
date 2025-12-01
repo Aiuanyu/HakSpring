@@ -37,7 +37,21 @@ for BRANCH in $JULES_BRANCHES; do
 
     if [ -z "$COMMITS" ]; then
         echo "❌ 這是垃圾分支（沒有新 commits）"
-        echo "   建議刪除：git push origin --delete $BRANCH"
+        echo ""
+        read -p "要刪除這個垃圾分支嗎？(y/n) " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "🗑️  正在刪除 $BRANCH..."
+            if git push origin --delete $BRANCH 2>/dev/null; then
+                echo "✅ 已刪除 $BRANCH"
+            else
+                echo "❌ 刪除失敗（可能需要權限），請手動執行："
+                echo "   git push origin --delete $BRANCH"
+            fi
+        else
+            echo "⏭️  跳過，建議手動刪除：git push origin --delete $BRANCH"
+        fi
         echo ""
         continue
     fi
@@ -49,7 +63,21 @@ for BRANCH in $JULES_BRANCHES; do
         echo "❌ 這是垃圾分支（只有空 commits）"
         echo "   Commits:"
         echo "$COMMITS" | sed 's/^/   /'
-        echo "   建議刪除：git push origin --delete $BRANCH"
+        echo ""
+        read -p "要刪除這個垃圾分支嗎？(y/n) " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "🗑️  正在刪除 $BRANCH..."
+            if git push origin --delete $BRANCH 2>/dev/null; then
+                echo "✅ 已刪除 $BRANCH"
+            else
+                echo "❌ 刪除失敗（可能需要權限），請手動執行："
+                echo "   git push origin --delete $BRANCH"
+            fi
+        else
+            echo "⏭️  跳過，建議手動刪除：git push origin --delete $BRANCH"
+        fi
         echo ""
         continue
     fi
