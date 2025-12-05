@@ -401,7 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const clone = romanizerOutput.cloneNode(true);
     clone.querySelectorAll('.uppercase-btn, .delete-btn').forEach(btn => btn.remove());
 
-    const textToCopy = clone.textContent.replace(/\s+/g, ' ').trim();
+    let textToCopy = clone.textContent;
+
+    // 清理符號
+    textToCopy = textToCopy.replace(/[/\(\)（）【】]/g, ''); // 拿掉 /( )【】
+    textToCopy = textToCopy.replace(/～/g, '~'); // 全形～轉半形
+    textToCopy = textToCopy.replace(/\s+/g, ' ').trim(); // 清理空白
 
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy).then(() => {
