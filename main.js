@@ -190,7 +190,7 @@ function toggleSearchAccordion(clickedButton, line) {
         '安': { name: '詔安', dataVar: '安' + 級 },
     };
 
-    let nextRow = parentRow.nextSibling;
+    let lastAppendedRow = parentRow;
     let createdRows = [];
 
     accents.forEach(accentKey => {
@@ -206,7 +206,8 @@ function toggleSearchAccordion(clickedButton, line) {
                 const itemDialectInfo = getDialectInfo(accentKey, 級);
                 const newRow = createComparisonRow(foundItem, itemDialectInfo);
                 newRow.classList.add('accordion-row');
-                parentRow.parentNode.insertBefore(newRow, nextRow);
+                lastAppendedRow.after(newRow);
+                lastAppendedRow = newRow;
                 createdRows.push(newRow);
             }
         }
@@ -4461,11 +4462,10 @@ function toggleAccordion(event, line, dialectInfo) {
         '安': { name: '詔安', dataVar: '安' + currentLevel },
     };
 
-    let nextRow = parentRow.nextSibling;
+    let lastAppendedRow = parentRow;
     let createdRows = [];
 
     accents.forEach(accentKey => {
-        // Don't show the original dialect's row in the accordion
         if (accentKey === dialectInfo.腔) {
             return;
         }
@@ -4478,7 +4478,8 @@ function toggleAccordion(event, line, dialectInfo) {
                 const itemDialectInfo = getDialectInfo(accentKey, currentLevel);
                 const newRow = createComparisonRow(foundItem, itemDialectInfo);
                 newRow.classList.add('accordion-row');
-                parentRow.parentNode.insertBefore(newRow, nextRow);
+                lastAppendedRow.after(newRow);
+                lastAppendedRow = newRow;
                 createdRows.push(newRow);
             }
         }
