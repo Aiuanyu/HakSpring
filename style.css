@@ -1614,7 +1614,12 @@ input:checked + .slider:before {
   #generated tr.accordion-row {
     display: block;
   }
+}
 
+@media screen and (min-width: 768px) {
+  #generated tr.accordion-row {
+    display: table-row;
+  }
 }
 
 /* --- Hide Romanizer on mobile devices based on JS detection --- */
