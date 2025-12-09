@@ -888,6 +888,20 @@ input:checked + .slider:before {
   margin-left: 8px;
 }
 
+/* --- 【新增】自動斷詞連結樣式 --- */
+a.segmented-word {
+  text-decoration: none;
+  border-bottom: 1px dotted #0056b3; /* 淡藍色虛線 */
+  color: inherit; /* 繼承父元素的顏色 */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+a.segmented-word:hover {
+  border-bottom-style: solid; /* 滑鼠移上時變實線 */
+  color: #007bff; /* 滑鼠移上時文字顏色變深 */
+}
+
 #selectionPopupContent .popup-not-found { /* 尋無讀音个訊息 */
   padding: 10px 0;
   font-style: italic;

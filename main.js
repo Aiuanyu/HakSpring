@@ -1,3 +1,110 @@
+/**
+ * 使用 Trie 樹對句子進行最大長度匹配斷詞。
+ * @param {string} text - 需要斷詞的純文字句子。
+ * @param {object} trie - 預載入的詞彙樹。
+ * @returns {Array<object>} - 回傳一個物件陣列，每個物件包含 'text' 和 'isWord' 屬性。
+ */
+function segmentSentenceWithTrie(text, trie) {
+    if (!text || !trie) return [{ text: text, isWord: false }];
+
+    const results = [];
+    let currentIndex = 0;
+
+    while (currentIndex < text.length) {
+        let longestMatch = '';
+        let lastFoundIndex = currentIndex;
+
+        let currentNode = trie;
+        for (let i = currentIndex; i < text.length; i++) {
+            const char = text[i];
+            if (currentNode[char]) {
+                currentNode = currentNode[char];
+                if (currentNode.is_end) {
+                    longestMatch = text.substring(currentIndex, i + 1);
+                    lastFoundIndex = i;
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (longestMatch) {
+            results.push({ text: longestMatch, isWord: true });
+            currentIndex = lastFoundIndex + 1;
+        } else {
+            // 如果在目前位置找不到任何詞，就將這個字當作單一非詞字元處理
+            const unmatchableChar = text[currentIndex];
+            // 尋找連續的非詞字元並將它們合併
+            let nonWordEndIndex = currentIndex + 1;
+            while (nonWordEndIndex < text.length) {
+                const nextChar = text[nonWordEndIndex];
+                let nextNode = trie;
+                let isNextCharStartOfWord = false;
+                if (nextNode[nextChar]) {
+                    isNextCharStartOfWord = true;
+                }
+
+                if (isNextCharStartOfWord) {
+                    break;
+                }
+                nonWordEndIndex++;
+            }
+            const nonWordText = text.substring(currentIndex, nonWordEndIndex);
+            results.push({ text: nonWordText, isWord: false });
+            currentIndex = nonWordEndIndex;
+        }
+    }
+    return results;
+}
+
+
+/**
+ * 將斷詞結果應用到指定的 DOM 元素上，將詞彙轉換為可點擊的連結。
+ * @param {HTMLElement} element - 要處理的元素，例如包含例句的 <span> 或 <td>。
+ */
+function applySegmentationToElement(element) {
+    if (!element || !element.textContent || !window.wordTrie) {
+        return;
+    }
+
+    // 處理 <br> 標籤，將其暫時替換為特殊的分隔符號
+    const originalHtml = element.innerHTML;
+    const placeholder = '||BR||';
+    const textSegments = originalHtml.split(/<br\s*\/?>/i);
+
+    let finalHtml = '';
+
+    textSegments.forEach((segment, index) => {
+        // 為了避免重複處理，先建立一個臨時的 div 來取得純文字
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = segment;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+        if (plainText) {
+            const segmentedParts = segmentSentenceWithTrie(plainText, window.wordTrie);
+            let segmentHtml = '';
+            segmentedParts.forEach(part => {
+                if (part.isWord) {
+                    segmentHtml += `<a href="#" class="segmented-word" data-word="${part.text}">${part.text}</a>`;
+                } else {
+                    // 對非詞部分進行 HTML 編碼，避免 XSS 風險
+                    const encodedText = part.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    segmentHtml += encodedText;
+                }
+            });
+            finalHtml += segmentHtml;
+        }
+
+        // 在每段之間加回 <br>
+        if (index < textSegments.length - 1) {
+            finalHtml += '<br>';
+        }
+    });
+
+    element.innerHTML = finalHtml;
+}
+
+
 function handleDomainMigration() {
   if (window.location.hostname !== 'aiuanyu.github.io' && window.location.hostname !== 'fix-migration-dark-theme.hakspring.pages.dev' && window.location.hostname !== 'feat-dark-theme-loading-over.hakspring.pages.dev' && window.location.hostname !== 'fix-migration-page-scroll.hakspring.pages.dev') {
     return false;
@@ -253,7 +360,8 @@ const DATA_FILES_TO_CACHE = [
   // 其他資料
   'tone_mapping.json',
   'NAmedias.json',
-  'exclusions.json'
+  'exclusions.json',
+  'trie.json'
 ];
 
 const DB_NAME = 'HakkaDataDB';
@@ -1290,7 +1398,8 @@ function getKeyNameFromPath(filePath) {
     const otherMap = {
         'tone_mapping': 'toneMappingData',
         'NAmedias': 'missingAudioData',
-        'exclusions': '例外音檔'
+        'exclusions': '例外音檔',
+        'trie': 'wordTrie'
     };
     return otherMap[fileName];
 }
@@ -2260,6 +2369,7 @@ function displayQueryResults(results, keyword, searchMode, summaryText, selected
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
             sentenceSpan.innerHTML = (highlight.sentence ? line['例句'].replace(highlightRegex, '<mark>$1</mark>') : line['例句']).replace(/\n/g, '<br>');
+            applySegmentationToElement(sentenceSpan); // 在這裡呼叫斷詞
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
 
@@ -3364,6 +3474,7 @@ function renderCategoryItems(itemsToRender, dialectInfo, category, isInitialLoad
             const sentenceSpan = document.createElement('span');
             sentenceSpan.className = 'sentence';
             sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+            applySegmentationToElement(sentenceSpan); // 在這裡呼叫斷詞
             td3.appendChild(sentenceSpan);
             td3.appendChild(document.createElement('br'));
             if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
@@ -4418,6 +4529,35 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
           if (!isNaN(rowIndex) && g_currentSearchResults[rowIndex]) {
               toggleSearchAccordion(button, g_currentSearchResults[rowIndex]);
           }
+          return; // 處理完畢，返回
+      }
+
+      const segmentedWord = event.target.closest('a.segmented-word');
+      if (segmentedWord) {
+          event.preventDefault();
+          const word = segmentedWord.dataset.word;
+          if (word) {
+              const trElement = segmentedWord.closest('tr');
+              let contextualDialect = null;
+
+              if (trElement) {
+                if (trElement.classList.contains('accordion-row')) {
+                    const dialectClass = Array.from(trElement.classList).find(c => ['四縣', '海陸', '大埔', '饒平', '詔安'].includes(c));
+                    if (dialectClass) {
+                        contextualDialect = dialectClass;
+                    }
+                } else if (trElement.closest('#category-table')) {
+                    if (g_currentDialectInfo && g_currentDialectInfo.腔名) {
+                        contextualDialect = g_currentDialectInfo.腔名;
+                    }
+                } else {
+                    // Fallback for search results
+                    contextualDialect = currentActiveMainDialectName;
+                }
+              }
+
+              showPronunciationPopup(word, null, segmentedWord, null, contextualDialect);
+          }
       }
   });
 
@@ -4591,6 +4731,7 @@ function createComparisonRow(line, dialectInfo) {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
         sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+        applySegmentationToElement(sentenceSpan); // 在這裡呼叫斷詞
         td3.appendChild(sentenceSpan);
         td3.appendChild(document.createElement('br'));
         if (dialectInfo.級名 === '高級' || (missingAudioInfo && missingAudioInfo.sentence === false)) {
