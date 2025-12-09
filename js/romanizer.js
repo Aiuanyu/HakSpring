@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const romanizerUndoBtn = document.getElementById('romanizer-undo-btn');
   const romanizerRedoBtn = document.getElementById('romanizer-redo-btn');
 
-  const savedJoiningMode = localStorage.getItem(ROMANIZER_JOINING_MODE_KEY);
+  const savedJoiningMode = getUserData(ROMANIZER_JOINING_MODE_KEY);
   if (savedJoiningMode && romanizerJoiningModeSelector) {
     romanizerJoiningMode = savedJoiningMode;
     romanizerJoiningModeSelector.value = savedJoiningMode;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (romanizerJoiningModeSelector) {
     romanizerJoiningModeSelector.addEventListener('change', function() {
       romanizerJoiningMode = this.value;
-      localStorage.setItem(ROMANIZER_JOINING_MODE_KEY, romanizerJoiningMode);
+      setUserData(ROMANIZER_JOINING_MODE_KEY, romanizerJoiningMode);
       console.log(`連詞模式已切換並儲存: ${romanizerJoiningMode}`);
 
       // 淨更新分隔符，毋儲存到歷史紀錄

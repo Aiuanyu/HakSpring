@@ -52,16 +52,9 @@ function handleDomainMigration() {
       ];
       const migrationData = {};
       keysToMigrate.forEach(function(key) {
-        let value = localStorage.getItem(key);
+        // 改用 userData.js 统一处理
+        let value = getUserData(key); // getUserData 已经处理了 JSON 解析
         if (value !== null) {
-          // The "hakkaBookmarks" key contains a JSON string, which should be parsed before being re-encoded.
-          if (key === 'hakkaBookmarks') {
-            try {
-              value = JSON.parse(value);
-            } catch (e) {
-              console.error('Could not parse hakkaBookmarks from localStorage. Sending as raw string.', e);
-            }
-          }
           migrationData[key] = value;
         }
       });
@@ -1478,24 +1471,11 @@ function handleDataImport() {
       // --- Smart Bookmark Merging Logic ---
       if (parsedData.hakkaBookmarks) {
         const migratedBookmarks = Array.isArray(parsedData.hakkaBookmarks) ? parsedData.hakkaBookmarks : [];
-        const localBookmarksRaw = localStorage.getItem('hakkaBookmarks');
+        // 改用 userData.js
+        const localBookmarks = getBookmarks();
 
-        if (localBookmarksRaw) {
-          // If local bookmarks exist, merge them
-          let localBookmarks = [];
-          try {
-            const parsedLocal = JSON.parse(localBookmarksRaw);
-            // Ensure the parsed data is an array
-            if (Array.isArray(parsedLocal)) {
-              localBookmarks = parsedLocal;
-            } else {
-              console.warn('Local bookmarks are not an array, they will be overwritten.');
-            }
-          } catch (e) {
-            console.error('Failed to parse local bookmarks, they will be overwritten.', e);
-          }
+        if (localBookmarks.length > 0) {
           const combinedBookmarks = [...localBookmarks, ...migratedBookmarks];
-
           const bookmarkMap = new Map();
           combinedBookmarks.forEach(bm => {
             const key = `${bm.tableName}||${bm.cat}`;
@@ -1504,24 +1484,19 @@ function handleDataImport() {
               bookmarkMap.set(key, bm);
             }
           });
-
           let mergedBookmarks = Array.from(bookmarkMap.values());
           mergedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
-
           if (mergedBookmarks.length > 10) {
             mergedBookmarks = mergedBookmarks.slice(0, 10);
           }
-
-          localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+          // 改用 userData.js
+          setUserData('hakkaBookmarks', mergedBookmarks);
           console.log('Bookmarks merged successfully.');
-
         } else {
           // If no local bookmarks, just use the migrated ones
-          localStorage.setItem('hakkaBookmarks', JSON.stringify(migratedBookmarks));
+          setUserData('hakkaBookmarks', migratedBookmarks);
           console.log('No local bookmarks found, imported migrated bookmarks.');
         }
-
-        // Remove the key from parsedData so it's not processed again
         delete parsedData.hakkaBookmarks;
       }
 
@@ -1529,8 +1504,8 @@ function handleDataImport() {
       for (const key in parsedData) {
         if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
           let value = parsedData[key];
-          // Other values are directly set
-          localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : value);
+          // 改用 userData.js
+          setUserData(key, value);
         }
       }
 
@@ -1546,6 +1521,15 @@ function handleDataImport() {
 }
 
 async function initializeApp() {
+  // Firebase 初始化
+  try {
+    // 等待 Firebase 完成登入並載入初始資料
+    await initFirebase();
+  } catch (error) {
+    console.warn("Firebase 初始化失败，云端同步功能将不可用。", error);
+    // 即使 Firebase 初始化失败，应用仍可继续执行，但功能会受限
+  }
+
   // --- 【Jules 修正 iOS 捲動問題】 ---
   // 手動設定捲動位置，避免瀏覽器自動處理，這在 iOS 上常會造成問題
   if ('scrollRestoration' in history) {
@@ -1831,7 +1815,7 @@ function initializeAppUI() {
 
     const previousValue = progressDropdown.value;
 
-    const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    const bookmarks = getBookmarks(); // 改用 userData.js
 
     progressDropdown.innerHTML = '<option selected disabled>擇進前个進度</option>';
     if (bookmarks.length === 0 && progressDetailsSpan) {
@@ -1868,65 +1852,7 @@ function initializeAppUI() {
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
   }
 
-  function saveBookmark(
-    rowId,
-    percentage,
-    category,
-    tableName,
-    isPlayingContext = false
-  ) {
-    let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-    const newBookmark = {
-      rowId: rowId,
-      percentage: percentage,
-      cat: category,
-      tableName: tableName,
-      timestamp: Date.now(),
-    };
-
-    // 1. 移除已存在的完全相同的紀錄 (同表格同類別)
-    const existingIndex = bookmarks.findIndex(
-      (bm) => bm.tableName === newBookmark.tableName && bm.cat === newBookmark.cat
-    );
-    if (existingIndex > -1) {
-      bookmarks.splice(existingIndex, 1);
-    }
-    // 2. 將新紀錄加到最前面
-    bookmarks.unshift(newBookmark);
-
-    // 3. 如果紀錄超過 10 筆，執行您微調過的汰換邏輯
-    if (bookmarks.length > 10) {
-      let indexToDelete = -1;
-      let foundMatch = false;
-
-      // 從最舊的開始往前找 (但不包含最新的第0筆)
-      for (let i = bookmarks.length - 1; i >= 1; i--) {
-        const currentBookmark = bookmarks[i];
-        // 檢查是否為「同表格，但不同類別」
-        if (
-          currentBookmark.tableName === newBookmark.tableName &&
-          currentBookmark.cat !== newBookmark.cat
-        ) {
-          indexToDelete = i;
-          foundMatch = true;
-          break; // 找到目標，停止搜尋
-        }
-      }
-
-      // 如果找到了符合條件的，就刪除它
-      if (foundMatch) {
-        bookmarks.splice(indexToDelete, 1);
-      } else {
-        // 如果沒找到，才刪除最舊的一筆 (也就是最後一筆)
-        bookmarks.pop();
-      }
-    }
-
-    // 4. 儲存更新後的紀錄
-    localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
-
-    // 5. 更新下拉選單 UI
-    updateProgressDropdown();
+  // 這整段 saveBookmark 函式都已搬到 userData.js，所以直接刪除
 
     // 6. 更新進度詳情連結 (採用新版清晰的邏輯)
     const progressDetailsSpan = document.getElementById('progressDetails');
@@ -2726,7 +2652,7 @@ function adjustResultsSummaryFontSize() {
           if (progressDropdown && progressDropdown.options.length > 1) {
             event.preventDefault();
             const selectedValue = progressDropdown.options[1].value;
-            const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+            const bookmarks = getBookmarks(); // 改用 userData.js
             const firstBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
             if (firstBookmark) {
@@ -2950,8 +2876,8 @@ const DIALECT_NAME_TO_CODE = {
 function updateSearchDialect(dialectName) {
   if (!dialectName) return;
 
-  // 1. 更新 localStorage
-  localStorage.setItem('lastSearchDialect', dialectName);
+  // 1. 更新 localStorage -> 改用 userData.js
+  setUserData('lastSearchDialect', dialectName);
   console.log(`學習模式觸發：查詞腔調已更新並儲存到 localStorage: "${dialectName}"`);
 
   // 2. 更新查詞 popup 裡肚个 radio button
@@ -3520,15 +3446,9 @@ function playAudio(itemIndex, sessionId) {
     // --- 檢查是否已播完目前類別的所有項目 ---
     if (itemIndex >= activeCategoryData.length) {
         // --- 關鍵修正：還原舊版邏輯，在跳轉前刪除已完成類別的書籤 ---
-        let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-        // 【變數路徑修正】直接從 g_currentDialectInfo 存取屬性
-        const previousBookmarkIndex = bookmarks.findIndex((bm) => bm.tableName === g_currentDialectInfo.fullLvlName && bm.cat === g_currentCategory);
-        if (previousBookmarkIndex > -1) {
-            console.log(`移除已完成類別的書籤: ${g_currentDialectInfo.fullLvlName} - ${g_currentCategory}`);
-            bookmarks.splice(previousBookmarkIndex, 1);
-            localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
-            updateProgressDropdown();
-        }
+        // 改用 userData.js
+        removeBookmarkForCompletedCategory(g_currentDialectInfo.fullLvlName, g_currentCategory);
+        updateProgressDropdown();
 
         advanceToNextCategory();
         return;
@@ -3993,7 +3913,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   function handleUrlChange() {
     const urlParams = new URLSearchParams(window.location.search);
     const kiongParam = urlParams.get('kiong');
-    const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+    const lastUsedDialect = getUserData('lastSearchDialect'); // 改用 userData.js
     let dialectToSelect = '';
     if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
       dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
@@ -4008,7 +3928,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     }
 
     const musiidParam = urlParams.get('musiid');
-    const lastMode = localStorage.getItem('lastSearchMode');
+    const lastMode = getUserData('lastSearchMode'); // 改用 userData.js
     const searchModeValue = musiidParam
       ? (musiidParam === 'hak' ? '客話' : '華語')
       : (lastMode || '客話');
@@ -4131,7 +4051,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
         if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
           currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
         } else {
-          const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+          const lastUsedDialect = getUserData('lastSearchDialect'); // 改用 userData.js
           currentActiveMainDialectName = (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) ? lastUsedDialect : '四縣';
         }
 
@@ -4155,7 +4075,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       }).catch(error => {
         document.getElementById('info-content').innerHTML = '<p>說明文件載入失敗。</p>';
       });
-    const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
+    const dontShowAgain = getUserData('dontShowInfoModalAgain'); // 改用 userData.js
     if (!dontShowAgain) {
       infoModal.classList.add('is-visible');
     }
@@ -4165,7 +4085,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     });
     const closeInfoModal = () => {
       if (document.getElementById('dontShowInfoModalAgain').checked) {
-        localStorage.setItem('dontShowInfoModalAgain', 'true');
+        setUserData('dontShowInfoModalAgain', 'true'); // 改用 userData.js
       }
       infoModal.classList.remove('is-visible');
     };
@@ -4202,7 +4122,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       const markdownContent = await fetchWhatsNewContent();
       const versionMatch = markdownContent.match(/<!--\s*version:\s*(\d+)\s*-->/);
       const serverVersion = versionMatch ? parseInt(versionMatch[1], 10) : 0;
-      const localVersion = parseInt(localStorage.getItem('whatsNewVersion') || '0', 10);
+      const localVersion = parseInt(getUserData('whatsNewVersion', '0'), 10); // 改用 userData.js
 
       if (serverVersion > localVersion) {
         newWhatsNewVersion = serverVersion;
@@ -4233,7 +4153,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
   const closeWhatsNewModal = () => {
     // Correctly handle version 0 by checking against null
     if (newWhatsNewVersion !== null) {
-      localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
+      setUserData('whatsNewVersion', newWhatsNewVersion); // 改用 userData.js
     }
     whatsNewModal.classList.remove('is-visible');
   };
@@ -4297,8 +4217,8 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
       }
     });
     const triggerSearchOnChange = () => {
-        localStorage.setItem('lastSearchDialect', document.querySelector('#search-popup input[name="dialect"]:checked').value);
-        localStorage.setItem('lastSearchMode', document.querySelector('#search-popup input[name="search-mode"]:checked').value);
+        setUserData('lastSearchDialect', document.querySelector('#search-popup input[name="dialect"]:checked').value); // 改用 userData.js
+        setUserData('lastSearchMode', document.querySelector('#search-popup input[name="search-mode"]:checked').value); // 改用 userData.js
         if (searchInput.value.trim()) {
             performSearch();
         }
@@ -4363,7 +4283,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const selectedValue = this.value;
 
     if (selectedValue && selectedValue !== '擇進前个進度') {
-      const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      const bookmarks = getBookmarks(); // 改用 userData.js
       // [修正] 先從 bookmarks 陣列中找到完整的書籤物件
       const selectedBookmark = bookmarks.find(bm => bm.tableName + '||' + bm.cat === selectedValue);
 
@@ -4661,15 +4581,9 @@ function exportData() {
 
   const exportData = {};
   keysToExport.forEach(key => {
-    const value = localStorage.getItem(key);
+    const value = getUserData(key); // 改用 userData.js
     if (value !== null) {
-      try {
-        // Attempt to parse JSON strings to store them as objects/arrays
-        exportData[key] = JSON.parse(value);
-      } catch (e) {
-        // If it's not a valid JSON, store as a plain string
-        exportData[key] = value;
-      }
+      exportData[key] = value;
     }
   });
 
@@ -4770,11 +4684,8 @@ async function importData() {
       // 3. 基本个 key 驗證
       if (validKeys.includes(key) && Object.prototype.hasOwnProperty.call(parsedData, key)) {
         let value = parsedData[key];
-        // 如果值係一個物件 (例如 hakkaBookmarks)，愛將佢轉做字串再儲存
-        if (typeof value === 'object' && value !== null) {
-          value = JSON.stringify(value);
-        }
-        localStorage.setItem(key, String(value));
+        // 改用 userData.js
+        setUserData(key, value);
       }
     }
 
