@@ -154,8 +154,14 @@ td[data-label="詞彙"],
     font-size: 1.5em;
     font-weight: 700;
   }
-  rt,
-  ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
+  rt {
+    /* font-size was 1em, which is too large for ruby text, causing wrapping issues in WebKit.
+       Reducing it to 60% of the parent ruby element's font size. */
+    font-size: 60%;
+    font-family: var(--roman-font) !important;
+    margin-bottom: 0.3em;
+  }
+  ruby[class^="sandhi-"] { /* Separated from rt selector for clarity */
     font-size: 1em;
     font-family: var(--roman-font) !important;
     margin-bottom: 0.3em;
