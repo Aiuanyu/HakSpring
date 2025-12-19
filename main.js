@@ -3997,6 +3997,7 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     let dialectToSelect = '';
     if (kiongParam && DIALECT_CODE_TO_NAME[kiongParam]) {
       dialectToSelect = DIALECT_CODE_TO_NAME[kiongParam];
+      localStorage.setItem('lastSearchDialect', dialectToSelect);
     } else if (lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]) {
       dialectToSelect = lastUsedDialect;
     } else {
@@ -4012,6 +4013,10 @@ function handleAutoPlay(autoPlayTargetRowId, dialectInfo, category) {
     const searchModeValue = musiidParam
       ? (musiidParam === 'hak' ? '客話' : '華語')
       : (lastMode || '客話');
+
+    if (musiidParam) {
+      localStorage.setItem('lastSearchMode', searchModeValue);
+    }
 
     const modeRadio = document.querySelector(`#search-popup input[name="search-mode"][value="${searchModeValue}"]`);
     if (modeRadio) {
