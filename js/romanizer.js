@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function normalizePunctuation(punc) {
     const punctuationMap = {
       '，': ',', '。': '.', '？': '?', '！': '!', '；': ';', '：': ':',
-      '（': '(', '）': ')', '、': ',',
+      '（': '(', '）': ')', '、': ',', '～': '~',
       '「': '“', '」': '”', '『': '‘', '』': '’'
     };
     let result = '';
