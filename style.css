@@ -4,6 +4,7 @@
   font-family: '源石黑體';
   src: local('源石黑體');
 }
+
 @font-face {
   font-family: '源石黑體';
   src: local('GenSekiGothic TW R');
@@ -15,10 +16,13 @@
     /* 開始同結束時个顏色 (用變數定義个暫停黃色) */
     background-color: var(--paused-yellow);
   }
+
   50% {
     /* 動畫中間點个顏色 (做得調整 alpha 值分佢較透明) */
-    background-color: rgba(var(--paused-yellow-rgb, 255, 250, 205), 0.3); /* 預設用 LemonChiffon RGB */
+    background-color: rgba(var(--paused-yellow-rgb, 255, 250, 205), 0.3);
+    /* 預設用 LemonChiffon RGB */
   }
+
   100% {
     /* 回到開始个顏色 */
     background-color: var(--paused-yellow);
@@ -28,12 +32,16 @@
 /* 暗夜模式个動畫 (用不同个基礎顏色) */
 @keyframes pulse-dark-yellow-effect {
   0% {
-    background-color: var(--dark-paused-yellow); /* 暗夜模式个黃色 */
+    background-color: var(--dark-paused-yellow);
+    /* 暗夜模式个黃色 */
   }
+
   50% {
     /* 暗夜模式下，做得調整 alpha 值分佢較暗或較透明 */
-    background-color: rgba(var(--dark-paused-yellow-rgb, 255, 255, 150), 0.3); /* 預設用暗夜黃色 RGB */
+    background-color: rgba(var(--dark-paused-yellow-rgb, 255, 255, 150), 0.3);
+    /* 預設用暗夜黃色 RGB */
   }
+
   100% {
     background-color: var(--dark-paused-yellow);
   }
@@ -41,16 +49,25 @@
 
 /* --- Loading Indicator Styles --- */
 #loading-indicator {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(255, 255, 255, 0.9);
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   z-index: 9999;
 }
+
 #loading-text {
   font-size: 1.2em;
   margin-top: 20px;
   color: #333;
 }
+
 .spinner {
   border: 8px solid #f3f3f3;
   border-top: 8px solid #3498db;
@@ -59,9 +76,15 @@
   height: 60px;
   animation: spin 1.5s linear infinite;
 }
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 
@@ -70,11 +93,15 @@
   --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
-  --iMazinGrace-1-rgb: 170, 150, 183; /* 新增 RGB 版本方便用 rgba() */
-  --paused-yellow-rgb: 255, 250, 205; /* RGB 版本方便用 rgba() */
-  --paused-yellow: rgba(var(--paused-yellow-rgb), 1); /* 改用 rgba 確保一致 */
+  --iMazinGrace-1-rgb: 170, 150, 183;
+  /* 新增 RGB 版本方便用 rgba() */
+  --paused-yellow-rgb: 255, 250, 205;
+  /* RGB 版本方便用 rgba() */
+  --paused-yellow: rgba(var(--paused-yellow-rgb), 1);
+  /* 改用 rgba 確保一致 */
   /* --- Focus Glow Variables (Light Mode) --- */
-  --focus-glow-color: rgba(59, 130, 246, 0.65); /* 日時頭用較亮个藍色 */
+  --focus-glow-color: rgba(59, 130, 246, 0.65);
+  /* 日時頭用較亮个藍色 */
   --focus-glow-blur: 6px;
   --focus-glow-spread: 1px;
   --popup-btn-bg: #e9ecef;
@@ -90,11 +117,16 @@
   column-gap: 4px;
   line-height: 1;
   cursor: pointer;
-  border: 2px solid transparent; /* 預留邊框空間 */
-  border-radius: 8px;       /* 預設圓角 */
-  padding: 2px 5px;         /* 預設內距 */
-  margin-right: 8px; /* 稍微調整間距 */
-  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out; /* 可選：平滑過渡效果 */
+  border: 2px solid transparent;
+  /* 預留邊框空間 */
+  border-radius: 8px;
+  /* 預設圓角 */
+  padding: 2px 5px;
+  /* 預設內距 */
+  margin-right: 8px;
+  /* 稍微調整間距 */
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  /* 可選：平滑過渡效果 */
 }
 
 .radioItem:not(:last-of-type) {
@@ -119,20 +151,24 @@
 /* --- Global Focus Glow Style --- */
 :is(button, select, textarea, a, input):focus-visible,
 [contenteditable="true"]:focus-visible {
-  outline: none; /* 拿忒預設个 outline，改用 box-shadow 做光暈 */
+  outline: none;
+  /* 拿忒預設个 outline，改用 box-shadow 做光暈 */
   box-shadow: 0 0 var(--focus-glow-blur) var(--focus-glow-spread) var(--focus-glow-color);
-  transition: box-shadow 0.15s ease-in-out; /* 光暈出現/消失个平滑過渡 */
+  transition: box-shadow 0.15s ease-in-out;
+  /* 光暈出現/消失个平滑過渡 */
 }
 
 /* --- Specific Focus Adjustments --- */
 /* 確保腔調級別連結个 focus 光暈有圓角 */
-.dialect > span[data-varname] > a:focus-visible {
-  border-radius: 6px; /* 比佢外背 span 个 8px 細一息仔，較好看 */
+.dialect>span[data-varname]>a:focus-visible {
+  border-radius: 6px;
+  /* 比佢外背 span 个 8px 細一息仔，較好看 */
 }
 
 /* 確保進度詳情連結个 focus 光暈也有圓角 */
-#progressDetails > a:focus-visible {
-  border-radius: 4px; /* 設定一個適中个圓角 */
+#progressDetails>a:focus-visible {
+  border-radius: 4px;
+  /* 設定一個適中个圓角 */
 }
 
 .radioButton:checked::after {
@@ -154,13 +190,17 @@ td[data-label="詞彙"],
     font-size: 1.5em;
     font-weight: 700;
   }
+
   rt,
-  ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
+  ruby[class^="sandhi-"] {
+    /* 改用屬性選擇器 */
     font-size: 1em;
     font-family: var(--roman-font) !important;
     margin-bottom: 0.3em;
   }
-  ruby[class^="sandhi-"] { /* 改用屬性選擇器 */
+
+  ruby[class^="sandhi-"] {
+    /* 改用屬性選擇器 */
     font-size: revert !important;
     /* font-family: initial !important; */
 
@@ -169,28 +209,33 @@ td[data-label="詞彙"],
       color: inherit;
     }
   }
+
   rt {
     /*font-size: initial !important;*/
     color: inherit;
   }
 }
+
 .sentence rt {
   font-size: 70%;
 }
 
 ruby.sandhi-高降變 {
-    color: red;
+  color: red;
 }
+
 ruby.sandhi-中平變 {
-    color: darkorchid;
+  color: darkorchid;
 }
+
 ruby.sandhi-低升變 {
-    color: blue;
+  color: blue;
 }
 
 body {
   font-size: 20px;
 }
+
 body,
 body * {
   font-family: Iansui, '霞鶩文楷 TC', 'LXGW WenKai', tauhu-oo, serif;
@@ -199,56 +244,60 @@ body * {
 }
 
 .title-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 #main-content h2 {
-    margin-right: 1em;
-    margin-bottom: 0;
-    margin-top: 0;
+  margin-right: 1em;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
 #main-content h4 {
-    margin: 0;
-    line-height: 1.2em;
+  margin: 0;
+  line-height: 1.2em;
 }
 
 #main-content h2 a {
-    text-decoration: none;
-    display: block;
+  text-decoration: none;
+  display: block;
 }
 
 @media screen and (max-width: 768px) {
-    .title-container {
-        flex-direction: column;
-        text-align: center;
-    }
+  .title-container {
+    flex-direction: column;
+    text-align: center;
+  }
 
-    #main-content h2 {
-        margin-right: 0;
-        margin-bottom: 0.5em;
-    }
+  #main-content h2 {
+    margin-right: 0;
+    margin-bottom: 0.5em;
+  }
 }
 
 #main-content h2 img {
-    height: 1.8em;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 10px;
+  height: 1.8em;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 10px;
 }
+
 /*table {
   table-layout: fixed;
   width: 100%;
 }*/
 td {
-  padding: 1em; /*max-width: 60vw;*/
+  padding: 1em;
+  /*max-width: 60vw;*/
 }
+
 tr:nth-child(even) {
   background-color: rgba(103, 140, 63, 0.5);
 }
+
 a {
   color: #678c3f;
 }
@@ -257,36 +306,47 @@ a {
   height: 1em;
   border-radius: 1em;
 }
+
 /* audio {
   max-width: 5em;
-}*//* 同狹螢幕做成卡片以後就毋使吔，td 差毋多都有罅闊 */
+}*/
+/* 同狹螢幕做成卡片以後就毋使吔，td 差毋多都有罅闊 */
 .no {
   font-family: 'Operator Mono';
 }
+
 .sentence,
 .sentence * {
   font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive;
   text-decoration: underline;
 }
+
 #header {
   position: sticky;
   top: 10px;
   background: rgba(170, 150, 183, 0.5);
   backdrop-filter: blur(5px);
   z-index: 10;
-  padding: 4px 15px; /* 微調 padding */
-  display: flex; /* 改用 Flexbox 排版 */
-  align-items: center; /* 垂直置中 */
-  justify-content: flex-start; /* <--- 改為從頭開始對齊 */
+  padding: 4px 15px;
+  /* 微調 padding */
+  display: flex;
+  /* 改用 Flexbox 排版 */
+  align-items: center;
+  /* 垂直置中 */
+  justify-content: flex-start;
+  /* <--- 改為從頭開始對齊 */
   /* flex-wrap: wrap; /* 改做做得換行 */
-  gap: 10px; /* 項目之間的間距 */
+  gap: 10px;
+  /* 項目之間的間距 */
   font-family: var(--title-font);
 }
+
 .bookmarkBtn {
   background: none;
   border: none;
   cursor: pointer;
 }
+
 .bookmarkBtn,
 .crossDialectBtn {
   background: none;
@@ -296,16 +356,20 @@ a {
   margin: 0 3px;
   vertical-align: middle;
 }
+
 .bookmarkBtn i {
   color: var(--iMazinGrace-1) !important;
 }
+
 .crossDialectBtn {
   font-size: 1.5em;
 }
+
 .crossDialectBtn i {
   color: #4a67a1 !important;
   transition: transform 0.3s ease;
 }
+
 .accordion-parent .crossDialectBtn i {
   transform: rotate(135deg);
 }
@@ -316,28 +380,37 @@ a {
   }
 }
 
-tr.accordion-parent > td {
+tr.accordion-parent>td {
   border-top: 5px solid orange;
 }
-tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
+
+tr.accordion-parent>td:first-child,
+tr.accordion-row>td:first-child {
   border-left: 5px solid orange;
 }
-tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
+
+tr.accordion-parent>td:last-child,
+tr.accordion-row>td:last-child {
   border-right: 5px solid orange;
 }
-tr.accordion-row-last > td {
+
+tr.accordion-row-last>td {
   border-bottom: 5px solid orange;
 }
-tr.accordion-parent > td:first-child {
+
+tr.accordion-parent>td:first-child {
   border-top-left-radius: 8px;
 }
-tr.accordion-parent > td:last-child {
+
+tr.accordion-parent>td:last-child {
   border-top-right-radius: 8px;
 }
-tr.accordion-row-last > td:first-child {
+
+tr.accordion-row-last>td:first-child {
   border-bottom-left-radius: 8px;
 }
-tr.accordion-row-last > td:last-child {
+
+tr.accordion-row-last>td:last-child {
   border-bottom-right-radius: 8px;
 }
 
@@ -349,23 +422,48 @@ tr.accordion-row {
   filter: brightness(95%);
 }
 
-tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
-    color: white;
+tr.accordion-row.四縣,
+tr.accordion-row.海陸,
+tr.accordion-row.大埔,
+tr.accordion-row.饒平,
+tr.accordion-row.詔安 {
+  color: white;
 }
-tr.accordion-row.四縣 { background-color: #678d3f; }
-tr.accordion-row.海陸 { background-color: #76ad67; }
-tr.accordion-row.大埔 { background-color: #5898a9; }
-tr.accordion-row.饒平 { background-color: #834fa1; }
-tr.accordion-row.詔安 { background-color: #974a47; }
+
+tr.accordion-row.四縣 {
+  background-color: #678d3f;
+}
+
+tr.accordion-row.海陸 {
+  background-color: #76ad67;
+}
+
+tr.accordion-row.大埔 {
+  background-color: #5898a9;
+}
+
+tr.accordion-row.饒平 {
+  background-color: #834fa1;
+}
+
+tr.accordion-row.詔安 {
+  background-color: #974a47;
+}
 
 @media (prefers-color-scheme: dark) {
-    tr.accordion-row.四縣, tr.accordion-row.海陸, tr.accordion-row.大埔, tr.accordion-row.饒平, tr.accordion-row.詔安 {
-        filter: brightness(0.8) saturate(0.9);
-    }
+
+  tr.accordion-row.四縣,
+  tr.accordion-row.海陸,
+  tr.accordion-row.大埔,
+  tr.accordion-row.饒平,
+  tr.accordion-row.詔安 {
+    filter: brightness(0.8) saturate(0.9);
+  }
 }
 
 
 @media screen and (max-width: 768px) {
+
   #generated tr.accordion-parent,
   #generated tr.accordion-row {
     margin-bottom: 0;
@@ -374,57 +472,83 @@ tr.accordion-row.詔安 { background-color: #974a47; }
     border-left: 5px solid orange;
     border-right: 5px solid orange;
   }
+
   #generated tr.accordion-parent {
     border-top: 5px solid orange;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
   }
+
   #generated tr.accordion-row-last {
     margin-bottom: 1.5em;
     border-bottom: 5px solid orange;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
   }
+
   #generated tr.accordion-parent td,
   #generated tr.accordion-row td {
-      border: none !important;
+    border: none !important;
   }
-  #generated tr.accordion-row.四縣 { background-color: #678d3f !important; }
-  #generated tr.accordion-row.海陸 { background-color: #76ad67 !important; }
-  #generated tr.accordion-row.大埔 { background-color: #5898a9 !important; }
-  #generated tr.accordion-row.饒平 { background-color: #834fa1 !important; }
-  #generated tr.accordion-row.詔安 { background-color: #974a47 !important; }
+
+  #generated tr.accordion-row.四縣 {
+    background-color: #678d3f !important;
+  }
+
+  #generated tr.accordion-row.海陸 {
+    background-color: #76ad67 !important;
+  }
+
+  #generated tr.accordion-row.大埔 {
+    background-color: #5898a9 !important;
+  }
+
+  #generated tr.accordion-row.饒平 {
+    background-color: #834fa1 !important;
+  }
+
+  #generated tr.accordion-row.詔安 {
+    background-color: #974a47 !important;
+  }
 }
+
 #generated td:nth-of-type(2) {
   text-align: center;
   max-width: 40vw;
 }
+
 .progressLvl {
   color: red;
 }
+
 .progressCat {
   color: blue;
 }
 
 /* 歸到頁頂高个按鈕 */
 #backToTopBtn {
-  display: none; /* 預設隱藏 */
+  display: none;
+  /* 預設隱藏 */
   position: fixed;
   bottom: 10px;
   right: 10px;
   z-index: 99;
   border: none;
   outline: none;
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* 半透明黑色背景 */
   color: white;
   cursor: pointer;
   padding: 15px;
   border-radius: 10px;
   font-size: 18px;
 }
+
 #backToTopBtn:hover {
-  background-color: rgba(0, 0, 0, 0.8); /* 滑鼠懸停時加深背景顏色 */
+  background-color: rgba(0, 0, 0, 0.8);
+  /* 滑鼠懸停時加深背景顏色 */
 }
+
 #backToTopBtn i {
   color: white;
 }
@@ -435,9 +559,12 @@ tr.accordion-row.詔安 { background-color: #974a47; }
      可以加上 flex-shrink: 0 確保它也不會被壓縮 */
   flex-shrink: 0;
   margin-left: 1%;
-  /* display: inline-flex; */ /* 如果原本有 display，確保與 flex 容器兼容 */
-  /* align-items: center; */ /* 確保按鈕垂直對齊 */
+  /* display: inline-flex; */
+  /* 如果原本有 display，確保與 flex 容器兼容 */
+  /* align-items: center; */
+  /* 確保按鈕垂直對齊 */
 }
+
 #audioControls button {
   border: none;
   font-size: clamp(15px, 2vw, 22px);
@@ -447,6 +574,7 @@ tr.accordion-row.詔安 { background-color: #974a47; }
   margin: 0 3px;
   vertical-align: middle;
 }
+
 #audioControls button i,
 button.playFromThisRow i {
   cursor: pointer;
@@ -456,15 +584,18 @@ button.playFromThisRow i {
   border-radius: 0.3em;
   padding: 0.5em;
 }
+
 #audioControls button.playable i,
 button.playFromThisRow.playable i {
   background-color: green !important;
 }
+
 #audioControls button.ongoing i,
 button.playFromThisRow.ongoing i {
   background-color: yellow !important;
   color: var(--main-text-color);
 }
+
 #audioControls button.ended i,
 button.playFromThisRow.ended i {
   background-color: red !important;
@@ -491,7 +622,8 @@ button.playFromThisRow.ended i {
 
 /* --- 【新增】循環播放按鈕樣式 --- */
 button#loopCategoryBtn.active i {
-  background-color: #ff8c00; /* 暗橘色表示 active */
+  background-color: #ff8c00;
+  /* 暗橘色表示 active */
   color: white;
 }
 
@@ -502,28 +634,42 @@ button#loopCategoryBtn.active i {
   margin: 0 3px;
   vertical-align: middle;
 }
+
 .loop-one-btn i {
   cursor: pointer;
-  background: #8a2be2; /* 藍紫色 */
+  background: #8a2be2;
+  /* 藍紫色 */
   color: wheat;
-  box-shadow: 2px 2px #9932cc; /* 中蘭花紫 */
+  box-shadow: 2px 2px #9932cc;
+  /* 中蘭花紫 */
   border-radius: 0.3em;
   padding: 0.5em;
 }
+
 .loop-one-btn.looping i {
-  background-color: #ff4500; /* 橘紅色表示 looping */
+  background-color: #ff4500;
+  /* 橘紅色表示 looping */
   color: white;
 }
 
 tr.looping-row {
-  background-color: rgba(255, 105, 180, 0.4); /* 粉紅色背景 */
+  background-color: rgba(255, 105, 180, 0.4);
+  /* 粉紅色背景 */
   animation: pulse-pink-effect 2s infinite ease-in-out;
 }
 
 @keyframes pulse-pink-effect {
-  0% { background-color: rgba(255, 105, 180, 0.4); }
-  50% { background-color: rgba(255, 105, 180, 0.2); }
-  100% { background-color: rgba(255, 105, 180, 0.4); }
+  0% {
+    background-color: rgba(255, 105, 180, 0.4);
+  }
+
+  50% {
+    background-color: rgba(255, 105, 180, 0.2);
+  }
+
+  100% {
+    background-color: rgba(255, 105, 180, 0.4);
+  }
 }
 
 
@@ -531,6 +677,7 @@ tr.looping-row {
   background: none;
   border: none;
 }
+
 button#playAllBtn {
   display: none;
 }
@@ -549,83 +696,118 @@ audio[data-skip='true'] {
 }
 
 .dialect {
-  padding: /*0.3em 1em;*/5px 10px;
+  padding:
+    /*0.3em 1em;*/
+    5px 10px;
   display: inline-block;
   color: black;
-  margin-bottom: 5px; /* 加點垂直間距 */
+  margin-bottom: 5px;
+  /* 加點垂直間距 */
   vertical-align: middle;
 }
+
 .四縣 {
   background-color: #678d3f;
   color: black;
+
   a {
     color: white;
   }
 }
+
 .海陸 {
   background-color: #76ad67;
 }
+
 .大埔 {
   background-color: #5898a9;
 }
+
 .饒平 {
   background-color: #834fa1;
 }
+
 .詔安 {
   background-color: #974a47;
 }
+
 /* 確保連結樣式正確 */
-.dialect > span[data-varname] > a {
-    color: white;
-    /* text-decoration: none;*/
-    display: block; /* 讓連結填滿 span */
+.dialect>span[data-varname]>a {
+  color: white;
+  /* text-decoration: none;*/
+  display: block;
+  /* 讓連結填滿 span */
 }
 
 tr#nowPlaying {
   /*text-shadow: 0.2em 0.2em 0.3em var(--iMazinGrace-1);*/
   /*text-shadow: 0.05em 0.05em 0px #ffffff, 0.1em 0.1em 0px rgba(0, 0, 0, 0.15);*/
-  position: relative; /* 必須設定，以讓偽元素相對於 tr 定位 */
+  position: relative;
+  /* 必須設定，以讓偽元素相對於 tr 定位 */
   /* 設定規條个背景色，用 rgba 同變數 */
   background-color: rgba(var(--iMazinGrace-1-rgb), 0.5);
   /* 加入背景色个過渡效果 */
-  transition: background-color 0.4s ease; /* 0.4 秒个 ease 過渡 */
+  transition: background-color 0.4s ease;
+  /* 0.4 秒个 ease 過渡 */
 }
+
 /* --- 新增暫停狀態个樣式 --- */
 tr#nowPlaying.paused-playback {
   /* background-color: var(--paused-yellow); <-- 這行做得註解掉或拿掉，因為動畫會處理 */
-  animation: pulse-yellow-effect 3s infinite ease-in-out; /* 應用動畫 */
+  animation: pulse-yellow-effect 3s infinite ease-in-out;
+  /* 應用動畫 */
 }
 
 /* 學習進度下拉擇單 */
 #progressDropdown {
-  padding: 5px 8px; /* 內邊距 */
-  border: 1px solid #ccc; /* 邊框 */
-  border-radius: 4px; /* 圓角 */
-  background-color: white; /* 背景色 */
-  font-family: inherit; /* 繼承父元素字型 */
-  font-size: clamp(18px, 2vw, 2rem); /* 字型大小，可調整 */
-  margin: 0; /* 移除外距，由 header 的 gap 控制 */
-  vertical-align: middle; /* 垂直對齊方式 */
-  max-width: 30vw; /* 變狹因為有 #resultsSummary 吔 */
+  padding: 5px 8px;
+  /* 內邊距 */
+  border: 1px solid #ccc;
+  /* 邊框 */
+  border-radius: 4px;
+  /* 圓角 */
+  background-color: white;
+  /* 背景色 */
+  font-family: inherit;
+  /* 繼承父元素字型 */
+  font-size: clamp(18px, 2vw, 2rem);
+  /* 字型大小，可調整 */
+  margin: 0;
+  /* 移除外距，由 header 的 gap 控制 */
+  vertical-align: middle;
+  /* 垂直對齊方式 */
+  max-width: 30vw;
+  /* 變狹因為有 #resultsSummary 吔 */
   /*flex-grow: 1; /* 允許它伸展利用空間 */
-  min-width: 50px; /* 確保最小寬度 */
-  cursor: pointer; /* 滑鼠指標 */
-  flex-shrink: 1; /* 允許被壓縮 */
+  min-width: 50px;
+  /* 確保最小寬度 */
+  cursor: pointer;
+  /* 滑鼠指標 */
+  flex-shrink: 1;
+  /* 允許被壓縮 */
 }
+
 /* --- 修改：加強下拉選單个 focus 光暈，並確保 Firefox 點擊時顯示 --- */
-#progressDropdown:focus { /* 改用 :focus 來處理滑鼠點擊个情況 */
-  border-color: var(--focus-glow-color); /* 直接改變邊框顏色，較明顯 */
-  box-shadow: 0 0 8px 2px var(--focus-glow-color); /* 加強原本个光暈效果 */
+#progressDropdown:focus {
+  /* 改用 :focus 來處理滑鼠點擊个情況 */
+  border-color: var(--focus-glow-color);
+  /* 直接改變邊框顏色，較明顯 */
+  box-shadow: 0 0 8px 2px var(--focus-glow-color);
+  /* 加強原本个光暈效果 */
   /* 加入邊框顏色个過渡效果，同 box-shadow 一樣時間 */
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 #progressDetails {
-  font-size: clamp(18px, 1.5vw, 30px); /* 稍微小一點的字 */
-  color: #555; /* 設定顏色 */
-  vertical-align: middle; /* 垂直對齊 */
+  font-size: clamp(18px, 1.5vw, 30px);
+  /* 稍微小一點的字 */
+  color: #555;
+  /* 設定顏色 */
+  vertical-align: middle;
+  /* 垂直對齊 */
   /*margin-left: 8px; /* 和下拉選單間隔 */
-  flex-shrink: 1; /* 允許被壓縮 */
+  flex-shrink: 1;
+  /* 允許被壓縮 */
 
   a {
     color: wheat;
@@ -636,45 +818,64 @@ tr#nowPlaying.paused-playback {
 
 /* Autoplay Modal Styles */
 #autoplayModal {
-  position: fixed; /* 固定在視窗上 */
+  position: fixed;
+  /* 固定在視窗上 */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1000; /* 確保在最上層 */
-  display: none; /* 初始隱藏 */
-  align-items: center; /* 垂直置中 */
-  justify-content: center; /* 水平置中 */
-  background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+  z-index: 1000;
+  /* 確保在最上層 */
+  display: none;
+  /* 初始隱藏 */
+  align-items: center;
+  /* 垂直置中 */
+  justify-content: center;
+  /* 水平置中 */
+  background-color: rgba(0, 0, 0, 0.6);
+  /* 半透明黑色背景 */
 }
 
 /* 移除 modal-backdrop 的樣式，因為 #autoplayModal 本身就有背景了 */
 /* .modal-backdrop { ... } */
 
 .modal-content {
-  position: relative; /* 相對定位，以便內容在背景之上 */
+  position: relative;
+  /* 相對定位，以便內容在背景之上 */
   background-color: #aa96b7;
-  padding: 30px 40px; /* 增加左右 padding */
+  padding: 30px 40px;
+  /* 增加左右 padding */
   border-radius: 8px;
   /* text-align: center; /* 由 justify-content 取代 */
-  width: 50vw; /* 寬度 50% 視窗寬度 */
-  height: 50vh; /* 高度 50% 視窗高度 */
-  overflow: auto; /* 如果內容過多，允許滾動 */
-  cursor: pointer; /* 提示使用者可以點擊 */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  line-height: 1.6; /* 增加行高 */
+  width: 50vw;
+  /* 寬度 50% 視窗寬度 */
+  height: 50vh;
+  /* 高度 50% 視窗高度 */
+  overflow: auto;
+  /* 如果內容過多，允許滾動 */
+  cursor: pointer;
+  /* 提示使用者可以點擊 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  line-height: 1.6;
+  /* 增加行高 */
 
   /* --- 新增 Flexbox 屬性 --- */
-  display: flex;           /* 將此元素設為 Flex 容器 */
-  align-items: center;     /* 垂直置中容器內的項目 */
-  justify-content: center; /* 水平置中容器內的項目 (取代 text-align) */
+  display: flex;
+  /* 將此元素設為 Flex 容器 */
+  align-items: center;
+  /* 垂直置中容器內的項目 */
+  justify-content: center;
+  /* 水平置中容器內的項目 (取代 text-align) */
   /* --- 新增結束 --- */
 }
 
 .modal-content>p {
-  margin: 0; /* 移除預設的 margin */
-  font-size: clamp(1.5rem, 3vw, 1.8rem); /* 稍微放大字體 */
-  text-align: center; /* 確保段落內的文字也是置中的 */
+  margin: 0;
+  /* 移除預設的 margin */
+  font-size: clamp(1.5rem, 3vw, 1.8rem);
+  /* 稍微放大字體 */
+  text-align: center;
+  /* 確保段落內的文字也是置中的 */
   color: #d9e2a9;
 }
 
@@ -690,30 +891,48 @@ tr#nowPlaying.paused-playback {
 
 /* 選中的「腔別+級別」連結容器樣式 */
 span[data-varname].active-dialect-level {
-  border-radius: 8px;       /* 圓角 */
-  padding: 3px 6px;         /* 微調內距，讓框線不要太貼近文字 */
+  border-radius: 8px;
+  /* 圓角 */
+  padding: 3px 6px;
+  /* 微調內距，讓框線不要太貼近文字 */
   /* 移除舊的背景色和紅色邊框，改用更通用、更顯眼个樣式 */
-  border: 2px solid #FFD700; /* 用金色邊框，在各種底色上都較顯眼 */
-  box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7); /* 用金色光暈來強化效果 */
-  background-color: rgba(255, 255, 255, 0.2); /* 加一層淡淡的白色透明背景，增加可讀性 */
+  border: 2px solid #FFD700;
+  /* 用金色邊框，在各種底色上都較顯眼 */
+  box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7);
+  /* 用金色光暈來強化效果 */
+  background-color: rgba(255, 255, 255, 0.2);
+  /* 加一層淡淡的白色透明背景，增加可讀性 */
 }
+
 /* --- 新增：為 span[data-varname] 設定基本樣式以避免跳動 --- */
-.dialect > span[data-varname] { /* 直接選取內層的 span */
-  display: inline-block; /* 讓 padding 和 border 生效 */
-  border: 2px solid transparent; /* 預留邊框空間 */
-  border-radius: 8px;       /* 預設圓角 */
-  /*! padding: 3px 6px; */         /* 預設內距，與 active 狀態一致 */
-  /*! margin: 0 2px; */            /* 微調級別之間的水平間距 */
-  vertical-align: middle;   /* 確保垂直對齊 */
-  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* 平滑過渡效果 */
+.dialect>span[data-varname] {
+  /* 直接選取內層的 span */
+  display: inline-block;
+  /* 讓 padding 和 border 生效 */
+  border: 2px solid transparent;
+  /* 預留邊框空間 */
+  border-radius: 8px;
+  /* 預設圓角 */
+  /*! padding: 3px 6px; */
+  /* 預設內距，與 active 狀態一致 */
+  /*! margin: 0 2px; */
+  /* 微調級別之間的水平間距 */
+  vertical-align: middle;
+  /* 確保垂直對齊 */
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  /* 平滑過渡效果 */
 }
 
 /* 選中的「類別」選項標籤樣式 */
 .radioItem.active-category {
-  border: 2px solid #dc3545; /* 紅色邊框 */
-  border-radius: 8px;       /* 圓角 */
-  padding: 2px 5px;         /* 微調內距 */
-  background-color: rgba(220, 53, 69, 0.1); /* 可選：加上淡淡的紅色背景 */
+  border: 2px solid #dc3545;
+  /* 紅色邊框 */
+  border-radius: 8px;
+  /* 圓角 */
+  padding: 2px 5px;
+  /* 微調內距 */
+  background-color: rgba(220, 53, 69, 0.1);
+  /* 可選：加上淡淡的紅色背景 */
 }
 
 /* --- 客話選詞 Popup 樣式 (Hakka Selection Popup Styles) --- */
@@ -723,32 +942,44 @@ span[data-varname].active-dialect-level {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
-  z-index: 1051; /* 比 Romanizer Modal 高 */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* 半透明背景 */
+  z-index: 1051;
+  /* 比 Romanizer Modal 高 */
   /* display: none; 由 JS 控制 */
 }
 
 #selectionPopup {
-  position: absolute; /* 改做絕對定位 */
+  position: absolute;
+  /* 改做絕對定位 */
   /* top, left 會由 JavaScript 動態設定 */
-  background-color: #fff; /* 日間模式背景 */
-  color: var(--main-text-color); /* 日間模式文字 */
+  background-color: #fff;
+  /* 日間模式背景 */
+  color: var(--main-text-color);
+  /* 日間模式文字 */
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  z-index: 1052; /* 比 backdrop 高一層 */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  z-index: 1052;
+  /* 比 backdrop 高一層 */
   /* display: none; 由 JS 控制 */
-  width: clamp(300px, 60vw, 500px); /* 響應式寬度，最小 300px */
-  max-height: 70vh; /* 最大高度 */
-  overflow-y: auto; /* 內容超過時顯示捲軸 */
+  width: clamp(300px, 60vw, 500px);
+  /* 響應式寬度，最小 300px */
+  max-height: 70vh;
+  /* 最大高度 */
+  overflow-y: auto;
+  /* 內容超過時顯示捲軸 */
   font-family: var(--title-font);
-  outline: none; /* 移除 focus 時个預設 outline，因為 JS 會 focus 佢 */
+  outline: none;
+  /* 移除 focus 時个預設 outline，因為 JS 會 focus 佢 */
 }
 
-.popup-controls { /* 新增：控制項容器 */
+.popup-controls {
+  /* 新增：控制項容器 */
   display: flex;
   align-items: center;
-  gap: 15px; /* Add space between items */
+  gap: 15px;
+  /* Add space between items */
   padding-bottom: 10px;
   margin-bottom: 10px;
   border-bottom: 1px solid #eee;
@@ -788,7 +1019,8 @@ span[data-varname].active-dialect-level {
 .switch {
   position: relative;
   display: inline-block;
-  width: 44px; /* 略為縮小 */
+  width: 44px;
+  /* 略為縮小 */
   height: 22px;
 }
 
@@ -806,7 +1038,8 @@ span[data-varname].active-dialect-level {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .3s; /* 加快一點動畫 */
+  transition: .3s;
+  /* 加快一點動畫 */
 }
 
 .popup-header {
@@ -814,14 +1047,16 @@ span[data-varname].active-dialect-level {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0; /* 分隔線 */
+  border-bottom: 1px solid #e0e0e0;
+  /* 分隔線 */
   margin-bottom: 15px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px; /* 配合縮小 */
+  height: 16px;
+  /* 配合縮小 */
   width: 16px;
   left: 3px;
   bottom: 3px;
@@ -829,27 +1064,32 @@ span[data-varname].active-dialect-level {
   transition: .3s;
 }
 
-input:checked + .slider {
-  background-color: var(--focus-glow-color, #2196F3); /* 用主題強調色 */
+input:checked+.slider {
+  background-color: var(--focus-glow-color, #2196F3);
+  /* 用主題強調色 */
 }
 
-input:focus-visible + .slider {
+input:focus-visible+.slider {
   box-shadow: 0 0 2px var(--focus-glow-color, #2196F3);
 }
 
-input:checked + .slider:before {
-  transform: translateX(22px); /* 調整滑動距離 width - dot_width - 2*left_pos = 44 - 16 - 6 = 22 */
+input:checked+.slider:before {
+  transform: translateX(22px);
+  /* 調整滑動距離 width - dot_width - 2*left_pos = 44 - 16 - 6 = 22 */
 }
 
 
-.popup-header h4 { /* Popup 標題 */
+.popup-header h4 {
+  /* Popup 標題 */
   margin: 0;
   font-size: 1.2em;
   font-weight: 600;
-  color: inherit; /* 繼承 #selectionPopup 个文字顏色 */
+  color: inherit;
+  /* 繼承 #selectionPopup 个文字顏色 */
 }
 
-#selectionPopupCloseBtn { /* 關閉撳鈕 */
+#selectionPopupCloseBtn {
+  /* 關閉撳鈕 */
   background: none;
   border: none;
   font-size: 1.8rem;
@@ -862,33 +1102,44 @@ input:checked + .slider:before {
 }
 
 #selectionPopupCloseBtn:hover,
-#selectionPopupCloseBtn:focus-visible { /* 加上 focus-visible 樣式 */
+#selectionPopupCloseBtn:focus-visible {
+  /* 加上 focus-visible 樣式 */
   color: #333;
-  outline: none; /* 確保自訂 focus 樣式時無預設 outline */
+  outline: none;
+  /* 確保自訂 focus 樣式時無預設 outline */
   /* 可選：加上同其他元素一樣个 focus glow */
   /* box-shadow: 0 0 var(--focus-glow-blur) var(--focus-glow-spread) var(--focus-glow-color); */
 }
 
-#selectionPopupContent ul { /* 讀音列表 */
-  list-style: disc; /* 改用實心圓點 */
-  padding-left: 25px; /* 增加左邊內距分圓點空間 */
+#selectionPopupContent ul {
+  /* 讀音列表 */
+  list-style: disc;
+  /* 改用實心圓點 */
+  padding-left: 25px;
+  /* 增加左邊內距分圓點空間 */
   margin: 0;
 }
 
-#selectionPopupContent li { /* 列表項目 */
-  padding: 6px 2px; /* 微調 padding */
-  /* border-bottom: 1px solid #f0f0f0; */ /* 暫時拿掉底線，做得看效果 */
+#selectionPopupContent li {
+  /* 列表項目 */
+  padding: 6px 2px;
+  /* 微調 padding */
+  /* border-bottom: 1px solid #f0f0f0; */
+  /* 暫時拿掉底線，做得看效果 */
   font-size: 1em;
-  line-height: 1.6; /* 微調行高 */
+  line-height: 1.6;
+  /* 微調行高 */
 }
 
-#selectionPopupContent li .pronunciation-source { /* 讀音來源標示 */
+#selectionPopupContent li .pronunciation-source {
+  /* 讀音來源標示 */
   font-size: 0.85em;
   color: #777;
   margin-left: 8px;
 }
 
-#selectionPopupContent .popup-not-found { /* 尋無讀音个訊息 */
+#selectionPopupContent .popup-not-found {
+  /* 尋無讀音个訊息 */
   padding: 10px 0;
   font-style: italic;
   color: #555;
@@ -899,6 +1150,7 @@ input:checked + .slider:before {
 .accordion-item {
   border-bottom: 1px solid #eee;
 }
+
 .accordion-item:last-child {
   border-bottom: none;
 }
@@ -919,7 +1171,8 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px; /* 內容摎控制項之間个距離 */
+  gap: 8px;
+  /* 內容摎控制項之間个距離 */
   font-family: var(--title-font);
 }
 
@@ -930,9 +1183,11 @@ input:checked + .slider:before {
 
 /* 【新】標頭內容个容器 */
 .accordion-header-content {
-  flex-grow: 1; /* 佔用大部分空間 */
+  flex-grow: 1;
+  /* 佔用大部分空間 */
   display: flex;
-  flex-direction: column; /* 分詞目摎來源上下排列 */
+  flex-direction: column;
+  /* 分詞目摎來源上下排列 */
 }
 
 .accordion-header .pronunciation-text {
@@ -943,15 +1198,18 @@ input:checked + .slider:before {
 .accordion-header .pronunciation-source {
   font-size: 0.85em;
   color: #777;
-  margin-top: 2px; /* 同頂高个讀音隔開一息仔 */
+  margin-top: 2px;
+  /* 同頂高个讀音隔開一息仔 */
 }
 
 /* 【新】標頭控制項个容器 */
 .accordion-header-controls {
   display: flex;
   align-items: center;
-  gap: 12px; /* 控制項之間个距離 */
-  flex-shrink: 0; /* 毋分佢縮起來 */
+  gap: 12px;
+  /* 控制項之間个距離 */
+  flex-shrink: 0;
+  /* 毋分佢縮起來 */
 }
 
 /* 【新】「選用這筆讀音」个按鈕樣式 */
@@ -978,22 +1236,27 @@ input:checked + .slider:before {
 .accordion-header .indicator {
   font-size: 1.2em;
   font-weight: bold;
-  width: 1em; /* 固定闊度，避免展開時跳動 */
+  width: 1em;
+  /* 固定闊度，避免展開時跳動 */
   text-align: center;
 }
 
 /* --- 暗夜模式个對應樣式 --- */
 @media (prefers-color-scheme: dark) {
+
   .accordion-header:hover,
   .accordion-header.active {
     background-color: rgba(255, 255, 255, 0.08);
   }
+
   .accordion-header .pronunciation-source {
-     color: #aaa;
+    color: #aaa;
   }
+
   .popup-substitute-btn {
     color: var(--dark-link-color);
   }
+
   .popup-substitute-btn:hover {
     background-color: rgba(144, 202, 249, 0.15);
     border-color: var(--dark-link-color);
@@ -1017,6 +1280,7 @@ input:checked + .slider:before {
   overflow: hidden;
   transition: max-height 0.2s ease-out;
 }
+
 .accordion-panel p {
   margin: 8px 0;
   font-size: 0.9em;
@@ -1024,129 +1288,167 @@ input:checked + .slider:before {
 }
 
 .sandhi-applied {
-    color: #c0392b; /* A reddish color to highlight the change */
-    font-weight: bold;
+  color: #c0392b;
+  /* A reddish color to highlight the change */
+  font-weight: bold;
 }
 
 .pronunciation-text {
-    display: inline-block;
+  display: inline-block;
 }
 
 .accordion-header-content br {
-    margin-bottom: 4px;
+  margin-bottom: 4px;
 }
+
 .accordion-panel audio {
   max-width: 100%;
-  height: 30px; /* Adjust height as needed */
+  height: 30px;
+  /* Adjust height as needed */
   margin-top: 8px;
 }
 
 /* --- 新增：頁首搜尋容器樣式 --- */
 #search-container {
   position: relative;
-  margin-left: auto; /* 將搜尋框推到最右邊 */
+  margin-left: auto;
+  /* 將搜尋框推到最右邊 */
 }
 
 #search-input {
   padding: 8px 12px;
   border: 1px solid #ccc;
-  border-radius: 15px; /* 圓角 */
-  width: 180px; /* 預設寬度 */
+  border-radius: 15px;
+  /* 圓角 */
+  width: 180px;
+  /* 預設寬度 */
   transition: width 0.3s ease-in-out, background-color 0.3s;
 }
 
 #search-input:focus {
-  width: 300px; /* focus 時變闊 */
+  width: 300px;
+  /* focus 時變闊 */
   background-color: #f8f8f8;
 }
 
 #search-popup {
-  display: none; /* 預設隱藏 */
+  display: none;
+  /* 預設隱藏 */
   position: absolute;
-  top: 100%; /* 在輸入框下方 */
+  top: 100%;
+  /* 在輸入框下方 */
   right: 0;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 20;
   padding: 15px;
-  width: 300px; /* 固定寬度 */
-  margin-top: 5px; /* 和輸入框的間距 */
+  width: 300px;
+  /* 固定寬度 */
+  margin-top: 5px;
+  /* 和輸入框的間距 */
 }
 
 #search-container.active #search-popup {
-  display: block; /* 當容器有 active class 時顯示 */
+  display: block;
+  /* 當容器有 active class 時顯示 */
 }
 
-#dialect-selection, #search-mode-selection {
+#dialect-selection,
+#search-mode-selection {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 #dialect-selection:not(:last-child) {
   margin-bottom: 15px;
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
 
-#dialect-selection p, #search-mode-selection p {
+#dialect-selection p,
+#search-mode-selection p {
   margin: 0 0 5px 0;
   font-weight: bold;
 }
 
-#dialect-selection label, #search-mode-selection label {
+#dialect-selection label,
+#search-mode-selection label {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
 }
 
 #results-summary {
-  display: none; /* 預設完全隱藏，不佔空間 */
+  display: none;
+  /* 預設完全隱藏，不佔空間 */
   position: sticky;
-  top: 80px; /* Adjust this value based on your header's height */
+  top: 80px;
+  /* Adjust this value based on your header's height */
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(5px);
   padding: 5px 20px;
   margin-bottom: 10px;
   z-index: 5;
   font-weight: bold;
-  
+
   /* Flexbox 佈局 */
-  justify-content: center; /* 水平置中 */
-  align-items: center;    /* 垂直置中 */
-  gap: 15px;              /* 項目之間个距離 */
+  justify-content: center;
+  /* 水平置中 */
+  align-items: center;
+  /* 垂直置中 */
+  gap: 15px;
+  /* 項目之間个距離 */
   white-space: nowrap;
   overflow: hidden;
 }
 
 #summary-text-content {
-  flex-grow: 1; /* Allow the text to take up available space */
-  min-width: 0; /* Prevent text from overflowing its container */
-  text-align: center; /* Keep text centered */
+  flex-grow: 1;
+  /* Allow the text to take up available space */
+  min-width: 0;
+  /* Prevent text from overflowing its container */
+  text-align: center;
+  /* Keep text centered */
 }
 
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
 @media (prefers-color-scheme: dark) {
   :root {
     /* 覆蓋夜間模式下的主要文字顏色 */
-    --main-text-color: #e0e0e0; /* 淺灰色，適合在暗色背景上閱讀 */
+    --main-text-color: #e0e0e0;
+    /* 淺灰色，適合在暗色背景上閱讀 */
     /* 定義夜間模式的背景色 */
-    --dark-background-color: #1f1f1f; /* 深灰色背景 (比 #121212 稍淺) */
-    --dark-surface-color: #2c2c2c; /* 元件表面顏色 (例如表格行) */
-    --dark-primary-accent: #678d3f; /* 暗模式下个主要強調色 (沿用四縣綠) */
-    --dark-secondary-accent: #aa96b7; /* 暗模式下个次要強調色 (沿用 iMazinGrace-1) */
-    --dark-link-color: #90caf9; /* 淺藍色連結 */
-    --dark-button-text-color: #1f1f1f; /* 按鈕上个深色文字 */
-    --dark-modal-background: #333; /* Modal 背景 */
-    --dark-modal-text: #f5f5f5; /* Modal 文字 */
-    --dark-active-border-color: #dc3545; /* 選中項目个紅色邊框 (保持) */
-    --dark-active-bg-color: rgba(78, 106, 47, 0.77); /* 選中項目个背景 (改用較深个綠色) */
-    --dark-now-playing-bg: rgba(var(--iMazinGrace-1-rgb), 0.4); /* 暗模式下做得稍為透明兜 */
-    --dark-paused-yellow: rgba(var(--dark-paused-yellow-rgb), 0.5); /* 暗模式下个黃色，愛確定在深色背景看得清楚 */
+    --dark-background-color: #1f1f1f;
+    /* 深灰色背景 (比 #121212 稍淺) */
+    --dark-surface-color: #2c2c2c;
+    /* 元件表面顏色 (例如表格行) */
+    --dark-primary-accent: #678d3f;
+    /* 暗模式下个主要強調色 (沿用四縣綠) */
+    --dark-secondary-accent: #aa96b7;
+    /* 暗模式下个次要強調色 (沿用 iMazinGrace-1) */
+    --dark-link-color: #90caf9;
+    /* 淺藍色連結 */
+    --dark-button-text-color: #1f1f1f;
+    /* 按鈕上个深色文字 */
+    --dark-modal-background: #333;
+    /* Modal 背景 */
+    --dark-modal-text: #f5f5f5;
+    /* Modal 文字 */
+    --dark-active-border-color: #dc3545;
+    /* 選中項目个紅色邊框 (保持) */
+    --dark-active-bg-color: rgba(78, 106, 47, 0.77);
+    /* 選中項目个背景 (改用較深个綠色) */
+    --dark-now-playing-bg: rgba(var(--iMazinGrace-1-rgb), 0.4);
+    /* 暗模式下做得稍為透明兜 */
+    --dark-paused-yellow: rgba(var(--dark-paused-yellow-rgb), 0.5);
+    /* 暗模式下个黃色，愛確定在深色背景看得清楚 */
     --dark-paused-yellow-rgb: 255, 255, 150;
     /* --- Focus Glow Variables (Dark Mode) --- */
-    --focus-glow-color: rgba(96, 165, 250, 0.75); /* 暗夜模式用較亮、較飽和个藍色 */
+    --focus-glow-color: rgba(96, 165, 250, 0.75);
+    /* 暗夜模式用較亮、較飽和个藍色 */
     /* --focus-glow-blur and --focus-glow-spread 會承接 :root 个設定 */
     --popup-btn-bg: #343a40;
     --popup-btn-border: #495057;
@@ -1156,40 +1458,51 @@ input:checked + .slider:before {
 
   body {
     background-color: var(--dark-background-color);
-    color: var(--main-text-color); /* 確保 body 文字顏色也套用 */
+    color: var(--main-text-color);
+    /* 確保 body 文字顏色也套用 */
   }
 
   /* 確保所有子元素也繼承基本文字顏色 */
   body * {
-     color: inherit; /* 繼承 body 設定个顏色 */
+    color: inherit;
+    /* 繼承 body 設定个顏色 */
   }
 
   /* --- Loading Indicator Dark Mode --- */
   #loading-indicator {
-    background-color: rgba(31, 31, 31, 0.95); /* Based on --dark-background-color */
+    background-color: rgba(31, 31, 31, 0.95);
+    /* Based on --dark-background-color */
   }
+
   #loading-text {
     color: var(--main-text-color);
   }
+
   .spinner {
     border-color: var(--dark-surface-color);
-    border-top-color: #3498db; /* Keep the accent color */
+    border-top-color: #3498db;
+    /* Keep the accent color */
   }
 
   /* --- 針對夜間模式調整 header 背景 --- */
   #header {
-    background: rgba(40, 40, 40, 0.8); /* 深色半透明背景，透明度略增 */
-    backdrop-filter: blur(8px); /* 加強模糊效果 */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* 加一條細線分界 */
+    background: rgba(40, 40, 40, 0.8);
+    /* 深色半透明背景，透明度略增 */
+    backdrop-filter: blur(8px);
+    /* 加強模糊效果 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* 加一條細線分界 */
   }
 
   /* --- 調整表格偶數行背景 --- */
   tr:nth-child(even) {
-    background-color: var(--dark-surface-color); /* 使用元件表面顏色 */
+    background-color: var(--dark-surface-color);
+    /* 使用元件表面顏色 */
   }
+
   /* 確保表格文字顏色正確 */
   td {
-      color: var(--main-text-color);
+    color: var(--main-text-color);
   }
 
   /* --- 調整連結顏色 --- */
@@ -1202,134 +1515,198 @@ input:checked + .slider:before {
     /* 背景色做得用較深个版本，或者調整透明度 */
     /* 這邊用 filter 稍微降低亮度同飽和度做示範 */
     filter: brightness(0.8) saturate(0.9);
-    color: var(--main-text-color); /* 區塊內文字用淺色 */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* 加點邊框增加區別 */
-    border-radius: 5px; /* 加圓角 */
+    color: var(--main-text-color);
+    /* 區塊內文字用淺色 */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* 加點邊框增加區別 */
+    border-radius: 5px;
+    /* 加圓角 */
   }
-  .dialect > span[data-varname] > a {
-    color: #fff; /* 腔調內連結用白色較清楚 */
+
+  .dialect>span[data-varname]>a {
+    color: #fff;
+    /* 腔調內連結用白色較清楚 */
   }
+
   /* 選中个腔調級別 */
   span[data-varname].active-dialect-level {
     /* 暗夜模式下用同樣个金色，但光暈做得較亮來確保對比 */
     border-color: #FFD700;
     box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.8);
-    background-color: rgba(255, 255, 255, 0.25); /* 白色透明背景做得較亮一息仔 */
+    background-color: rgba(255, 255, 255, 0.25);
+    /* 白色透明背景做得較亮一息仔 */
   }
-   /* 確保 span[data-varname] 基本樣式在暗模式下也適用 */
-  .dialect > span[data-varname] {
+
+  /* 確保 span[data-varname] 基本樣式在暗模式下也適用 */
+  .dialect>span[data-varname] {
     border: 2px solid transparent;
     border-radius: 8px;
     transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   }
 
   /* --- 調整 Radio Button 樣式 --- */
-   .radioItem {
-     background-color: transparent; /* 暗模式下毋需要背景色 */
-     border: 2px solid var(--dark-surface-color); /* 用表面顏色做邊框 */
-   }
-   .radioButton {
-     border-color: var(--dark-link-color); /* 外框用連結藍色 */
-     background-color: var(--dark-surface-color); /* 未選中時用表面色 */
-   }
-   .radioButton:checked {
-     background-color: transparent; /* 選中時透明 */
-   }
-   .radioButton:checked::after {
-     border-color: var(--dark-link-color); /* 內圈也用連結藍色 */
-     background-color: var(--dark-link-color); /* 內圈填滿 */
-   }
-   /* 選中个類別 */
-   .radioItem.active-category {
-     border-color: var(--dark-active-border-color);
-     background-color: var(--dark-active-bg-color); /* 用定義个變數 */
-   }
+  .radioItem {
+    background-color: transparent;
+    /* 暗模式下毋需要背景色 */
+    border: 2px solid var(--dark-surface-color);
+    /* 用表面顏色做邊框 */
+  }
+
+  .radioButton {
+    border-color: var(--dark-link-color);
+    /* 外框用連結藍色 */
+    background-color: var(--dark-surface-color);
+    /* 未選中時用表面色 */
+  }
+
+  .radioButton:checked {
+    background-color: transparent;
+    /* 選中時透明 */
+  }
+
+  .radioButton:checked::after {
+    border-color: var(--dark-link-color);
+    /* 內圈也用連結藍色 */
+    background-color: var(--dark-link-color);
+    /* 內圈填滿 */
+  }
+
+  /* 選中个類別 */
+  .radioItem.active-category {
+    border-color: var(--dark-active-border-color);
+    background-color: var(--dark-active-bg-color);
+    /* 用定義个變數 */
+  }
 
   /* --- 調整 Modal 背景和文字 --- */
   #autoplayModal {
-    background-color: rgba(0, 0, 0, 0.85); /* 更深的背景 */
+    background-color: rgba(0, 0, 0, 0.85);
+    /* 更深的背景 */
   }
+
   .modal-content {
     background-color: var(--dark-modal-background);
   }
-  .modal-content > p {
+
+  .modal-content>p {
     color: var(--dark-modal-text);
   }
 
   /* --- 調整其他可能有顏色衝突的元素 --- */
   .notes {
-    color: #111; /* 備註文字用深色，因為背景是淺紫色 */
-    background-color: var(--dark-secondary-accent); /* 背景色不變 */
+    color: #111;
+    /* 備註文字用深色，因為背景是淺紫色 */
+    background-color: var(--dark-secondary-accent);
+    /* 背景色不變 */
   }
+
   #progressDetails a {
-    color: var(--dark-link-color); /* 進度詳情連結 */
+    color: var(--dark-link-color);
+    /* 進度詳情連結 */
   }
+
   #progressDropdown {
-      background-color: var(--dark-surface-color);
-      color: var(--main-text-color);
-      border-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--dark-surface-color);
+    color: var(--main-text-color);
+    border-color: rgba(255, 255, 255, 0.2);
   }
+
   /* 播放控制按鈕 */
   #audioControls button i,
   button.playFromThisRow i {
-    background: var(--dark-primary-accent); /* 主要強調色 */
-    color: var(--dark-button-text-color); /* 按鈕文字用深色 */
-    box-shadow: 2px 2px rgba(0, 0, 0, 0.4); /* 陰影加深 */
+    background: var(--dark-primary-accent);
+    /* 主要強調色 */
+    color: var(--dark-button-text-color);
+    /* 按鈕文字用深色 */
+    box-shadow: 2px 2px rgba(0, 0, 0, 0.4);
+    /* 陰影加深 */
   }
+
   #audioControls button.ongoing i,
   button.playFromThisRow.ongoing i {
-    background-color: #ffd700 !important; /* 黃色 */
+    background-color: #ffd700 !important;
+    /* 黃色 */
     color: var(--dark-button-text-color);
   }
+
   #audioControls button.ended i,
   button.playFromThisRow.ended i {
-    background-color: #b71c1c !important; /* 深紅色 */
-    color: #fff; /* 結束時文字用白色 */
+    background-color: #b71c1c !important;
+    /* 深紅色 */
+    color: #fff;
+    /* 結束時文字用白色 */
   }
+
   /* 回到頂部按鈕 */
   #backToTopBtn {
-      background-color: rgba(255, 255, 255, 0.2); /* 半透明淺色 */
-      color: var(--main-text-color);
+    background-color: rgba(255, 255, 255, 0.2);
+    /* 半透明淺色 */
+    color: var(--main-text-color);
   }
+
   #backToTopBtn:hover {
-      background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(255, 255, 255, 0.4);
   }
+
   #backToTopBtn i {
-      color: var(--main-text-color);
+    color: var(--main-text-color);
   }
 
   /* 【新增】暗黑模式循環按鈕樣式 */
   button#loopCategoryBtn.active i {
-    background-color: #e67e22; /* 較亮的橘色 */
+    background-color: #e67e22;
+    /* 較亮的橘色 */
   }
+
   .loop-one-btn i {
-    background: #9b59b6; /* 較亮的紫色 */
+    background: #9b59b6;
+    /* 較亮的紫色 */
     box-shadow: 2px 2px #8e44ad;
   }
+
   .loop-one-btn.looping i {
-    background-color: #e74c3c; /* 較亮的紅色 */
+    background-color: #e74c3c;
+    /* 較亮的紅色 */
   }
+
   tr.looping-row {
     animation: pulse-dark-pink-effect 2s infinite ease-in-out;
   }
+
   @keyframes pulse-dark-pink-effect {
-    0% { background-color: rgba(231, 76, 60, 0.4); }
-    50% { background-color: rgba(231, 76, 60, 0.2); }
-    100% { background-color: rgba(231, 76, 60, 0.4); }
+    0% {
+      background-color: rgba(231, 76, 60, 0.4);
+    }
+
+    50% {
+      background-color: rgba(231, 76, 60, 0.2);
+    }
+
+    100% {
+      background-color: rgba(231, 76, 60, 0.4);
+    }
   }
 
 
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
   .pronunciation-text {
-    ruby.sandhi-高降變 { /* 修改 class 選擇器 */
-      color: #FF8A80; /* 較亮个紅色 */
+    ruby.sandhi-高降變 {
+      /* 修改 class 選擇器 */
+      color: #FF8A80;
+      /* 較亮个紅色 */
     }
-    ruby.sandhi-中平變 { /* 修改 class 選擇器 */
-      color: lightgreen; /* 較亮个橘色 */
+
+    ruby.sandhi-中平變 {
+      /* 修改 class 選擇器 */
+      color: lightgreen;
+      /* 較亮个橘色 */
     }
-    ruby.sandhi-低升變 { /* 修改 class 選擇器 */
-      color: #80CBC4; /* 較亮个藍綠色 */
+
+    ruby.sandhi-低升變 {
+      /* 修改 class 選擇器 */
+      color: #80CBC4;
+      /* 較亮个藍綠色 */
     }
   }
 
@@ -1338,28 +1715,34 @@ input:checked + .slider:before {
     background-color: var(--dark-now-playing-bg);
     /* transition 會承接外背个設定，毋使重複寫 */
   }
+
   /* --- 暗夜模式下个暫停狀態樣式 --- */
   tr#nowPlaying.paused-playback {
     /* background-color: var(--dark-paused-yellow); <-- 這行做得註解掉或拿掉 */
-    animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* 應用暗夜模式个動畫 */
+    animation: pulse-dark-yellow-effect 3s infinite ease-in-out;
+    /* 應用暗夜模式个動畫 */
   }
 
   /* --- 暗夜模式下个選詞 Popup 樣式 --- */
   #selectionPopupBackdrop {
-    background-color: rgba(0, 0, 0, 0.6); /* 暗夜模式用較深个背景 */
+    background-color: rgba(0, 0, 0, 0.6);
+    /* 暗夜模式用較深个背景 */
   }
 
   #selectionPopup {
-    background-color: var(--dark-surface-color, #2c2c2c); /* 暗夜模式背景 */
-    box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+    background-color: var(--dark-surface-color, #2c2c2c);
+    /* 暗夜模式背景 */
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
   }
 
-  .popup-controls { /* 暗夜模式控制項容器 */
+  .popup-controls {
+    /* 暗夜模式控制項容器 */
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 
   .popup-header {
-    border-bottom-color: rgba(255, 255, 255, 0.15); /* 暗夜模式分隔線 */
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+    /* 暗夜模式分隔線 */
   }
 
   #selectionPopupCloseBtn {
@@ -1372,46 +1755,61 @@ input:checked + .slider:before {
     /* 可選：加上同其他元素一樣个 focus glow (暗模式版本) */
     /* box-shadow: 0 0 var(--focus-glow-blur) var(--focus-glow-spread) var(--focus-glow-color); */
   }
-  
+
   /* 暗夜模式 Toggle Switch */
   .popup-toggle-switch .toggle-label {
     color: var(--main-text-color);
   }
+
   .slider {
-    background-color: #555; /* 暗模式下未選中背景 */
+    background-color: #555;
+    /* 暗模式下未選中背景 */
   }
+
   /* input:checked + .slider 已用 var(--focus-glow-color) */
 
   #selectionPopupContent li {
-    /* border-bottom-color: rgba(255, 255, 255, 0.1); */ /* 暫時拿掉底線 */
+    /* border-bottom-color: rgba(255, 255, 255, 0.1); */
+    /* 暫時拿掉底線 */
   }
+
   #selectionPopupContent li .pronunciation-source {
-    color: #aaa; /* 暗模式下來源標示用較淺个灰色 */
+    color: #aaa;
+    /* 暗模式下來源標示用較淺个灰色 */
   }
+
   #selectionPopupContent .popup-not-found {
-    color: #bbb; /* 暗夜模式尋無訊息文字顏色 */
+    color: #bbb;
+    /* 暗夜模式尋無訊息文字顏色 */
   }
 
   /* Accordion Dark Mode Styles */
   .accordion-item {
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
+
   .accordion-header {
     color: var(--main-text-color);
   }
+
   .accordion-header:hover,
   .accordion-header.active {
     background-color: rgba(255, 255, 255, 0.08);
   }
+
   .accordion-header .pronunciation-source {
-     color: #aaa;
+    color: #aaa;
   }
+
   .accordion-panel {
-    background-color: var(--dark-surface-color, #2c2c2c); /* Slightly lighter than popup bg or same */
+    background-color: var(--dark-surface-color, #2c2c2c);
+    /* Slightly lighter than popup bg or same */
   }
+
   .accordion-panel p {
     color: var(--main-text-color);
   }
+
   /* Audio controls are generally handled by browser, might need specific styling if issues arise */
 
   #search-input {
@@ -1419,13 +1817,16 @@ input:checked + .slider:before {
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--main-text-color);
   }
+
   #search-input:focus {
     background-color: #333;
   }
+
   #search-popup {
     background-color: var(--dark-surface-color, #2c2c2c);
     border-color: rgba(255, 255, 255, 0.15);
   }
+
   #dialect-selection:not(:last-child) {
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
@@ -1435,26 +1836,34 @@ input:checked + .slider:before {
   }
 
   /* Brighter orange for dark mode accordion borders */
-  tr.accordion-parent > td {
+  tr.accordion-parent>td {
     border-top-color: #FFC107;
   }
-  tr.accordion-parent > td:first-child, tr.accordion-row > td:first-child {
+
+  tr.accordion-parent>td:first-child,
+  tr.accordion-row>td:first-child {
     border-left-color: #FFC107;
   }
-  tr.accordion-parent > td:last-child, tr.accordion-row > td:last-child {
+
+  tr.accordion-parent>td:last-child,
+  tr.accordion-row>td:last-child {
     border-right-color: #FFC107;
   }
-  tr.accordion-row-last > td {
+
+  tr.accordion-row-last>td {
     border-bottom-color: #FFC107;
   }
+
   #generated tr.accordion-parent,
   #generated tr.accordion-row {
     border-left-color: #FFC107;
     border-right-color: #FFC107;
   }
+
   #generated tr.accordion-parent {
     border-top-color: #FFC107;
   }
+
   #generated tr.accordion-row-last {
     border-bottom-color: #FFC107;
   }
@@ -1462,152 +1871,233 @@ input:checked + .slider:before {
 
 /* --- 響應式表格：疊起來个樣式 (螢幕闊度 <= 768px) --- */
 @media screen and (max-width: 768px) {
-  #generated table, #comparison-table {
-    border: none; /* 移除表格外框 */
-    width: 100%; /* 確保表格寬度 */
+
+  #generated table,
+  #comparison-table {
+    border: none;
+    /* 移除表格外框 */
+    width: 100%;
+    /* 確保表格寬度 */
   }
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
-  #generated thead, #comparison-table thead {
+  #generated thead,
+  #comparison-table thead {
     display: none;
   }
 
-  #generated tr, #comparison-table tr {
-    display: block; /* 分歸列變做區塊元素 */
-    margin-bottom: 1.5em; /* 列之間个間距 */
-    border: 1px solid rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5); /* 加淡色框線，像卡片樣 */
-    border-radius: 8px; /* 加圓角 */
-    padding: 1em; /* 卡片內距 */
-    /* background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1); */ /* <-- 移除通用背景色 */
+  #generated tr,
+  #comparison-table tr {
+    display: block;
+    /* 分歸列變做區塊元素 */
+    margin-bottom: 1.5em;
+    /* 列之間个間距 */
+    border: 1px solid rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5);
+    /* 加淡色框線，像卡片樣 */
+    border-radius: 8px;
+    /* 加圓角 */
+    padding: 1em;
+    /* 卡片內距 */
+    /* background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1); */
+    /* <-- 移除通用背景色 */
   }
 
   /* 移除偶數行个特殊背景 */
-  #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
+  #generated tr:nth-child(even),
+  #comparison-table tr:nth-child(even) {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
-  #generated td, #comparison-table td {
-    display: block; /* 分儲存格變做區塊元素 */
-    text-align: left !important; /* 強制靠左對齊 */
-    padding-left: 15%; /* 留空間分標籤 */
-    position: relative; /* 設定相對定位，分 ::before 好定位 */
-    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3); /* 加底線分隔 */
+  #generated td,
+  #comparison-table td {
+    display: block;
+    /* 分儲存格變做區塊元素 */
+    text-align: left !important;
+    /* 強制靠左對齊 */
+    padding-left: 15%;
+    /* 留空間分標籤 */
+    position: relative;
+    /* 設定相對定位，分 ::before 好定位 */
+    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
+    /* 加底線分隔 */
     padding-top: 0.5em;
     padding-bottom: 0.5em;
-    min-height: 2em; /* 確保有基本高度 */
-    max-width: 90vw !important; /* 覆蓋原本个 max-width */
+    min-height: 2em;
+    /* 確保有基本高度 */
+    max-width: 90vw !important;
+    /* 覆蓋原本个 max-width */
   }
 
-  #generated td:last-child, #comparison-table td:last-child {
-    border-bottom: none; /* 最尾一格毋使底線 */
+  #generated td:last-child,
+  #comparison-table td:last-child {
+    border-bottom: none;
+    /* 最尾一格毋使底線 */
   }
 
   /* 用 ::before 顯示標籤 */
-  #generated td::before, #comparison-table td::before {
-    content: attr(data-label); /* 讀取 data-label 內容 */
+  #generated td::before,
+  #comparison-table td::before {
+    content: attr(data-label);
+    /* 讀取 data-label 內容 */
     position: absolute;
-    left: 10px; /* 標籤靠左 */
-    width: 10%; /* 標籤闊度 */
-    padding-right: 10px; /* 標籤右邊留白 */
+    left: 10px;
+    /* 標籤靠左 */
+    width: 10%;
+    /* 標籤闊度 */
+    padding-right: 10px;
+    /* 標籤右邊留白 */
     font-weight: bold;
-    white-space: nowrap; /* 標籤毋換行 */
-    color: var(--main-text-color); /* 確保標籤顏色 */
-    font-size: 0.7em; /* Aiuanyu：狹螢幕个 data-label 字毋使恁大 *//* 會㖸死，「真人寫个」還愛特別註明 */
+    white-space: nowrap;
+    /* 標籤毋換行 */
+    color: var(--main-text-color);
+    /* 確保標籤顏色 */
+    font-size: 0.7em;
+    /* Aiuanyu：狹螢幕个 data-label 字毋使恁大 */
+    /* 會㖸死，「真人寫个」還愛特別註明 */
   }
 
   /* 調整特定欄位个樣式 */
-  #generated td.no, #comparison-table td.no {
-    font-size: 1.1em; /* 編號做得放大一息仔 */
-    padding-left: 10px; /* 編號毋使恁多左邊距 */
+  #generated td.no,
+  #comparison-table td.no {
+    font-size: 1.1em;
+    /* 編號做得放大一息仔 */
+    padding-left: 10px;
+    /* 編號毋使恁多左邊距 */
     text-align: left !important;
   }
-  #generated td.no::before, #comparison-table td.no::before {
-     display: none; /* 編號欄位毋使顯示 "編號：" 標籤 */
+
+  #generated td.no::before,
+  #comparison-table td.no::before {
+    display: none;
+    /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
-  #generated td.no br, #comparison-table td.no br {
-    display: none; /* 編號欄位毋使換行 */
+
+  #generated td.no br,
+  #comparison-table td.no br {
+    display: none;
+    /* 編號欄位毋使換行 */
   }
 
   /* 調整詞彙欄位个標音 */
-  #generated td[data-label="詞彙"] ruby, #comparison-table td[data-label="詞彙"] ruby {
-    font-size: 1.3em; /* 調整字體大小 */
+  #generated td[data-label="詞彙"] ruby,
+  #comparison-table td[data-label="詞彙"] ruby {
+    font-size: 1.3em;
+    /* 調整字體大小 */
   }
-   #generated td[data-label="詞彙"] rt, #comparison-table td[data-label="詞彙"] rt {
-     font-size: 0.8em; /* 標音相對縮小 */
-   }
+
+  #generated td[data-label="詞彙"] rt,
+  #comparison-table td[data-label="詞彙"] rt {
+    font-size: 0.8em;
+    /* 標音相對縮小 */
+  }
 
   /* 調整音檔控制項 */
-  #generated audio.media, #comparison-table audio.media {
-    max-width: 100%; /* 音檔控制項做得較闊 */
-    /* height: auto; */ /* <-- 移除 auto */
-    height: 1em; /* <-- 設定固定高度 */
+  #generated audio.media,
+  #comparison-table audio.media {
+    max-width: 100%;
+    /* 音檔控制項做得較闊 */
+    /* height: auto; */
+    /* <-- 移除 auto */
+    height: 1em;
+    /* <-- 設定固定高度 */
     margin-top: 5px;
   }
 
   /* 調整備註樣式 */
-  #generated .notes, #comparison-table .notes {
+  #generated .notes,
+  #comparison-table .notes {
     margin-top: 5px;
     margin-left: 5px;
-    display: inline-block; /* 避免佔歸行 */
+    display: inline-block;
+    /* 避免佔歸行 */
   }
 
   /* 調整播放按鈕 */
-  #generated .playFromThisRow, #comparison-table .playFromThisRow {
+  #generated .playFromThisRow,
+  #comparison-table .playFromThisRow {
     margin-left: 5px;
   }
 
   /* 確保 nowPlaying 樣式在卡片模式下正確應用 */
-  #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
-      background-color: rgba(var(--iMazinGrace-1-rgb), 0.5); /* <-- 明確重新設定背景色，莫 !important 啦！就係你造成動畫失效！ */
-      transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
+  #generated tr#nowPlaying,
+  #comparison-table tr#nowPlaying {
+    /* <-- 目標 tr#nowPlaying */
+    background-color: rgba(var(--iMazinGrace-1-rgb), 0.5);
+    /* <-- 明確重新設定背景色，莫 !important 啦！就係你造成動畫失效！ */
+    transition: background-color 0.4s ease;
+    /* <-- 也重新設定過渡效果 */
   }
-  #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
-    /* background-color: transparent !important; */ /* 動畫會處理背景 */
-    animation: pulse-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
+
+  #generated tr#nowPlaying.paused-playback,
+  #comparison-table tr#nowPlaying.paused-playback {
+    /* background-color: transparent !important; */
+    /* 動畫會處理背景 */
+    animation: pulse-yellow-effect 3s infinite ease-in-out;
+    /* <-- 拿忒 !important */
   }
 
   /* --- 新增：調整搜尋框在狹窄螢幕下的樣式 --- */
   #search-input {
-    width: 50px !important; /* 再縮小預設寬度 */
-    padding: 6px 10px; /* 縮小內距 */
+    width: 50px !important;
+    /* 再縮小預設寬度 */
+    padding: 6px 10px;
+    /* 縮小內距 */
     /* 字型大小已由主要規則中的 clamp() 處理 */
   }
 
   #search-input:focus {
-    width: 150px !important; /* 再縮小 focus 時的寬度 */
+    width: 150px !important;
+    /* 再縮小 focus 時的寬度 */
   }
 
 
   /* 暗夜模式下个調整 */
   @media (prefers-color-scheme: dark) {
-    #generated tr, #comparison-table tr {
+
+    #generated tr,
+    #comparison-table tr {
       border-color: rgba(255, 255, 255, 0.2);
       background-color: var(--dark-surface-color);
     }
-    #generated tr:nth-child(even), #comparison-table tr:nth-child(even) {
-       /* background-color: var(--dark-surface-color); */ /* <-- 移除通用背景色 */
+
+    #generated tr:nth-child(even),
+    #comparison-table tr:nth-child(even) {
+      /* background-color: var(--dark-surface-color); */
+      /* <-- 移除通用背景色 */
     }
-    #generated td, #comparison-table td {
+
+    #generated td,
+    #comparison-table td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
     }
-    #generated td::before, #comparison-table td::before {
+
+    #generated td::before,
+    #comparison-table td::before {
       color: var(--main-text-color);
     }
 
     /* 確保 nowPlaying 樣式在暗夜卡片模式下正確應用 */
-    #generated tr#nowPlaying, #comparison-table tr#nowPlaying { /* <-- 目標 tr#nowPlaying */
-        background-color: var(--dark-now-playing-bg); /* <-- 明確重新設定暗夜背景色，加 !important */
-        transition: background-color 0.4s ease; /* <-- 也重新設定過渡效果 */
-    }
-    #generated tr#nowPlaying.paused-playback, #comparison-table tr#nowPlaying.paused-playback {
-      /* background-color: transparent !important; */
-      animation: pulse-dark-yellow-effect 3s infinite ease-in-out; /* <-- 拿忒 !important */
+    #generated tr#nowPlaying,
+    #comparison-table tr#nowPlaying {
+      /* <-- 目標 tr#nowPlaying */
+      background-color: var(--dark-now-playing-bg);
+      /* <-- 明確重新設定暗夜背景色，加 !important */
+      transition: background-color 0.4s ease;
+      /* <-- 也重新設定過渡效果 */
     }
 
-}
+    #generated tr#nowPlaying.paused-playback,
+    #comparison-table tr#nowPlaying.paused-playback {
+      /* background-color: transparent !important; */
+      animation: pulse-dark-yellow-effect 3s infinite ease-in-out;
+      /* <-- 拿忒 !important */
+    }
+
+  }
 
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
-  #generated td.empty-sentence-cell, #comparison-table td.empty-sentence-cell {
+  #generated td.empty-sentence-cell,
+  #comparison-table td.empty-sentence-cell {
     display: none;
   }
 
@@ -1626,6 +2116,7 @@ input:checked + .slider:before {
 
 /* As a fallback, hide the Romaine button on small screens using a media query */
 @media screen and (max-width: 768px) {
+
   #showRomanizerBtn,
   #romanizerContainer,
   #selectionPopupRomanizerBtn {
@@ -1636,32 +2127,45 @@ input:checked + .slider:before {
 
 /* --- 手機版查詞按鈕樣式 (Mobile Lookup Button Styles) --- */
 #mobileLookupBtn {
-  position: absolute; /* 用絕對定位，JS 會設定 top/left */
-  z-index: 1000; /* 要在一般內容之上，但在 popup backdrop 之下 (若 backdrop z-index 更高) */
-  background-color: #007bff; /* 範例：藍色背景 */
+  position: absolute;
+  /* 用絕對定位，JS 會設定 top/left */
+  z-index: 1000;
+  /* 要在一般內容之上，但在 popup backdrop 之下 (若 backdrop z-index 更高) */
+  background-color: #007bff;
+  /* 範例：藍色背景 */
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 6px 12px; /* 調整內距 */
-  font-size: 0.9em; /* 字體大小 */
+  padding: 6px 12px;
+  /* 調整內距 */
+  font-size: 0.9em;
+  /* 字體大小 */
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
-  display: none; /* 初始隱藏，由 JS 控制顯示 */
-  font-family: var(--title-font); /* 用返相同个標題字型 */
-  line-height: 1.2; /* 調整行高避免圖示文字擠在一堆 */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  display: none;
+  /* 初始隱藏，由 JS 控制顯示 */
+  font-family: var(--title-font);
+  /* 用返相同个標題字型 */
+  line-height: 1.2;
+  /* 調整行高避免圖示文字擠在一堆 */
 }
 
 #mobileLookupBtn i.fas.fa-search {
-  margin-left: 5px; /* 圖示和文字之間加點距離 */
-  color: white; /* 確保圖示顏色 */
+  margin-left: 5px;
+  /* 圖示和文字之間加點距離 */
+  color: white;
+  /* 確保圖示顏色 */
 }
 
 /* 暗夜模式下的按鈕樣式 (可選) */
 @media (prefers-color-scheme: dark) {
   #mobileLookupBtn {
-    background-color: var(--dark-primary-accent, #678d3f); /* 用暗模式的主要強調色 */
-    color: var(--dark-button-text-color, #1f1f1f); /* 按鈕文字顏色 */
+    background-color: var(--dark-primary-accent, #678d3f);
+    /* 用暗模式的主要強調色 */
+    color: var(--dark-button-text-color, #1f1f1f);
+    /* 按鈕文字顏色 */
   }
+
   #mobileLookupBtn i.fas.fa-search {
     color: var(--dark-button-text-color, #1f1f1f);
   }
@@ -1674,23 +2178,105 @@ input:checked + .slider:before {
   background: none;
   border: none;
   color: var(--main-text-color);
-  font-size: clamp(1.1rem, 1.5vw, 1.5rem); /* 同其他 header 控制項大細相近 */
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  /* 同其他 header 控制項大細相近 */
   padding: 3px 3px;
-  margin-left: 3px; /* 同 progressDetails 間隔 */
+  margin-left: 3px;
+  /* 同 progressDetails 間隔 */
   cursor: pointer;
   vertical-align: middle;
-  flex-shrink: 0; /* 避免被壓縮 */
+  flex-shrink: 0;
+  /* 避免被壓縮 */
 }
+
 #infoButton i,
 #showRomanizerBtn i,
 #dataManagementBtn i {
   color: inherit;
 }
+
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
 #showRomanizerBtn:hover i,
-#dataManagementBtn:hover i { /* 單獨處理 hover 效果 */
-  color: var(--focus-glow-color); /* 用 focus 光暈色做 hover 效果 */
+#dataManagementBtn:hover i {
+  /* 單獨處理 hover 效果 */
+  color: var(--focus-glow-color);
+  /* 用 focus 光暈色做 hover 效果 */
+}
+
+/* --- 【新增】雲端同步按鈕樣式 --- */
+#cloudSyncBtn,
+#cloudSyncLogoutBtn {
+  background: none;
+  border: none;
+  color: var(--main-text-color);
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  padding: 3px 3px;
+  margin-left: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: color 0.2s ease-in-out;
+}
+
+#cloudSyncBtn i,
+#cloudSyncLogoutBtn i {
+  color: inherit;
+}
+
+#cloudSyncBtn:hover i,
+#cloudSyncLogoutBtn:hover i {
+  color: var(--focus-glow-color);
+}
+
+/* 雲端同步已登入狀態 */
+#cloudSyncBtn.logged-in i {
+  color: #28a745;
+  /* 綠色表示已登入 */
+}
+
+/* 雲端同步中動畫 */
+#cloudSyncBtn.syncing i {
+  animation: spin 1s linear infinite;
+  color: #ffc107;
+  /* 黃色表示同步中 */
+}
+
+/* 同步成功提示 */
+#cloudSyncBtn.sync-success i {
+  color: #28a745;
+  animation: pulse-success 0.5s ease-out;
+}
+
+/* 同步失敗提示 */
+#cloudSyncBtn.sync-error i {
+  color: #dc3545;
+}
+
+@keyframes pulse-success {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 雲端同步使用者名稱 */
+#cloudSyncUserInfo {
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  color: var(--main-text-color);
+  margin-left: 5px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 /* Modal Overlay Styles */
@@ -1702,7 +2288,8 @@ input:checked + .slider:before {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.65);
   z-index: 1050;
-  display: none; /* Hidden by default */
+  display: none;
+  /* Hidden by default */
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -1710,7 +2297,8 @@ input:checked + .slider:before {
 }
 
 .modal-overlay.is-visible {
-  display: flex; /* Shown when is-visible class is present */
+  display: flex;
+  /* Shown when is-visible class is present */
 }
 
 /* Modal Dialog Specific Styles */
@@ -1719,14 +2307,15 @@ input:checked + .slider:before {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   width: 80vw;
   max-width: 900px;
   height: 80vh;
   max-height: 700px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 避免 iframe 載入前內容溢出 */
+  overflow: hidden;
+  /* 避免 iframe 載入前內容溢出 */
 }
 
 #infoModal .modal-header,
@@ -1766,6 +2355,7 @@ input:checked + .slider:before {
   padding: 0 5px;
   line-height: 1;
 }
+
 #infoModal .modal-close-btn:hover,
 #infoModal .modal-close-btn:focus-visible,
 #whatsNewModal .modal-close-btn:hover,
@@ -1787,11 +2377,13 @@ input:checked + .slider:before {
 
 /* Dark Mode for Modals */
 @media (prefers-color-scheme: dark) {
+
   #infoButton,
   #showRomanizerBtn,
   #dataManagementBtn {
     color: var(--main-text-color);
   }
+
   #infoButton:hover i,
   #showRomanizerBtn:hover i,
   #dataManagementBtn:hover i {
@@ -1807,17 +2399,20 @@ input:checked + .slider:before {
   #romanizerContainer .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
+
   #infoModal .modal-header,
   #whatsNewModal .modal-header,
   #dataManagementModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
+
   #infoModal .modal-close-btn,
   #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
   #dataManagementModal .modal-close-btn {
     color: #aaa;
   }
+
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
   #whatsNewModal .modal-close-btn:hover,
@@ -1835,7 +2430,7 @@ input:checked + .slider:before {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   width: 90vw;
   max-width: 600px;
   max-height: 90vh;
@@ -1870,6 +2465,7 @@ input:checked + .slider:before {
   padding: 0 5px;
   line-height: 1;
 }
+
 #dataManagementModal .modal-close-btn:hover,
 #dataManagementModal .modal-close-btn:focus-visible {
   color: #333;
@@ -1884,6 +2480,7 @@ input:checked + .slider:before {
 .data-section {
   margin-bottom: 25px;
 }
+
 .data-section:last-child {
   margin-bottom: 0;
 }
@@ -1894,6 +2491,7 @@ input:checked + .slider:before {
   border-bottom: 2px solid var(--iMazinGrace-1);
   padding-bottom: 5px;
 }
+
 .data-section h4 i {
   margin-right: 8px;
 }
@@ -1925,6 +2523,7 @@ input:checked + .slider:before {
   cursor: pointer;
   transition: background-color 0.2s;
 }
+
 #dataManagementModal button:hover {
   background-color: #0056b3;
 }
@@ -1936,8 +2535,9 @@ input:checked + .slider:before {
 
 @media (prefers-color-scheme: dark) {
   #dataManagementModal .modal-dialog {
-      background-color: var(--dark-surface-color, #2c2c2c);
+    background-color: var(--dark-surface-color, #2c2c2c);
   }
+
   #dataManagementModal textarea {
     background-color: var(--dark-background-color, #1f1f1f);
     border-color: rgba(255, 255, 255, 0.2);
@@ -1948,6 +2548,7 @@ input:checked + .slider:before {
     background-color: var(--dark-link-color);
     color: var(--dark-button-text-color, #1f1f1f);
   }
+
   #dataManagementModal button:hover {
     background-color: #a9d6fc;
   }
@@ -1955,18 +2556,24 @@ input:checked + .slider:before {
 
 /* iOS Autoplay Instruction Message Style */
 tr.ios-autoplay-instruction td {
-  background-color: rgba(var(--paused-yellow-rgb), 0.7); /* 用半透明个黃色做背景 */
+  background-color: rgba(var(--paused-yellow-rgb), 0.7);
+  /* 用半透明个黃色做背景 */
   border: 1px solid var(--paused-yellow);
   border-radius: 6px;
-  padding: 8px 12px !important; /* 覆蓋原本个 padding */
-  text-align: center !important; /* 強制置中 */
+  padding: 8px 12px !important;
+  /* 覆蓋原本个 padding */
+  text-align: center !important;
+  /* 強制置中 */
   font-size: 0.9em;
-  color: #333; /* 深色文字 */
-  position: relative; /* 確保在堆疊模式下正常顯示 */
+  color: #333;
+  /* 深色文字 */
+  position: relative;
+  /* 確保在堆疊模式下正常顯示 */
 }
 
 tr.ios-autoplay-instruction td::before {
-  display: none !important; /* 毋使顯示 "編號：" 這兜標籤 */
+  display: none !important;
+  /* 毋使顯示 "編號：" 這兜標籤 */
 }
 
 /* Dark mode for iOS instruction */
@@ -2011,6 +2618,7 @@ tr.ios-autoplay-instruction td::before {
     background-color: #343a40;
     border-top-color: rgba(255, 255, 255, 0.15);
   }
+
   #infoModal .modal-footer label {
     color: var(--main-text-color);
   }
@@ -2049,7 +2657,8 @@ tr.ios-autoplay-instruction td::before {
   cursor: pointer;
   font-weight: bold;
   padding: 0.2em 0.5em;
-  display: inline-block; /* 讓 padding 生效 */
+  display: inline-block;
+  /* 讓 padding 生效 */
 }
 
 #learningSelectionPanel summary:hover {
@@ -2068,39 +2677,54 @@ tr.ios-autoplay-instruction td::before {
 
 /* --- 頁首查詢容器樣式 (Header Search Container) --- */
 #search-container {
-  position: relative; /* 設定相對定位，分彈出面板好用絕對定位 */
-  margin-left: auto; /* 將查詢容器推到 flex 容器个最右片 */
+  position: relative;
+  /* 設定相對定位，分彈出面板好用絕對定位 */
+  margin-left: auto;
+  /* 將查詢容器推到 flex 容器个最右片 */
 }
 
 /* --- 查詢輸入框 (Search Input) --- */
 #search-input {
   padding: 8px 12px;
   border: 1px solid #ccc;
-  border-radius: 15px; /* 圓角，看起來較幼秀 */
-  width: 180px; /* 預設寬度 */
-  font-size: clamp(16px, 1.8vw, 18px); /* 自動調整字型大小 */
-  transition: width 0.3s ease-in-out, background-color 0.3s; /* 平滑過渡效果 */
+  border-radius: 15px;
+  /* 圓角，看起來較幼秀 */
+  width: 180px;
+  /* 預設寬度 */
+  font-size: clamp(16px, 1.8vw, 18px);
+  /* 自動調整字型大小 */
+  transition: width 0.3s ease-in-out, background-color 0.3s;
+  /* 平滑過渡效果 */
 }
 
 #search-input:focus {
-  width: 220px; /* focus 个時節變闊兜 */
-  background-color: #f8f8f8; /* focus 个時節背景色小小愛變 */
+  width: 220px;
+  /* focus 个時節變闊兜 */
+  background-color: #f8f8f8;
+  /* focus 个時節背景色小小愛變 */
 }
 
 /* --- 查詢設定彈出面板 (Search Settings Popup) --- */
 #search-popup {
-  display: none; /* 預設隱藏 */
+  display: none;
+  /* 預設隱藏 */
   position: absolute;
-  top: 100%; /* 在輸入框个正下方 */
-  right: 0; /* 對齊輸入框个右邊 */
+  top: 100%;
+  /* 在輸入框个正下方 */
+  right: 0;
+  /* 對齊輸入框个右邊 */
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 加一息仔陰影，看起來有浮起來个效果 */
-  z-index: 20; /* 確保在其他內容之上 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* 加一息仔陰影，看起來有浮起來个效果 */
+  z-index: 20;
+  /* 確保在其他內容之上 */
   padding: 15px;
-  width: 300px; /* 固定寬度 */
-  margin-top: 5px; /* 同輸入框之間个距離 */
+  width: 300px;
+  /* 固定寬度 */
+  margin-top: 5px;
+  /* 同輸入框之間个距離 */
 }
 
 /* 用 JS 控制个 .active class 來顯示彈出面板 */
@@ -2110,14 +2734,19 @@ tr.ios-autoplay-instruction td::before {
 
 /* --- 彈出面板內容 (Popup Content) --- */
 .dialect-row {
-  display: flex; /* 用 Flexbox 排版 */
-  gap: 15px;     /* 選項之間个距離 */
+  display: flex;
+  /* 用 Flexbox 排版 */
+  gap: 15px;
+  /* 選項之間个距離 */
 }
 
-#dialect-selection, #search-mode-selection {
+#dialect-selection,
+#search-mode-selection {
   display: flex;
-  flex-direction: column; /* 內容垂直排列 */
-  gap: 8px; /* 項目之間个距離 */
+  flex-direction: column;
+  /* 內容垂直排列 */
+  gap: 8px;
+  /* 項目之間个距離 */
 }
 
 /* 兩個區塊之間个分隔線 */
@@ -2128,13 +2757,15 @@ tr.ios-autoplay-instruction td::before {
 }
 
 /* 區塊標題文字 */
-#dialect-selection p, #search-mode-selection p {
+#dialect-selection p,
+#search-mode-selection p {
   margin: 0 0 5px 0;
   font-weight: bold;
 }
 
 /* 區塊內个選項 */
-#dialect-selection label, #search-mode-selection label {
+#dialect-selection label,
+#search-mode-selection label {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
@@ -2151,20 +2782,22 @@ tr.ios-autoplay-instruction td::before {
 
 /* 關鍵字 highlight 樣式 */
 mark {
-    background-color: #ffda06;
-    padding: 0.1em 0.2em;
-    border-radius: 3px;
+  background-color: #ffda06;
+  padding: 0.1em 0.2em;
+  border-radius: 3px;
 }
 
 
 /* --- 暗夜模式調整 (Dark Mode Adjustments) --- */
 @media (prefers-color-scheme: dark) {
+
   /* 查詢輸入框 */
   #search-input {
     background-color: var(--dark-background-color, #1f1f1f);
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--main-text-color);
   }
+
   #search-input:focus {
     background-color: #333;
   }
@@ -2179,7 +2812,7 @@ mark {
   #dialect-selection:not(:last-child) {
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   /* 查詢結果頁面用个，來源標籤樣式 */
   .source-tag {
     color: #aaa;
@@ -2192,11 +2825,13 @@ mark {
   }
 
   #results-summary {
-    background: rgba(20, 60, 50, 0.95); /* Darker shade of #245d48 */
+    background: rgba(20, 60, 50, 0.95);
+    /* Darker shade of #245d48 */
     color: #f0f0f0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
 /* --- Pagination Container --- */
 .pagination-container {
   text-align: center;
@@ -2224,6 +2859,7 @@ mark {
   color: white;
   border: 1px solid #4CAF50;
 }
+
 /* --- Result Sequence Number --- */
 .result-sequence-number {
   background-color: #f0f0f0;
@@ -2236,7 +2872,8 @@ mark {
   line-height: 40px;
   padding: 0.5em;
   min-width: 40px;
-  font-family: 'Bodoni 72 Oldstyle', serif; /* 使用 Bodoni Oldstyle 字型 */
+  font-family: 'Bodoni 72 Oldstyle', serif;
+  /* 使用 Bodoni Oldstyle 字型 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2252,7 +2889,8 @@ mark {
 #infoModal .modal-body h3 {
   margin-top: 1.5em;
   margin-bottom: 0.8em;
-  color: var(--main-text-color); /* 確保標題顏色與主題一致 */
+  color: var(--main-text-color);
+  /* 確保標題顏色與主題一致 */
 }
 
 #infoModal .modal-body h1 {
@@ -2272,11 +2910,13 @@ mark {
 }
 
 #infoModal .modal-body ul {
-  padding-left: 25px; /* 讓清單項目有內縮 */
+  padding-left: 25px;
+  /* 讓清單項目有內縮 */
 }
 
 #infoModal .modal-body a {
-  color: #007bff; /* 使用較亮的藍色讓連結更明顯 */
+  color: #007bff;
+  /* 使用較亮的藍色讓連結更明顯 */
   text-decoration: underline;
 }
 
@@ -2293,9 +2933,11 @@ mark {
 
 @media screen and (max-width: 768px) {
   .result-sequence-number {
-    margin-right: 0.5em; /* 在小螢幕下，序號和內容之間的距離 */
+    margin-right: 0.5em;
+    /* 在小螢幕下，序號和內容之間的距離 */
   }
 }
+
 /* --- 查詢結果來源標籤 --- */
 /*.source-tag {
   font-size: 0.8em;
@@ -2328,15 +2970,17 @@ mark {
   left: -6px;
   width: 22px;
   height: 22px;
-  background-color: #dc3545; /* 紅色，表示有問題 */
+  background-color: #dc3545;
+  /* 紅色，表示有問題 */
   color: white;
   border: 1px solid white;
   border-radius: 50%;
   cursor: pointer;
   font-size: 12px;
-  line-height: 20px; /* 調整讓圖示置中 */
+  line-height: 20px;
+  /* 調整讓圖示置中 */
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
   /* 預設隱藏 */
   opacity: 0;
@@ -2358,9 +3002,12 @@ mark {
   border: 1px solid #007bff;
   border-radius: 3px;
   padding: 1px 3px;
-  font-size: inherit; /* 承襲字體大小 */
-  font-family: inherit; /* 承襲字體 */
-  background-color: #e7f3ff; /* 淡藍色背景，提示編輯中 */
+  font-size: inherit;
+  /* 承襲字體大小 */
+  font-family: inherit;
+  /* 承襲字體 */
+  background-color: #e7f3ff;
+  /* 淡藍色背景，提示編輯中 */
   color: #333;
   outline: none;
 }
@@ -2368,14 +3015,16 @@ mark {
 /* --- 暗夜模式个對應樣式 --- */
 @media (prefers-color-scheme: dark) {
   .resegment-btn {
-	background-color: #f56565; /* 較亮个紅色 */
-	color: #1a202c;
-	border-color: #2d3748;
+    background-color: #f56565;
+    /* 較亮个紅色 */
+    color: #1a202c;
+    border-color: #2d3748;
   }
+
   .resegment-input {
-	background-color: #2a4365;
-	border-color: #63b3ed;
-	color: #e2e8f0;
+    background-color: #2a4365;
+    border-color: #63b3ed;
+    color: #e2e8f0;
   }
 }
 
@@ -2383,46 +3032,60 @@ mark {
 
 /* 每一個音節个外層容器 */
 .syllable-wrapper {
-  position: relative; /* 設定相對定位，分絕對定位个按鈕有好个基準 */
-  display: inline-block; /* 讓佢像文字樣排列，但有區塊特性 */
+  position: relative;
+  /* 設定相對定位，分絕對定位个按鈕有好个基準 */
+  display: inline-block;
+  /* 讓佢像文字樣排列，但有區塊特性 */
   border-radius: 3px;
   transition: background-color 0.2s ease;
-  font-family: var(--roman-font); /* 【新】設定羅馬字字型 */
+  font-family: var(--roman-font);
+  /* 【新】設定羅馬字字型 */
   /* 【舊】拿掉 padding 同 margin */
 }
-.segment-group, .segment-group span[data-seg-id] {
-  font-family: var(--roman-font); /* 乜愛設定字型 */
+
+.segment-group,
+.segment-group span[data-seg-id] {
+  font-family: var(--roman-font);
+  /* 乜愛設定字型 */
 }
 
 /* 大寫按鈕樣式 */
 .uppercase-btn {
-  position: absolute; /* 絕對定位，相對於 .syllable-wrapper */
-  top: -8px;          /* 移到頂高 */
-  left: -8px;         /* 移到左片 */
+  position: absolute;
+  /* 絕對定位，相對於 .syllable-wrapper */
+  top: -8px;
+  /* 移到頂高 */
+  left: -8px;
+  /* 移到左片 */
   width: 20px;
   height: 20px;
   background-color: #007bff;
   color: white;
   border: 1px solid white;
-  border-radius: 50%; /* 圓形按鈕 */
+  border-radius: 50%;
+  /* 圓形按鈕 */
   cursor: pointer;
-  font-family: sans-serif; /* 用較清晰个無襯線字體 */
+  font-family: sans-serif;
+  /* 用較清晰个無襯線字體 */
   font-weight: bold;
   font-size: 12px;
-  line-height: 18px; /* 調整讓 'U' 在垂直方向置中 */
+  line-height: 18px;
+  /* 調整讓 'U' 在垂直方向置中 */
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
   /* 預設隱藏按鈕 */
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.8); /* 預設縮小 */
+  transform: scale(0.8);
+  /* 預設縮小 */
   transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
 }
 
 /* 當滑鼠懸停在音節容器上時，顯示按鈕 */
 .syllable-wrapper:hover {
-  background-color: rgba(0, 123, 255, 0.1); /* 淡淡个藍色背景 */
+  background-color: rgba(0, 123, 255, 0.1);
+  /* 淡淡个藍色背景 */
 }
 
 /* 刪除按鈕樣式 */
@@ -2438,10 +3101,10 @@ mark {
   border-radius: 50%;
   cursor: pointer;
   /* 【新】為著配合 icon 調整 */
-  font-size: 12px; 
+  font-size: 12px;
   line-height: 18px;
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
   transform: scale(0.8);
@@ -2452,20 +3115,25 @@ mark {
 .syllable-wrapper:hover .delete-btn {
   opacity: 1;
   visibility: visible;
-  transform: scale(1); /* 恢復正常大小 */
+  transform: scale(1);
+  /* 恢復正常大小 */
 }
 
 /* 【新】為由使用者從 popup 選用个讀音加上特別樣式 */
 #romanizer-output .substituted-by-user {
-  text-decoration: underline wavy #dc3545; /* 紅色波浪底線 */
-  text-underline-offset: 3px; /* 分底線摎文字隔較開 */
+  text-decoration: underline wavy #dc3545;
+  /* 紅色波浪底線 */
+  text-underline-offset: 3px;
+  /* 分底線摎文字隔較開 */
 }
 
 /* 暗夜模式个對應樣式 */
 @media (prefers-color-scheme: dark) {
   .syllable-wrapper:hover {
-    background-color: rgba(144, 202, 249, 0.15); /* 暗夜模式个 hover 背景色 */
+    background-color: rgba(144, 202, 249, 0.15);
+    /* 暗夜模式个 hover 背景色 */
   }
+
   .uppercase-btn {
     background-color: var(--dark-link-color, #90caf9);
     color: var(--dark-background-color, #1f1f1f);
@@ -2484,17 +3152,20 @@ mark {
 }
 
 #segmentation-workspace .segment-word.no-result:hover {
-  background-color: #c4b5d0; /* 滑鼠懸停時个顏色 */
+  background-color: #c4b5d0;
+  /* 滑鼠懸停時个顏色 */
 }
 
 /* 2. 建立分「最終結果區」用个獨立 placeholder class */
 .placeholder-block {
   display: inline-block;
   width: 3em;
-  height: 1.2em; /* 這高度做得根據你个行高微調 */
+  height: 1.2em;
+  /* 這高度做得根據你个行高微調 */
   background-color: var(--iMazinGrace-1);
   border-radius: 4px;
-  vertical-align: middle; /* 垂直置中 */
+  vertical-align: middle;
+  /* 垂直置中 */
 }
 
 /* --- 暗夜模式个對應樣式 --- */
@@ -2502,9 +3173,11 @@ mark {
   #segmentation-workspace .segment-word.no-result {
     background-color: var(--dark-secondary-accent);
   }
+
   #segmentation-workspace .segment-word.no-result:hover {
     background-color: #8a7899;
   }
+
   .placeholder-block {
     background-color: var(--dark-secondary-accent);
   }
@@ -2514,7 +3187,8 @@ mark {
 #romanizer-history-controls {
   display: flex;
   gap: 8px;
-  margin-bottom: 10px; /* 同下背个 output 區隔開 */
+  margin-bottom: 10px;
+  /* 同下背个 output 區隔開 */
 }
 
 #romanizer-history-controls button {
@@ -2535,12 +3209,13 @@ mark {
 /* 暗夜模式 */
 @media (prefers-color-scheme: dark) {
   #romanizer-history-controls button {
-	background-color: #444;
-	border-color: #666;
-	color: #ddd;
+    background-color: #444;
+    border-color: #666;
+    color: #ddd;
   }
+
   #romanizer-history-controls button:disabled {
-	opacity: 0.4;
+    opacity: 0.4;
   }
 }
 
@@ -2549,23 +3224,28 @@ mark {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   width: 80vw;
   max-width: 900px;
-  height: 85vh; /* Set height to enable scrolling */
-  max-height: 800px; /* Set max-height */
+  height: 85vh;
+  /* Set height to enable scrolling */
+  max-height: 800px;
+  /* Set max-height */
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* Make the dialog itself scroll */
+  overflow-y: auto;
+  /* Make the dialog itself scroll */
 }
 
 #romanizerContainer .romanizer-content {
-  background-color: transparent; /* Now handled by modal-dialog */
+  background-color: transparent;
+  /* Now handled by modal-dialog */
   padding: 20px;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Allow content to fill dialog */
+  flex-grow: 1;
+  /* Allow content to fill dialog */
 }
 
 /* 【新增】Romanizer 連詞模式選擇器樣式 */
@@ -2584,6 +3264,7 @@ mark {
 
 /* 【新增】對應个暗夜模式樣式 */
 @media (prefers-color-scheme: dark) {
+
   #romanizer-dialect-selector,
   #romanizer-joining-mode-selector {
     background-color: var(--dark-surface-color, #2c2c2c);
@@ -2593,12 +3274,13 @@ mark {
 }
 
 #romanizerContainer .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-shrink: 0;
-    flex-wrap: wrap; /* 允許換行 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  /* 允許換行 */
 }
 
 #romanizerContainer .modal-body {
@@ -2623,7 +3305,8 @@ mark {
   font-weight: 700;
   font-size: 1.2em;
   flex-grow: 1;
-  min-height: 1.5em; /* Ensure it has some height even when empty */
+  min-height: 1.5em;
+  /* Ensure it has some height even when empty */
 }
 
 #copy-romanizer-result-btn {
@@ -2654,8 +3337,10 @@ mark {
 }
 
 #segmentation-workspace .segment-word.completed {
-  background-color: #d4edda; /* Light green */
-  border-bottom: 2px solid #155724; /* Darker green */
+  background-color: #d4edda;
+  /* Light green */
+  border-bottom: 2px solid #155724;
+  /* Darker green */
 }
 
 .romanizer-section {
@@ -2672,7 +3357,8 @@ mark {
   border: 1px solid #ccc;
   border-radius: 5px;
   resize: vertical;
-  box-sizing: border-box; /* Fix width overflow */
+  box-sizing: border-box;
+  /* Fix width overflow */
 }
 
 #romanizer-start-btn {
@@ -2690,8 +3376,10 @@ mark {
 }
 
 #segmentation-workspace .segment-word.auto-filled-multiple {
-  background-color: #fffacd; /* LemonChiffon */
-  border-bottom: 2px solid #ffd700; /* Gold */
+  background-color: #fffacd;
+  /* LemonChiffon */
+  border-bottom: 2px solid #ffd700;
+  /* Gold */
 }
 
 #segmentation-workspace .segment-word.no-result {
@@ -2705,7 +3393,7 @@ mark {
   #romanizerContainer .romanizer-content {
     background-color: var(--dark-surface-color, #2c2c2c);
     color: var(--main-text-color);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
 
   #romanizer-output-container,
@@ -2721,7 +3409,8 @@ mark {
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--main-text-color);
   }
-    #copy-romanizer-result-btn:hover {
+
+  #copy-romanizer-result-btn:hover {
     background-color: #444;
   }
 
@@ -2731,8 +3420,10 @@ mark {
   }
 
   #segmentation-workspace .segment-word.completed {
-    background-color: #2a4b37; /* Darker green */
-    border-bottom-color: #6fa883; /* Lighter green for border */
+    background-color: #2a4b37;
+    /* Darker green */
+    border-bottom-color: #6fa883;
+    /* Lighter green for border */
     color: #e0e0e0;
   }
 
@@ -2742,7 +3433,8 @@ mark {
   }
 
   #romanizer-start-btn:hover {
-    background-color: #85b567; /* Lighter shade of the accent color */
+    background-color: #85b567;
+    /* Lighter shade of the accent color */
   }
 
   #segmentation-workspace .segment-word.auto-filled-multiple {
@@ -2763,16 +3455,17 @@ mark {
   #romanizerContainer .modal-header {
     /* 在狹窄螢幕，改做從頭開始對齊，分 h2 好看 */
     justify-content: flex-start;
-    gap: 10px; /* 加入項目之間个間距 */
+    gap: 10px;
+    /* 加入項目之間个間距 */
   }
 
   #romanizerContainer .modal-header h2 {
     /* 分標題佔用歸行个闊度，佢就會自動跳到第一行 */
     flex-basis: 100%;
     /* 拿掉 h2 預設个 margin，避免影響排版 */
-    margin: 0 0 10px 0; 
+    margin: 0 0 10px 0;
     /* 文字做得靠左或置中，看你歡喜哪一樣 */
-    text-align: left; 
+    text-align: left;
   }
 
   #romanizerContainer .modal-header .modal-close-btn {
@@ -2780,12 +3473,14 @@ mark {
     margin-left: auto;
   }
 }
+
 /* --- Migration Overlay Styles --- */
 #migration-overlay {
   background-color: #f0f2f5;
   overflow-y: auto;
   align-items: flex-start;
 }
+
 .migration-container {
   display: flex;
   flex-direction: column;
@@ -2795,6 +3490,7 @@ mark {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   text-align: center;
 }
+
 .migration-image {
   max-width: 250px;
   width: 100%;
@@ -2803,15 +3499,33 @@ mark {
   border-radius: 12px;
   object-fit: cover;
 }
+
 .migration-text-content {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.migration-container h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-.migration-container p { margin: 0.5em 0; font-size: 1.1em; color: #333; }
-.migration-container a { color: #007bff; text-decoration: none; }
-.migration-container a:hover { text-decoration: underline; }
+
+.migration-container h1 {
+  font-size: 1.8em;
+  margin-bottom: 0.5em;
+}
+
+.migration-container p {
+  margin: 0.5em 0;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.migration-container a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.migration-container a:hover {
+  text-decoration: underline;
+}
+
 #migrationBtn {
   font-family: 'tauhu-oo', sans-serif;
   font-size: 1.2em;
@@ -2825,68 +3539,89 @@ mark {
   transition: background-color 0.3s ease;
   margin-top: 1em;
 }
+
 #migrationBtn:hover {
   background-color: #0056b3;
 }
+
 @media (min-width: 600px) {
   .migration-container {
     flex-direction: row;
     text-align: left;
   }
+
   .migration-text-content {
     align-items: flex-start;
   }
+
   .migration-image {
     max-width: 350px;
   }
-  .migration-container h1 { font-size: 2.2em; }
+
+  .migration-container h1 {
+    font-size: 2.2em;
+  }
 }
-@media (max-width: 400px), (max-height: 760px) {
+
+@media (max-width: 400px),
+(max-height: 760px) {
   .migration-container {
     padding: 1em;
     gap: 1em;
   }
+
   .migration-image {
     max-width: 200px;
   }
+
   .migration-container h1 {
     font-size: 1.5em;
   }
+
   .migration-container p {
     font-size: 1em;
   }
+
   #migrationBtn {
     font-size: 1em;
     padding: 0.6em 1.2em;
   }
 }
+
 @media (prefers-color-scheme: dark) {
   #migration-overlay {
     background-color: var(--dark-background-color);
   }
+
   .migration-container {
-      background-color: var(--dark-surface-color);
-      padding: 2em;
-      border-radius: 12px;
+    background-color: var(--dark-surface-color);
+    padding: 2em;
+    border-radius: 12px;
   }
+
   .migration-container h1 {
-      color: var(--main-text-color);
+    color: var(--main-text-color);
   }
+
   .migration-container p {
-      color: var(--main-text-color);
-      opacity: 0.85;
+    color: var(--main-text-color);
+    opacity: 0.85;
   }
+
   .migration-container a {
-      color: var(--dark-link-color);
+    color: var(--dark-link-color);
   }
+
   #migrationBtn {
-      background-color: var(--dark-link-color);
-      color: var(--dark-button-text-color);
+    background-color: var(--dark-link-color);
+    color: var(--dark-button-text-color);
   }
+
   #migrationBtn:hover {
-      background-color: #a9d6fc;
+    background-color: #a9d6fc;
   }
+
   .migration-image {
-      border: 2px solid var(--dark-surface-color);
+    border: 2px solid var(--dark-surface-color);
   }
 }
