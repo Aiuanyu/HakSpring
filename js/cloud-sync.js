@@ -367,25 +367,60 @@ function updateSyncStatusUI(status) {
 }
 
 /**
- * 觸發書籤變更後的雲端同步（防抖）
- * 使用較長的 debounce 時間以減少 API 呼叫次數
+ * 觸發書籤變更後的雲端同步（節流）
+ * 使用 throttle 機制確保播放期間至少每 30 秒上傳一次
+ * 同時在停止操作後也會上傳最終狀態
  */
-let syncDebounceTimer = null;
+let syncThrottleTimer = null;
+let syncTrailingTimer = null;
 let hasPendingSync = false;
+let lastSyncTime = 0;
+const SYNC_INTERVAL = 30000; // 30 秒
 
 function triggerCloudSync() {
   if (!cloudSyncState.isLoggedIn) return;
 
   hasPendingSync = true;
+  const now = Date.now();
 
-  if (syncDebounceTimer) {
-    clearTimeout(syncDebounceTimer);
+  // 清除尾隨計時器（因為有新的變更進來）
+  if (syncTrailingTimer) {
+    clearTimeout(syncTrailingTimer);
+    syncTrailingTimer = null;
   }
 
-  syncDebounceTimer = setTimeout(() => {
+  // 如果距離上次同步已超過 30 秒，立即同步
+  if (now - lastSyncTime >= SYNC_INTERVAL) {
+    // 清除節流計時器（如果有的話）
+    if (syncThrottleTimer) {
+      clearTimeout(syncThrottleTimer);
+      syncThrottleTimer = null;
+    }
+
+    lastSyncTime = now;
     syncToCloud();
     hasPendingSync = false;
-  }, 30000); // 30 秒後同步，減少 Supabase API 呼叫次數
+  } else if (!syncThrottleTimer) {
+    // 還沒到 30 秒，且沒有計時器在跑，設置計時器
+    const remainingTime = SYNC_INTERVAL - (now - lastSyncTime);
+    syncThrottleTimer = setTimeout(() => {
+      syncThrottleTimer = null;
+      lastSyncTime = Date.now();
+      syncToCloud();
+      hasPendingSync = false;
+    }, remainingTime);
+  }
+
+  // 設置尾隨計時器：確保最後一次變更後也會上傳
+  // 這樣停止播放後的最終狀態也能被保存
+  syncTrailingTimer = setTimeout(() => {
+    syncTrailingTimer = null;
+    if (hasPendingSync) {
+      lastSyncTime = Date.now();
+      syncToCloud();
+      hasPendingSync = false;
+    }
+  }, SYNC_INTERVAL);
 }
 
 /**
@@ -395,10 +430,15 @@ function triggerCloudSync() {
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && hasPendingSync) {
-      if (syncDebounceTimer) {
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = null;
+      if (syncThrottleTimer) {
+        clearTimeout(syncThrottleTimer);
+        syncThrottleTimer = null;
       }
+      if (syncTrailingTimer) {
+        clearTimeout(syncTrailingTimer);
+        syncTrailingTimer = null;
+      }
+      lastSyncTime = Date.now();
       syncToCloud();
       hasPendingSync = false;
     }
