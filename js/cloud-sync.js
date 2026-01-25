@@ -118,6 +118,9 @@ async function syncFromCloud() {
   const client = getSupabaseClient();
   if (!client || !cloudSyncState.isLoggedIn) return;
 
+  // 競合保護：避免同時執行多個同步
+  if (cloudSyncState.isSyncing) return;
+
   cloudSyncState.isSyncing = true;
   updateSyncStatusUI('syncing');
 
@@ -232,8 +235,12 @@ async function syncToCloud() {
  * 3. 依 timestamp 排序，保留最新的 BOOKMARK_LIMIT 筆
  */
 function mergeBookmarks(localBookmarks, cloudBookmarks) {
+  // 輸入驗證：確保參數是陣列
+  const local = Array.isArray(localBookmarks) ? localBookmarks : [];
+  const cloud = Array.isArray(cloudBookmarks) ? cloudBookmarks : [];
+
   // 合併所有書籤
-  const allBookmarks = [...cloudBookmarks, ...localBookmarks];
+  const allBookmarks = [...cloud, ...local];
 
   // 用 tableName 為 key，只保留每個表格中 timestamp 最新的書籤
   const tableMap = new Map();
