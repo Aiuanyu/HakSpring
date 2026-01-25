@@ -4,7 +4,6 @@
  */
 
 const BOOKMARK_LIMIT = 10;
-const SYNC_KEYS = ['hakkaBookmarks', 'romanizerJoiningMode'];
 
 // 同步狀態
 let cloudSyncState = {
@@ -71,10 +70,15 @@ async function signInWithGoogle() {
   if (!client) return;
 
   try {
+    // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
+    const redirectUrl =
+      window.location.origin +
+      window.location.pathname +
+      window.location.search;
     const { data, error } = await client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: redirectUrl,
       },
     });
 
@@ -159,23 +163,14 @@ async function syncFromCloud() {
 
       // 上傳合併後的資料
       await syncToCloud();
-
-      // 更新 UI
-      setTimeout(() => {
-        if (typeof window.updateProgressDropdown === 'function') {
-          window.updateProgressDropdown();
-        }
-      }, 100);
     } else {
       // 雲端沒有資料，上傳本地資料
       await syncToCloud();
+    }
 
-      // 更新 UI
-      setTimeout(() => {
-        if (typeof window.updateProgressDropdown === 'function') {
-          window.updateProgressDropdown();
-        }
-      }, 100);
+    // 同步完成後立即更新 UI
+    if (typeof window.updateProgressDropdown === 'function') {
+      window.updateProgressDropdown();
     }
 
     cloudSyncState.lastSyncTime = new Date();
@@ -183,6 +178,8 @@ async function syncFromCloud() {
   } catch (err) {
     console.error('[CloudSync] 同步失敗:', err);
     updateSyncStatusUI('error');
+    // 顯示用戶可見的錯誤通知
+    showSyncError('同步失敗，請稍後再試');
   } finally {
     cloudSyncState.isSyncing = false;
   }
@@ -223,6 +220,7 @@ async function syncToCloud() {
     console.log('[CloudSync] 已上傳到雲端');
   } catch (err) {
     console.error('[CloudSync] 上傳失敗:', err);
+    showSyncError('上傳失敗，請稍後再試');
   }
 }
 
@@ -308,6 +306,36 @@ function updateSyncUI(isLoggedIn, user) {
 }
 
 /**
+ * 顯示同步錯誤通知（短暫顯示後自動消失）
+ * 使用 dataset 存儲原始 title，避免快速觸發時的 race condition
+ */
+function showSyncError(message) {
+  const cloudSyncBtn = document.getElementById('cloudSyncBtn');
+  if (!cloudSyncBtn) return;
+
+  // 清除任何現有的 timeout
+  if (cloudSyncBtn.dataset.errorTimeoutId) {
+    clearTimeout(Number(cloudSyncBtn.dataset.errorTimeoutId));
+  }
+
+  // 首次調用時存儲真正的原始 title
+  if (!cloudSyncBtn.dataset.originalTitle) {
+    cloudSyncBtn.dataset.originalTitle = cloudSyncBtn.title;
+  }
+
+  cloudSyncBtn.title = message;
+
+  // 3 秒後恢復原本的 title
+  const timeoutId = setTimeout(() => {
+    cloudSyncBtn.title = cloudSyncBtn.dataset.originalTitle;
+    delete cloudSyncBtn.dataset.originalTitle;
+    delete cloudSyncBtn.dataset.errorTimeoutId;
+  }, 3000);
+
+  cloudSyncBtn.dataset.errorTimeoutId = timeoutId;
+}
+
+/**
  * 更新同步狀態提示
  */
 function updateSyncStatusUI(status) {
@@ -355,29 +383,15 @@ function triggerCloudSync() {
 
 /**
  * 頁面離開時強制同步（確保資料不遺失）
+ * 注意：只使用 visibilitychange，因為 beforeunload 中的非同步操作不可靠
  */
 function setupPageUnloadSync() {
-  // 頁面隱藏時同步（切換分頁、最小化等）
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && hasPendingSync) {
       if (syncDebounceTimer) {
         clearTimeout(syncDebounceTimer);
         syncDebounceTimer = null;
       }
-      syncToCloud();
-      hasPendingSync = false;
-    }
-  });
-
-  // 頁面關閉前同步
-  window.addEventListener('beforeunload', () => {
-    if (hasPendingSync) {
-      if (syncDebounceTimer) {
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = null;
-      }
-      // 使用 sendBeacon 確保請求能在頁面關閉前送出
-      // 但 Supabase client 不支援，所以直接呼叫 syncToCloud
       syncToCloud();
       hasPendingSync = false;
     }
