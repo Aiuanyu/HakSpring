@@ -4,6 +4,8 @@
 # 「客源翠 HakSpring」新消息
 20260125 22:23
 
+**馬年快樂！**🎁🎊🎀🙌
+
 ### 9/17 進前就有用个人，請改用 [hakspring.pages.dev](https://hakspring.pages.dev/) 網址斯好 lió
 #### 嗨～大自家～客源翠的舊網址 `aiuanyu.github.io` 已經設計打包舊進度過來。而新網址的進度也會受到保護。這項遷移只需要做一次就好，之後大家可以直接用 [hakspring.pages.dev](https://hakspring.pages.dev/) 網址（可加入書籤／最愛或桌面捷徑）～
 
