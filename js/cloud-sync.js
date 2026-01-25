@@ -70,10 +70,15 @@ async function signInWithGoogle() {
   if (!client) return;
 
   try {
+    // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
+    const redirectUrl =
+      window.location.origin +
+      window.location.pathname +
+      window.location.search;
     const { data, error } = await client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: redirectUrl,
       },
     });
 
@@ -215,6 +220,7 @@ async function syncToCloud() {
     console.log('[CloudSync] 已上傳到雲端');
   } catch (err) {
     console.error('[CloudSync] 上傳失敗:', err);
+    showSyncError('上傳失敗，請稍後再試');
   }
 }
 
@@ -301,19 +307,32 @@ function updateSyncUI(isLoggedIn, user) {
 
 /**
  * 顯示同步錯誤通知（短暫顯示後自動消失）
+ * 使用 dataset 存儲原始 title，避免快速觸發時的 race condition
  */
 function showSyncError(message) {
-  // 使用現有的 cloudSyncBtn 顯示 tooltip 風格的錯誤訊息
   const cloudSyncBtn = document.getElementById('cloudSyncBtn');
   if (!cloudSyncBtn) return;
 
-  const originalTitle = cloudSyncBtn.title;
+  // 清除任何現有的 timeout
+  if (cloudSyncBtn.dataset.errorTimeoutId) {
+    clearTimeout(Number(cloudSyncBtn.dataset.errorTimeoutId));
+  }
+
+  // 首次調用時存儲真正的原始 title
+  if (!cloudSyncBtn.dataset.originalTitle) {
+    cloudSyncBtn.dataset.originalTitle = cloudSyncBtn.title;
+  }
+
   cloudSyncBtn.title = message;
 
   // 3 秒後恢復原本的 title
-  setTimeout(() => {
-    cloudSyncBtn.title = originalTitle;
+  const timeoutId = setTimeout(() => {
+    cloudSyncBtn.title = cloudSyncBtn.dataset.originalTitle;
+    delete cloudSyncBtn.dataset.originalTitle;
+    delete cloudSyncBtn.dataset.errorTimeoutId;
   }, 3000);
+
+  cloudSyncBtn.dataset.errorTimeoutId = timeoutId;
 }
 
 /**
