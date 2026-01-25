@@ -4,7 +4,6 @@
  */
 
 const BOOKMARK_LIMIT = 10;
-const SYNC_KEYS = ['hakkaBookmarks', 'romanizerJoiningMode'];
 
 // 同步狀態
 let cloudSyncState = {
