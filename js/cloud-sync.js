@@ -24,6 +24,9 @@ async function initCloudSync() {
     return;
   }
 
+  // 設置頁面離開時的同步機制
+  setupPageUnloadSync();
+
   // 監聽認證狀態變化
   client.auth.onAuthStateChange(async (event, session) => {
     console.log('[CloudSync] Auth state changed:', event);
@@ -330,10 +333,15 @@ function updateSyncStatusUI(status) {
 
 /**
  * 觸發書籤變更後的雲端同步（防抖）
+ * 使用較長的 debounce 時間以減少 API 呼叫次數
  */
 let syncDebounceTimer = null;
+let hasPendingSync = false;
+
 function triggerCloudSync() {
   if (!cloudSyncState.isLoggedIn) return;
+
+  hasPendingSync = true;
 
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
@@ -341,5 +349,37 @@ function triggerCloudSync() {
 
   syncDebounceTimer = setTimeout(() => {
     syncToCloud();
-  }, 1000); // 1 秒後同步，避免頻繁寫入
+    hasPendingSync = false;
+  }, 30000); // 30 秒後同步，減少 Supabase API 呼叫次數
+}
+
+/**
+ * 頁面離開時強制同步（確保資料不遺失）
+ */
+function setupPageUnloadSync() {
+  // 頁面隱藏時同步（切換分頁、最小化等）
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && hasPendingSync) {
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+      syncToCloud();
+      hasPendingSync = false;
+    }
+  });
+
+  // 頁面關閉前同步
+  window.addEventListener('beforeunload', () => {
+    if (hasPendingSync) {
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+      // 使用 sendBeacon 確保請求能在頁面關閉前送出
+      // 但 Supabase client 不支援，所以直接呼叫 syncToCloud
+      syncToCloud();
+      hasPendingSync = false;
+    }
+  });
 }
