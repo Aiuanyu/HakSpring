@@ -1,0 +1,15 @@
+最佳化雲端同步 UI：改用人頭圖示減少空間佔用
+
+修正原旦登入後直接顯示帳號名造成狹螢幕版面擠壓个問題。
+主要變更：
+- 在 `index.html` 同使用者名仔文字改做人頭撳鈕 (`#cloudSyncUserBtn`)，過將資訊視窗標題改做「網站說明」。
+- 在 `style.css` 增加按鈕樣式同 CSS Tooltip 邏輯，hover 時正顯示完整帳號。
+- 在 `js/cloud-sync.js` 更新 UI 同步邏輯，同名稱寫入按鈕个 `dataset.tooltip`。
+
+貢獻分工：
+- Gemini 3 Pro (#G3Pro): 負責規劃 UI 改進方案、實作 HTML/CSS/JS 程式碼修改。
+- Gemini 3 Flash (#G3Flash): 負責協助文件讀取、確認現狀同最後个 Git Commit 助手任務。
+- Robert 自家改短資訊視窗標題。
+
+Co-authored-by: Gemini 3 Pro <Gemini-3-Pro@Antigravity>
+Signed-off-by: GHSRobert <robertus0617@gmail.com> (Commit Helper: Gemini 3 Flash <Gemini-3-Flash@Antigravity>)
