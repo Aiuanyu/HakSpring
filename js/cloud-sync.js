@@ -278,8 +278,7 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
  */
 function updateSyncUI(isLoggedIn, user) {
   const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-  const cloudSyncStatus = document.getElementById('cloudSyncStatus');
-  const cloudSyncUserInfo = document.getElementById('cloudSyncUserInfo');
+  const cloudSyncUserBtn = document.getElementById('cloudSyncUserBtn');
   const cloudSyncLogoutBtn = document.getElementById('cloudSyncLogoutBtn');
 
   if (!cloudSyncBtn) return;
@@ -289,11 +288,11 @@ function updateSyncUI(isLoggedIn, user) {
     cloudSyncBtn.title = '已登入雲端同步';
     cloudSyncBtn.classList.add('logged-in');
 
-    if (cloudSyncUserInfo) {
+    if (cloudSyncUserBtn) {
       const displayName =
         user.user_metadata?.full_name || user.email || '使用者';
-      cloudSyncUserInfo.textContent = displayName;
-      cloudSyncUserInfo.style.display = 'inline';
+      cloudSyncUserBtn.dataset.tooltip = displayName;
+      cloudSyncUserBtn.style.display = 'inline-block';
     }
     if (cloudSyncLogoutBtn) {
       cloudSyncLogoutBtn.style.display = 'inline-block';
@@ -303,8 +302,8 @@ function updateSyncUI(isLoggedIn, user) {
     cloudSyncBtn.title = '雲端同步（Google 登入）';
     cloudSyncBtn.classList.remove('logged-in');
 
-    if (cloudSyncUserInfo) {
-      cloudSyncUserInfo.style.display = 'none';
+    if (cloudSyncUserBtn) {
+      cloudSyncUserBtn.style.display = 'none';
     }
     if (cloudSyncLogoutBtn) {
       cloudSyncLogoutBtn.style.display = 'none';
