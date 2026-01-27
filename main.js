@@ -5146,10 +5146,10 @@ function initializeAppUI() {
         document.getElementById('info-content').innerHTML =
           '<p>說明文件載入失敗。</p>';
       });
-    const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
-    if (!dontShowAgain) {
-      infoModal.classList.add('is-visible');
-    }
+    // const dontShowAgain = localStorage.getItem('dontShowInfoModalAgain');
+    // if (!dontShowAgain) {
+    //   infoModal.classList.add('is-visible');
+    // }
     infoButton.addEventListener('click', () => {
       infoModal.classList.add('is-visible');
       trackEvent('open', 'InfoModal', 'click_info_button');
@@ -5268,7 +5268,7 @@ function initializeAppUI() {
   }
 
   // Run the check on startup
-  checkWhatsNew();
+  // checkWhatsNew();
   // --- End of What's New Modal Logic ---
 
   if (selectionPopup && selectionPopupBackdrop && selectionPopupCloseBtn) {
