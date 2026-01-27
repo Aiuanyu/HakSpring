@@ -342,9 +342,28 @@ a {
 }
 
 .bookmarkBtn {
-  background: none;
-  border: none;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
   cursor: pointer;
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1em;
+  font-family: 'Operator Mono', monospace;
+  transition: background-color 0.2s;
+}
+
+.bookmarkBtn:hover {
+  background: #e0e0e0;
+}
+
+@media screen and (max-width: 768px) {
+  .bookmarkBtn {
+    vertical-align: bottom; /* Better alignment with other buttons on mobile */
+  }
 }
 
 .bookmarkBtn,
