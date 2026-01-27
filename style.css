@@ -2268,15 +2268,58 @@ input:checked+.slider:before {
 }
 
 /* 雲端同步使用者名稱 */
-#cloudSyncUserInfo {
-  font-size: clamp(0.8rem, 1.2vw, 1rem);
+/* 雲端同步使用者按鈕（人頭 icon） */
+#cloudSyncUserBtn {
+  background: none;
+  border: none;
   color: var(--main-text-color);
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  padding: 3px;
   margin-left: 5px;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  cursor: pointer;
   vertical-align: middle;
+  position: relative;
+  /* 為了定位 tooltip */
+}
+
+#cloudSyncUserBtn:hover {
+  color: var(--focus-glow-color);
+}
+
+/* Tooltip 樣式 (顯示使用者名稱) */
+#cloudSyncUserBtn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  /* 顯示在下方 */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  /* 深色背景 */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  pointer-events: none;
+  /* 避免擋住滑鼠 */
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 1000;
+  margin-top: 5px;
+  /* 與 icon 的距離 */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Hover 或 Focus 時顯示 Tooltip */
+#cloudSyncUserBtn:hover::after,
+#cloudSyncUserBtn:focus::after {
+  opacity: 1;
+}
+
+/* 確保在 infoModal 標頭中顯示正常，避免被裁切 */
+.modal-header-buttons {
+  overflow: visible;
 }
 
 /* Modal Overlay Styles */
