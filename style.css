@@ -342,8 +342,8 @@ a {
 }
 
 .bookmarkBtn {
-  background: #f0f0f0;
-  border: 1px solid #ccc;
+  background: transparent;
+  border: 2px solid var(--iMazinGrace-1);
   cursor: pointer;
   padding: 0.5em 1em;
   border-radius: 8px;
@@ -353,11 +353,12 @@ a {
   gap: 8px;
   font-size: 1em;
   font-family: 'Operator Mono', monospace;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
+  color: var(--iMazinGrace-1);
 }
 
 .bookmarkBtn:hover {
-  background: #e0e0e0;
+  background: rgba(var(--iMazinGrace-1-rgb), 0.15);
 }
 
 @media screen and (max-width: 768px) {
@@ -366,7 +367,6 @@ a {
   }
 }
 
-.bookmarkBtn,
 .crossDialectBtn {
   background: none;
   border: none;
