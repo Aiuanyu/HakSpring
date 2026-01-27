@@ -4044,11 +4044,10 @@ function initializeAppUI() {
       const anchor = document.createElement('a');
       anchor.name = originalRowId;
       td1.appendChild(anchor);
-      td1.appendChild(document.createTextNode(line.編號 + ' '));
       const bookmarkBtn = document.createElement('button');
-      bookmarkBtn.className = 'bookmarkBtn';
+      bookmarkBtn.className = 'bookmarkBtn number-btn';
       bookmarkBtn.dataset.rowId = originalRowId;
-      bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
+      bookmarkBtn.innerHTML = `${line.編號} <i class="fas fa-bookmark"></i>`;
       td1.appendChild(bookmarkBtn);
 
       // Add the cross-dialect comparison button

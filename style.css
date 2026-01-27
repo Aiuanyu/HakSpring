@@ -361,6 +361,43 @@ a {
   color: var(--iMazinGrace-1) !important;
 }
 
+/* --- New Number Button Style for Issue #198 --- */
+.bookmarkBtn.number-btn {
+  font-family: 'Operator Mono';
+  font-size: 1rem;
+  /* Match the original .no column size */
+  color: var(--main-text-color);
+  /* Default text color */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Space between number and icon */
+  padding: 4px 8px;
+  border-radius: 4px;
+  /* Make it look like a button by default */
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.bookmarkBtn.number-btn:hover {
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+  /* Light highlight on hover */
+  /* color: var(--iMazinGrace-1); */
+}
+
+/* Make the icon slightly smaller or subtler when part of the number button */
+.bookmarkBtn.number-btn i {
+  font-size: 0.8em;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.bookmarkBtn.number-btn:hover i {
+  opacity: 1;
+}
+
 .crossDialectBtn {
   font-size: 1.5em;
 }
@@ -377,6 +414,12 @@ a {
 @media (prefers-color-scheme: dark) {
   .crossDialectBtn i {
     color: #8cb3d9 !important;
+  }
+
+  .bookmarkBtn.number-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
   }
 }
 
