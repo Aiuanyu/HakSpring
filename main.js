@@ -4584,6 +4584,30 @@ function initializeAppUI() {
 
     stopSingleWordLoop();
 
+    // --- Auto Bookmark Mode: Save bookmark when starting single word loop ---
+    const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+    const isCertVocab = g_currentDialectInfo && g_currentDialectInfo.sourceType === 'cert';
+
+    if (autoBookmarkEnabled && isCertVocab && trackData) {
+      const rowId = button.dataset.rowId;
+      if (rowId) {
+        const paddedRowId = padRowIdForLegacy(rowId);
+        const itemIndex = activeCategoryData.indexOf(trackData);
+        if (itemIndex !== -1) {
+          const totalRows = activeCategoryData.length;
+          const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+          saveBookmark(
+            paddedRowId,
+            percentage,
+            g_currentCategory,
+            g_currentDialectInfo.fullLvlName,
+            false, // Not in playback context
+          );
+        }
+      }
+    }
+    // --- End of Auto Bookmark Mode ---
+
     isSingleWordLooping = true;
     singleLoopingAudio = {
       word: wordAudio,
@@ -5164,6 +5188,26 @@ function initializeAppUI() {
     infoModal.addEventListener('click', (event) => {
       if (event.target === infoModal) closeInfoModal();
     });
+
+    // --- Auto Bookmark Settings Logic ---
+    const autoBookmarkToggle = document.getElementById('autoBookmarkToggle');
+    if (autoBookmarkToggle) {
+      // Load setting from localStorage
+      const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode');
+      if (autoBookmarkEnabled === 'true') {
+        autoBookmarkToggle.checked = true;
+      }
+
+      // Save setting when changed
+      autoBookmarkToggle.addEventListener('change', (event) => {
+        localStorage.setItem('autoBookmarkMode', event.target.checked);
+        trackEvent(
+          'toggle',
+          'AutoBookmarkMode',
+          event.target.checked ? 'enabled' : 'disabled',
+        );
+      });
+    }
   }
 
   // --- What's New Modal Logic ---
