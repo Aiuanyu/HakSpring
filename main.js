@@ -357,6 +357,10 @@ let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
 let g_currentSearchResults = [];
 
+// --- Auto Bookmark Mode: WeakMap to track audio event handlers ---
+const audioPlayHandlers = new WeakMap();
+// --- End of Auto Bookmark Mode ---
+
 const LEVEL_TO_EXCEPTION_FILE = {
   基: '基例外音檔',
   初: '初例外音檔',
@@ -3961,6 +3965,20 @@ function initializeAppUI() {
     let tbody;
 
     if (isInitialLoad) {
+      // --- Auto Bookmark Mode: Clean up audio event listeners before clearing ---
+      const existingTable = document.getElementById('category-table');
+      if (existingTable) {
+        const audioElements = existingTable.querySelectorAll('audio.media');
+        audioElements.forEach((audio) => {
+          const handler = audioPlayHandlers.get(audio);
+          if (handler) {
+            audio.removeEventListener('play', handler);
+            audioPlayHandlers.delete(audio);
+          }
+        });
+      }
+      // --- End of Auto Bookmark Mode ---
+
       contentContainer.innerHTML = '';
       document.querySelector('#audioControls')?.remove();
 
@@ -4107,8 +4125,8 @@ function initializeAppUI() {
         }
         audio1.src = wordAudioSrc;
 
-        // --- Auto Bookmark Mode: Add play event listener ---
-        audio1.addEventListener('play', () => {
+        // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
+        const wordPlayHandler = () => {
           const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
           if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
             const itemIndex = activeCategoryData.findIndex(
@@ -4127,7 +4145,17 @@ function initializeAppUI() {
               );
             }
           }
-        });
+        };
+
+        // Remove old handler if exists
+        const oldHandler = audioPlayHandlers.get(audio1);
+        if (oldHandler) {
+          audio1.removeEventListener('play', oldHandler);
+        }
+
+        // Add new handler and store it
+        audio1.addEventListener('play', wordPlayHandler);
+        audioPlayHandlers.set(audio1, wordPlayHandler);
         // --- End of Auto Bookmark Mode ---
 
         td2.appendChild(audio1);
@@ -4172,8 +4200,8 @@ function initializeAppUI() {
           audio2.preload = 'none';
           audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
 
-          // --- Auto Bookmark Mode: Add play event listener ---
-          audio2.addEventListener('play', () => {
+          // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
+          const sentencePlayHandler = () => {
             const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
             if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
               const itemIndex = activeCategoryData.findIndex(
@@ -4192,7 +4220,17 @@ function initializeAppUI() {
                 );
               }
             }
-          });
+          };
+
+          // Remove old handler if exists
+          const oldHandler = audioPlayHandlers.get(audio2);
+          if (oldHandler) {
+            audio2.removeEventListener('play', oldHandler);
+          }
+
+          // Add new handler and store it
+          audio2.addEventListener('play', sentencePlayHandler);
+          audioPlayHandlers.set(audio2, sentencePlayHandler);
           // --- End of Auto Bookmark Mode ---
 
           td3.appendChild(audio2);
