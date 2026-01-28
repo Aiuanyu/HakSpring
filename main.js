@@ -4106,6 +4106,30 @@ function initializeAppUI() {
             'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
         }
         audio1.src = wordAudioSrc;
+
+        // --- Auto Bookmark Mode: Add play event listener ---
+        audio1.addEventListener('play', () => {
+          const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+          if (autoBookmarkEnabled && dialectInfo.sourceType === 'cert') {
+            const itemIndex = activeCategoryData.findIndex(
+              (item) => item.編號 === line.編號
+            );
+            if (itemIndex !== -1) {
+              const paddedRowId = padRowIdForLegacy(originalRowId);
+              const totalRows = activeCategoryData.length;
+              const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+              saveBookmark(
+                paddedRowId,
+                percentage,
+                category,
+                dialectInfo.fullLvlName,
+                false,
+              );
+            }
+          }
+        });
+        // --- End of Auto Bookmark Mode ---
+
         td2.appendChild(audio1);
       }
       td2.appendChild(document.createElement('br'));
@@ -4147,6 +4171,30 @@ function initializeAppUI() {
           audio2.controls = true;
           audio2.preload = 'none';
           audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+
+          // --- Auto Bookmark Mode: Add play event listener ---
+          audio2.addEventListener('play', () => {
+            const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+            if (autoBookmarkEnabled && dialectInfo.sourceType === 'cert') {
+              const itemIndex = activeCategoryData.findIndex(
+                (item) => item.編號 === line.編號
+              );
+              if (itemIndex !== -1) {
+                const paddedRowId = padRowIdForLegacy(originalRowId);
+                const totalRows = activeCategoryData.length;
+                const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+                saveBookmark(
+                  paddedRowId,
+                  percentage,
+                  category,
+                  dialectInfo.fullLvlName,
+                  false,
+                );
+              }
+            }
+          });
+          // --- End of Auto Bookmark Mode ---
+
           td3.appendChild(audio2);
         }
         td3.appendChild(document.createElement('br'));
