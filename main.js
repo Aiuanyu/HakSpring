@@ -4110,7 +4110,7 @@ function initializeAppUI() {
         // --- Auto Bookmark Mode: Add play event listener ---
         audio1.addEventListener('play', () => {
           const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
-          if (autoBookmarkEnabled && dialectInfo.sourceType === 'cert') {
+          if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
             const itemIndex = activeCategoryData.findIndex(
               (item) => item.編號 === line.編號
             );
@@ -4175,7 +4175,7 @@ function initializeAppUI() {
           // --- Auto Bookmark Mode: Add play event listener ---
           audio2.addEventListener('play', () => {
             const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
-            if (autoBookmarkEnabled && dialectInfo.sourceType === 'cert') {
+            if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
               const itemIndex = activeCategoryData.findIndex(
                 (item) => item.編號 === line.編號
               );
@@ -4634,7 +4634,7 @@ function initializeAppUI() {
 
     // --- Auto Bookmark Mode: Save bookmark when starting single word loop ---
     const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
-    const isCertVocab = g_currentDialectInfo && g_currentDialectInfo.sourceType === 'cert';
+    const isCertVocab = g_currentDialectInfo && g_currentDialectInfo.腔 && g_currentDialectInfo.級;
 
     if (autoBookmarkEnabled && isCertVocab && trackData) {
       const rowId = button.dataset.rowId;
