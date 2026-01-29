@@ -357,6 +357,10 @@ let audioAbortController = new AbortController();
 let playbackSessionId = null; // <-- 【新增此行】
 let g_currentSearchResults = [];
 
+// --- Auto Bookmark Mode: WeakMap to track audio event handlers ---
+const audioPlayHandlers = new WeakMap();
+// --- End of Auto Bookmark Mode ---
+
 const LEVEL_TO_EXCEPTION_FILE = {
   基: '基例外音檔',
   初: '初例外音檔',
@@ -3961,6 +3965,20 @@ function initializeAppUI() {
     let tbody;
 
     if (isInitialLoad) {
+      // --- Auto Bookmark Mode: Clean up audio event listeners before clearing ---
+      const existingTable = document.getElementById('category-table');
+      if (existingTable) {
+        const audioElements = existingTable.querySelectorAll('audio.media');
+        audioElements.forEach((audio) => {
+          const handler = audioPlayHandlers.get(audio);
+          if (handler) {
+            audio.removeEventListener('play', handler);
+            audioPlayHandlers.delete(audio);
+          }
+        });
+      }
+      // --- End of Auto Bookmark Mode ---
+
       contentContainer.innerHTML = '';
       document.querySelector('#audioControls')?.remove();
 
@@ -4106,6 +4124,40 @@ function initializeAppUI() {
             'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
         }
         audio1.src = wordAudioSrc;
+
+        // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
+        const wordPlayHandler = () => {
+          const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+          if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
+            const itemIndex = activeCategoryData.findIndex(
+              (item) => item.編號 === line.編號
+            );
+            if (itemIndex !== -1) {
+              const paddedRowId = padRowIdForLegacy(originalRowId);
+              const totalRows = activeCategoryData.length;
+              const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+              saveBookmark(
+                paddedRowId,
+                percentage,
+                category,
+                dialectInfo.fullLvlName,
+                false,
+              );
+            }
+          }
+        };
+
+        // Remove old handler if exists
+        const oldHandler = audioPlayHandlers.get(audio1);
+        if (oldHandler) {
+          audio1.removeEventListener('play', oldHandler);
+        }
+
+        // Add new handler and store it
+        audio1.addEventListener('play', wordPlayHandler);
+        audioPlayHandlers.set(audio1, wordPlayHandler);
+        // --- End of Auto Bookmark Mode ---
+
         td2.appendChild(audio1);
       }
       td2.appendChild(document.createElement('br'));
@@ -4147,6 +4199,40 @@ function initializeAppUI() {
           audio2.controls = true;
           audio2.preload = 'none';
           audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+
+          // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
+          const sentencePlayHandler = () => {
+            const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+            if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
+              const itemIndex = activeCategoryData.findIndex(
+                (item) => item.編號 === line.編號
+              );
+              if (itemIndex !== -1) {
+                const paddedRowId = padRowIdForLegacy(originalRowId);
+                const totalRows = activeCategoryData.length;
+                const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+                saveBookmark(
+                  paddedRowId,
+                  percentage,
+                  category,
+                  dialectInfo.fullLvlName,
+                  false,
+                );
+              }
+            }
+          };
+
+          // Remove old handler if exists
+          const oldHandler = audioPlayHandlers.get(audio2);
+          if (oldHandler) {
+            audio2.removeEventListener('play', oldHandler);
+          }
+
+          // Add new handler and store it
+          audio2.addEventListener('play', sentencePlayHandler);
+          audioPlayHandlers.set(audio2, sentencePlayHandler);
+          // --- End of Auto Bookmark Mode ---
+
           td3.appendChild(audio2);
         }
         td3.appendChild(document.createElement('br'));
@@ -4583,6 +4669,30 @@ function initializeAppUI() {
     // --- End of BUG FIX ---
 
     stopSingleWordLoop();
+
+    // --- Auto Bookmark Mode: Save bookmark when starting single word loop ---
+    const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+    const isCertVocab = g_currentDialectInfo && g_currentDialectInfo.腔 && g_currentDialectInfo.級;
+
+    if (autoBookmarkEnabled && isCertVocab && trackData) {
+      const rowId = button.dataset.rowId;
+      if (rowId) {
+        const paddedRowId = padRowIdForLegacy(rowId);
+        const itemIndex = activeCategoryData.indexOf(trackData);
+        if (itemIndex !== -1) {
+          const totalRows = activeCategoryData.length;
+          const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+          saveBookmark(
+            paddedRowId,
+            percentage,
+            g_currentCategory,
+            g_currentDialectInfo.fullLvlName,
+            false, // Not in playback context
+          );
+        }
+      }
+    }
+    // --- End of Auto Bookmark Mode ---
 
     isSingleWordLooping = true;
     singleLoopingAudio = {
@@ -5164,6 +5274,26 @@ function initializeAppUI() {
     infoModal.addEventListener('click', (event) => {
       if (event.target === infoModal) closeInfoModal();
     });
+
+    // --- Auto Bookmark Settings Logic ---
+    const autoBookmarkToggle = document.getElementById('autoBookmarkToggle');
+    if (autoBookmarkToggle) {
+      // Load setting from localStorage
+      const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode');
+      if (autoBookmarkEnabled === 'true') {
+        autoBookmarkToggle.checked = true;
+      }
+
+      // Save setting when changed
+      autoBookmarkToggle.addEventListener('change', (event) => {
+        localStorage.setItem('autoBookmarkMode', event.target.checked);
+        trackEvent(
+          'toggle',
+          'AutoBookmarkMode',
+          event.target.checked ? 'enabled' : 'disabled',
+        );
+      });
+    }
   }
 
   // --- What's New Modal Logic ---

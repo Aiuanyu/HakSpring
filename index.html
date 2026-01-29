@@ -325,6 +325,22 @@
           </div>
         </div>
         <div class="modal-body" id="info-content"></div>
+        <details id="infoSettingsPanel" class="info-settings-panel">
+          <summary>⚙️ 設定</summary>
+          <div class="settings-content">
+            <div class="setting-item">
+              <div class="setting-info">
+                <label for="autoBookmarkToggle">一律更新書籤模式</label>
+                <span
+                  class="setting-description">播放個別認證詞彙時，也自動記錄進度到書籤<br><small>（否則只有連續播放認證詞彙時，才會自動記錄進度到書籤）</small></span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoBookmarkToggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </details>
         <div class="modal-footer">
           <label for="dontShowInfoModalAgain">
             <input type="checkbox" id="dontShowInfoModalAgain">
