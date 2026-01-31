@@ -125,6 +125,13 @@ async function syncFromCloud() {
   // 競合保護：避免同時執行多個同步
   if (cloudSyncState.isSyncing) return;
 
+  // 清除待處理的 debounce timer，避免同步完成後又重複同步
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = null;
+  }
+  hasPendingSync = false;
+
   cloudSyncState.isSyncing = true;
   updateSyncStatusUI('syncing');
 
@@ -443,6 +450,12 @@ function startPeriodicSync() {
     // 如果頁面可見，才執行同步
     // 雖然 syncFromCloud 有競合保護，但判斷 visibility 可以更省資源
     if (document.visibilityState === 'visible') {
+      // 清除待處理的 debounce timer，避免重複同步
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+      hasPendingSync = false;
       console.log('[CloudSync] 執行背景自動同步');
       syncFromCloud();
     }
