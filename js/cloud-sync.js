@@ -34,6 +34,7 @@ async function initCloudSync() {
       cloudSyncState.isLoggedIn = true;
       cloudSyncState.user = session.user;
       updateSyncUI(true, session.user);
+      startPeriodicSync(); // 啟動背景同步排程
 
       // 登入後自動從雲端拉取資料
       if (event === 'SIGNED_IN') {
@@ -44,6 +45,7 @@ async function initCloudSync() {
       cloudSyncState.isLoggedIn = false;
       cloudSyncState.user = null;
       updateSyncUI(false, null);
+      stopPeriodicSync(); // 停止背景同步排程
     }
   });
 
@@ -55,6 +57,7 @@ async function initCloudSync() {
     cloudSyncState.isLoggedIn = true;
     cloudSyncState.user = session.user;
     updateSyncUI(true, session.user);
+    startPeriodicSync(); // 啟動背景同步排程
 
     // 【修正】頁面載入時如果已登入，也要同步
     console.log('[CloudSync] 觸發 INITIAL_SESSION 同步');
@@ -366,80 +369,97 @@ function updateSyncStatusUI(status) {
 }
 
 /**
- * 觸發書籤變更後的雲端同步（節流）
- * 使用 throttle 機制確保播放期間至少每 30 秒上傳一次
- * 同時在停止操作後也會上傳最終狀態
+ * 觸發書籤變更後的雲端同步（防抖）
+ * 使用較長的 debounce 時間以減少 API 呼叫次數
+ * 改為呼叫 syncFromCloud (Pull-Merge-Push) 以確保資料安全
  */
-let syncThrottleTimer = null;
-let syncTrailingTimer = null;
+let syncDebounceTimer = null;
 let hasPendingSync = false;
-let lastSyncTime = 0;
-const SYNC_INTERVAL = 30000; // 30 秒
 
 function triggerCloudSync() {
   if (!cloudSyncState.isLoggedIn) return;
 
   hasPendingSync = true;
-  const now = Date.now();
 
-  // 清除尾隨計時器（因為有新的變更進來）
-  if (syncTrailingTimer) {
-    clearTimeout(syncTrailingTimer);
-    syncTrailingTimer = null;
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
   }
 
-  // 如果距離上次同步已超過 30 秒，立即同步
-  if (now - lastSyncTime >= SYNC_INTERVAL) {
-    // 清除節流計時器（如果有的話）
-    if (syncThrottleTimer) {
-      clearTimeout(syncThrottleTimer);
-      syncThrottleTimer = null;
-    }
-
-    lastSyncTime = now;
-    syncToCloud();
+  syncDebounceTimer = setTimeout(() => {
+    // 改為呼叫 syncFromCloud，確保先拉取最新資料再合併上傳
+    // 避免直接覆蓋雲端可能存在的更新
+    syncFromCloud();
     hasPendingSync = false;
-  } else if (!syncThrottleTimer) {
-    // 還沒到 30 秒，且沒有計時器在跑，設置計時器
-    const remainingTime = SYNC_INTERVAL - (now - lastSyncTime);
-    syncThrottleTimer = setTimeout(() => {
-      syncThrottleTimer = null;
-      lastSyncTime = Date.now();
-      syncToCloud();
-      hasPendingSync = false;
-    }, remainingTime);
-  }
+  }, 30000); // 30 秒後同步，減少 Supabase API 呼叫次數
+}
 
-  // 設置尾隨計時器：確保最後一次變更後也會上傳
-  // 這樣停止播放後的最終狀態也能被保存
-  syncTrailingTimer = setTimeout(() => {
-    syncTrailingTimer = null;
-    if (hasPendingSync) {
-      lastSyncTime = Date.now();
-      syncToCloud();
-      hasPendingSync = false;
+/**
+ * 週期性背景同步計時器
+ */
+let periodicSyncTimer = null;
+const PERIODIC_SYNC_INTERVAL = 60000; // 60 秒
+
+/**
+ * 啟動週期性背景同步
+ * 每 60 秒執行一次 syncFromCloud
+ */
+function startPeriodicSync() {
+  stopPeriodicSync(); // 確保不會重複啟動
+
+  if (!cloudSyncState.isLoggedIn) return;
+
+  console.log('[CloudSync] 啟動背景同步排程');
+
+  periodicSyncTimer = setInterval(() => {
+    // 如果頁面可見，才執行同步
+    // 雖然 syncFromCloud 有競合保護，但判斷 visibility 可以更省資源
+    if (document.visibilityState === 'visible') {
+      console.log('[CloudSync] 執行背景自動同步');
+      syncFromCloud();
     }
-  }, SYNC_INTERVAL);
+  }, PERIODIC_SYNC_INTERVAL);
+}
+
+/**
+ * 停止週期性背景同步
+ */
+function stopPeriodicSync() {
+  if (periodicSyncTimer) {
+    clearInterval(periodicSyncTimer);
+    periodicSyncTimer = null;
+    console.log('[CloudSync] 停止背景同步排程');
+  }
 }
 
 /**
  * 頁面離開時強制同步（確保資料不遺失）
- * 注意：只使用 visibilitychange，因為 beforeunload 中的非同步操作不可靠
+ * 同時管理背景排程的暫停與恢復
  */
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && hasPendingSync) {
-      if (syncThrottleTimer) {
-        clearTimeout(syncThrottleTimer);
-        syncThrottleTimer = null;
+    if (document.visibilityState === 'hidden') {
+      // 頁面隱藏時
+      if (hasPendingSync) {
+        if (syncDebounceTimer) {
+          clearTimeout(syncDebounceTimer);
+          syncDebounceTimer = null;
+        }
+        syncToCloud(); // 離線前若是 pending，至少先 push (這裡用 syncToCloud 避免拉取延遲)
+        // 註：若想要更安全也可改 syncFromCloud，但 hidden 時頁面即將凍結，race condition 風險視情況而定
+        // 考慮到 hidden 後很快會凍結，這裡先保守使用 syncToCloud 確保至少有上傳
+        showSyncError('離線自動上傳...'); // 僅供 debug
+        hasPendingSync = false;
       }
-      if (syncTrailingTimer) {
-        clearTimeout(syncTrailingTimer);
-        syncTrailingTimer = null;
+      // 暫停背景排程，省電
+      stopPeriodicSync();
+    } else {
+      // 頁面恢復顯示時
+      startPeriodicSync(); // 重啟背景排程
+      // 立即同步一次，確保獲取離線期間其他裝置的變更
+      if (cloudSyncState.isLoggedIn) {
+        console.log('[CloudSync] 頁面恢復顯示，立即同步');
+        syncFromCloud();
       }
-      lastSyncTime = Date.now();
-      syncToCloud();
-      hasPendingSync = false;
     }
   });
 }
