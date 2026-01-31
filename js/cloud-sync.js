@@ -39,8 +39,8 @@ async function initCloudSync() {
       startPeriodicSync(); // 啟動背景同步排程
 
       // 登入後自動從雲端拉取資料
-      if (event === 'SIGNED_IN') {
-        console.log('[CloudSync] 觸發 SIGNED_IN 同步');
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        console.log(`[CloudSync] 觸發 ${event} 同步`);
         await syncFromCloud();
       }
     } else {
@@ -183,7 +183,8 @@ async function syncFromCloud() {
       // 簡單比對 preferences (目前只有一個欄位)
       const prefsChanged =
         cloudPrefs.romanizerJoiningMode &&
-        localPrefs.romanizerJoiningMode !== cloudPrefs.romanizerJoiningMode;
+        localPrefs.romanizerJoiningMode !==
+          (cloudPrefs.romanizerJoiningMode || 'none');
 
       if (bookmarksChanged || prefsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
@@ -458,7 +459,7 @@ function stopPeriodicSync() {
  * 同時管理背景排程的暫停與恢復
  */
 function setupPageUnloadSync() {
-  document.addEventListener('visibilitychange', () => {
+  document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') {
       // 頁面隱藏時
       if (hasPendingSync) {
@@ -468,7 +469,7 @@ function setupPageUnloadSync() {
         }
         // [修正] 改為 syncFromCloud (Pull-Merge-Push) 以確保安全
         // 雖然比直接 syncToCloud 慢，但避免覆蓋其他裝置更新
-        syncFromCloud();
+        await syncFromCloud();
         hasPendingSync = false;
       }
       // 暫停背景排程，省電
