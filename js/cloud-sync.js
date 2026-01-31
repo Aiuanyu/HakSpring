@@ -99,6 +99,17 @@ async function signOut() {
   const client = getSupabaseClient();
   if (!client) return;
 
+  // 清除所有待處理的同步計時器，避免登出後仍執行同步
+  if (syncThrottleTimer) {
+    clearTimeout(syncThrottleTimer);
+    syncThrottleTimer = null;
+  }
+  if (syncTrailingTimer) {
+    clearTimeout(syncTrailingTimer);
+    syncTrailingTimer = null;
+  }
+  hasPendingSync = false;
+
   try {
     const { error } = await client.auth.signOut();
     if (error) {
@@ -154,14 +165,10 @@ async function syncFromCloud() {
 
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
 
-      // 合併偏好設定
-      if (data.preferences) {
-        if (data.preferences.romanizerJoiningMode) {
-          localStorage.setItem(
-            'romanizerJoiningMode',
-            data.preferences.romanizerJoiningMode,
-          );
-        }
+      // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
+      const cloudRomanizerMode = data.preferences?.romanizerJoiningMode;
+      if (cloudRomanizerMode !== undefined && cloudRomanizerMode !== null) {
+        localStorage.setItem('romanizerJoiningMode', cloudRomanizerMode);
       }
 
       // 上傳合併後的資料
@@ -425,6 +432,7 @@ function triggerCloudSync() {
 /**
  * 頁面離開時強制同步（確保資料不遺失）
  * 注意：只使用 visibilitychange，因為 beforeunload 中的非同步操作不可靠
+ * 使用 syncFromCloud 以遵循 Pull-Merge-Push 機制，避免覆蓋其他裝置的更新
  */
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', () => {
@@ -438,7 +446,7 @@ function setupPageUnloadSync() {
         syncTrailingTimer = null;
       }
       lastSyncTime = Date.now();
-      syncToCloud();
+      syncFromCloud();
       hasPendingSync = false;
     }
   });
