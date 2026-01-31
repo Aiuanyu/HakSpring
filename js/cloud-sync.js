@@ -106,9 +106,6 @@ async function signOut() {
 
 /**
  * 從雲端拉取資料並合併
- */
-/**
- * 從雲端拉取資料並合併
  * 實作 Pull-Merge-Push 流程
  */
 async function syncFromCloud() {
@@ -181,10 +178,10 @@ async function syncFromCloud() {
       const bookmarksChanged =
         JSON.stringify(mergedBookmarks) !== JSON.stringify(cloudBookmarks);
       // 簡單比對 preferences (目前只有一個欄位)
+      // [修正 Round 3] 移除 cloudPrefs.romanizerJoiningMode && 檢查，避免雲端為空時無法上傳本地變更
       const prefsChanged =
-        cloudPrefs.romanizerJoiningMode &&
         localPrefs.romanizerJoiningMode !==
-          (cloudPrefs.romanizerJoiningMode || 'none');
+        (cloudPrefs.romanizerJoiningMode || 'none');
 
       if (bookmarksChanged || prefsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
@@ -476,12 +473,13 @@ function setupPageUnloadSync() {
       stopPeriodicSync();
     } else {
       // 頁面恢復顯示時
-      startPeriodicSync(); // 重啟背景排程
-      // 立即同步一次，確保獲取離線期間其他裝置的變更
+
+      // [修正 Round 3] 先等待同步完成，再啟動排程，避免 race condition
       if (cloudSyncState.isLoggedIn) {
         console.log('[CloudSync] 頁面恢復顯示，立即同步');
-        syncFromCloud();
+        await syncFromCloud();
       }
+      startPeriodicSync(); // 重啟背景排程
     }
   });
 }
