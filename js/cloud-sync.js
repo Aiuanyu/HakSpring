@@ -92,6 +92,17 @@ async function signOut() {
   const client = getSupabaseClient();
   if (!client) return;
 
+  // 清除所有待處理的同步計時器，避免登出後仍執行同步
+  if (syncThrottleTimer) {
+    clearTimeout(syncThrottleTimer);
+    syncThrottleTimer = null;
+  }
+  if (syncTrailingTimer) {
+    clearTimeout(syncTrailingTimer);
+    syncTrailingTimer = null;
+  }
+  hasPendingSync = false;
+
   try {
     const { error } = await client.auth.signOut();
     if (error) {
@@ -166,11 +177,10 @@ async function syncFromCloud() {
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
 
-      if (cloudPrefs.romanizerJoiningMode) {
-        localStorage.setItem(
-          'romanizerJoiningMode',
-          cloudPrefs.romanizerJoiningMode,
-        );
+      // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
+      // 使用 !== undefined && !== null 確保 falsy 值也能正確處理
+      if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
+        localStorage.setItem('romanizerJoiningMode', cloudPrefs.romanizerJoiningMode);
       }
 
       // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
@@ -454,6 +464,7 @@ function stopPeriodicSync() {
 /**
  * 頁面離開時強制同步（確保資料不遺失）
  * 同時管理背景排程的暫停與恢復
+ * 使用 syncFromCloud 以遵循 Pull-Merge-Push 機制，避免覆蓋其他裝置的更新
  */
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', async () => {
