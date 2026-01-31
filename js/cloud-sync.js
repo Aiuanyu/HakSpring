@@ -4,6 +4,8 @@
  */
 
 const BOOKMARK_LIMIT = 10;
+const SYNC_DEBOUNCE_MS = 30000; // 30 秒
+const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
 
 // 同步狀態
 let cloudSyncState = {
@@ -34,32 +36,23 @@ async function initCloudSync() {
       cloudSyncState.isLoggedIn = true;
       cloudSyncState.user = session.user;
       updateSyncUI(true, session.user);
+      startPeriodicSync(); // 啟動背景同步排程
 
       // 登入後自動從雲端拉取資料
-      if (event === 'SIGNED_IN') {
-        console.log('[CloudSync] 觸發 SIGNED_IN 同步');
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        console.log(`[CloudSync] 觸發 ${event} 同步`);
         await syncFromCloud();
       }
     } else {
       cloudSyncState.isLoggedIn = false;
       cloudSyncState.user = null;
       updateSyncUI(false, null);
+      stopPeriodicSync(); // 停止背景同步排程
     }
   });
 
   // 檢查現有 session
-  const {
-    data: { session },
-  } = await client.auth.getSession();
-  if (session?.user) {
-    cloudSyncState.isLoggedIn = true;
-    cloudSyncState.user = session.user;
-    updateSyncUI(true, session.user);
-
-    // 【修正】頁面載入時如果已登入，也要同步
-    console.log('[CloudSync] 觸發 INITIAL_SESSION 同步');
-    await syncFromCloud();
-  }
+  // 檢查現有 session (移除：已由 onAuthStateChange 的 INITIAL_SESSION 處理)
 }
 
 /**
@@ -100,15 +93,14 @@ async function signOut() {
   if (!client) return;
 
   // 清除所有待處理的同步計時器，避免登出後仍執行同步
-  if (syncThrottleTimer) {
-    clearTimeout(syncThrottleTimer);
-    syncThrottleTimer = null;
-  }
-  if (syncTrailingTimer) {
-    clearTimeout(syncTrailingTimer);
-    syncTrailingTimer = null;
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = null;
   }
   hasPendingSync = false;
+
+  // 停止週期性背景同步
+  stopPeriodicSync();
 
   try {
     const { error } = await client.auth.signOut();
@@ -124,6 +116,7 @@ async function signOut() {
 
 /**
  * 從雲端拉取資料並合併
+ * 實作 Pull-Merge-Push 流程
  */
 async function syncFromCloud() {
   const client = getSupabaseClient();
@@ -144,37 +137,70 @@ async function syncFromCloud() {
       .maybeSingle();
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Supabase 查詢超時')), 10000),
+      setTimeout(() => reject(new Error('SupabaseTimeout')), 10000),
     );
 
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows found
-      console.error('[CloudSync] Supabase 查詢錯誤:', error);
-      throw error;
+    // 明確捕捉並處理錯誤
+    let data = null;
+    try {
+      const result = await Promise.race([queryPromise, timeoutPromise]);
+      if (result.error && result.error.code !== 'PGRST116') {
+        throw result.error;
+      }
+      data = result.data;
+    } catch (err) {
+      if (err.message === 'SupabaseTimeout') {
+        console.warn('[CloudSync] 查詢超時，本次跳過');
+        // 超時不視為嚴重錯誤，僅跳過
+        return;
+      }
+      throw err;
     }
 
     if (data) {
-      // 合併書籤
+      // 1. 準備資料
       const localBookmarks = JSON.parse(
         localStorage.getItem('hakkaBookmarks') || '[]',
       );
       const cloudBookmarks = data.bookmarks || [];
+
+      const localPrefs = {
+        romanizerJoiningMode:
+          localStorage.getItem('romanizerJoiningMode') || 'none',
+      };
+      const cloudPrefs = data.preferences || {};
+
+      // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
 
+      // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
 
       // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
-      const cloudRomanizerMode = data.preferences?.romanizerJoiningMode;
-      if (cloudRomanizerMode !== undefined && cloudRomanizerMode !== null) {
-        localStorage.setItem('romanizerJoiningMode', cloudRomanizerMode);
+      // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
+      if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
+        localStorage.setItem('romanizerJoiningMode', cloudPrefs.romanizerJoiningMode);
       }
 
-      // 上傳合併後的資料
-      await syncToCloud();
+      // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
+      // 比對 merged vs cloud
+      const bookmarksChanged =
+        JSON.stringify(mergedBookmarks) !== JSON.stringify(cloudBookmarks);
+      // 簡單比對 preferences (目前只有一個欄位)
+      // [修正 Round 3] 移除 cloudPrefs.romanizerJoiningMode && 檢查，避免雲端為空時無法上傳本地變更
+      const prefsChanged =
+        localPrefs.romanizerJoiningMode !==
+        (cloudPrefs.romanizerJoiningMode || 'none');
+
+      if (bookmarksChanged || prefsChanged) {
+        console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
+        await syncToCloud();
+      } else {
+        console.log('[CloudSync] 資料一致，跳過上傳');
+      }
     } else {
       // 雲端沒有資料，上傳本地資料
+      console.log('[CloudSync] 雲端無資料，執行初始化上傳');
       await syncToCloud();
     }
 
@@ -373,81 +399,97 @@ function updateSyncStatusUI(status) {
 }
 
 /**
- * 觸發書籤變更後的雲端同步（節流）
- * 使用 throttle 機制確保播放期間至少每 30 秒上傳一次
- * 同時在停止操作後也會上傳最終狀態
+ * 觸發書籤變更後的雲端同步（防抖）
+ * 使用較長的 debounce 時間以減少 API 呼叫次數
+ * 改為呼叫 syncFromCloud (Pull-Merge-Push) 以確保資料安全
  */
-let syncThrottleTimer = null;
-let syncTrailingTimer = null;
+let syncDebounceTimer = null;
 let hasPendingSync = false;
-let lastSyncTime = 0;
-const SYNC_INTERVAL = 30000; // 30 秒
 
 function triggerCloudSync() {
   if (!cloudSyncState.isLoggedIn) return;
 
   hasPendingSync = true;
-  const now = Date.now();
 
-  // 清除尾隨計時器（因為有新的變更進來）
-  if (syncTrailingTimer) {
-    clearTimeout(syncTrailingTimer);
-    syncTrailingTimer = null;
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
   }
 
-  // 如果距離上次同步已超過 30 秒，立即同步
-  if (now - lastSyncTime >= SYNC_INTERVAL) {
-    // 清除節流計時器（如果有的話）
-    if (syncThrottleTimer) {
-      clearTimeout(syncThrottleTimer);
-      syncThrottleTimer = null;
-    }
-
-    lastSyncTime = now;
-    syncToCloud();
+  syncDebounceTimer = setTimeout(() => {
+    // 改為呼叫 syncFromCloud，確保先拉取最新資料再合併上傳
+    // 避免直接覆蓋雲端可能存在的更新
+    syncFromCloud();
     hasPendingSync = false;
-  } else if (!syncThrottleTimer) {
-    // 還沒到 30 秒，且沒有計時器在跑，設置計時器
-    const remainingTime = SYNC_INTERVAL - (now - lastSyncTime);
-    syncThrottleTimer = setTimeout(() => {
-      syncThrottleTimer = null;
-      lastSyncTime = Date.now();
-      syncToCloud();
-      hasPendingSync = false;
-    }, remainingTime);
-  }
+  }, SYNC_DEBOUNCE_MS); // 使用常數
+}
 
-  // 設置尾隨計時器：確保最後一次變更後也會上傳
-  // 這樣停止播放後的最終狀態也能被保存
-  syncTrailingTimer = setTimeout(() => {
-    syncTrailingTimer = null;
-    if (hasPendingSync) {
-      lastSyncTime = Date.now();
-      syncToCloud();
-      hasPendingSync = false;
+/**
+ * 週期性背景同步計時器
+ */
+let periodicSyncTimer = null;
+
+/**
+ * 啟動週期性背景同步
+ * 每 PERIODIC_SYNC_INTERVAL_MS 秒執行一次 syncFromCloud
+ */
+function startPeriodicSync() {
+  stopPeriodicSync(); // 確保不會重複啟動
+
+  if (!cloudSyncState.isLoggedIn) return;
+
+  console.log('[CloudSync] 啟動背景同步排程');
+
+  periodicSyncTimer = setInterval(() => {
+    // 如果頁面可見，才執行同步
+    // 雖然 syncFromCloud 有競合保護，但判斷 visibility 可以更省資源
+    if (document.visibilityState === 'visible') {
+      console.log('[CloudSync] 執行背景自動同步');
+      syncFromCloud();
     }
-  }, SYNC_INTERVAL);
+  }, PERIODIC_SYNC_INTERVAL_MS);
+}
+
+/**
+ * 停止週期性背景同步
+ */
+function stopPeriodicSync() {
+  if (periodicSyncTimer) {
+    clearInterval(periodicSyncTimer);
+    periodicSyncTimer = null;
+    console.log('[CloudSync] 停止背景同步排程');
+  }
 }
 
 /**
  * 頁面離開時強制同步（確保資料不遺失）
- * 注意：只使用 visibilitychange，因為 beforeunload 中的非同步操作不可靠
+ * 同時管理背景排程的暫停與恢復
  * 使用 syncFromCloud 以遵循 Pull-Merge-Push 機制，避免覆蓋其他裝置的更新
  */
 function setupPageUnloadSync() {
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && hasPendingSync) {
-      if (syncThrottleTimer) {
-        clearTimeout(syncThrottleTimer);
-        syncThrottleTimer = null;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'hidden') {
+      // 頁面隱藏時
+      if (hasPendingSync) {
+        if (syncDebounceTimer) {
+          clearTimeout(syncDebounceTimer);
+          syncDebounceTimer = null;
+        }
+        // [修正] 改為 syncFromCloud (Pull-Merge-Push) 以確保安全
+        // 雖然比直接 syncToCloud 慢，但避免覆蓋其他裝置更新
+        await syncFromCloud();
+        hasPendingSync = false;
       }
-      if (syncTrailingTimer) {
-        clearTimeout(syncTrailingTimer);
-        syncTrailingTimer = null;
+      // 暫停背景排程，省電
+      stopPeriodicSync();
+    } else {
+      // 頁面恢復顯示時
+
+      // [修正 Round 3] 先等待同步完成，再啟動排程，避免 race condition
+      if (cloudSyncState.isLoggedIn) {
+        console.log('[CloudSync] 頁面恢復顯示，立即同步');
+        await syncFromCloud();
       }
-      lastSyncTime = Date.now();
-      syncFromCloud();
-      hasPendingSync = false;
+      startPeriodicSync(); // 重啟背景排程
     }
   });
 }
