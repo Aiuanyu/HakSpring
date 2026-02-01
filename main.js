@@ -2234,7 +2234,37 @@ function initializeAppUI() {
           (bm) => bm.tableName + '||' + bm.cat === previousValue,
         );
         if (selectedBookmark && progressDetailsSpan) {
-          progressDetailsSpan.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+          // [Fix] Reconstruct the link instead of setting plain text
+          let baseURL = '';
+          if (window.location.protocol === 'file:') {
+            baseURL = window.location.href.substring(
+              0,
+              window.location.href.lastIndexOf('/') + 1,
+            );
+          } else {
+            let path = window.location.pathname;
+            baseURL =
+              window.location.origin +
+              path.substring(0, path.lastIndexOf('/') + 1);
+            if (!baseURL.endsWith('/')) {
+              baseURL += '/';
+            }
+          }
+
+          const dialectLevelCodes = extractDialectLevelCodes(
+            selectedBookmark.tableName,
+          );
+          if (dialectLevelCodes) {
+            const shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${selectedBookmark.cat}&row=${selectedBookmark.rowId}`;
+            const linkElement = document.createElement('a');
+            linkElement.href = shareURL;
+            linkElement.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+            linkElement.style.marginLeft = '5px';
+            progressDetailsSpan.innerHTML = '';
+            progressDetailsSpan.appendChild(linkElement);
+          } else {
+            progressDetailsSpan.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+          }
         }
       } else {
         progressDropdown.selectedIndex = 0;
@@ -4127,15 +4157,18 @@ function initializeAppUI() {
 
         // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
         const wordPlayHandler = () => {
-          const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+          const autoBookmarkEnabled =
+            localStorage.getItem('autoBookmarkMode') === 'true';
           if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
             const itemIndex = activeCategoryData.findIndex(
-              (item) => item.編號 === line.編號
+              (item) => item.編號 === line.編號,
             );
             if (itemIndex !== -1) {
               const paddedRowId = padRowIdForLegacy(originalRowId);
               const totalRows = activeCategoryData.length;
-              const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+              const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(
+                2,
+              );
               saveBookmark(
                 paddedRowId,
                 percentage,
@@ -4202,15 +4235,19 @@ function initializeAppUI() {
 
           // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
           const sentencePlayHandler = () => {
-            const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
+            const autoBookmarkEnabled =
+              localStorage.getItem('autoBookmarkMode') === 'true';
             if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
               const itemIndex = activeCategoryData.findIndex(
-                (item) => item.編號 === line.編號
+                (item) => item.編號 === line.編號,
               );
               if (itemIndex !== -1) {
                 const paddedRowId = padRowIdForLegacy(originalRowId);
                 const totalRows = activeCategoryData.length;
-                const percentage = (((itemIndex + 1) / totalRows) * 100).toFixed(2);
+                const percentage = (
+                  ((itemIndex + 1) / totalRows) *
+                  100
+                ).toFixed(2);
                 saveBookmark(
                   paddedRowId,
                   percentage,
@@ -4671,8 +4708,12 @@ function initializeAppUI() {
     stopSingleWordLoop();
 
     // --- Auto Bookmark Mode: Save bookmark when starting single word loop ---
-    const autoBookmarkEnabled = localStorage.getItem('autoBookmarkMode') === 'true';
-    const isCertVocab = g_currentDialectInfo && g_currentDialectInfo.腔 && g_currentDialectInfo.級;
+    const autoBookmarkEnabled =
+      localStorage.getItem('autoBookmarkMode') === 'true';
+    const isCertVocab =
+      g_currentDialectInfo &&
+      g_currentDialectInfo.腔 &&
+      g_currentDialectInfo.級;
 
     if (autoBookmarkEnabled && isCertVocab && trackData) {
       const rowId = button.dataset.rowId;
