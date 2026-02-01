@@ -6,6 +6,7 @@
 const BOOKMARK_LIMIT = 10;
 const SYNC_DEBOUNCE_MS = 30000; // 30 秒
 const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
+const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
 
 // 同步狀態
 let cloudSyncState = {
@@ -50,9 +51,6 @@ async function initCloudSync() {
       stopPeriodicSync(); // 停止背景同步排程
     }
   });
-
-  // 檢查現有 session
-  // 檢查現有 session (移除：已由 onAuthStateChange 的 INITIAL_SESSION 處理)
 }
 
 /**
@@ -144,7 +142,7 @@ async function syncFromCloud() {
       .maybeSingle();
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('SupabaseTimeout')), 10000),
+      setTimeout(() => reject(new Error('SupabaseTimeout')), SUPABASE_QUERY_TIMEOUT_MS),
     );
 
     // 明確捕捉並處理錯誤
