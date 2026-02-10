@@ -3727,6 +3727,72 @@ function initializeAppUI() {
     }
   }
 
+  const DEFAULT_CATEGORIES = [
+    '人體與醫療',
+    '心理活動與感覺',
+    '代詞',
+    '外在活動與動作',
+    '生物',
+    '自然與景觀',
+    '事物狀態與變化',
+    '居家生活',
+    '抽象概念與形容',
+    '法律、政治與軍事',
+    '社會關係與行為',
+    '時空與情狀副詞',
+    '特殊詞類',
+    '通訊、建設與交通',
+    '歲時祭儀、習俗與宗教',
+    '數詞量詞',
+    '職業與經濟',
+    '藝文與教育',
+  ];
+
+  function getOfficialCategories(data) {
+    const cats = new Set();
+    data.forEach((item) => {
+      if (item.分類) cats.add(item.分類);
+    });
+    return Array.from(cats).sort((a, b) => {
+      const matchA = a.match(/\d+/);
+      const matchB = b.match(/\d+/);
+      const numA = matchA ? parseInt(matchA[0], 10) : 0;
+      const numB = matchB ? parseInt(matchB[0], 10) : 0;
+      return numA - numB;
+    });
+  }
+
+  function formatCategoryLabel(catStr) {
+    const match = catStr.match(/^(\d+)(.*)$/);
+    if (match) {
+      return `${match[1]}. ${match[2]}`;
+    }
+    return catStr;
+  }
+
+  function renderCategoryPanel(categories, isOfficial) {
+    const catPanel = document.getElementById('cat-panel');
+    if (!catPanel) return;
+
+    catPanel.innerHTML = '再擇類別：\n          ';
+    categories.forEach((cat) => {
+      const label = document.createElement('label');
+      label.className = 'radioItem';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'category';
+      radio.className = 'radioButton';
+      radio.value = cat;
+
+      const labelText = isOfficial ? formatCategoryLabel(cat) : cat;
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode('\n            ' + labelText + '\n          '));
+      catPanel.appendChild(label);
+      catPanel.appendChild(document.createTextNode('\n          '));
+    });
+  }
+
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
@@ -3783,6 +3849,19 @@ function initializeAppUI() {
       updateSearchDialect(dialectInfo.腔名);
     }
 
+    // --- NEW: Dynamic Category Panel Rendering ---
+    const officialOrderToggle = document.getElementById('officialOrderToggle');
+    const isOfficial =
+      officialOrderToggle && officialOrderToggle.checked;
+
+    if (isOfficial) {
+      const cats = getOfficialCategories(content.content);
+      renderCategoryPanel(cats, true);
+    } else {
+      renderCategoryPanel(DEFAULT_CATEGORIES, false);
+    }
+    // --- End of NEW logic ---
+
     // --- 在底下加入這一行，確保 categoryList 總是更新的 ---
     categoryList = Array.from(
       document.querySelectorAll('input[name="category"]'),
@@ -3790,14 +3869,6 @@ function initializeAppUI() {
 
     var contentContainer = document.getElementById('generated');
     contentContainer.innerHTML = '';
-
-    const catPanel = document.getElementById('cat-panel');
-    if (catPanel) {
-      const catPanelClone = catPanel.cloneNode(true);
-      catPanel.parentNode.replaceChild(catPanelClone, catPanel);
-    } else {
-      console.error('Could not find #cat-panel to clone.');
-    }
 
     var radios = document.querySelectorAll('input[name="category"]');
     const radioLabels = document.querySelectorAll('.radioItem');
@@ -3833,9 +3904,24 @@ function initializeAppUI() {
     });
 
     if (initialCategory) {
-      const targetRadio = document.querySelector(
+      // Improved matching: try exact match first, then partial match
+      let targetRadio = document.querySelector(
         `input[name="category"][value="${initialCategory}"]`,
       );
+      if (!targetRadio) {
+        const allRadios = document.querySelectorAll('input[name="category"]');
+        for (const r of allRadios) {
+          if (
+            r.value === initialCategory ||
+            r.value.endsWith(initialCategory) ||
+            initialCategory.endsWith(r.value)
+          ) {
+            targetRadio = r;
+            break;
+          }
+        }
+      }
+
       if (targetRadio) {
         targetRadio.checked = true;
         const targetLabel = targetRadio.closest('.radioItem');
@@ -5315,6 +5401,43 @@ function initializeAppUI() {
     infoModal.addEventListener('click', (event) => {
       if (event.target === infoModal) closeInfoModal();
     });
+
+    // --- Official Order Toggle Logic ---
+    const officialOrderToggle = document.getElementById('officialOrderToggle');
+    if (officialOrderToggle) {
+      const officialOrderMode =
+        localStorage.getItem('officialOrderMode') === 'true';
+      officialOrderToggle.checked = officialOrderMode;
+
+      officialOrderToggle.addEventListener('change', (event) => {
+        const isEnabled = event.target.checked;
+        localStorage.setItem('officialOrderMode', isEnabled);
+        trackEvent(
+          'toggle',
+          'OfficialOrderMode',
+          isEnabled ? 'enabled' : 'disabled',
+        );
+
+        // If a level is currently selected, refresh the category panel
+        const activeSpan = document.querySelector('.active-dialect-level');
+        if (activeSpan) {
+          const varName = activeSpan.dataset.varname;
+          const dataObject = window[varName];
+          if (dataObject) {
+            // Find currently selected category name
+            const selectedRadio = document.querySelector(
+              'input[name="category"]:checked',
+            );
+            // Extract the name part without numbers if any
+            const currentCat = selectedRadio
+              ? selectedRadio.value.replace(/^\d+/, '')
+              : null;
+
+            generate(dataObject, currentCat);
+          }
+        }
+      });
+    }
 
     // --- Auto Bookmark Settings Logic ---
     const autoBookmarkToggle = document.getElementById('autoBookmarkToggle');
