@@ -3765,7 +3765,7 @@ function initializeAppUI() {
   function formatCategoryLabel(catStr) {
     const match = catStr.match(/^(\d+)(.*)$/);
     if (match) {
-      return `${match[1]}. ${match[2]}`;
+      return `${parseInt(match[1], 10)}. ${match[2]}`;
     }
     return catStr;
   }
@@ -3799,7 +3799,30 @@ function initializeAppUI() {
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
 
+    const 腔 = content.name.substring(0, 1);
+    const 級 = content.name.substring(1);
+    const dialectInfo = getDialectInfo(腔, 級);
+
+    if (dialectInfo.腔名) {
+      currentActiveMainDialectName = dialectInfo.腔名;
+      updateSearchDialect(dialectInfo.腔名);
+    }
+
+    // --- NEW: Dynamic Category Panel Rendering ---
+    const officialOrderToggle = document.getElementById('officialOrderToggle');
+    const isOfficial =
+      officialOrderToggle && officialOrderToggle.checked;
+
+    if (isOfficial) {
+      const cats = getOfficialCategories(content.content);
+      renderCategoryPanel(cats, true);
+    } else {
+      renderCategoryPanel(DEFAULT_CATEGORIES, false);
+    }
+    // --- End of NEW logic ---
+
     // --- BUG FIX: Sort level data according to UI category order for correct progress calculation ---
+    // Moved here after panel rendering to ensure we use the current UI order.
     const categoryOrder = Array.from(
       document.querySelectorAll('#cat-panel input[name="category"]'),
     ).map((radio) => radio.value);
@@ -3840,27 +3863,6 @@ function initializeAppUI() {
       if (progressDetailsSpan) progressDetailsSpan.textContent = '';
     }
 
-    const 腔 = content.name.substring(0, 1);
-    const 級 = content.name.substring(1);
-    const dialectInfo = getDialectInfo(腔, 級);
-
-    if (dialectInfo.腔名) {
-      currentActiveMainDialectName = dialectInfo.腔名;
-      updateSearchDialect(dialectInfo.腔名);
-    }
-
-    // --- NEW: Dynamic Category Panel Rendering ---
-    const officialOrderToggle = document.getElementById('officialOrderToggle');
-    const isOfficial =
-      officialOrderToggle && officialOrderToggle.checked;
-
-    if (isOfficial) {
-      const cats = getOfficialCategories(content.content);
-      renderCategoryPanel(cats, true);
-    } else {
-      renderCategoryPanel(DEFAULT_CATEGORIES, false);
-    }
-    // --- End of NEW logic ---
 
     // --- 在底下加入這一行，確保 categoryList 總是更新的 ---
     categoryList = Array.from(
