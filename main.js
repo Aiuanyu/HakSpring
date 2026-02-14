@@ -4661,7 +4661,43 @@ function initializeAppUI() {
       // --- 所有類別都已播完，真正結束 ---
       console.log('所有類別播放完畢。');
       playEndOfPlayback();
+      showRestartMessage();
     }
+  }
+
+  /**
+   * 在級別播放結束時，顯示重新開始的訊息。
+   */
+  function showRestartMessage() {
+    // 避免重複顯示
+    if (document.getElementById('level-restart-box')) return;
+
+    const contentContainer = document.getElementById('generated');
+    if (!contentContainer || !g_currentDialectInfo) return;
+
+    const levelName = g_currentDialectInfo.fullLvlName;
+
+    const restartBox = document.createElement('div');
+    restartBox.id = 'level-restart-box';
+    restartBox.innerHTML = `<p>${levelName}全部放送煞，重新開始？</p>`;
+
+    // 使用 addEventListener 替代 onclick
+    restartBox.addEventListener('click', () => {
+      if (categoryList && categoryList.length > 0) {
+        const firstCategory = categoryList[0];
+        const firstRadio = document.querySelector(
+          `input[name="category"][value="${firstCategory}"]`,
+        );
+        if (firstRadio) {
+          firstRadio.click();
+        }
+      }
+    });
+
+    contentContainer.appendChild(restartBox);
+    setTimeout(() => {
+      restartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   }
 
   /**

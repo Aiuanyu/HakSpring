@@ -3845,3 +3845,37 @@ mark {
     border: 2px solid var(--dark-surface-color);
   }
 }
+/* --- Level Restart Box Styles --- */
+#level-restart-box {
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.1);
+  border: 2px dashed var(--iMazinGrace-1);
+  border-radius: 8px;
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 80%;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#level-restart-box:hover {
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+}
+
+#level-restart-box p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #007bff;
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  #level-restart-box {
+    background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+    border-color: var(--dark-secondary-accent);
+  }
+  #level-restart-box p {
+    color: var(--dark-link-color);
+  }
+}
