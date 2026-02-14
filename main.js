@@ -4438,23 +4438,6 @@ function initializeAppUI() {
 
     // --- 檢查是否已播完目前類別的所有項目 ---
     if (itemIndex >= activeCategoryData.length) {
-      // --- 關鍵修正：還原舊版邏輯，在跳轉前刪除已完成類別的書籤 ---
-      let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-      // 【變數路徑修正】直接從 g_currentDialectInfo 存取屬性
-      const previousBookmarkIndex = bookmarks.findIndex(
-        (bm) =>
-          bm.tableName === g_currentDialectInfo.fullLvlName &&
-          bm.cat === g_currentCategory,
-      );
-      if (previousBookmarkIndex > -1) {
-        console.log(
-          `移除已完成類別的書籤: ${g_currentDialectInfo.fullLvlName} - ${g_currentCategory}`,
-        );
-        bookmarks.splice(previousBookmarkIndex, 1);
-        localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
-        updateProgressDropdown();
-      }
-
       advanceToNextCategory();
       return;
     }
