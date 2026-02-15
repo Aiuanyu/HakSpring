@@ -2217,9 +2217,13 @@ function initializeAppUI() {
 
     bookmarks.forEach((bookmark, index) => {
       const option = document.createElement('option');
-      option.textContent = `${bookmark.tableName} - ${
-        bookmark.cat
-      } - #${bookmark.rowId} (${bookmark.percentage}%)`;
+      if (bookmark.isLevelFinished) {
+        option.textContent = `${bookmark.tableName}全部放送煞，重新開始？`;
+      } else {
+        option.textContent = `${bookmark.tableName} - ${
+          bookmark.cat
+        } - #${bookmark.rowId} (${bookmark.percentage}%)`;
+      }
       option.value = bookmark.tableName + '||' + bookmark.cat;
       progressDropdown.appendChild(option);
     });
@@ -2284,6 +2288,8 @@ function initializeAppUI() {
     category,
     tableName,
     isPlayingContext = false,
+    isLevelFinished = false,
+    restartCat = null,
   ) {
     let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
     const newBookmark = {
@@ -2292,6 +2298,8 @@ function initializeAppUI() {
       cat: category,
       tableName: tableName,
       timestamp: Date.now(),
+      isLevelFinished: isLevelFinished,
+      restartCat: restartCat,
     };
 
     // 1. 移除已存在的完全相同的紀錄 (同表格同類別)
@@ -4662,6 +4670,26 @@ function initializeAppUI() {
       console.log('所有類別播放完畢。');
       playEndOfPlayback();
       showRestartMessage();
+
+      // 儲存特別書籤，標記為已完成並提供重新開始的目標
+      if (categoryList && categoryList.length > 0 && g_currentDialectInfo) {
+        const firstCategory = categoryList[0];
+        const lastCategory = g_currentCategory;
+        const totalRows = activeCategoryData.length;
+        const lastRowId =
+          activeCategoryData[totalRows - 1].編號.split('-')[1];
+        const paddedLastRowId = padRowIdForLegacy(lastRowId);
+
+        saveBookmark(
+          paddedLastRowId,
+          '100.00',
+          lastCategory,
+          g_currentDialectInfo.fullLvlName,
+          false,
+          true,
+          firstCategory,
+        );
+      }
     }
   }
 
@@ -4679,25 +4707,40 @@ function initializeAppUI() {
 
     const restartBox = document.createElement('div');
     restartBox.id = 'level-restart-box';
-    restartBox.innerHTML = `<p>${levelName}全部放送煞，重新開始？</p>`;
+    restartBox.setAttribute('role', 'button');
+    restartBox.setAttribute('tabindex', '0');
 
-    // 使用 addEventListener 替代 onclick
-    restartBox.addEventListener('click', () => {
+    // 使用文本節點避免 XSS
+    const p = document.createElement('p');
+    p.textContent = `${levelName}全部放送煞，重新開始？`;
+    restartBox.appendChild(p);
+
+    const restartAction = () => {
       if (categoryList && categoryList.length > 0) {
         const firstCategory = categoryList[0];
-        const firstRadio = document.querySelector(
-          `input[name="category"][value="${firstCategory}"]`,
-        );
+        // 使用 CSS.escape 處理類別名稱
+        const selector = `input[name="category"][value="${CSS.escape(firstCategory)}"]`;
+        const firstRadio = document.querySelector(selector);
         if (firstRadio) {
           firstRadio.click();
         }
       }
+    };
+
+    restartBox.addEventListener('click', restartAction);
+    restartBox.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        restartAction();
+      }
     });
 
     contentContainer.appendChild(restartBox);
-    setTimeout(() => {
+
+    // 使用 requestAnimationFrame 替代 setTimeout
+    requestAnimationFrame(() => {
       restartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+    });
   }
 
   /**
@@ -5578,8 +5621,15 @@ function initializeAppUI() {
       if (selectedBookmark) {
         // [修正] 從找到的物件中安全地取得所有資訊
         const targetTableName = selectedBookmark.tableName;
-        const targetCategory = selectedBookmark.cat;
-        const targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
+        let targetCategory = selectedBookmark.cat;
+        let targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
+
+        // 如果是已完成的級別，重新開始
+        if (selectedBookmark.isLevelFinished) {
+          targetCategory = selectedBookmark.restartCat || targetCategory;
+          targetRowIdToGo = '1';
+        }
+
         const dataVarName = mapTableNameToDataVar(targetTableName);
 
         if (dataVarName) {
