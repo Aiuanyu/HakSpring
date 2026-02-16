@@ -3866,7 +3866,7 @@ mark {
   margin: 0;
   font-weight: bold;
   font-size: 1.2em;
-  color: #007bff;
+  color: var(--link-color, #007bff);
   text-decoration: underline;
 }
 

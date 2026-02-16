@@ -4676,19 +4676,21 @@ function initializeAppUI() {
         const firstCategory = categoryList[0];
         const lastCategory = g_currentCategory;
         const totalRows = activeCategoryData.length;
-        const lastRowId =
-          activeCategoryData[totalRows - 1].編號.split('-')[1];
-        const paddedLastRowId = padRowIdForLegacy(lastRowId);
+        if (totalRows > 0) {
+          const lastRowIdRaw = activeCategoryData[totalRows - 1].編號.split('-')[1];
+          const lastRowId = lastRowIdRaw || '1';
+          const paddedLastRowId = padRowIdForLegacy(lastRowId);
 
-        saveBookmark(
-          paddedLastRowId,
-          '100.00',
-          lastCategory,
-          g_currentDialectInfo.fullLvlName,
-          false,
-          true,
-          firstCategory,
-        );
+          saveBookmark(
+            paddedLastRowId,
+            '100.00',
+            lastCategory,
+            g_currentDialectInfo.fullLvlName,
+            false,
+            true,
+            firstCategory,
+          );
+        }
       }
     }
   }
@@ -4737,9 +4739,11 @@ function initializeAppUI() {
 
     contentContainer.appendChild(restartBox);
 
-    // 使用 requestAnimationFrame 替代 setTimeout
+    // 使用 double requestAnimationFrame 確保元素已在 DOM 中並完成排版
     requestAnimationFrame(() => {
-      restartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      requestAnimationFrame(() => {
+        restartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     });
   }
 
@@ -5626,8 +5630,29 @@ function initializeAppUI() {
 
         // 如果是已完成的級別，重新開始
         if (selectedBookmark.isLevelFinished) {
-          targetCategory = selectedBookmark.restartCat || targetCategory;
+          const originalFinishedCat = targetCategory;
+          const restartCat = selectedBookmark.restartCat || targetCategory;
+          targetCategory = restartCat;
           targetRowIdToGo = '1';
+
+          // 【使用者回饋修正】點選重新開始時，先移除原本的「已完成」書籤
+          let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+          const oldIndex = bookmarks.findIndex(
+            (bm) => bm.tableName === targetTableName && bm.cat === originalFinishedCat && bm.isLevelFinished
+          );
+          if (oldIndex > -1) {
+            bookmarks.splice(oldIndex, 1);
+            localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+          }
+
+          // 再儲存新的開始進度，這會自動觸發下拉選單更新
+          saveBookmark(
+            '001',
+            '0.00',
+            targetCategory,
+            targetTableName,
+            false,
+          );
         }
 
         const dataVarName = mapTableNameToDataVar(targetTableName);
