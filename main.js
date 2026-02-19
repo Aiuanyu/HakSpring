@@ -4678,7 +4678,8 @@ function initializeAppUI() {
         const totalRows = activeCategoryData.length;
         if (totalRows > 0) {
           const lastRowIdRaw = activeCategoryData[totalRows - 1].編號.split('-')[1];
-          const lastRowId = lastRowIdRaw || '1';
+          // 【回饋修正】更明確的 fallback 處理，避免 編號 格式異常時報錯
+          const lastRowId = (lastRowIdRaw && lastRowIdRaw.trim()) ? lastRowIdRaw : '1';
           const paddedLastRowId = padRowIdForLegacy(lastRowId);
 
           saveBookmark(
@@ -4718,11 +4719,17 @@ function initializeAppUI() {
     restartBox.appendChild(p);
 
     const restartAction = () => {
+      // 【回饋修正】顯式移除 DOM 元素，避免殘留
+      restartBox.remove();
       if (categoryList && categoryList.length > 0) {
         const firstCategory = categoryList[0];
-        // 使用 CSS.escape 處理類別名稱
-        const selector = `input[name="category"][value="${CSS.escape(firstCategory)}"]`;
-        const firstRadio = document.querySelector(selector);
+
+        // 【回饋修正】設定跨類別播放旗標，讓跳轉後能自動開始播放
+        isCrossCategoryPlaying = true;
+
+        // 【回饋修正】改用遍歷方式尋找 radio button，提升對舊版 WebView 的相容性並避免字串拼接選擇器
+        const allRadios = document.querySelectorAll('input[name="category"]');
+        const firstRadio = Array.from(allRadios).find((r) => r.value === firstCategory);
         if (firstRadio) {
           firstRadio.click();
         }
@@ -5651,7 +5658,7 @@ function initializeAppUI() {
             '0.00',
             targetCategory,
             targetTableName,
-            false,
+            false, // isPlayingContext: false (此處刻意省略後兩個參數 isLevelFinished, restartCat)
           );
         }
 

@@ -3847,7 +3847,8 @@ mark {
 }
 /* --- Level Restart Box Styles --- */
 #level-restart-box {
-  background-color: rgba(var(--iMazinGrace-1-rgb), 0.1);
+  /* 【回饋修正】加入變數 fallback */
+  background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   border: 2px dashed var(--iMazinGrace-1);
   border-radius: 8px;
   margin: 20px auto;
@@ -3859,7 +3860,7 @@ mark {
 }
 
 #level-restart-box:hover {
-  background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+  background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.2);
 }
 
 #level-restart-box p {
@@ -3872,7 +3873,7 @@ mark {
 
 @media (prefers-color-scheme: dark) {
   #level-restart-box {
-    background-color: rgba(var(--iMazinGrace-1-rgb), 0.2);
+    background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.2);
     border-color: var(--dark-secondary-accent);
   }
   #level-restart-box p {
