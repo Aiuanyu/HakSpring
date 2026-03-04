@@ -385,6 +385,21 @@ const LEVEL_INFO = {
   高: { 目錄級: '4', 檔級: '3', 級名: '高級' },
 };
 
+/**
+ * [新增] 針對 elearning.hakka.gov.tw 的音檔網址套用 Proxy 轉導，
+ * 以解決 Cross-Origin-Resource-Policy (CORP) 封鎖問題。
+ * @param {string} url - 原始音檔網址。
+ * @returns {string} 套用 Proxy 後的網址，或原網址。
+ */
+function applyAudioProxy(url) {
+  if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) {
+    return url;
+  }
+  // 在本機開發或特定測試環境下，可能需要根據環境調整路徑
+  const proxyPath = '/audio-proxy?url=';
+  return proxyPath + encodeURIComponent(url);
+}
+
 function getDialectInfo(腔, 級) {
   const selected例外音檔 = window[LEVEL_TO_EXCEPTION_FILE[級]] || [];
   const { 檔腔, 腔名 } = ACCENT_INFO[腔] || { 檔腔: '', 腔名: '' };
@@ -766,7 +781,7 @@ function constructAudioUrlForPopup(lineData, dialectInfo) {
       audioSrc =
         'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
     }
-    return audioSrc;
+    return applyAudioProxy(audioSrc);
   }
   return null;
 }
@@ -2729,10 +2744,11 @@ function initializeAppUI() {
         let wordAudioActuallyMissing =
           missingAudioInfo && missingAudioInfo.word === false;
         if (!wordAudioActuallyMissing) {
-          audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+          audioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
           if (fullSourceName === '海陸中高級' && line.編號 === '4-261') {
-            audioSrc =
-              'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+            audioSrc = applyAudioProxy(
+              'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
+            );
           }
         }
       }
@@ -2822,7 +2838,7 @@ function initializeAppUI() {
             audio2.className = 'media';
             audio2.controls = true;
             audio2.preload = 'none';
-            audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+            audio2.src = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`);
             td3.appendChild(audio2);
           }
         }
@@ -4148,10 +4164,11 @@ function initializeAppUI() {
         audio1.className = 'media';
         audio1.controls = true;
         audio1.preload = 'none';
-        let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+        let wordAudioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
         if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
-          wordAudioSrc =
-            'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+          wordAudioSrc = applyAudioProxy(
+            'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
+          );
         }
         audio1.src = wordAudioSrc;
 
@@ -4231,7 +4248,7 @@ function initializeAppUI() {
           audio2.className = 'media';
           audio2.controls = true;
           audio2.preload = 'none';
-          audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+          audio2.src = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`);
 
           // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
           const sentencePlayHandler = () => {
@@ -5765,10 +5782,11 @@ function createComparisonRow(line, dialectInfo) {
     audio1.className = 'media accordion-audio';
     audio1.controls = true;
     audio1.preload = 'none';
-    let wordAudioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`;
+    let wordAudioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
     if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
-      wordAudioSrc =
-        'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
+      wordAudioSrc = applyAudioProxy(
+        'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
+      );
     }
     audio1.src = wordAudioSrc;
     td2.appendChild(audio1);
@@ -5806,7 +5824,7 @@ function createComparisonRow(line, dialectInfo) {
       audio2.className = 'media accordion-audio';
       audio2.controls = true;
       audio2.preload = 'none';
-      audio2.src = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`;
+      audio2.src = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`);
       td3.appendChild(audio2);
     }
     td3.appendChild(document.createElement('br'));

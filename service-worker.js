@@ -21,7 +21,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   // We only want to cache audio files.
-  if (event.request.url.endsWith('.mp3')) {
+  // [Modified] Support both direct .mp3 files and proxied audio URLs.
+  if (
+    event.request.url.endsWith('.mp3') ||
+    event.request.url.includes('/audio-proxy?url=')
+  ) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(event.request).then((response) => {
