@@ -3743,21 +3743,105 @@ function initializeAppUI() {
     }
   }
 
+  /**
+   * 從資料中抽取所有類別，並依官方編號排序
+   * @param {Array} data - 詞彙資料陣列
+   * @returns {Array} - 排序後的類別陣列（含數字前綴，如 "1人體與醫療"）
+   */
+  function getOfficialCategories(data) {
+    const cats = new Set();
+    data.forEach((item) => {
+      if (item.分類) cats.add(item.分類);
+    });
+    return Array.from(cats).sort((a, b) => {
+      const matchA = a.match(/^\d+/);  // 修正：使用錨點 ^ 確保只匹配開頭數字
+      const matchB = b.match(/^\d+/);
+      const numA = matchA ? parseInt(matchA[0], 10) : 0;
+      const numB = matchB ? parseInt(matchB[0], 10) : 0;
+      return numA - numB;
+    });
+  }
+
+  /**
+   * 格式化類別標籤，將 "1人體與醫療" 轉換成 "1. 人體與醫療"
+   * @param {string} catStr - 原始類別字串（如 "1人體與醫療"）
+   * @returns {string} - 格式化後的類別標籤（如 "1. 人體與醫療"）
+   */
+  function formatCategoryLabel(catStr) {
+    const match = catStr.match(/^(\d+)(.*)$/);
+    if (match) {
+      return `${parseInt(match[1], 10)}. ${match[2]}`;
+    }
+    return catStr;
+  }
+
+  /**
+   * 動態渲染類別面板
+   * @param {Array} categories - 類別陣列（含數字前綴，如 "1人體與醫療"）
+   */
+  function renderCategoryPanel(categories) {
+    const catPanel = document.getElementById('cat-panel');
+    if (!catPanel) return;
+
+    catPanel.innerHTML = '再擇類別：\n          ';
+
+    // 邊界處理：如果沒有類別，顯示提示訊息
+    if (!categories || categories.length === 0) {
+      console.warn('renderCategoryPanel: 沒有可用的類別資料');
+      return;
+    }
+
+    categories.forEach((cat) => {
+      const label = document.createElement('label');
+      label.className = 'radioItem';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'category';
+      radio.className = 'radioButton';
+      // 重要：radio.value 儲存不含數字前綴的類別名（如 "人體與醫療"），以確保書籤相容性
+      radio.value = cat.replace(/^\d+/, '');
+
+      // 顯示文字包含數字前綴（如 "1. 人體與醫療"）
+      const labelText = formatCategoryLabel(cat);
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode('\n            ' + labelText + '\n          '));
+      catPanel.appendChild(label);
+      catPanel.appendChild(document.createTextNode('\n          '));
+    });
+  }
+
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
 
+    const 腔 = content.name.substring(0, 1);
+    const 級 = content.name.substring(1);
+    const dialectInfo = getDialectInfo(腔, 級);
+
+    if (dialectInfo.腔名) {
+      currentActiveMainDialectName = dialectInfo.腔名;
+      updateSearchDialect(dialectInfo.腔名);
+    }
+
+    // --- 動態渲染類別面板（使用官方類別順序） ---
+    const officialCategories = getOfficialCategories(content.content);
+    renderCategoryPanel(officialCategories);
+
     // --- BUG FIX: Sort level data according to UI category order for correct progress calculation ---
+    // Moved here after panel rendering to ensure we use the current UI order.
     const categoryOrder = Array.from(
       document.querySelectorAll('#cat-panel input[name="category"]'),
     ).map((radio) => radio.value);
 
     const getSortIndex = (itemCategories) => {
       if (!itemCategories) return categoryOrder.length; // Put items without category at the end
+      // 移除資料中類別的數字前綴以進行比對
+      const cleanedItemCat = itemCategories.replace(/^\d+/, '');
       for (let i = 0; i < categoryOrder.length; i++) {
-        if (itemCategories.includes(categoryOrder[i])) {
+        if (cleanedItemCat === categoryOrder[i]) {
           return i;
         }
       }
@@ -3788,15 +3872,6 @@ function initializeAppUI() {
     if (!initialCategory && !targetRowId) {
       const progressDetailsSpan = document.getElementById('progressDetails');
       if (progressDetailsSpan) progressDetailsSpan.textContent = '';
-    }
-
-    const 腔 = content.name.substring(0, 1);
-    const 級 = content.name.substring(1);
-    const dialectInfo = getDialectInfo(腔, 級);
-
-    if (dialectInfo.腔名) {
-      currentActiveMainDialectName = dialectInfo.腔名;
-      updateSearchDialect(dialectInfo.腔名);
     }
 
     // --- 在底下加入這一行，確保 categoryList 總是更新的 ---
@@ -3904,7 +3979,7 @@ function initializeAppUI() {
 
     // 2. Filter data and handle empty category
     activeCategoryData = vocabularyArray.filter(
-      (line) => line.分類 && line.分類.includes(category),
+      (line) => line.分類 && line.分類.replace(/^\d+/, '') === category,
     );
     const totalResults = activeCategoryData.length;
 
