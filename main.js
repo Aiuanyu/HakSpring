@@ -3738,8 +3738,8 @@ function initializeAppUI() {
       if (item.分類) cats.add(item.分類);
     });
     return Array.from(cats).sort((a, b) => {
-      const matchA = a.match(/\d+/);
-      const matchB = b.match(/\d+/);
+      const matchA = a.match(/^\d+/);  // 修正：使用錨點 ^ 確保只匹配開頭數字
+      const matchB = b.match(/^\d+/);
       const numA = matchA ? parseInt(matchA[0], 10) : 0;
       const numB = matchB ? parseInt(matchB[0], 10) : 0;
       return numA - numB;
@@ -3768,6 +3768,13 @@ function initializeAppUI() {
     if (!catPanel) return;
 
     catPanel.innerHTML = '再擇類別：\n          ';
+
+    // 邊界處理：如果沒有類別，顯示提示訊息
+    if (!categories || categories.length === 0) {
+      console.warn('renderCategoryPanel: 沒有可用的類別資料');
+      return;
+    }
+
     categories.forEach((cat) => {
       const label = document.createElement('label');
       label.className = 'radioItem';
