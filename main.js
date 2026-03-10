@@ -1989,6 +1989,20 @@ function initializeAppUI() {
     document.body.classList.add('mobile-device');
   }
 
+  /**
+   * 從資料陣列中尋找與 strippedCat 匹配的完整分類名稱。
+   * @param {string} strippedCat - 不含數字前綴的分類名稱 (如 "人體與醫療")
+   * @param {Array} dataArray - 詞彙資料陣列
+   * @returns {string} - 完整的分類名稱 (如 "01人體與醫療")
+   */
+  function getFullOfficialCategoryName(strippedCat, dataArray) {
+    if (!dataArray || !Array.isArray(dataArray)) return strippedCat;
+    const item = dataArray.find(
+      (line) => line.分類 && line.分類.replace(/^\d+/, '') === strippedCat,
+    );
+    return item ? item.分類 : strippedCat;
+  }
+
   function updateLastCenteredRow() {
     if (isRepositioning) return;
 
@@ -2232,9 +2246,19 @@ function initializeAppUI() {
 
     bookmarks.forEach((bookmark, index) => {
       const option = document.createElement('option');
-      option.textContent = `${bookmark.tableName} - ${
-        bookmark.cat
-      } - #${bookmark.rowId} (${bookmark.percentage}%)`;
+
+      // 嘗試找回含官方編號的類別名稱以供顯示
+      let displayCat = bookmark.cat;
+      const dataVar = mapTableNameToDataVar(bookmark.tableName);
+      if (dataVar && window[dataVar] && window[dataVar].content) {
+        const fullCat = getFullOfficialCategoryName(
+          bookmark.cat,
+          window[dataVar].content,
+        );
+        displayCat = formatCategoryLabel(fullCat);
+      }
+
+      option.textContent = `${bookmark.tableName} - ${displayCat} - #${bookmark.rowId} (${bookmark.percentage}%)`;
       option.value = bookmark.tableName + '||' + bookmark.cat;
       progressDropdown.appendChild(option);
     });
@@ -4066,7 +4090,12 @@ function initializeAppUI() {
     }
 
     // 8. Final UI updates
-    updatePageTitle([dialectInfo.fullLvlName, category]);
+    const fullCategoryName = getFullOfficialCategoryName(
+      category,
+      vocabularyArray,
+    );
+    const formattedCategory = formatCategoryLabel(fullCategoryName);
+    updatePageTitle([dialectInfo.fullLvlName, formattedCategory]);
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
     updateResultsSummaryVisibility();
     isCrossCategoryPlaying = false; // 這隻旗標應該愛放在這位，做毋得放在函式最頭前
@@ -4107,7 +4136,13 @@ function initializeAppUI() {
         'summary-text-content',
       );
       if (summaryTextContent) {
-        let summaryText = `${dialectInfo.fullLvlName}：${category}`;
+        const fullCategoryName = getFullOfficialCategoryName(
+          category,
+          activeCategoryData,
+        );
+        const formattedCategory = formatCategoryLabel(fullCategoryName);
+
+        let summaryText = `${dialectInfo.fullLvlName}：${formattedCategory}`;
         if (totalResults > 0) {
           summaryText += ` (${totalResults})`;
         }
