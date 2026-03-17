@@ -5633,17 +5633,20 @@ function initializeAppUI() {
       }
     };
     backToTopButton.addEventListener('click', () => {
-      if (g_currentDialectInfo && g_currentCategory && firstLoadedIndex > 0) {
+      if (
+        g_currentDialectInfo &&
+        g_currentCategory &&
+        g_currentLevelData.length > 0 &&
+        firstLoadedIndex > 0
+      ) {
         // 如果是在類別瀏覽模式且不是從第一筆開始（lazy loading 中間開始），則重新載入該類別以回到頂端
         buildTableAndSetupPlayback(
           g_currentCategory,
           g_currentLevelData,
           g_currentDialectInfo,
         );
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 
