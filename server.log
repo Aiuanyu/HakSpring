@@ -1,0 +1,379 @@
+127.0.0.1 - - [21/Mar/2026 12:23:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /img/avatar.png HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /main.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /js/supabase-config.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /js/romanizer.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /js/cloud-sync.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:54] "GET /data/data_version.json?cachebust=1774095834745 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E5%9F%BA.json?cachebust=1774095835289 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E5%9F%BA.json?cachebust=1774095835290 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E4%B8%AD.json?cachebust=1774095835289 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E9%AB%98.json?cachebust=1774095835289 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E4%B8%AD%E9%AB%98.json?cachebust=1774095835289 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E5%88%9D.json?cachebust=1774095835289 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E5%88%9D.json?cachebust=1774095835290 HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55360)
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55356)
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E9%AB%98.json?cachebust=1774095835290 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E4%B8%AD.json?cachebust=1774095835290 HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55408)
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E5%9F%BA.json?cachebust=1774095835290 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E4%B8%AD%E9%AB%98.json?cachebust=1774095835290 HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E5%88%9D.json?cachebust=1774095835290 HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E4%B8%AD.json?cachebust=1774095835291 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E4%B8%AD%E9%AB%98.json?cachebust=1774095835291 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E9%AB%98.json?cachebust=1774095835292 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E4%B8%AD.json?cachebust=1774095835293 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E5%88%9D.json?cachebust=1774095835293 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E4%B8%AD%E9%AB%98.json?cachebust=1774095835293 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E5%9F%BA.json?cachebust=1774095835292 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E9%AB%98.json?cachebust=1774095835293 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E5%9F%BA.json?cachebust=1774095835294 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E5%88%9D.json?cachebust=1774095835294 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E4%B8%AD.json?cachebust=1774095835294 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%9B%9B.json?cachebust=1774095835299 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E4%B8%AD%E9%AB%98.json?cachebust=1774095835295 HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55548)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E9%AB%98.json?cachebust=1774095835299 HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55524)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55538)
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E6%B5%B7.json?cachebust=1774095835300 HTTP/1.1" 200 -
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%B9%B3.json?cachebust=1774095835302 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%A4%A7.json?cachebust=1774095835302 HTTP/1.1" 200 -
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%AE%89.json?cachebust=1774095835303 HTTP/1.1" 200 -
+Exception occurred during processing of request from ('127.0.0.1', 55544)
+BrokenPipeError: [Errno 32] Broken pipe
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55578)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55556)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%8D%97.json?cachebust=1774095835299 HTTP/1.1" 200 -
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /tone_mapping.json?cachebust=1774095835303 HTTP/1.1" 200 -
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+----------------------------------------
+Traceback (most recent call last):
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /NAmedias.json?cachebust=1774095835303 HTTP/1.1" 200 -
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /exclusions.json?cachebust=1774095835303 HTTP/1.1" 200 -
+Exception occurred during processing of request from ('127.0.0.1', 55570)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55582)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 55552)
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 1326, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 676, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 766, in __init__
+    self.handle()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 440, in handle
+    self.handle_one_request()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 428, in handle_one_request
+    method()
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 683, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/http/server.py", line 882, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/shutil.py", line 204, in copyfileobj
+    fdst_write(buf)
+  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/data_version.json?cachebust=1774095835611 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E5%88%9D.json?cachebust=1774095835660 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E5%9F%BA.json?cachebust=1774095835660 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E4%B8%AD%E9%AB%98.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E9%AB%98.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%9B%9B%E4%B8%AD.json?cachebust=1774095835660 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E5%9F%BA.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E5%88%9D.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E4%B8%AD.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E4%B8%AD%E9%AB%98.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E6%B5%B7%E9%AB%98.json?cachebust=1774095835661 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E5%88%9D.json?cachebust=1774095835663 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E5%9F%BA.json?cachebust=1774095835662 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E4%B8%AD.json?cachebust=1774095835663 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E4%B8%AD%E9%AB%98.json?cachebust=1774095835663 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%A4%A7%E9%AB%98.json?cachebust=1774095835663 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E5%9F%BA.json?cachebust=1774095835664 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E5%88%9D.json?cachebust=1774095835664 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E4%B8%AD.json?cachebust=1774095835664 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E4%B8%AD%E9%AB%98.json?cachebust=1774095835664 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%B9%B3%E9%AB%98.json?cachebust=1774095835664 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E5%9F%BA.json?cachebust=1774095835666 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E5%88%9D.json?cachebust=1774095835666 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E4%B8%AD.json?cachebust=1774095835667 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E9%AB%98.json?cachebust=1774095835667 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/cert/113%E5%AE%89%E4%B8%AD%E9%AB%98.json?cachebust=1774095835667 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%9B%9B.json?cachebust=1774095835667 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%A4%A7.json?cachebust=1774095835668 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E5%8D%97.json?cachebust=1774095835667 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:55] "GET /data/gip/20250630-%E6%B5%B7.json?cachebust=1774095835668 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:56] "GET /data/gip/20250630-%E5%B9%B3.json?cachebust=1774095835668 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:56] "GET /data/gip/20250630-%E5%AE%89.json?cachebust=1774095835668 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:56] "GET /tone_mapping.json?cachebust=1774095835668 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:56] "GET /NAmedias.json?cachebust=1774095835669 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 12:23:56] "GET /exclusions.json?cachebust=1774095835669 HTTP/1.1" 200 -

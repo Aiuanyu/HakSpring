@@ -392,7 +392,12 @@ const LEVEL_INFO = {
  * @returns {string} 套用 Proxy 後的網址，或原網址。
  */
 function applyAudioProxy(url) {
-  if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) {
+  if (!url) return url;
+
+  const isHakkaGov = url.startsWith('https://elearning.hakka.gov.tw/');
+  const isLocalhost = /^https?:\/\/localhost([:/]|$)/.test(url);
+
+  if (!isHakkaGov && !isLocalhost) {
     return url;
   }
   // 在本機開發或特定測試環境下，可能需要根據環境調整路徑
