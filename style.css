@@ -1733,6 +1733,7 @@ input:checked+.slider:before {
 
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
+  #romanizer-output,
   .pronunciation-text {
     ruby.sandhi-高降變 {
       /* 修改 class 選擇器 */

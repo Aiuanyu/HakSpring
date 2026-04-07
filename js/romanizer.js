@@ -95,17 +95,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const wrapper = uppercaseBtn.parentNode;
         // 【新】為這粒音節加上手動設定个標籤
         wrapper.dataset.manualCase = 'true'; 
-        const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-        if (textNode) {
-            const currentText = textNode.textContent;
-            if (currentText[0] === currentText[0].toUpperCase()) {
-                textNode.textContent = currentText.toLowerCase();
-            } else {
-                textNode.textContent = currentText.charAt(0).toUpperCase() + currentText.slice(1);
+
+        // --- Refactored to handle ruby elements ---
+        const handleTextNode = (node) => {
+            const currentText = node.textContent;
+            if (currentText && currentText.length > 0) {
+                if (currentText[0] === currentText[0].toUpperCase()) {
+                    node.textContent = currentText.toLowerCase();
+                } else {
+                    node.textContent = currentText.charAt(0).toUpperCase() + currentText.slice(1);
+                }
             }
-            // 手動調整後，毋使呼叫 applyCapitalizationRules，直接儲存狀態
-            saveState();
+        };
+
+        const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        const rubyElement = wrapper.querySelector('ruby');
+
+        if (textNode) {
+            handleTextNode(textNode);
+        } else if (rubyElement) {
+            // If it's a ruby, the first child node should be the text node of the base text
+            const rubyTextNode = Array.from(rubyElement.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+            if (rubyTextNode) {
+                handleTextNode(rubyTextNode);
+            }
         }
+        // 手動調整後，毋使呼叫 applyCapitalizationRules，直接儲存狀態
+        saveState();
       } 
       else if (deleteBtn) {
         const wrapper = deleteBtn.parentNode;
@@ -498,8 +514,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateSegmentGroup(container, romanizedText, sourceSpan) {
         container.innerHTML = '';
         const tokens = tokenizeRomanization(romanizedText);
+
+        // --- Apply Sandhi if engine is available ---
+        let sandhiResults = [];
+        if (typeof HakkaSandhi !== 'undefined') {
+            sandhiResults = HakkaSandhi.applyToTokens(tokens, romanizerSelectedDialect);
+        } else {
+            sandhiResults = tokens.map(t => ({ text: t, sandhi: null }));
+        }
     
-        tokens.forEach(token => {
+        sandhiResults.forEach(res => {
+            const token = res.text || (res.variants && res.variants.map(v => v.text).join('/'));
+
             if (!/[【】（）()\/]/.test(token)) {
                 // 【新邏輯】淨產生音節个 wrapper，毋產生連接符號
                 const wrapper = document.createElement('span');
@@ -510,7 +536,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sourceSpan.dataset.noCapitalize) {
                     wrapper.dataset.noCapitalize = 'true';
                 }
-                wrapper.appendChild(document.createTextNode(token));
+
+                // --- Render Sandhi with Ruby ---
+                if (res.variants) {
+                    res.variants.forEach((v, idx) => {
+                        if (v.newTone) {
+                            const ruby = document.createElement('ruby');
+                            ruby.className = v.rubyClass;
+                            ruby.textContent = v.text;
+                            const rt = document.createElement('rt');
+                            rt.textContent = v.newTone;
+                            ruby.appendChild(rt);
+                            wrapper.appendChild(ruby);
+                        } else {
+                            wrapper.appendChild(document.createTextNode(v.text));
+                        }
+                        if (idx < res.variants.length - 1) {
+                            wrapper.appendChild(document.createTextNode('/'));
+                        }
+                    });
+                } else if (res.newTone) {
+                    const ruby = document.createElement('ruby');
+                    ruby.className = res.rubyClass;
+                    ruby.textContent = res.text;
+                    const rt = document.createElement('rt');
+                    rt.textContent = res.newTone;
+                    ruby.appendChild(rt);
+                    wrapper.appendChild(ruby);
+                } else {
+                    wrapper.appendChild(document.createTextNode(token));
+                }
     
                 const uppercaseBtn = document.createElement('button');
                 uppercaseBtn.className = 'uppercase-btn';
@@ -545,11 +600,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wrapper.dataset.manualCase) {
             return;
         }
-        const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-        if (textNode) {
-            const currentText = textNode.textContent;
+
+        const handleLowering = (node) => {
+            const currentText = node.textContent;
             if (currentText && currentText.length > 0) {
-                textNode.textContent = currentText.charAt(0).toLowerCase() + currentText.slice(1);
+                node.textContent = currentText.charAt(0).toLowerCase() + currentText.slice(1);
+            }
+        };
+
+        const textNode = Array.from(wrapper.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        const rubyElement = wrapper.querySelector('ruby');
+
+        if (textNode) {
+            handleLowering(textNode);
+        } else if (rubyElement) {
+            const rubyTextNode = Array.from(rubyElement.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+            if (rubyTextNode) {
+                handleLowering(rubyTextNode);
             }
         }
     });
@@ -575,10 +642,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (firstSyllableInGroup) {
                 // 【新】愛確定無手動標籤，正做自動大寫
                 if (capitalizeNext && !firstSyllableInGroup.dataset.manualCase && !firstSyllableInGroup.dataset.noCapitalize) {
-                    const textNode = Array.from(firstSyllableInGroup.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-                    if (textNode) {
+                    const handleUpper = (textNode) => {
                         const text = textNode.textContent;
                         textNode.textContent = text.charAt(0).toUpperCase() + text.slice(1);
+                    };
+
+                    const textNode = Array.from(firstSyllableInGroup.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                    const rubyElement = firstSyllableInGroup.querySelector('ruby');
+
+                    if (textNode) {
+                        handleUpper(textNode);
+                    } else if (rubyElement) {
+                        const rubyTextNode = Array.from(rubyElement.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                        if (rubyTextNode) {
+                            handleUpper(rubyTextNode);
+                        }
                     }
                 }
                 capitalizeNext = false;
@@ -660,12 +738,21 @@ function updateJoiningSeparators() {
 
             // 若係無障礙物，正插入連接符號
             if (!hasObstacle) {
-                const s1TextNode = Array.from(s1.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-                const s2TextNode = Array.from(s2.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                const getSyllableText = (syllableEl) => {
+                    const textNode = Array.from(syllableEl.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                    if (textNode) return textNode.textContent.toLowerCase();
+                    const ruby = syllableEl.querySelector('ruby');
+                    if (ruby) {
+                        const rubyTextNode = Array.from(ruby.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                        if (rubyTextNode) return rubyTextNode.textContent.toLowerCase();
+                    }
+                    return '';
+                };
 
-                if (s1TextNode && s2TextNode) {
-                    const s1Text = s1TextNode.textContent.toLowerCase();
-                    const s2Text = s2TextNode.textContent.toLowerCase();
+                const s1Text = getSyllableText(s1);
+                const s2Text = getSyllableText(s2);
+
+                if (s1Text && s2Text) {
                     let separator = '';
 
                     switch (romanizerJoiningMode) {
