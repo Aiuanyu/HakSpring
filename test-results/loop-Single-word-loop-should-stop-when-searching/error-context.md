@@ -1,0 +1,144 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - heading "logo客源翠 HakSpring" [level=2] [ref=e4]:
+        - link "logo客源翠 HakSpring" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img "logo" [ref=e6]
+          - text: 客源翠 HakSpring
+      - heading "你个客援隊／客研隊。詞典+分類學習" [level=4] [ref=e7]
+    - heading "擇進前个進度" [level=3] [ref=e8]:
+      - combobox [ref=e9] [cursor=pointer]:
+        - option "擇進前个進度" [disabled] [selected]
+      - button "看說明文件" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: 
+      - button "客語羅馬字轉換工具" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: 
+      - textbox "查語詞" [ref=e15]
+    - group [ref=e17]:
+      - generic "認證詞彙學習主控板" [ref=e18] [cursor=pointer]
+      - paragraph [ref=e19]:
+        - text: 先擇腔調摎級別，
+        - generic [ref=e20]:
+          - text: 四縣：
+          - link "基礎" [ref=e22] [cursor=pointer]:
+            - /url: "#"
+          - link "初級" [ref=e24] [cursor=pointer]:
+            - /url: "#"
+          - link "中級" [ref=e26] [cursor=pointer]:
+            - /url: "#"
+          - link "中高" [ref=e28] [cursor=pointer]:
+            - /url: "#"
+          - link "高級" [ref=e30] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e31]:
+          - text: 海陸：
+          - link "基礎" [ref=e33] [cursor=pointer]:
+            - /url: "#"
+          - link "初級" [ref=e35] [cursor=pointer]:
+            - /url: "#"
+          - link "中級" [ref=e37] [cursor=pointer]:
+            - /url: "#"
+          - link "中高" [ref=e39] [cursor=pointer]:
+            - /url: "#"
+          - link "高級" [ref=e41] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e42]:
+          - text: 大埔：
+          - link "基礎" [ref=e44] [cursor=pointer]:
+            - /url: "#"
+          - link "初級" [ref=e46] [cursor=pointer]:
+            - /url: "#"
+          - link "中級" [ref=e48] [cursor=pointer]:
+            - /url: "#"
+          - link "中高" [ref=e50] [cursor=pointer]:
+            - /url: "#"
+          - link "高級" [ref=e52] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e53]:
+          - text: 饒平：
+          - link "基礎" [ref=e55] [cursor=pointer]:
+            - /url: "#"
+          - link "初級" [ref=e57] [cursor=pointer]:
+            - /url: "#"
+          - link "中級" [ref=e59] [cursor=pointer]:
+            - /url: "#"
+          - link "中高" [ref=e61] [cursor=pointer]:
+            - /url: "#"
+          - link "高級" [ref=e63] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e64]:
+          - text: 詔安：
+          - link "基礎" [ref=e66] [cursor=pointer]:
+            - /url: "#"
+          - link "初級" [ref=e68] [cursor=pointer]:
+            - /url: "#"
+          - link "中級" [ref=e70] [cursor=pointer]:
+            - /url: "#"
+          - link "中高" [ref=e72] [cursor=pointer]:
+            - /url: "#"
+          - link "高級" [ref=e74] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e75]:
+        - text: 再擇類別：
+        - generic [ref=e76] [cursor=pointer]:
+          - radio "人體與醫療" [ref=e77]
+          - text: 人體與醫療
+        - generic [ref=e78] [cursor=pointer]:
+          - radio "心理活動與感覺" [ref=e79]
+          - text: 心理活動與感覺
+        - generic [ref=e80] [cursor=pointer]:
+          - radio "代詞" [ref=e81]
+          - text: 代詞
+        - generic [ref=e82] [cursor=pointer]:
+          - radio "外在活動與動作" [ref=e83]
+          - text: 外在活動與動作
+        - generic [ref=e84] [cursor=pointer]:
+          - radio "生物" [ref=e85]
+          - text: 生物
+        - generic [ref=e86] [cursor=pointer]:
+          - radio "自然與景觀" [ref=e87]
+          - text: 自然與景觀
+        - generic [ref=e88] [cursor=pointer]:
+          - radio "事物狀態與變化" [ref=e89]
+          - text: 事物狀態與變化
+        - generic [ref=e90] [cursor=pointer]:
+          - radio "居家生活" [ref=e91]
+          - text: 居家生活
+        - generic [ref=e92] [cursor=pointer]:
+          - radio "抽象概念與形容" [ref=e93]
+          - text: 抽象概念與形容
+        - generic [ref=e94] [cursor=pointer]:
+          - radio "法律、政治與軍事" [ref=e95]
+          - text: 法律、政治與軍事
+        - generic [ref=e96] [cursor=pointer]:
+          - radio "社會關係與行為" [ref=e97]
+          - text: 社會關係與行為
+        - generic [ref=e98] [cursor=pointer]:
+          - radio "時空與情狀副詞" [ref=e99]
+          - text: 時空與情狀副詞
+        - generic [ref=e100] [cursor=pointer]:
+          - radio "特殊詞類" [ref=e101]
+          - text: 特殊詞類
+        - generic [ref=e102] [cursor=pointer]:
+          - radio "通訊、建設與交通" [ref=e103]
+          - text: 通訊、建設與交通
+        - generic [ref=e104] [cursor=pointer]:
+          - radio "歲時祭儀、習俗與宗教" [ref=e105]
+          - text: 歲時祭儀、習俗與宗教
+        - generic [ref=e106] [cursor=pointer]:
+          - radio "數詞量詞" [ref=e107]
+          - text: 數詞量詞
+        - generic [ref=e108] [cursor=pointer]:
+          - radio "職業與經濟" [ref=e109]
+          - text: 職業與經濟
+        - generic [ref=e110] [cursor=pointer]:
+          - radio "藝文與教育" [ref=e111]
+          - text: 藝文與教育
+    - text:   
+    - text:      
+  - text:  
+```

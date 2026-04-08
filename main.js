@@ -174,7 +174,7 @@ function toggleSearchAccordion(clickedButton, line) {
 
   // Pause autoplay if it's running
   const stopButton = document.getElementById('stopBtn');
-  if (isPlaying && stopButton) {
+  if (stopButton) {
     stopButton.click();
   }
 
@@ -1109,6 +1109,13 @@ function showPronunciationPopup(
           if (playButton) {
             playButton.addEventListener('click', (e) => {
               e.stopPropagation(); // 保持 stopPropagation 以避免 headerBtn 也響應
+
+              stopSingleWordLoop(); // 【新增】
+              g_mainPlaybackIndexBeforeLoop = null; // 【新增】
+              if (isPlaying) {
+                stopPlayback();
+              }
+
               const header = playButton.closest('.accordion-header');
               const panel = header ? header.nextElementSibling : null;
               if (header && panel && !header.classList.contains('active')) {
@@ -2454,6 +2461,9 @@ function initializeAppUI() {
   }
 
   function performSearch(page = 1, itemsPerPage = 50) {
+    stopSingleWordLoop(); // 【新增】
+    g_mainPlaybackIndexBeforeLoop = null; // 【新增】
+
     const selectedDialect = document.querySelector(
       '#search-popup input[name="dialect"]:checked',
     ).value;
@@ -3484,6 +3494,24 @@ function initializeAppUI() {
 
   document.addEventListener('keydown', globalKeydownHandler);
 
+  // --- 【新增】全域音檔衝突處理：播放任何音檔時，若正在單詞循環則停止之 ---
+  document.addEventListener(
+    'play',
+    (event) => {
+      if (event.target.tagName === 'AUDIO' && isSingleWordLooping) {
+        if (
+          event.target !== singleLoopingAudio.word &&
+          event.target !== singleLoopingAudio.sentence
+        ) {
+          console.log('偵測到其他音檔播放，停止單詞循環。');
+          stopSingleWordLoop();
+          g_mainPlaybackIndexBeforeLoop = null;
+        }
+      }
+    },
+    true,
+  );
+
   document.addEventListener('click', (event) => {
     if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
       const button =
@@ -3838,6 +3866,10 @@ function initializeAppUI() {
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
+
+    stopSingleWordLoop(); // 【新增】
+    g_mainPlaybackIndexBeforeLoop = null; // 【新增】
+
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
 
@@ -3990,6 +4022,9 @@ function initializeAppUI() {
     autoPlayTargetRowId = null,
   ) {
     const contentContainer = document.getElementById('generated');
+
+    stopSingleWordLoop(); // 【新增】
+    g_mainPlaybackIndexBeforeLoop = null; // 【新增】
 
     // 1. Reset global state for the new category
     g_currentDialectInfo = dialectInfo;
@@ -4284,6 +4319,8 @@ function initializeAppUI() {
 
         // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
         const wordPlayHandler = () => {
+          stopSingleWordLoop(); // 【新增】
+          g_mainPlaybackIndexBeforeLoop = null; // 【新增】
           const autoBookmarkEnabled =
             localStorage.getItem('autoBookmarkMode') === 'true';
           if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
@@ -4362,6 +4399,8 @@ function initializeAppUI() {
 
           // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
           const sentencePlayHandler = () => {
+            stopSingleWordLoop(); // 【新增】
+            g_mainPlaybackIndexBeforeLoop = null; // 【新增】
             const autoBookmarkEnabled =
               localStorage.getItem('autoBookmarkMode') === 'true';
             if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
@@ -4522,6 +4561,9 @@ function initializeAppUI() {
       console.error('無效的播放起始索引:', itemIndex);
       return;
     }
+
+    stopSingleWordLoop(); // 【新增】
+    g_mainPlaybackIndexBeforeLoop = null; // 【新增】
 
     // 重設狀態
     // 【新增此行】用當前時間戳記產生一個獨一無二的 ID
@@ -4749,6 +4791,7 @@ function initializeAppUI() {
     currentAudio = null;
     currentAudioIndex = 0;
     removeNowPlaying();
+    stopSingleWordLoop(); // 【新增】
     updateMediaSession(null); // --- 【整合 Media Session】 ---
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
@@ -5025,6 +5068,8 @@ function initializeAppUI() {
 
     if (stopButton) {
       stopButton.onclick = function () {
+        stopSingleWordLoop(); // 【新增】
+        g_mainPlaybackIndexBeforeLoop = null; // 【新增】
         if (isPlaying) {
           stopPlayback();
         }
@@ -5773,7 +5818,7 @@ function toggleAccordion(event, line, dialectInfo) {
 
   // Pause autoplay if it's running
   const stopButton = document.getElementById('stopBtn');
-  if (isPlaying && stopButton) {
+  if (stopButton) {
     stopButton.click();
   }
 
