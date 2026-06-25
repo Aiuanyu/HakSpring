@@ -7,8 +7,11 @@ export async function onRequest(context) {
     return new Response('Missing url parameter', { status: 400 });
   }
 
-  // Basic security: only proxy from elearning.hakka.gov.tw
-  if (!targetUrl.startsWith('https://elearning.hakka.gov.tw/')) {
+  // Basic security: only proxy from elearning.hakka.gov.tw or localhost for development
+  const isHakkaGov = targetUrl.startsWith('https://elearning.hakka.gov.tw/');
+  const isLocalhost = /^https?:\/\/localhost([:/]|$)/.test(targetUrl);
+
+  if (!isHakkaGov && !isLocalhost) {
     return new Response('Invalid target URL', { status: 403 });
   }
 

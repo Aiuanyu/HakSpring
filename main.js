@@ -392,11 +392,24 @@ const LEVEL_INFO = {
  * @returns {string} 套用 Proxy 後的網址，或原網址。
  */
 function applyAudioProxy(url) {
-  if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) {
+  if (!url) return url;
+
+  const isHakkaGov = url.startsWith('https://elearning.hakka.gov.tw/');
+  const isLocalhost = /^https?:\/\/localhost([:/]|$)/.test(url);
+
+  if (!isHakkaGov && !isLocalhost) {
     return url;
   }
-  // 在本機開發或特定測試環境下，可能需要根據環境調整路徑
-  const proxyPath = '/audio-proxy?url=';
+  
+  // 預設的 proxy 路徑，適用於上線環境或 wrangler 開發環境
+  let proxyPath = '/audio-proxy?url=';
+
+  // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
+  // 則強制導向正式環境的 Proxy API，解決 local Apache 找不到 Endpoint 的問題。
+  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8788') {
+    proxyPath = 'https://hakspring.pages.dev/audio-proxy?url=';
+  }
+
   return proxyPath + encodeURIComponent(url);
 }
 
