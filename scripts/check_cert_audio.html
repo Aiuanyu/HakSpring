@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認證詞彙音檔檢查器</title>
+    <!-- SheetJS for ODS support -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        .file-input {
+            margin: 20px 0;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #2980b9; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        .progress {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .status { margin: 10px 0; color: #7f8c8d; }
+        .results {
+            margin: 20px 0;
+            display: none;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-card.ok { background: #d5f4e6; color: #27ae60; }
+        .stat-card.warn { background: #ffeaa7; color: #e17055; }
+        .stat-card.error { background: #fab1a0; color: #d63031; }
+        .stat-card .number { font-size: 32px; font-weight: bold; }
+        .stat-card .label { font-size: 14px; margin-top: 5px; }
+        .problems {
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .problem-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            border-radius: 3px;
+        }
+        .problem-item .id { font-weight: bold; color: #2c3e50; }
+        .problem-item .detail { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 認證詞彙音檔檢查器</h1>
+
+        <div class="file-input">
+            <h3>選擇檔案：</h3>
+            <input type="file" id="dataFile" accept=".json,.ods">
+            <p style="margin-top: 10px; color: #7f8c8d; font-size: 14px;">
+                選擇 114 年度 ODS 檔案（例如 114_Basic_Vocab_Si.ods）或 113 年度 JSON 檔案
+            </p>
+        </div>
+
+        <div>
+            <button id="startBtn" disabled>開始檢查</button>
+            <button id="downloadBtn" style="display:none; background:#27ae60;">下載結果 JSON</button>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="status" id="status">準備中...</div>
+        </div>
+
+        <div class="results" id="results">
+            <h2>檢查結果</h2>
+            <div class="summary" id="summary"></div>
+            <div id="problemsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const AUDIO_BASE_URL = 'https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary';
+
+        const ACCENT_MAP = {
+            '四': 'si', '海': 'ha', '大': 'da', '平': 'rh', '安': 'zh'
+        };
+
+        const LEVEL_CONFIG = {
+            '基': { 目錄級: '5', 目錄另級: '1', 檔級: '' },
+            '初': { 目錄級: '1', 檔級: '' },
+            '中': { 目錄級: '2', 檔級: '1' },
+            '中高': { 目錄級: '3', 檔級: '2' },
+            '高': { 目錄級: '4', 檔級: '3' }
+        };
+
+        const EXCEPTION_AUDIO = {
+            '基': [['16-3', '110', '007'], ['7-13', '110', '024']],
+            '初': [],
+            '中': [['1-15', '110', '015'], ['4-156', '110', '156']],
+            '中高': [['1-2', '110', '002'], ['9-156', '110', '156']],
+            '高': [['1-205', '110', '205'], ['9-116', '110', '116'], ['9-26', '110', '026']]
+        };
+
+        const KNOWN_MISSING = {
+            '海陸中高級': { '4-261': { word: true, sentence: false } },
+            '詔安中級': { '17-119': { word: true, sentence: false } },
+            '詔安初級': { '18-92': { word: false, sentence: false } },
+            '海陸高級': { '1-101': { word: false, sentence: 'na' }, '16-36': { word: false, sentence: 'na' } },
+            '大埔高級': {
+                '2-100': { word: false, sentence: 'na' }, '2-194': { word: false, sentence: 'na' },
+                '3-32': { word: false, sentence: 'na' }, '5-103': { word: false, sentence: 'na' },
+                '10-217': { word: false, sentence: 'na' }, '10-543': { word: false, sentence: 'na' },
+                '17-2': { word: false, sentence: 'na' }
+            },
+            '詔安高級': {
+                '1-112': { word: false, sentence: 'na' }, '3-28': { word: false, sentence: 'na' },
+                '7-130': { word: false, sentence: 'na' }
+            }
+        };
+
+        // ==================== 全域變數 ====================
+        let fileData = null;
+        let fileName = '';
+        let fileType = '';
+        let results = null;
+
+        // ==================== DOM 元素 ====================
+        const dataFileInput = document.getElementById('dataFile');
+        const startBtn = document.getElementById('startBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const status = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        const summaryDiv = document.getElementById('summary');
+
+        // ==================== 事件監聽 ====================
+        dataFileInput.addEventListener('change', handleFileSelect);
+        startBtn.addEventListener('click', startCheck);
+        downloadBtn.addEventListener('click', downloadResults);
+
+        // ==================== 函數 ====================
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileName = file.name;
+            const ext = fileName.split('.').pop().toLowerCase();
+            fileType = ext;
+
+            if (ext === 'json') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        fileData = JSON.parse(e.target.result);
+                        startBtn.disabled = false;
+                        status.textContent = `已載入：${fileName}`;
+                    } catch (err) {
+                        alert('JSON 檔案格式錯誤：' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            } else if (ext === 'ods') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        fileData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        startBtn.disabled = false;
+                        status.textContent = `已載入：${fileName}`;
+                    } catch (err) {
+                        alert('ODS 檔案格式錯誤：' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert('不支援的檔案格式，請選擇 .json 或 .ods 檔案');
+            }
+        }
+
+        function parseFilename(filename) {
+            // 114_Basic_Vocab_Si.ods -> { year: '114', level: '基', accent: '四' }
+            // 113四基.json -> { year: '113', level: '基', accent: '四' }
+
+            if (filename.startsWith('114_')) {
+                const parts = filename.replace('.ods', '').split('_');
+                const levelMap = { 'Basic': '基', 'Elementary': '初', 'Intermediate': '中', 'Upper': '中高', 'Advanced': '高' };
+                const accentMap = { 'Si': '四', 'Hai': '海', 'Da': '大', 'Rao': '平', 'Zhao': '安' };
+
+                const year = parts[0];
+                let level = levelMap[parts[1]] || parts[1];
+                if (parts[1] === 'Upper') level = '中高'; // Upper-Intermediate
+                let accent = accentMap[parts[parts.length - 1]] || parts[parts.length - 1];
+
+                return { year, level, accent };
+            } else {
+                // 113四基.json
+                const match = filename.match(/^(\d{3})([四海大平安])(.+)\./);
+                if (match) {
+                    return { year: match[1], accent: match[2], level: match[3] };
+                }
+            }
+            return null;
+        }
+
+        function extractEntryIdsFromODS(data) {
+            // ODS data is array of rows
+            // First row is header, find column index for "編號"
+            const header = data[0];
+            const idColIndex = header.findIndex(col => col === '編號' || col === '編碼');
+
+            if (idColIndex === -1) {
+                alert('找不到「編號」或「編碼」欄位');
+                return [];
+            }
+
+            const entryIds = [];
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                const id = row[idColIndex];
+                if (id && typeof id === 'string' && id.includes('-')) {
+                    entryIds.push(id.trim());
+                }
+            }
+            return entryIds;
+        }
+
+        function extractEntryIdsFromJSON(data) {
+            // JSON format with content field
+            const content = data.content || '';
+            const lines = content.trim().split('\n');
+            const entryIds = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const parts = line.split(',');
+                if (parts[0] && parts[0].includes('-')) {
+                    entryIds.push(parts[0].trim());
+                }
+            }
+            return entryIds;
+        }
+
+        function parseEntryId(entryId) {
+            const parts = entryId.split('-');
+            if (parts.length === 2) {
+                return [parts[0].padStart(2, '0'), parts[1].padStart(3, '0')];
+            }
+            return [null, null];
+        }
+
+        function buildAudioUrl(year, level, accent, levelPrefix, category, number, isSentence = false, isException = false) {
+            const exceptionPath = isException ? (isSentence ? 's/' : 'w/') : '';
+            const sentenceSuffix = isSentence ? 's' : '';
+            return `${AUDIO_BASE_URL}/${year}/${level}/${accent}/${exceptionPath}${levelPrefix}${accent}-${category}-${number}${sentenceSuffix}.mp3`;
+        }
+
+        async function checkUrlExists(url) {
+            return new Promise((resolve) => {
+                const audio = new Audio();
+                const timeout = setTimeout(() => {
+                    audio.src = '';
+                    resolve(false);
+                }, 5000); // 5 秒超時
+
+                audio.addEventListener('canplaythrough', () => {
+                    clearTimeout(timeout);
+                    audio.src = '';
+                    resolve(true);
+                }, { once: true });
+
+                audio.addEventListener('error', () => {
+                    clearTimeout(timeout);
+                    audio.src = '';
+                    resolve(false);
+                }, { once: true });
+
+                audio.src = url;
+            });
+        }
+
+        async function checkEntryAudio(entryId, accentChar, level, levelName) {
+            const [category, number] = parseEntryId(entryId);
+            if (!category || !number) return { entry_id: entryId, error: 'Invalid entry ID' };
+
+            const config = LEVEL_CONFIG[level];
+            const dirLevel = config.目錄級;
+            const levelPrefix = config.檔級;
+            const altLevel = config.目錄另級;
+            const accent = ACCENT_MAP[accentChar];
+
+            // 檢查例外音檔
+            const exceptions = EXCEPTION_AUDIO[level] || [];
+            const exception = exceptions.find(e => e[0] === entryId);
+
+            // 檢查已知缺失
+            const fullName = `${accentChar}${levelName}`;
+            const missingInfo = KNOWN_MISSING[fullName]?.[entryId];
+
+            const result = { entry_id: entryId };
+
+            // === 檢查詞音檔 ===
+            if (missingInfo?.word === false) {
+                result.word = { status: 'known_missing' };
+            } else if (exception) {
+                const [, excYear, excNum] = exception;
+                const excLevel = altLevel || dirLevel;
+                const url = buildAudioUrl(excYear, excLevel, accent, levelPrefix, category, excNum.padStart(3, '0'), false, true);
+                const exists = await checkUrlExists(url);
+                result.word = { year: excYear, url, exists };
+            } else {
+                // 114 年度
+                if (level === '基' || level === '初') {
+                    const url = buildAudioUrl('114', dirLevel, accent, levelPrefix, category, number);
+                    const exists = await checkUrlExists(url);
+                    if (exists) {
+                        result.word = { year: '114', url, exists: true };
+                    } else {
+                        // 記錄 114 嘗試但失敗
+                        if (entryId === '1-1') console.log('114 詞音檔:', url, exists);
+                    }
+                }
+
+                // 112 年度 fallback
+                if (!result.word) {
+                    const category112 = level === '初' ? category[0].padStart(3, '0') : category;
+                    const url = buildAudioUrl('112', dirLevel, accent, levelPrefix, category112, number);
+                    const exists = await checkUrlExists(url);
+                    result.word = { year: '112', url, exists };
+                    if (entryId === '1-1') console.log('112 詞音檔 (fallback):', url, exists);
+                }
+            }
+
+            // === 檢查句音檔 ===
+            if (level === '高') {
+                result.sentence = { status: 'level_na' };
+            } else if (missingInfo?.sentence === false) {
+                result.sentence = { status: 'known_missing' };
+            } else if (missingInfo?.sentence === 'na') {
+                result.sentence = { status: 'known_na' };
+            } else if (exception) {
+                const [, excYear, excNum] = exception;
+                const excLevel = altLevel || dirLevel;
+                const url = buildAudioUrl(excYear, excLevel, accent, levelPrefix, category, excNum.padStart(3, '0'), true, true);
+                const exists = await checkUrlExists(url);
+                result.sentence = { year: excYear, url, exists };
+            } else {
+                // 114 年度
+                if (level === '基' || level === '初') {
+                    const url = buildAudioUrl('114', dirLevel, accent, levelPrefix, category, number, true);
+                    const exists = await checkUrlExists(url);
+                    if (exists) {
+                        result.sentence = { year: '114', url, exists: true };
+                    } else {
+                        if (entryId === '1-1') console.log('114 句音檔:', url, exists);
+                    }
+                }
+
+                // 112 年度 fallback
+                if (!result.sentence) {
+                    const category112 = level === '初' ? category[0].padStart(3, '0') : category;
+                    const url = buildAudioUrl('112', dirLevel, accent, levelPrefix, category112, number, true);
+                    const exists = await checkUrlExists(url);
+                    result.sentence = { year: '112', url, exists };
+                    if (entryId === '1-1') console.log('112 句音檔 (fallback):', url, exists);
+                }
+            }
+
+            // 判斷狀態
+            const wordOk = result.word?.exists || result.word?.status === 'known_missing';
+            const sentenceOk = result.sentence?.exists || ['known_missing', 'level_na', 'known_na'].includes(result.sentence?.status);
+
+            if (wordOk && sentenceOk) result.status = 'ok';
+            else if (!wordOk && !sentenceOk) result.status = 'both_missing';
+            else if (!wordOk) result.status = 'word_missing';
+            else result.status = 'sentence_missing';
+
+            return result;
+        }
+
+        async function startCheck() {
+            startBtn.disabled = true;
+            downloadBtn.style.display = 'none';
+            progress.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            // 解析檔名
+            const parsed = parseFilename(fileName);
+            if (!parsed) {
+                alert('無法解析檔名格式');
+                startBtn.disabled = false;
+                return;
+            }
+
+            const { year, accent: accentChar, level: levelChars } = parsed;
+            console.log('解析結果:', { year, accentChar, levelChars, accentCode: ACCENT_MAP[accentChar] });
+
+            if (!ACCENT_MAP[accentChar] || !LEVEL_CONFIG[levelChars]) {
+                alert(`無法識別腔調或級別：${accentChar}/${levelChars}\n請檢查控制台 (F12) 查看詳情`);
+                startBtn.disabled = false;
+                return;
+            }
+
+            status.textContent = `檔案: ${fileName} | 年度: ${year} | 腔調: ${accentChar}(${ACCENT_MAP[accentChar]}) | 級別: ${levelChars}`;
+
+            // 提取詞彙編號
+            const entryIds = fileType === 'ods'
+                ? extractEntryIdsFromODS(fileData)
+                : extractEntryIdsFromJSON(fileData);
+
+            if (entryIds.length === 0) {
+                alert('找不到詞彙編號');
+                startBtn.disabled = false;
+                return;
+            }
+
+            status.textContent = `開始檢查 ${entryIds.length} 個詞彙...`;
+
+            // 初始化結果
+            results = {
+                file: fileName.replace(/\.(json|ods)$/, ''),
+                year: year,
+                accent: accentChar,
+                level: levelChars,
+                total_entries: entryIds.length,
+                entries: [],
+                summary: { ok: 0, word_missing: 0, sentence_missing: 0, both_missing: 0 }
+            };
+
+            // 檢查每個詞彙（平行處理，但限制並發數）
+            const concurrency = 10; // 同時最多 10 個請求
+            for (let i = 0; i < entryIds.length; i += concurrency) {
+                const batch = entryIds.slice(i, i + concurrency);
+                const batchResults = await Promise.all(
+                    batch.map(id => checkEntryAudio(id, accentChar, levelChars, levelChars))
+                );
+
+                batchResults.forEach(result => {
+                    results.entries.push(result);
+                    results.summary[result.status]++;
+                });
+
+                const progress = ((i + batch.length) / entryIds.length * 100).toFixed(1);
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+                status.textContent = `已檢查 ${i + batch.length}/${entryIds.length} 個詞彙...`;
+            }
+
+            // 顯示結果
+            displayResults();
+            startBtn.disabled = false;
+            downloadBtn.style.display = 'inline-block';
+        }
+
+        function displayResults() {
+            resultsDiv.style.display = 'block';
+
+            // 顯示統計
+            summaryDiv.innerHTML = `
+                <div class="stat-card ok">
+                    <div class="number">${results.summary.ok}</div>
+                    <div class="label">✓ 完全正常</div>
+                </div>
+                <div class="stat-card warn">
+                    <div class="number">${results.summary.word_missing}</div>
+                    <div class="label">⚠ 缺詞音檔</div>
+                </div>
+                <div class="stat-card warn">
+                    <div class="number">${results.summary.sentence_missing}</div>
+                    <div class="label">⚠ 缺句音檔</div>
+                </div>
+                <div class="stat-card error">
+                    <div class="number">${results.summary.both_missing}</div>
+                    <div class="label">✗ 全部缺失</div>
+                </div>
+            `;
+
+            // 顯示問題詞彙
+            const problems = results.entries.filter(e => e.status !== 'ok');
+            if (problems.length > 0) {
+                const problemsHtml = problems.slice(0, 50).map(p => `
+                    <div class="problem-item">
+                        <div class="id">${p.entry_id}: ${p.status}</div>
+                        <div class="detail">
+                            詞: ${JSON.stringify(p.word)}<br>
+                            句: ${JSON.stringify(p.sentence)}
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('problemsContainer').innerHTML = `
+                    <h3>問題詞彙 (${problems.length} 個，顯示前 50 個)</h3>
+                    <div class="problems">${problemsHtml}</div>
+                `;
+            }
+        }
+
+        function downloadResults() {
+            const dataStr = JSON.stringify(results, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${results.file}_audio_check_results.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
