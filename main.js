@@ -323,6 +323,7 @@ let indexedDataCache = {}; // <-- 新增此索引快取物件
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
+let currentDataVarName = ''; // Keep track of the active file var name
 let isNavigatingViaCode = false; // <--- 在這裡新增這一行
 let activeCategoryData = [];
 let firstLoadedIndex = 0;
@@ -3851,6 +3852,7 @@ function initializeAppUI() {
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
+    currentDataVarName = content.name; // Keep track of the active file var name
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
 
@@ -3859,9 +3861,13 @@ function initializeAppUI() {
     const dialectInfo = getDialectInfo(腔, 級);
 
     if (dialectInfo.腔名) {
+      currentDialect = dialectInfo.腔名;
       currentActiveMainDialectName = dialectInfo.腔名;
       updateSearchDialect(dialectInfo.腔名);
     }
+    
+    const gameControls = document.getElementById('game-controls');
+    if (gameControls) gameControls.style.display = 'block';
 
     // --- 動態渲染類別面板（使用官方類別順序） ---
     const officialCategories = getOfficialCategories(content.content);

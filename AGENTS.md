@@ -105,6 +105,26 @@
 	- [URL Patterns and Data Formats](https://deepwiki.com/Aiuanyu/HakSpring/8.1-url-patterns-and-data-formats)
 	- [Supporting Assets and Configuration](https://deepwiki.com/Aiuanyu/HakSpring/8.2-supporting-assets-and-configuration)
 
+## 學習進度（SRS）資料規範
+
+- **`progressKey` 複合鍵**: 系統使用唯一的字串鍵值來存取學習進度，**一旦使用者開始累積進度就不可更改**，否則所有進度會對不上、形同清空。
+  - CERT 格式：`cert|${dialect}|${level}|${編號}` (例: `cert|四縣|基礎級|1-1`)
+  - GIP 格式：`gip|${dialect}|${序號}` (例: `gip|四縣|17918`)
+  - **`level` 必須用 `getFullLevelName()` 的回傳值**（完整名如 `基礎級`、`中高級`），**不可**用簡寫（`基`、`四基`）。CERT 的 `編號`（如 `1-1`）只在「同一個腔+級檔案內」唯一，所以 `dialect`、`level` 兩段缺一不可，且全專案產生 key 的地方都要走同一個 `getFullLevelName()`，確保字面完全一致。
+- **localStorage Schema**: 進度統一儲存在 `localStorage` 的 `hakkaLearningProgress` 鍵值中，內容為一個 JSON 物件，以 `progressKey` 作為屬性名稱。
+- **資料結構**:
+  ```json
+  {
+    "seen": true,
+    "lastResult": "good",
+    "easeFactor": 2.5,
+    "interval": 0,
+    "repetitions": 0,
+    "nextReviewDate": null,
+    "updatedAt": 1718000000000
+  }
+  ```
+
 ## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
 - **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。
 - **使用精確的刪除指令 (Use Precise Deletion Commands)**: 清理暫存檔案時，**必須**使用明確指向該目錄的指令 (例如 `rm -rf /home/jules/verification`)，避免使用廣泛影響整個版本庫的指令 (如 `git clean`)。
