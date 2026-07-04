@@ -31,6 +31,8 @@ async function getProgress(progressKey) {
   }
 }
 
+let gameSyncDebounceTimer = null;
+
 /**
  * Save learning progress for a specific key
  * @param {string} progressKey - e.g., "c四基1-1|m"
@@ -57,6 +59,17 @@ async function putProgress(progressKey, progressObj) {
     ];
 
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
+
+    // Debounce 觸發雲端同步 (避免連續答題時頻繁觸發)
+    if (typeof window.triggerCloudSync === 'function') {
+      if (gameSyncDebounceTimer) {
+        clearTimeout(gameSyncDebounceTimer);
+      }
+      gameSyncDebounceTimer = setTimeout(() => {
+        window.triggerCloudSync();
+      }, 2000); // 2秒後無新操作則觸發同步
+    }
+
   } catch (error) {
     console.error('Error putting progress to localStorage:', error);
   }

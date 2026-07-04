@@ -344,29 +344,28 @@ function mergeProgress(localObj, cloudObj) {
       merged[key] = [...cloudItem];
       continue;
     }
-    
+
     // [ef, interval, reps, due, firstSeenDay]
     const cReps = cloudItem[2] || 0;
     const lReps = localItem[2] || 0;
     const cDue = cloudItem[3] || 0;
     const lDue = localItem[3] || 0;
-    
+
     let preferCloud = false;
     if (cReps > lReps) {
       preferCloud = true;
     } else if (cReps === lReps && cDue > lDue) {
       preferCloud = true;
     }
-    
-    if (preferCloud) {
-      merged[key] = [...cloudItem];
-    }
-    
+
+    // 一律複製勝出那筆，避免下面改 firstSeenDay 時就地 mutate 到 local/cloud 原陣列
+    merged[key] = preferCloud ? [...cloudItem] : [...localItem];
+
     // firstSeenDay 取早 (小)
     const cSeen = cloudItem[4];
     const lSeen = localItem[4];
     const mSeen = merged[key][4];
-    
+
     let earliestSeen = mSeen;
     if (cSeen !== undefined && lSeen !== undefined) {
       earliestSeen = Math.min(cSeen, lSeen);
@@ -375,7 +374,7 @@ function mergeProgress(localObj, cloudObj) {
     } else if (lSeen !== undefined) {
       earliestSeen = lSeen;
     }
-    
+
     if (earliestSeen !== undefined) {
       merged[key][4] = earliestSeen;
     }
@@ -500,6 +499,10 @@ function triggerCloudSync() {
     hasPendingSync = false;
   }, SYNC_DEBOUNCE_MS); // 使用常數
 }
+
+// 明確掛上 window，供跨檔呼叫（game-progress.js 寫進度後會呼叫 window.triggerCloudSync）。
+// 不倚賴「頂層 function 宣告自動成為 window 屬性」的隱式行為，避免載入環境改變時靜默失效。
+window.triggerCloudSync = triggerCloudSync;
 
 /**
  * 週期性背景同步計時器
