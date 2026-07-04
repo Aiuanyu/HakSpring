@@ -336,12 +336,23 @@ function mergeProgress(localObj, cloudObj) {
   
   for (const key in cloud) {
     if (!cloud.hasOwnProperty(key)) continue;
-    
+
     const cloudItem = cloud[key];
     const localItem = local[key];
-    
-    if (!localItem) {
-      merged[key] = [...cloudItem];
+
+    // 防呆：只處理合法的陣列格式。雲端/本地可能殘留舊格式（物件）或空值，
+    // 直接展開會丟 "is not iterable"。非陣列時：本地非法就用雲端、雲端也非法就跳過。
+    const cloudOk = Array.isArray(cloudItem);
+    const localOk = Array.isArray(localItem);
+
+    if (!localOk) {
+      if (cloudOk) merged[key] = [...cloudItem];
+      // 兩邊都非陣列 → 無法合併，保持 merged 現況（可能是本地的非法值，交由後續清理）
+      continue;
+    }
+    if (!cloudOk) {
+      // 雲端非法、本地合法 → 保留本地
+      merged[key] = [...localItem];
       continue;
     }
 
