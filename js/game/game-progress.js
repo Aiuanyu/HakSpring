@@ -5,15 +5,26 @@ const PROGRESS_KEY = 'hakkaLearningProgress';
 
 /**
  * Get learning progress for a specific key
- * @param {string} progressKey - e.g., "cert|四縣|基礎級|1-1"
- * @returns {Promise<object|null>} The progress object or null if it doesn't exist
+ * @param {string} progressKey - e.g., "c四基1-1|m"
+ * @returns {Promise<object|null>} Object {ef, interval, reps, due, firstSeenDay} or null if unseen
  */
 async function getProgress(progressKey) {
   try {
     const dataStr = localStorage.getItem(PROGRESS_KEY);
     if (!dataStr) return null;
     const progressData = JSON.parse(dataStr);
-    return progressData[progressKey] || null;
+    const arr = progressData[progressKey];
+    if (!arr || !Array.isArray(arr)) return null;
+
+    // Map from array to object.
+    // firstSeenDay (arr[4]) 為後加欄位：舊紀錄無第 5 格時回傳 null（「只加不改舊」原則，不需 migration）。
+    return {
+      ef: arr[0],
+      interval: arr[1],
+      reps: arr[2],
+      due: arr[3],
+      firstSeenDay: arr[4] ?? null
+    };
   } catch (error) {
     console.error('Error getting progress from localStorage:', error);
     return null;
@@ -22,26 +33,29 @@ async function getProgress(progressKey) {
 
 /**
  * Save learning progress for a specific key
- * @param {string} progressKey - e.g., "cert|四縣|基礎級|1-1"
- * @param {object} progressObj - The progress data to store
+ * @param {string} progressKey - e.g., "c四基1-1|m"
+ * @param {object} progressObj - {ef, interval, reps, due, firstSeenDay}
  */
 async function putProgress(progressKey, progressObj) {
   try {
     const dataStr = localStorage.getItem(PROGRESS_KEY);
     const progressData = dataStr ? JSON.parse(dataStr) : {};
-    
-    // Default SM-2 placeholder schema if missing
-    const existing = progressData[progressKey] || {};
-    progressData[progressKey] = {
-      seen: progressObj.seen ?? existing.seen ?? true,
-      lastResult: progressObj.lastResult ?? existing.lastResult ?? 'again',
-      easeFactor: progressObj.easeFactor ?? existing.easeFactor ?? 2.5,
-      interval: progressObj.interval ?? existing.interval ?? 0,
-      repetitions: progressObj.repetitions ?? existing.repetitions ?? 0,
-      nextReviewDate: progressObj.nextReviewDate ?? existing.nextReviewDate ?? null,
-      updatedAt: progressObj.updatedAt ?? existing.updatedAt ?? Date.now()
-    };
-    
+
+    const today = Math.floor(Date.now() / 86400000);
+    // 初見日：優先用傳入值，其次沿用既有紀錄的舊值，最後才給今天（確保初見日只寫一次、之後不被覆蓋）。
+    const existing = progressData[progressKey];
+    const prevFirstSeen = Array.isArray(existing) ? existing[4] : undefined;
+    const firstSeenDay = progressObj.firstSeenDay ?? prevFirstSeen ?? today;
+
+    // Store as fixed length array: [ef, interval, reps, due, firstSeenDay]
+    progressData[progressKey] = [
+      progressObj.ef ?? 250,
+      progressObj.interval ?? 0,
+      progressObj.reps ?? 0,
+      progressObj.due ?? today,
+      firstSeenDay
+    ];
+
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
   } catch (error) {
     console.error('Error putting progress to localStorage:', error);

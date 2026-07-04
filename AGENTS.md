@@ -107,23 +107,36 @@
 
 ## 學習進度（SRS）資料規範
 
-- **`progressKey` 複合鍵**: 系統使用唯一的字串鍵值來存取學習進度，**一旦使用者開始累積進度就不可更改**，否則所有進度會對不上、形同清空。
-  - CERT 格式：`cert|${dialect}|${level}|${編號}` (例: `cert|四縣|基礎級|1-1`)
-  - GIP 格式：`gip|${dialect}|${序號}` (例: `gip|四縣|17918`)
-  - **`level` 必須用 `getFullLevelName()` 的回傳值**（完整名如 `基礎級`、`中高級`），**不可**用簡寫（`基`、`四基`）。CERT 的 `編號`（如 `1-1`）只在「同一個腔+級檔案內」唯一，所以 `dialect`、`level` 兩段缺一不可，且全專案產生 key 的地方都要走同一個 `getFullLevelName()`，確保字面完全一致。
-- **localStorage Schema**: 進度統一儲存在 `localStorage` 的 `hakkaLearningProgress` 鍵值中，內容為一個 JSON 物件，以 `progressKey` 作為屬性名稱。
-- **資料結構**:
-  ```json
+> **儲存策略**：學習進度存 `localStorage`（key `hakkaLearningProgress`），**不存 IndexedDB**。IndexedDB（`HakkaDataDB`）在本專案只是字典 JSON 快取，會被 `?force-refresh=true` 清掉；進度與書籤（`hakkaBookmarks`）一樣走 localStorage，未來一併經 Supabase 同步。
+
+- **`progressKey` 精簡鍵**: 唯一字串鍵，**一旦使用者開始累積進度就不可更改**，否則所有進度會對不上、形同清空。
+  - 格式：`${source首字}${dataVarName}${編號}|${題型}`，`source` 首字 `c`=cert、`g`=gip。
+    - CERT 例：`c四基1-1|m`（`c` + `四基` + `1-1` + 題型 `m`）
+    - GIP 例：`g海12345|m`（`g` + `海` + `序號` + 題型 `m`）
+  - `dataVarName` 直接用既有兩字碼（`四基`、`海中高`…），不展開成完整名。
+  - CERT `編號`（如 `1-1`）只在「同一個腔+級檔案內」唯一，故 `dataVarName` 段不可省。
+  - **題型段（尾段 `|x`）**：`m` = 目前唯一題型「看漢字+拼音→選華語」。不同題型是不同記憶技能，各題型各自一筆進度、互不干擾。未來新題型用新代碼（`|a`、`|b`…），**key 格式本身不再變**，只是多出新紀錄。
+  - 產生 key 的邏輯集中在 `js/game/game-data.js` 的 `generateProgressKey()`（含 `QUESTION_MODE_DEFAULT`），全專案只走這一處。
+- **localStorage Schema**: `localStorage['hakkaLearningProgress']` 是一個 JSON 物件，以 `progressKey` 為屬性名，**值為定長陣列**（省空間，數萬詞才不會撞 localStorage ~5MB 上限）：
+  ```jsonc
   {
-    "seen": true,
-    "lastResult": "good",
-    "easeFactor": 2.5,
-    "interval": 0,
-    "repetitions": 0,
-    "nextReviewDate": null,
-    "updatedAt": 1718000000000
+    "c四基1-1|m": [250, 6, 3, 20128, 20122]
+    // [ef, interval, reps, due, firstSeenDay]
+    //  ef           容易度 ×100 存整數（2.5 → 250），下限 130
+    //  interval     間隔天數（整數）
+    //  reps         連續答對次數（答錯歸零）
+    //  due          下次複習日，epoch「天」（Math.floor(Date.now()/86400000)）
+    //  firstSeenDay 初見日，epoch「天」；只在第一次寫入時設定，之後不覆蓋
   }
   ```
+  - **`seen`（是否初見）由「有無這筆紀錄」隱含**，不另存。
+  - 讀寫封裝在 `js/game/game-progress.js`（`getProgress`/`putProgress`），對外可轉成物件方便使用，但**落地格式一律陣列**。
+- **SM-2 評分**：4 級 `again`/`hard`/`good`/`easy`。答對顯示 `hard`/`good`/`easy` 三鈕；**答錯不給選、直接記 `again`**（`reps` 歸零、`ef` 下修）。純函式在 `js/game/srs.js`。
+
+### Schema 演進守則（避免昂貴 migration）
+> 進度資料未來一定會想加欄位。為避免「改一次 schema → 觸發整包 localStorage 重傳 Supabase」的負載，遵守兩條：
+> 1. **只加不改（append-only）**：新欄位一律加在陣列**尾端**，並在 `getProgress` 用 `arr[n] ?? 預設值` 讀取。舊紀錄無此格時給預設，**不需掃全表 migration**，也不會造成大量同步異動。（`firstSeenDay` 即依此加在 arr[4]。）
+> 2. **非做整表 migration 不可時**：等 Phase 3 把 Supabase 同步從「整包 upsert」改成「逐筆增量」之後再做，否則會把幾 MB 進度整包重傳。
 
 ## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
 - **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。

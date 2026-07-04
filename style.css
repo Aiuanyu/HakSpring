@@ -3082,7 +3082,6 @@ mark {
 
 /* --- Result Sequence Number --- */
 .result-sequence-number {
-  background-color: #f0f0f0;
   color: #333;
   text-align: center;
   font-weight: bold;
@@ -3944,17 +3943,36 @@ mark {
   font-size: 0.85em;
   font-weight: bold;
 }
+#gameLearningMode {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #333;
+}
+.game-sentence-display {
+  font-family: var(--title-font);
+  display: none;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  color: #333;
+  text-align: left;
+}
 .game-question-card {
   text-align: center;
   margin-bottom: 30px;
 }
 .game-question-card h1 {
-  font-size: 2.5em;
+  font-family: var(--title-font);
+  font-size: 3em;
   margin: 0 0 10px 0;
   color: #333;
 }
 .game-question-card .pinyin-text {
-  font-size: 1.2em;
+  font-family: var(--roman-font);
+  font-size: 1.5em;
   color: #666;
   margin-bottom: 10px;
 }
@@ -3971,9 +3989,20 @@ mark {
 #game-play-audio-btn:hover {
   background-color: rgba(74, 144, 226, 0.1);
 }
+@keyframes pulse-playing {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; color: var(--primary-color); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 #game-play-audio-btn.playing {
   color: #2ecc71;
-  transform: scale(1.1);
+  animation: pulse-playing 1s infinite;
+}
+
+.game-sentence-display button.playing i {
+  animation: pulse-playing 1s infinite;
+  color: #f1c40f;
 }
 .game-options {
   display: grid;
@@ -4026,6 +4055,23 @@ mark {
 }
 
 @media (prefers-color-scheme: dark) {
+  #gameLearningMode {
+    background-color: #2d2d2d;
+    color: #eee;
+    border-color: #444;
+  }
+  .game-sentence-display {
+    font-family: var(--title-font);
+    background-color: #1a1a1a !important;
+    color: #eee !important;
+  }
+  .game-btn {
+    background-color: #357ABD;
+    color: #eee;
+  }
+  .game-btn:hover {
+    background-color: #285e92;
+  }
   .game-question-card h1 {
     color: #eee;
   }
@@ -4067,5 +4113,22 @@ mark {
   }
   .game-question-card h1 {
     font-size: 2em;
+  }
+}
+
+.kbd-shortcut {
+  font-family: inherit;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-right: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 0.9em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kbd-shortcut {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.3);
   }
 }

@@ -55,18 +55,92 @@ function generateDistractors(targetWord, allWords) {
 }
 
 /**
+ * Helper to sort words by their ID (e.g. "1-2" before "1-10")
+ */
+function sortWordsById(words) {
+  return [...words].sort((a, b) => {
+    const aParts = (a['編號'] || a['序號'] || '').toString().split('-');
+    const bParts = (b['編號'] || b['序號'] || '').toString().split('-');
+    if (aParts.length > 1 && bParts.length > 1) {
+      const a0 = parseInt(aParts[0], 10) || 0;
+      const b0 = parseInt(bParts[0], 10) || 0;
+      if (a0 !== b0) return a0 - b0;
+      const a1 = parseInt(aParts[1], 10) || 0;
+      const b1 = parseInt(bParts[1], 10) || 0;
+      return a1 - b1;
+    }
+    const aVal = parseInt(aParts[0], 10) || 0;
+    const bVal = parseInt(bParts[0], 10) || 0;
+    return aVal - bVal;
+  });
+}
+
+/**
  * Generate a game session (10 questions)
  */
-async function generateGameSession(dialect, dataVarName) {
+async function generateGameSession(dialect, dataVarName, mode = 'review') {
   const allWords = getWordsForDialectAndLevel(dialect, dataVarName);
   
   if (allWords.length === 0) {
     throw new Error('無法取得詞彙資料，請確定資料庫已載入。');
   }
 
-  // Pick 10 random targets for PoC
-  const targets = getRandomItems(allWords, Math.min(10, allWords.length));
-  
+  // Pre-fetch all progress to avoid awaiting in loop if possible, 
+  // but getProgress is async (localStorage is sync, but wrapped in Promise).
+  // Actually, we can just await Promise.all
+  const wordsWithProgress = await Promise.all(allWords.map(async w => {
+    const p = await getProgress(w.progressKey);
+    return { word: w, progress: p };
+  }));
+
+  let targets = [];
+  const MAX_QUESTIONS = Math.min(10, allWords.length);
+
+  if (mode === 'sequential') {
+    // 1. Filter unseen words
+    const unseen = wordsWithProgress.filter(wp => !wp.progress).map(wp => wp.word);
+    
+    // 2. Sort by ID
+    const sortedUnseen = sortWordsById(unseen);
+    
+    // 3. Take up to 10
+    targets = sortedUnseen.slice(0, MAX_QUESTIONS);
+    
+    // 4. If less than 10, fill with random unseen (though sequential implies we just take them)
+    // If still less than 10, fill with anything just to make it 10
+    if (targets.length < MAX_QUESTIONS) {
+      const remaining = allWords.filter(w => !targets.includes(w));
+      targets = targets.concat(getRandomItems(remaining, MAX_QUESTIONS - targets.length));
+    }
+  } else {
+    // Review Mode
+    const todayEpochDay = Math.floor(Date.now() / 86400000);
+    
+    // 1. Due words (progress exists and due <= today)
+    const dueWords = wordsWithProgress.filter(wp => wp.progress && wp.progress.due <= todayEpochDay).map(wp => wp.word);
+    
+    // 2. Unseen words
+    const unseenWords = wordsWithProgress.filter(wp => !wp.progress).map(wp => wp.word);
+    
+    // 3. Seen but not due words
+    const notDueWords = wordsWithProgress.filter(wp => wp.progress && wp.progress.due > todayEpochDay).map(wp => wp.word);
+
+    // Pick due words first
+    targets = getRandomItems(dueWords, Math.min(dueWords.length, MAX_QUESTIONS));
+    
+    // Fill with unseen
+    if (targets.length < MAX_QUESTIONS) {
+      const needed = MAX_QUESTIONS - targets.length;
+      targets = targets.concat(getRandomItems(unseenWords, Math.min(unseenWords.length, needed)));
+    }
+    
+    // Fill with random not due if STILL needed
+    if (targets.length < MAX_QUESTIONS) {
+      const needed = MAX_QUESTIONS - targets.length;
+      targets = targets.concat(getRandomItems(notDueWords, Math.min(notDueWords.length, needed)));
+    }
+  }
+
   const session = [];
   for (const target of targets) {
     const distractors = generateDistractors(target, allWords);
@@ -79,9 +153,9 @@ async function generateGameSession(dialect, dataVarName) {
       [options[i], options[j]] = [options[j], options[i]];
     }
 
-    // Check if it's new (seen status)
+    // Check if it's new (seen status) - now purely based on existence of progress
     const progress = await getProgress(target.progressKey);
-    const isNew = !progress || !progress.seen;
+    const isNew = !progress;
 
     session.push({
       targetWord: target,

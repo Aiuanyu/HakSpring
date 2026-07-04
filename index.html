@@ -31,6 +31,7 @@
   <script type="text/javascript" src="js/game/game-progress.js" defer></script>
   <script type="text/javascript" src="js/game/game-data.js" defer></script>
   <script type="text/javascript" src="js/game/question-gen.js" defer></script>
+  <script type="text/javascript" src="js/game/srs.js" defer></script>
   <script type="text/javascript" src="js/game/game-ui.js" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js" defer></script>
   <script src="https://kit.fontawesome.com/6741caa77f.js" crossorigin="anonymous"></script>
@@ -169,6 +170,19 @@
           <div id="game-setup-view">
             <p>準備好開始學習 <span id="game-target-level"></span> 了嗎？</p>
             <p>一局共有 10 題選擇題。</p>
+            <div style="margin-bottom: 15px;">
+              <label for="gameLearningMode">學習模式：</label>
+              <select id="gameLearningMode" class="form-select">
+                <option value="review">複習優先模式</option>
+                <option value="sequential">固定依序模式</option>
+              </select>
+            </div>
+            <div style="margin-bottom: 25px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555;">
+                <input type="checkbox" id="gameAutoOpenSentence" checked>
+                答對後一律自動打開例句
+              </label>
+            </div>
             <button id="gameStartSessionBtn" class="game-btn">開始挑戰！</button>
           </div>
           <div id="game-play-view" style="display: none;">
