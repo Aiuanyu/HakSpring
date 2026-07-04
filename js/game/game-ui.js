@@ -7,29 +7,114 @@ let score = 0;
 let gameActiveDialect = '';
 let gameActiveDataVarName = '';
 let currentGameAudioElements = [];
+let currentQuestionAudioPromise = Promise.resolve();
 
 function initGameUI() {
   const startGameBtn = document.getElementById('startGameBtn');
+  const headerStartGameBtn = document.getElementById('headerStartGameBtn');
+  const floatingStartGameBtn = document.getElementById('floatingStartGameBtn');
   const gameModal = document.getElementById('gameModal');
   const gameCloseBtn = document.getElementById('gameCloseBtn');
   const gameStartSessionBtn = document.getElementById('gameStartSessionBtn');
   const gameRetryBtn = document.getElementById('gameRetryBtn');
   const gamePlayAudioBtn = document.getElementById('game-play-audio-btn');
 
-  if (startGameBtn) {
-    startGameBtn.addEventListener('click', () => {
-      // Check if a dialect and level are selected
-      if (!currentActiveDialectLevelFullName) {
-        alert('請先在主控板選擇腔調與級別！');
-        return;
-      }
-      
-      gameActiveDialect = currentDialect;
+  const handleStartGameClick = () => {
+    const readyBlock = document.getElementById('game-setup-ready-block');
+    const selectBlock = document.getElementById('game-setup-select-block');
+
+    if (currentActiveDialectLevelFullName) {
+      const 腔 = currentDataVarName.substring(0, 1);
+      const 級 = currentDataVarName.substring(1);
+      gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣';
       gameActiveDataVarName = currentDataVarName;
-      
       document.getElementById('game-target-level').textContent = currentActiveDialectLevelFullName;
+      if (readyBlock) readyBlock.style.display = 'block';
+      if (selectBlock) selectBlock.style.display = 'none';
       showGameView('setup');
       gameModal.style.display = 'flex';
+      return;
+    }
+
+    // Infer from progress
+    let latestVarName = null;
+    let maxDue = -1;
+    try {
+      const progressObj = JSON.parse(localStorage.getItem('hakkaLearningProgress') || '{}');
+      for (const key in progressObj) {
+        const record = progressObj[key];
+        const due = record[3] || 0;
+        if (due > maxDue) {
+          maxDue = due;
+          const match = key.match(/^[cg]([^\d|]+)/);
+          if (match) latestVarName = match[1];
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse progress for inference', e);
+    }
+
+    if (latestVarName) {
+      const varData = window[latestVarName];
+      if (varData) {
+        // Set game variables without triggering main UI changes
+        gameActiveDataVarName = varData.name;
+        // The getDialectInfo function is in main.js, but we can just set it from the first character
+        const 腔 = varData.name.substring(0, 1);
+        const 級 = varData.name.substring(1);
+        gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣'; // fallback
+        
+        g_currentLevelData = [...varData.content];
+
+        document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
+        if (readyBlock) readyBlock.style.display = 'block';
+        if (selectBlock) selectBlock.style.display = 'none';
+        showGameView('setup');
+        gameModal.style.display = 'flex';
+        return;
+      }
+    }
+
+    if (readyBlock) readyBlock.style.display = 'none';
+    if (selectBlock) selectBlock.style.display = 'block';
+    showGameView('setup');
+    gameModal.style.display = 'flex';
+  };
+
+  if (startGameBtn) startGameBtn.addEventListener('click', handleStartGameClick);
+  if (headerStartGameBtn) headerStartGameBtn.addEventListener('click', handleStartGameClick);
+  if (floatingStartGameBtn) floatingStartGameBtn.addEventListener('click', handleStartGameClick);
+
+  const gameChangeLevelBtn = document.getElementById('gameChangeLevelBtn');
+  if (gameChangeLevelBtn) {
+    gameChangeLevelBtn.addEventListener('click', () => {
+      document.getElementById('game-setup-ready-block').style.display = 'none';
+      document.getElementById('game-setup-select-block').style.display = 'block';
+    });
+  }
+
+  const gameConfirmLevelBtn = document.getElementById('gameConfirmLevelBtn');
+  if (gameConfirmLevelBtn) {
+    gameConfirmLevelBtn.addEventListener('click', () => {
+      const dialect = document.getElementById('gameSelectDialect').value;
+      const level = document.getElementById('gameSelectLevel').value;
+      if (dialect && level) {
+        const dataVarName = dialect + level;
+        const varData = window[dataVarName];
+        if (varData) {
+          gameActiveDataVarName = varData.name;
+          gameActiveDialect = getDialectInfo(dialect, level).腔名 || '四縣';
+          g_currentLevelData = [...varData.content];
+
+          document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
+          document.getElementById('game-setup-select-block').style.display = 'none';
+          document.getElementById('game-setup-ready-block').style.display = 'block';
+        } else {
+          alert('無此腔調/級別組合的資料！');
+        }
+      } else {
+        alert('請擇腔調摎級別！');
+      }
     });
   }
 
@@ -181,9 +266,13 @@ function renderQuestion() {
     const btn = document.createElement('button');
     btn.className = 'game-option-btn';
     btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> ${opt}`;
+    btn.dataset.option = opt;
     btn.onclick = () => handleAnswer(opt, btn);
     optionsContainer.appendChild(btn);
   });
+  
+  // 題目出現時立刻播放詞彙音檔
+  currentQuestionAudioPromise = playCurrentQuestionAudio();
 }
 
 async function handleAnswer(selectedOption, btnElement) {
@@ -201,9 +290,6 @@ async function handleAnswer(selectedOption, btnElement) {
     btnElement.classList.add('correct');
     feedback.className = 'game-feedback correct';
     score++;
-    
-    // Play audio
-    const audioPromise = playCurrentQuestionAudio();
     
     const msg = document.createElement('div');
     msg.textContent = '著！（你覺著這題會難無：）';
@@ -232,14 +318,14 @@ async function handleAnswer(selectedOption, btnElement) {
     
     feedback.appendChild(evalContainer);
     
-    appendSentenceUI(feedback, question, audioPromise);
+    appendSentenceUI(feedback, question, currentQuestionAudioPromise);
   } else {
     btnElement.classList.add('wrong');
     feedback.className = 'game-feedback wrong';
     
     // Highlight correct answer
     options.forEach(btn => {
-      if (btn.textContent === question.targetWord.華語詞義) {
+      if (btn.dataset.option === question.targetWord.華語詞義) {
         btn.classList.add('correct');
       }
     });

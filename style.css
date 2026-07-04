@@ -2217,7 +2217,8 @@ input:checked+.slider:before {
 /* Info Button in Header */
 #infoButton,
 #showRomanizerBtn,
-#dataManagementBtn {
+#dataManagementBtn,
+#headerStartGameBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -2234,17 +2235,53 @@ input:checked+.slider:before {
 
 #infoButton i,
 #showRomanizerBtn i,
-#dataManagementBtn i {
+#dataManagementBtn i,
+#headerStartGameBtn i {
   color: inherit;
 }
 
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
 #showRomanizerBtn:hover i,
-#dataManagementBtn:hover i {
+#dataManagementBtn:hover i,
+#headerStartGameBtn:hover i {
   /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color);
   /* 用 focus 光暈色做 hover 效果 */
+}
+
+/* --- 浮動開始遊戲按鈕 (寬版專用) --- */
+.floating-game-btn {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.floating-game-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  background-color: var(--primary-btn-hover);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  .floating-game-btn {
+    display: none !important; /* 窄版螢幕隱藏 */
+  }
 }
 
 /* --- 【新增】雲端同步按鈕樣式 --- */
@@ -2466,13 +2503,15 @@ input:checked+.slider:before {
 
   #infoButton,
   #showRomanizerBtn,
-  #dataManagementBtn {
+  #dataManagementBtn,
+  #headerStartGameBtn {
     color: var(--main-text-color);
   }
 
   #infoButton:hover i,
   #showRomanizerBtn:hover i,
-  #dataManagementBtn:hover i {
+  #dataManagementBtn:hover i,
+  #headerStartGameBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -2877,8 +2916,9 @@ tr.ios-autoplay-instruction td::before {
   cursor: pointer;
   font-weight: bold;
   padding: 0.2em 0.5em;
-  display: inline-block;
-  /* 讓 padding 生效 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #learningSelectionPanel summary:hover {
@@ -3911,6 +3951,12 @@ mark {
   #gameModal .modal-close-btn:focus-visible {
     color: #fff;
   }
+  
+  #gameModal .form-select {
+    background-color: #3a3a3c;
+    color: #e0e0e0;
+    border-color: #555;
+  }
 }
 
 .game-btn {
@@ -3943,7 +3989,7 @@ mark {
   font-size: 0.85em;
   font-weight: bold;
 }
-#gameLearningMode {
+.form-select {
   padding: 5px;
   border-radius: 4px;
   border: 1px solid #ccc;

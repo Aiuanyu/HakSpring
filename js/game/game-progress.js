@@ -61,3 +61,36 @@ async function putProgress(progressKey, progressObj) {
     console.error('Error putting progress to localStorage:', error);
   }
 }
+
+// One-time migration for old progress keys without |m
+(function migrateOldProgressKeys() {
+  try {
+    const dataStr = localStorage.getItem(PROGRESS_KEY);
+    if (!dataStr) return;
+    const progressData = JSON.parse(dataStr);
+    let migrated = false;
+    for (const key in progressData) {
+      if (!key.includes('|')) {
+        const newKey = key + '|m';
+        if (!progressData[newKey]) {
+          progressData[newKey] = progressData[key];
+        } else {
+          // If both exist, keep the one with a higher due date
+          const oldDue = progressData[key][3] || 0;
+          const newDue = progressData[newKey][3] || 0;
+          if (oldDue > newDue) {
+            progressData[newKey] = progressData[key];
+          }
+        }
+        delete progressData[key];
+        migrated = true;
+      }
+    }
+    if (migrated) {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
+      console.log('Migrated old progress keys to include |m');
+    }
+  } catch (e) {
+    console.error('Migration failed:', e);
+  }
+})();

@@ -137,7 +137,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, updated_at')
+      .select('bookmarks, preferences, learning_progress, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -175,11 +175,18 @@ async function syncFromCloud() {
       };
       const cloudPrefs = data.preferences || {};
 
+      const localProgress = JSON.parse(
+        localStorage.getItem('hakkaLearningProgress') || '{}'
+      );
+      const cloudProgress = data.learning_progress || {};
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
+      const mergedProgress = mergeProgress(localProgress, cloudProgress);
 
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+      localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
 
       // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
       // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
@@ -196,8 +203,10 @@ async function syncFromCloud() {
       const prefsChanged =
         localPrefs.romanizerJoiningMode !==
         (cloudPrefs.romanizerJoiningMode || 'none');
+      const progressChanged =
+        JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
 
-      if (bookmarksChanged || prefsChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
@@ -241,12 +250,16 @@ async function syncToCloud() {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
     };
+    const learningProgress = JSON.parse(
+      localStorage.getItem('hakkaLearningProgress') || '{}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
         user_id: cloudSyncState.user.id,
         bookmarks: bookmarks,
         preferences: preferences,
+        learning_progress: learningProgress,
         updated_at: new Date().toISOString(),
       },
       {
@@ -308,6 +321,66 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
     merged = merged.slice(0, BOOKMARK_LIMIT);
   }
 
+  return merged;
+}
+
+/**
+ * 合併學習進度 (Phase 3: 逐詞單調合併)
+ * 留「學得更深」的那筆，確保任何一邊的進步都不回退
+ */
+function mergeProgress(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  
+  const merged = { ...local };
+  
+  for (const key in cloud) {
+    if (!cloud.hasOwnProperty(key)) continue;
+    
+    const cloudItem = cloud[key];
+    const localItem = local[key];
+    
+    if (!localItem) {
+      merged[key] = [...cloudItem];
+      continue;
+    }
+    
+    // [ef, interval, reps, due, firstSeenDay]
+    const cReps = cloudItem[2] || 0;
+    const lReps = localItem[2] || 0;
+    const cDue = cloudItem[3] || 0;
+    const lDue = localItem[3] || 0;
+    
+    let preferCloud = false;
+    if (cReps > lReps) {
+      preferCloud = true;
+    } else if (cReps === lReps && cDue > lDue) {
+      preferCloud = true;
+    }
+    
+    if (preferCloud) {
+      merged[key] = [...cloudItem];
+    }
+    
+    // firstSeenDay 取早 (小)
+    const cSeen = cloudItem[4];
+    const lSeen = localItem[4];
+    const mSeen = merged[key][4];
+    
+    let earliestSeen = mSeen;
+    if (cSeen !== undefined && lSeen !== undefined) {
+      earliestSeen = Math.min(cSeen, lSeen);
+    } else if (cSeen !== undefined) {
+      earliestSeen = cSeen;
+    } else if (lSeen !== undefined) {
+      earliestSeen = lSeen;
+    }
+    
+    if (earliestSeen !== undefined) {
+      merged[key][4] = earliestSeen;
+    }
+  }
+  
   return merged;
 }
 
