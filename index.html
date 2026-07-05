@@ -28,7 +28,18 @@
   <script type="text/javascript" src="main.js" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
+  <script type="text/javascript" src="js/game/game-progress.js" defer></script>
+  <script type="text/javascript" src="js/game/game-data.js" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js" defer></script>
+  <script type="text/javascript" src="js/game/srs.js" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js" defer></script>
+  
+  <!-- Driver.js for Onboarding -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+  <script type="text/javascript" src="js/onboarding.js" defer></script>
+
   <script src="https://kit.fontawesome.com/6741caa77f.js" crossorigin="anonymous"></script>
   <!--20250309 上去申請的 kit-->
 </head>
@@ -100,7 +111,9 @@
     <div id="learning-mode-controls">
 
       <details id="learningSelectionPanel" open>
-        <summary>認證詞彙學習主控板</summary>
+        <summary>
+          <span>認證詞彙學習主控板</span>
+        </summary>
         <p>
           先擇腔調摎級別，
           <span class="dialect 四縣">
@@ -149,6 +162,90 @@
           再擇類別：
         </div>
       </details>
+    </div>
+
+    <!-- Game PoC Modal -->
+    <div id="gameModal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div>
+            <h2 id="gameModalTitle" style="margin-bottom: 0;">客源翠學習遊戲</h2>
+            <div style="font-size: 0.85em; color: var(--text-muted, #666); margin-top: 4px;">做得放心隨時關忒無要緊，每一題都有單獨記憶</div>
+          </div>
+          <button id="gameCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+        </div>
+        <div class="modal-body" id="game-modal-body">
+          <div id="game-setup-view">
+            <div id="game-options-area">
+              <div id="game-setup-ready-block">
+                <p>準備好開始學習 <span id="game-target-level" style="font-weight: bold; color: var(--primary-color);"></span> 了嗎？
+                  <button id="gameChangeLevelBtn" class="game-btn" style="margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;">換其他腔／其他級</button>
+                </p>
+                <p>一局共有 10 題選擇題。</p>
+                <div style="margin-bottom: 15px;">
+                  <label for="gameLearningMode">學習模式：</label>
+                  <select id="gameLearningMode" class="form-select">
+                    <option value="review">複習優先模式</option>
+                    <option value="sequential">固定依序模式</option>
+                  </select>
+                </div>
+                <div style="margin-bottom: 25px;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555;">
+                    <input type="checkbox" id="gameAutoOpenSentence" checked>
+                    答對後一律自動打開例句
+                  </label>
+                </div>
+              </div>
+            
+              <div id="game-setup-select-block" style="display: none; text-align: center;">
+                <p>擇愛學个腔頭／級別</p>
+                <div style="margin: 20px 0; display: flex; justify-content: center; gap: 10px;">
+                  <select id="gameSelectDialect" class="form-select">
+                    <option value="" selected disabled>擇腔調</option>
+                    <option value="四">四縣</option>
+                    <option value="海">海陸</option>
+                    <option value="大">大埔</option>
+                    <option value="平">饒平</option>
+                    <option value="安">詔安</option>
+                  </select>
+                  <select id="gameSelectLevel" class="form-select">
+                    <option value="" selected disabled>擇級別</option>
+                    <option value="基">基礎</option>
+                    <option value="初">初級</option>
+                    <option value="中">中級</option>
+                    <option value="中高">中高級</option>
+                    <option value="高">高級</option>
+                  </select>
+                </div>
+                <button id="gameConfirmLevelBtn" class="game-btn">確定</button>
+              </div>
+            </div>
+            <button id="gameStartSessionBtn" class="game-btn">開始挑戰！</button>
+          </div>
+          <div id="game-play-view" style="display: none;">
+            <div class="game-progress-bar">
+              <span id="game-question-counter">題 1 / 10</span>
+              <span id="game-new-badge" class="new-badge" style="display: none;">新進度！</span>
+            </div>
+            <div class="game-question-card">
+              <h1 id="game-target-word"></h1>
+              <p id="game-target-pinyin" class="pinyin-text"></p>
+              <button id="game-play-audio-btn" style="display: none;"><i class="fas fa-volume-up"></i></button>
+            </div>
+            <div id="game-options-container" class="game-options">
+              <!-- Options injected by JS -->
+            </div>
+            <div id="game-feedback" class="game-feedback" style="display: none;">
+              <!-- Feedback injected by JS -->
+            </div>
+          </div>
+          <div id="game-result-view" style="display: none;">
+            <h3>挑戰完成！</h3>
+            <p>你的成績：<span id="game-final-score"></span> / 10</p>
+            <button id="gameRetryBtn" class="game-btn">再來一局</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
@@ -238,6 +335,10 @@
     </div>
 
     <!-- Info Modal -->
+    <button id="floatingStartGameBtn" title="開始遊戲" class="floating-game-btn">
+      <i class="fas fa-gamepad"></i>
+    </button>
+
     <div id="infoModal" class="modal-overlay">
       <div class="modal-dialog">
         <div class="modal-header">

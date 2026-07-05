@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SRS Test</title>
+</head>
+<body>
+  <h1>SRS Algorithm Tests</h1>
+  <p>Check the console for results.</p>
+  
+  <script src="js/game/srs.js"></script>
+  <script>
+    function assert(condition, message) {
+      if (!condition) {
+        console.error('FAILED: ' + message);
+        document.body.innerHTML += `<div style="color:red">FAILED: ${message}</div>`;
+      } else {
+        console.log('PASSED: ' + message);
+        document.body.innerHTML += `<div style="color:green">PASSED: ${message}</div>`;
+      }
+    }
+
+    const today = 10000;
+
+    // Test 1: First time Good
+    let state = computeSM2({}, 'good', today);
+    assert(state.reps === 1 && state.interval === 1 && state.due === 10001 && state.ef === 250, 'First time Good: interval=1');
+
+    // Test 2: Second time Good
+    state = computeSM2(state, 'good', today + 1);
+    assert(state.reps === 2 && state.interval === 6 && state.due === (today + 1 + 6) && state.ef === 250, 'Second time Good: interval=6');
+
+    // Test 3: Third time Good
+    state = computeSM2(state, 'good', today + 7);
+    assert(state.reps === 3 && state.interval === 15 && state.ef === 250, 'Third time Good: interval=15 (6 * 2.5)');
+
+    // Test 4: Again resets reps and decreases EF
+    state = computeSM2(state, 'again', today + 22);
+    assert(state.reps === 0 && state.interval === 1 && state.ef === 230, 'Again: reps=0, interval=1, ef=230');
+
+    // Test 5: Easy increases EF and interval
+    let state2 = computeSM2({}, 'easy', today);
+    assert(state2.reps === 1 && state2.interval === 4 && state2.ef === 265, 'First time Easy: interval=4, ef=265');
+
+    // Test 6: Hard decreases EF and gently increases interval
+    let state3 = computeSM2({ ef: 250, interval: 10, reps: 2 }, 'hard', today);
+    assert(state3.reps === 3 && state3.interval === 12 && state3.ef === 235, 'Hard: interval=12 (10*1.2), ef=235');
+
+    // Test 7: EF lower bound is 130
+    let state4 = { ef: 140, interval: 10, reps: 2 };
+    state4 = computeSM2(state4, 'again', today);
+    assert(state4.ef === 130, 'EF bound check: Again drops from 140 to 130, not below');
+  </script>
+</body>
+</html>

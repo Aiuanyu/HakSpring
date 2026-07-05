@@ -2,3 +2,8 @@
 *.ffs_db
 *.ffs_gui
 *.log
+
+# 2026-update 評估用素材（非 production；production 詞彙在 data/cert/）
+# 留在本機供 scripts/check_cert_audio_curl.py 使用，等正式併入 data/cert/ 前不進 repo
+data/cert_113/
+data/cert_114/

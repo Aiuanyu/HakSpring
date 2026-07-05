@@ -1,0 +1,1415 @@
+{
+  "version": "2.7",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "Yn9cd",
+      "x": 0,
+      "y": 0,
+      "name": "HakSpring Design",
+      "width": 1024,
+      "height": 800,
+      "fill": "#FFFFFF",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "GPiov",
+          "name": "Header",
+          "width": 1024,
+          "height": 60,
+          "fill": "#E5DDE9",
+          "gap": 16,
+          "padding": 10,
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "goy18",
+              "name": "Logo",
+              "metadata": {
+                "type": "unsplash",
+                "username": "nypl",
+                "link": "https://unsplash.com/@nypl",
+                "author": "The New York Public Library"
+              },
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "https://images.unsplash.com/photo-1723055277840-b180ae444121?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NzA0MjA2NzB8&ixlib=rb-4.1.0&q=80&w=1080",
+                "mode": "fill"
+              },
+              "width": 40,
+              "height": 40
+            },
+            {
+              "type": "frame",
+              "id": "b15yw",
+              "name": "titleGroup",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KEQ1W",
+                  "name": "titleText",
+                  "fill": "#245d48",
+                  "content": "客源翠 HakSpring",
+                  "fontFamily": "Iansui",
+                  "fontSize": 24,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "8x86N",
+                  "name": "subTitle",
+                  "fill": "#245d48",
+                  "content": "你个客援隊／客研隊。詞典+分類學習",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "0ShQb",
+              "name": "spacer",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "f8Hdy",
+              "name": "controls",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "6cWt9",
+                  "name": "Progress Dropdown",
+                  "width": 120,
+                  "height": 32,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vCtks",
+                      "name": "dropdownText",
+                      "fill": "#333333",
+                      "content": "擇進前个進度",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "7z3hH",
+                  "name": "infoBtn",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "transparent",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Rv5cu",
+                      "name": "infoIcon",
+                      "content": "ℹ️",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "otUtI",
+                  "name": "romanizerBtn",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "transparent",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rZ3BI",
+                      "name": "romanizerIcon",
+                      "content": "📝",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y4d0i",
+                  "name": "Search Input",
+                  "width": 160,
+                  "height": 32,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TmIcc",
+                      "name": "searchText",
+                      "fill": "#999999",
+                      "content": "查語詞",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gomQC",
+          "name": "Learning Panel",
+          "width": "fill_container",
+          "fill": "#F9F9F9",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": 20,
+          "children": [
+            {
+              "type": "text",
+              "id": "hRjNe",
+              "name": "summary",
+              "fill": "#333333",
+              "content": "認證詞彙學習主控板",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "frame",
+              "id": "rx9H9",
+              "name": "dialects",
+              "gap": 15,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PslTo",
+                  "name": "d1",
+                  "fill": "#678d3f",
+                  "content": "四縣",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "A6qNs",
+                  "name": "d2",
+                  "fill": "#76ad67",
+                  "content": "海陸",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "LEyix",
+                  "name": "d3",
+                  "fill": "#5898a9",
+                  "content": "大埔",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "AaqfB",
+                  "name": "d4",
+                  "fill": "#834fa1",
+                  "content": "饒平",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "9lxWF",
+                  "name": "d5",
+                  "fill": "#974a47",
+                  "content": "詔安",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "CvjNU",
+              "name": "catLabel",
+              "fill": "#333333",
+              "content": "再擇類別：",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "eEuUL",
+              "name": "categories",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rt3qk",
+                  "name": "c1",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "YiUgg",
+                      "name": "r1",
+                      "fill": "#dddddd",
+                      "width": 16,
+                      "height": 16
+                    },
+                    {
+                      "type": "text",
+                      "id": "IU1bR",
+                      "name": "l1",
+                      "content": "人體與醫療",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "7x0Az",
+                  "name": "c2",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "7bLN3",
+                      "name": "r2",
+                      "fill": "#dddddd",
+                      "width": 16,
+                      "height": 16
+                    },
+                    {
+                      "type": "text",
+                      "id": "CoC7u",
+                      "name": "l2",
+                      "content": "心理活動與感覺",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eU8pb",
+                  "name": "c3",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "CriOT",
+                      "name": "r3",
+                      "fill": "#dddddd",
+                      "width": 16,
+                      "height": 16
+                    },
+                    {
+                      "type": "text",
+                      "id": "UsAFd",
+                      "name": "l3",
+                      "content": "代詞",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DIDTe",
+                  "name": "c4",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "si1JS",
+                      "name": "r4",
+                      "fill": "#dddddd",
+                      "width": 16,
+                      "height": 16
+                    },
+                    {
+                      "type": "text",
+                      "id": "iDVEF",
+                      "name": "l4",
+                      "content": "生物",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eXn3s",
+      "x": 1360,
+      "y": 0,
+      "name": "HakSpring by Claudia",
+      "width": 1280,
+      "fill": "#F7F6F3",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "bpPQ7",
+          "name": "topNav",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#F0EFEC"
+          },
+          "padding": [
+            20,
+            40
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "by4ZO",
+              "name": "logoArea",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "T4rQq",
+                  "name": "logoIcon",
+                  "fill": "#7C9070",
+                  "width": 44,
+                  "height": 44
+                },
+                {
+                  "type": "frame",
+                  "id": "ZzHGq",
+                  "name": "logoText",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "K6wCm",
+                      "name": "mainTitle",
+                      "fill": "#2D2D2D",
+                      "content": "客源翠 HakSpring",
+                      "fontFamily": "Iansui",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NQQBv",
+                      "name": "subtitle",
+                      "fill": "#6B6B6B",
+                      "content": "你个客援隊／客研隊",
+                      "fontFamily": "Iansui",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zXLUE",
+              "name": "controlsArea",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WvTsd",
+                  "name": "searchBar",
+                  "width": 240,
+                  "height": 40,
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 10,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "VcH6G",
+                      "name": "searchIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8E8E93"
+                    },
+                    {
+                      "type": "text",
+                      "id": "nuJ2L",
+                      "name": "searchPlaceholder",
+                      "fill": "#8E8E93",
+                      "content": "查語詞",
+                      "fontFamily": "Iansui",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q9fJH",
+                  "name": "infoBtn",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 10,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "2jgNV",
+                      "name": "infoBtnIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "info",
+                      "iconFontFamily": "lucide",
+                      "fill": "#6B6B6B"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MMI7x",
+                  "name": "romanizerBtn",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 10,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Wldq1",
+                      "name": "romanizerIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "pen-line",
+                      "iconFontFamily": "lucide",
+                      "fill": "#6B6B6B"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WPyc9",
+                  "name": "progressBtn",
+                  "height": 40,
+                  "fill": "#7C9070",
+                  "cornerRadius": 10,
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vJjcQ",
+                      "name": "progressText",
+                      "fill": "#FFFFFF",
+                      "content": "擇進度",
+                      "fontFamily": "Iansui",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K8ce5",
+          "name": "contentArea",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            32,
+            48
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "55tW2",
+              "name": "learningCard",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 24,
+              "padding": 28,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "9yzSN",
+                  "name": "cardTitle",
+                  "fill": "#2D2D2D",
+                  "content": "認證詞彙學習主控板",
+                  "fontFamily": "Iansui",
+                  "fontSize": 22,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "oxoao",
+                  "name": "dialectSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "93XCj",
+                      "name": "dialectLabel",
+                      "fill": "#6B6B6B",
+                      "content": "擇腔調摎級別",
+                      "fontFamily": "Iansui",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Jw2Ki",
+                      "name": "dialectsRow",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "jji0n",
+                          "name": "d1",
+                          "height": 44,
+                          "fill": "#7C907015",
+                          "cornerRadius": 10,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "dXozb",
+                              "name": "d1text",
+                              "fill": "#7C9070",
+                              "content": "四縣",
+                              "fontFamily": "Iansui",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cnp3z",
+                          "name": "d2",
+                          "height": 44,
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 10,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kZPfW",
+                              "name": "d2text",
+                              "fill": "#6B6B6B",
+                              "content": "海陸",
+                              "fontFamily": "Iansui",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "BvYwn",
+                          "name": "d3",
+                          "height": 44,
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 10,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "0rA23",
+                              "name": "d3text",
+                              "fill": "#6B6B6B",
+                              "content": "大埔",
+                              "fontFamily": "Iansui",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "1H7h7",
+                          "name": "d4",
+                          "height": 44,
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 10,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Eg2o6",
+                              "name": "d4text",
+                              "fill": "#6B6B6B",
+                              "content": "饒平",
+                              "fontFamily": "Iansui",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "0giWB",
+                          "name": "d5",
+                          "height": 44,
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 10,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sOuMr",
+                              "name": "d5text",
+                              "fill": "#6B6B6B",
+                              "content": "詔安",
+                              "fontFamily": "Iansui",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "7elPC",
+                      "name": "levelsRow",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "TtkG0",
+                          "name": "lv1",
+                          "fill": "#7C9070",
+                          "cornerRadius": 8,
+                          "padding": [
+                            8,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CnIzO",
+                              "name": "lv1text",
+                              "fill": "#FFFFFF",
+                              "content": "基礎",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XnQ5m",
+                          "name": "lv2",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            8,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "J0IBo",
+                              "name": "lv2text",
+                              "fill": "#6B6B6B",
+                              "content": "初級",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "7eGkA",
+                          "name": "lv3",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            8,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ct1oX",
+                              "name": "lv3text",
+                              "fill": "#6B6B6B",
+                              "content": "中級",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LMBgm",
+                          "name": "lv4",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            8,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gimzy",
+                              "name": "lv4text",
+                              "fill": "#6B6B6B",
+                              "content": "中高",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ooMmW",
+                          "name": "lv5",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            8,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "U6xPm",
+                              "name": "lv5text",
+                              "fill": "#6B6B6B",
+                              "content": "高級",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jdK78",
+                  "name": "divider",
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "#F0EFEC"
+                },
+                {
+                  "type": "frame",
+                  "id": "wUouX",
+                  "name": "categorySection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SaMAR",
+                      "name": "categoryLabel",
+                      "fill": "#6B6B6B",
+                      "content": "再擇類別",
+                      "fontFamily": "Iansui",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JWUrh",
+                      "name": "categoriesGrid",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ddQTI",
+                          "name": "cat1",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HTdpk",
+                              "name": "cat1text",
+                              "fill": "#6B6B6B",
+                              "content": "人體與醫療",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oAyXm",
+                          "name": "cat2",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VCevU",
+                              "name": "cat2text",
+                              "fill": "#6B6B6B",
+                              "content": "心理活動與感覺",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Wmq0V",
+                          "name": "cat3",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IxAQq",
+                              "name": "cat3text",
+                              "fill": "#6B6B6B",
+                              "content": "代詞",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wWHlA",
+                          "name": "cat4",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "8uyne",
+                              "name": "cat4text",
+                              "fill": "#6B6B6B",
+                              "content": "外在活動與動作",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qTDVh",
+                          "name": "cat5",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DbhLb",
+                              "name": "cat5text",
+                              "fill": "#6B6B6B",
+                              "content": "生物",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "8sHBn",
+                          "name": "cat6",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "eZTGB",
+                              "name": "cat6text",
+                              "fill": "#6B6B6B",
+                              "content": "自然與景觀",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eRqsj",
+                          "name": "cat7",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "siS5J",
+                              "name": "cat7text",
+                              "fill": "#6B6B6B",
+                              "content": "事物狀態與變化",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Evcd3",
+                          "name": "cat8",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TOgAR",
+                              "name": "cat8text",
+                              "fill": "#6B6B6B",
+                              "content": "居家生活",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Al051",
+                          "name": "cat9",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IhQSZ",
+                              "name": "cat9text",
+                              "fill": "#6B6B6B",
+                              "content": "抽象概念與形容",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GlC7q",
+                          "name": "cat10",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "f0esh",
+                              "name": "cat10text",
+                              "fill": "#6B6B6B",
+                              "content": "法律、政治與軍事",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sTzSQ",
+                          "name": "cat11",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "dWPF0",
+                              "name": "cat11text",
+                              "fill": "#6B6B6B",
+                              "content": "社會關係與行為",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wAW8D",
+                          "name": "cat12",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TV4jg",
+                              "name": "cat12text",
+                              "fill": "#6B6B6B",
+                              "content": "時空與情狀副詞",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Dg8Rt",
+                          "name": "cat13",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xk7bR",
+                              "name": "cat13text",
+                              "fill": "#6B6B6B",
+                              "content": "特殊詞類",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RSmFX",
+                          "name": "cat14",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "7rrr5",
+                              "name": "cat14text",
+                              "fill": "#6B6B6B",
+                              "content": "通訊、建設與交通",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "AyHBc",
+                          "name": "cat15",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QgzCU",
+                              "name": "cat15text",
+                              "fill": "#6B6B6B",
+                              "content": "歲時祭儀、習俗與宗教",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JpJZc",
+                          "name": "cat16",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "v1SEt",
+                              "name": "cat16text",
+                              "fill": "#6B6B6B",
+                              "content": "數詞量詞",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rbebj",
+                          "name": "cat17",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XRs7W",
+                              "name": "cat17text",
+                              "fill": "#6B6B6B",
+                              "content": "職業與經濟",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H5H3E",
+                          "name": "cat18",
+                          "fill": "#F7F6F3",
+                          "cornerRadius": 8,
+                          "padding": [
+                            10,
+                            18
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "poxDw",
+                              "name": "cat18text",
+                              "fill": "#6B6B6B",
+                              "content": "藝文與教育",
+                              "fontFamily": "Iansui",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hoWY7",
+              "name": "resultsArea",
+              "width": "fill_container",
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cmgJ9",
+                  "name": "resultsTitle",
+                  "fill": "#2D2D2D",
+                  "content": "詞彙結果顯示區",
+                  "fontFamily": "Iansui",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "AWA0E",
+                  "name": "resultsPlaceholder",
+                  "fill": "#8E8E93",
+                  "content": "這位會顯示查詢个結果...",
+                  "fontFamily": "Iansui",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

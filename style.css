@@ -2217,7 +2217,8 @@ input:checked+.slider:before {
 /* Info Button in Header */
 #infoButton,
 #showRomanizerBtn,
-#dataManagementBtn {
+#dataManagementBtn,
+#headerStartGameBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -2234,17 +2235,47 @@ input:checked+.slider:before {
 
 #infoButton i,
 #showRomanizerBtn i,
-#dataManagementBtn i {
+#dataManagementBtn i,
+#headerStartGameBtn i {
   color: inherit;
 }
 
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
 #showRomanizerBtn:hover i,
-#dataManagementBtn:hover i {
+#dataManagementBtn:hover i,
+#headerStartGameBtn:hover i {
   /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color);
   /* 用 focus 光暈色做 hover 效果 */
+}
+
+/* --- 浮動開始遊戲按鈕 (寬版專用) --- */
+.floating-game-btn {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.floating-game-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  background-color: var(--primary-btn-hover);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 /* --- 【新增】雲端同步按鈕樣式 --- */
@@ -2466,13 +2497,15 @@ input:checked+.slider:before {
 
   #infoButton,
   #showRomanizerBtn,
-  #dataManagementBtn {
+  #dataManagementBtn,
+  #headerStartGameBtn {
     color: var(--main-text-color);
   }
 
   #infoButton:hover i,
   #showRomanizerBtn:hover i,
-  #dataManagementBtn:hover i {
+  #dataManagementBtn:hover i,
+  #headerStartGameBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -2877,8 +2910,9 @@ tr.ios-autoplay-instruction td::before {
   cursor: pointer;
   font-weight: bold;
   padding: 0.2em 0.5em;
-  display: inline-block;
-  /* 讓 padding 生效 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #learningSelectionPanel summary:hover {
@@ -3082,7 +3116,6 @@ mark {
 
 /* --- Result Sequence Number --- */
 .result-sequence-number {
-  background-color: #f0f0f0;
   color: #333;
   text-align: center;
   font-weight: bold;
@@ -3844,4 +3877,346 @@ mark {
   .migration-image {
     border: 2px solid var(--dark-surface-color);
   }
+}
+
+/* Game PoC Styles */
+#gameModal .modal-dialog {
+  background-color: #fff;
+  color: var(--main-text-color);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  width: 90vw;
+  max-width: 600px;
+  height: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#gameModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+#gameModal .modal-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  font-family: var(--title-font);
+  color: inherit;
+}
+#gameModal .modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+#gameModal .modal-close-btn:hover,
+#gameModal .modal-close-btn:focus-visible {
+  color: #333;
+}
+#gameModal .modal-body {
+  padding: 20px 30px;
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  -webkit-overflow-scrolling: touch;
+  line-height: 1.7;
+}
+
+@media (prefers-color-scheme: dark) {
+  #gameModal .modal-dialog {
+    background-color: var(--dark-surface-color, #2c2c2c);
+  }
+  #gameModal .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+  #gameModal .modal-close-btn {
+    color: #aaa;
+  }
+  #gameModal .modal-close-btn:hover,
+  #gameModal .modal-close-btn:focus-visible {
+    color: #fff;
+  }
+  
+  #gameModal .form-select {
+    background-color: #3a3a3c;
+    color: #e0e0e0;
+    border-color: #555;
+  }
+}
+
+.game-btn {
+  background-color: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+.game-btn:hover {
+  background-color: #357ABD;
+}
+.game-progress-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+}
+.new-badge {
+  background-color: #ff9800;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+.form-select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #333;
+}
+.game-sentence-display {
+  font-family: var(--title-font);
+  display: none;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  color: #333;
+  text-align: left;
+}
+.game-question-card {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.game-question-card h1 {
+  font-family: var(--title-font);
+  font-size: 3em;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+.game-question-card .pinyin-text {
+  font-family: var(--roman-font);
+  font-size: 1.5em;
+  color: #666;
+  margin-bottom: 10px;
+}
+#game-play-audio-btn {
+  background: none;
+  border: none;
+  color: #4A90E2;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+#game-play-audio-btn:hover {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+@keyframes pulse-playing {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; color: var(--primary-color); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#game-play-audio-btn.playing {
+  color: #2ecc71;
+  animation: pulse-playing 1s infinite;
+}
+
+.game-sentence-display button.playing i {
+  animation: pulse-playing 1s infinite;
+  color: #f1c40f;
+}
+.game-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.game-option-btn {
+  background-color: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.game-option-btn:hover:not(:disabled) {
+  background-color: #e9e9e9;
+  border-color: #ccc;
+}
+.game-option-btn:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.game-option-btn.correct {
+  background-color: #d4edda !important;
+  border-color: #c3e6cb !important;
+  color: #155724;
+}
+.game-option-btn.wrong {
+  background-color: #f8d7da !important;
+  border-color: #f5c6cb !important;
+  color: #721c24;
+}
+.game-feedback {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.game-feedback.correct {
+  background-color: #d4edda;
+  color: #155724;
+}
+.game-feedback.wrong {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+@media (prefers-color-scheme: dark) {
+  #gameLearningMode {
+    background-color: #2d2d2d;
+    color: #eee;
+    border-color: #444;
+  }
+  .game-sentence-display {
+    font-family: var(--title-font);
+    background-color: #1a1a1a !important;
+    color: #eee !important;
+  }
+  .game-btn {
+    background-color: #357ABD;
+    color: #eee;
+  }
+  .game-btn:hover {
+    background-color: #285e92;
+  }
+  .game-question-card h1 {
+    color: #eee;
+  }
+  .game-question-card .pinyin-text, .game-progress-bar {
+    color: #aaa;
+  }
+  .game-option-btn {
+    background-color: #2d2d2d;
+    border-color: #444;
+    color: #eee;
+  }
+  .game-option-btn:hover:not(:disabled) {
+    background-color: #3d3d3d;
+    border-color: #555;
+  }
+  .game-option-btn.correct {
+    background-color: #1e4620 !important;
+    border-color: #2d6a2f !important;
+    color: #c3e6cb;
+  }
+  .game-option-btn.wrong {
+    background-color: #5c1e22 !important;
+    border-color: #8b2d33 !important;
+    color: #f5c6cb;
+  }
+  .game-feedback.correct {
+    background-color: #1e4620;
+    color: #c3e6cb;
+  }
+  .game-feedback.wrong {
+    background-color: #5c1e22;
+    color: #f5c6cb;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .game-options {
+    grid-template-columns: 1fr;
+  }
+  .game-question-card h1 {
+    font-size: 2em;
+  }
+}
+
+.kbd-shortcut {
+  font-family: inherit;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-right: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 0.9em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kbd-shortcut {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.3);
+  }
+}
+
+/* --- Driver.js 樣式覆蓋 (Onboarding) --- */
+:root {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #2d2d2d;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --driver-popover-bg: #2c2c2c;
+    --driver-popover-text: #e0e0e0;
+  }
+}
+
+.driver-popover {
+  background-color: var(--driver-popover-bg) !important;
+  color: var(--driver-popover-text) !important;
+  border-radius: 8px !important;
+}
+.driver-popover-title, .driver-popover-description {
+  color: var(--driver-popover-text) !important;
+}
+.driver-popover-close-btn {
+  color: #a2a2a2 !important;
+}
+.driver-popover-close-btn:hover {
+  color: var(--driver-popover-text) !important;
+}
+
+/* Arrow dynamic border colors */
+.driver-popover-arrow-side-left { border-left-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-right { border-right-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-top { border-top-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-bottom { border-bottom-color: var(--driver-popover-bg) !important; }
+
+.driver-popover-footer button {
+  color: #fff !important;
+  text-shadow: none !important;
+  border-color: transparent !important;
+  border-radius: 4px !important;
+  background-color: #437d45 !important;
+}
+.driver-popover-footer button:hover {
+  background-color: #2b5c2d !important;
+}
+.driver-popover-progress-text {
+  color: #437d45 !important;
+  font-weight: bold;
 }

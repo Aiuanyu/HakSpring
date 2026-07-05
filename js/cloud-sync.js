@@ -60,6 +60,11 @@ async function signInWithGoogle() {
   const client = getSupabaseClient();
   if (!client) return;
 
+  // 先在「使用者點擊」的同步脈絡下開一個空白分頁卡位。
+  // 這樣才不會被彈出視窗封鎖器擋掉——若等到 await 之後才 window.open，就脫離手勢脈絡、多半會被擋。
+  // 用新分頁登入是刻意的：避免主頁被 redirect 跳走，登入回來後 onboarding 才不會中斷。
+  const authWindow = window.open('', '_blank');
+
   try {
     // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
     const redirectUrl =
@@ -70,15 +75,33 @@ async function signInWithGoogle() {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
       },
     });
 
     if (error) {
       console.error('[CloudSync] 登入失敗:', error);
+      if (authWindow) authWindow.close();
       alert('登入失敗：' + error.message);
+      return;
+    }
+
+    if (data && data.url) {
+      if (authWindow) {
+        // 卡位分頁還在 → 把授權網址填進去（正常路徑，保住新分頁 + onboarding）
+        authWindow.location.href = data.url;
+      } else {
+        // 連空白分頁都被擋（極端封鎖）→ 退回同分頁導向，至少能完成登入
+        // （此情況該次 redirect 回來會跳過 onboarding，屬可接受的退路）
+        window.location.href = data.url;
+      }
+    } else if (authWindow) {
+      // 沒拿到 url 也別留空白分頁在那
+      authWindow.close();
     }
   } catch (err) {
     console.error('[CloudSync] 登入錯誤:', err);
+    if (authWindow) authWindow.close();
     alert('登入時發生錯誤');
   }
 }
@@ -137,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, updated_at')
+      .select('bookmarks, preferences, learning_progress, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -175,11 +198,18 @@ async function syncFromCloud() {
       };
       const cloudPrefs = data.preferences || {};
 
+      const localProgress = JSON.parse(
+        localStorage.getItem('hakkaLearningProgress') || '{}'
+      );
+      const cloudProgress = data.learning_progress || {};
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
+      const mergedProgress = mergeProgress(localProgress, cloudProgress);
 
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+      localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
 
       // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
       // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
@@ -196,8 +226,10 @@ async function syncFromCloud() {
       const prefsChanged =
         localPrefs.romanizerJoiningMode !==
         (cloudPrefs.romanizerJoiningMode || 'none');
+      const progressChanged =
+        JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
 
-      if (bookmarksChanged || prefsChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
@@ -241,12 +273,16 @@ async function syncToCloud() {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
     };
+    const learningProgress = JSON.parse(
+      localStorage.getItem('hakkaLearningProgress') || '{}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
         user_id: cloudSyncState.user.id,
         bookmarks: bookmarks,
         preferences: preferences,
+        learning_progress: learningProgress,
         updated_at: new Date().toISOString(),
       },
       {
@@ -308,6 +344,76 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
     merged = merged.slice(0, BOOKMARK_LIMIT);
   }
 
+  return merged;
+}
+
+/**
+ * 合併學習進度 (Phase 3: 逐詞單調合併)
+ * 留「學得更深」的那筆，確保任何一邊的進步都不回退
+ */
+function mergeProgress(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  
+  const merged = { ...local };
+  
+  for (const key in cloud) {
+    if (!cloud.hasOwnProperty(key)) continue;
+
+    const cloudItem = cloud[key];
+    const localItem = local[key];
+
+    // 防呆：只處理合法的陣列格式。雲端/本地可能殘留舊格式（物件）或空值，
+    // 直接展開會丟 "is not iterable"。非陣列時：本地非法就用雲端、雲端也非法就跳過。
+    const cloudOk = Array.isArray(cloudItem);
+    const localOk = Array.isArray(localItem);
+
+    if (!localOk) {
+      if (cloudOk) merged[key] = [...cloudItem];
+      // 兩邊都非陣列 → 無法合併，保持 merged 現況（可能是本地的非法值，交由後續清理）
+      continue;
+    }
+    if (!cloudOk) {
+      // 雲端非法、本地合法 → 保留本地
+      merged[key] = [...localItem];
+      continue;
+    }
+
+    // [ef, interval, reps, due, firstSeenDay]
+    const cReps = cloudItem[2] || 0;
+    const lReps = localItem[2] || 0;
+    const cDue = cloudItem[3] || 0;
+    const lDue = localItem[3] || 0;
+
+    let preferCloud = false;
+    if (cReps > lReps) {
+      preferCloud = true;
+    } else if (cReps === lReps && cDue > lDue) {
+      preferCloud = true;
+    }
+
+    // 一律複製勝出那筆，避免下面改 firstSeenDay 時就地 mutate 到 local/cloud 原陣列
+    merged[key] = preferCloud ? [...cloudItem] : [...localItem];
+
+    // firstSeenDay 取早 (小)
+    const cSeen = cloudItem[4];
+    const lSeen = localItem[4];
+    const mSeen = merged[key][4];
+
+    let earliestSeen = mSeen;
+    if (cSeen !== undefined && lSeen !== undefined) {
+      earliestSeen = Math.min(cSeen, lSeen);
+    } else if (cSeen !== undefined) {
+      earliestSeen = cSeen;
+    } else if (lSeen !== undefined) {
+      earliestSeen = lSeen;
+    }
+
+    if (earliestSeen !== undefined) {
+      merged[key][4] = earliestSeen;
+    }
+  }
+  
   return merged;
 }
 
@@ -427,6 +533,10 @@ function triggerCloudSync() {
     hasPendingSync = false;
   }, SYNC_DEBOUNCE_MS); // 使用常數
 }
+
+// 明確掛上 window，供跨檔呼叫（game-progress.js 寫進度後會呼叫 window.triggerCloudSync）。
+// 不倚賴「頂層 function 宣告自動成為 window 屬性」的隱式行為，避免載入環境改變時靜默失效。
+window.triggerCloudSync = triggerCloudSync;
 
 /**
  * 週期性背景同步計時器

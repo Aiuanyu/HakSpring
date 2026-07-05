@@ -323,6 +323,7 @@ let indexedDataCache = {}; // <-- 新增此索引快取物件
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
+let currentDataVarName = ''; // Keep track of the active file var name
 let isNavigatingViaCode = false; // <--- 在這裡新增這一行
 let activeCategoryData = [];
 let firstLoadedIndex = 0;
@@ -694,9 +695,12 @@ function findPronunciationsInAllData(searchText) {
   return foundReadings;
 }
 
-function constructAudioUrlForPopup(lineData, dialectInfo) {
-  if (!dialectInfo) return null;
-  if (dialectInfo.sourceType === 'gip') {
+function constructWordAudioUrl(lineData, fullSourceName) {
+  if (!fullSourceName) return null;
+  const isGip = fullSourceName.startsWith('gip') || fullSourceName.includes('教典');
+  const isCert = fullSourceName.startsWith('cert') || (!isGip && typeof getDialectInfo === 'function'); // Fallback
+
+  if (isGip) {
     const audioFileName = lineData['詞目音檔名'];
     if (audioFileName && audioFileName.trim() !== '') {
       const finalName = audioFileName.endsWith('.mp3')
@@ -706,97 +710,124 @@ function constructAudioUrlForPopup(lineData, dialectInfo) {
     }
     return null;
   }
-  if (dialectInfo.sourceType === 'cert') {
-    if (!lineData || !lineData.編號 || !dialectInfo.dataVarName) return null;
-    const dataVarName = dialectInfo.dataVarName;
-    const 腔 = dataVarName.substring(0, 1);
-    const 級 = dataVarName.substring(1);
-    let selected例外音檔;
-    switch (級) {
-      case '基':
-        selected例外音檔 = typeof 基例外音檔 !== 'undefined' ? 基例外音檔 : [];
-        break;
-      case '初':
-        selected例外音檔 = typeof 初例外音檔 !== 'undefined' ? 初例外音檔 : [];
-        break;
-      case '中':
-        selected例外音檔 = typeof 中例外音檔 !== 'undefined' ? 中例外音檔 : [];
-        break;
-      case '中高':
-        selected例外音檔 =
-          typeof 中高例外音檔 !== 'undefined' ? 中高例外音檔 : [];
-        break;
-      case '高':
-        selected例外音檔 = typeof 高例外音檔 !== 'undefined' ? 高例外音檔 : [];
-        break;
-      default:
-        selected例外音檔 = [];
-    }
-    let 檔腔 = '',
-      檔級 = '',
-      目錄級 = '',
-      目錄另級 = undefined;
-    if (腔 === '四') {
-      檔腔 = 'si';
-    } else if (腔 === '海') {
-      檔腔 = 'ha';
-    } else if (腔 === '大') {
-      檔腔 = 'da';
-    } else if (腔 === '平') {
-      檔腔 = 'rh';
-    } else if (腔 === '安') {
-      檔腔 = 'zh';
-    }
-    if (級 === '基') {
-      目錄級 = '5';
-      目錄另級 = '1';
-    } else if (級 === '初') {
-      目錄級 = '1';
-    } else if (級 === '中') {
-      目錄級 = '2';
-      檔級 = '1';
-    } else if (級 === '中高') {
-      目錄級 = '3';
-      檔級 = '2';
-    } else if (級 === '高') {
-      目錄級 = '4';
-      檔級 = '3';
-    }
-    let mediaYr = '112';
-    let pre112Insertion詞 = '';
-    let current目錄級 = 目錄級;
-    const noParts = lineData.編號.split('-');
-    if (noParts.length < 2) return null;
-    let no_0 = noParts[0];
+  
+  if (isCert) {
+    let sourceName = fullSourceName.replace(/^cert/, '');
+    const 腔 = sourceName.substring(0, 1);
+    const 級 = sourceName.substring(1);
+    const dialectInfo = getDialectInfo(腔, 級);
+
+    const missingAudioInfo =
+      typeof getMissingAudioInfo === 'function'
+        ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+        : null;
+
+    let wordAudioActuallyMissing =
+      missingAudioInfo && missingAudioInfo.word === false;
+
+    if (wordAudioActuallyMissing) return null;
+
+    let mediaYr = '112',
+      pre112Insertion詞 = '',
+      詞目錄級 = dialectInfo.目錄級,
+      mediaNo = '';
+    
+    var no = lineData.編號.split('-');
+    if (!no || no.length < 2) return null;
+    
+    let no_0 = no[0];
     if (no_0.length === 1 && !isNaN(parseInt(no_0))) no_0 = '0' + no_0;
     if (級 === '初') no_0 = '0' + no_0;
-    let mediaNo = noParts[1];
-    if (mediaNo.length < 2 && !isNaN(parseInt(mediaNo)))
-      mediaNo = '0' + mediaNo;
-    if (mediaNo.length < 3 && !isNaN(parseInt(mediaNo)))
-      mediaNo = '0' + mediaNo;
-    const exceptionIndex = selected例外音檔.findIndex(
+    
+    let mediaNo_raw = no[1];
+    if (mediaNo_raw.length < 2 && !isNaN(parseInt(mediaNo_raw)))
+      mediaNo_raw = '0' + mediaNo_raw;
+    if (mediaNo_raw.length < 3 && !isNaN(parseInt(mediaNo_raw)))
+      mediaNo_raw = '0' + mediaNo_raw;
+    mediaNo = mediaNo_raw;
+    
+    const index = dialectInfo.例外音檔.findIndex(
       ([編號]) => 編號 === lineData.編號,
     );
-    if (exceptionIndex !== -1) {
-      const matchedElement = selected例外音檔[exceptionIndex];
+    if (index !== -1) {
+      const matchedElement = dialectInfo.例外音檔[index];
       mediaYr = matchedElement[1] || mediaYr;
       mediaNo = matchedElement[2] || mediaNo;
       pre112Insertion詞 = 'w/';
-      if (目錄另級 !== undefined) current目錄級 = 目錄另級;
+      if (dialectInfo.目錄另級 !== undefined) {
+        詞目錄級 = dialectInfo.目錄另級;
+      }
     }
-    const 詞目錄 = `${current目錄級}/${檔腔}/${pre112Insertion詞}${檔級}${檔腔}`;
+    
+    const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
     let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
+    
     if (
-      getFullLevelName(dataVarName) === '海陸中高級' &&
+      dialectInfo.fullLvlName === '海陸中高級' &&
       lineData.編號 === '4-261'
     ) {
       audioSrc =
         'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
     }
-    return applyAudioProxy(audioSrc);
+    return audioSrc; // Do not apply proxy here, caller handles it
   }
   return null;
+}
+
+/**
+ * Constructs the audio URL for the sentence audio of a specific word line.
+ * @param {object} lineData - The word data object from the database.
+ * @param {string} fullSourceName - The full source name (e.g. 'cert四基').
+ * @returns {string|null} The audio URL, or null if missing.
+ */
+function constructSentenceAudioUrl(lineData, fullSourceName) {
+  if (!fullSourceName || !fullSourceName.startsWith('cert')) return null;
+  const sourceName = fullSourceName.replace(/^cert/, '');
+  const 腔 = sourceName.substring(0, 1);
+  const 級 = sourceName.substring(1);
+  const dialectInfo = getDialectInfo(腔, 級);
+
+  const missingAudioInfo =
+    typeof getMissingAudioInfo === 'function'
+      ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+      : null;
+
+  let sentenceAudioActuallyMissing =
+    (missingAudioInfo && missingAudioInfo.sentence === false) || 級 === '高';
+  
+  if (sentenceAudioActuallyMissing) return null;
+
+  let mediaYr = '112',
+    pre112Insertion句 = '',
+    句目錄級 = dialectInfo.目錄級,
+    mediaNo = '';
+  
+  var no = lineData.編號.split('-');
+  if (!no || no.length < 2) return null;
+
+  let no_0 = no[0];
+  if (no_0 <= 9) no_0 = '0' + no_0;
+  if (級 === '初') no_0 = '0' + no_0;
+  
+  let no_1 = no[1];
+  if (no_1 <= 9) no_1 = '0' + no_1;
+  if (no_1 <= 99) no_1 = '0' + no_1;
+  mediaNo = no_1;
+  
+  const index = dialectInfo.例外音檔.findIndex(
+    ([編號]) => 編號 === lineData.編號,
+  );
+  if (index !== -1) {
+    const matchedElement = dialectInfo.例外音檔[index];
+    mediaYr = matchedElement[1];
+    mediaNo = matchedElement[2];
+    pre112Insertion句 = 's/';
+    if (dialectInfo.目錄另級 !== undefined) {
+      句目錄級 = dialectInfo.目錄另級;
+    }
+  }
+  const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+  return applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no_0}-${mediaNo}s.mp3`);
 }
 
 function updatePopupPosition(popupEl, selectionRect) {
@@ -1095,12 +1126,13 @@ function showPronunciationPopup(
           if (!reading.isExactMatch) {
             headerText += ` (詞目: ${reading.originalTerm})`;
           }
-          const audioUrl = reading.audioDetails
-            ? constructAudioUrlForPopup(
+          let audioUrl = reading.audioDetails
+            ? constructWordAudioUrl(
                 reading.audioDetails.lineData,
-                reading.audioDetails.dialectInfo,
+                reading.audioDetails.fullSourceName,
               )
             : null;
+          if (audioUrl) audioUrl = applyAudioProxy(audioUrl);
           let audioElementHTML = audioUrl
             ? `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>`
             : '';
@@ -2738,56 +2770,10 @@ function initializeAppUI() {
       td2.appendChild(ruby);
       td2.appendChild(document.createElement('br'));
 
-      let audioSrc = null;
-      if (line.sourceType === 'gip' && line['詞目音檔名']) {
-        audioSrc =
-          'https://hakkadict.moe.edu.tw/static/audio/' +
-          (line['詞目音檔名'].endsWith('.mp3')
-            ? line['詞目音檔名']
-            : line['詞目音檔名'] + '.mp3');
-      } else if (line.sourceType === 'cert') {
-        const sourceName = line.sourceName;
-        const 腔 = sourceName.substring(0, 1);
-        const 級 = sourceName.substring(1);
-        const dialectInfo = getDialectInfo(腔, 級);
-
-        const missingAudioInfo =
-          typeof getMissingAudioInfo === 'function'
-            ? getMissingAudioInfo(fullSourceName, line.分類, line.編號)
-            : null;
-        let mediaYr = '112',
-          pre112Insertion詞 = '',
-          詞目錄級 = dialectInfo.目錄級,
-          mediaNo = '';
-        var no = line.編號.split('-');
-        if (no[0] <= 9) no[0] = '0' + no[0];
-        if (級 === '初') no[0] = '0' + no[0];
-        if (no[1] <= 9) no[1] = '0' + no[1];
-        if (no[1] <= 99) no[1] = '0' + no[1];
-        mediaNo = no[1];
-        const index = dialectInfo.例外音檔.findIndex(
-          ([編號]) => 編號 === line.編號,
-        );
-        if (index !== -1) {
-          const matchedElement = dialectInfo.例外音檔[index];
-          mediaYr = matchedElement[1];
-          mediaNo = matchedElement[2];
-          pre112Insertion詞 = 'w/';
-          if (dialectInfo.目錄另級 !== undefined) {
-            詞目錄級 = dialectInfo.目錄另級;
-          }
-        }
-        const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
-        let wordAudioActuallyMissing =
-          missingAudioInfo && missingAudioInfo.word === false;
-        if (!wordAudioActuallyMissing) {
-          audioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
-          if (fullSourceName === '海陸中高級' && line.編號 === '4-261') {
-            audioSrc = applyAudioProxy(
-              'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
-            );
-          }
-        }
+      const dataKey = line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
+      let audioSrc = constructWordAudioUrl(line, dataKey);
+      if (audioSrc) {
+        audioSrc = applyAudioProxy(audioSrc);
       }
 
       if (audioSrc) {
@@ -2835,47 +2821,14 @@ function initializeAppUI() {
         td3.appendChild(document.createElement('br'));
 
         if (line.sourceType === 'cert') {
-          const sourceName = line.sourceName;
-          const 腔 = sourceName.substring(0, 1);
-          const 級 = sourceName.substring(1);
-          const dialectInfo = getDialectInfo(腔, 級);
-
-          const missingAudioInfo =
-            typeof getMissingAudioInfo === 'function'
-              ? getMissingAudioInfo(fullSourceName, line.分類, line.編號)
-              : null;
-          let mediaYr = '112',
-            pre112Insertion句 = '',
-            句目錄級 = dialectInfo.目錄級,
-            mediaNo = '';
-          var no = line.編號.split('-');
-          if (no[0] <= 9) no[0] = '0' + no[0];
-          if (級 === '初') no[0] = '0' + no[0];
-          if (no[1] <= 9) no[1] = '0' + no[1];
-          if (no[1] <= 99) no[1] = '0' + no[1];
-          mediaNo = no[1];
-          const index = dialectInfo.例外音檔.findIndex(
-            ([編號]) => 編號 === line.編號,
-          );
-          if (index !== -1) {
-            const matchedElement = dialectInfo.例外音檔[index];
-            mediaYr = matchedElement[1];
-            mediaNo = matchedElement[2];
-            pre112Insertion句 = 's/';
-            if (dialectInfo.目錄另級 !== undefined) {
-              句目錄級 = dialectInfo.目錄另級;
-            }
-          }
-          const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
-          let sentenceAudioActuallyMissing =
-            (missingAudioInfo && missingAudioInfo.sentence === false) ||
-            級 === '高';
-          if (!sentenceAudioActuallyMissing) {
+          const dataKey = 'cert' + line.sourceName;
+          const audioUrl = constructSentenceAudioUrl(line, dataKey);
+          if (audioUrl) {
             const audio2 = document.createElement('audio');
             audio2.className = 'media';
             audio2.controls = true;
             audio2.preload = 'none';
-            audio2.src = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`);
+            audio2.src = audioUrl;
             td3.appendChild(audio2);
           }
         }
@@ -3576,10 +3529,7 @@ function initializeAppUI() {
             mandarinMeaning: line.華語詞義,
             audioDetails: {
               lineData: { ...line },
-              dialectInfo: {
-                sourceType: isGipData ? 'gip' : 'cert',
-                dataVarName: dataVarName,
-              },
+              fullSourceName: isGipData ? 'gip' : 'cert' + dataVarName,
             },
           });
         }
@@ -3851,6 +3801,7 @@ function initializeAppUI() {
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
+    currentDataVarName = content.name; // Keep track of the active file var name
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
 
@@ -3859,9 +3810,13 @@ function initializeAppUI() {
     const dialectInfo = getDialectInfo(腔, 級);
 
     if (dialectInfo.腔名) {
+      currentDialect = dialectInfo.腔名;
       currentActiveMainDialectName = dialectInfo.腔名;
       updateSearchDialect(dialectInfo.腔名);
     }
+    
+    const gameControls = document.getElementById('game-controls');
+    if (gameControls) gameControls.style.display = 'block';
 
     // --- 動態渲染類別面板（使用官方類別順序） ---
     const officialCategories = getOfficialCategories(content.content);
@@ -5517,6 +5472,15 @@ function initializeAppUI() {
         newWhatsNewVersion = serverVersion;
         whatsNewContent.innerHTML = marked.parse(markdownContent);
         whatsNewModal.classList.add('is-visible');
+      } else {
+        if (localStorage.getItem('seenOnboarding20260705') !== 'true') {
+          localStorage.setItem('seenOnboarding20260705', 'true');
+          if (typeof window.startHakSpringOnboarding === 'function') {
+            setTimeout(() => {
+              window.startHakSpringOnboarding();
+            }, 500);
+          }
+        }
       }
     } catch (error) {
       console.error('Error checking for whatsnew.md update:', error);
@@ -5547,6 +5511,15 @@ function initializeAppUI() {
       localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
     }
     whatsNewModal.classList.remove('is-visible');
+
+    if (localStorage.getItem('seenOnboarding20260705') !== 'true') {
+      localStorage.setItem('seenOnboarding20260705', 'true');
+      if (typeof window.startHakSpringOnboarding === 'function') {
+        setTimeout(() => {
+          window.startHakSpringOnboarding();
+        }, 300);
+      }
+    }
   };
 
   // Attach event listeners
