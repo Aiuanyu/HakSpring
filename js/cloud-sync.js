@@ -70,8 +70,13 @@ async function signInWithGoogle() {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
       },
     });
+
+    if (data && data.url) {
+      window.open(data.url, '_blank');
+    }
 
     if (error) {
       console.error('[CloudSync] 登入失敗:', error);

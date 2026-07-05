@@ -2278,12 +2278,6 @@ input:checked+.slider:before {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
-@media (max-width: 768px) {
-  .floating-game-btn {
-    display: none !important; /* 窄版螢幕隱藏 */
-  }
-}
-
 /* --- 【新增】雲端同步按鈕樣式 --- */
 #cloudSyncBtn,
 #cloudSyncLogoutBtn {
@@ -4177,4 +4171,34 @@ mark {
     background: rgba(255,255,255,0.2);
     border-color: rgba(255,255,255,0.3);
   }
+}
+
+/* --- Driver.js 樣式覆蓋 (Onboarding) --- */
+html {
+  --driver-popover-bg-color: #ffffff;
+  --driver-popover-text-color: #333333;
+}
+@media (prefers-color-scheme: dark) {
+  html {
+    --driver-popover-bg-color: #2c2c2c;
+    --driver-popover-text-color: #ffffff;
+  }
+}
+
+.driver-popover {
+  border-radius: 8px !important;
+}
+.driver-popover-footer button {
+  color: #fff !important;
+  text-shadow: none !important;
+  border-color: transparent !important;
+  border-radius: 4px !important;
+  background-color: #437d45 !important;
+}
+.driver-popover-footer button:hover {
+  background-color: #2b5c2d !important;
+}
+.driver-popover-progress-text {
+  color: #437d45 !important;
+  font-weight: bold;
 }

@@ -31,6 +31,8 @@ function initGameUI() {
       document.getElementById('game-target-level').textContent = currentActiveDialectLevelFullName;
       if (readyBlock) readyBlock.style.display = 'block';
       if (selectBlock) selectBlock.style.display = 'none';
+      const startSessionBtn = document.getElementById('gameStartSessionBtn');
+      if (startSessionBtn) startSessionBtn.style.display = 'block';
       showGameView('setup');
       gameModal.style.display = 'flex';
       return;
@@ -69,6 +71,8 @@ function initGameUI() {
         document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
         if (readyBlock) readyBlock.style.display = 'block';
         if (selectBlock) selectBlock.style.display = 'none';
+        const startSessionBtn = document.getElementById('gameStartSessionBtn');
+        if (startSessionBtn) startSessionBtn.style.display = 'block';
         showGameView('setup');
         gameModal.style.display = 'flex';
         return;
@@ -77,6 +81,8 @@ function initGameUI() {
 
     if (readyBlock) readyBlock.style.display = 'none';
     if (selectBlock) selectBlock.style.display = 'block';
+    const startSessionBtnFallback = document.getElementById('gameStartSessionBtn');
+    if (startSessionBtnFallback) startSessionBtnFallback.style.display = 'none';
     showGameView('setup');
     gameModal.style.display = 'flex';
   };
@@ -89,6 +95,7 @@ function initGameUI() {
   if (gameChangeLevelBtn) {
     gameChangeLevelBtn.addEventListener('click', () => {
       document.getElementById('game-setup-ready-block').style.display = 'none';
+      document.getElementById('gameStartSessionBtn').style.display = 'none';
       document.getElementById('game-setup-select-block').style.display = 'block';
     });
   }
@@ -109,6 +116,7 @@ function initGameUI() {
           document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
           document.getElementById('game-setup-select-block').style.display = 'none';
           document.getElementById('game-setup-ready-block').style.display = 'block';
+          document.getElementById('gameStartSessionBtn').style.display = 'block';
         } else {
           alert('無此腔調/級別組合的資料！');
         }
@@ -273,6 +281,12 @@ function renderQuestion() {
   
   // 題目出現時立刻播放詞彙音檔
   currentQuestionAudioPromise = playCurrentQuestionAudio();
+
+  // 自動捲動到題目卡 (為了窄版螢幕體驗)
+  const playView = document.getElementById('game-play-view');
+  if (playView) {
+    playView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function handleAnswer(selectedOption, btnElement) {
@@ -343,6 +357,9 @@ async function handleAnswer(selectedOption, btnElement) {
     nextBtn.onclick = () => saveProgressAndNext('again');
     feedback.appendChild(nextBtn);
   }
+
+  // 自動捲動到評估區，讓評估區保持在上緣
+  feedback.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function saveProgressAndNext(lastResult) {

@@ -5472,6 +5472,15 @@ function initializeAppUI() {
         newWhatsNewVersion = serverVersion;
         whatsNewContent.innerHTML = marked.parse(markdownContent);
         whatsNewModal.classList.add('is-visible');
+      } else {
+        if (localStorage.getItem('seenOnboarding20260705') !== 'true') {
+          localStorage.setItem('seenOnboarding20260705', 'true');
+          if (typeof window.startHakSpringOnboarding === 'function') {
+            setTimeout(() => {
+              window.startHakSpringOnboarding();
+            }, 500);
+          }
+        }
       }
     } catch (error) {
       console.error('Error checking for whatsnew.md update:', error);
@@ -5502,6 +5511,15 @@ function initializeAppUI() {
       localStorage.setItem('whatsNewVersion', newWhatsNewVersion);
     }
     whatsNewModal.classList.remove('is-visible');
+
+    if (localStorage.getItem('seenOnboarding20260705') !== 'true') {
+      localStorage.setItem('seenOnboarding20260705', 'true');
+      if (typeof window.startHakSpringOnboarding === 'function') {
+        setTimeout(() => {
+          window.startHakSpringOnboarding();
+        }, 300);
+      }
+    }
   };
 
   // Attach event listeners
