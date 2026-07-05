@@ -48,15 +48,20 @@ function normalizeGameData(item, dialect, level, source) {
  */
 function getWordsForDialectAndLevel(dialect, dataVarName) {
   const fullLevelName = getFullLevelName(dataVarName);
-  
-  if (typeof g_currentLevelData === 'undefined' || !g_currentLevelData || g_currentLevelData.length === 0) {
-    console.warn(`No current level data found`);
+
+  // Use window[dataVarName] directly to avoid reading from g_currentLevelData,
+  // which is shared with the main UI and can be mutated independently, causing
+  // a mismatch where question text comes from one level but audio from another.
+  const varData = window[dataVarName];
+  const levelData = (varData && Array.isArray(varData.content)) ? varData.content : [];
+
+  if (levelData.length === 0) {
+    console.warn(`No data found for level: ${dataVarName}`);
     return [];
   }
 
-  return g_currentLevelData.map(item => {
-    // We attach dataVarName in case it's not present natively on the item
-    const newItem = { ...item, dataVarName: item.dataVarName || dataVarName };
+  return levelData.map(item => {
+    const newItem = { ...item, dataVarName: dataVarName };
     return normalizeGameData(newItem, dialect, fullLevelName, 'cert');
   });
 }
