@@ -60,6 +60,11 @@ async function signInWithGoogle() {
   const client = getSupabaseClient();
   if (!client) return;
 
+  // 先在「使用者點擊」的同步脈絡下開一個空白分頁卡位。
+  // 這樣才不會被彈出視窗封鎖器擋掉——若等到 await 之後才 window.open，就脫離手勢脈絡、多半會被擋。
+  // 用新分頁登入是刻意的：避免主頁被 redirect 跳走，登入回來後 onboarding 才不會中斷。
+  const authWindow = window.open('', '_blank');
+
   try {
     // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
     const redirectUrl =
@@ -74,16 +79,29 @@ async function signInWithGoogle() {
       },
     });
 
-    if (data && data.url) {
-      window.open(data.url, '_blank');
-    }
-
     if (error) {
       console.error('[CloudSync] 登入失敗:', error);
+      if (authWindow) authWindow.close();
       alert('登入失敗：' + error.message);
+      return;
+    }
+
+    if (data && data.url) {
+      if (authWindow) {
+        // 卡位分頁還在 → 把授權網址填進去（正常路徑，保住新分頁 + onboarding）
+        authWindow.location.href = data.url;
+      } else {
+        // 連空白分頁都被擋（極端封鎖）→ 退回同分頁導向，至少能完成登入
+        // （此情況該次 redirect 回來會跳過 onboarding，屬可接受的退路）
+        window.location.href = data.url;
+      }
+    } else if (authWindow) {
+      // 沒拿到 url 也別留空白分頁在那
+      authWindow.close();
     }
   } catch (err) {
     console.error('[CloudSync] 登入錯誤:', err);
+    if (authWindow) authWindow.close();
     alert('登入時發生錯誤');
   }
 }

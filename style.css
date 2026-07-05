@@ -4174,20 +4174,38 @@ mark {
 }
 
 /* --- Driver.js 樣式覆蓋 (Onboarding) --- */
-html {
-  --driver-popover-bg-color: #ffffff;
-  --driver-popover-text-color: #333333;
+:root {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #2d2d2d;
 }
 @media (prefers-color-scheme: dark) {
-  html {
-    --driver-popover-bg-color: #2c2c2c;
-    --driver-popover-text-color: #ffffff;
+  :root {
+    --driver-popover-bg: #2c2c2c;
+    --driver-popover-text: #e0e0e0;
   }
 }
 
 .driver-popover {
+  background-color: var(--driver-popover-bg) !important;
+  color: var(--driver-popover-text) !important;
   border-radius: 8px !important;
 }
+.driver-popover-title, .driver-popover-description {
+  color: var(--driver-popover-text) !important;
+}
+.driver-popover-close-btn {
+  color: #a2a2a2 !important;
+}
+.driver-popover-close-btn:hover {
+  color: var(--driver-popover-text) !important;
+}
+
+/* Arrow dynamic border colors */
+.driver-popover-arrow-side-left { border-left-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-right { border-right-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-top { border-top-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-bottom { border-bottom-color: var(--driver-popover-bg) !important; }
+
 .driver-popover-footer button {
   color: #fff !important;
   text-shadow: none !important;
