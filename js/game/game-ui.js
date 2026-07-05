@@ -65,8 +65,6 @@ function initGameUI() {
         const 腔 = varData.name.substring(0, 1);
         const 級 = varData.name.substring(1);
         gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣'; // fallback
-        
-        g_currentLevelData = [...varData.content];
 
         document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
         if (readyBlock) readyBlock.style.display = 'block';
@@ -111,7 +109,6 @@ function initGameUI() {
         if (varData) {
           gameActiveDataVarName = varData.name;
           gameActiveDialect = getDialectInfo(dialect, level).腔名 || '四縣';
-          g_currentLevelData = [...varData.content];
 
           document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
           document.getElementById('game-setup-select-block').style.display = 'none';
