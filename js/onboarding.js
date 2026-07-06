@@ -4,11 +4,16 @@
  */
 
 function initHakSpringOnboarding() {
+  if (!window.driver) return;
   const driver = window.driver.js.driver;
   
   // 偵測是否已登入
   const userBtn = document.getElementById('cloudSyncUserBtn');
   const isLoggedIn = userBtn && window.getComputedStyle(userBtn).display !== 'none';
+  
+  if (typeof trackEvent === 'function') {
+    trackEvent('start', 'Onboarding', isLoggedIn ? 'logged_in' : 'guest');
+  }
   
   const syncStep = isLoggedIn ? {
     element: '#cloudSyncUserBtn',
@@ -124,7 +129,17 @@ function initHakSpringOnboarding() {
     closeBtnText: '關閉',
     nextBtnText: '下一步 &rarr;',
     prevBtnText: '&larr; 上一步',
-    steps: steps
+    steps: steps,
+    onDestroyed: () => {
+      if (typeof trackEvent === 'function') {
+        const currentIndex = onboardingDriver.getActiveIndex();
+        if (currentIndex === steps.length - 1) {
+          trackEvent('complete', 'Onboarding', '');
+        } else {
+          trackEvent('skip', 'Onboarding', `step_${currentIndex}`);
+        }
+      }
+    }
   });
 
   onboardingDriver.drive();

@@ -20,6 +20,10 @@ function initGameUI() {
   const gamePlayAudioBtn = document.getElementById('game-play-audio-btn');
 
   const handleStartGameClick = () => {
+    if (typeof trackEvent === 'function') {
+      trackEvent('open_modal', 'Game', 'floating_btn');
+    }
+
     const readyBlock = document.getElementById('game-setup-ready-block');
     const selectBlock = document.getElementById('game-setup-select-block');
 
@@ -126,6 +130,11 @@ function initGameUI() {
   if (gameCloseBtn) {
     gameCloseBtn.addEventListener('click', () => {
       gameModal.style.display = 'none';
+      if (currentSession && currentSession.length && currentQuestionIndex < currentSession.length) {
+        if (typeof trackEvent === 'function') {
+          trackEvent('quit_session', 'Game', `${gameActiveDataVarName}_q${currentQuestionIndex + 1}`);
+        }
+      }
     });
   }
 
@@ -214,6 +223,10 @@ async function startSession() {
     currentQuestionIndex = 0;
     score = 0;
     
+    if (typeof trackEvent === 'function') {
+      trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${mode}`);
+    }
+    
     loadingIndicator.style.display = 'none';
     showGameView('play');
     renderQuestion();
@@ -290,6 +303,10 @@ async function handleAnswer(selectedOption, btnElement) {
   const question = currentSession[currentQuestionIndex];
   const isCorrect = selectedOption === question.targetWord.華語詞義;
   
+  if (typeof trackEvent === 'function') {
+    trackEvent('answer', 'Game', isCorrect ? 'correct' : 'wrong');
+  }
+  
   const options = document.querySelectorAll('.game-option-btn');
   options.forEach(btn => btn.disabled = true); // Disable all options
 
@@ -360,6 +377,10 @@ async function handleAnswer(selectedOption, btnElement) {
 }
 
 async function saveProgressAndNext(lastResult) {
+  if (typeof trackEvent === 'function') {
+    trackEvent('grade', 'Game', lastResult);
+  }
+
   const question = currentSession[currentQuestionIndex];
   const progressKey = question.targetWord.progressKey;
   const existingProgress = await getProgress(progressKey) || {};
@@ -413,7 +434,8 @@ function playCurrentQuestionAudio() {
 }
 
 function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) {
-  if (question.targetWord.例句 && question.targetWord.翻譯) {
+  const sentenceTextValue = question.targetWord.例句 ? question.targetWord.例句.trim() : '';
+  if (sentenceTextValue && sentenceTextValue !== '-') {
     const sentenceDisplay = document.createElement('div');
     sentenceDisplay.className = 'game-sentence-display';
     
@@ -421,23 +443,37 @@ function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) 
     const formatText = (text) => text ? text.replace(/\n/g, '<br>') : '';
     const hakkaText = `<span class="sentence" style="font-size: 1.1em;">${formatText(question.targetWord.例句)}</span>`;
     
-    const sentenceAudioBtn = document.createElement('button');
-    sentenceAudioBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-    sentenceAudioBtn.className = 'game-btn';
-    sentenceAudioBtn.style.marginLeft = '10px';
-    sentenceAudioBtn.style.backgroundColor = 'var(--primary-color)';
-    sentenceAudioBtn.style.color = '#fff';
-    sentenceAudioBtn.style.padding = '2px 8px';
-    sentenceAudioBtn.style.fontSize = '0.9em';
+    const fullSourceName = `cert${question.targetWord.dataVarName}`;
+    const audioUrl = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(question.targetWord, fullSourceName) : null;
+    const hasAudio = !!audioUrl;
     
-    sentenceAudioBtn.onclick = (e) => {
-      e.stopPropagation();
-      playCurrentSentenceAudio(sentenceAudioBtn);
-    };
+    let sentenceAudioBtn = null;
+    if (hasAudio) {
+      sentenceAudioBtn = document.createElement('button');
+      sentenceAudioBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+      sentenceAudioBtn.className = 'game-btn';
+      sentenceAudioBtn.style.marginLeft = '10px';
+      sentenceAudioBtn.style.backgroundColor = 'var(--primary-color)';
+      sentenceAudioBtn.style.color = '#fff';
+      sentenceAudioBtn.style.padding = '2px 8px';
+      sentenceAudioBtn.style.fontSize = '0.9em';
+      
+      sentenceAudioBtn.onclick = (e) => {
+        e.stopPropagation();
+        playCurrentSentenceAudio(sentenceAudioBtn);
+      };
+    }
 
     sentenceText.innerHTML = `<strong>例句：</strong> ${hakkaText} `;
-    sentenceText.appendChild(sentenceAudioBtn);
-    sentenceText.insertAdjacentHTML('beforeend', `<br><strong>翻譯：</strong> ${formatText(question.targetWord.翻譯)}`);
+    if (sentenceAudioBtn) {
+      sentenceText.appendChild(sentenceAudioBtn);
+    }
+    
+    const translationTextValue = question.targetWord.翻譯 ? question.targetWord.翻譯.trim() : '';
+    if (translationTextValue && translationTextValue !== '-') {
+      sentenceText.insertAdjacentHTML('beforeend', `<br><strong>翻譯：</strong> ${formatText(question.targetWord.翻譯)}`);
+    }
+    
     sentenceDisplay.appendChild(sentenceText);
 
     const sentenceBtn = document.createElement('button');
@@ -450,7 +486,12 @@ function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) 
     sentenceBtn.onclick = () => {
       sentenceDisplay.style.display = 'block';
       sentenceBtn.style.display = 'none';
-      playCurrentSentenceAudio(sentenceAudioBtn);
+      if (typeof trackEvent === 'function') {
+        trackEvent('view_example', 'Game', gameActiveDataVarName);
+      }
+      if (hasAudio) {
+        playCurrentSentenceAudio(sentenceAudioBtn);
+      }
     };
     
     feedback.appendChild(sentenceBtn);
@@ -493,9 +534,12 @@ function playCurrentSentenceAudio(btnEl) {
       btnEl.style.opacity = '0.7';
     }
     
+    if (typeof trackEvent === 'function') {
+      trackEvent('play_sentence_audio', 'Game', gameActiveDataVarName);
+    }
+    
     audio.play().catch(e => {
       console.error("Sentence audio playback failed:", e);
-      alert("無法播放例句音檔，可能是音檔不存在或網路問題。");
       if (btnEl) {
         btnEl.classList.remove('playing');
         btnEl.style.opacity = '1';
@@ -508,14 +552,15 @@ function playCurrentSentenceAudio(btnEl) {
         btnEl.style.opacity = '1';
       }
     };
-  } else {
-    alert("此詞彙目前沒有提供例句語音。");
   }
 }
 
 function endSession() {
   showGameView('result');
   document.getElementById('game-final-score').textContent = score;
+  if (typeof trackEvent === 'function') {
+    trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
+  }
 }
 
 // Hook into existing initializeAppUI or run when DOM is loaded
