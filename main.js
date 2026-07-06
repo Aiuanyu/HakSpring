@@ -1885,6 +1885,34 @@ function handleDataImport() {
         delete parsedData.hakkaBookmarks;
       }
 
+      // --- Smart Learning Progress Merging Logic ---
+      if (parsedData.hakkaLearningProgress) {
+        const migratedProgress = parsedData.hakkaLearningProgress;
+        const localProgressRaw = localStorage.getItem('hakkaLearningProgress');
+        let localProgress = {};
+        
+        if (localProgressRaw) {
+          try {
+            localProgress = JSON.parse(localProgressRaw);
+          } catch (e) {
+            console.error('Failed to parse local learning progress, it will be overwritten.', e);
+          }
+        }
+        
+        if (typeof mergeProgress === 'function') {
+          const mergedProgress = mergeProgress(localProgress, migratedProgress);
+          localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
+          console.log('Learning progress merged successfully.');
+        } else {
+          // Fallback
+          localStorage.setItem('hakkaLearningProgress', JSON.stringify(migratedProgress));
+          console.log('mergeProgress not found, imported migrated learning progress directly.');
+        }
+        
+        // Remove the key from parsedData so it's not processed again
+        delete parsedData.hakkaLearningProgress;
+      }
+
       // --- Handle other settings (overwrite) ---
       for (const key in parsedData) {
         if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
