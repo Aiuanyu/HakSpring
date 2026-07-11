@@ -4005,13 +4005,15 @@ mark {
   margin-bottom: 30px;
 }
 .game-question-card h1 {
-  font-family: var(--title-font);
+  /* 題幹漢字：對齊主詞彙表詞目字型（--title-font），!important 壓過 modal/reset */
+  font-family: var(--title-font) !important;
   font-size: 3em;
   margin: 0 0 10px 0;
   color: #333;
 }
 .game-question-card .pinyin-text {
-  font-family: var(--roman-font);
+  /* 拼音：對齊主詞彙表羅馬字字型（--roman-font） */
+  font-family: var(--roman-font) !important;
   font-size: 1.5em;
   color: #666;
   margin-bottom: 10px;
@@ -4093,6 +4095,15 @@ mark {
   background-color: #f8d7da;
   color: #721c24;
 }
+.diff-highlight {
+  font-family: 'Lesson One', monospace;
+  font-size: larger;
+  padding: 0.1em 0.2em;
+  background-color: #ffeb3b;
+  color: #000 !important;
+  border-radius: 3px;
+  font-weight: bold;
+}
 
 @media (prefers-color-scheme: dark) {
   #gameLearningMode {
@@ -4145,6 +4156,10 @@ mark {
     background-color: #5c1e22;
     color: #f5c6cb;
   }
+  .diff-highlight {
+    background-color: #fbc02d; /* Slightly deeper yellow for dark mode */
+    color: #000 !important;
+  }
 }
 
 @media screen and (max-width: 600px) {
@@ -4154,6 +4169,21 @@ mark {
   .game-question-card h1 {
     font-size: 2em;
   }
+}
+
+/* Pinyin Practice Mode Specifics */
+.game-mandarin-translation {
+  /* 華語(Chinese)不特設字型，沿用網頁 body 預設（Iansui）即可 */
+  font-size: 0.45em;
+  color: var(--text-color);
+  opacity: 0.8;
+  margin-top: 5px;
+  font-weight: normal;
+}
+
+.game-pinyin-option {
+  font-family: var(--roman-font) !important;
+  letter-spacing: 0.02em;
 }
 
 .kbd-shortcut {

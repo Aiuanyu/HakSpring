@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=4.3.4" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -28,12 +28,13 @@
   <script type="text/javascript" src="main.js" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
-  <script type="text/javascript" src="js/game/game-progress.js" defer></script>
-  <script type="text/javascript" src="js/game/game-data.js" defer></script>
-  <script type="text/javascript" src="js/game/question-gen.js" defer></script>
-  <script type="text/javascript" src="js/game/srs.js" defer></script>
-  <script type="text/javascript" src="js/game/game-ui.js" defer></script>
-  <script type="text/javascript" src="js/cloud-sync.js" defer></script>
+  <script type="text/javascript" src="js/game/game-progress.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/game-data.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/srs.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.3.5" defer></script>
+  <script type="text/javascript" src="js/cloud-sync.js?v=4.3.2" defer></script>
   
   <!-- Driver.js for Onboarding -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
@@ -182,12 +183,22 @@
                   <button id="gameChangeLevelBtn" class="game-btn" style="margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;">換其他腔／其他級</button>
                 </p>
                 <p>一局共有 10 題選擇題。</p>
-                <div style="margin-bottom: 15px;">
-                  <label for="gameLearningMode">學習模式：</label>
-                  <select id="gameLearningMode" class="form-select">
-                    <option value="review">複習優先模式</option>
-                    <option value="sequential">固定依序模式</option>
-                  </select>
+                <div style="margin-bottom: 15px; text-align: left; display: inline-block;">
+                  <div class="game-mode-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">出題順序：</span>
+                    <label style="margin-right: 10px;"><input type="radio" name="gameOrderMode" value="random" checked> 隨機</label>
+                    <label><input type="radio" name="gameOrderMode" value="sequential"> 循序（依編號）</label>
+                  </div>
+                  <div class="game-mode-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">新舊配比：</span>
+                    <label style="margin-right: 10px;"><input type="radio" name="gameMixMode" value="reviewFirst" checked> 複習優先</label>
+                    <label><input type="radio" name="gameMixMode" value="newFirst"> 衝新進度</label>
+                  </div>
+                  <div class="game-type-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">考驗題型：</span>
+                    <label style="margin-right: 10px;"><input type="checkbox" name="gameType" value="m" checked> 選詞義</label>
+                    <label><input type="checkbox" name="gameType" value="p"> 練拼音</label>
+                  </div>
                 </div>
                 <div style="margin-bottom: 25px;">
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555;">
@@ -241,7 +252,7 @@
           </div>
           <div id="game-result-view" style="display: none;">
             <h3>挑戰完成！</h3>
-            <p>你的成績：<span id="game-final-score"></span> / 10</p>
+            <p>你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">10</span></p>
             <button id="gameRetryBtn" class="game-btn">再來一局</button>
           </div>
         </div>

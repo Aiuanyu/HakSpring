@@ -146,3 +146,6 @@
 ## Branching and Communication
 
 If you need to create a new branch for your work (e.g., to recover from an error or start a clean implementation), you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays. **For follow-up work by the same Jules task/chat, you should commit to the existing branch used in the same task/chat to avoid creating unnecessary new branches.**
+
+## 快取更新慣例 (Cache Busting Conventions)
+- **更新靜態資源版本**: 當修改了專案的 `.css` 或 `.js` 檔案（特別是在頻繁測試的開發階段或發布新功能時），**必須**同步至 `index.html` 更新對應檔案載入標籤的查詢字串（Query String，如 `?v=4.2.1` 改為 `?v=4.2.2`）。這可以確保使用者的瀏覽器不會因為快取 (Cache) 而載入舊版的樣式或腳本，避免產生「程式碼已修改但畫面未生效」的誤判。

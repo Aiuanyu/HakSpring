@@ -207,6 +207,12 @@ async function syncFromCloud() {
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
       const mergedProgress = mergeProgress(localProgress, cloudProgress);
 
+      // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
+      // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
+      if (typeof window.foldTypeKeysIntoWordCards === 'function') {
+        window.foldTypeKeysIntoWordCards(mergedProgress);
+      }
+
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
       localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));

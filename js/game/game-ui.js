@@ -209,6 +209,12 @@ function initGameUI() {
   });
 }
 
+function getSelectedTypes() {
+  const checkboxes = document.querySelectorAll('input[name="gameType"]:checked');
+  const types = Array.from(checkboxes).map(cb => cb.value);
+  return types.length > 0 ? types : ['m']; // fallback to 'm'
+}
+
 async function startSession() {
   const loadingIndicator = document.getElementById('loading-indicator');
   const loadingText = document.getElementById('loading-text');
@@ -217,14 +223,16 @@ async function startSession() {
   loadingIndicator.style.display = 'flex';
 
   try {
-    const modeSelect = document.getElementById('gameLearningMode');
-    const mode = modeSelect ? modeSelect.value : 'review';
-    currentSession = await generateGameSession(gameActiveDialect, gameActiveDataVarName, mode);
+    const orderMode = document.querySelector('input[name="gameOrderMode"]:checked')?.value || 'random';
+    const mixMode = document.querySelector('input[name="gameMixMode"]:checked')?.value || 'reviewFirst';
+    const types = getSelectedTypes();
+    
+    currentSession = await generateGameSession(gameActiveDialect, gameActiveDataVarName, { orderMode, mixMode, types });
     currentQuestionIndex = 0;
     score = 0;
     
     if (typeof trackEvent === 'function') {
-      trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${mode}`);
+      trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${orderMode}_${mixMode}`);
     }
     
     loadingIndicator.style.display = 'none';
@@ -258,9 +266,8 @@ function renderQuestion() {
 
   const question = currentSession[currentQuestionIndex];
   
-  const modeSelect = document.getElementById('gameLearningMode');
-  const mode = modeSelect ? modeSelect.value : 'review';
-  if (mode === 'sequential') {
+  const orderMode = document.querySelector('input[name="gameOrderMode"]:checked')?.value || 'random';
+  if (orderMode === 'sequential') {
     document.getElementById('game-question-counter').textContent = `題 ${currentQuestionIndex + 1} / ${currentSession.length} (編號：${question.targetWord.編號})`;
   } else {
     document.getElementById('game-question-counter').textContent = `題 ${currentQuestionIndex + 1} / ${currentSession.length}`;
@@ -269,8 +276,22 @@ function renderQuestion() {
   const newBadge = document.getElementById('game-new-badge');
   newBadge.style.display = question.isNew ? 'inline-block' : 'none';
 
-  document.getElementById('game-target-word').textContent = question.targetWord.客家語;
-  document.getElementById('game-target-pinyin').textContent = question.targetWord.標音;
+  // Pinyin Mode specific UI
+  const pinyinElem = document.getElementById('game-target-pinyin');
+  if (question.type === 'p') {
+    pinyinElem.style.display = 'none'; // hide pinyin in prompt for pinyin test
+    // If they have mandarin translation toggled on, we can append it
+    const showMandarin = true; // Later we can add a toggle, for now just append it
+    if (showMandarin && question.targetWord.華語詞義) {
+      document.getElementById('game-target-word').innerHTML = `${question.targetWord.客家語}<div class="game-mandarin-translation">${question.targetWord.華語詞義}</div>`;
+    } else {
+      document.getElementById('game-target-word').textContent = question.targetWord.客家語;
+    }
+  } else {
+    document.getElementById('game-target-word').textContent = question.targetWord.客家語;
+    pinyinElem.style.display = 'block';
+    pinyinElem.textContent = question.targetWord.標音;
+  }
   
   // Audio button hidden until they answer correctly
   document.getElementById('game-play-audio-btn').style.display = 'none';
@@ -283,6 +304,9 @@ function renderQuestion() {
   question.options.forEach((opt, index) => {
     const btn = document.createElement('button');
     btn.className = 'game-option-btn';
+    if (question.type === 'p') {
+      btn.classList.add('game-pinyin-option');
+    }
     btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> ${opt}`;
     btn.dataset.option = opt;
     btn.onclick = () => handleAnswer(opt, btn);
@@ -299,9 +323,69 @@ function renderQuestion() {
   }
 }
 
+function highlightDiff(wrongStr, correctStr) {
+  const dp = Array(correctStr.length + 1).fill(0).map(() => Array(wrongStr.length + 1).fill(0));
+  for (let i = 1; i <= correctStr.length; i++) {
+    for (let j = 1; j <= wrongStr.length; j++) {
+      if (correctStr[i - 1] === wrongStr[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+  
+  let i = correctStr.length;
+  let j = wrongStr.length;
+  const matchCorrect = Array(correctStr.length).fill(false);
+  
+  while (i > 0 && j > 0) {
+    if (correctStr[i - 1] === wrongStr[j - 1]) {
+      matchCorrect[i - 1] = true;
+      i--;
+      j--;
+    } else if (dp[i - 1][j] > dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  
+  let result = '';
+  let inStrong = false;
+  for (let k = 0; k < correctStr.length; k++) {
+    if (!matchCorrect[k]) {
+      if (!inStrong) {
+        result += '<strong class="diff-highlight">';
+        inStrong = true;
+      }
+      result += correctStr[k];
+    } else {
+      if (inStrong) {
+        result += '</strong>';
+        inStrong = false;
+      }
+      result += correctStr[k];
+    }
+  }
+  if (inStrong) {
+    result += '</strong>';
+  }
+  return result;
+}
+
 async function handleAnswer(selectedOption, btnElement) {
   const question = currentSession[currentQuestionIndex];
-  const isCorrect = selectedOption === question.targetWord.華語詞義;
+  let isCorrect = false;
+  let correctText = '';
+  
+  if (question.type === 'p') {
+    correctText = question.targetWord.客語標音_顯示 || question.targetWord.標音;
+    isCorrect = selectedOption === correctText;
+  } else {
+    correctText = question.targetWord.華語詞義;
+    isCorrect = selectedOption === correctText;
+  }
   
   if (typeof trackEvent === 'function') {
     trackEvent('answer', 'Game', isCorrect ? 'correct' : 'wrong');
@@ -353,13 +437,22 @@ async function handleAnswer(selectedOption, btnElement) {
     
     // Highlight correct answer
     options.forEach(btn => {
-      if (btn.dataset.option === question.targetWord.華語詞義) {
+      if (btn.dataset.option === correctText) {
         btn.classList.add('correct');
+        if (question.type === 'p') {
+          const kbdMatch = btn.innerHTML.match(/<kbd[^>]*>.*?<\/kbd>/);
+          const kbdHTML = kbdMatch ? kbdMatch[0] : '';
+          btn.innerHTML = `${kbdHTML} ${highlightDiff(selectedOption, correctText)}`;
+        }
       }
     });
     
     const msg = document.createElement('div');
-    msg.textContent = `毋著。正確答案係：${question.targetWord.華語詞義}`;
+    if (question.type === 'p') {
+      msg.innerHTML = `毋著。正確答案係：${highlightDiff(selectedOption, correctText)}`;
+    } else {
+      msg.textContent = `毋著。正確答案係：${correctText}`;
+    }
     msg.style.marginBottom = '10px';
     feedback.appendChild(msg);
     
@@ -382,13 +475,25 @@ async function saveProgressAndNext(lastResult) {
   }
 
   const question = currentSession[currentQuestionIndex];
-  const progressKey = question.targetWord.progressKey;
-  const existingProgress = await getProgress(progressKey) || {};
-  
+  // 一詞一卡：進度一律寫回詞卡（|m key），題型只影響 typeReps 計數。
+  const wordKey = question.targetWord.progressKey.replace(/\|.$/, '|m');
+  const existingProgress = await getProgress(wordKey) || {};
+
+  // typeReps：這次用的形式 +1
+  const typeReps = { ...(existingProgress.typeReps || {}) };
+  if (typeReps.m == null && existingProgress.reps != null) {
+    typeReps.m = existingProgress.reps; // 舊詞卡首次補上 |m 歷史次數
+  }
+  typeReps[question.type] = (typeReps[question.type] || 0) + 1;
+
   const todayEpochDay = Math.floor(Date.now() / 86400000);
-  const newState = computeSM2(existingProgress, lastResult, todayEpochDay);
-  
-  await putProgress(progressKey, newState);
+  if (question.isPlanting && lastResult !== 'again') {
+    // 種植連發題答對：只記 typeReps，不推進 SM-2（避免同日兩次曝光雙重加速排程）
+    await putProgress(wordKey, { ...existingProgress, typeReps });
+  } else {
+    const newState = computeSM2(existingProgress, lastResult, todayEpochDay);
+    await putProgress(wordKey, { ...newState, typeReps });
+  }
 
   currentQuestionIndex++;
   renderQuestion();
@@ -558,6 +663,8 @@ function playCurrentSentenceAudio(btnEl) {
 function endSession() {
   showGameView('result');
   document.getElementById('game-final-score').textContent = score;
+  const totalElem = document.getElementById('game-total-questions');
+  if (totalElem) totalElem.textContent = currentSession.length;
   if (typeof trackEvent === 'function') {
     trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
   }
