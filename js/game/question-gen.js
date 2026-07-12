@@ -2,7 +2,7 @@
 // Handles question generation, distractor selection, and session setup
 
 // 載入版本 banner：在 Console 看到這行＝新版 JS 有載到（cache 驗證用）
-const QUESTION_GEN_VERSION = '4.3.2';
+const QUESTION_GEN_VERSION = '4.6.2';
 console.info(`[HakSpring Game] question-gen.js v${QUESTION_GEN_VERSION} loaded`);
 
 /**
@@ -472,7 +472,18 @@ function buildOptionsForType(target, type, allWords) {
     const targetPinyin = target.客語標音_查詢 || '';
     const targetSyllables = countSyllables(targetPinyin);
 
-    const validPool = allWords.filter(w => w.progressKey !== target.progressKey);
+    const validPool = allWords.filter(w => {
+      if (w.progressKey === target.progressKey) return false;
+      const cleanW = (w.客家語 || '').replace(/（.*?）/g, '');
+      const cleanTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+      if (cleanW === cleanTarget) return false;
+      
+      const pW = (w.客語標音_查詢 || '').replace(/[\s-]+/g, '');
+      const pTarget = (targetPinyin).replace(/[\s-]+/g, '');
+      if (pW === pTarget) return false;
+      
+      return true;
+    });
     // Sort by similarity
     validPool.sort((a, b) => {
       const pA = a.客語標音_查詢 || '';
