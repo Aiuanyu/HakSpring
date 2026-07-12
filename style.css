@@ -3089,7 +3089,37 @@ mark {
 /* --- Pagination Container --- */
 .pagination-container {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 10px;
+}
+
+/* Explicit CSS for Sandhi in Game UI to prevent body/button overrides */
+.game-option-btn ruby[class^="sandhi-"],
+.game-feedback ruby[class^="sandhi-"],
+.pinyin-text ruby[class^="sandhi-"] {
+  font-family: var(--roman-font) !important;
+  font-size: 1em !important;
+}
+.game-option-btn ruby[class^="sandhi-"] rt,
+.game-feedback ruby[class^="sandhi-"] rt,
+.pinyin-text ruby[class^="sandhi-"] rt {
+  font-family: var(--roman-font) !important;
+  font-size: 50% !important;
+}
+
+.game-option-btn ruby.sandhi-高降變,
+.game-feedback ruby.sandhi-高降變,
+.pinyin-text ruby.sandhi-高降變 {
+  color: red !important;
+}
+.game-option-btn ruby.sandhi-中平變,
+.game-feedback ruby.sandhi-中平變,
+.pinyin-text ruby.sandhi-中平變 {
+  color: darkorchid !important;
+}
+.game-option-btn ruby.sandhi-低升變,
+.game-feedback ruby.sandhi-低升變,
+.pinyin-text ruby.sandhi-低升變 {
+  color: blue !important;
 }
 
 .page-button {
@@ -4018,6 +4048,9 @@ mark {
   color: #666;
   margin-bottom: 10px;
 }
+.pinyin-text {
+  font-family: var(--roman-font);
+}
 #game-play-audio-btn {
   background: none;
   border: none;
@@ -4144,10 +4177,27 @@ mark {
     color: #c3e6cb;
   }
   .game-option-btn.wrong {
-    background-color: #5c1e22 !important;
-    border-color: #8b2d33 !important;
-    color: #f5c6cb;
+    background-color: #5a1920 !important;
+    border-color: #842029 !important;
+    color: #ea868f;
   }
+  
+  .game-option-btn ruby.sandhi-高降變,
+  .game-feedback ruby.sandhi-高降變,
+  .pinyin-text ruby.sandhi-高降變 {
+    color: #ff6b6b !important;
+  }
+  .game-option-btn ruby.sandhi-中平變,
+  .game-feedback ruby.sandhi-中平變,
+  .pinyin-text ruby.sandhi-中平變 {
+    color: #e066ff !important;
+  }
+  .game-option-btn ruby.sandhi-低升變,
+  .game-feedback ruby.sandhi-低升變,
+  .pinyin-text ruby.sandhi-低升變 {
+    color: #66b2ff !important;
+  }
+
   .game-feedback.correct {
     background-color: #1e4620;
     color: #c3e6cb;

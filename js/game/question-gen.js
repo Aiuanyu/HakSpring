@@ -33,11 +33,12 @@ function isTooSimilar(str1, str2) {
  * Generate 3 distractors for a given target word from the pool of all words.
  * Priority: Same 分類 -> Same 詞性1 -> Random.
  */
-function generateDistractors(targetWord, allWords) {
+function generateDistractors(targetWord, allWords, returnField = '華語詞義') {
   // Filter out the target word itself, and words with similar/identical meanings
   const validPool = allWords.filter(w => 
     w.progressKey !== targetWord.progressKey && 
-    !isTooSimilar(w.華語詞義, targetWord.華語詞義)
+    !isTooSimilar(w.華語詞義, targetWord.華語詞義) &&
+    (returnField === '華語詞義' || !isTooSimilar(w[returnField], targetWord[returnField]))
   );
   
   let candidates = validPool.filter(w => targetWord.分類 && w.分類 === targetWord.分類);
@@ -55,7 +56,29 @@ function generateDistractors(targetWord, allWords) {
   }
   
   // Pick exactly 3 unique distractors
-  return getRandomItems(candidates, 3).map(w => w.華語詞義);
+  return getRandomItems(candidates, 3).map(w => w[returnField]);
+}
+
+/**
+ * 計算兩個字串的 Levenshtein Distance (編輯距離)
+ */
+function levenshteinDistance(a, b) {
+  if (!a || !b) return (a || b || '').length;
+  const matrix = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return matrix[a.length][b.length];
 }
 
 /**
@@ -305,14 +328,27 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     if (!mProgress) {
       chosenType = 'm'; // 新詞：先認識
     } else {
-      chosenType = pickLeastPracticedType(selected, mProgress);
+      const eligibleTypes = selected.filter(t => isEligibleForType(target, t));
+      chosenType = eligibleTypes.length > 0 ? pickLeastPracticedType(eligibleTypes, mProgress) : 'm';
+    }
+
+    let clozeSentence = null;
+    let clozeTarget = null;
+    if (chosenType === 'c') {
+      clozeTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+      const sentences = target.例句.split('<br>').map(s => s.trim()).filter(Boolean);
+      const validSentences = sentences.filter(s => s.includes(clozeTarget));
+      const chosenSent = validSentences[Math.floor(Math.random() * validSentences.length)];
+      clozeSentence = chosenSent.replaceAll(clozeTarget, '____');
     }
 
     session.push({
       targetWord: target,
       options: buildOptionsForType(target, chosenType, allWords),
       isNew: !mProgress,
-      type: chosenType
+      type: chosenType,
+      clozeSentence,
+      clozeTarget
     });
   }
 
@@ -328,13 +364,28 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     for (let i = 0; i < session.length && planted < MAX_PLANTING; i++) {
       const q = session[i];
       if (!q.isNew || q.type !== 'm' || q.isPlanting) continue;
-      const followType = pickLeastPracticedType(otherTypes, null);
+      const eligibleOtherTypes = otherTypes.filter(t => isEligibleForType(q.targetWord, t));
+      if (eligibleOtherTypes.length === 0) continue;
+      const followType = pickLeastPracticedType(eligibleOtherTypes, null);
+      
+      let clozeSentence = null;
+      let clozeTarget = null;
+      if (followType === 'c') {
+        clozeTarget = (q.targetWord.客家語 || '').replace(/（.*?）/g, '');
+        const sentences = q.targetWord.例句.split('<br>').map(s => s.trim()).filter(Boolean);
+        const validSentences = sentences.filter(s => s.includes(clozeTarget));
+        const chosenSent = validSentences[Math.floor(Math.random() * validSentences.length)];
+        clozeSentence = chosenSent.replaceAll(clozeTarget, '____');
+      }
+
       const followUp = {
         targetWord: q.targetWord,
         options: buildOptionsForType(q.targetWord, followType, allWords),
         isNew: false,
         type: followType,
-        isPlanting: true
+        isPlanting: true,
+        clozeSentence,
+        clozeTarget
       };
       session.splice(Math.min(i + 1 + PLANTING_GAP, session.length), 0, followUp);
       planted++;
@@ -342,6 +393,26 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   }
 
   return session;
+}
+
+/**
+ * 檢查該詞是否符合指定題型的出題資格
+ */
+function isEligibleForType(targetWord, type) {
+  if (type === 'c') {
+    const cleanWord = (targetWord.客家語 || '').replace(/（.*?）/g, '');
+    if (!cleanWord || cleanWord.includes('…')) return false;
+    if (!targetWord.例句) return false;
+    const sentences = targetWord.例句.split('<br>').map(s => s.trim()).filter(Boolean);
+    return sentences.some(s => s.includes(cleanWord));
+  }
+  if (type === 'l') {
+    const tableName = typeof getFullLevelName === 'function' ? getFullLevelName(targetWord.dataVarName) : `cert${targetWord.dataVarName}`;
+    const missing = typeof getMissingAudioInfo === 'function' ? getMissingAudioInfo(tableName, targetWord.分類, targetWord.編號) : null;
+    if (missing && missing.word === false) return false;
+    return true;
+  }
+  return true; // 其他題型預設符合
 }
 
 /**
@@ -368,6 +439,59 @@ function buildOptionsForType(target, type, allWords) {
   } else if (type === 'p') {
     const targetPinyin = target.客語標音_顯示 || target.標音;
     options = [targetPinyin, ...generatePinyinDistractors(target, allWords)];
+  } else if (type === 'd') {
+    options = [target.客家語, ...generateDistractors(target, allWords, '客家語')];
+  } else if (type === 'c') {
+    const cleanTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+    const validPool = allWords.filter(w => {
+      if (w.progressKey === target.progressKey) return false;
+      const cleanW = (w.客家語 || '').replace(/（.*?）/g, '');
+      return cleanW && cleanW !== cleanTarget;
+    });
+    let candidates = validPool.filter(w => target.分類 && w.分類 === target.分類);
+    if (candidates.length < 3) {
+      candidates = candidates.concat(validPool.filter(w => !candidates.includes(w) && target.詞性1 && w.詞性1 === target.詞性1));
+    }
+    if (candidates.length < 3) {
+      candidates = candidates.concat(validPool.filter(w => !candidates.includes(w)));
+    }
+    const distractors = [];
+    while (distractors.length < 3 && candidates.length > 0) {
+      const idx = Math.floor(Math.random() * candidates.length);
+      const chosen = candidates.splice(idx, 1)[0];
+      const cleanChosen = (chosen.客家語 || '').replace(/（.*?）/g, '');
+      if (!distractors.includes(cleanChosen)) {
+        distractors.push(cleanChosen);
+      }
+    }
+    options = [cleanTarget, ...distractors];
+  } else if (type === 'l') {
+    // 聽力題：傳回整個 word 物件，且干擾項要是音節相同、拼音最相似的字
+    // 音節以空白或連字號分隔（客語標音_查詢 實際用空格，如「fad2 seu24」）；用 /[\s-]+/ 兩者都吃。
+    const countSyllables = (p) => (p || '').trim().split(/[\s-]+/).filter(Boolean).length;
+    const targetPinyin = target.客語標音_查詢 || '';
+    const targetSyllables = countSyllables(targetPinyin);
+
+    const validPool = allWords.filter(w => w.progressKey !== target.progressKey);
+    // Sort by similarity
+    validPool.sort((a, b) => {
+      const pA = a.客語標音_查詢 || '';
+      const pB = b.客語標音_查詢 || '';
+      const sylA = countSyllables(pA);
+      const sylB = countSyllables(pB);
+      
+      const aSameSyl = sylA === targetSyllables;
+      const bSameSyl = sylB === targetSyllables;
+      if (aSameSyl && !bSameSyl) return -1;
+      if (!aSameSyl && bSameSyl) return 1;
+      
+      return levenshteinDistance(targetPinyin, pA) - levenshteinDistance(targetPinyin, pB);
+    });
+
+    // 取前 7 名隨機抽 3 個
+    const topCandidates = validPool.slice(0, 7);
+    const distractors = getRandomItems(topCandidates, 3);
+    options = [target, ...distractors];
   }
   // Fisher-Yates shuffle
   for (let i = options.length - 1; i > 0; i--) {

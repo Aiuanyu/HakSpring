@@ -138,6 +138,33 @@
 > 1. **只加不改（append-only）**：新欄位一律加在陣列**尾端**，並在 `getProgress` 用 `arr[n] ?? 預設值` 讀取。舊紀錄無此格時給預設，**不需掃全表 migration**，也不會造成大量同步異動。（`firstSeenDay` 即依此加在 arr[4]。）
 > 2. **非做整表 migration 不可時**：等 Phase 3 把 Supabase 同步從「整包 upsert」改成「逐筆增量」之後再做，否則會把幾 MB 進度整包重傳。
 
+## 雲端同步資料規範 (Cloud-Sync Data Governance)
+
+雲端同步是「客源翠」的核心功能。**每一種要落地的使用者資料，都必須先回答兩個問題**，再決定實作：
+
+1. **要不要跨裝置同步？**
+   - 使用者自己產生、換裝置想帶著走 → **要**（進度、書籤、偏好、統計…）。
+   - 純本機暫存 / 可重建的快取（如 `HakkaDataDB` 字典快取）→ **不要**。
+2. **若要同步，衝突時怎麼合併？** 從下面三種**擇一**，並在 `js/cloud-sync.js` 寫對應的 `mergeXxx` 純函式：
+
+| 合併法 | 適用 | 規則 |
+|---|---|---|
+| **LWW（後蓋前）** | 單一狀態、覆蓋無妨 | 取 `updated_at` 較新者；如偏好設定 |
+| **逐項單調不回退** | 各裝置各自累積、不可倒退 | 逐 key 合併、取「學得更深」者（如學習進度：reps 大/due 晚勝、firstSeenDay 取早）；書籤同表取較新 |
+| **逐項相加（累計量）** | 同鍵是「次數/計量」，兩邊都算數 | 同 key 數字**相加**（如每日統計：手機 10 題＋電腦 5 題＝15 題）。⚠️**相加非冪等**，必須用「已同步基準快照」記 delta，只加「上次同步後的新增量」，否則每次同步會重複累加 |
+
+### 現有資料分類表（新增資料時往此表補一列）
+
+| 資料 | localStorage key | Supabase 欄 | 同步 | 合併法 |
+|---|---|---|---|---|
+| 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
+| 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
+| 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
+| 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
+| 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
+
+- **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。
+
 ## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
 - **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。
 - **使用精確的刪除指令 (Use Precise Deletion Commands)**: 清理暫存檔案時，**必須**使用明確指向該目錄的指令 (例如 `rm -rf /home/jules/verification`)，避免使用廣泛影響整個版本庫的指令 (如 `git clean`)。

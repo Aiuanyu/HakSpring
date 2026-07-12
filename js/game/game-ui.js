@@ -130,6 +130,7 @@ function initGameUI() {
   if (gameCloseBtn) {
     gameCloseBtn.addEventListener('click', () => {
       gameModal.style.display = 'none';
+      stopGameAudio(); // 關 modal 立刻中斷任何正在播（或排隊要播）的音效
       if (currentSession && currentSession.length && currentQuestionIndex < currentSession.length) {
         if (typeof trackEvent === 'function') {
           trackEvent('quit_session', 'Game', `${gameActiveDataVarName}_q${currentQuestionIndex + 1}`);
@@ -147,7 +148,14 @@ function initGameUI() {
   }
   
   if (gamePlayAudioBtn) {
-    gamePlayAudioBtn.addEventListener('click', playCurrentQuestionAudio);
+    gamePlayAudioBtn.addEventListener('click', () => {
+      const question = currentSession[currentQuestionIndex];
+      if (question && question.type === 'c') {
+        playCurrentSentenceAudio();
+      } else {
+        playCurrentQuestionAudio();
+      }
+    });
   }
 
   // Keyboard shortcuts
@@ -251,13 +259,29 @@ function showGameView(viewName) {
   document.getElementById('game-result-view').style.display = viewName === 'result' ? 'block' : 'none';
 }
 
-function renderQuestion() {
-  // Stop any currently playing audio
+function formatGamePinyinWithSandhi(pinyinStr) {
+  if (!pinyinStr) return '';
+  let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
+  const isDapu = gameActiveDialect === '大埔' || (gameActiveDataVarName && gameActiveDataVarName.startsWith('大'));
+  if (isDapu && typeof getDapuSandhiHtml === 'function') {
+    return getDapuSandhiHtml(formatted);
+  }
+  return formatted;
+}
+
+// 中斷並清掉所有進行中的遊戲音效（換題、關 modal、進下一題時都用）。
+// 克漏字/聽力會連放兩遍，若不中斷，關掉 modal 後仍會繼續播。
+function stopGameAudio() {
   currentGameAudioElements.forEach(audio => {
     audio.pause();
     audio.currentTime = 0;
   });
   currentGameAudioElements = [];
+}
+
+function renderQuestion() {
+  // Stop any currently playing audio
+  stopGameAudio();
 
   if (currentQuestionIndex >= currentSession.length) {
     endSession();
@@ -267,10 +291,11 @@ function renderQuestion() {
   const question = currentSession[currentQuestionIndex];
   
   const orderMode = document.querySelector('input[name="gameOrderMode"]:checked')?.value || 'random';
+  const prefix = gameActiveDataVarName ? `${getFullLevelName(gameActiveDataVarName)} · ` : '';
   if (orderMode === 'sequential') {
-    document.getElementById('game-question-counter').textContent = `題 ${currentQuestionIndex + 1} / ${currentSession.length} (編號：${question.targetWord.編號})`;
+    document.getElementById('game-question-counter').textContent = `${prefix}題 ${currentQuestionIndex + 1} / ${currentSession.length} (編號：${question.targetWord.編號})`;
   } else {
-    document.getElementById('game-question-counter').textContent = `題 ${currentQuestionIndex + 1} / ${currentSession.length}`;
+    document.getElementById('game-question-counter').textContent = `${prefix}題 ${currentQuestionIndex + 1} / ${currentSession.length}`;
   }
   
   const newBadge = document.getElementById('game-new-badge');
@@ -278,19 +303,41 @@ function renderQuestion() {
 
   // Pinyin Mode specific UI
   const pinyinElem = document.getElementById('game-target-pinyin');
+  const targetWordElem = document.getElementById('game-target-word');
+  
+  // Reset previous inline styles and visibility
+  targetWordElem.style.removeProperty('font-size');
+  targetWordElem.style.removeProperty('font-family');
+  targetWordElem.style.removeProperty('display');
+  pinyinElem.style.removeProperty('display');
+
   if (question.type === 'p') {
     pinyinElem.style.display = 'none'; // hide pinyin in prompt for pinyin test
     // If they have mandarin translation toggled on, we can append it
     const showMandarin = true; // Later we can add a toggle, for now just append it
     if (showMandarin && question.targetWord.華語詞義) {
-      document.getElementById('game-target-word').innerHTML = `${question.targetWord.客家語}<div class="game-mandarin-translation">${question.targetWord.華語詞義}</div>`;
+      targetWordElem.innerHTML = `${question.targetWord.客家語}<div class="game-mandarin-translation">${question.targetWord.華語詞義}</div>`;
     } else {
-      document.getElementById('game-target-word').textContent = question.targetWord.客家語;
+      targetWordElem.innerHTML = question.targetWord.客家語;
     }
+  } else if (question.type === 'l') {
+    // 聽力題：隱藏目標詞和拼音，只播音檔
+    targetWordElem.style.display = 'none';
+    pinyinElem.style.display = 'none';
+  } else if (question.type === 'd') {
+    pinyinElem.style.display = 'none'; // hide pinyin in prompt since question is Chinese
+    targetWordElem.textContent = question.targetWord.華語詞義;
+    targetWordElem.style.setProperty('font-family', 'inherit', 'important');
+    targetWordElem.style.setProperty('font-size', '1.3em', 'important');
+  } else if (question.type === 'c') {
+    pinyinElem.style.display = 'none';
+    targetWordElem.innerHTML = question.clozeSentence;
+    targetWordElem.style.setProperty('font-family', 'inherit', 'important');
+    targetWordElem.style.setProperty('font-size', '1.3em', 'important');
   } else {
-    document.getElementById('game-target-word').textContent = question.targetWord.客家語;
+    targetWordElem.textContent = question.targetWord.客家語;
     pinyinElem.style.display = 'block';
-    pinyinElem.textContent = question.targetWord.標音;
+    pinyinElem.innerHTML = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
   }
   
   // Audio button hidden until they answer correctly
@@ -299,22 +346,60 @@ function renderQuestion() {
   const optionsContainer = document.getElementById('game-options-container');
   optionsContainer.innerHTML = '';
   
+  const existingHint = document.querySelector('.game-hint');
+  if (existingHint) existingHint.remove();
+  
   document.getElementById('game-feedback').style.display = 'none';
   
   question.options.forEach((opt, index) => {
     const btn = document.createElement('button');
     btn.className = 'game-option-btn';
-    if (question.type === 'p') {
+    let displayOpt = opt;
+    let comparisonValue = opt;
+    if (question.type === 'l') {
+      comparisonValue = opt.客家語;
+      btn.style.fontFamily = 'var(--title-font)';
+      btn.style.textAlign = 'left';
+      btn.style.padding = '10px 15px'; // Adjust padding for taller button
+      const optPinyin = formatGamePinyinWithSandhi(opt.客語標音_顯示 || opt.標音);
+      const optMandarin = opt.華語詞義;
+      // 3行排列
+      const contentHtml = `
+        <div style="display: inline-flex; flex-direction: column; vertical-align: middle;">
+          <span style="font-size: 1.2em; line-height: 1.2;">${opt.客家語}</span>
+          <span style="font-size: 0.85em; color: #555; line-height: 1.2; margin-top: 2px;">${optPinyin}</span>
+          <span style="font-size: 0.8em; color: #888; line-height: 1.2; margin-top: 2px;">${optMandarin}</span>
+        </div>
+      `;
+      displayOpt = contentHtml;
+    } else if (question.type === 'p') {
       btn.classList.add('game-pinyin-option');
+      displayOpt = formatGamePinyinWithSandhi(opt);
+    } else if (question.type === 'd') {
+      btn.style.fontFamily = 'var(--title-font)';
+      btn.style.fontSize = '1.2em';
     }
-    btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> ${opt}`;
-    btn.dataset.option = opt;
-    btn.onclick = () => handleAnswer(opt, btn);
+    
+    if (question.type === 'l') {
+      btn.innerHTML = `<kbd class="kbd-shortcut" style="vertical-align: middle; margin-right: 10px;">${index + 1}</kbd> ${displayOpt}`;
+    } else {
+      btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> ${displayOpt}`;
+    }
+    btn.dataset.option = comparisonValue;
+    btn.onclick = () => handleAnswer(comparisonValue, btn);
     optionsContainer.appendChild(btn);
   });
   
-  // 題目出現時立刻播放詞彙音檔
-  currentQuestionAudioPromise = playCurrentQuestionAudio();
+  if (question.type === 'c') {
+    optionsContainer.insertAdjacentHTML('afterend', '<div class="game-hint" style="margin-top: 15px; font-size: 0.85em; color: #888;">克漏字是以教材例句出題，所以若選項中剛好有適合的詞但非標準答案，還請別介意！</div>');
+  }
+  
+  // 題目出現時立刻播放音檔
+  if (question.type === 'c') {
+    currentQuestionAudioPromise = playCurrentSentenceAudio();
+  } else {
+    currentQuestionAudioPromise = playCurrentQuestionAudio();
+  }
 
   // 自動捲動到題目卡 (為了窄版螢幕體驗)
   const playView = document.getElementById('game-play-view');
@@ -374,6 +459,37 @@ function highlightDiff(wrongStr, correctStr) {
   return result;
 }
 
+function bumpDailyStat(isCorrect, isNew, qType) {
+  try {
+    const today = new Date();
+    const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const statsObj = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
+    
+    const statArr = statsObj[dateStr] || [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    statArr[0] = (statArr[0] ?? 0) + 1;
+    if (isCorrect) {
+      statArr[1] = (statArr[1] ?? 0) + 1;
+    }
+    if (isNew) {
+      statArr[3] = (statArr[3] ?? 0) + 1;
+    } else {
+      statArr[2] = (statArr[2] ?? 0) + 1;
+    }
+    
+    const typeIndexMap = { 'm': 4, 'p': 5, 'd': 6, 'c': 7, 'l': 8 };
+    const typeIndex = typeIndexMap[qType];
+    if (typeIndex !== undefined) {
+      statArr[typeIndex] = (statArr[typeIndex] ?? 0) + 1;
+    }
+    
+    statsObj[dateStr] = statArr;
+    localStorage.setItem('hakkaDailyStats', JSON.stringify(statsObj));
+  } catch (e) {
+    console.warn('Failed to save daily stats', e);
+  }
+}
+
 async function handleAnswer(selectedOption, btnElement) {
   const question = currentSession[currentQuestionIndex];
   let isCorrect = false;
@@ -381,6 +497,15 @@ async function handleAnswer(selectedOption, btnElement) {
   
   if (question.type === 'p') {
     correctText = question.targetWord.客語標音_顯示 || question.targetWord.標音;
+    isCorrect = selectedOption === correctText;
+  } else if (question.type === 'd') {
+    correctText = question.targetWord.客家語;
+    isCorrect = selectedOption === correctText;
+  } else if (question.type === 'c') {
+    correctText = question.clozeTarget;
+    isCorrect = selectedOption === correctText;
+  } else if (question.type === 'l') {
+    correctText = question.targetWord.客家語;
     isCorrect = selectedOption === correctText;
   } else {
     correctText = question.targetWord.華語詞義;
@@ -391,12 +516,22 @@ async function handleAnswer(selectedOption, btnElement) {
     trackEvent('answer', 'Game', isCorrect ? 'correct' : 'wrong');
   }
   
+  bumpDailyStat(isCorrect, question.isNew, question.type);
+  
   const options = document.querySelectorAll('.game-option-btn');
   options.forEach(btn => btn.disabled = true); // Disable all options
 
   const feedback = document.getElementById('game-feedback');
   feedback.style.display = 'block';
   feedback.innerHTML = ''; // clear previous
+  
+  const replayAudioPromise = currentQuestionAudioPromise.then(() => {
+    if (question.type === 'c') {
+      return playCurrentSentenceAudio();
+    } else {
+      return playCurrentQuestionAudio();
+    }
+  });
 
   if (isCorrect) {
     btnElement.classList.add('correct');
@@ -404,7 +539,12 @@ async function handleAnswer(selectedOption, btnElement) {
     score++;
     
     const msg = document.createElement('div');
-    msg.textContent = '著！（你覺著這題會難無：）';
+    if (question.type === 'd' || question.type === 'c') {
+      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
+      msg.innerHTML = `著！（你覺著這題會難無：）<div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
+    } else {
+      msg.textContent = '著！（你覺著這題會難無：）';
+    }
     msg.style.marginBottom = '10px';
     feedback.appendChild(msg);
     
@@ -430,7 +570,7 @@ async function handleAnswer(selectedOption, btnElement) {
     
     feedback.appendChild(evalContainer);
     
-    appendSentenceUI(feedback, question, currentQuestionAudioPromise);
+    appendSentenceUI(feedback, question, replayAudioPromise);
   } else {
     btnElement.classList.add('wrong');
     feedback.className = 'game-feedback wrong';
@@ -450,13 +590,16 @@ async function handleAnswer(selectedOption, btnElement) {
     const msg = document.createElement('div');
     if (question.type === 'p') {
       msg.innerHTML = `毋著。正確答案係：${highlightDiff(selectedOption, correctText)}`;
+    } else if (question.type === 'd' || question.type === 'c') {
+      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
+      msg.innerHTML = `毋著。正確答案係：<span style="font-family: var(--title-font); font-size: 1.2em;">${correctText}</span><div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
     } else {
       msg.textContent = `毋著。正確答案係：${correctText}`;
     }
     msg.style.marginBottom = '10px';
     feedback.appendChild(msg);
     
-    appendSentenceUI(feedback, question);
+    appendSentenceUI(feedback, question, replayAudioPromise);
     
     const nextBtn = document.createElement('button');
     nextBtn.className = 'game-btn game-next-btn';
@@ -500,9 +643,12 @@ async function saveProgressAndNext(lastResult) {
 }
 
 function playCurrentQuestionAudio() {
+  // modal 已關就別播——擋掉「關閉時第一遍還在放、鏈上的第二遍才要觸發」的漏網音效
+  const gameModal = document.getElementById('gameModal');
+  if (!gameModal || gameModal.style.display === 'none') return Promise.resolve();
   const question = currentSession[currentQuestionIndex];
   if (!question) return Promise.resolve();
-  
+
   const targetWord = question.targetWord;
   // Use existing constructWordAudioUrl logic from main.js
   const fullSourceName = 'cert' + targetWord.dataVarName; // Assumed cert since PoC focuses on cert levels
@@ -618,9 +764,12 @@ function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) 
 }
 
 function playCurrentSentenceAudio(btnEl) {
+  // modal 已關就別播（同 playCurrentQuestionAudio；克漏字/聽力連放兩遍尤其需要）
+  const gameModal = document.getElementById('gameModal');
+  if (!gameModal || gameModal.style.display === 'none') return Promise.resolve();
   const question = currentSession[currentQuestionIndex];
-  if (!question) return;
-  
+  if (!question) return Promise.resolve();
+
   const targetWord = question.targetWord;
   // constructSentenceAudioUrl expects (lineData, fullSourceName)
   // We construct fullSourceName like 'cert四基'
@@ -637,27 +786,55 @@ function playCurrentSentenceAudio(btnEl) {
     if (btnEl) {
       btnEl.classList.add('playing');
       btnEl.style.opacity = '0.7';
+    } else {
+      const audioBtn = document.getElementById('game-play-audio-btn');
+      if (audioBtn) {
+        audioBtn.style.display = 'inline-block';
+        audioBtn.classList.add('playing');
+      }
     }
     
     if (typeof trackEvent === 'function') {
       trackEvent('play_sentence_audio', 'Game', gameActiveDataVarName);
     }
     
-    audio.play().catch(e => {
-      console.error("Sentence audio playback failed:", e);
-      if (btnEl) {
-        btnEl.classList.remove('playing');
-        btnEl.style.opacity = '1';
-      }
+    return new Promise(resolve => {
+      audio.onended = () => {
+        if (btnEl) {
+          btnEl.classList.remove('playing');
+          btnEl.style.opacity = '1';
+        } else {
+          const audioBtn = document.getElementById('game-play-audio-btn');
+          if (audioBtn) audioBtn.classList.remove('playing');
+        }
+        resolve();
+      };
+      
+      audio.onerror = () => {
+        if (btnEl) {
+          btnEl.classList.remove('playing');
+          btnEl.style.opacity = '1';
+        } else {
+          const audioBtn = document.getElementById('game-play-audio-btn');
+          if (audioBtn) audioBtn.classList.remove('playing');
+        }
+        resolve();
+      };
+      
+      audio.play().catch(e => {
+        console.error("Sentence audio playback failed:", e);
+        if (btnEl) {
+          btnEl.classList.remove('playing');
+          btnEl.style.opacity = '1';
+        } else {
+          const audioBtn = document.getElementById('game-play-audio-btn');
+          if (audioBtn) audioBtn.classList.remove('playing');
+        }
+        resolve();
+      });
     });
-    
-    audio.onended = () => {
-      if (btnEl) {
-        btnEl.classList.remove('playing');
-        btnEl.style.opacity = '1';
-      }
-    };
   }
+  return Promise.resolve();
 }
 
 function endSession() {

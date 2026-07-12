@@ -160,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, updated_at')
+      .select('bookmarks, preferences, learning_progress, daily_stats, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -203,9 +203,19 @@ async function syncFromCloud() {
       );
       const cloudProgress = data.learning_progress || {};
 
+      const localStats = JSON.parse(
+        localStorage.getItem('hakkaDailyStats') || '{}'
+      );
+      const cloudStats = data.daily_stats || {};
+      // 已同步基準快照：用來算「本地相對上次同步的新增量」，讓相加合併冪等
+      const syncedStats = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsSynced') || '{}'
+      );
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
       const mergedProgress = mergeProgress(localProgress, cloudProgress);
+      const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
 
       // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
       // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
@@ -216,6 +226,9 @@ async function syncFromCloud() {
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
       localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
+      localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
+      // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
+      // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
       // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
       // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
@@ -234,17 +247,27 @@ async function syncFromCloud() {
         (cloudPrefs.romanizerJoiningMode || 'none');
       const progressChanged =
         JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
+      const statsChanged =
+        JSON.stringify(mergedStats) !== JSON.stringify(cloudStats);
 
-      if (bookmarksChanged || prefsChanged || progressChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
         console.log('[CloudSync] 資料一致，跳過上傳');
       }
+      // 走到這裡＝雲端已與 mergedStats 對齊（有變上傳成功、無變本就一致；
+      // syncToCloud 失敗會 throw 到外層 catch、不會到這行）→ 安全推進基準快照。
+      localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
     } else {
       // 雲端沒有資料，上傳本地資料
       console.log('[CloudSync] 雲端無資料，執行初始化上傳');
       await syncToCloud();
+      // 初始上傳成功後，基準＝目前本地統計
+      localStorage.setItem(
+        'hakkaDailyStatsSynced',
+        localStorage.getItem('hakkaDailyStats') || '{}'
+      );
     }
 
     // 同步完成後立即更新 UI
@@ -282,6 +305,9 @@ async function syncToCloud() {
     const learningProgress = JSON.parse(
       localStorage.getItem('hakkaLearningProgress') || '{}'
     );
+    const dailyStats = JSON.parse(
+      localStorage.getItem('hakkaDailyStats') || '{}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
@@ -289,6 +315,7 @@ async function syncToCloud() {
         bookmarks: bookmarks,
         preferences: preferences,
         learning_progress: learningProgress,
+        daily_stats: dailyStats,
         updated_at: new Date().toISOString(),
       },
       {
@@ -419,7 +446,49 @@ function mergeProgress(localObj, cloudObj) {
       merged[key][4] = earliestSeen;
     }
   }
-  
+
+  return merged;
+}
+
+/**
+ * 合併每日答題統計（逐項「相加」，累計量型）。
+ *
+ * ⚠️ 相加非冪等：直接 local+cloud，push 後 local=cloud=和，下次同步又相加 → 重複膨脹。
+ * 解法用「已同步基準快照」syncedSnapshot：只把「本地相對上次同步的新增量(delta)」加到雲端。
+ *   delta = local - synced（逐日逐格，僅取正值）
+ *   merged = cloud + delta
+ * 合併後呼叫端須把 syncedSnapshot 更新成 merged（代表這份已與雲端對齊）。
+ *
+ * @param {Object} localObj  本地 hakkaDailyStats  { 'YYYY-MM-DD': number[] }
+ * @param {Object} cloudObj  雲端 daily_stats
+ * @param {Object} syncedObj 上次同步後的基準快照 hakkaDailyStatsSynced
+ * @returns {Object} 合併後的統計
+ */
+function mergeDailyStats(localObj, cloudObj, syncedObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  const synced = (syncedObj && typeof syncedObj === 'object') ? syncedObj : {};
+
+  // 先以雲端為底複製（含只有雲端有的日期）
+  const merged = {};
+  for (const day in cloud) {
+    if (Array.isArray(cloud[day])) merged[day] = [...cloud[day]];
+  }
+
+  // 逐日把本地的「新增量」加上去
+  for (const day in local) {
+    const lArr = Array.isArray(local[day]) ? local[day] : [];
+    const sArr = Array.isArray(synced[day]) ? synced[day] : [];
+    const mArr = Array.isArray(merged[day]) ? merged[day] : [];
+    const len = Math.max(lArr.length, sArr.length, mArr.length);
+    const out = [];
+    for (let i = 0; i < len; i++) {
+      const delta = Math.max(0, (lArr[i] || 0) - (sArr[i] || 0)); // 只加正向新增，防基準比本地大時倒扣
+      out[i] = (mArr[i] || 0) + delta;
+    }
+    merged[day] = out;
+  }
+
   return merged;
 }
 

@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.3.4" />
+  <link rel="stylesheet" href="style.css?v=4.4.1" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -31,9 +31,9 @@
   <script type="text/javascript" src="js/game/game-progress.js?v=4.3.2" defer></script>
   <script type="text/javascript" src="js/game/game-data.js?v=4.3.2" defer></script>
   <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
-  <script type="text/javascript" src="js/game/question-gen.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js?v=4.6.1" defer></script>
   <script type="text/javascript" src="js/game/srs.js?v=4.3.2" defer></script>
-  <script type="text/javascript" src="js/game/game-ui.js?v=4.3.5" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.6.2" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js?v=4.3.2" defer></script>
   
   <!-- Driver.js for Onboarding -->
@@ -182,7 +182,7 @@
                 <p>準備好開始學習 <span id="game-target-level" style="font-weight: bold; color: var(--primary-color);"></span> 了嗎？
                   <button id="gameChangeLevelBtn" class="game-btn" style="margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;">換其他腔／其他級</button>
                 </p>
-                <p>一局共有 10 題選擇題。</p>
+                <p>每局約 10 題（新詞會多幾題加強）選擇題。</p>
                 <div style="margin-bottom: 15px; text-align: left; display: inline-block;">
                   <div class="game-mode-row" style="margin-bottom: 8px;">
                     <span style="display: inline-block; width: 80px;">出題順序：</span>
@@ -198,7 +198,11 @@
                     <span style="display: inline-block; width: 80px;">考驗題型：</span>
                     <label style="margin-right: 10px;"><input type="checkbox" name="gameType" value="m" checked> 選詞義</label>
                     <label><input type="checkbox" name="gameType" value="p"> 練拼音</label>
+                    <label><input type="checkbox" name="gameType" value="d"> 看翻譯擇客詞</label>
+                    <label><input type="checkbox" name="gameType" value="c"> 克漏字</label>
+                    <label><input type="checkbox" name="gameType" value="l"> 練聽力</label>
                   </div>
+                  <p class="game-type-hint" style="margin: 0 0 8px 88px; font-size: 0.8em; opacity: 0.7;">學新个詞定著會先考詞義。毋擇詞義淨會影響復習个題型哦～</p>
                 </div>
                 <div style="margin-bottom: 25px;">
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555;">
@@ -235,7 +239,7 @@
           </div>
           <div id="game-play-view" style="display: none;">
             <div class="game-progress-bar">
-              <span id="game-question-counter">題 1 / 10</span>
+              <span id="game-question-counter">-</span>
               <span id="game-new-badge" class="new-badge" style="display: none;">新進度！</span>
             </div>
             <div class="game-question-card">
@@ -252,7 +256,7 @@
           </div>
           <div id="game-result-view" style="display: none;">
             <h3>挑戰完成！</h3>
-            <p>你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">10</span></p>
+            <p>你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">-</span></p>
             <button id="gameRetryBtn" class="game-btn">再來一局</button>
           </div>
         </div>
