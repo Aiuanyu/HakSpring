@@ -256,16 +256,18 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   // 所以若使用者沒勾 |m（例如只勾拼音），那些未解鎖的新詞這一局根本無題可出，
   // 必須先從候選池剔除——否則第一步（尤其 newFirst）會挑一堆新詞，結果被迫全出 |m，
   // 造成「只勾拼音卻一直出詞義」。
-  const wantsM = !types || types.includes('m');
-  const wordsWithM = wantsM
-    ? wordsWithMAll
-    : wordsWithMAll.filter(x => x.mProgress); // 沒勾 m → 只留「已解鎖(有 |m 紀錄)」的詞
+  // 【一律保留所有詞，含未見過的新詞】——「認識新詞（|m 初見）」是不可關的地基。
+  // 過去為了「不勾 m 就別出 m」而把新詞整批剔除，導致：只勾克漏字/拼音時，
+  // 已解鎖的詞就那幾個、永遠出不了新詞 → 同一批詞一直重複（徐煥昇先生回報的極端案例）。
+  // 修正：新詞照常進場，配題型時錨點規則自然讓它出 |m 初見（不受勾選影響）；
+  // 題型勾選只作用在「已解鎖詞的複習形式」上。
+  const wordsWithM = wordsWithMAll;
 
   if (wordsWithM.length === 0) {
-    throw new Error('目前還沒有已學過的詞可以出這種題型，請先玩「選詞義」把新詞學起來，或改勾其他題型。');
+    throw new Error('這個腔級目前沒有可出題的詞彙。');
   }
 
-  // 一局題數：以「可用的詞」為上限（沒勾 m 時可用詞可能少於 10）。
+  // 一局題數：以「可用的詞」為上限。
   const MAX_QUESTIONS = Math.min(10, wordsWithM.length);
 
   const dueWords = wordsWithM.filter(x => x.mProgress && x.mProgress.due <= todayEpochDay);
