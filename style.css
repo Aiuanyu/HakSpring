@@ -3999,6 +3999,7 @@ mark {
 }
 .game-btn-highlight {
   background-color: #ff9800;
+  color: #1a1a1a;
 }
 .game-btn-highlight:hover {
   background-color: #e68900;
@@ -4161,6 +4162,13 @@ mark {
   }
   .game-btn:hover {
     background-color: #285e92;
+  }
+  .game-btn-highlight {
+    background-color: #ffb84d;
+    color: #1a1a1a;
+  }
+  .game-btn-highlight:hover {
+    background-color: #ffa726;
   }
   .game-question-card h1 {
     color: #eee;

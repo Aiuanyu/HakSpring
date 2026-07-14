@@ -213,9 +213,12 @@ function initGameUI() {
   const gameSetupReturnBtn = document.getElementById('gameSetupReturnBtn');
   if (gameSetupReturnBtn) {
     gameSetupReturnBtn.addEventListener('click', () => {
-      document.getElementById('game-setup-ready-block').style.display = 'none';
-      document.getElementById('gameStartSessionBtn').style.display = 'none';
-      document.getElementById('game-setup-select-block').style.display = 'block';
+      // 回選項畫面（沿用剛打完那局的腔調/級別），使用者不一定要換腔換級，
+      // 想換的話畫面上本來就有「換其他腔／其他級」按鈕可以點，不必每次都先逼著重選。
+      document.getElementById('game-setup-select-block').style.display = 'none';
+      document.getElementById('game-setup-ready-block').style.display = 'block';
+      document.getElementById('gameStartSessionBtn').style.display = 'block';
+      refreshUseLastPlayedBtn();
       showGameView('setup');
     });
   }

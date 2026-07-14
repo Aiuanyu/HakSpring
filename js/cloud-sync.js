@@ -213,6 +213,12 @@ async function syncFromCloud() {
       const syncedStats = JSON.parse(
         localStorage.getItem('hakkaDailyStatsSynced') || '{}'
       );
+      // 偏好設定的已同步快照：本地值 === 快照，才代表本地沒有「尚未推上雲端」的新變更，
+      // 此時才可以放心讓雲端值覆蓋本地；否則就是本地剛改過還沒同步，必須保留本地、留給下面 Smart Push 推上去。
+      // 沒有這層判斷的話，本地剛寫入的新值會被下面「雲端有值就覆寫本地」的邏輯讀成舊資料而遺失。
+      const syncedPrefs = JSON.parse(
+        localStorage.getItem('hakkaPrefsSynced') || '{}'
+      );
 
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
@@ -232,27 +238,34 @@ async function syncFromCloud() {
       // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
       // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
-      // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
+      // 合併偏好設定：本地相對快照沒變 → 套用雲端值；本地相對快照有變 → 保留本地、留給 Smart Push 推上去
       // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
-      if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
-        localStorage.setItem('romanizerJoiningMode', cloudPrefs.romanizerJoiningMode);
+      let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
+      if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
+        if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
+          finalRomanizerJoiningMode = cloudPrefs.romanizerJoiningMode;
+        }
       }
-      // 空字串代表雲端「從未玩過遊戲」，此時保留本地值（可能本地剛玩過、還沒推上去）
-      if (cloudPrefs.gameLastDataVarName) {
-        localStorage.setItem('hakkaGameLastDataVarName', cloudPrefs.gameLastDataVarName);
+      localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
+
+      // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
+      let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
+      if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
+        if (cloudPrefs.gameLastDataVarName) {
+          finalGameLastDataVarName = cloudPrefs.gameLastDataVarName;
+        }
       }
+      localStorage.setItem('hakkaGameLastDataVarName', finalGameLastDataVarName);
 
       // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
       // 比對 merged vs cloud
       const bookmarksChanged =
         JSON.stringify(mergedBookmarks) !== JSON.stringify(cloudBookmarks);
-      // 簡單比對 preferences (目前只有一個欄位)
-      // [修正 Round 3] 移除 cloudPrefs.romanizerJoiningMode && 檢查，避免雲端為空時無法上傳本地變更
+      // 偏好設定比對用「合併後的最終值」而非同步前的 localPrefs，
+      // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
-        localPrefs.romanizerJoiningMode !==
-          (cloudPrefs.romanizerJoiningMode || 'none') ||
-        localPrefs.gameLastDataVarName !==
-          (cloudPrefs.gameLastDataVarName || '');
+        finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
+        finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '');
       const progressChanged =
         JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
       const statsChanged =
@@ -264,17 +277,31 @@ async function syncFromCloud() {
       } else {
         console.log('[CloudSync] 資料一致，跳過上傳');
       }
-      // 走到這裡＝雲端已與 mergedStats 對齊（有變上傳成功、無變本就一致；
+      // 走到這裡＝雲端已與 merged 結果對齊（有變上傳成功、無變本就一致；
       // syncToCloud 失敗會 throw 到外層 catch、不會到這行）→ 安全推進基準快照。
       localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
+      localStorage.setItem(
+        'hakkaPrefsSynced',
+        JSON.stringify({
+          romanizerJoiningMode: finalRomanizerJoiningMode,
+          gameLastDataVarName: finalGameLastDataVarName,
+        })
+      );
     } else {
       // 雲端沒有資料，上傳本地資料
       console.log('[CloudSync] 雲端無資料，執行初始化上傳');
       await syncToCloud();
-      // 初始上傳成功後，基準＝目前本地統計
+      // 初始上傳成功後，基準＝目前本地統計／偏好設定
       localStorage.setItem(
         'hakkaDailyStatsSynced',
         localStorage.getItem('hakkaDailyStats') || '{}'
+      );
+      localStorage.setItem(
+        'hakkaPrefsSynced',
+        JSON.stringify({
+          romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
+          gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
+        })
       );
     }
 
