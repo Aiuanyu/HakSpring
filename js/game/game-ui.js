@@ -9,6 +9,44 @@ let gameActiveDataVarName = '';
 let currentGameAudioElements = [];
 let currentQuestionAudioPromise = Promise.resolve();
 
+// 記住「上一次玩遊戲」用的腔調＋級別（dataVarName，如 '四基'）。
+// 開遊戲 modal 仍照舊優先用網頁本身（或其他功能）目前設定的腔調/級別；
+// 「搞上擺个腔級」按鈕按下去才會代入這裡記住的上次遊戲腔級。
+const GAME_LAST_VAR_NAME_KEY = 'hakkaGameLastDataVarName';
+
+function getLastPlayedGameVarName() {
+  try {
+    return localStorage.getItem(GAME_LAST_VAR_NAME_KEY) || null;
+  } catch (e) {
+    console.warn('Failed to read last played game level', e);
+    return null;
+  }
+}
+
+// 遊戲實際開打時才記錄，藉此代表「上一次玩」而非「選過但沒玩」
+function saveLastPlayedGameVarName(dataVarName) {
+  if (!dataVarName) return;
+  try {
+    if (localStorage.getItem(GAME_LAST_VAR_NAME_KEY) === dataVarName) return;
+    localStorage.setItem(GAME_LAST_VAR_NAME_KEY, dataVarName);
+    if (typeof window.triggerCloudSync === 'function') {
+      window.triggerCloudSync();
+    }
+  } catch (e) {
+    console.warn('Failed to save last played game level', e);
+  }
+}
+
+// 只在「有上次玩過的紀錄、且跟目前 ready block 顯示的腔級不同」時才秀出按鈕，
+// 避免使用者按了卻沒變化、一頭霧水。
+function refreshUseLastPlayedBtn() {
+  const btn = document.getElementById('gameUseLastPlayedBtn');
+  if (!btn) return;
+  const lastVarName = getLastPlayedGameVarName();
+  const hasDifferentLast = !!lastVarName && !!window[lastVarName] && lastVarName !== gameActiveDataVarName;
+  btn.style.display = hasDifferentLast ? 'inline-block' : 'none';
+}
+
 function initGameUI() {
   const startGameBtn = document.getElementById('startGameBtn');
   const headerStartGameBtn = document.getElementById('headerStartGameBtn');
@@ -37,6 +75,7 @@ function initGameUI() {
       if (selectBlock) selectBlock.style.display = 'none';
       const startSessionBtn = document.getElementById('gameStartSessionBtn');
       if (startSessionBtn) startSessionBtn.style.display = 'block';
+      refreshUseLastPlayedBtn();
       showGameView('setup');
       gameModal.style.display = 'flex';
       return;
@@ -75,6 +114,7 @@ function initGameUI() {
         if (selectBlock) selectBlock.style.display = 'none';
         const startSessionBtn = document.getElementById('gameStartSessionBtn');
         if (startSessionBtn) startSessionBtn.style.display = 'block';
+        refreshUseLastPlayedBtn();
         showGameView('setup');
         gameModal.style.display = 'flex';
         return;
@@ -118,11 +158,34 @@ function initGameUI() {
           document.getElementById('game-setup-select-block').style.display = 'none';
           document.getElementById('game-setup-ready-block').style.display = 'block';
           document.getElementById('gameStartSessionBtn').style.display = 'block';
+          refreshUseLastPlayedBtn();
         } else {
           alert('無此腔調/級別組合的資料！');
         }
       } else {
         alert('請擇腔調摎級別！');
+      }
+    });
+  }
+
+  const gameUseLastPlayedBtn = document.getElementById('gameUseLastPlayedBtn');
+  if (gameUseLastPlayedBtn) {
+    gameUseLastPlayedBtn.addEventListener('click', () => {
+      const lastVarName = getLastPlayedGameVarName();
+      if (!lastVarName) return;
+      const varData = window[lastVarName];
+      if (!varData) {
+        alert('揣無上擺个腔調/級別資料！');
+        return;
+      }
+      gameActiveDataVarName = varData.name;
+      const 腔 = lastVarName.substring(0, 1);
+      const 級 = lastVarName.substring(1);
+      gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣';
+      document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
+      refreshUseLastPlayedBtn();
+      if (typeof trackEvent === 'function') {
+        trackEvent('use_last_played_level', 'Game', gameActiveDataVarName);
       }
     });
   }
@@ -150,9 +213,12 @@ function initGameUI() {
   const gameSetupReturnBtn = document.getElementById('gameSetupReturnBtn');
   if (gameSetupReturnBtn) {
     gameSetupReturnBtn.addEventListener('click', () => {
-      document.getElementById('game-setup-ready-block').style.display = 'none';
-      document.getElementById('gameStartSessionBtn').style.display = 'none';
-      document.getElementById('game-setup-select-block').style.display = 'block';
+      // 回選項畫面（沿用剛打完那局的腔調/級別），使用者不一定要換腔換級，
+      // 想換的話畫面上本來就有「換其他腔／其他級」按鈕可以點，不必每次都先逼著重選。
+      document.getElementById('game-setup-select-block').style.display = 'none';
+      document.getElementById('game-setup-ready-block').style.display = 'block';
+      document.getElementById('gameStartSessionBtn').style.display = 'block';
+      refreshUseLastPlayedBtn();
       showGameView('setup');
     });
   }
@@ -248,7 +314,9 @@ async function startSession() {
     currentSession = await generateGameSession(gameActiveDialect, gameActiveDataVarName, { orderMode, mixMode, types });
     currentQuestionIndex = 0;
     score = 0;
-    
+
+    saveLastPlayedGameVarName(gameActiveDataVarName);
+
     if (typeof trackEvent === 'function') {
       trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${orderMode}_${mixMode}`);
     }
