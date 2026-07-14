@@ -159,6 +159,7 @@
 |---|---|---|---|---|
 | 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
 | 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
+| 遊戲上次腔調/級別 | `hakkaGameLastDataVarName` | `preferences` | ✅ | LWW（空字串視為未設定，不覆蓋本地） |
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |

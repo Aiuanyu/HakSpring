@@ -9,6 +9,33 @@ let gameActiveDataVarName = '';
 let currentGameAudioElements = [];
 let currentQuestionAudioPromise = Promise.resolve();
 
+// 記住「上一次玩遊戲」用的腔調＋級別（dataVarName，如 '四基'）。
+// 開遊戲 modal 時優先套用這個，若從未玩過才退回網頁本身（或其他功能）目前設定的腔調/級別。
+const GAME_LAST_VAR_NAME_KEY = 'hakkaGameLastDataVarName';
+
+function getLastPlayedGameVarName() {
+  try {
+    return localStorage.getItem(GAME_LAST_VAR_NAME_KEY) || null;
+  } catch (e) {
+    console.warn('Failed to read last played game level', e);
+    return null;
+  }
+}
+
+// 遊戲實際開打時才記錄，藉此代表「上一次玩」而非「選過但沒玩」
+function saveLastPlayedGameVarName(dataVarName) {
+  if (!dataVarName) return;
+  try {
+    if (localStorage.getItem(GAME_LAST_VAR_NAME_KEY) === dataVarName) return;
+    localStorage.setItem(GAME_LAST_VAR_NAME_KEY, dataVarName);
+    if (typeof window.triggerCloudSync === 'function') {
+      window.triggerCloudSync();
+    }
+  } catch (e) {
+    console.warn('Failed to save last played game level', e);
+  }
+}
+
 function initGameUI() {
   const startGameBtn = document.getElementById('startGameBtn');
   const headerStartGameBtn = document.getElementById('headerStartGameBtn');
@@ -26,6 +53,26 @@ function initGameUI() {
 
     const readyBlock = document.getElementById('game-setup-ready-block');
     const selectBlock = document.getElementById('game-setup-select-block');
+
+    // 最優先：套用上一次實際玩過的腔調/級別；還沒玩過才退回網頁本身或其他功能的設定
+    const lastVarName = getLastPlayedGameVarName();
+    if (lastVarName) {
+      const lastVarData = window[lastVarName];
+      if (lastVarData) {
+        gameActiveDataVarName = lastVarData.name;
+        const 腔 = lastVarName.substring(0, 1);
+        const 級 = lastVarName.substring(1);
+        gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣';
+        document.getElementById('game-target-level').textContent = getFullLevelName(lastVarData.name);
+        if (readyBlock) readyBlock.style.display = 'block';
+        if (selectBlock) selectBlock.style.display = 'none';
+        const startSessionBtn = document.getElementById('gameStartSessionBtn');
+        if (startSessionBtn) startSessionBtn.style.display = 'block';
+        showGameView('setup');
+        gameModal.style.display = 'flex';
+        return;
+      }
+    }
 
     if (currentActiveDialectLevelFullName) {
       const 腔 = currentDataVarName.substring(0, 1);
@@ -248,7 +295,9 @@ async function startSession() {
     currentSession = await generateGameSession(gameActiveDialect, gameActiveDataVarName, { orderMode, mixMode, types });
     currentQuestionIndex = 0;
     score = 0;
-    
+
+    saveLastPlayedGameVarName(gameActiveDataVarName);
+
     if (typeof trackEvent === 'function') {
       trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${orderMode}_${mixMode}`);
     }

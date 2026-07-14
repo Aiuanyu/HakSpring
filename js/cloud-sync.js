@@ -195,6 +195,8 @@ async function syncFromCloud() {
       const localPrefs = {
         romanizerJoiningMode:
           localStorage.getItem('romanizerJoiningMode') || 'none',
+        gameLastDataVarName:
+          localStorage.getItem('hakkaGameLastDataVarName') || '',
       };
       const cloudPrefs = data.preferences || {};
 
@@ -235,6 +237,10 @@ async function syncFromCloud() {
       if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
         localStorage.setItem('romanizerJoiningMode', cloudPrefs.romanizerJoiningMode);
       }
+      // 空字串代表雲端「從未玩過遊戲」，此時保留本地值（可能本地剛玩過、還沒推上去）
+      if (cloudPrefs.gameLastDataVarName) {
+        localStorage.setItem('hakkaGameLastDataVarName', cloudPrefs.gameLastDataVarName);
+      }
 
       // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
       // 比對 merged vs cloud
@@ -244,7 +250,9 @@ async function syncFromCloud() {
       // [修正 Round 3] 移除 cloudPrefs.romanizerJoiningMode && 檢查，避免雲端為空時無法上傳本地變更
       const prefsChanged =
         localPrefs.romanizerJoiningMode !==
-        (cloudPrefs.romanizerJoiningMode || 'none');
+          (cloudPrefs.romanizerJoiningMode || 'none') ||
+        localPrefs.gameLastDataVarName !==
+          (cloudPrefs.gameLastDataVarName || '');
       const progressChanged =
         JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
       const statsChanged =
@@ -301,6 +309,8 @@ async function syncToCloud() {
     const preferences = {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
+      gameLastDataVarName:
+        localStorage.getItem('hakkaGameLastDataVarName') || '',
     };
     const learningProgress = JSON.parse(
       localStorage.getItem('hakkaLearningProgress') || '{}'
