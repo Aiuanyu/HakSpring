@@ -865,143 +865,15 @@ function updatePopupPosition(popupEl, selectionRect) {
   popupEl.style.visibility = 'visible';
 }
 
-function getDapuSandhiHtml(htmlContent) {
-  const BLOCKING_PUNCTUATION = '()（）【】';
-  const SKIPPABLE_PUNCTUATION = '\\s、';
-  const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
-
-  const TOKENIZER_REGEX = new RegExp(
-    `[^<>` +
-      ALL_PUNCTUATION_CHARS +
-      `]+|[${SKIPPABLE_PUNCTUATION}]+|[${BLOCKING_PUNCTUATION}]+`,
-    'g',
-  );
-  const SKIPPABLE_REGEX = new RegExp(`^[${SKIPPABLE_PUNCTUATION}]+$`);
-  const BLOCKING_REGEX = new RegExp(`^[${BLOCKING_PUNCTUATION}]+$`);
-
-  const sandhiRubyRegex =
-    /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
-  let preliminaryTokens = [];
-  let lastIndex = 0;
-
-  htmlContent.replace(sandhiRubyRegex, (match, offset) => {
-    if (offset > lastIndex) {
-      preliminaryTokens.push(htmlContent.substring(lastIndex, offset));
-    }
-    preliminaryTokens.push(match);
-    lastIndex = offset + match.length;
-    return match;
-  });
-  if (lastIndex < htmlContent.length) {
-    preliminaryTokens.push(htmlContent.substring(lastIndex));
-  }
-
-  const tokens = preliminaryTokens
-    .flatMap((token) => {
-      if (token.startsWith('<ruby class="sandhi-')) {
-        return [token];
-      }
-      return token.match(TOKENIZER_REGEX) || [];
-    })
-    .filter((t) => t && t.length > 0);
-
-  let modifiedTokens = [];
-  let hasActualModification = false;
-
-  const applySandhiRule = (variant, next) => {
-    let newTone = null;
-    let rubyClass = null;
-
-    if (variant.match(/[àèìòù](?![bdg])/) && next.match(/[àèìòùâêîôû]/)) {
-      newTone = '55';
-      rubyClass = 'sandhi-高降變';
-    } else if (variant.match(/[āēīōū]/) && next.match(/[ǎěǐǒǔâêîôû]/)) {
-      newTone = '35';
-      rubyClass = 'sandhi-中平變';
-    } else if (variant.match(/[ǎěǐǒǔ]/) && next.match(/[ǎěǐǒǔ]/)) {
-      newTone = '33';
-      rubyClass = 'sandhi-低升變';
-    }
-
-    if (newTone && rubyClass) {
-      let rubyElement = document.createElement('ruby');
-      rubyElement.className = rubyClass;
-      rubyElement.textContent = variant;
-      let rtInnerElement = document.createElement('rt');
-      rtInnerElement.textContent = newTone;
-      rubyElement.appendChild(rtInnerElement);
-      return rubyElement.outerHTML;
-    }
-    return variant;
-  };
-
-  for (let i = 0; i < tokens.length; i++) {
-    let currentToken = tokens[i];
-
-    if (
-      currentToken.startsWith('<ruby class="sandhi-') ||
-      SKIPPABLE_REGEX.test(currentToken) ||
-      BLOCKING_REGEX.test(currentToken)
-    ) {
-      modifiedTokens.push(currentToken);
-      continue;
-    }
-
-    let nextWordToken = '';
-    for (let j = i + 1; j < tokens.length; j++) {
-      if (
-        tokens[j].startsWith('<ruby class="sandhi-') ||
-        SKIPPABLE_REGEX.test(tokens[j])
-      ) {
-        continue;
-      }
-      if (BLOCKING_REGEX.test(tokens[j])) {
-        nextWordToken = '';
-        break;
-      }
-      nextWordToken = tokens[j];
-      break;
-    }
-
-    if (currentToken.length === 0 || !nextWordToken) {
-      modifiedTokens.push(currentToken);
-      continue;
-    }
-
-    let finalToken;
-    if (currentToken.includes('/')) {
-      const variants = currentToken.split('/');
-      const processedVariants = variants.map((variant) =>
-        applySandhiRule(variant, nextWordToken),
-      );
-      finalToken = processedVariants.join('/');
-    } else {
-      finalToken = applySandhiRule(currentToken, nextWordToken);
-    }
-
-    if (finalToken !== currentToken) {
-      hasActualModification = true;
-    }
-    modifiedTokens.push(finalToken);
-  }
-
-  if (hasActualModification) {
-    return modifiedTokens.join('');
-  } else {
-    return htmlContent;
-  }
-}
-
 /**
  * Checks for and applies tone sandhi for a given pronunciation and dialect.
- * Currently only supports Dapu dialect.
  * @param {string} pronunciation - The original pronunciation string.
  * @param {string} dialect - The dialect name (e.g., '大埔教典').
  * @returns {object|null} An object with original and sandhi versions, or null if no change.
  */
 function getSandhiPronunciation(pronunciation, dialect) {
-  if (dialect && dialect.includes('大埔')) {
-    const sandhiPron = getDapuSandhiHtml(pronunciation);
+  if (typeof HakkaSandhi !== 'undefined' && HakkaSandhi.hasRulesFor(dialect)) {
+    const sandhiPron = HakkaSandhi.applyToHtml(pronunciation, dialect);
     // Return an object only if a change was actually made.
     if (sandhiPron !== pronunciation) {
       return {
@@ -1018,9 +890,11 @@ function applyDapuSandhiToGenerated() {
   const rtElements = document.querySelectorAll('#generated rt');
   rtElements.forEach((rt) => {
     const originalHtml = rt.innerHTML;
-    const newHtml = getDapuSandhiHtml(originalHtml);
-    if (originalHtml !== newHtml) {
-      rt.innerHTML = newHtml;
+    if (typeof HakkaSandhi !== 'undefined') {
+        const newHtml = HakkaSandhi.applyToHtml(originalHtml, '大埔');
+        if (originalHtml !== newHtml) {
+          rt.innerHTML = newHtml;
+        }
     }
   });
 }
@@ -2790,8 +2664,8 @@ function initializeAppUI() {
         : line['客家語'];
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      if (selectedDialect === '大埔') {
-        phoneticText = getDapuSandhiHtml(phoneticText);
+      if (selectedDialect === '大埔' && typeof HakkaSandhi !== 'undefined') {
+        phoneticText = HakkaSandhi.applyToHtml(phoneticText, '大埔');
       }
       rt.innerHTML = phoneticText;
       ruby.appendChild(rt);
@@ -4252,8 +4126,8 @@ function initializeAppUI() {
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      if (dialectInfo.腔 === '大') {
-        phoneticText = getDapuSandhiHtml(phoneticText);
+      if (dialectInfo.腔 === '大' && typeof HakkaSandhi !== 'undefined') {
+        phoneticText = HakkaSandhi.applyToHtml(phoneticText, '大埔');
       }
       rt.innerHTML = phoneticText;
       ruby.appendChild(rt);
@@ -5904,8 +5778,8 @@ function createComparisonRow(line, dialectInfo) {
   ruby.textContent = line.客家語;
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-  if (dialectInfo.腔 === '大') {
-    phoneticText = getDapuSandhiHtml(phoneticText);
+  if (dialectInfo.腔 === '大' && typeof HakkaSandhi !== 'undefined') {
+    phoneticText = HakkaSandhi.applyToHtml(phoneticText, '大埔');
   }
   rt.innerHTML = phoneticText;
   ruby.appendChild(rt);
