@@ -288,10 +288,22 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     return getRandomItems(pool, Math.min(pool.length, needed));
   };
 
+  // 有沒有勾「副題型」（m 以外）？有的話，復習優先時要讓「已解鎖詞用副題型再練」贏過「灌新詞」。
+  const hasSubType = (types || ['m']).some(t => t !== 'm');
+
   // mixMode 決定「抽取優先序」；今天複習過的一律墊底。
-  const order = (mixMode === 'reviewFirst')
-    ? [dueWords, unseenWords, notDueWords, reviewedTodayWords]
-    : [unseenWords, dueWords, notDueWords, reviewedTodayWords];
+  // reviewFirst + 有勾副題型：到期詞 → 【已解鎖未到期詞（可出副題型鞏固）】→ 新詞 → 今日已複習。
+  //   把 notDueWords 排在 unseenWords 前，避免「解鎖詞少、到期詞不夠」時整局被新詞 |m 灌滿、
+  //   副題型（拼音/克漏字…）搶不到主格（20260714 回報：復習卻像衝新進度、拼音幾乎不出）。
+  // reviewFirst + 只勾 |m：維持舊序（新詞優先於未到期），照常細水推新詞。
+  let order;
+  if (mixMode === 'reviewFirst') {
+    order = hasSubType
+      ? [dueWords, notDueWords, unseenWords, reviewedTodayWords]
+      : [dueWords, unseenWords, notDueWords, reviewedTodayWords];
+  } else {
+    order = [unseenWords, dueWords, notDueWords, reviewedTodayWords];
+  }
 
   let picked = [];
   for (const pool of order) {

@@ -146,6 +146,16 @@ function initGameUI() {
   if (gameRetryBtn) {
     gameRetryBtn.addEventListener('click', startSession);
   }
+
+  const gameSetupReturnBtn = document.getElementById('gameSetupReturnBtn');
+  if (gameSetupReturnBtn) {
+    gameSetupReturnBtn.addEventListener('click', () => {
+      document.getElementById('game-setup-ready-block').style.display = 'none';
+      document.getElementById('gameStartSessionBtn').style.display = 'none';
+      document.getElementById('game-setup-select-block').style.display = 'block';
+      showGameView('setup');
+    });
+  }
   
   if (gamePlayAudioBtn) {
     gamePlayAudioBtn.addEventListener('click', () => {
@@ -526,10 +536,16 @@ async function handleAnswer(selectedOption, btnElement) {
   feedback.innerHTML = ''; // clear previous
   
   const replayAudioPromise = currentQuestionAudioPromise.then(() => {
-    if (question.type === 'c') {
-      return playCurrentSentenceAudio();
-    } else {
+    if (question.type === 'c' || question.type === 'p') {
       return playCurrentQuestionAudio();
+    } else {
+      const fullSourceName = `cert${question.targetWord.dataVarName}`;
+      const sentenceAudioUrl = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(question.targetWord, fullSourceName) : null;
+      if (sentenceAudioUrl) {
+        return playCurrentSentenceAudio();
+      } else {
+        return playCurrentQuestionAudio();
+      }
     }
   });
 
@@ -570,7 +586,7 @@ async function handleAnswer(selectedOption, btnElement) {
     
     feedback.appendChild(evalContainer);
     
-    appendSentenceUI(feedback, question, replayAudioPromise);
+    appendSentenceUI(feedback, question);
   } else {
     btnElement.classList.add('wrong');
     feedback.className = 'game-feedback wrong';
@@ -599,7 +615,7 @@ async function handleAnswer(selectedOption, btnElement) {
     msg.style.marginBottom = '10px';
     feedback.appendChild(msg);
     
-    appendSentenceUI(feedback, question, replayAudioPromise);
+    appendSentenceUI(feedback, question);
     
     const nextBtn = document.createElement('button');
     nextBtn.className = 'game-btn game-next-btn';
@@ -684,7 +700,7 @@ function playCurrentQuestionAudio() {
   return Promise.resolve();
 }
 
-function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) {
+function appendSentenceUI(feedback, question) {
   const sentenceTextValue = question.targetWord.例句 ? question.targetWord.例句.trim() : '';
   if (sentenceTextValue && sentenceTextValue !== '-') {
     const sentenceDisplay = document.createElement('div');
@@ -751,13 +767,6 @@ function appendSentenceUI(feedback, question, audioPromise = Promise.resolve()) 
     if (autoOpen) {
       sentenceDisplay.style.display = 'block';
       sentenceBtn.style.display = 'none';
-      audioPromise.then(() => {
-        // Double check if this is still the current question
-        const currentQ = currentSession[currentQuestionIndex];
-        if (currentQ === question) {
-          playCurrentSentenceAudio(sentenceAudioBtn);
-        }
-      });
     }
     feedback.appendChild(sentenceDisplay);
   }
