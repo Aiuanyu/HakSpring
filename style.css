@@ -3997,6 +3997,12 @@ mark {
 .game-btn:hover {
   background-color: #357ABD;
 }
+.game-btn-highlight {
+  background-color: #ff9800;
+}
+.game-btn-highlight:hover {
+  background-color: #e68900;
+}
 .game-progress-bar {
   display: flex;
   justify-content: space-between;

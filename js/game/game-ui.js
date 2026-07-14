@@ -10,7 +10,8 @@ let currentGameAudioElements = [];
 let currentQuestionAudioPromise = Promise.resolve();
 
 // 記住「上一次玩遊戲」用的腔調＋級別（dataVarName，如 '四基'）。
-// 開遊戲 modal 時優先套用這個，若從未玩過才退回網頁本身（或其他功能）目前設定的腔調/級別。
+// 開遊戲 modal 仍照舊優先用網頁本身（或其他功能）目前設定的腔調/級別；
+// 「搞上擺个腔級」按鈕按下去才會代入這裡記住的上次遊戲腔級。
 const GAME_LAST_VAR_NAME_KEY = 'hakkaGameLastDataVarName';
 
 function getLastPlayedGameVarName() {
@@ -36,6 +37,16 @@ function saveLastPlayedGameVarName(dataVarName) {
   }
 }
 
+// 只在「有上次玩過的紀錄、且跟目前 ready block 顯示的腔級不同」時才秀出按鈕，
+// 避免使用者按了卻沒變化、一頭霧水。
+function refreshUseLastPlayedBtn() {
+  const btn = document.getElementById('gameUseLastPlayedBtn');
+  if (!btn) return;
+  const lastVarName = getLastPlayedGameVarName();
+  const hasDifferentLast = !!lastVarName && !!window[lastVarName] && lastVarName !== gameActiveDataVarName;
+  btn.style.display = hasDifferentLast ? 'inline-block' : 'none';
+}
+
 function initGameUI() {
   const startGameBtn = document.getElementById('startGameBtn');
   const headerStartGameBtn = document.getElementById('headerStartGameBtn');
@@ -54,26 +65,6 @@ function initGameUI() {
     const readyBlock = document.getElementById('game-setup-ready-block');
     const selectBlock = document.getElementById('game-setup-select-block');
 
-    // 最優先：套用上一次實際玩過的腔調/級別；還沒玩過才退回網頁本身或其他功能的設定
-    const lastVarName = getLastPlayedGameVarName();
-    if (lastVarName) {
-      const lastVarData = window[lastVarName];
-      if (lastVarData) {
-        gameActiveDataVarName = lastVarData.name;
-        const 腔 = lastVarName.substring(0, 1);
-        const 級 = lastVarName.substring(1);
-        gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣';
-        document.getElementById('game-target-level').textContent = getFullLevelName(lastVarData.name);
-        if (readyBlock) readyBlock.style.display = 'block';
-        if (selectBlock) selectBlock.style.display = 'none';
-        const startSessionBtn = document.getElementById('gameStartSessionBtn');
-        if (startSessionBtn) startSessionBtn.style.display = 'block';
-        showGameView('setup');
-        gameModal.style.display = 'flex';
-        return;
-      }
-    }
-
     if (currentActiveDialectLevelFullName) {
       const 腔 = currentDataVarName.substring(0, 1);
       const 級 = currentDataVarName.substring(1);
@@ -84,6 +75,7 @@ function initGameUI() {
       if (selectBlock) selectBlock.style.display = 'none';
       const startSessionBtn = document.getElementById('gameStartSessionBtn');
       if (startSessionBtn) startSessionBtn.style.display = 'block';
+      refreshUseLastPlayedBtn();
       showGameView('setup');
       gameModal.style.display = 'flex';
       return;
@@ -122,6 +114,7 @@ function initGameUI() {
         if (selectBlock) selectBlock.style.display = 'none';
         const startSessionBtn = document.getElementById('gameStartSessionBtn');
         if (startSessionBtn) startSessionBtn.style.display = 'block';
+        refreshUseLastPlayedBtn();
         showGameView('setup');
         gameModal.style.display = 'flex';
         return;
@@ -165,11 +158,34 @@ function initGameUI() {
           document.getElementById('game-setup-select-block').style.display = 'none';
           document.getElementById('game-setup-ready-block').style.display = 'block';
           document.getElementById('gameStartSessionBtn').style.display = 'block';
+          refreshUseLastPlayedBtn();
         } else {
           alert('無此腔調/級別組合的資料！');
         }
       } else {
         alert('請擇腔調摎級別！');
+      }
+    });
+  }
+
+  const gameUseLastPlayedBtn = document.getElementById('gameUseLastPlayedBtn');
+  if (gameUseLastPlayedBtn) {
+    gameUseLastPlayedBtn.addEventListener('click', () => {
+      const lastVarName = getLastPlayedGameVarName();
+      if (!lastVarName) return;
+      const varData = window[lastVarName];
+      if (!varData) {
+        alert('揣無上擺个腔調/級別資料！');
+        return;
+      }
+      gameActiveDataVarName = varData.name;
+      const 腔 = lastVarName.substring(0, 1);
+      const 級 = lastVarName.substring(1);
+      gameActiveDialect = getDialectInfo(腔, 級).腔名 || '四縣';
+      document.getElementById('game-target-level').textContent = getFullLevelName(varData.name);
+      refreshUseLastPlayedBtn();
+      if (typeof trackEvent === 'function') {
+        trackEvent('use_last_played_level', 'Game', gameActiveDataVarName);
       }
     });
   }
