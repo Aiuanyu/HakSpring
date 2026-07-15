@@ -302,15 +302,26 @@ function getSelectedTypes() {
 async function startSession() {
   const loadingIndicator = document.getElementById('loading-indicator');
   const loadingText = document.getElementById('loading-text');
-  
-  loadingText.textContent = '準備題目中...';
+  const startBtn = document.getElementById('gameStartSessionBtn');
+  const retryBtn = document.getElementById('gameRetryBtn');
+
+  loadingText.textContent = '出題中，請小等一下……';
   loadingIndicator.style.display = 'flex';
+  if (startBtn) startBtn.disabled = true;
+  if (retryBtn) retryBtn.disabled = true;
+
+  // 出題運算在慢速裝置（尤其手機）上是同步且吃重的，會卡住主執行緒數秒。
+  // 若不先讓瀏覽器畫出上面這層遮罩就直接算題，使用者在等待期間亂點的觸控事件
+  // 會被排進佇列，等運算結束、第一題畫面一出現就立刻誤觸到選項——導致第一題答錯。
+  // 用雙重 requestAnimationFrame 確保遮罩「真的畫出來」了，才開始算題，
+  // 讓期間的誤觸都被這層遮罩擋掉，而不是穿透到後面的答案按鈕。
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   try {
     const orderMode = document.querySelector('input[name="gameOrderMode"]:checked')?.value || 'random';
     const mixMode = document.querySelector('input[name="gameMixMode"]:checked')?.value || 'reviewFirst';
     const types = getSelectedTypes();
-    
+
     currentSession = await generateGameSession(gameActiveDialect, gameActiveDataVarName, { orderMode, mixMode, types });
     currentQuestionIndex = 0;
     score = 0;
@@ -320,7 +331,7 @@ async function startSession() {
     if (typeof trackEvent === 'function') {
       trackEvent('start_session', 'Game', `${gameActiveDataVarName}_${orderMode}_${mixMode}`);
     }
-    
+
     loadingIndicator.style.display = 'none';
     showGameView('play');
     renderQuestion();
@@ -328,6 +339,9 @@ async function startSession() {
     loadingIndicator.style.display = 'none';
     alert('產生題目失敗：' + err.message);
     console.error(err);
+  } finally {
+    if (startBtn) startBtn.disabled = false;
+    if (retryBtn) retryBtn.disabled = false;
   }
 }
 
