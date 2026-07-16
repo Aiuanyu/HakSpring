@@ -197,6 +197,8 @@ async function syncFromCloud() {
           localStorage.getItem('romanizerJoiningMode') || 'none',
         gameLastDataVarName:
           localStorage.getItem('hakkaGameLastDataVarName') || '',
+        userName: localStorage.getItem('hakkaUserName') || '',
+        userLocation: localStorage.getItem('hakkaUserLocation') || '',
       };
       const cloudPrefs = data.preferences || {};
 
@@ -209,9 +211,16 @@ async function syncFromCloud() {
         localStorage.getItem('hakkaDailyStats') || '{}'
       );
       const cloudStats = data.daily_stats || {};
+      const localStatsByLevel = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+      );
+      const cloudStatsByLevel = data.daily_stats_by_level || {};
       // 已同步基準快照：用來算「本地相對上次同步的新增量」，讓相加合併冪等
       const syncedStats = JSON.parse(
         localStorage.getItem('hakkaDailyStatsSynced') || '{}'
+      );
+      const syncedStatsByLevel = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsByLevelSynced') || '{}'
       );
       // 偏好設定的已同步快照：本地值 === 快照，才代表本地沒有「尚未推上雲端」的新變更，
       // 此時才可以放心讓雲端值覆蓋本地；否則就是本地剛改過還沒同步，必須保留本地、留給下面 Smart Push 推上去。
@@ -224,6 +233,7 @@ async function syncFromCloud() {
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
       const mergedProgress = mergeProgress(localProgress, cloudProgress);
       const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
+      const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, cloudStatsByLevel, syncedStatsByLevel);
 
       // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
       // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
@@ -235,6 +245,7 @@ async function syncFromCloud() {
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
       localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
       localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
+      localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
       // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
       // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
@@ -257,6 +268,22 @@ async function syncFromCloud() {
       }
       localStorage.setItem('hakkaGameLastDataVarName', finalGameLastDataVarName);
 
+      let finalUserName = localPrefs.userName;
+      if (localPrefs.userName === (syncedPrefs.userName || '')) {
+        if (cloudPrefs.userName !== undefined && cloudPrefs.userName !== null) {
+          finalUserName = cloudPrefs.userName;
+        }
+      }
+      localStorage.setItem('hakkaUserName', finalUserName);
+
+      let finalUserLocation = localPrefs.userLocation;
+      if (localPrefs.userLocation === (syncedPrefs.userLocation || '')) {
+        if (cloudPrefs.userLocation !== undefined && cloudPrefs.userLocation !== null) {
+          finalUserLocation = cloudPrefs.userLocation;
+        }
+      }
+      localStorage.setItem('hakkaUserLocation', finalUserLocation);
+
       // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
       // 比對 merged vs cloud
       const bookmarksChanged =
@@ -265,11 +292,14 @@ async function syncFromCloud() {
       // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
         finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
-        finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '');
+        finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
+        finalUserName !== (cloudPrefs.userName || '') ||
+        finalUserLocation !== (cloudPrefs.userLocation || '');
       const progressChanged =
         JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
       const statsChanged =
-        JSON.stringify(mergedStats) !== JSON.stringify(cloudStats);
+        JSON.stringify(mergedStats) !== JSON.stringify(cloudStats) ||
+        JSON.stringify(mergedStatsByLevel) !== JSON.stringify(cloudStatsByLevel);
 
       if (bookmarksChanged || prefsChanged || progressChanged || statsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
@@ -280,11 +310,14 @@ async function syncFromCloud() {
       // 走到這裡＝雲端已與 merged 結果對齊（有變上傳成功、無變本就一致；
       // syncToCloud 失敗會 throw 到外層 catch、不會到這行）→ 安全推進基準快照。
       localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
+      localStorage.setItem('hakkaDailyStatsByLevelSynced', JSON.stringify(mergedStatsByLevel));
       localStorage.setItem(
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: finalRomanizerJoiningMode,
           gameLastDataVarName: finalGameLastDataVarName,
+          userName: finalUserName,
+          userLocation: finalUserLocation,
         })
       );
     } else {
@@ -297,10 +330,16 @@ async function syncFromCloud() {
         localStorage.getItem('hakkaDailyStats') || '{}'
       );
       localStorage.setItem(
+        'hakkaDailyStatsByLevelSynced',
+        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+      );
+      localStorage.setItem(
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
           gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
+          userName: localStorage.getItem('hakkaUserName') || '',
+          userLocation: localStorage.getItem('hakkaUserLocation') || '',
         })
       );
     }
@@ -338,12 +377,17 @@ async function syncToCloud() {
         localStorage.getItem('romanizerJoiningMode') || 'none',
       gameLastDataVarName:
         localStorage.getItem('hakkaGameLastDataVarName') || '',
+      userName: localStorage.getItem('hakkaUserName') || '',
+      userLocation: localStorage.getItem('hakkaUserLocation') || '',
     };
     const learningProgress = JSON.parse(
       localStorage.getItem('hakkaLearningProgress') || '{}'
     );
     const dailyStats = JSON.parse(
       localStorage.getItem('hakkaDailyStats') || '{}'
+    );
+    const dailyStatsByLevel = JSON.parse(
+      localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
     );
 
     const { error } = await client.from('user_sync_data').upsert(
@@ -353,6 +397,7 @@ async function syncToCloud() {
         preferences: preferences,
         learning_progress: learningProgress,
         daily_stats: dailyStats,
+        daily_stats_by_level: dailyStatsByLevel,
         updated_at: new Date().toISOString(),
       },
       {
@@ -524,6 +569,55 @@ function mergeDailyStats(localObj, cloudObj, syncedObj) {
       out[i] = (mArr[i] || 0) + delta;
     }
     merged[day] = out;
+  }
+
+  return merged;
+}
+
+/**
+ * 合併每日各腔級統計（巢狀逐項「相加」，累計量型）。
+ *
+ * @param {Object} localObj  本地 hakkaDailyStatsByLevel
+ * @param {Object} cloudObj  雲端 daily_stats_by_level
+ * @param {Object} syncedObj 上次同步後的基準快照 hakkaDailyStatsByLevelSynced
+ * @returns {Object} 合併後的統計
+ */
+function mergeDailyStatsByLevel(localObj, cloudObj, syncedObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  const synced = (syncedObj && typeof syncedObj === 'object') ? syncedObj : {};
+
+  const merged = {};
+  for (const day in cloud) {
+    if (cloud[day] && typeof cloud[day] === 'object') {
+      merged[day] = {};
+      for (const level in cloud[day]) {
+        if (Array.isArray(cloud[day][level])) {
+          merged[day][level] = [...cloud[day][level]];
+        }
+      }
+    }
+  }
+
+  for (const day in local) {
+    if (!local[day] || typeof local[day] !== 'object') continue;
+    
+    merged[day] = merged[day] || {};
+    const syncedDay = (synced[day] && typeof synced[day] === 'object') ? synced[day] : {};
+    
+    for (const level in local[day]) {
+      const lArr = Array.isArray(local[day][level]) ? local[day][level] : [];
+      const sArr = Array.isArray(syncedDay[level]) ? syncedDay[level] : [];
+      const mArr = Array.isArray(merged[day][level]) ? merged[day][level] : [];
+      
+      const len = Math.max(lArr.length, sArr.length, mArr.length);
+      const out = [];
+      for (let i = 0; i < len; i++) {
+        const delta = Math.max(0, (lArr[i] || 0) - (sArr[i] || 0));
+        out[i] = (mArr[i] || 0) + delta;
+      }
+      merged[day][level] = out;
+    }
   }
 
   return merged;

@@ -45,6 +45,9 @@ function refreshUseLastPlayedBtn() {
   const lastVarName = getLastPlayedGameVarName();
   const hasDifferentLast = !!lastVarName && !!window[lastVarName] && lastVarName !== gameActiveDataVarName;
   btn.style.display = hasDifferentLast ? 'inline-block' : 'none';
+  if (hasDifferentLast && typeof getFullLevelName === 'function') {
+    btn.textContent = `繼續搞 ${getFullLevelName(lastVarName)}`;
+  }
 }
 
 function initGameUI() {
@@ -393,6 +396,13 @@ function renderQuestion() {
   const newBadge = document.getElementById('game-new-badge');
   newBadge.style.display = question.isNew ? 'inline-block' : 'none';
 
+  // Apply pastel background color to modal dialog
+  const gameModalDialog = document.querySelector('#gameModal .modal-dialog');
+  if (gameModalDialog) {
+    gameModalDialog.classList.remove('game-type-m', 'game-type-p', 'game-type-d', 'game-type-c', 'game-type-l');
+    gameModalDialog.classList.add(`game-type-${question.type}`);
+  }
+
   // Pinyin Mode specific UI
   const pinyinElem = document.getElementById('game-target-pinyin');
   const targetWordElem = document.getElementById('game-target-word');
@@ -424,7 +434,8 @@ function renderQuestion() {
   } else if (question.type === 'c') {
     pinyinElem.style.display = 'none';
     targetWordElem.innerHTML = question.clozeSentence;
-    targetWordElem.style.setProperty('font-family', 'inherit', 'important');
+    // 例句用「文源楷書 Marion Bunguan」那組（同主表例句 .sentence 的字型）
+    targetWordElem.style.setProperty('font-family', "'Marion', 'Marion+jfBunguan', tauhu-oo, cursive", 'important');
     targetWordElem.style.setProperty('font-size', '1.3em', 'important');
   } else {
     targetWordElem.textContent = question.targetWord.客家語;
@@ -458,18 +469,20 @@ function renderQuestion() {
       // 3行排列
       const contentHtml = `
         <div style="display: inline-flex; flex-direction: column; vertical-align: middle;">
-          <span style="font-size: 1.2em; line-height: 1.2;">${opt.客家語}</span>
-          <span style="font-size: 0.85em; color: #555; line-height: 1.2; margin-top: 2px;">${optPinyin}</span>
+          <span style="font-family: var(--title-font); font-size: 1.2em; line-height: 1.2;">${opt.客家語}</span>
+          <span style="font-family: var(--roman-font); font-size: 0.85em; color: #555; line-height: 1.2; margin-top: 2px;">${optPinyin}</span>
           <span style="font-size: 0.8em; color: #888; line-height: 1.2; margin-top: 2px;">${optMandarin}</span>
         </div>
       `;
       displayOpt = contentHtml;
     } else if (question.type === 'p') {
       btn.classList.add('game-pinyin-option');
-      displayOpt = formatGamePinyinWithSandhi(opt);
+      displayOpt = `<span class="pinyin-text">${formatGamePinyinWithSandhi(opt)}</span>`;
     } else if (question.type === 'd') {
-      btn.style.fontFamily = 'var(--title-font)';
-      btn.style.fontSize = '1.2em';
+      displayOpt = `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
+    } else if (question.type === 'c') {
+      // 克漏字選項是客語詞 → 用 --title-font（比照 |d）
+      displayOpt = `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
     }
     
     if (question.type === 'l') {
@@ -551,12 +564,13 @@ function highlightDiff(wrongStr, correctStr) {
   return result;
 }
 
-function bumpDailyStat(isCorrect, isNew, qType) {
+function bumpDailyStat(isCorrect, isNew, qType, dataVarName) {
   try {
     const today = new Date();
     const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    const statsObj = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
     
+    // 1. 原有每日總計
+    const statsObj = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
     const statArr = statsObj[dateStr] || [0, 0, 0, 0, 0, 0, 0, 0, 0];
     
     statArr[0] = (statArr[0] ?? 0) + 1;
@@ -577,6 +591,21 @@ function bumpDailyStat(isCorrect, isNew, qType) {
     
     statsObj[dateStr] = statArr;
     localStorage.setItem('hakkaDailyStats', JSON.stringify(statsObj));
+
+    // 2. 新增每日各腔級統計
+    if (dataVarName) {
+      const statsByLevelObj = JSON.parse(localStorage.getItem('hakkaDailyStatsByLevel') || '{}');
+      const todayByLevel = statsByLevelObj[dateStr] || {};
+      const levelStatArr = todayByLevel[dataVarName] || [0, 0];
+      
+      levelStatArr[0] = (levelStatArr[0] ?? 0) + 1; // 答題數
+      if (isCorrect) {
+        levelStatArr[1] = (levelStatArr[1] ?? 0) + 1; // 答對數
+      }
+      todayByLevel[dataVarName] = levelStatArr;
+      statsByLevelObj[dateStr] = todayByLevel;
+      localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(statsByLevelObj));
+    }
   } catch (e) {
     console.warn('Failed to save daily stats', e);
   }
@@ -608,7 +637,7 @@ async function handleAnswer(selectedOption, btnElement) {
     trackEvent('answer', 'Game', isCorrect ? 'correct' : 'wrong');
   }
   
-  bumpDailyStat(isCorrect, question.isNew, question.type);
+  bumpDailyStat(isCorrect, question.isNew, question.type, gameActiveDataVarName);
   
   const options = document.querySelectorAll('.game-option-btn');
   options.forEach(btn => btn.disabled = true); // Disable all options
@@ -933,6 +962,7 @@ function endSession() {
   document.getElementById('game-final-score').textContent = score;
   const totalElem = document.getElementById('game-total-questions');
   if (totalElem) totalElem.textContent = currentSession.length;
+  
   if (typeof trackEvent === 'function') {
     trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
   }
@@ -940,3 +970,227 @@ function endSession() {
 
 // Hook into existing initializeAppUI or run when DOM is loaded
 document.addEventListener('DOMContentLoaded', initGameUI);
+
+// --- 戰績面板與 Streak 邏輯 ---
+
+function getLocalYMD() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function calculateStreak(stats) {
+  if (!stats || Object.keys(stats).length === 0) return 0;
+  
+  const dates = Object.keys(stats).sort().reverse();
+  const todayStr = getLocalYMD();
+  
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const yesterdayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  
+  let streak = 0;
+  let currentCheckDateStr = dates[0] === todayStr ? todayStr : yesterdayStr;
+  
+  if (dates[0] !== todayStr && dates[0] !== yesterdayStr) {
+    return 0; // 最新紀錄早於昨天，代表中斷
+  }
+
+  const checkDate = new Date(currentCheckDateStr + 'T00:00:00');
+
+  for (let i = 0; i < dates.length; i++) {
+    const dStr = checkDate.getFullYear() + '-' + String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + String(checkDate.getDate()).padStart(2, '0');
+    if (stats[dStr]) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+}
+
+function aggregateStats(startDateStr, endDateStr) {
+  const stats = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
+  const levelStats = JSON.parse(localStorage.getItem('hakkaDailyStatsByLevel') || '{}');
+  
+  const res = { correct: 0, wrong: 0, types: {}, levels: {} };
+  
+  // bumpDailyStat 存的陣列格式：[total, correct, reviews, new, m, p, d, c, l]
+  // 索引對照：0=總題數, 1=正確數, 2=複習數, 3=新詞數, 4=m次, 5=p次, 6=d次, 7=c次, 8=l次
+  const typeIndexMap = { 'm': 4, 'p': 5, 'd': 6, 'c': 7, 'l': 8 };
+  ['m', 'p', 'd', 'c', 'l'].forEach(t => { res.types[t] = { correct: 0, wrong: 0 }; });
+  
+  for (const [date, dayStats] of Object.entries(stats)) {
+    if ((!startDateStr || date >= startDateStr) && (!endDateStr || date <= endDateStr)) {
+      if (Array.isArray(dayStats)) {
+        // 陣列格式：[total, correct, reviews, new, m, p, d, c, l]
+        const dayTotal = dayStats[0] || 0;
+        const dayCorrect = dayStats[1] || 0;
+        const dayWrong = dayTotal - dayCorrect;
+        res.correct += dayCorrect;
+        res.wrong += dayWrong;
+        
+        // 各題型只有「次數」，沒有「對錯」分開記（bumpDailyStat 只記該題型被答幾次）。
+        // 所以這裡先把題型次數記到 correct，未來若需要分開再擴充。
+        for (const [t, idx] of Object.entries(typeIndexMap)) {
+          const typeCount = dayStats[idx] || 0;
+          if (typeCount > 0) {
+            // 以比例推估各題型的正確數
+            const ratio = dayTotal > 0 ? dayCorrect / dayTotal : 0;
+            res.types[t].correct += Math.round(typeCount * ratio);
+            res.types[t].wrong += typeCount - Math.round(typeCount * ratio);
+          }
+        }
+      } else if (typeof dayStats === 'object') {
+        // 萬一有舊格式物件資料的兼容
+        for (const [type, ts] of Object.entries(dayStats)) {
+          if (!res.types[type]) res.types[type] = { correct: 0, wrong: 0 };
+          res.types[type].correct += ts.correct || 0;
+          res.types[type].wrong += ts.wrong || 0;
+          res.correct += ts.correct || 0;
+          res.wrong += ts.wrong || 0;
+        }
+      }
+      
+      // 腔級統計（hakkaDailyStatsByLevel）
+      if (levelStats[date]) {
+        for (const [lvl, lvlDayStats] of Object.entries(levelStats[date])) {
+          if (!res.levels[lvl]) res.levels[lvl] = { correct: 0, wrong: 0 };
+          if (Array.isArray(lvlDayStats)) {
+            // [答題數, 答對數] 格式
+            const lvlTotal = lvlDayStats[0] || 0;
+            const lvlCorrect = lvlDayStats[1] || 0;
+            res.levels[lvl].correct += lvlCorrect;
+            res.levels[lvl].wrong += (lvlTotal - lvlCorrect);
+          } else if (typeof lvlDayStats === 'object') {
+            for (const [type, ts] of Object.entries(lvlDayStats)) {
+              res.levels[lvl].correct += ts.correct || 0;
+              res.levels[lvl].wrong += ts.wrong || 0;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return res;
+}
+
+function generateStatsHTML(title, data) {
+  if (data.correct + data.wrong === 0) {
+    return `<div style="text-align: center; color: var(--text-muted, #666); margin: 20px 0;">無答題紀錄</div>`;
+  }
+  
+  const total = data.correct + data.wrong;
+  const acc = Math.round((data.correct / total) * 100);
+
+  let html = `<h5 style="margin-top: 0;">${title}</h5>`;
+
+  // 對錯：堆疊式橫條（左綠答對、右紅答錯）＋數字說明
+  const correctPct = total > 0 ? (data.correct / total) * 100 : 0;
+  html += `
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+      <span style="color:#28a745;">✓ 答對 ${data.correct}</span>
+      <span style="font-weight:bold;">正確率 ${acc}%</span>
+      <span style="color:#dc3545;">✗ 答錯 ${data.wrong}</span>
+    </div>
+    <div style="display:flex; height:22px; border-radius:11px; overflow:hidden; margin-bottom:18px; background:rgba(128,128,128,0.15);">
+      <div style="width:${correctPct}%; background:#28a745;" title="答對 ${data.correct}"></div>
+      <div style="width:${100 - correctPct}%; background:#dc3545;" title="答錯 ${data.wrong}"></div>
+    </div>`;
+
+  // 題型分佈：堆疊式橫條，5 段用 5 題型粉彩（§E 同色）＋圖例
+  const typeNames = { m: '看漢字選華語', p: '看拼音選華語', d: '看華語選漢字', c: '聽音選華語', l: '聽音選漢字' };
+  const typeOrder = ['m', 'p', 'd', 'c', 'l'];
+  const typeTotals = typeOrder.map(t => ({ t, n: (data.types[t] ? data.types[t].correct + data.types[t].wrong : 0) }));
+  const grandTypeTotal = typeTotals.reduce((s, x) => s + x.n, 0);
+  if (grandTypeTotal > 0) {
+    html += `<h6 style="margin-bottom:6px;">題型分佈</h6>`;
+    html += `<div style="display:flex; height:22px; border-radius:11px; overflow:hidden; margin-bottom:8px; background:rgba(128,128,128,0.15);">`;
+    for (const { t, n } of typeTotals) {
+      if (n === 0) continue;
+      const pct = (n / grandTypeTotal) * 100;
+      html += `<div style="width:${pct}%; background:var(--game-type-${t});" title="${typeNames[t]}：${n} 題"></div>`;
+    }
+    html += `</div>`;
+    // 圖例
+    html += `<div style="display:flex; flex-wrap:wrap; gap:4px 12px; font-size:0.8rem; margin-bottom:18px;">`;
+    for (const { t, n } of typeTotals) {
+      if (n === 0) continue;
+      html += `<span style="display:inline-flex; align-items:center; gap:4px;">
+        <span style="width:12px; height:12px; border-radius:3px; background:var(--game-type-${t}); display:inline-block;"></span>
+        ${typeNames[t]} ${n}
+      </span>`;
+    }
+    html += `</div>`;
+  }
+  
+  if (Object.keys(data.levels).length > 0) {
+    html += `<h6 style="margin-bottom:6px;">腔級分佈</h6><div style="display: flex; flex-direction: column; gap: 10px;">`;
+    const sortedLevels = Object.entries(data.levels).sort((a, b) => (b[1].correct + b[1].wrong) - (a[1].correct + a[1].wrong));
+    for (const [lvl, stats] of sortedLevels) {
+      const lTotal = stats.correct + stats.wrong;
+      if (lTotal === 0) continue;
+      const lAcc = Math.round((stats.correct / lTotal) * 100);
+      const lCorrectPct = (stats.correct / lTotal) * 100;
+      const lvlLabel = (typeof getFullLevelName === 'function' ? getFullLevelName(lvl) : null) || lvl;
+      // 每腔級一條堆疊橫條（左綠答對、右紅答錯）＋標籤
+      html += `<div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:3px;">
+          <span>${lvlLabel}</span>
+          <span style="color:var(--text-muted,#666);">${stats.correct} 對 / ${stats.wrong} 錯 (${lAcc}%)</span>
+        </div>
+        <div style="display:flex; height:16px; border-radius:8px; overflow:hidden; background:rgba(128,128,128,0.15);">
+          <div style="width:${lCorrectPct}%; background:#28a745;" title="答對 ${stats.correct}"></div>
+          <div style="width:${100 - lCorrectPct}%; background:#dc3545;" title="答錯 ${stats.wrong}"></div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  
+  return html;
+}
+
+window.renderStatsModal = function() {
+  const stats = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
+  
+  const streakDays = calculateStreak(stats);
+  const streakContainer = document.getElementById('stats-streak-container');
+  const streakSpan = document.getElementById('stats-streak-days');
+  if (streakContainer && streakSpan) {
+    if (streakDays > 0) {
+      streakSpan.textContent = streakDays;
+      streakContainer.style.display = 'block';
+    } else {
+      streakContainer.style.display = 'none';
+    }
+  }
+  
+  const todayStr = getLocalYMD();
+  
+  const todayData = aggregateStats(todayStr, todayStr);
+  document.getElementById('stats-tab-today').innerHTML = generateStatsHTML('今晡日个戰績', todayData);
+  
+  const d = new Date();
+  d.setDate(d.getDate() - 6);
+  const weekAgoStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const weekData = aggregateStats(weekAgoStr, todayStr);
+  document.getElementById('stats-tab-week').innerHTML = generateStatsHTML('這禮拜个戰績（近七日）', weekData);
+  
+  const d2 = new Date();
+  d2.setDate(d2.getDate() - 29);
+  const monthAgoStr = d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0') + '-' + String(d2.getDate()).padStart(2, '0');
+  const monthData = aggregateStats(monthAgoStr, todayStr);
+  document.getElementById('stats-tab-month').innerHTML = generateStatsHTML('這隻月个戰績（近三十日）', monthData);
+  
+  const d3 = new Date();
+  d3.setDate(d3.getDate() - 364);
+  const yearAgoStr = d3.getFullYear() + '-' + String(d3.getMonth() + 1).padStart(2, '0') + '-' + String(d3.getDate()).padStart(2, '0');
+  const yearData = aggregateStats(yearAgoStr, todayStr);
+  document.getElementById('stats-tab-year').innerHTML = generateStatsHTML('今年个戰績（近三百六十五日）', yearData);
+  
+  const allTimeData = aggregateStats(null, null);
+  document.getElementById('stats-tab-overview').innerHTML = generateStatsHTML('各腔總覽（所有紀錄）', allTimeData);
+};

@@ -162,6 +162,7 @@
 | 遊戲上次腔調/級別 | `hakkaGameLastDataVarName` | `preferences` | ✅ | LWW（空字串視為未設定，不覆蓋本地） |
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
+| 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
 
 - **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。

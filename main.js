@@ -2058,6 +2058,49 @@ function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log('Initializing UI...');
 
+  function updateAppTitles() {
+    const userNameRaw = localStorage.getItem('hakkaUserName') || '';
+    const userLocationRaw = localStorage.getItem('hakkaUserLocation') || '';
+    
+    const userName = userNameRaw.trim();
+    const userLocation = userLocationRaw.trim();
+    
+    let defaultSubtitle = '你个客援隊／客研隊。詞典+分類學習';
+    let defaultGameTitle = '客源翠學習遊戲';
+    
+    if (userName) {
+      const locationPrefix = userLocation ? `${userLocation}个` : '';
+      
+      const mainSubtitle = document.getElementById('mainSubtitle');
+      if (mainSubtitle) {
+        mainSubtitle.textContent = `${userName}个客援隊／客研隊。詞典+分類學習`;
+      }
+      
+      const gameModalTitle = document.getElementById('gameModalTitle');
+      if (gameModalTitle) {
+        gameModalTitle.textContent = `${userName}个挑戰競技場`;
+      }
+      
+      const statsModalTitle = document.getElementById('statsModalTitle');
+      if (statsModalTitle) {
+        statsModalTitle.textContent = `${locationPrefix}${userName}，客話戰績回顧`;
+      }
+    } else {
+      const mainSubtitle = document.getElementById('mainSubtitle');
+      if (mainSubtitle) mainSubtitle.textContent = defaultSubtitle;
+      
+      const gameModalTitle = document.getElementById('gameModalTitle');
+      if (gameModalTitle) gameModalTitle.textContent = defaultGameTitle;
+      
+      const statsModalTitle = document.getElementById('statsModalTitle');
+      if (statsModalTitle) statsModalTitle.textContent = '學習戰績面板';
+    }
+  }
+
+  // 暴露給全域以便設定視窗儲存後呼叫
+  window.updateAppTitles = updateAppTitles;
+  updateAppTitles();
+
   if (isMobileDevice()) {
     document.body.classList.add('mobile-device');
   }
@@ -2241,6 +2284,9 @@ function initializeAppUI() {
   const infoButton = document.getElementById('infoButton');
   const infoModal = document.getElementById('infoModal');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
+  const statsModalBtn = document.getElementById('statsModalBtn');
+  const statsModal = document.getElementById('statsModal');
+  const statsModalCloseBtn = document.getElementById('statsCloseBtn'); // HTML 的 id 是 statsCloseBtn，非 statsModalCloseBtn
   const romanizerContainer = document.getElementById('romanizerContainer');
   initializeDataManagement(); // <-- 【新增】呼叫新的初始化函式
   initializeCloudSync(); // <-- 【新增】初始化雲端同步
@@ -5409,6 +5455,39 @@ function initializeAppUI() {
   handleUrlChange();
   window.addEventListener('popstate', handleUrlChange);
 
+  // --- Stats Modal Logic ---
+  if (statsModalBtn && statsModal && statsModalCloseBtn) {
+    const closeStatsModal = () => {
+      statsModal.classList.remove('is-visible');
+    };
+    statsModalBtn.addEventListener('click', () => {
+      statsModal.classList.add('is-visible');
+      if (typeof window.renderStatsModal === 'function') {
+        window.renderStatsModal();
+      }
+    });
+    statsModalCloseBtn.addEventListener('click', closeStatsModal);
+    statsModal.addEventListener('click', (event) => {
+      if (event.target === statsModal) closeStatsModal();
+    });
+
+    // Tab switching logic
+    const tabs = statsModal.querySelectorAll('.stats-tab');
+    const tabContents = statsModal.querySelectorAll('.stats-tab-content');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetId = tab.getAttribute('data-target');
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add('active');
+      });
+    });
+  }
+
   if (infoButton && infoModal && infoModalCloseBtn) {
     fetch('info.md')
       .then((response) => response.text())
@@ -5457,6 +5536,50 @@ function initializeAppUI() {
           event.target.checked ? 'enabled' : 'disabled',
         );
       });
+    }
+
+    // --- Settings Modal Logic ---
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsModalCloseBtn = document.getElementById('settingsCloseBtn');
+    const userLocationInput = document.getElementById('userLocationInput');
+    const userNameInput = document.getElementById('userNameInput');
+
+    if (settingsBtn && settingsModal && settingsModalCloseBtn && userLocationInput && userNameInput) {
+      settingsBtn.addEventListener('click', () => {
+        // Load latest values
+        userLocationInput.value = localStorage.getItem('hakkaUserLocation') || '';
+        userNameInput.value = localStorage.getItem('hakkaUserName') || '';
+        settingsModal.classList.add('is-visible');
+        trackEvent('click', 'SettingsModal', 'opened');
+      });
+
+      const saveSettingsAndClose = () => {
+        const newLocation = userLocationInput.value.trim();
+        const newName = userNameInput.value.trim();
+        
+        localStorage.setItem('hakkaUserLocation', newLocation);
+        localStorage.setItem('hakkaUserName', newName);
+
+        if (typeof window.updateAppTitles === 'function') {
+          window.updateAppTitles();
+        }
+
+        if (typeof window.triggerCloudSync === 'function') {
+          window.triggerCloudSync();
+        }
+
+        settingsModal.classList.remove('is-visible');
+      };
+
+      settingsModalCloseBtn.addEventListener('click', saveSettingsAndClose);
+      settingsModal.addEventListener('click', (event) => {
+        if (event.target === settingsModal) saveSettingsAndClose();
+      });
+      
+      // Load initial values for placeholders or immediate usage if needed
+      userLocationInput.value = localStorage.getItem('hakkaUserLocation') || '';
+      userNameInput.value = localStorage.getItem('hakkaUserName') || '';
     }
   }
 

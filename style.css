@@ -108,7 +108,29 @@
   --popup-btn-border: #ced4da;
   --popup-btn-text: #495057;
   --popup-btn-bg-hover: #dee2e6;
+  
+  /* --- Pastel Colors for Game Types (Light Mode) ---
+     介於「原本太淺」與「一版太濃」之間：看得出顏色但仍柔和。 */
+  --game-type-m: #c4dbf7; /* 藍 */
+  --game-type-p: #c2ecd0; /* 綠 */
+  --game-type-d: #fbe888; /* 黃（貼近 R 認可的 #fef08a） */
+  --game-type-c: #e2d0f7; /* 紫 */
+  --game-type-l: #f9cbe0; /* 粉紅 */
 }
+
+/* --- Game Type Background Classes --- */
+/* 用 .radioItem 前綴提高 specificity（0,2,0），壓過暗色模式 `.radioItem { background: transparent }`
+   （style.css:1664）——否則題型色塊在暗色下會被 transparent 蓋掉、透出深色 modal 底＝看似全黑。 */
+.radioItem.game-type-m,
+.game-type-m { background-color: var(--game-type-m); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-p,
+.game-type-p { background-color: var(--game-type-p); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-d,
+.game-type-d { background-color: var(--game-type-d); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-c,
+.game-type-c { background-color: var(--game-type-c); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-l,
+.game-type-l { background-color: var(--game-type-l); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
 
 /* radio button style from <https: //webspe.net/tools/en/radio-button/> */
 .radioItem {
@@ -1457,6 +1479,43 @@ input:checked+.slider:before {
   /* Keep text centered */
 }
 
+/* --- 戰績面板 Tabs --- */
+.stats-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.stats-tab {
+  padding: 8px 12px;
+  background: #f1f1f1;
+  border: none;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.stats-tab:hover {
+  background: #e0e0e0;
+}
+
+.stats-tab.active {
+  background: #678d3f;
+  color: white;
+}
+
+.stats-tab-content {
+  display: none;
+}
+
+.stats-tab-content.active {
+  display: block;
+}
+
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1497,6 +1556,39 @@ input:checked+.slider:before {
     --popup-btn-border: #495057;
     --popup-btn-text: #e9ecef;
     --popup-btn-bg-hover: #495057;
+
+    /* --- Pastel Colors for Game Types (Dark Mode) ---
+       R 要求：暗色時色塊要「變深」，白/淺字才顯眼（不是只有深 border）。
+       故改成深飽和色，白字放上去對比夠。 */
+    --game-type-m: #27507e; /* 深藍 */
+    --game-type-p: #245c3b; /* 深綠 */
+    --game-type-d: #6e5c1c; /* 深金黃 */
+    --game-type-c: #402a68; /* 深紫 */
+    --game-type-l: #6e2c4c; /* 深洋紅 */
+  }
+
+  /* 暗色的題型色塊不要 border（R：夠深就不需要邊框；壓過 .radioItem 的暗色 border）。 */
+  .radioItem.game-type-m,
+  .radioItem.game-type-p,
+  .radioItem.game-type-d,
+  .radioItem.game-type-c,
+  .radioItem.game-type-l {
+    border-color: transparent;
+  }
+
+  .stats-tabs {
+    border-bottom-color: #444;
+  }
+  .stats-tab {
+    background: #333;
+    color: #ccc;
+  }
+  .stats-tab:hover {
+    background: #444;
+  }
+  .stats-tab.active {
+    background: var(--dark-primary-accent);
+    color: white;
   }
 
   body {
@@ -2216,6 +2308,7 @@ input:checked+.slider:before {
 
 /* Info Button in Header */
 #infoButton,
+#settingsBtn,
 #showRomanizerBtn,
 #dataManagementBtn,
 #headerStartGameBtn {
@@ -2234,6 +2327,7 @@ input:checked+.slider:before {
 }
 
 #infoButton i,
+#settingsBtn i,
 #showRomanizerBtn i,
 #dataManagementBtn i,
 #headerStartGameBtn i {
@@ -2242,6 +2336,7 @@ input:checked+.slider:before {
 
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
+#settingsBtn:hover i,
 #showRomanizerBtn:hover i,
 #dataManagementBtn:hover i,
 #headerStartGameBtn:hover i {
@@ -2420,7 +2515,9 @@ input:checked+.slider:before {
 
 /* Modal Dialog Specific Styles */
 #infoModal .modal-dialog,
-#whatsNewModal .modal-dialog {
+#whatsNewModal .modal-dialog,
+#settingsModal .modal-dialog,
+#statsModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
@@ -2436,7 +2533,9 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-header,
-#whatsNewModal .modal-header {
+#whatsNewModal .modal-header,
+#settingsModal .modal-header,
+#statsModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2452,7 +2551,9 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-title,
-#whatsNewModal .modal-title {
+#whatsNewModal .modal-title,
+#settingsModal .modal-title,
+#statsModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -2462,7 +2563,9 @@ input:checked+.slider:before {
 
 #infoModal .modal-close-btn,
 #whatsNewModal .modal-close-btn,
-#romanizerContainer .modal-close-btn {
+#romanizerContainer .modal-close-btn,
+#settingsModal .modal-close-btn,
+#statsModal .modal-close-btn {
   background: none;
   border: none;
   font-size: 1.8rem;
@@ -2478,12 +2581,18 @@ input:checked+.slider:before {
 #whatsNewModal .modal-close-btn:hover,
 #whatsNewModal .modal-close-btn:focus-visible,
 #romanizerContainer .modal-close-btn:hover,
-#romanizerContainer .modal-close-btn:focus-visible {
+#romanizerContainer .modal-close-btn:focus-visible,
+#settingsModal .modal-close-btn:hover,
+#settingsModal .modal-close-btn:focus-visible,
+#statsModal .modal-close-btn:hover,
+#statsModal .modal-close-btn:focus-visible {
   color: #333;
 }
 
 #infoModal .modal-body,
-#whatsNewModal .modal-body {
+#whatsNewModal .modal-body,
+#settingsModal .modal-body,
+#statsModal .modal-body {
   padding: 20px 30px;
   flex-grow: 1;
   overflow-y: auto;
@@ -2492,10 +2601,33 @@ input:checked+.slider:before {
   line-height: 1.7;
 }
 
+.settings-input {
+  width: 100px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: #fff;
+  color: #333;
+}
+
+.settings-hint {
+  color: gray;
+  font-size: 0.85em;
+}
+
+.settings-divider {
+  margin: 15px 0;
+  border: 0;
+  border-top: 1px solid #eee;
+}
+
 /* Dark Mode for Modals */
 @media (prefers-color-scheme: dark) {
 
   #infoButton,
+  #settingsBtn,
   #showRomanizerBtn,
   #dataManagementBtn,
   #headerStartGameBtn {
@@ -2503,6 +2635,7 @@ input:checked+.slider:before {
   }
 
   #infoButton:hover i,
+  #settingsBtn:hover i,
   #showRomanizerBtn:hover i,
   #dataManagementBtn:hover i,
   #headerStartGameBtn:hover i {
@@ -2515,21 +2648,41 @@ input:checked+.slider:before {
 
   #infoModal .modal-dialog,
   #whatsNewModal .modal-dialog,
-  #romanizerContainer .modal-dialog {
+  #romanizerContainer .modal-dialog,
+  #settingsModal .modal-dialog,
+  #statsModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
 
   #infoModal .modal-header,
   #whatsNewModal .modal-header,
-  #dataManagementModal .modal-header {
+  #dataManagementModal .modal-header,
+  #settingsModal .modal-header,
+  #statsModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
   #infoModal .modal-close-btn,
   #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
-  #dataManagementModal .modal-close-btn {
+  #dataManagementModal .modal-close-btn,
+  #settingsModal .modal-close-btn,
+  #statsModal .modal-close-btn {
     color: #aaa;
+  }
+
+  .settings-input {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: var(--main-text-color);
+  }
+
+  .settings-hint {
+    color: #999;
+  }
+
+  .settings-divider {
+    border-top-color: #444;
   }
 
   #infoModal .modal-close-btn:hover,
@@ -3914,6 +4067,9 @@ mark {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
+  /* ⚠️ 這幾條版面屬性（尤其 max-height + display:flex + overflow）必須留在「基礎規則」，
+     才能讓 .modal-body 的 flex-grow + overflow-y:auto 生效、答題畫面可捲動。
+     先前被誤併進 .game-type-l 選擇器 → 只有聽力題才有版面、其他題型不能捲動。 */
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   width: 90vw;
   max-width: 600px;
@@ -3923,6 +4079,13 @@ mark {
   flex-direction: column;
   overflow: hidden;
 }
+/* modal 淡底色用 50%（而非 30%）：因為勾選色塊已刻意調柔和，30% 會混到近乎全白、克漏字粉底隱形。
+   拉到 50% 讓「柔和變數」在 modal 底仍看得出顏色，同時保持不干擾讀題。 */
+#gameModal .modal-dialog.game-type-m { background-color: color-mix(in srgb, var(--game-type-m) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-p { background-color: color-mix(in srgb, var(--game-type-p) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-d { background-color: color-mix(in srgb, var(--game-type-d) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-c { background-color: color-mix(in srgb, var(--game-type-c) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-l { background-color: color-mix(in srgb, var(--game-type-l) 50%, #fff) !important; }
 #gameModal .modal-header {
   display: flex;
   justify-content: space-between;
@@ -3965,6 +4128,11 @@ mark {
   #gameModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
+  #gameModal .modal-dialog.game-type-m { background-color: color-mix(in srgb, var(--game-type-m) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-p { background-color: color-mix(in srgb, var(--game-type-p) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-d { background-color: color-mix(in srgb, var(--game-type-d) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-c { background-color: color-mix(in srgb, var(--game-type-c) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-l { background-color: color-mix(in srgb, var(--game-type-l) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
   #gameModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
