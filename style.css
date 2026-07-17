@@ -262,6 +262,18 @@ ruby.sandhi-t11 {
   color: darkorange;
 }
 
+ruby.sandhi-t5 {
+  color: teal;
+}
+
+ruby.sandhi-t3 {
+  color: saddlebrown;
+}
+
+ruby.sandhi-t53 {
+  color: mediumvioletred;
+}
+
 body {
   font-size: 20px;
 }
@@ -1859,6 +1871,18 @@ input:checked+.slider:before {
     ruby.sandhi-t11 {
       color: #FFB74D;
     }
+
+    ruby.sandhi-t5 {
+      color: #4DB6AC;
+    }
+
+    ruby.sandhi-t3 {
+      color: #D7CCC8;
+    }
+
+    ruby.sandhi-t53 {
+      color: #F48FB1;
+    }
   }
 
   /* --- 暗夜模式下个 tr#nowPlaying 樣式 --- */
@@ -3300,6 +3324,21 @@ mark {
 .pinyin-text ruby.sandhi-t11 {
   color: darkorange !important;
 }
+.game-option-btn ruby.sandhi-t5,
+.game-feedback ruby.sandhi-t5,
+.pinyin-text ruby.sandhi-t5 {
+  color: teal !important;
+}
+.game-option-btn ruby.sandhi-t3,
+.game-feedback ruby.sandhi-t3,
+.pinyin-text ruby.sandhi-t3 {
+  color: saddlebrown !important;
+}
+.game-option-btn ruby.sandhi-t53,
+.game-feedback ruby.sandhi-t53,
+.pinyin-text ruby.sandhi-t53 {
+  color: mediumvioletred !important;
+}
 
 .page-button {
   background-color: #f2f2f2;
@@ -4414,6 +4453,21 @@ mark {
   .game-feedback ruby.sandhi-t11,
   .pinyin-text ruby.sandhi-t11 {
     color: #FFB74D !important;
+  }
+  .game-option-btn ruby.sandhi-t5,
+  .game-feedback ruby.sandhi-t5,
+  .pinyin-text ruby.sandhi-t5 {
+    color: #4DB6AC !important;
+  }
+  .game-option-btn ruby.sandhi-t3,
+  .game-feedback ruby.sandhi-t3,
+  .pinyin-text ruby.sandhi-t3 {
+    color: #D7CCC8 !important;
+  }
+  .game-option-btn ruby.sandhi-t53,
+  .game-feedback ruby.sandhi-t53,
+  .pinyin-text ruby.sandhi-t53 {
+    color: #F48FB1 !important;
   }
 
   .game-feedback.correct {

@@ -873,17 +873,21 @@ function classifyTone(syllable, dialectCode) {
   }
   // -b/-d 結尾是入聲；-g 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
   const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
-  const vowelMap = window.reverseToneMappingData.vowel_map;
-  let aForm = 'a';
+  // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
+  // 支援預先組合字元（如 á）以及獨立注音符號（如 ˊ）
+  let nfdSyllable = syllable.normalize('NFD')
+    .replace('ˊ', '\u0301')
+    .replace('ˋ', '\u0300')
+    .replace('ˇ', '\u030C')
+    .replace('ˆ', '\u0302')
+    .replace(/¯|⁺|\+/, '\u0304');
 
-  for (let i = 0; i < syllable.length; i++) {
-    const char = syllable[i];
-    if (vowelMap[char]) {
-      const nfd = char.normalize('NFD');
-      const diacritic = nfd.substring(1);
-      aForm = ('a' + diacritic).normalize('NFC');
-      break;
-    }
+  // Hakka Pinyin 調號：\u0301 (ˊ), \u0300 (ˋ), \u030C (ˇ), \u0302 (ˆ), \u0304 (¯)
+  const toneMatch = nfdSyllable.match(/[\u0301\u0300\u030C\u0302\u0304]/);
+  
+  let aForm = 'a';
+  if (toneMatch) {
+    aForm = ('a' + toneMatch[0]).normalize('NFC');
   }
 
   let key = aForm + (hasStop ? 'd' : '');
@@ -966,14 +970,31 @@ function getSandhiHtml(htmlContent, dialectCode) {
     return variant;
   };
 
+  let inBracket = false;
   for (let i = 0; i < tokens.length; i++) {
     let currentToken = tokens[i];
 
-    if (
-      currentToken.startsWith('<ruby class="sandhi-') ||
-      SKIPPABLE_REGEX.test(currentToken) ||
-      BLOCKING_REGEX.test(currentToken)
-    ) {
+    if (currentToken.startsWith('<ruby class="sandhi-')) {
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    if (BLOCKING_REGEX.test(currentToken)) {
+      if (currentToken.includes('【')) {
+        inBracket = true;
+      } else if (currentToken.includes('】')) {
+        inBracket = false;
+      }
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    if (SKIPPABLE_REGEX.test(currentToken)) {
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    if (inBracket && dialectCode === 'rh') {
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -1040,6 +1061,10 @@ function getSandhiPronunciation(pronunciation, dialect) {
     dialectCode = 'ha';
   } else if (dialect.includes('四縣')) {
     dialectCode = 'si';
+  } else if (dialect.includes('詔安')) {
+    dialectCode = 'zh';
+  } else if (dialect.includes('饒平')) {
+    dialectCode = 'rh';
   }
 
   if (dialectCode) {
@@ -2916,6 +2941,8 @@ function initializeAppUI() {
       if (selectedDialect === '大埔') dialectCode = 'da';
       else if (selectedDialect === '海陸') dialectCode = 'ha';
       else if (selectedDialect.includes('四縣')) dialectCode = 'si';
+      else if (selectedDialect === '詔安') dialectCode = 'zh';
+      else if (selectedDialect === '饒平') dialectCode = 'rh';
       
       if (dialectCode) {
         phoneticText = getSandhiHtml(phoneticText, dialectCode);
@@ -4383,6 +4410,8 @@ function initializeAppUI() {
       if (dialectInfo.腔 === '大') dialectCode = 'da';
       else if (dialectInfo.腔 === '海') dialectCode = 'ha';
       else if (dialectInfo.腔 === '四' || dialectInfo.腔 === '南') dialectCode = 'si';
+      else if (dialectInfo.腔 === '安') dialectCode = 'zh';
+      else if (dialectInfo.腔 === '平') dialectCode = 'rh';
       
       if (dialectCode) {
         phoneticText = getSandhiHtml(phoneticText, dialectCode);
@@ -6117,6 +6146,8 @@ function createComparisonRow(line, dialectInfo) {
   if (dialectInfo.腔 === '大') dialectCode = 'da';
   else if (dialectInfo.腔 === '海') dialectCode = 'ha';
   else if (dialectInfo.腔 === '四' || dialectInfo.腔 === '南') dialectCode = 'si';
+  else if (dialectInfo.腔 === '安') dialectCode = 'zh';
+  else if (dialectInfo.腔 === '平') dialectCode = 'rh';
   
   if (dialectCode) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
@@ -6497,4 +6528,14 @@ async function displayGitCommitInfo() {
 }
 
 // Start the application
-initializeApp();
+if (typeof window !== 'undefined') {
+  initializeApp();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    classifyTone,
+    getSandhiHtml,
+    formatPhoneticForDisplay
+  };
+}

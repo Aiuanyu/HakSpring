@@ -357,9 +357,21 @@ function showGameView(viewName) {
 function formatGamePinyinWithSandhi(pinyinStr) {
   if (!pinyinStr) return '';
   let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
-  const isDapu = gameActiveDialect === '大埔' || (gameActiveDataVarName && gameActiveDataVarName.startsWith('大'));
-  if (isDapu && typeof getDapuSandhiHtml === 'function') {
-    return getDapuSandhiHtml(formatted);
+  
+  if (typeof getSandhiHtml === 'function') {
+    let dialectCode = null;
+    const prefix = gameActiveDataVarName ? gameActiveDataVarName.charAt(0) : '';
+    const dialect = gameActiveDialect || '';
+    
+    if (prefix === '大' || dialect.includes('大埔')) dialectCode = 'da';
+    else if (prefix === '海' || dialect.includes('海陸')) dialectCode = 'ha';
+    else if (prefix === '四' || prefix === '南' || dialect.includes('四縣')) dialectCode = 'si';
+    else if (prefix === '安' || dialect.includes('詔安')) dialectCode = 'zh';
+    else if (prefix === '饒' || dialect.includes('饒平')) dialectCode = 'rh';
+
+    if (dialectCode) {
+      return getSandhiHtml(formatted, dialectCode);
+    }
   }
   return formatted;
 }
