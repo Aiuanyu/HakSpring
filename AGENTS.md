@@ -167,6 +167,15 @@
 
 - **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。
 
+### 加新同步欄位時必查（血淚教訓）
+加一個要同步的欄位，`js/cloud-sync.js` 裡有**四個地方要一起改，缺一不可**，尤其 select/upsert 要**對稱**：
+1. **SELECT**（`syncFromCloud` 的 `.select('...')`）——**最常漏這個**。漏了會「推得上、拉不下」：`data.欄位` 讀成 `undefined`→雲端當空的→跨裝置永遠同步不到（症狀：本機有、別台顯示空/歸零）。
+2. **合併**（呼叫對應 `mergeXxx`，並依合併法選對）。
+3. **寫回本地**（`localStorage.setItem`）＋（相加型還要）**基準快照**於「push 成功後」才更新。
+4. **UPSERT**（`syncToCloud` 的 upsert 物件加該欄）。
+5. Supabase 先 `ALTER TABLE ... ADD COLUMN`（欄位要先於引用它的程式上線）。
+> 2026-07-17 就栽在「upsert 有加 `daily_stats_by_level`、select 漏加」——推上雲端了卻誰都 SELECT 不出來。改完務必**跨裝置實測**同步。
+
 ## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
 - **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。
 - **使用精確的刪除指令 (Use Precise Deletion Commands)**: 清理暫存檔案時，**必須**使用明確指向該目錄的指令 (例如 `rm -rf /home/jules/verification`)，避免使用廣泛影響整個版本庫的指令 (如 `git clean`)。
