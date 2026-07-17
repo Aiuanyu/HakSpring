@@ -1128,7 +1128,63 @@ function generateStatsHTML(title, data) {
   
   if (Object.keys(data.levels).length > 0) {
     html += `<h6 style="margin-bottom:6px;">腔級分佈</h6><div style="display: flex; flex-direction: column; gap: 10px;">`;
-    const sortedLevels = Object.entries(data.levels).sort((a, b) => (b[1].correct + b[1].wrong) - (a[1].correct + a[1].wrong));
+    const sortedLevels = Object.entries(data.levels).sort((a, b) => {
+      const lvlA = a[0];
+      const lvlB = b[0];
+      const dialectOrder = ['四', '海', '大', '平', '安'];
+      const levelOrder = ['基', '初', '中', '中高', '高', '教典'];
+
+      const parseLevel = (lvl) => {
+        let dialect = '';
+        let level = '';
+
+        // Find dialect by searching for inclusion of any dialect character
+        for (const d of dialectOrder) {
+          if (lvl.includes(d)) {
+            dialect = d;
+            break;
+          }
+        }
+
+        // Find level by searching for inclusion of level keywords
+        if (lvl.includes('教典')) {
+          level = '教典';
+        } else {
+          // Check '中高' before '中' to avoid partial matching of '中' first
+          const levelKeywords = ['基', '初', '中高', '中', '高'];
+          for (const l of levelKeywords) {
+            if (lvl.includes(l)) {
+              level = l;
+              break;
+            }
+          }
+        }
+        return { dialect, level };
+      };
+
+      const aInfo = parseLevel(lvlA);
+      const bInfo = parseLevel(lvlB);
+
+      let aDialectIdx = dialectOrder.indexOf(aInfo.dialect);
+      let bDialectIdx = dialectOrder.indexOf(bInfo.dialect);
+      if (aDialectIdx === -1) aDialectIdx = 999;
+      if (bDialectIdx === -1) bDialectIdx = 999;
+
+      if (aDialectIdx !== bDialectIdx) {
+        return aDialectIdx - bDialectIdx;
+      }
+
+      let aLevelIdx = levelOrder.indexOf(aInfo.level);
+      let bLevelIdx = levelOrder.indexOf(bInfo.level);
+      if (aLevelIdx === -1) aLevelIdx = 999;
+      if (bLevelIdx === -1) bLevelIdx = 999;
+
+      if (aLevelIdx !== bLevelIdx) {
+        return aLevelIdx - bLevelIdx;
+      }
+
+      return lvlA.localeCompare(lvlB);
+    });
     for (const [lvl, stats] of sortedLevels) {
       const lTotal = stats.correct + stats.wrong;
       if (lTotal === 0) continue;
