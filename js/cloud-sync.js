@@ -160,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, daily_stats, updated_at')
+      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
