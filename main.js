@@ -293,6 +293,8 @@ const DATA_FILES_TO_CACHE = [
   'data/gip/20250630-安.json',
   // 其他資料
   'tone_mapping.json',
+  'reverse_tone_mapping.json',
+  'sandhi_rules.json',
   'NAmedias.json',
   'exclusions.json',
 ];
@@ -865,7 +867,60 @@ function updatePopupPosition(popupEl, selectionRect) {
   popupEl.style.visibility = 'visible';
 }
 
-function getDapuSandhiHtml(htmlContent) {
+/**
+ * 統一「腔別字串 → 變調引擎腔碼」，避免各呼叫點各寫一份 if/else 而悄悄漂移
+ * （曾因此漏接：海陸被寫死 'da'、遊戲忘記饒平）。
+ * 接受三種輸入：完整腔名／來源字串（'大埔'、'海陸基'、'四縣教典'，用 includes 比對）、
+ * 單一腔字（'大'/'海'/'四'/'南'/'平'/'安'）、遊戲資料變數前綴（含 '饒'）。
+ * 註：'南四縣…' 因含子字串 '四縣' 亦歸 si。
+ * @param {string} dialect
+ * @returns {'da'|'ha'|'si'|'zh'|'rh'|null}
+ */
+function getDialectCode(dialect) {
+  if (!dialect) return null;
+  const s = String(dialect);
+  if (s.includes('大埔') || s === '大') return 'da';
+  if (s.includes('海陸') || s === '海') return 'ha';
+  if (s.includes('四縣') || s === '四' || s === '南') return 'si';
+  if (s.includes('詔安') || s === '安') return 'zh';
+  if (s.includes('饒平') || s === '平' || s === '饒') return 'rh';
+  return null;
+}
+
+function classifyTone(syllable, dialectCode) {
+  // 順帶檢查 vowel_map 存在：本函式已改走 NFD 拆調號、不再直接用 vowel_map，
+  // 但它與 dialect_reverse_map 同在 reverse_tone_mapping.json，故拿它當「反查表資料已載入」的存在性檢查。
+  if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
+    return null;
+  }
+  // -b/-d 結尾是入聲；-g 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
+  const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
+  // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
+  // 支援預先組合字元（如 á）以及獨立注音符號（如 ˊ）
+  // 註：下面 .replace 非全域、只換第一個調號——呼叫端一律傳「單一音節」，每音節至多一個調號故安全；
+  //     若日後改成傳多音節字串，須改成 /g 全域替換。
+  let nfdSyllable = syllable.normalize('NFD')
+    .replace('ˊ', '\u0301')
+    .replace('ˋ', '\u0300')
+    .replace('ˇ', '\u030C')
+    .replace('ˆ', '\u0302')
+    .replace(/¯|⁺|\+/, '\u0304');
+
+  // Hakka Pinyin 調號：\u0301 (ˊ), \u0300 (ˋ), \u030C (ˇ), \u0302 (ˆ), \u0304 (¯)
+  const toneMatch = nfdSyllable.match(/[\u0301\u0300\u030C\u0302\u0304]/);
+  
+  let aForm = 'a';
+  if (toneMatch) {
+    aForm = ('a' + toneMatch[0]).normalize('NFC');
+  }
+
+  let key = aForm + (hasStop ? 'd' : '');
+  const map = window.reverseToneMappingData.dialect_reverse_map[dialectCode];
+  if (!map) return null;
+  return map[key] || null;
+}
+
+function getSandhiHtml(htmlContent, dialectCode) {
   const BLOCKING_PUNCTUATION = '()（）【】';
   const SKIPPABLE_PUNCTUATION = '\\s、';
   const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
@@ -880,7 +935,7 @@ function getDapuSandhiHtml(htmlContent) {
   const BLOCKING_REGEX = new RegExp(`^[${BLOCKING_PUNCTUATION}]+$`);
 
   const sandhiRubyRegex =
-    /<ruby class="sandhi-(?:高降變|中平變|低升變)"[^>]*>.*?<\/ruby>/g;
+    /<ruby class="sandhi-t\d+"[^>]*>.*?<\/ruby>/g;
   let preliminaryTokens = [];
   let lastIndex = 0;
 
@@ -910,20 +965,24 @@ function getDapuSandhiHtml(htmlContent) {
 
   const applySandhiRule = (variant, next) => {
     let newTone = null;
-    let rubyClass = null;
 
-    if (variant.match(/[àèìòù](?![bdg])/) && next.match(/[àèìòùâêîôû]/)) {
-      newTone = '55';
-      rubyClass = 'sandhi-高降變';
-    } else if (variant.match(/[āēīōū]/) && next.match(/[ǎěǐǒǔâêîôû]/)) {
-      newTone = '35';
-      rubyClass = 'sandhi-中平變';
-    } else if (variant.match(/[ǎěǐǒǔ]/) && next.match(/[ǎěǐǒǔ]/)) {
-      newTone = '33';
-      rubyClass = 'sandhi-低升變';
+    if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
+      const frontTone = classifyTone(variant, dialectCode);
+      const rule = window.sandhiRulesData[dialectCode][frontTone];
+      if (rule) {
+        if (rule.always) {
+          newTone = rule.always;
+        } else if (rule.when) {
+          const nextTone = classifyTone(next, dialectCode);
+          newTone = rule.when[nextTone] || rule.else || null;
+        } else {
+          newTone = rule.else || null;
+        }
+      }
     }
 
-    if (newTone && rubyClass) {
+    if (newTone) {
+      let rubyClass = `sandhi-t${newTone}`;
       let rubyElement = document.createElement('ruby');
       rubyElement.className = rubyClass;
       rubyElement.textContent = variant;
@@ -935,14 +994,34 @@ function getDapuSandhiHtml(htmlContent) {
     return variant;
   };
 
+  let inBracket = false;
   for (let i = 0; i < tokens.length; i++) {
     let currentToken = tokens[i];
 
-    if (
-      currentToken.startsWith('<ruby class="sandhi-') ||
-      SKIPPABLE_REGEX.test(currentToken) ||
-      BLOCKING_REGEX.test(currentToken)
-    ) {
+    if (currentToken.startsWith('<ruby class="sandhi-')) {
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    if (BLOCKING_REGEX.test(currentToken)) {
+      if (currentToken.includes('【')) {
+        inBracket = true;
+      } else if (currentToken.includes('】')) {
+        inBracket = false;
+      }
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    if (SKIPPABLE_REGEX.test(currentToken)) {
+      modifiedTokens.push(currentToken);
+      continue;
+    }
+
+    // 僅饒平（rh）跳過【】內變調：【】裡是卓蘭／桃園異腔音，聲調系統與新竹不同，
+    // 官方也沒給那兩地的變調規則，套新竹規則會出錯，故整段保留本調。
+    // 其他腔的【】（）內部仍照常連讀變調（20260717 裁示），不要一起擋。
+    if (inBracket && dialectCode === 'rh') {
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -994,14 +1073,18 @@ function getDapuSandhiHtml(htmlContent) {
 
 /**
  * Checks for and applies tone sandhi for a given pronunciation and dialect.
- * Currently only supports Dapu dialect.
+ * Currently supports Dapu and Hailu dialects.
  * @param {string} pronunciation - The original pronunciation string.
- * @param {string} dialect - The dialect name (e.g., '大埔教典').
+ * @param {string} dialect - The dialect name (e.g., '大埔教典', '海陸基').
  * @returns {object|null} An object with original and sandhi versions, or null if no change.
  */
 function getSandhiPronunciation(pronunciation, dialect) {
-  if (dialect && dialect.includes('大埔')) {
-    const sandhiPron = getDapuSandhiHtml(pronunciation);
+  if (!dialect) return null;
+
+  const dialectCode = getDialectCode(dialect);
+
+  if (dialectCode) {
+    const sandhiPron = getSandhiHtml(pronunciation, dialectCode);
     // Return an object only if a change was actually made.
     if (sandhiPron !== pronunciation) {
       return {
@@ -1010,15 +1093,17 @@ function getSandhiPronunciation(pronunciation, dialect) {
       };
     }
   }
+  
   // If no sandhi applies or it's not the right dialect, return null.
   return null;
 }
 
-function applyDapuSandhiToGenerated() {
+function applySandhiToGenerated() {
   const rtElements = document.querySelectorAll('#generated rt');
   rtElements.forEach((rt) => {
     const originalHtml = rt.innerHTML;
-    const newHtml = getDapuSandhiHtml(originalHtml);
+    // Currently hardcoded to 'da' since this function was specifically for Dapu
+    const newHtml = getSandhiHtml(originalHtml, 'da');
     if (originalHtml !== newHtml) {
       rt.innerHTML = newHtml;
     }
@@ -1604,6 +1689,8 @@ function getKeyNameFromPath(filePath) {
   // 3. 處理其餘的特殊檔案
   const otherMap = {
     tone_mapping: 'toneMappingData',
+    reverse_tone_mapping: 'reverseToneMappingData',
+    sandhi_rules: 'sandhiRulesData',
     NAmedias: 'missingAudioData',
     exclusions: '例外音檔',
   };
@@ -2581,7 +2668,17 @@ function initializeAppUI() {
     ).value;
     const keyword = searchInput.value.trim();
 
-    if (keyword.length > 0 && isRomanizedHakka(keyword)) {
+    // 拼音 regex 模式偵測：含 regex 元字元，且淨由拼音允許个字元（英數、空白、-'）＋元字元組成，
+    // 無漢字、無變音符。用來對「客語標音_查詢」个數字調字串做 regex 比對，方便測變調（如 `.+53 .+53`）。
+    const looksLikePhoneticRegex =
+      keyword.length > 0 &&
+      /[.^$*+?()[\]{}|\\]/.test(keyword) &&
+      /^[a-z0-9\s.^$*+?()[\]{}|\\/'-]+$/i.test(keyword);
+
+    if (
+      keyword.length > 0 &&
+      (isRomanizedHakka(keyword) || looksLikePhoneticRegex)
+    ) {
       searchMode = '客話';
       const hakkaModeRadio = document.querySelector(
         'input[name="search-mode"][value="客話"]',
@@ -2658,6 +2755,26 @@ function initializeAppUI() {
             ...item,
             _match: { inPhonetics: true, isExact: true },
           }));
+      } else if (looksLikePhoneticRegex) {
+        // 拼音 regex 模式：對數字調字串「客語標音_查詢」做 regex 比對。
+        let phoneticRegex = null;
+        try {
+          phoneticRegex = new RegExp(keyword, 'i');
+        } catch (e) {
+          phoneticRegex = null;
+        }
+        results = phoneticRegex
+          ? combinedData
+              .filter(
+                (item) =>
+                  item['客語標音_查詢'] &&
+                  phoneticRegex.test(item['客語標音_查詢']),
+              )
+              .map((item) => ({
+                ...item,
+                _match: { inPhonetics: true, isExact: true },
+              }))
+          : [];
       } else {
         const normalizedKeyword = normalizePhonetics(lowerCaseKeyword);
         results = combinedData
@@ -2836,8 +2953,10 @@ function initializeAppUI() {
         : line['客家語'];
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      if (selectedDialect === '大埔') {
-        phoneticText = getDapuSandhiHtml(phoneticText);
+      const dialectCode = getDialectCode(selectedDialect);
+
+      if (dialectCode) {
+        phoneticText = getSandhiHtml(phoneticText, dialectCode);
       }
       rt.innerHTML = phoneticText;
       ruby.appendChild(rt);
@@ -4298,8 +4417,10 @@ function initializeAppUI() {
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      if (dialectInfo.腔 === '大') {
-        phoneticText = getDapuSandhiHtml(phoneticText);
+      const dialectCode = getDialectCode(dialectInfo.腔);
+
+      if (dialectCode) {
+        phoneticText = getSandhiHtml(phoneticText, dialectCode);
       }
       rt.innerHTML = phoneticText;
       ruby.appendChild(rt);
@@ -6027,8 +6148,10 @@ function createComparisonRow(line, dialectInfo) {
   ruby.textContent = line.客家語;
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-  if (dialectInfo.腔 === '大') {
-    phoneticText = getDapuSandhiHtml(phoneticText);
+  const dialectCode = getDialectCode(dialectInfo.腔);
+
+  if (dialectCode) {
+    phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
   rt.innerHTML = phoneticText;
   ruby.appendChild(rt);
@@ -6406,4 +6529,14 @@ async function displayGitCommitInfo() {
 }
 
 // Start the application
-initializeApp();
+if (typeof window !== 'undefined') {
+  initializeApp();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    classifyTone,
+    getSandhiHtml,
+    formatPhoneticForDisplay
+  };
+}

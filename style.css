@@ -242,16 +242,36 @@ td[data-label="詞彙"],
   font-size: 70%;
 }
 
-ruby.sandhi-高降變 {
+ruby.sandhi-t55 {
   color: red;
 }
 
-ruby.sandhi-中平變 {
+ruby.sandhi-t35 {
   color: darkorchid;
 }
 
-ruby.sandhi-低升變 {
+ruby.sandhi-t33 {
   color: blue;
+}
+
+ruby.sandhi-t2 {
+  color: forestgreen;
+}
+
+ruby.sandhi-t11 {
+  color: darkorange;
+}
+
+ruby.sandhi-t5 {
+  color: teal;
+}
+
+ruby.sandhi-t3 {
+  color: saddlebrown;
+}
+
+ruby.sandhi-t53 {
+  color: mediumvioletred;
 }
 
 body {
@@ -1826,22 +1846,42 @@ input:checked+.slider:before {
   /* 標音變調顏色調整 */
   #generated td:nth-of-type(2),
   .pronunciation-text {
-    ruby.sandhi-高降變 {
+    ruby.sandhi-t55 {
       /* 修改 class 選擇器 */
       color: #FF8A80;
       /* 較亮个紅色 */
     }
 
-    ruby.sandhi-中平變 {
+    ruby.sandhi-t35 {
       /* 修改 class 選擇器 */
       color: lightgreen;
       /* 較亮个橘色 */
     }
 
-    ruby.sandhi-低升變 {
+    ruby.sandhi-t33 {
       /* 修改 class 選擇器 */
       color: #80CBC4;
       /* 較亮个藍綠色 */
+    }
+
+    ruby.sandhi-t2 {
+      color: #A5D6A7;
+    }
+
+    ruby.sandhi-t11 {
+      color: #FFB74D;
+    }
+
+    ruby.sandhi-t5 {
+      color: #4DB6AC;
+    }
+
+    ruby.sandhi-t3 {
+      color: #D7CCC8;
+    }
+
+    ruby.sandhi-t53 {
+      color: #F48FB1;
     }
   }
 
@@ -3259,20 +3299,45 @@ mark {
   font-size: 50% !important;
 }
 
-.game-option-btn ruby.sandhi-高降變,
-.game-feedback ruby.sandhi-高降變,
-.pinyin-text ruby.sandhi-高降變 {
+.game-option-btn ruby.sandhi-t55,
+.game-feedback ruby.sandhi-t55,
+.pinyin-text ruby.sandhi-t55 {
   color: red !important;
 }
-.game-option-btn ruby.sandhi-中平變,
-.game-feedback ruby.sandhi-中平變,
-.pinyin-text ruby.sandhi-中平變 {
+.game-option-btn ruby.sandhi-t35,
+.game-feedback ruby.sandhi-t35,
+.pinyin-text ruby.sandhi-t35 {
   color: darkorchid !important;
 }
-.game-option-btn ruby.sandhi-低升變,
-.game-feedback ruby.sandhi-低升變,
-.pinyin-text ruby.sandhi-低升變 {
+.game-option-btn ruby.sandhi-t33,
+.game-feedback ruby.sandhi-t33,
+.pinyin-text ruby.sandhi-t33 {
   color: blue !important;
+}
+.game-option-btn ruby.sandhi-t2,
+.game-feedback ruby.sandhi-t2,
+.pinyin-text ruby.sandhi-t2 {
+  color: forestgreen !important;
+}
+.game-option-btn ruby.sandhi-t11,
+.game-feedback ruby.sandhi-t11,
+.pinyin-text ruby.sandhi-t11 {
+  color: darkorange !important;
+}
+.game-option-btn ruby.sandhi-t5,
+.game-feedback ruby.sandhi-t5,
+.pinyin-text ruby.sandhi-t5 {
+  color: teal !important;
+}
+.game-option-btn ruby.sandhi-t3,
+.game-feedback ruby.sandhi-t3,
+.pinyin-text ruby.sandhi-t3 {
+  color: saddlebrown !important;
+}
+.game-option-btn ruby.sandhi-t53,
+.game-feedback ruby.sandhi-t53,
+.pinyin-text ruby.sandhi-t53 {
+  color: mediumvioletred !important;
 }
 
 .page-button {
@@ -4364,20 +4429,45 @@ mark {
     color: #ea868f;
   }
   
-  .game-option-btn ruby.sandhi-高降變,
-  .game-feedback ruby.sandhi-高降變,
-  .pinyin-text ruby.sandhi-高降變 {
+  .game-option-btn ruby.sandhi-t55,
+  .game-feedback ruby.sandhi-t55,
+  .pinyin-text ruby.sandhi-t55 {
     color: #ff6b6b !important;
   }
-  .game-option-btn ruby.sandhi-中平變,
-  .game-feedback ruby.sandhi-中平變,
-  .pinyin-text ruby.sandhi-中平變 {
+  .game-option-btn ruby.sandhi-t35,
+  .game-feedback ruby.sandhi-t35,
+  .pinyin-text ruby.sandhi-t35 {
     color: #e066ff !important;
   }
-  .game-option-btn ruby.sandhi-低升變,
-  .game-feedback ruby.sandhi-低升變,
-  .pinyin-text ruby.sandhi-低升變 {
-    color: #66b2ff !important;
+  .game-option-btn ruby.sandhi-t33,
+  .game-feedback ruby.sandhi-t33,
+  .pinyin-text ruby.sandhi-t33 {
+    color: #80CBC4 !important;
+  }
+  .game-option-btn ruby.sandhi-t2,
+  .game-feedback ruby.sandhi-t2,
+  .pinyin-text ruby.sandhi-t2 {
+    color: #A5D6A7 !important;
+  }
+  .game-option-btn ruby.sandhi-t11,
+  .game-feedback ruby.sandhi-t11,
+  .pinyin-text ruby.sandhi-t11 {
+    color: #FFB74D !important;
+  }
+  .game-option-btn ruby.sandhi-t5,
+  .game-feedback ruby.sandhi-t5,
+  .pinyin-text ruby.sandhi-t5 {
+    color: #4DB6AC !important;
+  }
+  .game-option-btn ruby.sandhi-t3,
+  .game-feedback ruby.sandhi-t3,
+  .pinyin-text ruby.sandhi-t3 {
+    color: #D7CCC8 !important;
+  }
+  .game-option-btn ruby.sandhi-t53,
+  .game-feedback ruby.sandhi-t53,
+  .pinyin-text ruby.sandhi-t53 {
+    color: #F48FB1 !important;
   }
 
   .game-feedback.correct {

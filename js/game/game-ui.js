@@ -357,9 +357,18 @@ function showGameView(viewName) {
 function formatGamePinyinWithSandhi(pinyinStr) {
   if (!pinyinStr) return '';
   let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
-  const isDapu = gameActiveDialect === '大埔' || (gameActiveDataVarName && gameActiveDataVarName.startsWith('大'));
-  if (isDapu && typeof getDapuSandhiHtml === 'function') {
-    return getDapuSandhiHtml(formatted);
+  
+  if (typeof getSandhiHtml === 'function') {
+    // 先試資料變數前綴（單一腔字），再退回完整腔名；共用 main.js 的 getDialectCode
+    const prefix = gameActiveDataVarName ? gameActiveDataVarName.charAt(0) : '';
+    const dialectCode =
+      (typeof getDialectCode === 'function' &&
+        (getDialectCode(prefix) || getDialectCode(gameActiveDialect))) ||
+      null;
+
+    if (dialectCode) {
+      return getSandhiHtml(formatted, dialectCode);
+    }
   }
   return formatted;
 }
