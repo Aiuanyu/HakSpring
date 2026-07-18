@@ -867,7 +867,29 @@ function updatePopupPosition(popupEl, selectionRect) {
   popupEl.style.visibility = 'visible';
 }
 
+/**
+ * 統一「腔別字串 → 變調引擎腔碼」，避免各呼叫點各寫一份 if/else 而悄悄漂移
+ * （曾因此漏接：海陸被寫死 'da'、遊戲忘記饒平）。
+ * 接受三種輸入：完整腔名／來源字串（'大埔'、'海陸基'、'四縣教典'，用 includes 比對）、
+ * 單一腔字（'大'/'海'/'四'/'南'/'平'/'安'）、遊戲資料變數前綴（含 '饒'）。
+ * 註：'南四縣…' 因含子字串 '四縣' 亦歸 si。
+ * @param {string} dialect
+ * @returns {'da'|'ha'|'si'|'zh'|'rh'|null}
+ */
+function getDialectCode(dialect) {
+  if (!dialect) return null;
+  const s = String(dialect);
+  if (s.includes('大埔') || s === '大') return 'da';
+  if (s.includes('海陸') || s === '海') return 'ha';
+  if (s.includes('四縣') || s === '四' || s === '南') return 'si';
+  if (s.includes('詔安') || s === '安') return 'zh';
+  if (s.includes('饒平') || s === '平' || s === '饒') return 'rh';
+  return null;
+}
+
 function classifyTone(syllable, dialectCode) {
+  // 順帶檢查 vowel_map 存在：本函式已改走 NFD 拆調號、不再直接用 vowel_map，
+  // 但它與 dialect_reverse_map 同在 reverse_tone_mapping.json，故拿它當「反查表資料已載入」的存在性檢查。
   if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
     return null;
   }
@@ -875,6 +897,8 @@ function classifyTone(syllable, dialectCode) {
   const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
   // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
   // 支援預先組合字元（如 á）以及獨立注音符號（如 ˊ）
+  // 註：下面 .replace 非全域、只換第一個調號——呼叫端一律傳「單一音節」，每音節至多一個調號故安全；
+  //     若日後改成傳多音節字串，須改成 /g 全域替換。
   let nfdSyllable = syllable.normalize('NFD')
     .replace('ˊ', '\u0301')
     .replace('ˋ', '\u0300')
@@ -994,6 +1018,9 @@ function getSandhiHtml(htmlContent, dialectCode) {
       continue;
     }
 
+    // 僅饒平（rh）跳過【】內變調：【】裡是卓蘭／桃園異腔音，聲調系統與新竹不同，
+    // 官方也沒給那兩地的變調規則，套新竹規則會出錯，故整段保留本調。
+    // 其他腔的【】（）內部仍照常連讀變調（20260717 裁示），不要一起擋。
     if (inBracket && dialectCode === 'rh') {
       modifiedTokens.push(currentToken);
       continue;
@@ -1054,18 +1081,7 @@ function getSandhiHtml(htmlContent, dialectCode) {
 function getSandhiPronunciation(pronunciation, dialect) {
   if (!dialect) return null;
 
-  let dialectCode = null;
-  if (dialect.includes('大埔')) {
-    dialectCode = 'da';
-  } else if (dialect.includes('海陸')) {
-    dialectCode = 'ha';
-  } else if (dialect.includes('四縣')) {
-    dialectCode = 'si';
-  } else if (dialect.includes('詔安')) {
-    dialectCode = 'zh';
-  } else if (dialect.includes('饒平')) {
-    dialectCode = 'rh';
-  }
+  const dialectCode = getDialectCode(dialect);
 
   if (dialectCode) {
     const sandhiPron = getSandhiHtml(pronunciation, dialectCode);
@@ -2937,13 +2953,8 @@ function initializeAppUI() {
         : line['客家語'];
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      let dialectCode = null;
-      if (selectedDialect === '大埔') dialectCode = 'da';
-      else if (selectedDialect === '海陸') dialectCode = 'ha';
-      else if (selectedDialect.includes('四縣')) dialectCode = 'si';
-      else if (selectedDialect === '詔安') dialectCode = 'zh';
-      else if (selectedDialect === '饒平') dialectCode = 'rh';
-      
+      const dialectCode = getDialectCode(selectedDialect);
+
       if (dialectCode) {
         phoneticText = getSandhiHtml(phoneticText, dialectCode);
       }
@@ -4406,13 +4417,8 @@ function initializeAppUI() {
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-      let dialectCode = null;
-      if (dialectInfo.腔 === '大') dialectCode = 'da';
-      else if (dialectInfo.腔 === '海') dialectCode = 'ha';
-      else if (dialectInfo.腔 === '四' || dialectInfo.腔 === '南') dialectCode = 'si';
-      else if (dialectInfo.腔 === '安') dialectCode = 'zh';
-      else if (dialectInfo.腔 === '平') dialectCode = 'rh';
-      
+      const dialectCode = getDialectCode(dialectInfo.腔);
+
       if (dialectCode) {
         phoneticText = getSandhiHtml(phoneticText, dialectCode);
       }
@@ -6142,13 +6148,8 @@ function createComparisonRow(line, dialectInfo) {
   ruby.textContent = line.客家語;
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
-  let dialectCode = null;
-  if (dialectInfo.腔 === '大') dialectCode = 'da';
-  else if (dialectInfo.腔 === '海') dialectCode = 'ha';
-  else if (dialectInfo.腔 === '四' || dialectInfo.腔 === '南') dialectCode = 'si';
-  else if (dialectInfo.腔 === '安') dialectCode = 'zh';
-  else if (dialectInfo.腔 === '平') dialectCode = 'rh';
-  
+  const dialectCode = getDialectCode(dialectInfo.腔);
+
   if (dialectCode) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }

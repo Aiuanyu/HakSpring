@@ -359,15 +359,12 @@ function formatGamePinyinWithSandhi(pinyinStr) {
   let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
   
   if (typeof getSandhiHtml === 'function') {
-    let dialectCode = null;
+    // 先試資料變數前綴（單一腔字），再退回完整腔名；共用 main.js 的 getDialectCode
     const prefix = gameActiveDataVarName ? gameActiveDataVarName.charAt(0) : '';
-    const dialect = gameActiveDialect || '';
-    
-    if (prefix === '大' || dialect.includes('大埔')) dialectCode = 'da';
-    else if (prefix === '海' || dialect.includes('海陸')) dialectCode = 'ha';
-    else if (prefix === '四' || prefix === '南' || dialect.includes('四縣')) dialectCode = 'si';
-    else if (prefix === '安' || dialect.includes('詔安')) dialectCode = 'zh';
-    else if (prefix === '饒' || dialect.includes('饒平')) dialectCode = 'rh';
+    const dialectCode =
+      (typeof getDialectCode === 'function' &&
+        (getDialectCode(prefix) || getDialectCode(gameActiveDialect))) ||
+      null;
 
     if (dialectCode) {
       return getSandhiHtml(formatted, dialectCode);
