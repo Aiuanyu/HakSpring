@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.4.8" />
+  <link rel="stylesheet" href="style.css?v=4.4.10" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -105,9 +105,236 @@
             <label><input type="radio" name="search-mode" value="客話" checked /> 尋客詞（做得打漢字／拼音）</label>
             <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
           </div>
+          <button id="showcase-btn" class="popup-btn" style="width: 100%; margin-top: 15px; background: var(--primary-color); color: var(--button-text-color);">變調標示範例</button>
         </div>
       </div>
     </h3>
+
+    <!-- 五腔連讀變調靜態展示 (供截圖宣傳) -->
+    <!-- 可在 Console 輸入 document.getElementById('sandhi-showcase').style.display='block'; document.getElementById('search-container').style.display='none'; 來專注截圖 -->
+    <div id="sandhi-showcase" style="display: none; margin-bottom: 20px;">
+      <div class="search-results">
+        <table class="main-table">
+          <caption style="margin-bottom: 20px; caption-side: top;">
+            <h3 style="text-align: center; color: var(--primary-color); margin: 0;">客源翠・五腔連讀變調展示</h3>
+          </caption>
+          <thead>
+            <tr>
+              <th class="no">腔調</th>
+              <th class="no">編號</th>
+              <th>詞彙</th>
+              <th>例句</th>
+            </tr>
+          </thead>
+          
+          <tbody class="showcase-si">
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">四縣</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>西醫<rt><ruby class="sandhi-t11">xí<rt>11</rt></ruby> í</rt></ruby><br>
+                <span class="mandarin-meaning">西醫</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">看西醫。</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-ha">
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">海陸</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>發揮<rt><ruby class="sandhi-t2">fad<rt>2</rt></ruby> fùi</rt></ruby><br>
+                <span class="mandarin-meaning">發揮</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">自由發揮</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>枕頭<rt><ruby class="sandhi-t33">zhím<rt>33</rt></ruby> teu</rt></ruby><br>
+                <span class="mandarin-meaning">枕頭</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">兩隻枕頭</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-da">
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">大埔</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>臺灣<rt><ruby class="sandhi-t33">tǒi<rt>33</rt></ruby> vǎn</rt></ruby><br>
+                <span class="mandarin-meaning">臺灣</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">臺灣人。</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>番火<rt><ruby class="sandhi-t35">fān<rt>35</rt></ruby> fô</rt></ruby><br>
+                <span class="mandarin-meaning">火柴</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">一盒番火</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>中毒<rt><ruby class="sandhi-t55">zhùng<rt>55</rt></ruby> tùg</rt></ruby><br>
+                <span class="mandarin-meaning">中毒</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">食物中毒</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-ra">
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">饒平</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>腳球（足球）<rt><ruby class="sandhi-t5">giòg<rt>5</rt></ruby> kiu(<ruby class="sandhi-t5">ziùg<rt>5</rt></ruby> kiu)【giòg kiù(ziùg kiù)】</rt></ruby><br>
+                <span class="mandarin-meaning">足球</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">踢腳球。</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>租屋（稅屋）<rt>zǔ vùg(<ruby class="sandhi-t11">fè<rt>11</rt></ruby> vùg)【zǔ vùg(fê vùg)】</rt></ruby><br>
+                <span class="mandarin-meaning">租屋</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">租屋戴。</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>喉嗹<rt><ruby class="sandhi-t33">heu<rt>33</rt></ruby> lien(len)【hèu lèn/hèu lièn】</rt></ruby><br>
+                <span class="mandarin-meaning">喉嚨</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">喉嗹疾。</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">4</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>頭牲<rt><ruby class="sandhi-t53">teu<rt>53</rt></ruby> sǎng【tèu sǎng】</rt></ruby><br>
+                <span class="mandarin-meaning">泛指家畜家禽</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">畜頭牲。</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-za">
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">詔安</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>入境<rt><ruby class="sandhi-t3">ngìb<rt>3</rt></ruby> gîn</rt></ruby><br>
+                <span class="mandarin-meaning">入境</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">入境手續</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>發揮<rt><ruby class="sandhi-t5">fád<rt>5</rt></ruby> fǔi</rt></ruby><br>
+                <span class="mandarin-meaning">發揮</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">自由發揮</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>掛心<rt><ruby class="sandhi-t11">guâ<rt>11</rt></ruby>/<ruby class="sandhi-t11">kuâ<rt>11</rt></ruby> sǐm</rt></ruby><br>
+                <span class="mandarin-meaning">掛心</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">毋使掛心</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">4</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>恢復（回復）<rt>fǔi fu (<ruby class="sandhi-t33">fuè<rt>33</rt></ruby> fu)</rt></ruby><br>
+                <span class="mandarin-meaning">恢復</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">恢復健康</span>
+              </td>
+            </tr>
+            <tr >
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">5</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>目眉<rt><ruby class="sandhi-t55">hḿ<rt>55</rt></ruby> nì</rt></ruby><br>
+                <span class="mandarin-meaning">眉毛</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">目眉彎彎</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <div id="learning-mode-controls">
 
@@ -315,6 +542,7 @@
     <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
 
     <div id="results-summary"><span id="summary-text-content"></span></div>
+    
     <div id="generated"></div>
 
     <button id="backToTopBtn" title="歸頂高">

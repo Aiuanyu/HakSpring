@@ -5628,6 +5628,21 @@ function initializeAppUI() {
       infoModal.classList.add('is-visible');
       trackEvent('open', 'InfoModal', 'click_info_button');
     });
+    
+    const showcaseBtn = document.getElementById('showcase-btn');
+    if (showcaseBtn) {
+      showcaseBtn.addEventListener('click', () => {
+        document.getElementById('sandhi-showcase').style.display = 'block';
+        document.getElementById('search-container').style.display = 'none';
+        document.getElementById('generated').style.display = 'none';
+        if (typeof window.scrollTo === 'function') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (searchPopup) {
+          searchPopup.classList.remove('active');
+        }
+      });
+    }
     const closeInfoModal = () => {
       if (document.getElementById('dontShowInfoModalAgain').checked) {
         localStorage.setItem('dontShowInfoModalAgain', 'true');

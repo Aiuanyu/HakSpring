@@ -259,7 +259,7 @@ ruby.sandhi-t2 {
 }
 
 ruby.sandhi-t11 {
-  color: darkorange;
+  color: #c84c09; /* 原為 darkorange，加深以適應淺綠底色 */
 }
 
 ruby.sandhi-t5 {
@@ -550,7 +550,9 @@ tr.accordion-row.詔安 {
 @media screen and (max-width: 768px) {
 
   #generated tr.accordion-parent,
-  #generated tr.accordion-row {
+  #sandhi-showcase tr.accordion-parent,
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     margin-bottom: 0;
     border-radius: 0;
     border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
@@ -558,13 +560,15 @@ tr.accordion-row.詔安 {
     border-right: 5px solid orange;
   }
 
-  #generated tr.accordion-parent {
+  #generated tr.accordion-parent,
+  #sandhi-showcase tr.accordion-parent {
     border-top: 5px solid orange;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
   }
 
-  #generated tr.accordion-row-last {
+  #generated tr.accordion-row-last,
+  #sandhi-showcase tr.accordion-row-last {
     margin-bottom: 1.5em;
     border-bottom: 5px solid orange;
     border-bottom-left-radius: 8px;
@@ -572,34 +576,79 @@ tr.accordion-row.詔安 {
   }
 
   #generated tr.accordion-parent td,
-  #generated tr.accordion-row td {
+  #sandhi-showcase tr.accordion-parent td,
+  #generated tr.accordion-row td,
+  #sandhi-showcase tr.accordion-row td {
     border: none !important;
   }
 
-  #generated tr.accordion-row.四縣 {
+  #generated tr.accordion-row.四縣,
+  #sandhi-showcase tr.accordion-row.四縣 {
     background-color: #678d3f !important;
   }
 
-  #generated tr.accordion-row.海陸 {
+  #generated tr.accordion-row.海陸,
+  #sandhi-showcase tr.accordion-row.海陸 {
     background-color: #76ad67 !important;
   }
 
-  #generated tr.accordion-row.大埔 {
+  #generated tr.accordion-row.大埔,
+  #sandhi-showcase tr.accordion-row.大埔 {
     background-color: #5898a9 !important;
   }
 
-  #generated tr.accordion-row.饒平 {
+  #generated tr.accordion-row.饒平,
+  #sandhi-showcase tr.accordion-row.饒平 {
     background-color: #834fa1 !important;
   }
 
-  #generated tr.accordion-row.詔安 {
+  #generated tr.accordion-row.詔安,
+  #sandhi-showcase tr.accordion-row.詔安 {
     background-color: #974a47 !important;
   }
 }
 
-#generated td:nth-of-type(2) {
+#generated td[data-label="詞彙"],
+#sandhi-showcase td[data-label="詞彙"] {
   text-align: center;
   max-width: 40vw;
+}
+
+/* 解決部分瀏覽器（如 Firefox）無法正確渲染 tbody border 的問題 */
+#sandhi-showcase tbody.showcase-si { --dialect-border-color: #678d3f; }
+#sandhi-showcase tbody.showcase-ha { --dialect-border-color: #76ad67; }
+#sandhi-showcase tbody.showcase-da { --dialect-border-color: #5898a9; }
+#sandhi-showcase tbody.showcase-ra { --dialect-border-color: #834fa1; }
+#sandhi-showcase tbody.showcase-za { --dialect-border-color: #974a47; }
+
+/* 針對 Desktop 模式：利用 td 的邊框組合出 tbody 的外框 */
+@media (min-width: 801px) {
+  #sandhi-showcase tbody tr:first-child td { border-top: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody tr:last-child td { border-bottom: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody td:first-child { border-left: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody td:last-child { border-right: 5px solid var(--dialect-border-color) !important; }
+}
+
+/* 針對 Mobile 模式：將 tbody 轉為 block 元素，使其支援直接上邊框與圓角 */
+@media (max-width: 800px) {
+  #sandhi-showcase tbody {
+    display: block;
+    border: 5px solid var(--dialect-border-color) !important;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 2em;
+  }
+  /* 內部 tr 卡片不再需要粗邊框，改用細分隔線 */
+  #sandhi-showcase tbody tr {
+    margin-bottom: 10px !important;
+    border: none !important;
+    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5) !important;
+    border-radius: 0 !important;
+  }
+  #sandhi-showcase tbody tr:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+  }
 }
 
 .progressLvl {
@@ -1844,7 +1893,8 @@ input:checked+.slider:before {
 
 
   /* 標音變調顏色調整 */
-  #generated td:nth-of-type(2),
+  #generated td[data-label="詞彙"],
+  #sandhi-showcase td[data-label="詞彙"],
   .pronunciation-text {
     ruby.sandhi-t55 {
       /* 修改 class 選擇器 */
@@ -1877,7 +1927,7 @@ input:checked+.slider:before {
     }
 
     ruby.sandhi-t3 {
-      color: #D7CCC8;
+      color: #A1887F;
     }
 
     ruby.sandhi-t53 {
@@ -2030,16 +2080,20 @@ input:checked+.slider:before {
   }
 
   #generated tr.accordion-parent,
-  #generated tr.accordion-row {
+  #sandhi-showcase tr.accordion-parent,
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     border-left-color: #FFC107;
     border-right-color: #FFC107;
   }
 
-  #generated tr.accordion-parent {
+  #generated tr.accordion-parent,
+  #sandhi-showcase tr.accordion-parent {
     border-top-color: #FFC107;
   }
 
-  #generated tr.accordion-row-last {
+  #generated tr.accordion-row-last,
+  #sandhi-showcase tr.accordion-row-last {
     border-bottom-color: #FFC107;
   }
 }
@@ -2048,6 +2102,7 @@ input:checked+.slider:before {
 @media screen and (max-width: 768px) {
 
   #generated table,
+  #sandhi-showcase table,
   #comparison-table {
     border: none;
     /* 移除表格外框 */
@@ -2057,11 +2112,13 @@ input:checked+.slider:before {
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
   #generated thead,
+  #sandhi-showcase thead,
   #comparison-table thead {
     display: none;
   }
 
   #generated tr,
+  #sandhi-showcase tr,
   #comparison-table tr {
     display: block;
     /* 分歸列變做區塊元素 */
@@ -2079,11 +2136,13 @@ input:checked+.slider:before {
 
   /* 移除偶數行个特殊背景 */
   #generated tr:nth-child(even),
+  #sandhi-showcase tr:nth-child(even),
   #comparison-table tr:nth-child(even) {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
   #generated td,
+  #sandhi-showcase td,
   #comparison-table td {
     display: block;
     /* 分儲存格變做區塊元素 */
@@ -2104,6 +2163,7 @@ input:checked+.slider:before {
   }
 
   #generated td:last-child,
+  #sandhi-showcase td:last-child,
   #comparison-table td:last-child {
     border-bottom: none;
     /* 最尾一格毋使底線 */
@@ -2111,6 +2171,7 @@ input:checked+.slider:before {
 
   /* 用 ::before 顯示標籤 */
   #generated td::before,
+  #sandhi-showcase td::before,
   #comparison-table td::before {
     content: attr(data-label);
     /* 讀取 data-label 內容 */
@@ -2133,6 +2194,7 @@ input:checked+.slider:before {
 
   /* 調整特定欄位个樣式 */
   #generated td.no,
+  #sandhi-showcase td.no,
   #comparison-table td.no {
     font-size: 1.1em;
     /* 編號做得放大一息仔 */
@@ -2142,12 +2204,14 @@ input:checked+.slider:before {
   }
 
   #generated td.no::before,
+  #sandhi-showcase td.no::before,
   #comparison-table td.no::before {
     display: none;
     /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
 
   #generated td.no br,
+  #sandhi-showcase td.no br,
   #comparison-table td.no br {
     display: none;
     /* 編號欄位毋使換行 */
@@ -2155,12 +2219,14 @@ input:checked+.slider:before {
 
   /* 調整詞彙欄位个標音 */
   #generated td[data-label="詞彙"] ruby,
+  #sandhi-showcase td[data-label="詞彙"] ruby,
   #comparison-table td[data-label="詞彙"] ruby {
     font-size: 1.3em;
     /* 調整字體大小 */
   }
 
   #generated td[data-label="詞彙"] rt,
+  #sandhi-showcase td[data-label="詞彙"] rt,
   #comparison-table td[data-label="詞彙"] rt {
     font-size: 0.8em;
     /* 標音相對縮小 */
@@ -2168,6 +2234,7 @@ input:checked+.slider:before {
 
   /* 調整音檔控制項 */
   #generated audio.media,
+  #sandhi-showcase audio.media,
   #comparison-table audio.media {
     max-width: 100%;
     /* 音檔控制項做得較闊 */
@@ -2180,6 +2247,7 @@ input:checked+.slider:before {
 
   /* 調整備註樣式 */
   #generated .notes,
+  #sandhi-showcase .notes,
   #comparison-table .notes {
     margin-top: 5px;
     margin-left: 5px;
@@ -2189,12 +2257,14 @@ input:checked+.slider:before {
 
   /* 調整播放按鈕 */
   #generated .playFromThisRow,
+  #sandhi-showcase .playFromThisRow,
   #comparison-table .playFromThisRow {
     margin-left: 5px;
   }
 
   /* 確保 nowPlaying 樣式在卡片模式下正確應用 */
   #generated tr#nowPlaying,
+  #sandhi-showcase tr#nowPlaying,
   #comparison-table tr#nowPlaying {
     /* <-- 目標 tr#nowPlaying */
     background-color: rgba(var(--iMazinGrace-1-rgb), 0.5);
@@ -2204,6 +2274,7 @@ input:checked+.slider:before {
   }
 
   #generated tr#nowPlaying.paused-playback,
+  #sandhi-showcase tr#nowPlaying.paused-playback,
   #comparison-table tr#nowPlaying.paused-playback {
     /* background-color: transparent !important; */
     /* 動畫會處理背景 */
@@ -2230,29 +2301,34 @@ input:checked+.slider:before {
   @media (prefers-color-scheme: dark) {
 
     #generated tr,
+    #sandhi-showcase tr,
     #comparison-table tr {
       border-color: rgba(255, 255, 255, 0.2);
       background-color: var(--dark-surface-color);
     }
 
     #generated tr:nth-child(even),
+    #sandhi-showcase tr:nth-child(even),
     #comparison-table tr:nth-child(even) {
       /* background-color: var(--dark-surface-color); */
       /* <-- 移除通用背景色 */
     }
 
     #generated td,
+    #sandhi-showcase td,
     #comparison-table td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
     }
 
     #generated td::before,
+    #sandhi-showcase td::before,
     #comparison-table td::before {
       color: var(--main-text-color);
     }
 
     /* 確保 nowPlaying 樣式在暗夜卡片模式下正確應用 */
     #generated tr#nowPlaying,
+    #sandhi-showcase tr#nowPlaying,
     #comparison-table tr#nowPlaying {
       /* <-- 目標 tr#nowPlaying */
       background-color: var(--dark-now-playing-bg);
@@ -2262,6 +2338,7 @@ input:checked+.slider:before {
     }
 
     #generated tr#nowPlaying.paused-playback,
+    #sandhi-showcase tr#nowPlaying.paused-playback,
     #comparison-table tr#nowPlaying.paused-playback {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out;
@@ -2272,11 +2349,13 @@ input:checked+.slider:before {
 
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
   #generated td.empty-sentence-cell,
+  #sandhi-showcase td.empty-sentence-cell,
   #comparison-table td.empty-sentence-cell {
     display: none;
   }
 
-  #generated tr.accordion-row {
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     display: block;
   }
 
