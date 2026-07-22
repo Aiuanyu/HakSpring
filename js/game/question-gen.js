@@ -273,16 +273,25 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   const dueWords = wordsWithM.filter(x => x.mProgress && x.mProgress.due <= todayEpochDay);
   const unseenWords = wordsWithM.filter(x => !x.mProgress);
   const notDueAll = wordsWithM.filter(x => x.mProgress && x.mProgress.due > todayEpochDay);
+  
   // 「今天已複習過」的詞（SM-2 反推：最後複習日 = due - interval）排到最後一池，
   // 否則「循序＋無到期詞」時 notDue 湊數池永遠從編號最小取，每一局都從 1-1 重考同一批。
   const reviewedToday = x => (x.mProgress.due - x.mProgress.interval) === todayEpochDay;
-  const notDueWords = notDueAll.filter(x => !reviewedToday(x));
-  const reviewedTodayWords = notDueAll.filter(reviewedToday);
+  
+  // 湊數池過濾：排除 interval > 30 天的長天期熟詞，避免精熟詞被反覆抓來墊底
+  const paddingCandidates = notDueAll.filter(x => x.mProgress.interval <= 30);
+  const notDueWords = paddingCandidates.filter(x => !reviewedToday(x));
+  const reviewedTodayWords = paddingCandidates.filter(reviewedToday);
 
   // orderMode 決定「每一池怎麼取」：循序=依編號取前面；隨機=亂數取。
-  const takeFromPool = (pool, needed) => {
+  const takeFromPool = (pool, needed, isPadding = false) => {
     if (needed <= 0 || pool.length === 0) return [];
     if (orderMode === 'sequential') {
+      if (isPadding) {
+        // 湊數池即使在循序模式，也改為優先取「離到期日較近」的詞 (due 由小到大)，
+        // 避免永遠抓編號最小的詞 (如 1-1) 造成惡性循環。
+        return [...pool].sort((a, b) => a.mProgress.due - b.mProgress.due).slice(0, needed);
+      }
       return [...pool].sort((a, b) => compareByWordId(a.word, b.word)).slice(0, needed);
     }
     return getRandomItems(pool, Math.min(pool.length, needed));
@@ -308,7 +317,8 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   let picked = [];
   for (const pool of order) {
     if (picked.length >= MAX_QUESTIONS) break;
-    picked = picked.concat(takeFromPool(pool, MAX_QUESTIONS - picked.length));
+    const isPadding = (pool === notDueWords || pool === reviewedTodayWords);
+    picked = picked.concat(takeFromPool(pool, MAX_QUESTIONS - picked.length, isPadding));
   }
 
   // Debug：每局出題的池狀態與選詞結果（含 due 反推的最後複習日），供排查排程問題

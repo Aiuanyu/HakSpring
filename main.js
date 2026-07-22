@@ -3736,6 +3736,73 @@ function initializeAppUI() {
     console.log(
       `總共索引了 ${Object.keys(indexedDataCache).length} 筆獨特詞彙。`,
     );
+    
+    // 初始化沙盒展示區的音檔
+    initShowcaseAudio();
+  }
+
+  function initShowcaseAudio() {
+    const rows = document.querySelectorAll('#sandhi-showcase tbody tr[data-search-word]');
+    rows.forEach(row => {
+      if (row.hasAttribute('data-audio-init')) return;
+      
+      const word = row.getAttribute('data-search-word');
+      const dialectPrefix = row.getAttribute('data-dialect-prefix');
+      const sentenceFilter = row.getAttribute('data-search-sentence');
+      
+      const matches = indexedDataCache[word];
+      if (matches && matches.length > 0) {
+        const match = matches.find(m => {
+           const isDialect = m.audioDetails.fullSourceName.includes(dialectPrefix);
+           const isSentence = sentenceFilter ? (m.audioDetails.lineData.例句 || '') === sentenceFilter : true;
+           return isDialect && isSentence;
+        }) || matches.find(m => m.audioDetails.fullSourceName.includes(dialectPrefix)); // 找不到完美句子就用第一個符合腔調的
+        
+        if (match) {
+          const { lineData, fullSourceName } = match.audioDetails;
+          let wordAudioSrc = typeof constructWordAudioUrl === 'function' ? constructWordAudioUrl(lineData, fullSourceName) : null;
+          let sentenceAudioSrc = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(lineData, fullSourceName) : null;
+          
+          // 套用 proxy 繞過 CORS
+          if (wordAudioSrc && typeof applyAudioProxy === 'function') wordAudioSrc = applyAudioProxy(wordAudioSrc);
+          if (sentenceAudioSrc && typeof applyAudioProxy === 'function') sentenceAudioSrc = applyAudioProxy(sentenceAudioSrc);
+          
+          const tdWord = row.querySelector('td[data-label="詞彙"]');
+          const tdSentence = row.querySelector('td[data-label="例句"]');
+          
+          if (tdWord && wordAudioSrc) {
+            const audio = document.createElement('audio');
+            audio.className = 'media';
+            audio.controls = true;
+            audio.preload = 'none';
+            audio.src = wordAudioSrc;
+            
+            const meaningSpan = tdWord.querySelector('.mandarin-meaning');
+            if (meaningSpan) {
+              tdWord.insertBefore(audio, meaningSpan);
+              tdWord.insertBefore(document.createElement('br'), meaningSpan);
+            } else {
+              tdWord.appendChild(document.createElement('br'));
+              tdWord.appendChild(audio);
+            }
+          }
+          
+          if (tdSentence && sentenceAudioSrc) {
+            const audio = document.createElement('audio');
+            audio.className = 'media';
+            audio.controls = true;
+            audio.preload = 'none';
+            audio.src = sentenceAudioSrc;
+            // 為了美觀，若有例句文字且有音檔，才換行
+            if (tdSentence.textContent.trim().length > 0) {
+              tdSentence.appendChild(document.createElement('br'));
+            }
+            tdSentence.appendChild(audio);
+          }
+        }
+      }
+      row.setAttribute('data-audio-init', 'true');
+    });
   }
 
   // --- 新增：根據 #generated 內容，控制 #results-summary 顯示或隱藏 ---

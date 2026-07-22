@@ -608,10 +608,16 @@ tr.accordion-row.詔安 {
   }
 }
 
-#generated td[data-label="詞彙"],
-#sandhi-showcase td[data-label="詞彙"] {
+#generated td[data-label="詞彙"] {
   text-align: center;
   max-width: 40vw;
+}
+
+#sandhi-showcase td[data-label="詞彙"] {
+  text-align: center;
+  padding-top: 1.5em; /* 確保 sandhi 標音有足夠高度，不與 top border 重疊 */
+  padding-bottom: 1.5em;
+  line-height: 2em; 
 }
 
 /* 解決部分瀏覽器（如 Firefox）無法正確渲染 tbody border 的問題 */
@@ -620,6 +626,12 @@ tr.accordion-row.詔安 {
 #sandhi-showcase tbody.showcase-da { --dialect-border-color: #5898a9; }
 #sandhi-showcase tbody.showcase-ra { --dialect-border-color: #834fa1; }
 #sandhi-showcase tbody.showcase-za { --dialect-border-color: #974a47; }
+
+/* 腔調欄底色（對齊 accordion 各腔底色） */
+#sandhi-showcase tbody td[data-label="腔調"] {
+  background-color: var(--dialect-border-color);
+  color: white !important;
+}
 
 /* 針對 Desktop 模式：利用 td 的邊框組合出 tbody 的外框 */
 @media (min-width: 801px) {
@@ -1470,18 +1482,21 @@ input:checked+.slider:before {
   /* 預設隱藏 */
   position: absolute;
   top: 100%;
-  /* 在輸入框下方 */
+  /* 在輸入框个正下方 */
   right: 0;
+  /* 對齊輸入框个右邊 */
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* 加一息仔陰影，看起來有浮起來个效果 */
   z-index: 20;
+  /* 確保在其他內容之上 */
   padding: 15px;
-  width: 300px;
-  /* 固定寬度 */
-  margin-top: 5px;
-  /* 和輸入框的間距 */
+  width: max-content;
+  min-width: 300px;
+  max-width: 95vw;
+  /* 動態寬度 */
 }
 
 #search-container.active #search-popup {

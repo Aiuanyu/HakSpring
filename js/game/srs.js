@@ -43,6 +43,8 @@ function computeSM2(prev, grade, todayEpochDay) {
     reps += 1;
     ef += 15;
   }
+  // 加上 Interval 上限，避免指數成長失控（上限設為 365 天）
+  interval = Math.min(interval, 365);
   
   const due = todayEpochDay + interval;
   
