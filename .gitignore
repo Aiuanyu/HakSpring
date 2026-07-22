@@ -7,3 +7,4 @@
 # 留在本機供 scripts/check_cert_audio_curl.py 使用，等正式併入 data/cert/ 前不進 repo
 data/cert_113/
 data/cert_114/
+*.code-workspace

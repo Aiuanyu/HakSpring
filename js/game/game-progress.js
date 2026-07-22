@@ -174,3 +174,45 @@ window.foldTypeKeysIntoWordCards = foldTypeKeysIntoWordCards;
     console.error('Word-card migration failed:', e);
   }
 })();
+
+// 掃 hakkaLearningProgress，一次算出 B、C 要的數字。
+// 回傳 { byLevel: { 四基:{due,overdue,total}, ... }, forecast: [第0天,第1天,...第13天] }
+//   - due     = 今天(含)之前到期、還沒複習的詞卡數（due <= today）
+//   - overdue = 逾期（due < today）
+//   - forecast[i] = 第 i 天「新到期」的詞卡數（i=0 是今天，含逾期堆在 i=0）
+function computeSrsSnapshot(todayEpochDay) {
+  const data = JSON.parse(localStorage.getItem('hakkaLearningProgress') || '{}');
+  const byLevel = {};
+  const maturity = { sprout: 0, growing: 0, mature: 0 }; // 【新增】萌芽/生長/成熟
+  const HORIZON = 14;                 // 算 14 天，C 只畫前 7，其餘備用
+  const forecast = new Array(HORIZON).fill(0);
+
+  for (const key in data) {
+    if (!key.endsWith('|m')) continue;      // 一詞一卡：只算詞卡（|m），別重複算題型
+    const arr = data[key];
+    if (!Array.isArray(arr)) continue;
+    const due = arr[3];
+    if (due == null) continue;
+
+    // 【新增】成熟度：學過的 |m 詞卡都算「已種下」，依 interval 分三段。
+    // 門檻沿用 Anki young/mature 慣例（21 天）再細切出萌芽（<7）。
+    const interval = arr[1] || 0;
+    if (interval >= 21) maturity.mature++;
+    else if (interval >= 7) maturity.growing++;
+    else maturity.sprout++;
+
+    // 解析 dataVarName：key = c/g + dataVarName + 編號 + |m。
+    // dataVarName 不含數字、編號以數字開頭 → 切在第一個數字前。
+    const body = key.slice(1, -2);          // 去頭碼 c/g、去尾 |m
+    const mm = body.match(/^([^0-9]+)/);
+    const varName = mm ? mm[1] : body;
+
+    const lvl = byLevel[varName] || (byLevel[varName] = { due: 0, overdue: 0, total: 0 });
+    lvl.total++;
+    const delta = due - todayEpochDay;
+    if (delta <= 0) { lvl.due++; forecast[0]++; if (delta < 0) lvl.overdue++; }
+    else if (delta < HORIZON) { forecast[delta]++; }
+  }
+  return { byLevel, forecast, maturity };
+}
+window.computeSrsSnapshot = computeSrsSnapshot;

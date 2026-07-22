@@ -1,6 +1,9 @@
 // js/game/srs.js
 // Pure function for computing SM-2 spaced repetition progress
 
+// SM-2 間隔上限（天）。穩定期每日維持性複習量 ≈ 精熟詞數 ÷ 此值。
+const MAX_INTERVAL_DAYS = 730;
+
 /**
  * Computes the next SM-2 state based on the grade given.
  * 
@@ -43,8 +46,10 @@ function computeSM2(prev, grade, todayEpochDay) {
     reps += 1;
     ef += 15;
   }
-  // 加上 Interval 上限，避免指數成長失控（上限設為 365 天）
-  interval = Math.min(interval, 365);
+  // 加上 Interval 上限，避免指數成長失控。
+  // 20260722：認證詞庫龐大，穩定期每日底線 ≈ 精熟詞數 ÷ 上限；365 太密，改 730（兩年）減半每日負擔。
+  // 抽成具名常數，日後要再調只動這裡（改完務必 bump data_version 讓瀏覽器吃新碼）。
+  interval = Math.min(interval, MAX_INTERVAL_DAYS);
   
   const due = todayEpochDay + interval;
   

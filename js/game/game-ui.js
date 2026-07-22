@@ -210,7 +210,7 @@ function initGameUI() {
   }
 
   if (gameRetryBtn) {
-    gameRetryBtn.addEventListener('click', startSession);
+    gameRetryBtn.addEventListener('click', retryGame);
   }
 
   const gameSetupReturnBtn = document.getElementById('gameSetupReturnBtn');
@@ -302,7 +302,21 @@ function getSelectedTypes() {
   return types.length > 0 ? types : ['m']; // fallback to 'm'
 }
 
+// 記住上一局是不是「清債純複習」模式，讓「再來一局」沿用同模式（否則會跳回一般 10 題混合）。
+let lastSessionWasReviewOnly = false;
+let lastReviewOnlyVarName = null;
+
+// 「再來一局」派發：清債局→再開一次清債（同腔級）；一般局→照設定面板重開。
+function retryGame() {
+  if (lastSessionWasReviewOnly && lastReviewOnlyVarName) {
+    startReviewDebtSession(lastReviewOnlyVarName);
+  } else {
+    startSession();
+  }
+}
+
 async function startSession() {
+  lastSessionWasReviewOnly = false;
   const loadingIndicator = document.getElementById('loading-indicator');
   const loadingText = document.getElementById('loading-text');
   const startBtn = document.getElementById('gameStartSessionBtn');
@@ -348,10 +362,98 @@ async function startSession() {
   }
 }
 
+async function startReviewDebtSession(dataVarName) {
+  lastSessionWasReviewOnly = true;
+  lastReviewOnlyVarName = dataVarName;
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const loadingText = document.getElementById('loading-text');
+  
+  loadingText.textContent = '出題中，請小等一下……';
+  loadingIndicator.style.display = 'flex';
+  
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  const dialect = dataVarName.substring(0, 1);
+  try {
+    gameActiveDataVarName = dataVarName;
+    gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(dialect, dataVarName.substring(1))) ? getDialectInfo(dialect, dataVarName.substring(1)).腔名 : '四縣';
+
+    currentSession = await generateGameSession(dialect, dataVarName, {
+      orderMode: 'random',
+      types: getSelectedTypes(),
+      reviewOnly: true,
+    });
+    currentQuestionIndex = 0;
+    score = 0;
+
+    saveLastPlayedGameVarName(gameActiveDataVarName);
+
+    if (typeof trackEvent === 'function') {
+      trackEvent('start_session', 'Game', `${gameActiveDataVarName}_random_reviewOnly`);
+    }
+
+    loadingIndicator.style.display = 'none';
+    showGameView('play');
+    renderQuestion();
+  } catch (err) {
+    loadingIndicator.style.display = 'none';
+    alert(err.message);
+    console.error(err);
+  }
+}
+
 function showGameView(viewName) {
   document.getElementById('game-setup-view').style.display = viewName === 'setup' ? 'block' : 'none';
   document.getElementById('game-play-view').style.display = viewName === 'play' ? 'block' : 'none';
   document.getElementById('game-result-view').style.display = viewName === 'result' ? 'block' : 'none';
+
+  if (viewName === 'setup' && typeof renderDueByLevel === 'function') {
+    renderDueByLevel();
+  }
+}
+
+function renderDueByLevel() {
+  const el = document.getElementById('due-by-level-panel');
+  if (!el) return;
+  if (typeof computeSrsSnapshot !== 'function') return;
+  const today = Math.floor(Date.now() / 86400000);
+  const { byLevel } = computeSrsSnapshot(today);
+  const entries = Object.entries(byLevel)
+    .filter(([, v]) => v.total > 0)
+    .sort((a, b) => b[1].due - a[1].due);        // 欠最多的排最上
+  if (entries.length === 0) { el.innerHTML = ''; return; }
+
+  let html = `<h6 style="margin:4px 0 8px; font-size:0.9rem; font-weight:bold;">📅 各腔級今日待複習</h6>
+    <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">`;
+  for (const [varName, v] of entries) {
+    const label = (typeof getFullLevelName === 'function' ? getFullLevelName(varName) : varName);
+    const duePct = v.total > 0 ? Math.min(100, v.due / v.total * 100) : 0;
+    const overdueTag = v.overdue > 0
+      ? `<span style="color:#dc3545; margin-left:4px;">（逾期 ${v.overdue}）</span>` : '';
+      
+    const dueBtn = v.due > 0
+      ? `<button class="review-debt-btn" data-varname="${varName}"
+           style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer;
+                  background:#22c55e; color:#fff; font-weight:bold;">
+           複習 ${v.due} 題 →</button>`
+      : `<span style="color:var(--text-muted,#999); font-size:0.85rem;">已清空 ✓</span>`;
+
+    html += `<div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-bottom:3px;">
+        <span>${label} <span style="color:var(--text-muted,#999); font-size:0.75rem; margin-left:4px;">/ 共 ${v.total}</span> ${overdueTag}</span>
+        ${dueBtn}
+      </div>
+      <div style="height:12px; border-radius:6px; overflow:hidden; background:rgba(128,128,128,0.15);">
+        <div style="width:${duePct}%; height:100%; background:#22c55e;"></div>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+
+  el.querySelectorAll('.review-debt-btn').forEach(btn => {
+    btn.addEventListener('click', () => startReviewDebtSession(btn.dataset.varname));
+  });
 }
 
 function formatGamePinyinWithSandhi(pinyinStr) {
@@ -971,10 +1073,36 @@ function endSession() {
   document.getElementById('game-final-score').textContent = score;
   const totalElem = document.getElementById('game-total-questions');
   if (totalElem) totalElem.textContent = currentSession.length;
+
+  // 本局組成：複習 vs 新進度（isNew）＋答對率
+  const total = currentSession.length;
+  const newCount = currentSession.filter(q => q.isNew).length;
+  const reviewCount = total - newCount;
+  const acc = total > 0 ? Math.round((score / total) * 100) : 0;
+  const breakdown = document.getElementById('game-session-breakdown');
+  if (breakdown) breakdown.innerHTML = renderSessionBreakdown(reviewCount, newCount, acc);
   
   if (typeof trackEvent === 'function') {
     trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
   }
+}
+
+function renderSessionBreakdown(reviewCount, newCount, acc) {
+  const total = reviewCount + newCount || 1;
+  const reviewPct = reviewCount / total * 100;
+  return `
+    <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin:14px 0 4px;">
+      <span style="color:#3b82f6;">🔁 複習 ${reviewCount}</span>
+      <span style="color:#22c55e;">🌱 新進度 ${newCount}</span>
+    </div>
+    <div style="display:flex; height:20px; border-radius:10px; overflow:hidden; background:rgba(128,128,128,0.15);">
+      <div style="width:${reviewPct}%; background:#3b82f6;" title="複習 ${reviewCount}"></div>
+      <div style="width:${100 - reviewPct}%; background:#22c55e;" title="新進度 ${newCount}"></div>
+    </div>
+    <div style="text-align:center; margin-top:10px; font-size:1rem;">
+      本局答對率 <b style="font-size:1.3rem; color:${acc >= 80 ? '#22c55e' : acc >= 50 ? '#f59e0b' : '#dc3545'};">${acc}%</b>
+      <span style="color:var(--text-muted,#666);">（${total} 題）</span>
+    </div>`;
 }
 
 // Hook into existing initializeAppUI or run when DOM is loaded
@@ -1180,7 +1308,7 @@ window.renderStatsModal = function() {
   const todayStr = getLocalYMD();
   
   const todayData = aggregateStats(todayStr, todayStr);
-  document.getElementById('stats-tab-today').innerHTML = generateStatsHTML('今晡日个戰績', todayData);
+  document.getElementById('stats-tab-today').innerHTML = '<div id="srs-forecast" style="margin-bottom: 20px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 15px;"></div>' + generateStatsHTML('今晡日个戰績', todayData);
   
   const d = new Date();
   d.setDate(d.getDate() - 6);
@@ -1201,5 +1329,127 @@ window.renderStatsModal = function() {
   document.getElementById('stats-tab-year').innerHTML = generateStatsHTML('今年个戰績（近三百六十五日）', yearData);
   
   const allTimeData = aggregateStats(null, null);
-  document.getElementById('stats-tab-overview').innerHTML = generateStatsHTML('各腔總覽（所有紀錄）', allTimeData);
+  document.getElementById('stats-tab-overview').innerHTML =
+    '<div id="srs-maturity" style="margin-bottom:20px;"></div>' +
+    '<div id="srs-accuracy-trend" style="margin-bottom:20px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:15px;"></div>' +
+    generateStatsHTML('各腔總覽（所有紀錄）', allTimeData);
+
+  if (typeof renderForecast === 'function') {
+    renderForecast();
+  }
+  if (typeof renderMaturity === 'function') renderMaturity();
+  if (typeof renderAccuracyTrend === 'function') renderAccuracyTrend();
 };
+
+function renderForecast() {
+  const el = document.getElementById('srs-forecast');
+  if (!el) return;
+  const today = Math.floor(Date.now() / 86400000);
+  const { forecast } = computeSrsSnapshot(today);
+  const days = forecast.slice(0, 7);                 // 今天 + 未來 6 天
+  const max = Math.max(1, ...days);                  // 防除以 0
+  const weekLabels = ['今', '明', '後', '＋3', '＋4', '＋5', '＋6'];
+
+  const bars = days.map((n, i) => {
+    const hPct = (n / max) * 100;                       // 柱高比例
+    const isToday = i === 0;
+    const barColor = isToday ? '#f59e0b' : 'var(--game-type-m, #3b82f6)';
+    return `
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0;">
+        <div style="font-size:0.8rem; font-weight:${isToday ? 'bold' : 'normal'}; color:${n > 0 ? 'inherit' : 'var(--text-muted,#999)'};">${n}</div>
+        <div style="width:100%; height:90px; display:flex; align-items:flex-end;">
+          <div style="width:70%; margin:0 auto; height:${Math.max(hPct, n > 0 ? 6 : 0)}%;
+                      background:${barColor}; border-radius:4px 4px 0 0; transition:height .3s;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:${isToday ? '#f59e0b' : 'var(--text-muted,#666)'};">${weekLabels[i]}</div>
+      </div>`;
+  }).join('');
+
+  const totalWeek = days.reduce((s, n) => s + n, 0);
+  el.innerHTML = `
+    <h6 style="margin:0 0 8px;">🔮 未來七日到期預報</h6>
+    <div style="display:flex; align-items:flex-end; gap:6px; padding:4px 0;">${bars}</div>
+    <div style="text-align:center; font-size:0.8rem; color:var(--text-muted,#666); margin-top:6px;">
+      七日內共 ${totalWeek} 題到期
+    </div>`;
+}
+
+function renderMaturity() {
+  const el = document.getElementById('srs-maturity');
+  if (!el || typeof computeSrsSnapshot !== 'function') return;
+  const today = Math.floor(Date.now() / 86400000);
+  const { maturity } = computeSrsSnapshot(today);
+  const total = maturity.sprout + maturity.growing + maturity.mature;
+  if (total === 0) { el.innerHTML = ''; return; }
+
+  const seg = [
+    { key: 'sprout',  label: '🌱 萌芽',  n: maturity.sprout,  color: '#a3e635' }, // interval <7
+    { key: 'growing', label: '🌿 生長',  n: maturity.growing, color: '#22c55e' }, // 7–20
+    { key: 'mature',  label: '🌳 成熟',  n: maturity.mature,  color: '#15803d' }, // ≥21
+  ];
+  const bars = seg.filter(s => s.n > 0).map(s =>
+    `<div style="width:${s.n / total * 100}%; background:${s.color};" title="${s.label} ${s.n}"></div>`
+  ).join('');
+  const legend = seg.map(s =>
+    `<span style="display:inline-flex; align-items:center; gap:4px;">
+       <span style="width:12px; height:12px; border-radius:3px; background:${s.color}; display:inline-block;"></span>
+       ${s.label} ${s.n}
+     </span>`
+  ).join('');
+
+  el.innerHTML = `
+    <h6 style="margin:0 0 6px;">🌱 記憶成熟度（已種下 ${total} 詞）</h6>
+    <div style="display:flex; height:22px; border-radius:11px; overflow:hidden; background:rgba(128,128,128,0.15);">${bars}</div>
+    <div style="display:flex; flex-wrap:wrap; gap:4px 12px; font-size:0.8rem; margin-top:6px;">${legend}</div>
+    <div style="font-size:0.78rem; color:var(--text-muted,#666); margin-top:4px;">
+      成熟＝間隔已拉到 21 天以上、真正記牢的詞。看著成熟區長大就對了 🌳
+    </div>`;
+}
+
+function renderAccuracyTrend() {
+  const el = document.getElementById('srs-accuracy-trend');
+  if (!el) return;
+  const stats = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
+
+  // 近 30 天：算出每天（有資料才有點）的答對率
+  const DAYS = 30;
+  const pts = []; // {x:0..29, acc:0..100, dateStr}
+  for (let i = 0; i < DAYS; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (DAYS - 1 - i));
+    const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const arr = stats[ds];
+    if (Array.isArray(arr) && arr[0] > 0) {
+      pts.push({ x: i, acc: Math.round(arr[1] / arr[0] * 100), dateStr: ds });
+    }
+  }
+  if (pts.length < 2) { // 少於 2 天資料畫不出線
+    el.innerHTML = `<h6 style="margin:0 0 6px;">📈 正確率趨勢</h6>
+      <div style="font-size:0.8rem; color:var(--text-muted,#666);">累積兩天以上答題紀錄後，這裡就會長出折線圖 📈</div>`;
+    return;
+  }
+
+  // SVG 座標：viewBox 300×100，左右各留 6 邊距，上下留給 0/100%
+  const W = 300, H = 100, PAD = 6;
+  const sx = x => PAD + x / (DAYS - 1) * (W - 2 * PAD);
+  const sy = acc => PAD + (100 - acc) / 100 * (H - 2 * PAD);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.acc).toFixed(1)}`).join(' ');
+  const dots = pts.map(p =>
+    `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.acc).toFixed(1)}" r="2.5" fill="#22c55e"><title>${p.dateStr}：${p.acc}%</title></circle>`
+  ).join('');
+  // 50% 參考線 + 100% 頂線（淡）
+  const grid = [50, 100].map(g =>
+    `<line x1="${PAD}" y1="${sy(g)}" x2="${W - PAD}" y2="${sy(g)}" stroke="rgba(128,128,128,0.25)" stroke-width="1" stroke-dasharray="3 3"/>
+     <text x="${W - PAD}" y="${sy(g) - 2}" text-anchor="end" font-size="8" fill="var(--text-muted,#999)">${g}%</text>`
+  ).join('');
+  const avg = Math.round(pts.reduce((s, p) => s + p.acc, 0) / pts.length);
+
+  el.innerHTML = `
+    <h6 style="margin:0 0 6px;">📈 正確率趨勢（近 30 日 · 平均 ${avg}%）</h6>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block; overflow:visible;">
+      ${grid}
+      <path d="${line}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    </svg>
+    <div style="font-size:0.78rem; color:var(--text-muted,#666); margin-top:2px;">每點是一天的答對率，把滑鼠移上去看日期。</div>`;
+}

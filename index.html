@@ -28,12 +28,12 @@
   <script type="text/javascript" src="main.js?v=4.4.9" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
-  <script type="text/javascript" src="js/game/game-progress.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/game-progress.js?v=4.9.0" defer></script>
   <script type="text/javascript" src="js/game/game-data.js?v=4.3.2" defer></script>
   <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
-  <script type="text/javascript" src="js/game/question-gen.js?v=4.6.2" defer></script>
-  <script type="text/javascript" src="js/game/srs.js?v=4.3.2" defer></script>
-  <script type="text/javascript" src="js/game/game-ui.js?v=4.6.12" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js?v=4.8.1" defer></script>
+  <script type="text/javascript" src="js/game/srs.js?v=4.8.1" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.9.0" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js?v=4.3.4" defer></script>
   
   <!-- Driver.js for Onboarding -->
@@ -410,6 +410,7 @@
         <div class="modal-body" id="game-modal-body">
           <div id="game-setup-view">
             <div id="game-options-area">
+              <div id="due-by-level-panel" style="margin-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 10px;"></div>
               <div id="game-setup-ready-block">
                 <p>準備好開始學習 <span id="game-target-level" style="font-weight: bold; color: var(--primary-color);"></span> 了嗎？
                   <button id="gameChangeLevelBtn" class="game-btn" style="margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;">換其他腔／其他級</button>
@@ -488,8 +489,9 @@
             </div>
           </div>
           <div id="game-result-view" style="display: none;">
-            <h3>挑戰完成！</h3>
+            <h3>回顧你的學習結果</h3>
             <p>你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">-</span></p>
+            <div id="game-session-breakdown"></div>
             <button id="gameRetryBtn" class="game-btn">再來一局</button>
             <button id="gameSetupReturnBtn" class="game-btn game-secondary-btn" style="margin-top: 10px;">調整設定／換其他腔調／級別</button>
           </div>

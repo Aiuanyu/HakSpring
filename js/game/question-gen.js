@@ -236,7 +236,7 @@ function compareByWordId(a, b) {
  * 這樣「順序/新舊配比」兩軸只看詞的 |m 進度，不會被題型解鎖狀態污染
  * （舊作法把 word×type 全丟同一組池，導致題型變成新舊狀態的副產品）。
  */
-async function generateGameSession(dialect, dataVarName, { orderMode = 'random', mixMode = 'reviewFirst', types = ['m'] } = {}) {
+async function generateGameSession(dialect, dataVarName, { orderMode = 'random', mixMode = 'reviewFirst', types = ['m'], reviewOnly = false } = {}) {
   const allWords = getWordsForDialectAndLevel(dialect, dataVarName);
 
   if (allWords.length === 0) {
@@ -300,25 +300,39 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   // 有沒有勾「副題型」（m 以外）？有的話，復習優先時要讓「已解鎖詞用副題型再練」贏過「灌新詞」。
   const hasSubType = (types || ['m']).some(t => t !== 'm');
 
-  // mixMode 決定「抽取優先序」；今天複習過的一律墊底。
-  // reviewFirst + 有勾副題型：到期詞 → 【已解鎖未到期詞（可出副題型鞏固）】→ 新詞 → 今日已複習。
-  //   把 notDueWords 排在 unseenWords 前，避免「解鎖詞少、到期詞不夠」時整局被新詞 |m 灌滿、
-  //   副題型（拼音/克漏字…）搶不到主格（20260714 回報：復習卻像衝新進度、拼音幾乎不出）。
-  // reviewFirst + 只勾 |m：維持舊序（新詞優先於未到期），照常細水推新詞。
-  let order;
-  if (mixMode === 'reviewFirst') {
-    order = hasSubType
-      ? [dueWords, notDueWords, unseenWords, reviewedTodayWords]
-      : [dueWords, unseenWords, notDueWords, reviewedTodayWords];
-  } else {
-    order = [unseenWords, dueWords, notDueWords, reviewedTodayWords];
-  }
-
   let picked = [];
-  for (const pool of order) {
-    if (picked.length >= MAX_QUESTIONS) break;
-    const isPadding = (pool === notDueWords || pool === reviewedTodayWords);
-    picked = picked.concat(takeFromPool(pool, MAX_QUESTIONS - picked.length, isPadding));
+
+  // 【新增】純複習模式：只出到期/逾期詞卡，不摻新詞、不墊未到期熟詞。
+  if (reviewOnly) {
+    if (dueWords.length === 0) {
+      throw new Error('這個腔級目前沒有到期要複習的詞，去學新詞或換一級吧！');
+    }
+    // 到期債一次最多 15 題，逾期越久排越前（due 由小到大＝欠越久越先還）。
+    // 20260722 R：20 太多、一般人吃不消，改 15。
+    const REVIEW_CAP = 15;
+    const sorted = [...dueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
+    picked = sorted.slice(0, Math.min(REVIEW_CAP, sorted.length));
+    // ↓ 跳過原本的 order/池組合與 padding，直接進「第二步：配題型」。
+  } else {
+    // mixMode 決定「抽取優先序」；今天複習過的一律墊底。
+    // reviewFirst + 有勾副題型：到期詞 → 【已解鎖未到期詞（可出副題型鞏固）】→ 新詞 → 今日已複習。
+    //   把 notDueWords 排在 unseenWords 前，避免「解鎖詞少、到期詞不夠」時整局被新詞 |m 灌滿、
+    //   副題型（拼音/克漏字…）搶不到主格（20260714 回報：復習卻像衝新進度、拼音幾乎不出）。
+    // reviewFirst + 只勾 |m：維持舊序（新詞優先於未到期），照常細水推新詞。
+    let order;
+    if (mixMode === 'reviewFirst') {
+      order = hasSubType
+        ? [dueWords, notDueWords, unseenWords, reviewedTodayWords]
+        : [dueWords, unseenWords, notDueWords, reviewedTodayWords];
+    } else {
+      order = [unseenWords, dueWords, notDueWords, reviewedTodayWords];
+    }
+
+    for (const pool of order) {
+      if (picked.length >= MAX_QUESTIONS) break;
+      const isPadding = (pool === notDueWords || pool === reviewedTodayWords);
+      picked = picked.concat(takeFromPool(pool, MAX_QUESTIONS - picked.length, isPadding));
+    }
   }
 
   // Debug：每局出題的池狀態與選詞結果（含 due 反推的最後複習日），供排查排程問題
