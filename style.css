@@ -608,16 +608,16 @@ tr.accordion-row.詔安 {
   }
 }
 
-#generated td[data-label="詞彙"] {
-  text-align: center;
-  max-width: 40vw;
-}
-
+#generated td[data-label="詞彙"],
 #sandhi-showcase td[data-label="詞彙"] {
   text-align: center;
   padding-top: 1.5em; /* 確保 sandhi 標音有足夠高度，不與 top border 重疊 */
   padding-bottom: 1.5em;
   line-height: 2em; 
+}
+
+#generated td[data-label="詞彙"] {
+  max-width: 40vw;
 }
 
 /* 解決部分瀏覽器（如 Firefox）無法正確渲染 tbody border 的問題 */

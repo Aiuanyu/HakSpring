@@ -921,6 +921,11 @@ function classifyTone(syllable, dialectCode) {
 }
 
 function getSandhiHtml(htmlContent, dialectCode) {
+  // 資料陷阱防護：把 GIP 資料裡个漢字標記（又讀、俗音、小稱變調讀…）
+  // 包成【】，讓 tokenizer 視為阻斷邊界，sandhi 毋會跨越這兜標記。
+  const PHONETIC_MARKERS = /(?:又(?:俗音|讀|音)|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為|詞目刪除)/g;
+  htmlContent = htmlContent.replace(PHONETIC_MARKERS, '【$&】');
+
   const BLOCKING_PUNCTUATION = '()（）【】';
   const SKIPPABLE_PUNCTUATION = '\\s、';
   const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;

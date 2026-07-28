@@ -505,10 +505,16 @@ function buildOptionsForType(target, type, allWords) {
     options = [cleanTarget, ...distractors];
   } else if (type === 'l') {
     // 聽力題：傳回整個 word 物件，且干擾項要是音節相同、拼音最相似的字
-    // 音節以空白或連字號分隔（客語標音_查詢 實際用空格，如「fad2 seu24」）；用 /[\s-]+/ 兩者都吃。
-    const countSyllables = (p) => (p || '').trim().split(/[\s-]+/).filter(Boolean).length;
+    // 20260724 蒂兒：改用「客家語」（漢字）計算音節數，避開拼音欄位中
+    // 「又讀」「俗音」「小稱變調讀」等資料陷阱。客語一字一音節。
+    const countSyllables = (word) => {
+      const cleaned = (word.客家語 || '')
+        .replace(/【.*?】/g, '')
+        .replace(/（.*?）/g, '');
+      return (cleaned.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+    };
+    const targetSyllables = countSyllables(target);
     const targetPinyin = target.客語標音_查詢 || '';
-    const targetSyllables = countSyllables(targetPinyin);
 
     const validPool = allWords.filter(w => {
       if (w.progressKey === target.progressKey) return false;
@@ -526,8 +532,8 @@ function buildOptionsForType(target, type, allWords) {
     validPool.sort((a, b) => {
       const pA = a.客語標音_查詢 || '';
       const pB = b.客語標音_查詢 || '';
-      const sylA = countSyllables(pA);
-      const sylB = countSyllables(pB);
+      const sylA = countSyllables(a);
+      const sylB = countSyllables(b);
       
       const aSameSyl = sylA === targetSyllables;
       const bSameSyl = sylB === targetSyllables;
