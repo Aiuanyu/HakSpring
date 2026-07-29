@@ -6,6 +6,20 @@ let currentQuestionIndex = 0;
 let score = 0;
 let gameActiveDialect = '';
 let gameActiveDataVarName = '';
+
+// 【新增】輔助函式：確保在跨腔級模式下能正確抓到單題的腔級，即使 dataVarName 遺失也能從 progressKey 救回
+function getQuestionDataVarName(q) {
+  if (q && q.targetWord) {
+    if (q.targetWord.dataVarName) return q.targetWord.dataVarName;
+    if (q.targetWord.progressKey) {
+      const match = q.targetWord.progressKey.match(/^[cg]([^0-9]+)/);
+      if (match) return match[1];
+    }
+  }
+  return typeof gameActiveDataVarName !== 'undefined' ? gameActiveDataVarName : '';
+}
+
+
 let currentGameAudioElements = [];
 let currentQuestionAudioPromise = Promise.resolve();
 
@@ -25,7 +39,7 @@ function getLastPlayedGameVarName() {
 
 // 遊戲實際開打時才記錄，藉此代表「上一次玩」而非「選過但沒玩」
 function saveLastPlayedGameVarName(dataVarName) {
-  if (!dataVarName) return;
+  if (!dataVarName || dataVarName === 'ALL_OVERDUE') return;
   try {
     if (localStorage.getItem(GAME_LAST_VAR_NAME_KEY) === dataVarName) return;
     localStorage.setItem(GAME_LAST_VAR_NAME_KEY, dataVarName);
@@ -221,6 +235,18 @@ function initGameUI() {
       document.getElementById('game-setup-select-block').style.display = 'none';
       document.getElementById('game-setup-ready-block').style.display = 'block';
       document.getElementById('gameStartSessionBtn').style.display = 'block';
+      // 跨腔級復習完回到 setup 時，不能讓 gameActiveDataVarName 停留在 ALL_OVERDUE，
+      // 否則按「開始挑戰」會帶入 ALL_OVERDUE 而非真正的腔級。
+      // 優先用頁面當前選定的腔級，其次用進度推斷的最近腔級。
+      if (gameActiveDataVarName === 'ALL_OVERDUE') {
+        if (currentDataVarName && window[currentDataVarName]) {
+          gameActiveDataVarName = currentDataVarName;
+          const 腔 = currentDataVarName.substring(0, 1);
+          const 級 = currentDataVarName.substring(1);
+          gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(腔, 級)) ? getDialectInfo(腔, 級).腔名 : '四縣';
+          document.getElementById('game-target-level').textContent = getFullLevelName(currentDataVarName);
+        }
+      }
       refreshUseLastPlayedBtn();
       showGameView('setup');
     });
@@ -376,7 +402,11 @@ async function startReviewDebtSession(dataVarName) {
   const dialect = dataVarName.substring(0, 1);
   try {
     gameActiveDataVarName = dataVarName;
-    gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(dialect, dataVarName.substring(1))) ? getDialectInfo(dialect, dataVarName.substring(1)).腔名 : '四縣';
+    if (dataVarName === 'ALL_OVERDUE') {
+      gameActiveDialect = '跨腔級';
+    } else {
+      gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(dialect, dataVarName.substring(1))) ? getDialectInfo(dialect, dataVarName.substring(1)).腔名 : '四縣';
+    }
 
     currentSession = await generateGameSession(dialect, dataVarName, {
       orderMode: 'random',
@@ -423,7 +453,13 @@ function renderDueByLevel() {
     .sort((a, b) => b[1].due - a[1].due);        // 欠最多的排最上
   if (entries.length === 0) { el.innerHTML = ''; return; }
 
-  let html = `<h6 style="margin:4px 0 8px; font-size:0.9rem; font-weight:bold;">📅 各腔級今日待複習</h6>
+  let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0 8px;">
+      <h6 style="margin:0; font-size:0.9rem; font-weight:bold;">📅 各腔級今日待複習</h6>
+      <button class="review-debt-btn" data-varname="ALL_OVERDUE"
+              style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer; background:#3b82f6; color:#fff; font-weight:bold; font-size:0.85rem;">
+        跨腔級全部做下復習
+      </button>
+    </div>
     <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">`;
   for (const [varName, v] of entries) {
     const label = (typeof getFullLevelName === 'function' ? getFullLevelName(varName) : varName);
@@ -456,13 +492,14 @@ function renderDueByLevel() {
   });
 }
 
-function formatGamePinyinWithSandhi(pinyinStr) {
+function formatGamePinyinWithSandhi(pinyinStr, targetVarName) {
   if (!pinyinStr) return '';
   let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
   
   if (typeof getSandhiHtml === 'function') {
     // 先試資料變數前綴（單一腔字），再退回完整腔名；共用 main.js 的 getDialectCode
-    const prefix = gameActiveDataVarName ? gameActiveDataVarName.charAt(0) : '';
+    const varName = targetVarName || gameActiveDataVarName;
+    const prefix = varName ? varName.charAt(0) : '';
     const dialectCode =
       (typeof getDialectCode === 'function' &&
         (getDialectCode(prefix) || getDialectCode(gameActiveDialect))) ||
@@ -497,7 +534,8 @@ function renderQuestion() {
   const question = currentSession[currentQuestionIndex];
   
   const orderMode = document.querySelector('input[name="gameOrderMode"]:checked')?.value || 'random';
-  const prefix = gameActiveDataVarName ? `${getFullLevelName(gameActiveDataVarName)} · ` : '';
+  const targetVarName = getQuestionDataVarName(question);
+  const prefix = targetVarName ? `${getFullLevelName(targetVarName)} · ` : '';
   if (orderMode === 'sequential') {
     document.getElementById('game-question-counter').textContent = `${prefix}題 ${currentQuestionIndex + 1} / ${currentSession.length} (編號：${question.targetWord.編號})`;
   } else {
@@ -551,7 +589,7 @@ function renderQuestion() {
   } else {
     targetWordElem.textContent = question.targetWord.客家語;
     pinyinElem.style.display = 'block';
-    pinyinElem.innerHTML = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
+    pinyinElem.innerHTML = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
   }
   
   // Audio button hidden until they answer correctly
@@ -575,7 +613,7 @@ function renderQuestion() {
       btn.style.fontFamily = 'var(--title-font)';
       btn.style.textAlign = 'left';
       btn.style.padding = '10px 15px'; // Adjust padding for taller button
-      const optPinyin = formatGamePinyinWithSandhi(opt.客語標音_顯示 || opt.標音);
+      const optPinyin = formatGamePinyinWithSandhi(opt.客語標音_顯示 || opt.標音, (opt.dataVarName || getQuestionDataVarName(question)));
       const optMandarin = opt.華語詞義;
       // 3行排列
       const contentHtml = `
@@ -588,7 +626,7 @@ function renderQuestion() {
       displayOpt = contentHtml;
     } else if (question.type === 'p') {
       btn.classList.add('game-pinyin-option');
-      displayOpt = `<span class="pinyin-text">${formatGamePinyinWithSandhi(opt)}</span>`;
+      displayOpt = `<span class="pinyin-text">${formatGamePinyinWithSandhi(opt, getQuestionDataVarName(question))}</span>`;
     } else if (question.type === 'd') {
       displayOpt = `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
     } else if (question.type === 'c') {
@@ -748,7 +786,7 @@ async function handleAnswer(selectedOption, btnElement) {
     trackEvent('answer', 'Game', isCorrect ? 'correct' : 'wrong');
   }
   
-  bumpDailyStat(isCorrect, question.isNew, question.type, gameActiveDataVarName);
+  bumpDailyStat(isCorrect, question.isNew, question.type, getQuestionDataVarName(question));
   
   const options = document.querySelectorAll('.game-option-btn');
   options.forEach(btn => btn.disabled = true); // Disable all options
@@ -761,7 +799,7 @@ async function handleAnswer(selectedOption, btnElement) {
     if (question.type === 'c' || question.type === 'p') {
       return playCurrentQuestionAudio();
     } else {
-      const fullSourceName = `cert${question.targetWord.dataVarName}`;
+      const fullSourceName = `cert${getQuestionDataVarName(question)}`;
       const sentenceAudioUrl = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(question.targetWord, fullSourceName) : null;
       if (sentenceAudioUrl) {
         return playCurrentSentenceAudio();
@@ -778,7 +816,7 @@ async function handleAnswer(selectedOption, btnElement) {
     
     const msg = document.createElement('div');
     if (question.type === 'd' || question.type === 'c') {
-      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
+      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
       msg.innerHTML = `著！（你覺著這題會難無：）<div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
     } else {
       msg.textContent = '著！（你覺著這題會難無：）';
@@ -829,7 +867,7 @@ async function handleAnswer(selectedOption, btnElement) {
     if (question.type === 'p') {
       msg.innerHTML = `毋著。正確答案係：${highlightDiff(selectedOption, correctText)}`;
     } else if (question.type === 'd' || question.type === 'c') {
-      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音);
+      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
       msg.innerHTML = `毋著。正確答案係：<span style="font-family: var(--title-font); font-size: 1.2em;">${correctText}</span><div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
     } else {
       msg.textContent = `毋著。正確答案係：${correctText}`;
@@ -867,13 +905,17 @@ async function saveProgressAndNext(lastResult) {
   }
   typeReps[question.type] = (typeReps[question.type] || 0) + 1;
 
+  // typeLastGrade：記錄各題型最後一次的評分，用於出題時打破 typeReps 同分平手
+  const typeLastGrade = { ...(existingProgress.typeLastGrade || {}) };
+  typeLastGrade[question.type] = lastResult;
+
   const todayEpochDay = Math.floor(Date.now() / 86400000);
   if (question.isPlanting && lastResult !== 'again') {
     // 種植連發題答對：只記 typeReps，不推進 SM-2（避免同日兩次曝光雙重加速排程）
-    await putProgress(wordKey, { ...existingProgress, typeReps });
+    await putProgress(wordKey, { ...existingProgress, typeReps, typeLastGrade });
   } else {
     const newState = computeSM2(existingProgress, lastResult, todayEpochDay);
-    await putProgress(wordKey, { ...newState, typeReps });
+    await putProgress(wordKey, { ...newState, typeReps, typeLastGrade });
   }
 
   currentQuestionIndex++;
@@ -932,7 +974,7 @@ function appendSentenceUI(feedback, question) {
     const formatText = (text) => text ? text.replace(/\n/g, '<br>') : '';
     const hakkaText = `<span class="sentence" style="font-size: 1.1em;">${formatText(question.targetWord.例句)}</span>`;
     
-    const fullSourceName = `cert${question.targetWord.dataVarName}`;
+    const fullSourceName = `cert${getQuestionDataVarName(question)}`;
     const audioUrl = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(question.targetWord, fullSourceName) : null;
     const hasAudio = !!audioUrl;
     
@@ -976,7 +1018,7 @@ function appendSentenceUI(feedback, question) {
       sentenceDisplay.style.display = 'block';
       sentenceBtn.style.display = 'none';
       if (typeof trackEvent === 'function') {
-        trackEvent('view_example', 'Game', gameActiveDataVarName);
+        trackEvent('view_example', 'Game', getQuestionDataVarName(question));
       }
       if (hasAudio) {
         playCurrentSentenceAudio(sentenceAudioBtn);
@@ -1026,7 +1068,7 @@ function playCurrentSentenceAudio(btnEl) {
     }
     
     if (typeof trackEvent === 'function') {
-      trackEvent('play_sentence_audio', 'Game', gameActiveDataVarName);
+      trackEvent('play_sentence_audio', 'Game', getQuestionDataVarName(question));
     }
     
     return new Promise(resolve => {

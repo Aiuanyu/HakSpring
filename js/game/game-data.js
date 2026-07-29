@@ -47,6 +47,33 @@ function normalizeGameData(item, dialect, level, source) {
  * @param {string} dataVarName - e.g., "四基"
  */
 function getWordsForDialectAndLevel(dialect, dataVarName) {
+  if (dataVarName === 'ALL_OVERDUE') {
+    const data = JSON.parse(localStorage.getItem('hakkaLearningProgress') || '{}');
+    const todayEpochDay = Math.floor(Date.now() / 86400000);
+    const varNames = new Set();
+    for (const key in data) {
+      if (!key.endsWith('|m')) continue;
+      const arr = data[key];
+      if (!Array.isArray(arr)) continue;
+      const due = arr[3];
+      if (due != null && due <= todayEpochDay) {
+        const match = key.match(/^[cg]([^0-9]+)/);
+        if (match) varNames.add(match[1]);
+      }
+    }
+    
+    let allWords = [];
+    for (const varName of varNames) {
+      const dCode = varName.substring(0, 1);
+      const dName = (typeof getDialectInfo === 'function' && getDialectInfo(dCode, varName.substring(1))) ? getDialectInfo(dCode, varName.substring(1)).腔名 : '四縣';
+      allWords = allWords.concat(getWordsForDialectAndLevel(dName, varName));
+    }
+    if (allWords.length === 0) {
+      throw new Error('這個腔級目前沒有到期要複習的詞，去學新詞或換一級吧！');
+    }
+    return allWords;
+  }
+
   const fullLevelName = getFullLevelName(dataVarName);
 
   // Use window[dataVarName] directly to avoid reading from g_currentLevelData,

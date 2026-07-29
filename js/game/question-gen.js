@@ -240,7 +240,7 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   const allWords = getWordsForDialectAndLevel(dialect, dataVarName);
 
   if (allWords.length === 0) {
-    throw new Error('無法取得詞彙資料，請確定資料庫已載入。');
+    throw new Error(`無法取得詞彙資料（${dataVarName}），請確定資料庫已載入。`);
   }
 
   const todayEpochDay = Math.floor(Date.now() / 86400000);
@@ -460,11 +460,27 @@ function isEligibleForType(targetWord, type) {
 function pickLeastPracticedType(candidateTypes, wordProgress) {
   if (candidateTypes.length === 1) return candidateTypes[0];
   const typeReps = (wordProgress && wordProgress.typeReps) || {};
+  const typeLastGrade = (wordProgress && wordProgress.typeLastGrade) || {};
+
   // 舊詞卡尚無 typeReps 時，|m 的歷史 reps 就是它的練習次數（遷移前的保險）
   const repsOf = t => typeReps[t] ?? (t === 'm' && wordProgress ? (wordProgress.reps ?? 0) : 0);
   const minReps = Math.min(...candidateTypes.map(repsOf));
-  const least = candidateTypes.filter(t => repsOf(t) === minReps);
-  return least[Math.floor(Math.random() * least.length)];
+  const leastPracticed = candidateTypes.filter(t => repsOf(t) === minReps);
+
+  if (leastPracticed.length === 1) return leastPracticed[0];
+
+  // 練習次數平手時，比較上次評分 (typeLastGrade)，優先挑表現最差的
+  // 分數越小代表表現越差，越需要優先出題。未曾有評分視為 0（等同 again，最需練習）。
+  const gradeScore = { 'again': 0, 'hard': 1, 'good': 2, 'easy': 3 };
+  const scoreOf = t => {
+    const grade = typeLastGrade[t];
+    return grade ? gradeScore[grade] : 0;
+  };
+
+  const minGradeScore = Math.min(...leastPracticed.map(scoreOf));
+  const worstGraded = leastPracticed.filter(t => scoreOf(t) === minGradeScore);
+
+  return worstGraded[Math.floor(Math.random() * worstGraded.length)];
 }
 
 /**

@@ -25,7 +25,8 @@ async function getProgress(progressKey) {
       reps: arr[2],
       due: arr[3],
       firstSeenDay: arr[4] ?? null,
-      typeReps: arr[5] ?? null
+      typeReps: arr[5] ?? null,
+      typeLastGrade: arr[6] ?? null
     };
   } catch (error) {
     console.error('Error getting progress from localStorage:', error);
@@ -55,14 +56,19 @@ async function putProgress(progressKey, progressObj) {
     const prevTypeReps = Array.isArray(existing) ? existing[5] : undefined;
     const typeReps = progressObj.typeReps ?? prevTypeReps ?? null;
 
-    // Store as fixed length array: [ef, interval, reps, due, firstSeenDay, typeReps]
+    // typeLastGrade：優先用傳入值，其次沿用既有紀錄
+    const prevTypeLastGrade = Array.isArray(existing) ? existing[6] : undefined;
+    const typeLastGrade = progressObj.typeLastGrade ?? prevTypeLastGrade ?? null;
+
+    // Store as fixed length array: [ef, interval, reps, due, firstSeenDay, typeReps, typeLastGrade]
     progressData[progressKey] = [
       progressObj.ef ?? 250,
       progressObj.interval ?? 0,
       progressObj.reps ?? 0,
       progressObj.due ?? today,
       firstSeenDay,
-      typeReps
+      typeReps,
+      typeLastGrade
     ];
 
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
