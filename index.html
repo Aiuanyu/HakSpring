@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.4.11" />
+  <link rel="stylesheet" href="style.css?v=4.4.16" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -33,7 +33,7 @@
   <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
   <script type="text/javascript" src="js/game/question-gen.js?v=4.8.5" defer></script>
   <script type="text/javascript" src="js/game/srs.js?v=4.8.1" defer></script>
-  <script type="text/javascript" src="js/game/game-ui.js?v=4.9.3" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.10.0" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js?v=4.3.4" defer></script>
   
   <!-- Driver.js for Onboarding -->
@@ -489,11 +489,20 @@
             </div>
           </div>
           <div id="game-result-view" style="display: none;">
-            <h3>回顧你的學習結果</h3>
-            <p>你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">-</span></p>
-            <div id="game-session-breakdown"></div>
-            <button id="gameRetryBtn" class="game-btn">再來一局</button>
-            <button id="gameSetupReturnBtn" class="game-btn game-secondary-btn" style="margin-top: 10px;">調整設定／換其他腔調／級別</button>
+            <div class="game-result-container">
+              <div class="game-result-left">
+                <img src="img/thumbup.png" alt="阿翠妹比讚" class="result-thumbup-full-img" />
+              </div>
+              <div class="game-result-right">
+                <h3 id="gameResultTitle" style="margin-top: 0; font-size: 1.6rem; font-weight: bold; color: var(--primary-color, #2563eb);">湛斗！</h3>
+                <p style="margin: 4px 0 10px;">你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">-</span></p>
+                <div id="game-session-breakdown"></div>
+              </div>
+            </div>
+            <div class="game-result-btn-group" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <button id="gameRetryBtn" class="game-btn">再來一局</button>
+              <button id="gameSetupReturnBtn" class="game-btn game-secondary-btn">調整設定／換其他腔調／級別</button>
+            </div>
           </div>
         </div>
       </div>

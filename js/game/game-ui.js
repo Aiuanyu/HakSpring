@@ -1110,6 +1110,43 @@ function playCurrentSentenceAudio(btnEl) {
   return Promise.resolve();
 }
 
+function playAwesomeAudio(targetVarName) {
+  if (typeof constructWordAudioUrl !== 'function') return;
+
+  const dialects = ['四', '海', '大', '平', '安'];
+  let code = '';
+
+  if (targetVarName && targetVarName !== 'ALL_OVERDUE') {
+    code = targetVarName.charAt(0);
+  } else if (typeof gameActiveDialect === 'string' && gameActiveDialect !== '跨腔級') {
+    if (typeof getDialectCode === 'function') {
+      code = getDialectCode(gameActiveDialect);
+    }
+  }
+
+  if (!dialects.includes(code)) {
+    code = dialects[Math.floor(Math.random() * dialects.length)];
+  }
+
+  // 動態切換結算標題：詔安腔為「仁仁！」，其他腔為「湛斗！」
+  const resultTitleElem = document.getElementById('gameResultTitle');
+  if (resultTitleElem) {
+    resultTitleElem.textContent = (code === '安') ? '仁仁！' : '湛斗！';
+  }
+
+  const fullSourceName = `cert${code}高`;
+  const lineData = { 編號: '8-509', 分類: '8抽象概念與形容' };
+  const rawUrl = constructWordAudioUrl(lineData, fullSourceName);
+
+  if (rawUrl) {
+    const audioUrl = typeof applyAudioProxy === 'function' ? applyAudioProxy(rawUrl) : rawUrl;
+    const audio = new Audio(audioUrl);
+    audio.play().catch(e => {
+      console.info('Auto-play awesome audio prevented by browser policy:', e);
+    });
+  }
+}
+
 function endSession() {
   showGameView('result');
   document.getElementById('game-final-score').textContent = score;
@@ -1123,15 +1160,68 @@ function endSession() {
   const acc = total > 0 ? Math.round((score / total) * 100) : 0;
   const breakdown = document.getElementById('game-session-breakdown');
   if (breakdown) breakdown.innerHTML = renderSessionBreakdown(reviewCount, newCount, acc);
-  
+
+  // 播放「湛斗/8-509」高級慶祝音檔
+  playAwesomeAudio(gameActiveDataVarName);
+
+  // 點擊阿翠妹可重播「湛斗」音檔
+  const thumbupImg = document.querySelector('.result-thumbup-full-img');
+  if (thumbupImg) {
+    thumbupImg.title = '點擊聽「湛斗」語音';
+    thumbupImg.onclick = () => playAwesomeAudio(gameActiveDataVarName);
+  }
+
   if (typeof trackEvent === 'function') {
     trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
   }
 }
 
+function renderDueSummaryCard() {
+  const today = Math.floor(Date.now() / 86400000);
+  let todayDue = 0;
+  let tomorrowDue = 0;
+
+  if (typeof computeSrsSnapshot === 'function') {
+    const { forecast } = computeSrsSnapshot(today);
+    todayDue = forecast[0] || 0;
+    tomorrowDue = forecast[1] || 0;
+  } else {
+    const dataStr = localStorage.getItem('hakkaLearningProgress');
+    if (dataStr) {
+      try {
+        const data = JSON.parse(dataStr);
+        for (const key in data) {
+          if (!key.endsWith('|m')) continue;
+          const arr = data[key];
+          if (!Array.isArray(arr)) continue;
+          const due = arr[3];
+          if (due == null) continue;
+          const delta = due - today;
+          if (delta <= 0) todayDue++;
+          else if (delta === 1) tomorrowDue++;
+        }
+      } catch (e) {}
+    }
+  }
+
+  const line1 = todayDue > 0
+    ? `今晡日還有 <b>${todayDue}</b> 題到期`
+    : `今晡日都復習忒吔！`;
+
+  const line2 = `天光日會有 <b>${tomorrowDue}</b> 題到期`;
+
+  return `
+    <div class="result-due-card">
+      <div class="due-text-main">${line1}</div>
+      <div class="due-text-sub">${line2}</div>
+    </div>
+  `;
+}
+
 function renderSessionBreakdown(reviewCount, newCount, acc) {
   const total = reviewCount + newCount || 1;
   const reviewPct = reviewCount / total * 100;
+  const dueCardHtml = renderDueSummaryCard();
   return `
     <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin:14px 0 4px;">
       <span style="color:#3b82f6;">🔁 複習 ${reviewCount}</span>
@@ -1144,7 +1234,8 @@ function renderSessionBreakdown(reviewCount, newCount, acc) {
     <div style="text-align:center; margin-top:10px; font-size:1rem;">
       本局答對率 <b style="font-size:1.3rem; color:${acc >= 80 ? '#22c55e' : acc >= 50 ? '#f59e0b' : '#dc3545'};">${acc}%</b>
       <span style="color:var(--text-muted,#666);">（${total} 題）</span>
-    </div>`;
+    </div>
+    ${dueCardHtml}`;
 }
 
 // Hook into existing initializeAppUI or run when DOM is loaded

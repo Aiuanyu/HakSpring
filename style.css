@@ -4666,3 +4666,100 @@ mark {
   color: #437d45 !important;
   font-weight: bold;
 }
+
+/* 遊戲結算 modal：上層 60%/40% 雙欄（左大圖阿翠妹，右成績與狀態），下層單欄按鈕區 */
+.game-result-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
+}
+
+.game-result-left {
+  flex: 0 0 60%;
+  max-width: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.result-thumbup-full-img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.22));
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.result-thumbup-full-img:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.28));
+}
+
+.result-thumbup-full-img:active {
+  transform: scale(0.97);
+}
+
+.game-result-right {
+  flex: 0 0 40%;
+  max-width: 40%;
+  min-width: 0;
+}
+
+/* 到期狀態卡片（於右欄內部） */
+.result-due-card {
+  margin: 12px 0 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  text-align: left;
+}
+
+.result-due-card .due-text-main {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 3px;
+  color: var(--text-color, #1e293b);
+}
+
+.result-due-card .due-text-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted, #64748b);
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-due-card {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+  .result-due-card .due-text-main {
+    color: #f1f5f9;
+  }
+  .result-due-card .due-text-sub {
+    color: #94a3b8;
+  }
+}
+
+/* 響應式：窄螢幕時 (<= 560px) 置中單欄直排 */
+@media (max-width: 560px) {
+  .game-result-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .game-result-left {
+    flex: 0 0 auto;
+    max-width: 100%;
+    margin-bottom: 0;
+  }
+  .result-thumbup-full-img {
+    max-width: 180px;
+  }
+  .game-result-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
