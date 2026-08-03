@@ -1149,13 +1149,6 @@ function playAwesomeAudio(targetVarName) {
 
 function endSession() {
   showGameView('result');
-
-  // 自動捲動到結果畫面最上方 (為了窄版螢幕體驗，讓阿翠妹的鼓勵能正常顯示)
-  const resultView = document.getElementById('game-result-view');
-  if (resultView) {
-    resultView.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   document.getElementById('game-final-score').textContent = score;
   const totalElem = document.getElementById('game-total-questions');
   if (totalElem) totalElem.textContent = currentSession.length;
@@ -1180,6 +1173,12 @@ function endSession() {
 
   if (typeof trackEvent === 'function') {
     trackEvent('complete_session', 'Game', `${gameActiveDataVarName}_${score}/${currentSession.length}`);
+  }
+
+  // 自動捲動到結果畫面最上方 (為了窄版螢幕體驗，讓阿翠妹的鼓勵能正常顯示)
+  const resultView = document.getElementById('game-result-view');
+  if (resultView) {
+    resultView.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
