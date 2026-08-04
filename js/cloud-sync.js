@@ -60,6 +60,11 @@ async function signInWithGoogle() {
   const client = getSupabaseClient();
   if (!client) return;
 
+  // 先在「使用者點擊」的同步脈絡下開一個空白分頁卡位。
+  // 這樣才不會被彈出視窗封鎖器擋掉——若等到 await 之後才 window.open，就脫離手勢脈絡、多半會被擋。
+  // 用新分頁登入是刻意的：避免主頁被 redirect 跳走，登入回來後 onboarding 才不會中斷。
+  const authWindow = window.open('', '_blank');
+
   try {
     // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
     const redirectUrl =
@@ -70,15 +75,33 @@ async function signInWithGoogle() {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
       },
     });
 
     if (error) {
       console.error('[CloudSync] 登入失敗:', error);
+      if (authWindow) authWindow.close();
       alert('登入失敗：' + error.message);
+      return;
+    }
+
+    if (data && data.url) {
+      if (authWindow) {
+        // 卡位分頁還在 → 把授權網址填進去（正常路徑，保住新分頁 + onboarding）
+        authWindow.location.href = data.url;
+      } else {
+        // 連空白分頁都被擋（極端封鎖）→ 退回同分頁導向，至少能完成登入
+        // （此情況該次 redirect 回來會跳過 onboarding，屬可接受的退路）
+        window.location.href = data.url;
+      }
+    } else if (authWindow) {
+      // 沒拿到 url 也別留空白分頁在那
+      authWindow.close();
     }
   } catch (err) {
     console.error('[CloudSync] 登入錯誤:', err);
+    if (authWindow) authWindow.close();
     alert('登入時發生錯誤');
   }
 }
@@ -137,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, updated_at')
+      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -172,41 +195,153 @@ async function syncFromCloud() {
       const localPrefs = {
         romanizerJoiningMode:
           localStorage.getItem('romanizerJoiningMode') || 'none',
+        gameLastDataVarName:
+          localStorage.getItem('hakkaGameLastDataVarName') || '',
+        userName: localStorage.getItem('hakkaUserName') || '',
+        userLocation: localStorage.getItem('hakkaUserLocation') || '',
       };
       const cloudPrefs = data.preferences || {};
 
+      const localProgress = JSON.parse(
+        localStorage.getItem('hakkaLearningProgress') || '{}'
+      );
+      const cloudProgress = data.learning_progress || {};
+
+      const localStats = JSON.parse(
+        localStorage.getItem('hakkaDailyStats') || '{}'
+      );
+      const cloudStats = data.daily_stats || {};
+      const localStatsByLevel = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+      );
+      const cloudStatsByLevel = data.daily_stats_by_level || {};
+      // 已同步基準快照：用來算「本地相對上次同步的新增量」，讓相加合併冪等
+      const syncedStats = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsSynced') || '{}'
+      );
+      const syncedStatsByLevel = JSON.parse(
+        localStorage.getItem('hakkaDailyStatsByLevelSynced') || '{}'
+      );
+      // 偏好設定的已同步快照：本地值 === 快照，才代表本地沒有「尚未推上雲端」的新變更，
+      // 此時才可以放心讓雲端值覆蓋本地；否則就是本地剛改過還沒同步，必須保留本地、留給下面 Smart Push 推上去。
+      // 沒有這層判斷的話，本地剛寫入的新值會被下面「雲端有值就覆寫本地」的邏輯讀成舊資料而遺失。
+      const syncedPrefs = JSON.parse(
+        localStorage.getItem('hakkaPrefsSynced') || '{}'
+      );
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
+      const mergedProgress = mergeProgress(localProgress, cloudProgress);
+      const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
+      const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, cloudStatsByLevel, syncedStatsByLevel);
+
+      // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
+      // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
+      if (typeof window.foldTypeKeysIntoWordCards === 'function') {
+        window.foldTypeKeysIntoWordCards(mergedProgress);
+      }
 
       // 3. 寫入本地 storage
       localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+      localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
+      localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
+      localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
+      // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
+      // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
-      // 合併偏好設定（雲端有值時優先使用，否則保留本地值供後續上傳）
+      // 合併偏好設定：本地相對快照沒變 → 套用雲端值；本地相對快照有變 → 保留本地、留給 Smart Push 推上去
       // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
-      if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
-        localStorage.setItem('romanizerJoiningMode', cloudPrefs.romanizerJoiningMode);
+      let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
+      if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
+        if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
+          finalRomanizerJoiningMode = cloudPrefs.romanizerJoiningMode;
+        }
       }
+      localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
+
+      // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
+      let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
+      if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
+        if (cloudPrefs.gameLastDataVarName) {
+          finalGameLastDataVarName = cloudPrefs.gameLastDataVarName;
+        }
+      }
+      localStorage.setItem('hakkaGameLastDataVarName', finalGameLastDataVarName);
+
+      let finalUserName = localPrefs.userName;
+      if (localPrefs.userName === (syncedPrefs.userName || '')) {
+        if (cloudPrefs.userName !== undefined && cloudPrefs.userName !== null) {
+          finalUserName = cloudPrefs.userName;
+        }
+      }
+      localStorage.setItem('hakkaUserName', finalUserName);
+
+      let finalUserLocation = localPrefs.userLocation;
+      if (localPrefs.userLocation === (syncedPrefs.userLocation || '')) {
+        if (cloudPrefs.userLocation !== undefined && cloudPrefs.userLocation !== null) {
+          finalUserLocation = cloudPrefs.userLocation;
+        }
+      }
+      localStorage.setItem('hakkaUserLocation', finalUserLocation);
 
       // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
       // 比對 merged vs cloud
       const bookmarksChanged =
         JSON.stringify(mergedBookmarks) !== JSON.stringify(cloudBookmarks);
-      // 簡單比對 preferences (目前只有一個欄位)
-      // [修正 Round 3] 移除 cloudPrefs.romanizerJoiningMode && 檢查，避免雲端為空時無法上傳本地變更
+      // 偏好設定比對用「合併後的最終值」而非同步前的 localPrefs，
+      // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
-        localPrefs.romanizerJoiningMode !==
-        (cloudPrefs.romanizerJoiningMode || 'none');
+        finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
+        finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
+        finalUserName !== (cloudPrefs.userName || '') ||
+        finalUserLocation !== (cloudPrefs.userLocation || '');
+      const progressChanged =
+        JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
+      const statsChanged =
+        JSON.stringify(mergedStats) !== JSON.stringify(cloudStats) ||
+        JSON.stringify(mergedStatsByLevel) !== JSON.stringify(cloudStatsByLevel);
 
-      if (bookmarksChanged || prefsChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
         console.log('[CloudSync] 資料一致，跳過上傳');
       }
+      // 走到這裡＝雲端已與 merged 結果對齊（有變上傳成功、無變本就一致；
+      // syncToCloud 失敗會 throw 到外層 catch、不會到這行）→ 安全推進基準快照。
+      localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
+      localStorage.setItem('hakkaDailyStatsByLevelSynced', JSON.stringify(mergedStatsByLevel));
+      localStorage.setItem(
+        'hakkaPrefsSynced',
+        JSON.stringify({
+          romanizerJoiningMode: finalRomanizerJoiningMode,
+          gameLastDataVarName: finalGameLastDataVarName,
+          userName: finalUserName,
+          userLocation: finalUserLocation,
+        })
+      );
     } else {
       // 雲端沒有資料，上傳本地資料
       console.log('[CloudSync] 雲端無資料，執行初始化上傳');
       await syncToCloud();
+      // 初始上傳成功後，基準＝目前本地統計／偏好設定
+      localStorage.setItem(
+        'hakkaDailyStatsSynced',
+        localStorage.getItem('hakkaDailyStats') || '{}'
+      );
+      localStorage.setItem(
+        'hakkaDailyStatsByLevelSynced',
+        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+      );
+      localStorage.setItem(
+        'hakkaPrefsSynced',
+        JSON.stringify({
+          romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
+          gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
+          userName: localStorage.getItem('hakkaUserName') || '',
+          userLocation: localStorage.getItem('hakkaUserLocation') || '',
+        })
+      );
     }
 
     // 同步完成後立即更新 UI
@@ -240,13 +375,29 @@ async function syncToCloud() {
     const preferences = {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
+      gameLastDataVarName:
+        localStorage.getItem('hakkaGameLastDataVarName') || '',
+      userName: localStorage.getItem('hakkaUserName') || '',
+      userLocation: localStorage.getItem('hakkaUserLocation') || '',
     };
+    const learningProgress = JSON.parse(
+      localStorage.getItem('hakkaLearningProgress') || '{}'
+    );
+    const dailyStats = JSON.parse(
+      localStorage.getItem('hakkaDailyStats') || '{}'
+    );
+    const dailyStatsByLevel = JSON.parse(
+      localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
         user_id: cloudSyncState.user.id,
         bookmarks: bookmarks,
         preferences: preferences,
+        learning_progress: learningProgress,
+        daily_stats: dailyStats,
+        daily_stats_by_level: dailyStatsByLevel,
         updated_at: new Date().toISOString(),
       },
       {
@@ -306,6 +457,167 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
   // 限制數量
   if (merged.length > BOOKMARK_LIMIT) {
     merged = merged.slice(0, BOOKMARK_LIMIT);
+  }
+
+  return merged;
+}
+
+/**
+ * 合併學習進度 (Phase 3: 逐詞單調合併)
+ * 留「學得更深」的那筆，確保任何一邊的進步都不回退
+ */
+function mergeProgress(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  
+  const merged = { ...local };
+  
+  for (const key in cloud) {
+    if (!cloud.hasOwnProperty(key)) continue;
+
+    const cloudItem = cloud[key];
+    const localItem = local[key];
+
+    // 防呆：只處理合法的陣列格式。雲端/本地可能殘留舊格式（物件）或空值，
+    // 直接展開會丟 "is not iterable"。非陣列時：本地非法就用雲端、雲端也非法就跳過。
+    const cloudOk = Array.isArray(cloudItem);
+    const localOk = Array.isArray(localItem);
+
+    if (!localOk) {
+      if (cloudOk) merged[key] = [...cloudItem];
+      // 兩邊都非陣列 → 無法合併，保持 merged 現況（可能是本地的非法值，交由後續清理）
+      continue;
+    }
+    if (!cloudOk) {
+      // 雲端非法、本地合法 → 保留本地
+      merged[key] = [...localItem];
+      continue;
+    }
+
+    // [ef, interval, reps, due, firstSeenDay]
+    const cReps = cloudItem[2] || 0;
+    const lReps = localItem[2] || 0;
+    const cDue = cloudItem[3] || 0;
+    const lDue = localItem[3] || 0;
+
+    let preferCloud = false;
+    if (cReps > lReps) {
+      preferCloud = true;
+    } else if (cReps === lReps && cDue > lDue) {
+      preferCloud = true;
+    }
+
+    // 一律複製勝出那筆，避免下面改 firstSeenDay 時就地 mutate 到 local/cloud 原陣列
+    merged[key] = preferCloud ? [...cloudItem] : [...localItem];
+
+    // firstSeenDay 取早 (小)
+    const cSeen = cloudItem[4];
+    const lSeen = localItem[4];
+    const mSeen = merged[key][4];
+
+    let earliestSeen = mSeen;
+    if (cSeen !== undefined && lSeen !== undefined) {
+      earliestSeen = Math.min(cSeen, lSeen);
+    } else if (cSeen !== undefined) {
+      earliestSeen = cSeen;
+    } else if (lSeen !== undefined) {
+      earliestSeen = lSeen;
+    }
+
+    if (earliestSeen !== undefined) {
+      merged[key][4] = earliestSeen;
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * 合併每日答題統計（逐項「相加」，累計量型）。
+ *
+ * ⚠️ 相加非冪等：直接 local+cloud，push 後 local=cloud=和，下次同步又相加 → 重複膨脹。
+ * 解法用「已同步基準快照」syncedSnapshot：只把「本地相對上次同步的新增量(delta)」加到雲端。
+ *   delta = local - synced（逐日逐格，僅取正值）
+ *   merged = cloud + delta
+ * 合併後呼叫端須把 syncedSnapshot 更新成 merged（代表這份已與雲端對齊）。
+ *
+ * @param {Object} localObj  本地 hakkaDailyStats  { 'YYYY-MM-DD': number[] }
+ * @param {Object} cloudObj  雲端 daily_stats
+ * @param {Object} syncedObj 上次同步後的基準快照 hakkaDailyStatsSynced
+ * @returns {Object} 合併後的統計
+ */
+function mergeDailyStats(localObj, cloudObj, syncedObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  const synced = (syncedObj && typeof syncedObj === 'object') ? syncedObj : {};
+
+  // 先以雲端為底複製（含只有雲端有的日期）
+  const merged = {};
+  for (const day in cloud) {
+    if (Array.isArray(cloud[day])) merged[day] = [...cloud[day]];
+  }
+
+  // 逐日把本地的「新增量」加上去
+  for (const day in local) {
+    const lArr = Array.isArray(local[day]) ? local[day] : [];
+    const sArr = Array.isArray(synced[day]) ? synced[day] : [];
+    const mArr = Array.isArray(merged[day]) ? merged[day] : [];
+    const len = Math.max(lArr.length, sArr.length, mArr.length);
+    const out = [];
+    for (let i = 0; i < len; i++) {
+      const delta = Math.max(0, (lArr[i] || 0) - (sArr[i] || 0)); // 只加正向新增，防基準比本地大時倒扣
+      out[i] = (mArr[i] || 0) + delta;
+    }
+    merged[day] = out;
+  }
+
+  return merged;
+}
+
+/**
+ * 合併每日各腔級統計（巢狀逐項「相加」，累計量型）。
+ *
+ * @param {Object} localObj  本地 hakkaDailyStatsByLevel
+ * @param {Object} cloudObj  雲端 daily_stats_by_level
+ * @param {Object} syncedObj 上次同步後的基準快照 hakkaDailyStatsByLevelSynced
+ * @returns {Object} 合併後的統計
+ */
+function mergeDailyStatsByLevel(localObj, cloudObj, syncedObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+  const synced = (syncedObj && typeof syncedObj === 'object') ? syncedObj : {};
+
+  const merged = {};
+  for (const day in cloud) {
+    if (cloud[day] && typeof cloud[day] === 'object') {
+      merged[day] = {};
+      for (const level in cloud[day]) {
+        if (Array.isArray(cloud[day][level])) {
+          merged[day][level] = [...cloud[day][level]];
+        }
+      }
+    }
+  }
+
+  for (const day in local) {
+    if (!local[day] || typeof local[day] !== 'object') continue;
+    
+    merged[day] = merged[day] || {};
+    const syncedDay = (synced[day] && typeof synced[day] === 'object') ? synced[day] : {};
+    
+    for (const level in local[day]) {
+      const lArr = Array.isArray(local[day][level]) ? local[day][level] : [];
+      const sArr = Array.isArray(syncedDay[level]) ? syncedDay[level] : [];
+      const mArr = Array.isArray(merged[day][level]) ? merged[day][level] : [];
+      
+      const len = Math.max(lArr.length, sArr.length, mArr.length);
+      const out = [];
+      for (let i = 0; i < len; i++) {
+        const delta = Math.max(0, (lArr[i] || 0) - (sArr[i] || 0));
+        out[i] = (mArr[i] || 0) + delta;
+      }
+      merged[day][level] = out;
+    }
   }
 
   return merged;
@@ -427,6 +739,10 @@ function triggerCloudSync() {
     hasPendingSync = false;
   }, SYNC_DEBOUNCE_MS); // 使用常數
 }
+
+// 明確掛上 window，供跨檔呼叫（game-progress.js 寫進度後會呼叫 window.triggerCloudSync）。
+// 不倚賴「頂層 function 宣告自動成為 window 屬性」的隱式行為，避免載入環境改變時靜默失效。
+window.triggerCloudSync = triggerCloudSync;
 
 /**
  * 週期性背景同步計時器

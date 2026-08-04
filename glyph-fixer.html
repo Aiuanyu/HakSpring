@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客源翠 - 缺字對應工具 (Glyph Fixer)</title>
+    <!-- 引入 HakSpring 共用樣式與字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
+        
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #ddd;
+            --header-bg: #4a90e2;
+            --header-text: white;
+            --row-alt-bg: #f1f3f5;
+            --row-hover: #e9ecef;
+            --success-bg: #d4edda;
+            --success-border: #c3e6cb;
+            --accent-color: #007bff;
+            --font-main: 'Noto Sans TC', sans-serif;
+            --font-hakka: Iansui, '霞鶩文楷 TC', 'LXGW WenKai', tauhu-oo, serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-color: #f0f0f0;
+                --border-color: #444;
+                --header-bg: #2a4b7c;
+                --header-text: #e0e0e0;
+                --row-alt-bg: #2a2a2a;
+                --row-hover: #333;
+                --success-bg: #1e4620;
+                --success-border: #285b2a;
+                --accent-color: #4da3ff;
+            }
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--header-bg);
+            margin-bottom: 5px;
+        }
+        
+        p.subtitle {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        @media (prefers-color-scheme: dark) { p.subtitle { color: #aaa; } }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 100px; /* 給 float panel 留空間 */
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed; /* 固定寬度，避免跑版 */
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* 欄位寬度設定 */
+        th:nth-child(1), td:nth-child(1) { width: 10%; } /* Code Point */
+        th:nth-child(2), td:nth-child(2) { width: 8%; font-family: var(--font-hakka); font-size: 1.2em; text-align: center;} /* 錯字 */
+        th:nth-child(3), td:nth-child(3) { width: 15%; } /* 檔案 */
+        th:nth-child(4), td:nth-child(4) { width: 10%; } /* 欄位 */
+        th:nth-child(5), td:nth-child(5) { width: 45%; font-family: var(--font-hakka); font-size: 1.1em;} /* 詞目/例句 */
+        th:nth-child(6), td:nth-child(6) { width: 12%; text-align: center;} /* 正確對應 */
+
+        th {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:nth-of-type(even) {
+            background-color: var(--row-alt-bg);
+        }
+
+        tr:hover {
+            background-color: var(--row-hover);
+        }
+
+        /* 已解決的列樣式 */
+        tr.resolved {
+            background-color: var(--success-bg) !important;
+        }
+
+        /* Input Field */
+        input.correction-input {
+            width: 80%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-hakka);
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        input.correction-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        /* Floating Panel */
+        .float-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            transition: opacity 0.3s;
+            opacity: 0.6;
+        }
+
+        .float-panel:hover {
+            opacity: 1;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .float-panel { box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        }
+
+        .stats {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .export-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .export-btn:hover {
+            background-color: #0056b3;
+        }
+        @media (prefers-color-scheme: dark) {
+            .export-btn:hover { background-color: #2b7bc4; }
+        }
+
+        /* Popup Button */
+        #popup-btn {
+            position: absolute;
+            display: none;
+            background-color: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* 預先填入已知對應 (U+E700, CJK 相容區等) */
+        .auto-filled {
+            border-color: var(--success-border) !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>缺字對應工具 (Glyph Fixer)</h1>
+        <p class="subtitle">選取表格中的正確客字，點擊「這隻正著」即可自動填入。</p>
+        
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Code Point</th>
+                    <th>錯字</th>
+                    <th>檔案</th>
+                    <th>欄位</th>
+                    <th>詞目/例句</th>
+                    <th>正確對應</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="6" style="text-align: center;">載入資料中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="float-panel">
+        <div class="stats" id="statsDisplay">總共 0 種字元，還伸 0 種愛尋字</div>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+        <button class="export-btn" id="importBtn" style="background-color: #28a745;">匯入進度</button>
+        <button class="export-btn" id="exportBtn">匯出字元對應表</button>
+    </div>
+
+    <button id="popup-btn">這隻正著</button>
+
+    <script>
+        // State management
+        const state = {
+            data: [],          // Parsed CSV rows
+            mappings: {},      // codepoint -> correct character mapping
+            totalTypes: 0,     // Total unique codepoints
+            resolvedTypes: 0,  // Number of codepoints with mappings
+            selectedText: '',
+            targetRowCodepoint: null
+        };
+
+        // 已知的對應表 (可以預先填入)
+        const PREFILLED_MAPPINGS = {
+            "U+E700": "𫣆",
+            "U+F93F": "錄",
+            "U+F9BE": "料",
+            "U+F9CA": "流"
+        };
+
+        // Parse CSV handling quotes correctly
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const rows = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                // Regex to split by comma but ignore commas inside quotes
+                const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (currentline.length === headers.length) {
+                    const obj = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        // Remove surrounding quotes and unescape double quotes
+                        let val = currentline[j].trim();
+                        if (val.startsWith('"') && val.endsWith('"')) {
+                            val = val.substring(1, val.length - 1).replace(/""/g, '"');
+                        }
+                        obj[headers[j]] = val;
+                    }
+                    rows.push(obj);
+                }
+            }
+            return rows;
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('unsupported_glyphs_report.csv');
+                if (!response.ok) throw new Error('無法讀取 CSV 檔案');
+                const csvText = await response.text();
+                state.data = parseCSV(csvText);
+                
+                // Initialize mappings with prefilled data
+                const uniqueCodepoints = new Set(state.data.map(row => row.codepoint));
+                state.totalTypes = uniqueCodepoints.size;
+                
+                uniqueCodepoints.forEach(cp => {
+                    if (PREFILLED_MAPPINGS[cp]) {
+                        state.mappings[cp] = PREFILLED_MAPPINGS[cp];
+                    }
+                });
+
+                renderTable();
+                updateStats();
+            } catch (error) {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">錯誤：${error.message}。<br>請確認這支 HTML 放在專案根目錄，且以伺服器環境開啟 (e.g. python -m http.server)</td></tr>`;
+                console.error(error);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            // Group by codepoint is implicit as long as we add a class
+            state.data.forEach((row, index) => {
+                const cp = row.codepoint;
+                const tr = document.createElement('tr');
+                tr.dataset.codepoint = cp;
+                
+                // If mapped, add resolved class
+                if (state.mappings[cp]) {
+                    tr.classList.add('resolved');
+                }
+
+                const currentMapping = state.mappings[cp] || '';
+                const displayChar = row.char.charCodeAt(0) >= 0xE000 && row.char.charCodeAt(0) <= 0xF8FF ? '(PUA)' : row.char;
+
+                const displayContext = row.context ? `<div style="font-size: 0.9em; opacity: 0.8; margin-top: 4px;">${row.context}</div>` : '';
+
+                tr.innerHTML = `
+                    <td>${cp}</td>
+                    <td>${displayChar}</td>
+                    <td>${row.file}</td>
+                    <td>${row.column}</td>
+                    <td>
+                        <div style="font-weight: bold;">${row.entry}</div>
+                        ${displayContext}
+                    </td>
+                    <td>
+                        <input type="text" class="correction-input ${PREFILLED_MAPPINGS[cp] ? 'auto-filled' : ''}" 
+                               data-cp="${cp}" 
+                               value="${currentMapping}">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Add event listeners to inputs
+            document.querySelectorAll('.correction-input').forEach(input => {
+                input.addEventListener('input', handleInputChange);
+            });
+        }
+
+        function handleInputChange(e) {
+            const cp = e.target.dataset.cp;
+            const val = e.target.value.trim();
+            
+            updateMapping(cp, val);
+        }
+
+        function updateMapping(cp, val) {
+            if (val) {
+                state.mappings[cp] = val;
+            } else {
+                delete state.mappings[cp];
+            }
+
+            // Sync all inputs with the same codepoint and update row colors
+            const rows = document.querySelectorAll(`tr[data-codepoint="${cp}"]`);
+            rows.forEach(row => {
+                const input = row.querySelector('.correction-input');
+                if (input.value !== val) {
+                    input.value = val;
+                }
+                
+                if (val) {
+                    row.classList.add('resolved');
+                } else {
+                    row.classList.remove('resolved');
+                }
+            });
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const resolvedCount = Object.keys(state.mappings).length;
+            const remaining = state.totalTypes - resolvedCount;
+            
+            document.getElementById('statsDisplay').textContent = 
+                `總共 ${state.totalTypes} 種字元，已完成 ${resolvedCount} 種，還伸 ${remaining} 種愛尋字`;
+        }
+
+        // Popup logic
+        const popupBtn = document.getElementById('popup-btn');
+
+        document.addEventListener('selectionchange', () => {
+            const selection = document.getSelection();
+            if (!selection.rangeCount || selection.isCollapsed) {
+                popupBtn.style.display = 'none';
+                return;
+            }
+
+            const text = selection.toString().trim();
+            // 只有選取單一個字元時才顯示按鈕
+            // 注意：使用 Array.from 來正確計算包含 surrogate pairs (如 Ext-B 擴展區字) 的字元長度
+            const charArray = Array.from(text);
+            
+            if (charArray.length === 1) {
+                // Find closest row
+                let node = selection.anchorNode;
+                while (node && node.nodeName !== 'TR' && node.nodeName !== 'BODY') {
+                    node = node.parentNode;
+                }
+                
+                if (node && node.dataset && node.dataset.codepoint) {
+                    state.selectedText = text;
+                    state.targetRowCodepoint = node.dataset.codepoint;
+                }
+            } else {
+                popupBtn.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            const selection = document.getSelection();
+            if (!selection.isCollapsed && Array.from(selection.toString().trim()).length === 1 && state.targetRowCodepoint) {
+                // Calculate position above selection
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                
+                popupBtn.style.display = 'block';
+                popupBtn.style.top = `${rect.top + window.scrollY - 35}px`;
+                popupBtn.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (popupBtn.offsetWidth / 2)}px`;
+            } else if (e.target !== popupBtn) {
+                popupBtn.style.display = 'none';
+                state.targetRowCodepoint = null;
+            }
+        });
+
+        popupBtn.addEventListener('click', () => {
+            if (state.targetRowCodepoint && state.selectedText) {
+                updateMapping(state.targetRowCodepoint, state.selectedText);
+                popupBtn.style.display = 'none';
+                document.getSelection().removeAllRanges();
+            }
+        });
+
+        // Export logic
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.mappings, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "glyph_mapping.json");
+            dlAnchorElem.click();
+        });
+
+        // Import logic
+        document.getElementById('importBtn').addEventListener('click', () => {
+            document.getElementById('importFile').click();
+        });
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedMappings = JSON.parse(event.target.result);
+                    // Merge with existing state.mappings
+                    state.mappings = { ...state.mappings, ...importedMappings };
+                    renderTable();
+                    updateStats();
+                    alert('匯入成功！');
+                } catch (error) {
+                    alert('匯入失敗：無效的 JSON 檔案');
+                    console.error(error);
+                }
+                // Reset file input so same file can be selected again
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=4.4.18" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -25,10 +25,22 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
-  <script type="text/javascript" src="main.js" defer></script>
+  <script type="text/javascript" src="main.js?v=4.4.12" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
-  <script type="text/javascript" src="js/cloud-sync.js" defer></script>
+  <script type="text/javascript" src="js/game/game-progress.js?v=4.9.1" defer></script>
+  <script type="text/javascript" src="js/game/game-data.js?v=4.3.3" defer></script>
+  <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js?v=4.8.5" defer></script>
+  <script type="text/javascript" src="js/game/srs.js?v=4.8.1" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.10.1" defer></script>
+  <script type="text/javascript" src="js/cloud-sync.js?v=4.3.4" defer></script>
+  
+  <!-- Driver.js for Onboarding -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+  <script type="text/javascript" src="js/onboarding.js" defer></script>
+
   <script src="https://kit.fontawesome.com/6741caa77f.js" crossorigin="anonymous"></script>
   <!--20250309 上去申請的 kit-->
 </head>
@@ -65,7 +77,7 @@
   <div id="main-content" style="display: none;">
     <div class="title-container">
       <h2><a href="/"><img src="img/avatar.png" alt="logo" />客源翠 HakSpring</a></h2>
-      <h4>你个客援隊／客研隊。詞典+分類學習</h4>
+      <h4 id="mainSubtitle">你个客援隊／客研隊。詞典+分類學習</h4>
     </div>
     <h3 id="header">
       <select id="progressDropdown">
@@ -93,14 +105,243 @@
             <label><input type="radio" name="search-mode" value="客話" checked /> 尋客詞（做得打漢字／拼音）</label>
             <label><input type="radio" name="search-mode" value="華語" /> 尋華語詞義還係例句翻譯</label>
           </div>
+          <button id="showcase-btn" class="popup-btn" style="width: 100%; margin-top: 15px; background: var(--primary-color); color: var(--button-text-color);">變調標示範例</button>
         </div>
       </div>
     </h3>
 
+    <!-- 五腔連讀變調靜態展示 (供截圖宣傳) -->
+    <!-- 可在 Console 輸入 document.getElementById('sandhi-showcase').style.display='block'; document.getElementById('search-container').style.display='none'; 來專注截圖 -->
+    <div id="sandhi-showcase" style="display: none; margin-bottom: 20px;">
+      <div class="search-results">
+        <table class="main-table">
+          <caption style="margin-bottom: 20px; caption-side: top;">
+            <h3 style="text-align: center; color: var(--primary-color); margin: 0;">客源翠・五腔連讀變調展示</h3>
+          </caption>
+          <thead>
+            <tr>
+              <th class="no">腔調</th>
+              <th class="no">編號</th>
+              <th>詞彙</th>
+              <th>例句</th>
+            </tr>
+          </thead>
+          
+          <tbody class="showcase-si">
+            <tr data-search-word="西醫" data-dialect-prefix="四">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">四縣</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>西醫<rt><ruby class="sandhi-t11">xí<rt>11</rt></ruby> í</rt></ruby><br>
+                <span class="mandarin-meaning">西醫</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">看西醫。</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-ha">
+            <tr data-search-word="發揮" data-dialect-prefix="海">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">海陸</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>發揮<rt><ruby class="sandhi-t2">fad<rt>2</rt></ruby> fùi</rt></ruby><br>
+                <span class="mandarin-meaning">發揮</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">自由發揮</span>
+              </td>
+            </tr>
+            <tr data-search-word="枕頭" data-dialect-prefix="海">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>枕頭<rt><ruby class="sandhi-t33">zhím<rt>33</rt></ruby> teu</rt></ruby><br>
+                <span class="mandarin-meaning">枕頭</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">兩隻枕頭</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-da">
+            <tr data-search-word="臺灣" data-dialect-prefix="大" data-search-sentence="臺灣人。">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">大埔</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>臺灣<rt><ruby class="sandhi-t33">tǒi<rt>33</rt></ruby> vǎn</rt></ruby><br>
+                <span class="mandarin-meaning">臺灣</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">臺灣人。</span>
+              </td>
+            </tr>
+            <tr data-search-word="番火" data-dialect-prefix="大">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>番火<rt><ruby class="sandhi-t35">fān<rt>35</rt></ruby> fô</rt></ruby><br>
+                <span class="mandarin-meaning">火柴</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">一盒番火</span>
+              </td>
+            </tr>
+            <tr data-search-word="中毒" data-dialect-prefix="大">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>中毒<rt><ruby class="sandhi-t55">zhùng<rt>55</rt></ruby> tùg</rt></ruby><br>
+                <span class="mandarin-meaning">中毒</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">食物中毒</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-ra">
+            <tr data-search-word="腳球（足球）" data-dialect-prefix="平">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">饒平</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>腳球（足球）<rt><ruby class="sandhi-t5">giòg<rt>5</rt></ruby> kiu(<ruby class="sandhi-t5">ziùg<rt>5</rt></ruby> kiu)【giòg kiù(ziùg kiù)】</rt></ruby><br>
+                <span class="mandarin-meaning">足球</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">踢腳球。</span>
+              </td>
+            </tr>
+            <tr data-search-word="租屋（稅屋）" data-dialect-prefix="平">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>租屋（稅屋）<rt>zǔ vùg(<ruby class="sandhi-t11">fè<rt>11</rt></ruby> vùg)【zǔ vùg(fê vùg)】</rt></ruby><br>
+                <span class="mandarin-meaning">租屋</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">租屋戴。</span>
+              </td>
+            </tr>
+            <tr data-search-word="喉嗹" data-dialect-prefix="平">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>喉嗹<rt><ruby class="sandhi-t33">heu<rt>33</rt></ruby> lien(len)【hèu lèn/hèu lièn】</rt></ruby><br>
+                <span class="mandarin-meaning">喉嚨</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">喉嗹疾。</span>
+              </td>
+            </tr>
+            <tr data-search-word="頭牲" data-dialect-prefix="平">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">4</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>頭牲<rt><ruby class="sandhi-t53">teu<rt>53</rt></ruby> sǎng【tèu sǎng】</rt></ruby><br>
+                <span class="mandarin-meaning">泛指家畜家禽</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">畜頭牲。</span>
+              </td>
+            </tr>
+          </tbody>
+          <tbody class="showcase-za">
+            <tr data-search-word="入境" data-dialect-prefix="安">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);">詔安</td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">1</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>入境<rt><ruby class="sandhi-t3">ngìb<rt>3</rt></ruby> gîn</rt></ruby><br>
+                <span class="mandarin-meaning">入境</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">入境手續</span>
+              </td>
+            </tr>
+            <tr data-search-word="發揮" data-dialect-prefix="安">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">2</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>發揮<rt><ruby class="sandhi-t5">fád<rt>5</rt></ruby> fǔi</rt></ruby><br>
+                <span class="mandarin-meaning">發揮</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">自由發揮</span>
+              </td>
+            </tr>
+            <tr data-search-word="掛心" data-dialect-prefix="安">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">3</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>掛心<rt><ruby class="sandhi-t11">guâ<rt>11</rt></ruby>/<ruby class="sandhi-t11">kuâ<rt>11</rt></ruby> sǐm</rt></ruby><br>
+                <span class="mandarin-meaning">掛心</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">毋使掛心</span>
+              </td>
+            </tr>
+            <tr data-search-word="恢復（回復）" data-dialect-prefix="安">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">4</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>恢復（回復）<rt>fǔi fu (<ruby class="sandhi-t33">fuè<rt>33</rt></ruby> fu)</rt></ruby><br>
+                <span class="mandarin-meaning">恢復</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">恢復健康</span>
+              </td>
+            </tr>
+            <tr data-search-word="目眉" data-dialect-prefix="安">
+              <td class="no" data-label="腔調" style="font-weight: bold; color: var(--main-text-color);"></td>
+              <td class="no" data-label="編號">
+                <span class="result-sequence-number">5</span>
+              </td>
+              <td data-label="詞彙" class="hakka-word" style="text-align: center;">
+                <ruby>目眉<rt><ruby class="sandhi-t55">hḿ<rt>55</rt></ruby> nì</rt></ruby><br>
+                <span class="mandarin-meaning">眉毛</span>
+              </td>
+              <td data-label="例句">
+                <span class="sentence">目眉彎彎</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div id="learning-mode-controls">
 
       <details id="learningSelectionPanel" open>
-        <summary>認證詞彙學習主控板</summary>
+        <summary>
+          <span>認證詞彙學習主控板</span>
+        </summary>
         <p>
           先擇腔調摎級別，
           <span class="dialect 四縣">
@@ -144,83 +385,127 @@
             <span data-varname="安高"><a href="#">高級</a></span>
           </span>
         </p>
-        <!-- 多謝 https://webspe.net/tools/en/radio-button/ -->
+        <!-- 類別面板由 main.js 的 renderCategoryPanel() 動態渲染 -->
         <div id="cat-panel">
           再擇類別：
-          <label class="radioItem">
-            <input type="radio" name="category" value="人體與醫療" class="radioButton" />
-            人體與醫療
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="心理活動與感覺" class="radioButton" />
-            心理活動與感覺
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="代詞" class="radioButton" />
-            代詞
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="外在活動與動作" class="radioButton" />
-            外在活動與動作
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="生物" class="radioButton" />
-            生物
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="自然與景觀" class="radioButton" />
-            自然與景觀
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="事物狀態與變化" class="radioButton" />
-            事物狀態與變化
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="居家生活" class="radioButton" />
-            居家生活
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="抽象概念與形容" class="radioButton" />
-            抽象概念與形容
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="法律、政治與軍事" class="radioButton" />
-            法律、政治與軍事
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="社會關係與行為" class="radioButton" />
-            社會關係與行為
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="時空與情狀副詞" class="radioButton" />
-            時空與情狀副詞
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="特殊詞類" class="radioButton" />
-            特殊詞類
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="通訊、建設與交通" class="radioButton" />
-            通訊、建設與交通
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="歲時祭儀、習俗與宗教" class="radioButton" />
-            歲時祭儀、習俗與宗教
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="數詞量詞" class="radioButton" />
-            數詞量詞
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="職業與經濟" class="radioButton" />
-            職業與經濟
-          </label>
-          <label class="radioItem">
-            <input type="radio" name="category" value="藝文與教育" class="radioButton" />
-            藝文與教育
-          </label>
         </div>
       </details>
+    </div>
+
+    <!-- Game PoC Modal -->
+    <div id="gameModal" class="modal-overlay" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div>
+            <h2 id="gameModalTitle" style="margin-bottom: 0;">客源翠學習遊戲</h2>
+            <div style="font-size: 0.85em; color: var(--text-muted, #666); margin-top: 4px;">做得放心隨時關忒無要緊，每一題都有單獨記憶</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="statsModalBtn" class="header-btn" title="開啟戰績面板" aria-label="戰績面板" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--main-text-color);">
+              <i class="fa-solid fa-chart-simple"></i>
+            </button>
+            <button id="gameCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body" id="game-modal-body">
+          <div id="game-setup-view">
+            <div id="game-options-area">
+              <div id="due-by-level-panel" style="margin-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 10px;"></div>
+              <div id="game-setup-ready-block">
+                <p>準備好開始學習 <span id="game-target-level" style="font-weight: bold; color: var(--primary-color);"></span> 了嗎？
+                  <button id="gameChangeLevelBtn" class="game-btn" style="margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;">換其他腔／其他級</button>
+                  <button id="gameUseLastPlayedBtn" class="game-btn game-btn-highlight" style="display: none; margin-left: 10px; font-size: 0.9em; padding: 4px 8px; width: auto;" title="代入上一次實際遊戲个腔調摎級別">搞上擺个腔級</button>
+                </p>
+                <p>每局約 10 題（新詞會多幾題加強）選擇題。</p>
+                <div style="margin-bottom: 15px; text-align: left; display: inline-block;">
+                  <div class="game-mode-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">出題順序：</span>
+                    <label style="margin-right: 10px;"><input type="radio" name="gameOrderMode" value="random" checked> 隨機</label>
+                    <label><input type="radio" name="gameOrderMode" value="sequential"> 循序（依編號）</label>
+                  </div>
+                  <div class="game-mode-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">新舊配比：</span>
+                    <label style="margin-right: 10px;"><input type="radio" name="gameMixMode" value="reviewFirst" checked> 複習優先</label>
+                    <label><input type="radio" name="gameMixMode" value="newFirst"> 衝新進度</label>
+                  </div>
+                  <div class="game-type-row" style="margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 80px;">考驗題型：</span>
+                    <label class="radioItem game-type-m" style="margin-right: 10px;"><input type="checkbox" name="gameType" value="m" checked> 選詞義</label>
+                    <label class="radioItem game-type-p"><input type="checkbox" name="gameType" value="p" checked> 練拼音</label>
+                    <label class="radioItem game-type-d"><input type="checkbox" name="gameType" value="d" checked> 看翻譯擇客詞</label>
+                    <label class="radioItem game-type-c"><input type="checkbox" name="gameType" value="c" checked> 克漏字</label>
+                    <label class="radioItem game-type-l"><input type="checkbox" name="gameType" value="l" checked> 練聽力</label>
+                  </div>
+                  <p class="game-type-hint" style="margin: 0 0 8px 88px; font-size: 0.8em; opacity: 0.7;">學新个詞定著會先考詞義。毋擇詞義淨會影響復習个題型哦～</p>
+                </div>
+                <div style="margin-bottom: 25px;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555;">
+                    <input type="checkbox" id="gameAutoOpenSentence" checked>
+                    答對後一律自動打開例句
+                  </label>
+                </div>
+              </div>
+            
+              <div id="game-setup-select-block" style="display: none; text-align: center;">
+                <p>擇愛學个腔頭／級別</p>
+                <div style="margin: 20px 0; display: flex; justify-content: center; gap: 10px;">
+                  <select id="gameSelectDialect" class="form-select">
+                    <option value="" selected disabled>擇腔調</option>
+                    <option value="四">四縣</option>
+                    <option value="海">海陸</option>
+                    <option value="大">大埔</option>
+                    <option value="平">饒平</option>
+                    <option value="安">詔安</option>
+                  </select>
+                  <select id="gameSelectLevel" class="form-select">
+                    <option value="" selected disabled>擇級別</option>
+                    <option value="基">基礎</option>
+                    <option value="初">初級</option>
+                    <option value="中">中級</option>
+                    <option value="中高">中高級</option>
+                    <option value="高">高級</option>
+                  </select>
+                </div>
+                <button id="gameConfirmLevelBtn" class="game-btn">確定</button>
+              </div>
+            </div>
+            <button id="gameStartSessionBtn" class="game-btn">開始挑戰！</button>
+          </div>
+          <div id="game-play-view" style="display: none;">
+            <div class="game-progress-bar">
+              <span id="game-question-counter">-</span>
+              <span id="game-new-badge" class="new-badge" style="display: none;">新進度！</span>
+            </div>
+            <div class="game-question-card">
+              <h1 id="game-target-word"></h1>
+              <p id="game-target-pinyin" class="pinyin-text"></p>
+              <button id="game-play-audio-btn" style="display: none;"><i class="fas fa-volume-up"></i></button>
+            </div>
+            <div id="game-options-container" class="game-options">
+              <!-- Options injected by JS -->
+            </div>
+            <div id="game-feedback" class="game-feedback" style="display: none;">
+              <!-- Feedback injected by JS -->
+            </div>
+          </div>
+          <div id="game-result-view" style="display: none;">
+            <div class="game-result-container">
+              <div class="game-result-left">
+                <img src="img/thumbup.png" alt="阿翠妹比讚" class="result-thumbup-full-img" />
+              </div>
+              <div class="game-result-right">
+                <h3 id="gameResultTitle" style="margin-top: 0; font-size: 1.6rem; font-weight: bold; color: var(--primary-color, #2563eb);">湛斗！</h3>
+                <p style="margin: 4px 0 10px;">你的成績：<span id="game-final-score"></span> / <span id="game-total-questions">-</span></p>
+                <div id="game-session-breakdown"></div>
+              </div>
+            </div>
+            <div class="game-result-btn-group" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <button id="gameRetryBtn" class="game-btn">再來一局</button>
+              <button id="gameSetupReturnBtn" class="game-btn game-secondary-btn">調整設定／換其他腔調／級別</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ↓↓↓ 將 Romanizer 容器貼到這裡 ↓↓↓ -->
@@ -268,6 +553,7 @@
     <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
 
     <div id="results-summary"><span id="summary-text-content"></span></div>
+    
     <div id="generated"></div>
 
     <button id="backToTopBtn" title="歸頂高">
@@ -310,11 +596,16 @@
     </div>
 
     <!-- Info Modal -->
+    <button id="floatingStartGameBtn" title="開始遊戲" class="floating-game-btn">
+      <i class="fas fa-gamepad"></i>
+    </button>
+
     <div id="infoModal" class="modal-overlay">
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 id="infoModalTitle" class="modal-title">網站說明</h4>
           <div class="modal-header-buttons">
+            <button id="settingsBtn" title="全域設定"><i class="fas fa-cog"></i></button>
             <button id="cloudSyncBtn" title="雲端同步（Google 登入）"><i class="fas fa-cloud"></i></button>
             <button id="cloudSyncUserBtn" style="display: none;" aria-label="使用者資訊"><i
                 class="fas fa-user-circle"></i></button>
@@ -325,22 +616,6 @@
           </div>
         </div>
         <div class="modal-body" id="info-content"></div>
-        <details id="infoSettingsPanel" class="info-settings-panel">
-          <summary>⚙️ 設定</summary>
-          <div class="settings-content">
-            <div class="setting-item">
-              <div class="setting-info">
-                <label for="autoBookmarkToggle">一律更新書籤模式</label>
-                <span
-                  class="setting-description">播放個別認證詞彙時，也自動記錄進度到書籤<br><small>（否則只有連續播放認證詞彙時，才會自動記錄進度到書籤）</small></span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoBookmarkToggle">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </details>
         <div class="modal-footer">
           <label for="dontShowInfoModalAgain">
             <input type="checkbox" id="dontShowInfoModalAgain">
@@ -389,6 +664,67 @@
           <textarea id="importDataTextArea" placeholder="將備份資料貼在這位..."></textarea>
           <button id="importDataBtn">還原資料</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h4 class="modal-title">全域設定</h4>
+        <button id="settingsCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item" style="margin-bottom: 20px;">
+          <label for="userNameInput" style="display: block; margin-bottom: 5px;">名（顯示於頁首及戰績）</label>
+          <input type="text" id="userNameInput" placeholder="例如：阿明" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" />
+        </div>
+        <div class="setting-item" style="margin-bottom: 20px;">
+          <label for="userLocationInput" style="display: block; margin-bottom: 5px;">家屋名（顯示於戰績）</label>
+          <input type="text" id="userLocationInput" placeholder="例如：新竹頭前溪" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" />
+        </div>
+        <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="autoBookmarkToggle">一律更新書籤模式</label>
+            <span
+              class="setting-description">播放個別認證詞彙時，也自動記錄進度到書籤<br><small>（否則只有連續播放認證詞彙時，才會自動記錄進度到書籤）</small></span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoBookmarkToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Modal -->
+  <div id="statsModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 600px;">
+      <div class="modal-header">
+        <h4 id="statsModalTitle" class="modal-title">學習戰績面板</h4>
+        <button id="statsCloseBtn" class="modal-close-btn" aria-label="關閉">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="stats-tabs">
+          <button class="stats-tab active" data-target="stats-tab-today">今晡日</button>
+          <button class="stats-tab" data-target="stats-tab-week">這禮拜</button>
+          <button class="stats-tab" data-target="stats-tab-month">這隻月</button>
+          <button class="stats-tab" data-target="stats-tab-year">今年</button>
+          <button class="stats-tab" data-target="stats-tab-overview">各腔總覽</button>
+        </div>
+        
+        <div id="stats-streak-container" style="text-align: center; font-size: 1.2rem; margin-top: 10px; color: #d97706; font-weight: bold; display: none;">
+          🔥 連續 <span id="stats-streak-days">0</span> 日
+        </div>
+
+        <div id="stats-tab-today" class="stats-tab-content active" style="margin-top: 15px;"></div>
+        <div id="stats-tab-week" class="stats-tab-content" style="margin-top: 15px;"></div>
+        <div id="stats-tab-month" class="stats-tab-content" style="margin-top: 15px;"></div>
+        <div id="stats-tab-year" class="stats-tab-content" style="margin-top: 15px;"></div>
+        <div id="stats-tab-overview" class="stats-tab-content" style="margin-top: 15px;"></div>
       </div>
     </div>
   </div>

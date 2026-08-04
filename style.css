@@ -108,7 +108,29 @@
   --popup-btn-border: #ced4da;
   --popup-btn-text: #495057;
   --popup-btn-bg-hover: #dee2e6;
+  
+  /* --- Pastel Colors for Game Types (Light Mode) ---
+     介於「原本太淺」與「一版太濃」之間：看得出顏色但仍柔和。 */
+  --game-type-m: #c4dbf7; /* 藍 */
+  --game-type-p: #c2ecd0; /* 綠 */
+  --game-type-d: #fbe888; /* 黃（貼近 R 認可的 #fef08a） */
+  --game-type-c: #e2d0f7; /* 紫 */
+  --game-type-l: #f9cbe0; /* 粉紅 */
 }
+
+/* --- Game Type Background Classes --- */
+/* 用 .radioItem 前綴提高 specificity（0,2,0），壓過暗色模式 `.radioItem { background: transparent }`
+   （style.css:1664）——否則題型色塊在暗色下會被 transparent 蓋掉、透出深色 modal 底＝看似全黑。 */
+.radioItem.game-type-m,
+.game-type-m { background-color: var(--game-type-m); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-p,
+.game-type-p { background-color: var(--game-type-p); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-d,
+.game-type-d { background-color: var(--game-type-d); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-c,
+.game-type-c { background-color: var(--game-type-c); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
+.radioItem.game-type-l,
+.game-type-l { background-color: var(--game-type-l); transition: background-color 0.3s; padding: 2px 8px; border-radius: 1em; }
 
 /* radio button style from <https: //webspe.net/tools/en/radio-button/> */
 .radioItem {
@@ -220,16 +242,36 @@ td[data-label="詞彙"],
   font-size: 70%;
 }
 
-ruby.sandhi-高降變 {
+ruby.sandhi-t55 {
   color: red;
 }
 
-ruby.sandhi-中平變 {
+ruby.sandhi-t35 {
   color: darkorchid;
 }
 
-ruby.sandhi-低升變 {
+ruby.sandhi-t33 {
   color: blue;
+}
+
+ruby.sandhi-t2 {
+  color: forestgreen;
+}
+
+ruby.sandhi-t11 {
+  color: #c84c09; /* 原為 darkorange，加深以適應淺綠底色 */
+}
+
+ruby.sandhi-t5 {
+  color: teal;
+}
+
+ruby.sandhi-t3 {
+  color: saddlebrown;
+}
+
+ruby.sandhi-t53 {
+  color: mediumvioletred;
 }
 
 body {
@@ -508,7 +550,9 @@ tr.accordion-row.詔安 {
 @media screen and (max-width: 768px) {
 
   #generated tr.accordion-parent,
-  #generated tr.accordion-row {
+  #sandhi-showcase tr.accordion-parent,
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     margin-bottom: 0;
     border-radius: 0;
     border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.3);
@@ -516,13 +560,15 @@ tr.accordion-row.詔安 {
     border-right: 5px solid orange;
   }
 
-  #generated tr.accordion-parent {
+  #generated tr.accordion-parent,
+  #sandhi-showcase tr.accordion-parent {
     border-top: 5px solid orange;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
   }
 
-  #generated tr.accordion-row-last {
+  #generated tr.accordion-row-last,
+  #sandhi-showcase tr.accordion-row-last {
     margin-bottom: 1.5em;
     border-bottom: 5px solid orange;
     border-bottom-left-radius: 8px;
@@ -530,34 +576,91 @@ tr.accordion-row.詔安 {
   }
 
   #generated tr.accordion-parent td,
-  #generated tr.accordion-row td {
+  #sandhi-showcase tr.accordion-parent td,
+  #generated tr.accordion-row td,
+  #sandhi-showcase tr.accordion-row td {
     border: none !important;
   }
 
-  #generated tr.accordion-row.四縣 {
+  #generated tr.accordion-row.四縣,
+  #sandhi-showcase tr.accordion-row.四縣 {
     background-color: #678d3f !important;
   }
 
-  #generated tr.accordion-row.海陸 {
+  #generated tr.accordion-row.海陸,
+  #sandhi-showcase tr.accordion-row.海陸 {
     background-color: #76ad67 !important;
   }
 
-  #generated tr.accordion-row.大埔 {
+  #generated tr.accordion-row.大埔,
+  #sandhi-showcase tr.accordion-row.大埔 {
     background-color: #5898a9 !important;
   }
 
-  #generated tr.accordion-row.饒平 {
+  #generated tr.accordion-row.饒平,
+  #sandhi-showcase tr.accordion-row.饒平 {
     background-color: #834fa1 !important;
   }
 
-  #generated tr.accordion-row.詔安 {
+  #generated tr.accordion-row.詔安,
+  #sandhi-showcase tr.accordion-row.詔安 {
     background-color: #974a47 !important;
   }
 }
 
-#generated td:nth-of-type(2) {
+#generated td[data-label="詞彙"],
+#sandhi-showcase td[data-label="詞彙"] {
   text-align: center;
+  padding-top: 1.5em; /* 確保 sandhi 標音有足夠高度，不與 top border 重疊 */
+  padding-bottom: 1.5em;
+  line-height: 2em; 
+}
+
+#generated td[data-label="詞彙"] {
   max-width: 40vw;
+}
+
+/* 解決部分瀏覽器（如 Firefox）無法正確渲染 tbody border 的問題 */
+#sandhi-showcase tbody.showcase-si { --dialect-border-color: #678d3f; }
+#sandhi-showcase tbody.showcase-ha { --dialect-border-color: #76ad67; }
+#sandhi-showcase tbody.showcase-da { --dialect-border-color: #5898a9; }
+#sandhi-showcase tbody.showcase-ra { --dialect-border-color: #834fa1; }
+#sandhi-showcase tbody.showcase-za { --dialect-border-color: #974a47; }
+
+/* 腔調欄底色（對齊 accordion 各腔底色） */
+#sandhi-showcase tbody td[data-label="腔調"] {
+  background-color: var(--dialect-border-color);
+  color: white !important;
+}
+
+/* 針對 Desktop 模式：利用 td 的邊框組合出 tbody 的外框 */
+@media (min-width: 801px) {
+  #sandhi-showcase tbody tr:first-child td { border-top: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody tr:last-child td { border-bottom: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody td:first-child { border-left: 5px solid var(--dialect-border-color) !important; }
+  #sandhi-showcase tbody td:last-child { border-right: 5px solid var(--dialect-border-color) !important; }
+}
+
+/* 針對 Mobile 模式：將 tbody 轉為 block 元素，使其支援直接上邊框與圓角 */
+@media (max-width: 800px) {
+  #sandhi-showcase tbody {
+    display: block;
+    border: 5px solid var(--dialect-border-color) !important;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 2em;
+  }
+  /* 內部 tr 卡片不再需要粗邊框，改用細分隔線 */
+  #sandhi-showcase tbody tr {
+    margin-bottom: 10px !important;
+    border: none !important;
+    border-bottom: 1px dotted rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.5) !important;
+    border-radius: 0 !important;
+  }
+  #sandhi-showcase tbody tr:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+  }
 }
 
 .progressLvl {
@@ -1379,18 +1482,21 @@ input:checked+.slider:before {
   /* 預設隱藏 */
   position: absolute;
   top: 100%;
-  /* 在輸入框下方 */
+  /* 在輸入框个正下方 */
   right: 0;
+  /* 對齊輸入框个右邊 */
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* 加一息仔陰影，看起來有浮起來个效果 */
   z-index: 20;
+  /* 確保在其他內容之上 */
   padding: 15px;
-  width: 300px;
-  /* 固定寬度 */
-  margin-top: 5px;
-  /* 和輸入框的間距 */
+  width: max-content;
+  min-width: 300px;
+  max-width: 95vw;
+  /* 動態寬度 */
 }
 
 #search-container.active #search-popup {
@@ -1457,6 +1563,43 @@ input:checked+.slider:before {
   /* Keep text centered */
 }
 
+/* --- 戰績面板 Tabs --- */
+.stats-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.stats-tab {
+  padding: 8px 12px;
+  background: #f1f1f1;
+  border: none;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.stats-tab:hover {
+  background: #e0e0e0;
+}
+
+.stats-tab.active {
+  background: #678d3f;
+  color: white;
+}
+
+.stats-tab-content {
+  display: none;
+}
+
+.stats-tab-content.active {
+  display: block;
+}
+
 /* --- 夜間模式 (Dark Mode) 顏色設定 --- */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1497,6 +1640,39 @@ input:checked+.slider:before {
     --popup-btn-border: #495057;
     --popup-btn-text: #e9ecef;
     --popup-btn-bg-hover: #495057;
+
+    /* --- Pastel Colors for Game Types (Dark Mode) ---
+       R 要求：暗色時色塊要「變深」，白/淺字才顯眼（不是只有深 border）。
+       故改成深飽和色，白字放上去對比夠。 */
+    --game-type-m: #27507e; /* 深藍 */
+    --game-type-p: #245c3b; /* 深綠 */
+    --game-type-d: #6e5c1c; /* 深金黃 */
+    --game-type-c: #402a68; /* 深紫 */
+    --game-type-l: #6e2c4c; /* 深洋紅 */
+  }
+
+  /* 暗色的題型色塊不要 border（R：夠深就不需要邊框；壓過 .radioItem 的暗色 border）。 */
+  .radioItem.game-type-m,
+  .radioItem.game-type-p,
+  .radioItem.game-type-d,
+  .radioItem.game-type-c,
+  .radioItem.game-type-l {
+    border-color: transparent;
+  }
+
+  .stats-tabs {
+    border-bottom-color: #444;
+  }
+  .stats-tab {
+    background: #333;
+    color: #ccc;
+  }
+  .stats-tab:hover {
+    background: #444;
+  }
+  .stats-tab.active {
+    background: var(--dark-primary-accent);
+    color: white;
   }
 
   body {
@@ -1732,24 +1908,45 @@ input:checked+.slider:before {
 
 
   /* 標音變調顏色調整 */
-  #generated td:nth-of-type(2),
+  #generated td[data-label="詞彙"],
+  #sandhi-showcase td[data-label="詞彙"],
   .pronunciation-text {
-    ruby.sandhi-高降變 {
+    ruby.sandhi-t55 {
       /* 修改 class 選擇器 */
       color: #FF8A80;
       /* 較亮个紅色 */
     }
 
-    ruby.sandhi-中平變 {
+    ruby.sandhi-t35 {
       /* 修改 class 選擇器 */
       color: lightgreen;
       /* 較亮个橘色 */
     }
 
-    ruby.sandhi-低升變 {
+    ruby.sandhi-t33 {
       /* 修改 class 選擇器 */
       color: #80CBC4;
       /* 較亮个藍綠色 */
+    }
+
+    ruby.sandhi-t2 {
+      color: #A5D6A7;
+    }
+
+    ruby.sandhi-t11 {
+      color: #FFB74D;
+    }
+
+    ruby.sandhi-t5 {
+      color: #4DB6AC;
+    }
+
+    ruby.sandhi-t3 {
+      color: #A1887F;
+    }
+
+    ruby.sandhi-t53 {
+      color: #F48FB1;
     }
   }
 
@@ -1898,16 +2095,20 @@ input:checked+.slider:before {
   }
 
   #generated tr.accordion-parent,
-  #generated tr.accordion-row {
+  #sandhi-showcase tr.accordion-parent,
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     border-left-color: #FFC107;
     border-right-color: #FFC107;
   }
 
-  #generated tr.accordion-parent {
+  #generated tr.accordion-parent,
+  #sandhi-showcase tr.accordion-parent {
     border-top-color: #FFC107;
   }
 
-  #generated tr.accordion-row-last {
+  #generated tr.accordion-row-last,
+  #sandhi-showcase tr.accordion-row-last {
     border-bottom-color: #FFC107;
   }
 }
@@ -1916,6 +2117,7 @@ input:checked+.slider:before {
 @media screen and (max-width: 768px) {
 
   #generated table,
+  #sandhi-showcase table,
   #comparison-table {
     border: none;
     /* 移除表格外框 */
@@ -1925,11 +2127,13 @@ input:checked+.slider:before {
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
   #generated thead,
+  #sandhi-showcase thead,
   #comparison-table thead {
     display: none;
   }
 
   #generated tr,
+  #sandhi-showcase tr,
   #comparison-table tr {
     display: block;
     /* 分歸列變做區塊元素 */
@@ -1947,11 +2151,13 @@ input:checked+.slider:before {
 
   /* 移除偶數行个特殊背景 */
   #generated tr:nth-child(even),
+  #sandhi-showcase tr:nth-child(even),
   #comparison-table tr:nth-child(even) {
     background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
   }
 
   #generated td,
+  #sandhi-showcase td,
   #comparison-table td {
     display: block;
     /* 分儲存格變做區塊元素 */
@@ -1972,6 +2178,7 @@ input:checked+.slider:before {
   }
 
   #generated td:last-child,
+  #sandhi-showcase td:last-child,
   #comparison-table td:last-child {
     border-bottom: none;
     /* 最尾一格毋使底線 */
@@ -1979,6 +2186,7 @@ input:checked+.slider:before {
 
   /* 用 ::before 顯示標籤 */
   #generated td::before,
+  #sandhi-showcase td::before,
   #comparison-table td::before {
     content: attr(data-label);
     /* 讀取 data-label 內容 */
@@ -2001,6 +2209,7 @@ input:checked+.slider:before {
 
   /* 調整特定欄位个樣式 */
   #generated td.no,
+  #sandhi-showcase td.no,
   #comparison-table td.no {
     font-size: 1.1em;
     /* 編號做得放大一息仔 */
@@ -2010,12 +2219,14 @@ input:checked+.slider:before {
   }
 
   #generated td.no::before,
+  #sandhi-showcase td.no::before,
   #comparison-table td.no::before {
     display: none;
     /* 編號欄位毋使顯示 "編號：" 標籤 */
   }
 
   #generated td.no br,
+  #sandhi-showcase td.no br,
   #comparison-table td.no br {
     display: none;
     /* 編號欄位毋使換行 */
@@ -2023,12 +2234,14 @@ input:checked+.slider:before {
 
   /* 調整詞彙欄位个標音 */
   #generated td[data-label="詞彙"] ruby,
+  #sandhi-showcase td[data-label="詞彙"] ruby,
   #comparison-table td[data-label="詞彙"] ruby {
     font-size: 1.3em;
     /* 調整字體大小 */
   }
 
   #generated td[data-label="詞彙"] rt,
+  #sandhi-showcase td[data-label="詞彙"] rt,
   #comparison-table td[data-label="詞彙"] rt {
     font-size: 0.8em;
     /* 標音相對縮小 */
@@ -2036,6 +2249,7 @@ input:checked+.slider:before {
 
   /* 調整音檔控制項 */
   #generated audio.media,
+  #sandhi-showcase audio.media,
   #comparison-table audio.media {
     max-width: 100%;
     /* 音檔控制項做得較闊 */
@@ -2048,6 +2262,7 @@ input:checked+.slider:before {
 
   /* 調整備註樣式 */
   #generated .notes,
+  #sandhi-showcase .notes,
   #comparison-table .notes {
     margin-top: 5px;
     margin-left: 5px;
@@ -2057,12 +2272,14 @@ input:checked+.slider:before {
 
   /* 調整播放按鈕 */
   #generated .playFromThisRow,
+  #sandhi-showcase .playFromThisRow,
   #comparison-table .playFromThisRow {
     margin-left: 5px;
   }
 
   /* 確保 nowPlaying 樣式在卡片模式下正確應用 */
   #generated tr#nowPlaying,
+  #sandhi-showcase tr#nowPlaying,
   #comparison-table tr#nowPlaying {
     /* <-- 目標 tr#nowPlaying */
     background-color: rgba(var(--iMazinGrace-1-rgb), 0.5);
@@ -2072,6 +2289,7 @@ input:checked+.slider:before {
   }
 
   #generated tr#nowPlaying.paused-playback,
+  #sandhi-showcase tr#nowPlaying.paused-playback,
   #comparison-table tr#nowPlaying.paused-playback {
     /* background-color: transparent !important; */
     /* 動畫會處理背景 */
@@ -2098,29 +2316,34 @@ input:checked+.slider:before {
   @media (prefers-color-scheme: dark) {
 
     #generated tr,
+    #sandhi-showcase tr,
     #comparison-table tr {
       border-color: rgba(255, 255, 255, 0.2);
       background-color: var(--dark-surface-color);
     }
 
     #generated tr:nth-child(even),
+    #sandhi-showcase tr:nth-child(even),
     #comparison-table tr:nth-child(even) {
       /* background-color: var(--dark-surface-color); */
       /* <-- 移除通用背景色 */
     }
 
     #generated td,
+    #sandhi-showcase td,
     #comparison-table td {
       border-bottom-color: rgba(255, 255, 255, 0.1);
     }
 
     #generated td::before,
+    #sandhi-showcase td::before,
     #comparison-table td::before {
       color: var(--main-text-color);
     }
 
     /* 確保 nowPlaying 樣式在暗夜卡片模式下正確應用 */
     #generated tr#nowPlaying,
+    #sandhi-showcase tr#nowPlaying,
     #comparison-table tr#nowPlaying {
       /* <-- 目標 tr#nowPlaying */
       background-color: var(--dark-now-playing-bg);
@@ -2130,6 +2353,7 @@ input:checked+.slider:before {
     }
 
     #generated tr#nowPlaying.paused-playback,
+    #sandhi-showcase tr#nowPlaying.paused-playback,
     #comparison-table tr#nowPlaying.paused-playback {
       /* background-color: transparent !important; */
       animation: pulse-dark-yellow-effect 3s infinite ease-in-out;
@@ -2140,11 +2364,13 @@ input:checked+.slider:before {
 
   /* --- 新增：在狹窄螢幕下，若例句欄位為空，則不顯示 --- */
   #generated td.empty-sentence-cell,
+  #sandhi-showcase td.empty-sentence-cell,
   #comparison-table td.empty-sentence-cell {
     display: none;
   }
 
-  #generated tr.accordion-row {
+  #generated tr.accordion-row,
+  #sandhi-showcase tr.accordion-row {
     display: block;
   }
 
@@ -2216,8 +2442,10 @@ input:checked+.slider:before {
 
 /* Info Button in Header */
 #infoButton,
+#settingsBtn,
 #showRomanizerBtn,
-#dataManagementBtn {
+#dataManagementBtn,
+#headerStartGameBtn {
   background: none;
   border: none;
   color: var(--main-text-color);
@@ -2233,18 +2461,50 @@ input:checked+.slider:before {
 }
 
 #infoButton i,
+#settingsBtn i,
 #showRomanizerBtn i,
-#dataManagementBtn i {
+#dataManagementBtn i,
+#headerStartGameBtn i {
   color: inherit;
 }
 
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
+#settingsBtn:hover i,
 #showRomanizerBtn:hover i,
-#dataManagementBtn:hover i {
+#dataManagementBtn:hover i,
+#headerStartGameBtn:hover i {
   /* 單獨處理 hover 效果 */
   color: var(--focus-glow-color);
   /* 用 focus 光暈色做 hover 效果 */
+}
+
+/* --- 浮動開始遊戲按鈕 (寬版專用) --- */
+.floating-game-btn {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.floating-game-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  background-color: var(--primary-btn-hover);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 /* --- 【新增】雲端同步按鈕樣式 --- */
@@ -2389,7 +2649,9 @@ input:checked+.slider:before {
 
 /* Modal Dialog Specific Styles */
 #infoModal .modal-dialog,
-#whatsNewModal .modal-dialog {
+#whatsNewModal .modal-dialog,
+#settingsModal .modal-dialog,
+#statsModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
@@ -2405,7 +2667,9 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-header,
-#whatsNewModal .modal-header {
+#whatsNewModal .modal-header,
+#settingsModal .modal-header,
+#statsModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2421,7 +2685,9 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-title,
-#whatsNewModal .modal-title {
+#whatsNewModal .modal-title,
+#settingsModal .modal-title,
+#statsModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -2431,7 +2697,9 @@ input:checked+.slider:before {
 
 #infoModal .modal-close-btn,
 #whatsNewModal .modal-close-btn,
-#romanizerContainer .modal-close-btn {
+#romanizerContainer .modal-close-btn,
+#settingsModal .modal-close-btn,
+#statsModal .modal-close-btn {
   background: none;
   border: none;
   font-size: 1.8rem;
@@ -2447,12 +2715,18 @@ input:checked+.slider:before {
 #whatsNewModal .modal-close-btn:hover,
 #whatsNewModal .modal-close-btn:focus-visible,
 #romanizerContainer .modal-close-btn:hover,
-#romanizerContainer .modal-close-btn:focus-visible {
+#romanizerContainer .modal-close-btn:focus-visible,
+#settingsModal .modal-close-btn:hover,
+#settingsModal .modal-close-btn:focus-visible,
+#statsModal .modal-close-btn:hover,
+#statsModal .modal-close-btn:focus-visible {
   color: #333;
 }
 
 #infoModal .modal-body,
-#whatsNewModal .modal-body {
+#whatsNewModal .modal-body,
+#settingsModal .modal-body,
+#statsModal .modal-body {
   padding: 20px 30px;
   flex-grow: 1;
   overflow-y: auto;
@@ -2461,18 +2735,44 @@ input:checked+.slider:before {
   line-height: 1.7;
 }
 
+.settings-input {
+  width: 100px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: #fff;
+  color: #333;
+}
+
+.settings-hint {
+  color: gray;
+  font-size: 0.85em;
+}
+
+.settings-divider {
+  margin: 15px 0;
+  border: 0;
+  border-top: 1px solid #eee;
+}
+
 /* Dark Mode for Modals */
 @media (prefers-color-scheme: dark) {
 
   #infoButton,
+  #settingsBtn,
   #showRomanizerBtn,
-  #dataManagementBtn {
+  #dataManagementBtn,
+  #headerStartGameBtn {
     color: var(--main-text-color);
   }
 
   #infoButton:hover i,
+  #settingsBtn:hover i,
   #showRomanizerBtn:hover i,
-  #dataManagementBtn:hover i {
+  #dataManagementBtn:hover i,
+  #headerStartGameBtn:hover i {
     color: var(--focus-glow-color);
   }
 
@@ -2482,21 +2782,41 @@ input:checked+.slider:before {
 
   #infoModal .modal-dialog,
   #whatsNewModal .modal-dialog,
-  #romanizerContainer .modal-dialog {
+  #romanizerContainer .modal-dialog,
+  #settingsModal .modal-dialog,
+  #statsModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
 
   #infoModal .modal-header,
   #whatsNewModal .modal-header,
-  #dataManagementModal .modal-header {
+  #dataManagementModal .modal-header,
+  #settingsModal .modal-header,
+  #statsModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
   #infoModal .modal-close-btn,
   #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
-  #dataManagementModal .modal-close-btn {
+  #dataManagementModal .modal-close-btn,
+  #settingsModal .modal-close-btn,
+  #statsModal .modal-close-btn {
     color: #aaa;
+  }
+
+  .settings-input {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: var(--main-text-color);
+  }
+
+  .settings-hint {
+    color: #999;
+  }
+
+  .settings-divider {
+    border-top-color: #444;
   }
 
   #infoModal .modal-close-btn:hover,
@@ -2877,8 +3197,9 @@ tr.ios-autoplay-instruction td::before {
   cursor: pointer;
   font-weight: bold;
   padding: 0.2em 0.5em;
-  display: inline-block;
-  /* 讓 padding 生效 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #learningSelectionPanel summary:hover {
@@ -3055,7 +3376,62 @@ mark {
 /* --- Pagination Container --- */
 .pagination-container {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 10px;
+}
+
+/* Explicit CSS for Sandhi in Game UI to prevent body/button overrides */
+.game-option-btn ruby[class^="sandhi-"],
+.game-feedback ruby[class^="sandhi-"],
+.pinyin-text ruby[class^="sandhi-"] {
+  font-family: var(--roman-font) !important;
+  font-size: 1em !important;
+}
+.game-option-btn ruby[class^="sandhi-"] rt,
+.game-feedback ruby[class^="sandhi-"] rt,
+.pinyin-text ruby[class^="sandhi-"] rt {
+  font-family: var(--roman-font) !important;
+  font-size: 50% !important;
+}
+
+.game-option-btn ruby.sandhi-t55,
+.game-feedback ruby.sandhi-t55,
+.pinyin-text ruby.sandhi-t55 {
+  color: red !important;
+}
+.game-option-btn ruby.sandhi-t35,
+.game-feedback ruby.sandhi-t35,
+.pinyin-text ruby.sandhi-t35 {
+  color: darkorchid !important;
+}
+.game-option-btn ruby.sandhi-t33,
+.game-feedback ruby.sandhi-t33,
+.pinyin-text ruby.sandhi-t33 {
+  color: blue !important;
+}
+.game-option-btn ruby.sandhi-t2,
+.game-feedback ruby.sandhi-t2,
+.pinyin-text ruby.sandhi-t2 {
+  color: forestgreen !important;
+}
+.game-option-btn ruby.sandhi-t11,
+.game-feedback ruby.sandhi-t11,
+.pinyin-text ruby.sandhi-t11 {
+  color: darkorange !important;
+}
+.game-option-btn ruby.sandhi-t5,
+.game-feedback ruby.sandhi-t5,
+.pinyin-text ruby.sandhi-t5 {
+  color: teal !important;
+}
+.game-option-btn ruby.sandhi-t3,
+.game-feedback ruby.sandhi-t3,
+.pinyin-text ruby.sandhi-t3 {
+  color: saddlebrown !important;
+}
+.game-option-btn ruby.sandhi-t53,
+.game-feedback ruby.sandhi-t53,
+.pinyin-text ruby.sandhi-t53 {
+  color: mediumvioletred !important;
 }
 
 .page-button {
@@ -3082,7 +3458,6 @@ mark {
 
 /* --- Result Sequence Number --- */
 .result-sequence-number {
-  background-color: #f0f0f0;
   color: #333;
   text-align: center;
   font-weight: bold;
@@ -3845,6 +4220,542 @@ mark {
     border: 2px solid var(--dark-surface-color);
   }
 }
+
+/* Game PoC Styles */
+#gameModal .modal-dialog {
+  background-color: #fff;
+  color: var(--main-text-color);
+  border-radius: 10px;
+  /* ⚠️ 這幾條版面屬性（尤其 max-height + display:flex + overflow）必須留在「基礎規則」，
+     才能讓 .modal-body 的 flex-grow + overflow-y:auto 生效、答題畫面可捲動。
+     先前被誤併進 .game-type-l 選擇器 → 只有聽力題才有版面、其他題型不能捲動。 */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  width: 90vw;
+  max-width: 600px;
+  height: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* modal 淡底色用 50%（而非 30%）：因為勾選色塊已刻意調柔和，30% 會混到近乎全白、克漏字粉底隱形。
+   拉到 50% 讓「柔和變數」在 modal 底仍看得出顏色，同時保持不干擾讀題。 */
+#gameModal .modal-dialog.game-type-m { background-color: color-mix(in srgb, var(--game-type-m) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-p { background-color: color-mix(in srgb, var(--game-type-p) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-d { background-color: color-mix(in srgb, var(--game-type-d) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-c { background-color: color-mix(in srgb, var(--game-type-c) 50%, #fff) !important; }
+#gameModal .modal-dialog.game-type-l { background-color: color-mix(in srgb, var(--game-type-l) 50%, #fff) !important; }
+#gameModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+#gameModal .modal-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  font-family: var(--title-font);
+  color: inherit;
+}
+#gameModal .modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+#gameModal .modal-close-btn:hover,
+#gameModal .modal-close-btn:focus-visible {
+  color: #333;
+}
+#gameModal .modal-body {
+  padding: 20px 30px;
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  -webkit-overflow-scrolling: touch;
+  line-height: 1.7;
+}
+
+@media (prefers-color-scheme: dark) {
+  #gameModal .modal-dialog {
+    background-color: var(--dark-surface-color, #2c2c2c);
+  }
+  #gameModal .modal-dialog.game-type-m { background-color: color-mix(in srgb, var(--game-type-m) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-p { background-color: color-mix(in srgb, var(--game-type-p) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-d { background-color: color-mix(in srgb, var(--game-type-d) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-c { background-color: color-mix(in srgb, var(--game-type-c) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-dialog.game-type-l { background-color: color-mix(in srgb, var(--game-type-l) 20%, var(--dark-surface-color, #2c2c2c)) !important; }
+  #gameModal .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+  #gameModal .modal-close-btn {
+    color: #aaa;
+  }
+  #gameModal .modal-close-btn:hover,
+  #gameModal .modal-close-btn:focus-visible {
+    color: #fff;
+  }
+  
+  #gameModal .form-select {
+    background-color: #3a3a3c;
+    color: #e0e0e0;
+    border-color: #555;
+  }
+}
+
+.game-btn {
+  background-color: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+.game-btn:hover {
+  background-color: #357ABD;
+}
+.game-btn-highlight {
+  background-color: #ff9800;
+  color: #1a1a1a;
+}
+.game-btn-highlight:hover {
+  background-color: #e68900;
+}
+.game-progress-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+}
+.new-badge {
+  background-color: #ff9800;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+.form-select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #333;
+}
+.game-sentence-display {
+  font-family: var(--title-font);
+  display: none;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  color: #333;
+  text-align: left;
+}
+.game-question-card {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.game-question-card h1 {
+  /* 題幹漢字：對齊主詞彙表詞目字型（--title-font），!important 壓過 modal/reset */
+  font-family: var(--title-font) !important;
+  font-size: 3em;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+.game-question-card .pinyin-text {
+  /* 拼音：對齊主詞彙表羅馬字字型（--roman-font） */
+  font-family: var(--roman-font) !important;
+  font-size: 1.5em;
+  color: #666;
+  margin-bottom: 10px;
+}
+.pinyin-text {
+  font-family: var(--roman-font);
+}
+#game-play-audio-btn {
+  background: none;
+  border: none;
+  color: #4A90E2;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+#game-play-audio-btn:hover {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+@keyframes pulse-playing {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; color: var(--primary-color); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#game-play-audio-btn.playing {
+  color: #2ecc71;
+  animation: pulse-playing 1s infinite;
+}
+
+.game-sentence-display button.playing i {
+  animation: pulse-playing 1s infinite;
+  color: #f1c40f;
+}
+.game-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.game-option-btn {
+  background-color: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.game-option-btn:hover:not(:disabled) {
+  background-color: #e9e9e9;
+  border-color: #ccc;
+}
+.game-option-btn:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.game-option-btn.correct {
+  background-color: #d4edda !important;
+  border-color: #c3e6cb !important;
+  color: #155724;
+}
+.game-option-btn.wrong {
+  background-color: #f8d7da !important;
+  border-color: #f5c6cb !important;
+  color: #721c24;
+}
+.game-feedback {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.game-feedback.correct {
+  background-color: #d4edda;
+  color: #155724;
+}
+.game-feedback.wrong {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+.diff-highlight {
+  font-family: 'Lesson One', monospace;
+  font-size: larger;
+  padding: 0.1em 0.2em;
+  background-color: #ffeb3b;
+  color: #000 !important;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+@media (prefers-color-scheme: dark) {
+  #gameLearningMode {
+    background-color: #2d2d2d;
+    color: #eee;
+    border-color: #444;
+  }
+  .game-sentence-display {
+    font-family: var(--title-font);
+    background-color: #1a1a1a !important;
+    color: #eee !important;
+  }
+  .game-btn {
+    background-color: #357ABD;
+    color: #eee;
+  }
+  .game-btn:hover {
+    background-color: #285e92;
+  }
+  .game-btn-highlight {
+    background-color: #ffb84d;
+    color: #1a1a1a;
+  }
+  .game-btn-highlight:hover {
+    background-color: #ffa726;
+  }
+  .game-question-card h1 {
+    color: #eee;
+  }
+  .game-question-card .pinyin-text, .game-progress-bar {
+    color: #aaa;
+  }
+  .game-option-btn {
+    background-color: #2d2d2d;
+    border-color: #444;
+    color: #eee;
+  }
+  .game-option-btn:hover:not(:disabled) {
+    background-color: #3d3d3d;
+    border-color: #555;
+  }
+  .game-option-btn.correct {
+    background-color: #1e4620 !important;
+    border-color: #2d6a2f !important;
+    color: #c3e6cb;
+  }
+  .game-option-btn.wrong {
+    background-color: #5a1920 !important;
+    border-color: #842029 !important;
+    color: #ea868f;
+  }
+  
+  .game-option-btn ruby.sandhi-t55,
+  .game-feedback ruby.sandhi-t55,
+  .pinyin-text ruby.sandhi-t55 {
+    color: #ff6b6b !important;
+  }
+  .game-option-btn ruby.sandhi-t35,
+  .game-feedback ruby.sandhi-t35,
+  .pinyin-text ruby.sandhi-t35 {
+    color: #e066ff !important;
+  }
+  .game-option-btn ruby.sandhi-t33,
+  .game-feedback ruby.sandhi-t33,
+  .pinyin-text ruby.sandhi-t33 {
+    color: #80CBC4 !important;
+  }
+  .game-option-btn ruby.sandhi-t2,
+  .game-feedback ruby.sandhi-t2,
+  .pinyin-text ruby.sandhi-t2 {
+    color: #A5D6A7 !important;
+  }
+  .game-option-btn ruby.sandhi-t11,
+  .game-feedback ruby.sandhi-t11,
+  .pinyin-text ruby.sandhi-t11 {
+    color: #FFB74D !important;
+  }
+  .game-option-btn ruby.sandhi-t5,
+  .game-feedback ruby.sandhi-t5,
+  .pinyin-text ruby.sandhi-t5 {
+    color: #4DB6AC !important;
+  }
+  .game-option-btn ruby.sandhi-t3,
+  .game-feedback ruby.sandhi-t3,
+  .pinyin-text ruby.sandhi-t3 {
+    color: #D7CCC8 !important;
+  }
+  .game-option-btn ruby.sandhi-t53,
+  .game-feedback ruby.sandhi-t53,
+  .pinyin-text ruby.sandhi-t53 {
+    color: #F48FB1 !important;
+  }
+
+  .game-feedback.correct {
+    background-color: #1e4620;
+    color: #c3e6cb;
+  }
+  .game-feedback.wrong {
+    background-color: #5c1e22;
+    color: #f5c6cb;
+  }
+  .diff-highlight {
+    background-color: #fbc02d; /* Slightly deeper yellow for dark mode */
+    color: #000 !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .game-options {
+    grid-template-columns: 1fr;
+  }
+  .game-question-card h1 {
+    font-size: 2em;
+  }
+}
+
+/* Pinyin Practice Mode Specifics */
+.game-mandarin-translation {
+  /* 華語(Chinese)不特設字型，沿用網頁 body 預設（Iansui）即可 */
+  font-size: 0.45em;
+  color: var(--text-color);
+  opacity: 0.8;
+  margin-top: 5px;
+  font-weight: normal;
+}
+
+.game-pinyin-option {
+  font-family: var(--roman-font) !important;
+  letter-spacing: 0.02em;
+}
+
+.kbd-shortcut {
+  font-family: inherit;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-right: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 0.9em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kbd-shortcut {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.3);
+  }
+}
+
+/* --- Driver.js 樣式覆蓋 (Onboarding) --- */
+:root {
+  --driver-popover-bg: #ffffff;
+  --driver-popover-text: #2d2d2d;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --driver-popover-bg: #2c2c2c;
+    --driver-popover-text: #e0e0e0;
+  }
+}
+
+.driver-popover {
+  background-color: var(--driver-popover-bg) !important;
+  color: var(--driver-popover-text) !important;
+  border-radius: 8px !important;
+}
+.driver-popover-title, .driver-popover-description {
+  color: var(--driver-popover-text) !important;
+}
+.driver-popover-close-btn {
+  color: #a2a2a2 !important;
+}
+.driver-popover-close-btn:hover {
+  color: var(--driver-popover-text) !important;
+}
+
+/* Arrow dynamic border colors */
+.driver-popover-arrow-side-left { border-left-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-right { border-right-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-top { border-top-color: var(--driver-popover-bg) !important; }
+.driver-popover-arrow-side-bottom { border-bottom-color: var(--driver-popover-bg) !important; }
+
+.driver-popover-footer button {
+  color: #fff !important;
+  text-shadow: none !important;
+  border-color: transparent !important;
+  border-radius: 4px !important;
+  background-color: #437d45 !important;
+}
+.driver-popover-footer button:hover {
+  background-color: #2b5c2d !important;
+}
+.driver-popover-progress-text {
+  color: #437d45 !important;
+  font-weight: bold;
+}
+
+/* 遊戲結算 modal：上層 60%/40% 雙欄（左大圖阿翠妹，右成績與狀態），下層單欄按鈕區 */
+.game-result-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
+}
+
+.game-result-left {
+  flex: 0 0 60%;
+  max-width: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.result-thumbup-full-img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.22));
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.result-thumbup-full-img:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.28));
+}
+
+.result-thumbup-full-img:active {
+  transform: scale(0.97);
+}
+
+.game-result-right {
+  flex: 0 0 40%;
+  max-width: 40%;
+  min-width: 0;
+}
+
+/* 到期狀態卡片（於右欄內部） */
+.result-due-card {
+  margin: 12px 0 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  text-align: left;
+}
+
+.result-due-card .due-text-main {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 3px;
+  color: var(--text-color, #1e293b);
+}
+
+.result-due-card .due-text-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted, #64748b);
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-due-card {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+  .result-due-card .due-text-main {
+    color: #f1f5f9;
+  }
+  .result-due-card .due-text-sub {
+    color: #94a3b8;
+  }
+}
+
+/* 響應式：窄螢幕時 (<= 560px) 置中單欄直排 */
+@media (max-width: 560px) {
+  .game-result-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .game-result-left {
+    flex: 0 0 auto;
+    max-width: 100%;
+    margin-bottom: 0;
+  }
+
 /* --- Level Restart Box Styles --- */
 #level-restart-box {
   /* 【回饋修正】加入變數 fallback */

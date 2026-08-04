@@ -1,0 +1,28 @@
+name: Sandhi fixtures
+
+on:
+  push:
+    paths:
+      - 'main.js'
+      - 'sandhi_rules.json'
+      - 'reverse_tone_mapping.json'
+      - 'tests/sandhi_fixture_test.js'
+      - '.github/workflows/sandhi-test.yml'
+  pull_request:
+    paths:
+      - 'main.js'
+      - 'sandhi_rules.json'
+      - 'reverse_tone_mapping.json'
+      - 'tests/sandhi_fixture_test.js'
+      - '.github/workflows/sandhi-test.yml'
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run sandhi fixture regression
+        run: node tests/sandhi_fixture_test.js
