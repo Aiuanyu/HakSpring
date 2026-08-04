@@ -2457,19 +2457,20 @@ function initializeAppUI() {
 
     bookmarks.forEach((bookmark, index) => {
       const option = document.createElement('option');
-
-      // 嘗試找回含官方編號的類別名稱以供顯示
-      let displayCat = bookmark.cat;
-      const dataVar = mapTableNameToDataVar(bookmark.tableName);
-      if (dataVar && window[dataVar] && window[dataVar].content) {
-        const fullCat = getFullOfficialCategoryName(
-          bookmark.cat,
-          window[dataVar].content,
-        );
-        displayCat = formatCategoryLabel(fullCat);
+      if (bookmark.isLevelFinished) {
+        option.textContent = `${bookmark.tableName}全部放送煞，重新開始？`;
+      } else {
+        let displayCat = bookmark.cat;
+        const dataVar = mapTableNameToDataVar(bookmark.tableName);
+        if (dataVar && window[dataVar] && window[dataVar].content) {
+          const fullCat = getFullOfficialCategoryName(
+            bookmark.cat,
+            window[dataVar].content,
+          );
+          displayCat = formatCategoryLabel(fullCat);
+        }
+        option.textContent = `${bookmark.tableName} - ${displayCat} - #${bookmark.rowId} (${bookmark.percentage}%)`;
       }
-
-      option.textContent = `${bookmark.tableName} - ${displayCat} - #${bookmark.rowId} (${bookmark.percentage}%)`;
       option.value = bookmark.tableName + '||' + bookmark.cat;
       progressDropdown.appendChild(option);
     });
@@ -2534,6 +2535,8 @@ function initializeAppUI() {
     category,
     tableName,
     isPlayingContext = false,
+    isLevelFinished = false,
+    restartCat = null,
   ) {
     let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
     const newBookmark = {
@@ -2542,6 +2545,8 @@ function initializeAppUI() {
       cat: category,
       tableName: tableName,
       timestamp: Date.now(),
+      isLevelFinished: isLevelFinished,
+      restartCat: restartCat,
     };
 
     // 1. 移除已存在的完全相同的紀錄 (同表格同類別)
@@ -4800,23 +4805,6 @@ function initializeAppUI() {
 
     // --- 檢查是否已播完目前類別的所有項目 ---
     if (itemIndex >= activeCategoryData.length) {
-      // --- 關鍵修正：還原舊版邏輯，在跳轉前刪除已完成類別的書籤 ---
-      let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-      // 【變數路徑修正】直接從 g_currentDialectInfo 存取屬性
-      const previousBookmarkIndex = bookmarks.findIndex(
-        (bm) =>
-          bm.tableName === g_currentDialectInfo.fullLvlName &&
-          bm.cat === g_currentCategory,
-      );
-      if (previousBookmarkIndex > -1) {
-        console.log(
-          `移除已完成類別的書籤: ${g_currentDialectInfo.fullLvlName} - ${g_currentCategory}`,
-        );
-        bookmarks.splice(previousBookmarkIndex, 1);
-        localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
-        updateProgressDropdown();
-      }
-
       advanceToNextCategory();
       return;
     }
@@ -5040,7 +5028,89 @@ function initializeAppUI() {
       // --- 所有類別都已播完，真正結束 ---
       console.log('所有類別播放完畢。');
       playEndOfPlayback();
+      showRestartMessage();
+
+      // 儲存特別書籤，標記為已完成並提供重新開始的目標
+      if (categoryList && categoryList.length > 0 && g_currentDialectInfo) {
+        const firstCategory = categoryList[0];
+        const lastCategory = g_currentCategory;
+        const totalRows = activeCategoryData.length;
+        if (totalRows > 0) {
+          const lastRowIdRaw = activeCategoryData[totalRows - 1].編號.split('-')[1];
+          // 【回饋修正】更明確的 fallback 處理，避免 編號 格式異常時報錯
+          const lastRowId = (lastRowIdRaw && lastRowIdRaw.trim()) ? lastRowIdRaw : '1';
+          const paddedLastRowId = padRowIdForLegacy(lastRowId);
+
+          saveBookmark(
+            paddedLastRowId,
+            '100.00',
+            lastCategory,
+            g_currentDialectInfo.fullLvlName,
+            false,
+            true,
+            firstCategory,
+          );
+        }
+      }
     }
+  }
+
+  /**
+   * 在級別播放結束時，顯示重新開始的訊息。
+   */
+  function showRestartMessage() {
+    // 避免重複顯示
+    if (document.getElementById('level-restart-box')) return;
+
+    const contentContainer = document.getElementById('generated');
+    if (!contentContainer || !g_currentDialectInfo) return;
+
+    const levelName = g_currentDialectInfo.fullLvlName;
+
+    const restartBox = document.createElement('div');
+    restartBox.id = 'level-restart-box';
+    restartBox.setAttribute('role', 'button');
+    restartBox.setAttribute('tabindex', '0');
+
+    // 使用文本節點避免 XSS
+    const p = document.createElement('p');
+    p.textContent = `${levelName}全部放送煞，重新開始？`;
+    restartBox.appendChild(p);
+
+    const restartAction = () => {
+      // 【回饋修正】顯式移除 DOM 元素，避免殘留
+      restartBox.remove();
+      if (categoryList && categoryList.length > 0) {
+        const firstCategory = categoryList[0];
+
+        // 【回饋修正】設定跨類別播放旗標，讓跳轉後能自動開始播放
+        isCrossCategoryPlaying = true;
+
+        // 【回饋修正】改用遍歷方式尋找 radio button，提升對舊版 WebView 的相容性並避免字串拼接選擇器
+        const allRadios = document.querySelectorAll('input[name="category"]');
+        const firstRadio = Array.from(allRadios).find((r) => r.value === firstCategory);
+        if (firstRadio) {
+          firstRadio.click();
+        }
+      }
+    };
+
+    restartBox.addEventListener('click', restartAction);
+    restartBox.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        restartAction();
+      }
+    });
+
+    contentContainer.appendChild(restartBox);
+
+    // 使用 double requestAnimationFrame 確保元素已在 DOM 中並完成排版
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        restartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
   }
 
   /**
@@ -6043,8 +6113,36 @@ function initializeAppUI() {
       if (selectedBookmark) {
         // [修正] 從找到的物件中安全地取得所有資訊
         const targetTableName = selectedBookmark.tableName;
-        const targetCategory = selectedBookmark.cat;
-        const targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
+        let targetCategory = selectedBookmark.cat;
+        let targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
+
+        // 如果是已完成的級別，重新開始
+        if (selectedBookmark.isLevelFinished) {
+          const originalFinishedCat = targetCategory;
+          const restartCat = selectedBookmark.restartCat || targetCategory;
+          targetCategory = restartCat;
+          targetRowIdToGo = '1';
+
+          // 【使用者回饋修正】點選重新開始時，先移除原本的「已完成」書籤
+          let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+          const oldIndex = bookmarks.findIndex(
+            (bm) => bm.tableName === targetTableName && bm.cat === originalFinishedCat && bm.isLevelFinished
+          );
+          if (oldIndex > -1) {
+            bookmarks.splice(oldIndex, 1);
+            localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+          }
+
+          // 再儲存新的開始進度，這會自動觸發下拉選單更新
+          saveBookmark(
+            '001',
+            '0.00',
+            targetCategory,
+            targetTableName,
+            false, // isPlayingContext: false (此處刻意省略後兩個參數 isLevelFinished, restartCat)
+          );
+        }
+
         const dataVarName = mapTableNameToDataVar(targetTableName);
 
         if (dataVarName) {

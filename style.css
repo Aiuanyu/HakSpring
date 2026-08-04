@@ -4755,11 +4755,39 @@ mark {
     max-width: 100%;
     margin-bottom: 0;
   }
-  .result-thumbup-full-img {
-    max-width: 180px;
+
+/* --- Level Restart Box Styles --- */
+#level-restart-box {
+  /* 【回饋修正】加入變數 fallback */
+  background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.1);
+  border: 2px dashed var(--iMazinGrace-1);
+  border-radius: 8px;
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 80%;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#level-restart-box:hover {
+  background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.2);
+}
+
+#level-restart-box p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: var(--link-color, #007bff);
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  #level-restart-box {
+    background-color: rgba(var(--iMazinGrace-1-rgb, 170, 150, 183), 0.2);
+    border-color: var(--dark-secondary-accent);
   }
-  .game-result-right {
-    flex: 0 0 100%;
-    max-width: 100%;
+  #level-restart-box p {
+    color: var(--dark-link-color);
   }
 }
