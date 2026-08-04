@@ -89,7 +89,7 @@
 
 
 :root {
-  --title-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --title-font: 'PT Sans', /*'jf蘭陽黑體 1.0', */'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
   --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
@@ -4755,6 +4755,14 @@ mark {
     max-width: 100%;
     margin-bottom: 0;
   }
+  .result-thumbup-full-img {
+    max-width: 180px;
+  }
+  .game-result-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
 
 /* --- Level Restart Box Styles --- */
 #level-restart-box {

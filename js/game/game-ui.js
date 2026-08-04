@@ -399,6 +399,9 @@ async function startReviewDebtSession(dataVarName) {
   
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+  const previousDataVarName = gameActiveDataVarName;
+  const previousDialect = gameActiveDialect;
+
   const dialect = dataVarName.substring(0, 1);
   try {
     gameActiveDataVarName = dataVarName;
@@ -426,19 +429,61 @@ async function startReviewDebtSession(dataVarName) {
     showGameView('play');
     renderQuestion();
   } catch (err) {
+    // 跨腔級/單腔復習出題失敗（無到期詞彙）時，恢復出題前原本的腔級狀態，避免 gameActiveDataVarName 殘留 ALL_OVERDUE
+    gameActiveDataVarName = previousDataVarName;
+    gameActiveDialect = previousDialect;
     loadingIndicator.style.display = 'none';
+    showGameView('setup');
     alert(err.message);
     console.error(err);
   }
 }
 
 function showGameView(viewName) {
+  if (viewName === 'setup') {
+    // 進入 setup 畫面時，若 gameActiveDataVarName 卡佇 ALL_OVERDUE，必須歸位到正常的腔級
+    if (gameActiveDataVarName === 'ALL_OVERDUE') {
+      const fallbackVarName = (typeof currentDataVarName !== 'undefined' && currentDataVarName && window[currentDataVarName]) ? currentDataVarName : (typeof getLastPlayedGameVarName === 'function' ? getLastPlayedGameVarName() : null);
+      if (fallbackVarName && window[fallbackVarName]) {
+        gameActiveDataVarName = fallbackVarName;
+        const 腔 = fallbackVarName.substring(0, 1);
+        const 級 = fallbackVarName.substring(1);
+        gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(腔, 級)) ? getDialectInfo(腔, 級).腔名 : '四縣';
+        const targetLevelElem = document.getElementById('game-target-level');
+        if (targetLevelElem && typeof getFullLevelName === 'function') {
+          targetLevelElem.textContent = getFullLevelName(fallbackVarName);
+        }
+      }
+    }
+  }
+
   document.getElementById('game-setup-view').style.display = viewName === 'setup' ? 'block' : 'none';
   document.getElementById('game-play-view').style.display = viewName === 'play' ? 'block' : 'none';
   document.getElementById('game-result-view').style.display = viewName === 'result' ? 'block' : 'none';
 
   if (viewName === 'setup' && typeof renderDueByLevel === 'function') {
     renderDueByLevel();
+  }
+}
+
+function startChallengeSessionForLevel(varName) {
+  const varData = window[varName];
+  if (!varData) return;
+
+  gameActiveDataVarName = varName;
+  const 腔 = varName.substring(0, 1);
+  const 級 = varName.substring(1);
+  gameActiveDialect = (typeof getDialectInfo === 'function' && getDialectInfo(腔, 級)) ? getDialectInfo(腔, 級).腔名 : '四縣';
+
+  const targetLevelElem = document.getElementById('game-target-level');
+  if (targetLevelElem && typeof getFullLevelName === 'function') {
+    targetLevelElem.textContent = getFullLevelName(varName);
+  }
+  refreshUseLastPlayedBtn();
+
+  const startBtn = document.getElementById('gameStartSessionBtn');
+  if (startBtn) {
+    startBtn.click();
   }
 }
 
@@ -467,6 +512,13 @@ function renderDueByLevel() {
     const overdueTag = v.overdue > 0
       ? `<span style="color:#dc3545; margin-left:4px;">（逾期 ${v.overdue}）</span>` : '';
       
+    const playBtn = v.due === 0
+      ? `<button class="play-level-btn" data-varname="${varName}"
+            style="border:none; border-radius:6px; padding:2px 8px; margin-left:6px; cursor:pointer;
+                   background:#3b82f6; color:#fff; font-weight:bold; font-size:0.75rem;"
+            title="以 ${label} 開始挑戰">搞</button>`
+      : '';
+
     const dueBtn = v.due > 0
       ? `<button class="review-debt-btn" data-varname="${varName}"
            style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer;
@@ -476,7 +528,7 @@ function renderDueByLevel() {
 
     html += `<div>
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-bottom:3px;">
-        <span>${label} <span style="color:var(--text-muted,#999); font-size:0.75rem; margin-left:4px;">/ 共 ${v.total}</span> ${overdueTag}</span>
+        <span>${label} ${playBtn} <span style="color:var(--text-muted,#999); font-size:0.75rem; margin-left:4px;">/ 共 ${v.total}</span> ${overdueTag}</span>
         ${dueBtn}
       </div>
       <div style="height:12px; border-radius:6px; overflow:hidden; background:rgba(128,128,128,0.15);">
@@ -489,6 +541,10 @@ function renderDueByLevel() {
 
   el.querySelectorAll('.review-debt-btn').forEach(btn => {
     btn.addEventListener('click', () => startReviewDebtSession(btn.dataset.varname));
+  });
+
+  el.querySelectorAll('.play-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => startChallengeSessionForLevel(btn.dataset.varname));
   });
 }
 

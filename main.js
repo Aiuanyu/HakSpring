@@ -5083,13 +5083,11 @@ function initializeAppUI() {
       if (categoryList && categoryList.length > 0) {
         const firstCategory = categoryList[0];
 
-        // 【回饋修正】設定跨類別播放旗標，讓跳轉後能自動開始播放
-        isCrossCategoryPlaying = true;
-
-        // 【回饋修正】改用遍歷方式尋找 radio button，提升對舊版 WebView 的相容性並避免字串拼接選擇器
         const allRadios = document.querySelectorAll('input[name="category"]');
         const firstRadio = Array.from(allRadios).find((r) => r.value === firstCategory);
         if (firstRadio) {
+          // 【回饋修正】設定跨類別播放旗標，讓跳轉後能自動開始播放（找到 radio 時才設定，避免殘留狀態）
+          isCrossCategoryPlaying = true;
           firstRadio.click();
         }
       }
