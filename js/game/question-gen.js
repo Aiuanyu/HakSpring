@@ -18,11 +18,18 @@ function cleanClozeWord(wordStr) {
 }
 
 /**
+ * Count Chinese characters (including supplementary plane characters like 𠊎)
+ */
+function countHanChars(cleanStr) {
+  if (!cleanStr) return 0;
+  return (cleanStr.match(/\p{Script=Han}/gu) || []).length;
+}
+
+/**
  * Calculate the Chinese character count (字數) of a word, excluding bracketed/parenthesized content
  */
 function getChineseCharCount(wordStr) {
-  const clean = cleanClozeWord(wordStr);
-  return (clean.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+  return countHanChars(cleanClozeWord(wordStr));
 }
 
 /**
@@ -522,7 +529,7 @@ function buildOptionsForType(target, type, allWords) {
       if (w.progressKey === target.progressKey) return false;
       const cleanW = cleanClozeWord(w.客家語);
       if (!cleanW || cleanW === cleanTarget) return false;
-      return getChineseCharCount(w.客家語) === targetLength;
+      return countHanChars(cleanW) === targetLength;
     });
     let candidates = validPool.filter(w => target.分類 && w.分類 === target.分類);
     if (candidates.length < 3) {
@@ -546,18 +553,15 @@ function buildOptionsForType(target, type, allWords) {
     // 20260724 蒂兒：改用「客家語」（漢字）計算音節數，避開拼音欄位中
     // 「又讀」「俗音」「小稱變調讀」等資料陷阱。客語一字一音節。
     const countSyllables = (word) => {
-      const cleaned = (word.客家語 || '')
-        .replace(/【.*?】/g, '')
-        .replace(/（.*?）/g, '');
-      return (cleaned.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+      return getChineseCharCount(word.客家語);
     };
     const targetSyllables = countSyllables(target);
     const targetPinyin = target.客語標音_查詢 || '';
+    const cleanTarget = cleanClozeWord(target.客家語);
 
     const validPool = allWords.filter(w => {
       if (w.progressKey === target.progressKey) return false;
-      const cleanW = (w.客家語 || '').replace(/（.*?）/g, '');
-      const cleanTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+      const cleanW = cleanClozeWord(w.客家語);
       if (cleanW === cleanTarget) return false;
       
       const pW = (w.客語標音_查詢 || '').replace(/[\s-]+/g, '');
