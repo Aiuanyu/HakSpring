@@ -2,8 +2,35 @@
 // Handles question generation, distractor selection, and session setup
 
 // 載入版本 banner：在 Console 看到這行＝新版 JS 有載到（cache 驗證用）
-const QUESTION_GEN_VERSION = '4.6.2';
+const QUESTION_GEN_VERSION = '4.6.3';
 console.info(`[HakSpring Game] question-gen.js v${QUESTION_GEN_VERSION} loaded`);
+
+/**
+ * Clean Cloze Word by removing bracketed variants and parenthesized content
+ */
+function cleanClozeWord(wordStr) {
+  if (!wordStr) return '';
+  return wordStr
+    .replace(/【.*?】/g, '')
+    .replace(/（.*?）/g, '')
+    .replace(/\(.*?\)/g, '')
+    .trim();
+}
+
+/**
+ * Count Chinese characters (including supplementary plane characters like 𠊎)
+ */
+function countHanChars(cleanStr) {
+  if (!cleanStr) return 0;
+  return (cleanStr.match(/\p{Script=Han}/gu) || []).length;
+}
+
+/**
+ * Calculate the Chinese character count (字數) of a word, excluding bracketed/parenthesized content
+ */
+function getChineseCharCount(wordStr) {
+  return countHanChars(cleanClozeWord(wordStr));
+}
 
 /**
  * Selects exactly n random, unique items from an array.
@@ -373,7 +400,7 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     let clozeSentence = null;
     let clozeTarget = null;
     if (chosenType === 'c') {
-      clozeTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+      clozeTarget = cleanClozeWord(target.客家語);
       const sentences = target.例句.split('<br>').map(s => s.trim()).filter(Boolean);
       const validSentences = sentences.filter(s => s.includes(clozeTarget));
       const chosenSent = validSentences[Math.floor(Math.random() * validSentences.length)];
@@ -409,7 +436,7 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
       let clozeSentence = null;
       let clozeTarget = null;
       if (followType === 'c') {
-        clozeTarget = (q.targetWord.客家語 || '').replace(/（.*?）/g, '');
+        clozeTarget = cleanClozeWord(q.targetWord.客家語);
         const sentences = q.targetWord.例句.split('<br>').map(s => s.trim()).filter(Boolean);
         const validSentences = sentences.filter(s => s.includes(clozeTarget));
         const chosenSent = validSentences[Math.floor(Math.random() * validSentences.length)];
@@ -438,7 +465,7 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
  */
 function isEligibleForType(targetWord, type) {
   if (type === 'c') {
-    const cleanWord = (targetWord.客家語 || '').replace(/（.*?）/g, '');
+    const cleanWord = cleanClozeWord(targetWord.客家語);
     if (!cleanWord || cleanWord.includes('…')) return false;
     if (!targetWord.例句) return false;
     const sentences = targetWord.例句.split('<br>').map(s => s.trim()).filter(Boolean);
@@ -496,11 +523,13 @@ function buildOptionsForType(target, type, allWords) {
   } else if (type === 'd') {
     options = [target.客家語, ...generateDistractors(target, allWords, '客家語')];
   } else if (type === 'c') {
-    const cleanTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+    const cleanTarget = cleanClozeWord(target.客家語);
+    const targetLength = getChineseCharCount(target.客家語);
     const validPool = allWords.filter(w => {
       if (w.progressKey === target.progressKey) return false;
-      const cleanW = (w.客家語 || '').replace(/（.*?）/g, '');
-      return cleanW && cleanW !== cleanTarget;
+      const cleanW = cleanClozeWord(w.客家語);
+      if (!cleanW || cleanW === cleanTarget) return false;
+      return countHanChars(cleanW) === targetLength;
     });
     let candidates = validPool.filter(w => target.分類 && w.分類 === target.分類);
     if (candidates.length < 3) {
@@ -513,8 +542,8 @@ function buildOptionsForType(target, type, allWords) {
     while (distractors.length < 3 && candidates.length > 0) {
       const idx = Math.floor(Math.random() * candidates.length);
       const chosen = candidates.splice(idx, 1)[0];
-      const cleanChosen = (chosen.客家語 || '').replace(/（.*?）/g, '');
-      if (!distractors.includes(cleanChosen)) {
+      const cleanChosen = cleanClozeWord(chosen.客家語);
+      if (cleanChosen && !distractors.includes(cleanChosen)) {
         distractors.push(cleanChosen);
       }
     }
@@ -524,18 +553,15 @@ function buildOptionsForType(target, type, allWords) {
     // 20260724 蒂兒：改用「客家語」（漢字）計算音節數，避開拼音欄位中
     // 「又讀」「俗音」「小稱變調讀」等資料陷阱。客語一字一音節。
     const countSyllables = (word) => {
-      const cleaned = (word.客家語 || '')
-        .replace(/【.*?】/g, '')
-        .replace(/（.*?）/g, '');
-      return (cleaned.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+      return getChineseCharCount(word.客家語);
     };
     const targetSyllables = countSyllables(target);
     const targetPinyin = target.客語標音_查詢 || '';
+    const cleanTarget = cleanClozeWord(target.客家語);
 
     const validPool = allWords.filter(w => {
       if (w.progressKey === target.progressKey) return false;
-      const cleanW = (w.客家語 || '').replace(/（.*?）/g, '');
-      const cleanTarget = (target.客家語 || '').replace(/（.*?）/g, '');
+      const cleanW = cleanClozeWord(w.客家語);
       if (cleanW === cleanTarget) return false;
       
       const pW = (w.客語標音_查詢 || '').replace(/[\s-]+/g, '');

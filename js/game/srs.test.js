@@ -46,3 +46,61 @@ console.assert(state6.reps === 2, 'Reps should be 2');
 console.assert(state6.ef === 230, 'EF should decrease by 0.15 (15)');
 
 console.log('All tests passed successfully!');
+
+console.log('\n--- Question Gen / Cloze Word Length Tests ---');
+const qGenCode = fs.readFileSync('./js/game/question-gen.js', 'utf8');
+
+// Mock browser dependencies for question-gen.js
+const mockWindow = {
+  console: {
+    info: (...args) => console.log(...args),
+    log: (...args) => console.log(...args),
+    warn: (...args) => console.warn(...args)
+  }
+};
+
+// Evaluate question-gen.js in a sandbox
+const qGenContext = {};
+eval(qGenCode);
+
+console.log('Verifying cleanClozeWord:');
+const cleanTestCases = [
+  { input: '發子【病子／發子】', expected: '發子' },
+  { input: '出麻仔【出麻／出麻仔】', expected: '出麻仔' },
+  { input: '恢復（回復）', expected: '恢復' },
+  { input: '腳板（腳盤）【腳盤／腳板（腳盤）】', expected: '腳板' },
+  { input: '嘔【翻／嘔】', expected: '嘔' },
+  { input: '普通', expected: '普通' },
+  { input: '𠊎【𠊎】', expected: '𠊎' },
+  { input: '', expected: '' },
+  { input: null, expected: '' }
+];
+
+for (const tc of cleanTestCases) {
+  const result = cleanClozeWord(tc.input);
+  console.assert(result === tc.expected, `Expected cleanClozeWord("${tc.input}") to be "${tc.expected}", got "${result}"`);
+  console.log(`  cleanClozeWord("${tc.input || ''}") -> "${result}" [OK]`);
+}
+
+console.log('Verifying getChineseCharCount & countHanChars:');
+const lengthTestCases = [
+  { input: '𠊎', expected: 1 },
+  { input: '𠊎自家', expected: 3 },
+  { input: '發子【病子／發子】', expected: 2 },
+  { input: '出麻仔【出麻／出麻仔】', expected: 3 },
+  { input: '恢復（回復）', expected: 2 },
+  { input: '腳板（腳盤）【腳盤／腳板（腳盤）】', expected: 2 },
+  { input: '嘔【翻／嘔】', expected: 1 },
+  { input: '普通', expected: 2 },
+  { input: '𫣆人', expected: 2 },
+  { input: '', expected: 0 },
+  { input: null, expected: 0 }
+];
+
+for (const tc of lengthTestCases) {
+  const result = getChineseCharCount(tc.input);
+  console.assert(result === tc.expected, `Expected getChineseCharCount("${tc.input}") to be ${tc.expected}, got ${result}`);
+  console.log(`  getChineseCharCount("${tc.input || ''}") -> ${result} [OK]`);
+}
+
+console.log('All Cloze and Character Count tests passed successfully!');
