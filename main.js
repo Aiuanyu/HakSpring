@@ -391,9 +391,10 @@ function applyAudioProxy(url) {
   if (!url) return url;
 
   const isHakkaGov = url.startsWith('https://elearning.hakka.gov.tw/');
+  const isDict = url.startsWith('https://dict.hakka.gov.tw/');
   const isLocalhost = /^https?:\/\/localhost([:/]|$)/.test(url);
 
-  if (!isHakkaGov && !isLocalhost) {
+  if (!isHakkaGov && !isDict && !isLocalhost) {
     return url;
   }
   
@@ -716,7 +717,8 @@ function constructWordAudioUrl(lineData, fullSourceName) {
 
     const missingAudioInfo =
       typeof getMissingAudioInfo === 'function'
-        ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+        // NAmedias.js 的鍵是「腔調級別全名」（如 '海陸中高級'），不是 fullSourceName（'cert海中高'）
+        ? getMissingAudioInfo(dialectInfo.fullLvlName, lineData.分類, lineData.編號)
         : null;
 
     let wordAudioActuallyMissing =
@@ -786,7 +788,8 @@ function constructSentenceAudioUrl(lineData, fullSourceName) {
 
   const missingAudioInfo =
     typeof getMissingAudioInfo === 'function'
-      ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+      // 同上：NAmedias.js 的鍵是「腔調級別全名」
+      ? getMissingAudioInfo(dialectInfo.fullLvlName, lineData.分類, lineData.編號)
       : null;
 
   let sentenceAudioActuallyMissing =
@@ -6406,8 +6409,13 @@ function createComparisonRow(line, dialectInfo, isGip) {
     fullSourceName = 'cert' + dialectInfo.腔 + dialectInfo.級;
   }
 
-  const wordAudioSrc = constructWordAudioUrl(line, fullSourceName);
-  const sentenceAudioSrc = constructSentenceAudioUrl(line, fullSourceName);
+  // ⚠️ constructWordAudioUrl() 回傳的是「未經 proxy」的原始網址（見該函式結尾註解），
+  // 呼叫端必須自行套 applyAudioProxy()，否則 elearning.hakka.gov.tw 會被 CORS 擋掉。
+  // （constructSentenceAudioUrl() 則是內部已套好，這裡再套一次會原樣返回、無副作用。）
+  let wordAudioSrc = constructWordAudioUrl(line, fullSourceName);
+  if (wordAudioSrc) wordAudioSrc = applyAudioProxy(wordAudioSrc);
+  let sentenceAudioSrc = constructSentenceAudioUrl(line, fullSourceName);
+  if (sentenceAudioSrc) sentenceAudioSrc = applyAudioProxy(sentenceAudioSrc);
 
   // TD2: Vocabulary
   const td2 = document.createElement('td');

@@ -328,9 +328,28 @@ const DailyWord = (function () {
 
     const { row, dialect, level } = matchInfo;
     
-    const dayStr = new Date().getDate();
-    const monthStr = new Date().toLocaleDateString('zh-TW', { month: 'long' });
-    const weekdayStr = new Date().toLocaleDateString('zh-TW', { weekday: 'long' });
+    const today = new Date();
+    const dayStr = today.getDate();
+    const monthStr = today.toLocaleDateString('zh-TW', { month: 'long' });
+    
+    // Set YYYY.MM.DD header date
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const headerDateEl = document.getElementById('daily-header-date');
+    if (headerDateEl) {
+      headerDateEl.innerText = `${yyyy}.${mm}.${dd}`;
+    }
+
+    // Set Hakka weekday
+    const dayOfWeek = today.getDay();
+    const hakkaNumbers = ['日', '一', '二', '三', '四', '五', '六'];
+    let weekdayStr;
+    if (dayOfWeek === 0 && dialect === '安') {
+      weekdayStr = '禮拜日';
+    } else {
+      weekdayStr = '拜' + hakkaNumbers[dayOfWeek];
+    }
     
     const modeText = isToday ? (dialect === '安' ? '今日' : '今晡日') : '隨機拈詞';
     const word = row['客家語'];
