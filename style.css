@@ -4426,7 +4426,26 @@ mark {
   font-size: 1.1em;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: center;
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+.game-option-btn .kbd-shortcut {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8em;
+  height: 1.8em;
+  padding: 0;
+  margin-right: 12px;
+}
+
+.game-option-text {
+  flex-grow: 1;
+  text-align: left;
+  display: block;
 }
 .game-option-btn:hover:not(:disabled) {
   background-color: #e9e9e9;
