@@ -691,9 +691,9 @@ function renderQuestion() {
     }
     
     if (question.type === 'l') {
-      btn.innerHTML = `<kbd class="kbd-shortcut" style="vertical-align: middle; margin-right: 10px;">${index + 1}</kbd> ${displayOpt}`;
+      btn.innerHTML = `<kbd class="kbd-shortcut" style="vertical-align: middle; margin-right: 10px;">${index + 1}</kbd> <span class="game-option-text">${displayOpt}</span>`;
     } else {
-      btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> ${displayOpt}`;
+      btn.innerHTML = `<kbd class="kbd-shortcut">${index + 1}</kbd> <span class="game-option-text">${displayOpt}</span>`;
     }
     btn.dataset.option = comparisonValue;
     btn.onclick = () => handleAnswer(comparisonValue, btn);
