@@ -357,6 +357,9 @@ async function syncFromCloud() {
     if (typeof window.updateProgressDropdown === 'function') {
       window.updateProgressDropdown();
     }
+    if (window.DailyWord && typeof window.DailyWord.refreshUI === 'function') {
+      window.DailyWord.refreshUI();
+    }
 
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');

@@ -31,7 +31,10 @@ const DailyWord = (function () {
             parsed.items.forEach(key => { migratedItems[key] = now; });
             parsed.items = migratedItems;
           }
-          return parsed;
+          return {
+            items: parsed.items || {},
+            tomb: parsed.tomb || {}
+          };
         }
       } catch (e) {
         console.error('Error reading hakkaDailyFavs:', e);
@@ -319,13 +322,23 @@ const DailyWord = (function () {
 
       if (idx === -1) {
         // Fallback to searching by word text
-        idx = dailyPool.findIndex(i => {
-          if (i.type === 'cert') {
-            const row = window.DATA_CACHE[i.data] ? window.DATA_CACHE[i.data][i.key] : null;
-            if (row && row['客家語'] === wordFav) return true;
+        const targetAccentShort = getDisplayAccent();
+        const certLevels = ['基', '初', '中', '中高', '高'];
+        let foundKey = null;
+        for (const lvl of certLevels) {
+          const data = window[targetAccentShort + lvl];
+          if (data && Array.isArray(data.content)) {
+            const foundRow = data.content.find(r => r['客家語'] === wordFav && !r['客家語'].includes('此腔無此詞條'));
+            if (foundRow) {
+              foundKey = `${lvl}|${foundRow['編號']}`;
+              break;
+            }
           }
-          return false;
-        });
+        }
+        
+        if (foundKey) {
+           idx = dailyPool.findIndex(i => i.type === 'cert' && i.key === foundKey);
+        }
       }
 
       if (idx === -1) {
@@ -552,7 +565,7 @@ const DailyWord = (function () {
         const fId = e.currentTarget.dataset.favid;
         DailyFavManager.toggleFav(fId);
         // Re-render to update the star state and count
-        renderDailyWord(currentMode, 0, currentMode === 'specific' ? currentSpecificFavId : null); 
+        renderDailyWord(mode, 0, mode === 'specific' ? specificFavId : null); 
       });
     }
     if (btnFavList) {
@@ -770,9 +783,23 @@ const DailyWord = (function () {
     }
   }
 
+  function refreshUI() {
+    // Only refresh if the modal is currently open and has content
+    const modal = document.getElementById('dailyModal');
+    if (!modal || modal.style.display === 'none' || !dailyModalBody) return;
+    
+    // Determine which view is currently active
+    if (dailyModalBody.querySelector('#dailyBtnBack')) {
+      renderFavoritesPanel();
+    } else {
+      renderDailyWord(currentMode, 0, currentMode === 'specific' ? currentSpecificFavId : null);
+    }
+  }
+
   return {
     init,
-    renderDailyWord
+    renderDailyWord,
+    refreshUI
   };
 })();
 
