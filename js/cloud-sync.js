@@ -307,8 +307,10 @@ async function syncFromCloud() {
       const statsChanged =
         JSON.stringify(mergedStats) !== JSON.stringify(cloudStats) ||
         JSON.stringify(mergedStatsByLevel) !== JSON.stringify(cloudStatsByLevel);
+      const favsChanged =
+        JSON.stringify(mergedFavs) !== JSON.stringify(cloudFavs);
 
-      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
@@ -636,12 +638,27 @@ function mergeDailyStatsByLevel(localObj, cloudObj, syncedObj) {
 
 /**
  * 每日一詞收藏合併：逐項單調（聯集）＋ tombstone
- * items 取聯集，再剔除存在於任一邊 tomb 且 timestamp 較新的項目。
+ * items 與 tomb 皆存儲 { key: timestamp }，以最新時間為準。
  */
 function mergeDailyFavs(localObj, cloudObj) {
-  const local = (localObj && typeof localObj === 'object') ? localObj : { items: [], tomb: {} };
-  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : { items: [], tomb: {} };
+  const local = (localObj && typeof localObj === 'object') ? localObj : { items: {}, tomb: {} };
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : { items: {}, tomb: {} };
 
+  // 1. 舊版陣列結構升級 (Migration)
+  const normalizeItems = (items) => {
+    if (Array.isArray(items)) {
+      const obj = {};
+      const now = Date.now();
+      items.forEach(key => { obj[key] = now; });
+      return obj;
+    }
+    return items || {};
+  };
+
+  const localItems = normalizeItems(local.items);
+  const cloudItems = normalizeItems(cloud.items);
+
+  // 2. 合併 tomb (取兩邊最新時間戳)
   const mergedTomb = { ...(local.tomb || {}) };
   for (const [key, ts] of Object.entries(cloud.tomb || {})) {
     if (!mergedTomb[key] || ts > mergedTomb[key]) {
@@ -649,15 +666,27 @@ function mergeDailyFavs(localObj, cloudObj) {
     }
   }
 
-  const itemSet = new Set([...(local.items || []), ...(cloud.items || [])]);
+  // 3. 合併 items (取兩邊最新時間戳)
+  const mergedItems = { ...localItems };
+  for (const [key, ts] of Object.entries(cloudItems)) {
+    if (!mergedItems[key] || ts > mergedItems[key]) {
+      mergedItems[key] = ts;
+    }
+  }
 
-  // 剔除任何存在於合併後 tomb 中的項目
+  // 4. Tombstone 與 Items 競合判定
+  // 若項目存在於 tomb 中，且 tomb 時間較新，則將該 item 刪除；
+  // 若 item 的加入時間較新 (代表取消收藏後又重加)，則保留 item，並從 tomb 中移除。
   for (const key of Object.keys(mergedTomb)) {
-    itemSet.delete(key);
+    if (mergedItems[key] && mergedTomb[key] > mergedItems[key]) {
+      delete mergedItems[key];
+    } else if (mergedItems[key]) {
+      delete mergedTomb[key];
+    }
   }
 
   return {
-    items: Array.from(itemSet),
+    items: mergedItems,
     tomb: mergedTomb
   };
 }

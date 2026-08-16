@@ -391,10 +391,9 @@ function applyAudioProxy(url) {
   if (!url) return url;
 
   const isHakkaGov = url.startsWith('https://elearning.hakka.gov.tw/');
-  const isDict = url.startsWith('https://dict.hakka.gov.tw/');
   const isLocalhost = /^https?:\/\/localhost([:/]|$)/.test(url);
 
-  if (!isHakkaGov && !isDict && !isLocalhost) {
+  if (!isHakkaGov && !isLocalhost) {
     return url;
   }
   
@@ -556,7 +555,7 @@ function trackEvent(action, category, label) {
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @returns {string} 格式化後个淨俐字串。
  */
-function formatPhoneticForDisplay(text) {
+function formatPhoneticForDisplay(text, isGip = false) {
   if (!text) return '';
   // 1. 拿忒全形括號【】（）前後个所有空白
   let result = text.replace(/\s*([【（】）])\s*/g, '$1');
@@ -565,7 +564,9 @@ function formatPhoneticForDisplay(text) {
   // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
   result = result.replace(/\s+\)/g, ')');
   // 4. 教典詞音開頭的「特」加上【】
-  result = result.replace(/^特(?=\s*[a-zA-Z])/, '【特】');
+  if (isGip) {
+    result = result.replace(/^特(?=\s*[a-zA-Z])/, '【特】');
+  }
   return result;
 }
 
@@ -6273,7 +6274,13 @@ function initializeAppUI() {
   displayGitCommitInfo();
 }
 
+window.CROSS_DIALECT_CACHE = window.CROSS_DIALECT_CACHE || new WeakMap();
+
 function findCrossDialectRows(line, dialectInfo, isGip) {
+  if (window.CROSS_DIALECT_CACHE.has(line)) {
+    return window.CROSS_DIALECT_CACHE.get(line);
+  }
+
   const accents = ['四', '南', '海', '大', '平', '安'];
   const results = [];
   
@@ -6320,6 +6327,7 @@ function findCrossDialectRows(line, dialectInfo, isGip) {
       }
     }
   });
+  window.CROSS_DIALECT_CACHE.set(line, results);
   return results;
 }
 

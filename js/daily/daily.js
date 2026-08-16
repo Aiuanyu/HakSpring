@@ -14,7 +14,8 @@ const DailyWord = (function () {
   let gipCount = 0;
   let dataVersion = 'unknown';
   let isPoolBuilt = false;
-  let currentMode = 'today'; // 'today' or 'random'
+  let currentMode = 'today'; // 'today', 'random', or 'specific'
+  let currentSpecificFavId = null;
 
   // --- Favorites Manager (P4) ---
   const DailyFavManager = {
@@ -22,11 +23,20 @@ const DailyWord = (function () {
     getFavs: function() {
       try {
         const stored = localStorage.getItem(this.key);
-        if (stored) return JSON.parse(stored);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed.items)) {
+            const migratedItems = {};
+            const now = Date.now();
+            parsed.items.forEach(key => { migratedItems[key] = now; });
+            parsed.items = migratedItems;
+          }
+          return parsed;
+        }
       } catch (e) {
         console.error('Error reading hakkaDailyFavs:', e);
       }
-      return { items: [], tomb: {} };
+      return { items: {}, tomb: {} };
     },
     saveFavs: function(data) {
       try {
@@ -37,32 +47,31 @@ const DailyWord = (function () {
     },
     toggleFav: function(idString) { // e.g. "c四基1-1:客家"
       const data = this.getFavs();
-      const idx = data.items.indexOf(idString);
-      if (idx !== -1) {
+      if (data.items[idString]) {
         // Remove and tombstone
-        data.items.splice(idx, 1);
+        delete data.items[idString];
         data.tomb[idString] = Date.now();
       } else {
         // Add
-        data.items.push(idString);
+        data.items[idString] = Date.now();
         delete data.tomb[idString];
       }
       this.saveFavs(data);
     },
     isFav: function(idString) {
-      return this.getFavs().items.includes(idString);
+      return !!this.getFavs().items[idString];
     },
     clearAll: function() {
       const data = this.getFavs();
       const now = Date.now();
-      data.items.forEach(item => {
+      Object.keys(data.items).forEach(item => {
         data.tomb[item] = now;
       });
-      data.items = [];
+      data.items = {};
       this.saveFavs(data);
     },
     getCount: function() {
-      return this.getFavs().items.length;
+      return Object.keys(this.getFavs().items).length;
     }
   };
 
@@ -220,11 +229,13 @@ const DailyWord = (function () {
   }
 
   function getCoprime(N) {
+    if (N <= 1) return 1;
     let a = Math.floor(N * 0.618);
+    if (a === 0) a = 1;
     while (gcd(a, N) !== 1 && a < N) {
       a++;
     }
-    if (a >= N) a = 3;
+    if (a >= N) return 1; // Fallback to 1 (stride of 1 visits all)
     return a;
   }
 
@@ -266,13 +277,16 @@ const DailyWord = (function () {
     // Don't update currentMode if it's 'specific' so that "Back" knows what to return to
     if (mode !== 'specific') {
       currentMode = mode;
+      currentSpecificFavId = null;
+    } else {
+      currentSpecificFavId = specificFavId;
     }
 
     if (!buildDailyPool()) {
       dailyModalBody.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--main-text-color);">資料載入中，請稍候...</div>';
       // Wait and try again
       if (retryCount < 20) {
-        setTimeout(() => renderDailyWord(mode, retryCount + 1), 500);
+        setTimeout(() => renderDailyWord(mode, retryCount + 1, specificFavId), 500);
       } else {
         dailyModalBody.innerHTML = '<div style="padding: 40px; text-align: center; color: #ff6b6b;">資料載入失敗，請重新整理頁面。</div>';
       }
@@ -304,7 +318,18 @@ const DailyWord = (function () {
       }
 
       if (idx === -1) {
-        // Fallback if missing
+        // Fallback to searching by word text
+        idx = dailyPool.findIndex(i => {
+          if (i.type === 'cert') {
+            const row = window.DATA_CACHE[i.data] ? window.DATA_CACHE[i.data][i.key] : null;
+            if (row && row['客家語'] === wordFav) return true;
+          }
+          return false;
+        });
+      }
+
+      if (idx === -1) {
+        // Ultimate fallback if missing
         idx = getTodayIndex(N);
         isToday = true;
       }
@@ -351,7 +376,7 @@ const DailyWord = (function () {
       weekdayStr = '拜' + hakkaNumbers[dayOfWeek];
     }
     
-    const modeText = isToday ? (dialect === '安' ? '今日' : '今晡日') : '隨機拈詞';
+    const modeText = (mode === 'specific') ? '收藏詞' : (isToday ? (dialect === '安' ? '今日' : '今晡日') : '隨機拈詞');
     const word = row['客家語'];
     
     // Use main.js formatter if available
@@ -440,7 +465,7 @@ const DailyWord = (function () {
     const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(lineForAudio, originalDialectInfo, isGip) : [];
     
     const crossBtnHTML = crossDialectResults.length > 0 ? 
-      `<button id="dailyCrossBtn" class="crossDialectBtn" style="font-size: 0.6em; vertical-align: middle; margin-left: 10px; margin-bottom: 5px;"><i class="fas fa-plus-circle"></i></button>` : '';
+      `<button id="dailyCrossBtn" class="crossDialectBtn" style="font-size: 0.8em; padding: 2px; margin-left: 2px; vertical-align: middle;"><i class="fas fa-plus-circle"></i></button>` : '';
 
     // Favorites ID calculation
     const sourcePrefix = isGip ? 'g' : 'c';
@@ -470,10 +495,12 @@ const DailyWord = (function () {
             <button class="daily-fav-btn ${isFav ? 'active' : ''}" data-favid="${favId}" title="加入收藏">${isFav ? '★' : '☆'}</button>
             <div class="daily-word">
               ${word}
-              ${mainWordAudio ? `<button class="playBtn" data-src="${mainWordAudio}" style="background:none; border:none; color:var(--daily-card-text); font-size: 0.6em; margin-left: 5px; cursor:pointer;"><i class="fas fa-volume-up"></i></button>` : ''}
+            </div>
+            <div class="daily-pinyin-wrapper" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 30px;">
+              <div class="daily-pinyin" style="margin-bottom: 0;">${pinyinHTML}</div>
+              ${mainWordAudio ? `<button class="playBtn" data-src="${mainWordAudio}" style="background:none; border:none; color:var(--daily-card-text); font-size: 0.8em; cursor:pointer; padding: 2px;"><i class="fas fa-volume-up"></i></button>` : ''}
               ${crossBtnHTML}
             </div>
-            <div class="daily-pinyin">${pinyinHTML}</div>
             <div class="daily-meta">${metaStr}</div>
             
             ${sentenceBlock}
@@ -487,7 +514,7 @@ const DailyWord = (function () {
           </div>
           
           <div class="daily-source-section">
-            資料來源：客委會認證詞彙、教育部常用詞典<br>版面及配色致敬：<a href="https://khutian.liz462liz.workers.dev/" target="_blank" style="color: inherit; text-decoration: underline;">Liz Lim「逐工一詞」</a>
+            資料來源：客委會認證詞彙、教育部常用詞典<br>介面、配色及功能參照：<a href="https://khutian.liz462liz.workers.dev/" target="_blank" style="color: inherit; text-decoration: underline;">Liz Lim「逐工一詞」</a>
           </div>
         </div>
         
@@ -517,6 +544,7 @@ const DailyWord = (function () {
     if (btnRandom) {
       btnRandom.addEventListener('click', () => {
         renderDailyWord('random');
+        if (dailyModalBody) dailyModalBody.scrollTop = 0;
       });
     }
     if (btnFavToggle) {
@@ -524,7 +552,7 @@ const DailyWord = (function () {
         const fId = e.currentTarget.dataset.favid;
         DailyFavManager.toggleFav(fId);
         // Re-render to update the star state and count
-        renderDailyWord(currentMode); 
+        renderDailyWord(currentMode, 0, currentMode === 'specific' ? currentSpecificFavId : null); 
       });
     }
     if (btnFavList) {
@@ -675,7 +703,8 @@ const DailyWord = (function () {
 
   function renderFavoritesPanel() {
     if (!dailyModalBody) return;
-    const favs = DailyFavManager.getFavs().items;
+    const favsObj = DailyFavManager.getFavs().items;
+    const favs = Object.keys(favsObj).sort((a, b) => favsObj[b] - favsObj[a]); // sort by newest first
     
     let html = `
       <div class="daily-card-container" style="display: flex; flex-direction: column; max-height: 90vh;">
