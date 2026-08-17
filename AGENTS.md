@@ -67,10 +67,11 @@
 
 ### Modal 視窗
 
-- **加新个 Modal**：若愛加上新个全螢幕 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。
+- **加新个 Modal**：若愛加上新个一般 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。
 - **HTML 結構**：新 modal 愛有一个根元素，包含 `.modal-overlay` class，還有一個子元素包含 `.modal-dialog` class。Dialog 內部愛有 `.modal-header`、`.modal-body`，還做得選愛無愛加 `.modal-footer`。
 - **CSS 樣式**：為著確保樣式一致，愛將新 modal 个 ID 加到 `style.css` 裡肚既有个群組選擇器。這包含基本樣式、暗色主題樣式，還有其他共享屬性。
 - **JavaScript 邏輯**：顯示／隱藏 modal 个邏輯愛寫在 `main.js` 个 `initializeAppUI` 函式裡肚。用 `style.display = 'flex'` 來顯示 modal，用 `style.display = 'none'` 來隱藏。
+- **全螢幕型 Modal 例外**：若新 modal 是全螢幕沉浸式體驗（如 `#dailyWordModal`），可使用獨立的 `xxx-fullscreen-modal` 結構與專屬 class，不強制套用上述共用的對話方塊規範。
 
 ### 頁首按鈕
 

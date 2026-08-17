@@ -400,7 +400,7 @@ const DailyWord = (function () {
     if (item.type === 'cert') {
         pinyinHTML = rawPinyin.split('或')[0].trim();
     } else {
-        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin) : rawPinyin;
+        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true) : rawPinyin;
     }
     
     // Apply sandhi
@@ -475,7 +475,7 @@ const DailyWord = (function () {
       </div>`;
     }).join('');
 
-    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(lineForAudio, originalDialectInfo, isGip) : [];
+    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
     
     const crossBtnHTML = crossDialectResults.length > 0 ? 
       `<button id="dailyCrossBtn" class="crossDialectBtn" style="font-size: 0.8em; padding: 2px; margin-left: 2px; vertical-align: middle;"><i class="fas fa-plus-circle"></i></button>` : '';
@@ -604,7 +604,7 @@ const DailyWord = (function () {
                  if (!isGip) {
                    crossPinyin = crossPinyin.split('或')[0].trim();
                  } else {
-                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(crossPinyin) : crossPinyin;
+                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(crossPinyin, true) : crossPinyin;
                  }
                  if (typeof window.getSandhiPronunciation === 'function') {
                    const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
@@ -785,7 +785,7 @@ const DailyWord = (function () {
 
   function refreshUI() {
     // Only refresh if the modal is currently open and has content
-    const modal = document.getElementById('dailyModal');
+    const modal = document.getElementById('dailyWordModal');
     if (!modal || modal.style.display === 'none' || !dailyModalBody) return;
     
     // Determine which view is currently active

@@ -2983,7 +2983,7 @@ function initializeAppUI() {
         ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>')
         : line['客家語'];
       const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
       const dialectCode = getDialectCode(selectedDialect);
 
       if (dialectCode) {
@@ -3570,9 +3570,13 @@ function initializeAppUI() {
         );
       } else if (dailyWordModal && dailyWordModal.style.display === 'flex') {
         event.preventDefault();
-        dailyWordModal.style.display = 'none';
-        if (location.hash === '#daily') {
-          history.pushState(null, '', location.pathname + location.search);
+        if (typeof window.closeDailyModal === 'function') {
+          window.closeDailyModal();
+        } else {
+          dailyWordModal.style.display = 'none';
+          if (location.hash === '#daily') {
+            history.pushState(null, '', location.pathname + location.search);
+          }
         }
         const floatingDailyBtn = document.getElementById('dailyWordBtn');
         if (floatingDailyBtn) floatingDailyBtn.focus();
@@ -3755,7 +3759,7 @@ function initializeAppUI() {
             indexedDataCache[term] = [];
           }
           indexedDataCache[term].push({
-            pronunciation: formatPhoneticForDisplay(line['客語標音_顯示']),
+            pronunciation: formatPhoneticForDisplay(line['客語標音_顯示'], isGipData),
             source: sourceName,
             isExactMatch: true,
             originalTerm: term,
@@ -4526,7 +4530,8 @@ function initializeAppUI() {
       const ruby = document.createElement('ruby');
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+      const isGipData = dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典');
+      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGipData);
       const dialectCode = getDialectCode(dialectInfo.腔);
 
       if (dialectCode) {
@@ -5853,6 +5858,7 @@ function initializeAppUI() {
         }
       }
     };
+    window.closeDailyModal = closeDailyModal;
 
     if (dailyWordBtn) {
       dailyWordBtn.addEventListener('click', openDailyModal);
@@ -6431,7 +6437,7 @@ function createComparisonRow(line, dialectInfo, isGip) {
   const ruby = document.createElement('ruby');
   ruby.textContent = line.客家語;
   const rt = document.createElement('rt');
-  let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+  let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
   const dialectCode = getDialectCode(dialectInfo.腔);
 
   if (dialectCode) {
