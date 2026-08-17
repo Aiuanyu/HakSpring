@@ -16,6 +16,7 @@ const DailyWord = (function () {
   let isPoolBuilt = false;
   let currentMode = 'today'; // 'today', 'random', or 'specific'
   let currentSpecificFavId = null;
+  let currentDailyWordIdx = 0;
 
   // --- Favorites Manager (P4) ---
   const DailyFavManager = {
@@ -277,11 +278,11 @@ const DailyWord = (function () {
   // --- Rendering ---
   function renderDailyWord(mode = 'today', retryCount = 0, specificFavId = null) {
     if (!dailyModalBody) return;
-    // Don't update currentMode if it's 'specific' so that "Back" knows what to return to
-    if (mode !== 'specific') {
+    // Don't update currentMode if it's 'specific' or 'current' so that "Back" knows what to return to
+    if (mode !== 'specific' && mode !== 'current') {
       currentMode = mode;
       currentSpecificFavId = null;
-    } else {
+    } else if (mode === 'specific') {
       currentSpecificFavId = specificFavId;
     }
 
@@ -349,11 +350,15 @@ const DailyWord = (function () {
     } else if (mode === 'today') {
       idx = getTodayIndex(N);
       isToday = true;
+    } else if (mode === 'current') {
+      idx = currentDailyWordIdx;
     } else {
       idx = getRandomIndex(state);
       state.pos++;
       saveCycleState(state);
     }
+    
+    currentDailyWordIdx = idx;
 
     const item = dailyPool[idx];
     const targetAccent = getDisplayAccent();
@@ -565,7 +570,7 @@ const DailyWord = (function () {
         const fId = e.currentTarget.dataset.favid;
         DailyFavManager.toggleFav(fId);
         // Re-render to update the star state and count
-        renderDailyWord(mode, 0, mode === 'specific' ? specificFavId : null); 
+        renderDailyWord('current'); 
       });
     }
     if (btnFavList) {
@@ -761,7 +766,7 @@ const DailyWord = (function () {
     // Bind events
     const btnBack = dailyModalBody.querySelector('#dailyBtnBack');
     if (btnBack) {
-      btnBack.addEventListener('click', () => renderDailyWord(currentMode));
+      btnBack.addEventListener('click', () => renderDailyWord('current'));
     }
 
     const listItems = dailyModalBody.querySelectorAll('.daily-fav-list-item');
@@ -792,7 +797,7 @@ const DailyWord = (function () {
     if (dailyModalBody.querySelector('#dailyBtnBack')) {
       renderFavoritesPanel();
     } else {
-      renderDailyWord(currentMode, 0, currentMode === 'specific' ? currentSpecificFavId : null);
+      renderDailyWord('current');
     }
   }
 
