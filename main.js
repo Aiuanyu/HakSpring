@@ -182,47 +182,39 @@ function toggleSearchAccordion(clickedButton, line) {
   clickedButton.querySelector('i').className = 'fas fa-minus-circle';
 
   const lineId = line.編號;
-  const { sourceName } = line; // e.g., "四中高"
+  const { sourceName } = line; // e.g., "四中高" or "教典四"
 
   if (!sourceName || sourceName.length < 2) {
     console.error('Invalid sourceName for search accordion:', sourceName);
     return;
   }
 
-  const 腔 = sourceName.substring(0, 1);
-  const 級 = sourceName.substring(1);
-  const originalDialectInfo = getDialectInfo(腔, 級);
+  let 腔 = '';
+  let 級 = '';
+  let originalDialectInfo = {};
+  const isGip = line.sourceType === 'gip' || sourceName.startsWith('教典');
 
-  const accents = ['四', '海', '大', '平', '安'];
-  const accentMap = {
-    四: { name: '四縣', dataVar: '四' + 級 },
-    海: { name: '海陸', dataVar: '海' + 級 },
-    大: { name: '大埔', dataVar: '大' + 級 },
-    平: { name: '饒平', dataVar: '平' + 級 },
-    安: { name: '詔安', dataVar: '安' + 級 },
-  };
+  if (isGip) {
+     腔 = sourceName.replace('教典', '');
+     const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
+     originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '教典' };
+  } else {
+     腔 = sourceName.substring(0, 1);
+     級 = sourceName.substring(1);
+     originalDialectInfo = getDialectInfo(腔, 級);
+  }
 
   let lastAppendedRow = parentRow;
   let createdRows = [];
 
-  accents.forEach((accentKey) => {
-    if (accentKey === originalDialectInfo.腔) {
-      return;
-    }
+  const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
 
-    const accentInfo = accentMap[accentKey];
-    const dataObject = window[accentInfo.dataVar];
-    if (dataObject && dataObject.content) {
-      const foundItem = dataObject.content.find((item) => item.編號 === lineId);
-      if (foundItem) {
-        const itemDialectInfo = getDialectInfo(accentKey, 級);
-        const newRow = createComparisonRow(foundItem, itemDialectInfo);
-        newRow.classList.add('accordion-row');
-        lastAppendedRow.after(newRow);
-        lastAppendedRow = newRow;
-        createdRows.push(newRow);
-      }
-    }
+  crossDialectResults.forEach(({ foundItem, itemDialectInfo }) => {
+    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip);
+    newRow.classList.add('accordion-row');
+    lastAppendedRow.after(newRow);
+    lastAppendedRow = newRow;
+    createdRows.push(newRow);
   });
 
   if (createdRows.length > 0) {
@@ -374,6 +366,7 @@ const LEVEL_TO_EXCEPTION_FILE = {
 
 const ACCENT_INFO = {
   四: { 檔腔: 'si', 腔名: '四縣' },
+  南: { 檔腔: 'na', 腔名: '南四縣' },
   海: { 檔腔: 'ha', 腔名: '海陸' },
   大: { 檔腔: 'da', 腔名: '大埔' },
   平: { 檔腔: 'rh', 腔名: '饒平' },
@@ -562,7 +555,7 @@ function trackEvent(action, category, label) {
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @returns {string} 格式化後个淨俐字串。
  */
-function formatPhoneticForDisplay(text) {
+function formatPhoneticForDisplay(text, isGip = false) {
   if (!text) return '';
   // 1. 拿忒全形括號【】（）前後个所有空白
   let result = text.replace(/\s*([【（】）])\s*/g, '$1');
@@ -570,6 +563,10 @@ function formatPhoneticForDisplay(text) {
   result = result.replace(/\(\s+/g, '(');
   // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
   result = result.replace(/\s+\)/g, ')');
+  // 4. 教典詞音開頭的「特」加上【】
+  if (isGip) {
+    result = result.replace(/^特(?=\s*[a-zA-Z])/, '【特】');
+  }
   return result;
 }
 
@@ -721,7 +718,8 @@ function constructWordAudioUrl(lineData, fullSourceName) {
 
     const missingAudioInfo =
       typeof getMissingAudioInfo === 'function'
-        ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+        // NAmedias.js 的鍵是「腔調級別全名」（如 '海陸中高級'），不是 fullSourceName（'cert海中高'）
+        ? getMissingAudioInfo(dialectInfo.fullLvlName, lineData.分類, lineData.編號)
         : null;
 
     let wordAudioActuallyMissing =
@@ -791,7 +789,8 @@ function constructSentenceAudioUrl(lineData, fullSourceName) {
 
   const missingAudioInfo =
     typeof getMissingAudioInfo === 'function'
-      ? getMissingAudioInfo(fullSourceName, lineData.分類, lineData.編號)
+      // 同上：NAmedias.js 的鍵是「腔調級別全名」
+      ? getMissingAudioInfo(dialectInfo.fullLvlName, lineData.分類, lineData.編號)
       : null;
 
   let sentenceAudioActuallyMissing =
@@ -2380,6 +2379,9 @@ function initializeAppUI() {
   const statsModal = document.getElementById('statsModal');
   const statsModalCloseBtn = document.getElementById('statsCloseBtn'); // HTML 的 id 是 statsCloseBtn，非 statsModalCloseBtn
   const romanizerContainer = document.getElementById('romanizerContainer');
+  const dailyWordBtn = document.getElementById('dailyWordBtn');
+  const dailyWordModal = document.getElementById('dailyWordModal');
+  const dailyCloseBtn = document.getElementById('dailyCloseBtn');
   initializeDataManagement(); // <-- 【新增】呼叫新的初始化函式
   initializeCloudSync(); // <-- 【新增】初始化雲端同步
 
@@ -2939,7 +2941,26 @@ function initializeAppUI() {
       if (line.sourceType === 'cert' && line.編號) {
         const noText = document.createTextNode(line.編號 + ' ');
         td1.appendChild(noText);
+      }
 
+      let 腔 = '';
+      let 級 = '';
+      let originalDialectInfo = {};
+      const isGip = line.sourceType === 'gip' || line.sourceName.startsWith('教典');
+
+      if (isGip) {
+         腔 = line.sourceName.replace('教典', '');
+         const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
+         originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '教典' };
+      } else {
+         腔 = line.sourceName.substring(0, 1);
+         級 = line.sourceName.substring(1);
+         originalDialectInfo = getDialectInfo(腔, 級);
+      }
+
+      const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
+
+      if (crossDialectResults.length > 0) {
         const crossDialectBtn = document.createElement('button');
         crossDialectBtn.className = 'crossDialectBtn';
         crossDialectBtn.title = '跨腔調對照';
@@ -2962,7 +2983,7 @@ function initializeAppUI() {
         ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>')
         : line['客家語'];
       const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
       const dialectCode = getDialectCode(selectedDialect);
 
       if (dialectCode) {
@@ -3547,6 +3568,19 @@ function initializeAppUI() {
         console.log(
           'Global hotkey: Escape pressed, closing romanizer modal via custom event.',
         );
+      } else if (dailyWordModal && dailyWordModal.style.display === 'flex') {
+        event.preventDefault();
+        if (typeof window.closeDailyModal === 'function') {
+          window.closeDailyModal();
+        } else {
+          dailyWordModal.style.display = 'none';
+          if (location.hash === '#daily') {
+            history.pushState(null, '', location.pathname + location.search);
+          }
+        }
+        const floatingDailyBtn = document.getElementById('dailyWordBtn');
+        if (floatingDailyBtn) floatingDailyBtn.focus();
+        console.log('Global hotkey: Escape pressed, closing daily word modal.');
       } else if (
         isGeneralInputLikeFocused &&
         activeElement &&
@@ -3725,7 +3759,7 @@ function initializeAppUI() {
             indexedDataCache[term] = [];
           }
           indexedDataCache[term].push({
-            pronunciation: formatPhoneticForDisplay(line['客語標音_顯示']),
+            pronunciation: formatPhoneticForDisplay(line['客語標音_顯示'], isGipData),
             source: sourceName,
             isExactMatch: true,
             originalTerm: term,
@@ -4462,15 +4496,18 @@ function initializeAppUI() {
       bookmarkBtn.innerHTML = `${line.編號} <i class="fas fa-bookmark"></i>`;
       td1.appendChild(bookmarkBtn);
 
-      // Add the cross-dialect comparison button
-      const crossDialectBtn = document.createElement('button');
-      crossDialectBtn.className = 'crossDialectBtn';
-      crossDialectBtn.title = '跨腔調對照';
-      crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
-      crossDialectBtn.addEventListener('click', (event) => {
-        toggleAccordion(event, line, dialectInfo);
-      });
-      td1.appendChild(crossDialectBtn);
+      // Add the cross-dialect comparison button only if there are matches
+      const crossDialectResults = findCrossDialectRows(line, dialectInfo, false);
+      if (crossDialectResults.length > 0) {
+        const crossDialectBtn = document.createElement('button');
+        crossDialectBtn.className = 'crossDialectBtn';
+        crossDialectBtn.title = '跨腔調對照';
+        crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
+        crossDialectBtn.addEventListener('click', (event) => {
+          toggleAccordion(event, line, dialectInfo);
+        });
+        td1.appendChild(crossDialectBtn);
+      }
 
       const playBtn = document.createElement('button');
       playBtn.className = 'playFromThisRow';
@@ -4493,7 +4530,8 @@ function initializeAppUI() {
       const ruby = document.createElement('ruby');
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+      const isGipData = dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典');
+      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGipData);
       const dialectCode = getDialectCode(dialectInfo.腔);
 
       if (dialectCode) {
@@ -5794,6 +5832,54 @@ function initializeAppUI() {
       if (event.target === infoModal) closeInfoModal();
     });
 
+    let originalDocTitle = document.title;
+
+    // --- Daily Word Modal Logic ---
+    const openDailyModal = () => {
+      if (dailyWordModal) {
+        dailyWordModal.style.display = 'flex';
+        originalDocTitle = document.title;
+        document.title = '日日一詞 - 客源翠 HakSpring';
+        if (location.hash !== '#daily') {
+          history.pushState(null, '', location.pathname + location.search + '#daily');
+        }
+        if (window.DailyWord) {
+          window.DailyWord.init();
+        }
+      }
+    };
+
+    const closeDailyModal = () => {
+      if (dailyWordModal) {
+        dailyWordModal.style.display = 'none';
+        document.title = originalDocTitle;
+        if (location.hash === '#daily') {
+          history.pushState(null, '', location.pathname + location.search);
+        }
+      }
+    };
+    window.closeDailyModal = closeDailyModal;
+
+    if (dailyWordBtn) {
+      dailyWordBtn.addEventListener('click', openDailyModal);
+    }
+    if (dailyCloseBtn) {
+      dailyCloseBtn.addEventListener('click', closeDailyModal);
+    }
+
+
+    // Hash routing for #daily
+    if (location.hash === '#daily') {
+      setTimeout(openDailyModal, 100);
+    }
+    window.addEventListener('hashchange', () => {
+      if (location.hash === '#daily') {
+        openDailyModal();
+      } else {
+        closeDailyModal();
+      }
+    });
+
     // --- Auto Bookmark Settings Logic ---
     const autoBookmarkToggle = document.getElementById('autoBookmarkToggle');
     if (autoBookmarkToggle) {
@@ -6194,6 +6280,63 @@ function initializeAppUI() {
   displayGitCommitInfo();
 }
 
+window.CROSS_DIALECT_CACHE = window.CROSS_DIALECT_CACHE || new WeakMap();
+
+function findCrossDialectRows(line, dialectInfo, isGip) {
+  if (window.CROSS_DIALECT_CACHE.has(line)) {
+    return window.CROSS_DIALECT_CACHE.get(line);
+  }
+
+  const accents = ['四', '南', '海', '大', '平', '安'];
+  const results = [];
+  
+  accents.forEach((accentKey) => {
+    // Skip if it is the current dialect
+    if (accentKey === dialectInfo.腔) {
+      return;
+    }
+
+    let dataVarName = '';
+    if (isGip) {
+      dataVarName = '教典' + accentKey;
+    } else {
+      dataVarName = accentKey + dialectInfo.級;
+    }
+    
+    const dataObject = window[dataVarName];
+    if (dataObject && Array.isArray(dataObject.content)) {
+      let foundItem = null;
+      if (isGip) {
+        // Match by 客家語 only for GIP
+        foundItem = dataObject.content.find(
+          (item) => item.客家語 === line.客家語
+        );
+      } else {
+        // Match by 編號 for CERT
+        foundItem = dataObject.content.find((item) => item.編號 === line.編號);
+      }
+      
+      if (foundItem) {
+        let itemDialectInfo;
+        if (isGip) {
+          const accentObj = ACCENT_INFO[accentKey] || { 腔名: '' };
+          itemDialectInfo = { 
+            腔: accentKey, 
+            腔名: accentObj.腔名, 
+            級: '', 
+            fullLvlName: accentObj.腔名 + '教典' 
+          };
+        } else {
+          itemDialectInfo = getDialectInfo(accentKey, dialectInfo.級);
+        }
+        results.push({ foundItem, itemDialectInfo, accentKey, dataVarName });
+      }
+    }
+  });
+  window.CROSS_DIALECT_CACHE.set(line, results);
+  return results;
+}
+
 function toggleAccordion(event, line, dialectInfo) {
   const clickedButton = event.currentTarget;
   const parentRow = clickedButton.closest('tr');
@@ -6221,38 +6364,18 @@ function toggleAccordion(event, line, dialectInfo) {
   parentRow.classList.add('accordion-parent');
   clickedButton.querySelector('i').className = 'fas fa-minus-circle';
 
-  const lineId = line.編號;
-  const currentLevel = dialectInfo.級;
-  const accents = ['四', '海', '大', '平', '安'];
-  const accentMap = {
-    四: { name: '四縣', dataVar: '四' + currentLevel },
-    海: { name: '海陸', dataVar: '海' + currentLevel },
-    大: { name: '大埔', dataVar: '大' + currentLevel },
-    平: { name: '饒平', dataVar: '平' + currentLevel },
-    安: { name: '詔安', dataVar: '安' + currentLevel },
-  };
-
   let lastAppendedRow = parentRow;
   let createdRows = [];
 
-  accents.forEach((accentKey) => {
-    if (accentKey === dialectInfo.腔) {
-      return;
-    }
+  const isGip = line.sourceType === 'gip' || (!dialectInfo.級 && dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典'));
+  const crossDialectResults = findCrossDialectRows(line, dialectInfo, isGip);
 
-    const accentInfo = accentMap[accentKey];
-    const dataObject = window[accentInfo.dataVar];
-    if (dataObject && dataObject.content) {
-      const foundItem = dataObject.content.find((item) => item.編號 === lineId);
-      if (foundItem) {
-        const itemDialectInfo = getDialectInfo(accentKey, currentLevel);
-        const newRow = createComparisonRow(foundItem, itemDialectInfo);
-        newRow.classList.add('accordion-row');
-        lastAppendedRow.after(newRow);
-        lastAppendedRow = newRow;
-        createdRows.push(newRow);
-      }
-    }
+  crossDialectResults.forEach(({ foundItem, itemDialectInfo }) => {
+    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip);
+    newRow.classList.add('accordion-row');
+    lastAppendedRow.after(newRow);
+    lastAppendedRow = newRow;
+    createdRows.push(newRow);
   });
 
   // Add class to the last created row for styling
@@ -6278,7 +6401,7 @@ function toggleAccordion(event, line, dialectInfo) {
   }
 }
 
-function createComparisonRow(line, dialectInfo) {
+function createComparisonRow(line, dialectInfo, isGip) {
   const item = document.createElement('tr');
   item.className = dialectInfo.腔名; // Add dialect class for styling
 
@@ -6292,37 +6415,21 @@ function createComparisonRow(line, dialectInfo) {
   td1.appendChild(sourceSpan);
   item.appendChild(td1);
 
-  // This logic is heavily borrowed from renderCategoryItems
-  const missingAudioInfo =
-    typeof getMissingAudioInfo === 'function'
-      ? getMissingAudioInfo(dialectInfo.fullLvlName, line.分類, line.編號)
-      : null;
-  let mediaYr = dialectInfo.generalMediaYr;
-  let pre112Insertion詞 = '',
-    pre112Insertion句 = '';
-  let 詞目錄級 = dialectInfo.目錄級,
-    句目錄級 = dialectInfo.目錄級;
-  let mediaNo = '';
-  var no = line.編號.split('-');
-  if (no[0] <= 9) no[0] = '0' + no[0];
-  if (dialectInfo.級 === '初') no[0] = '0' + no[0];
-  if (no[1] <= 9) no[1] = '0' + no[1];
-  if (no[1] <= 99) no[1] = '0' + no[1];
-  mediaNo = no[1];
-  const index = dialectInfo.例外音檔.findIndex(([編號]) => 編號 === line.編號);
-  if (index !== -1) {
-    const matchedElement = dialectInfo.例外音檔[index];
-    mediaYr = matchedElement[1];
-    mediaNo = matchedElement[2];
-    pre112Insertion詞 = 'w/';
-    pre112Insertion句 = 's/';
-    if (dialectInfo.目錄另級 !== undefined) {
-      詞目錄級 = dialectInfo.目錄另級;
-      句目錄級 = dialectInfo.目錄另級;
-    }
+  // Audio setup using unified helpers
+  let fullSourceName = '';
+  if (isGip) {
+    fullSourceName = 'gip' + dialectInfo.fullLvlName;
+  } else {
+    fullSourceName = 'cert' + dialectInfo.腔 + dialectInfo.級;
   }
-  const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
-  const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
+
+  // ⚠️ constructWordAudioUrl() 回傳的是「未經 proxy」的原始網址（見該函式結尾註解），
+  // 呼叫端必須自行套 applyAudioProxy()，否則 elearning.hakka.gov.tw 會被 CORS 擋掉。
+  // （constructSentenceAudioUrl() 則是內部已套好，這裡再套一次會原樣返回、無副作用。）
+  let wordAudioSrc = constructWordAudioUrl(line, fullSourceName);
+  if (wordAudioSrc) wordAudioSrc = applyAudioProxy(wordAudioSrc);
+  let sentenceAudioSrc = constructSentenceAudioUrl(line, fullSourceName);
+  if (sentenceAudioSrc) sentenceAudioSrc = applyAudioProxy(sentenceAudioSrc);
 
   // TD2: Vocabulary
   const td2 = document.createElement('td');
@@ -6330,7 +6437,7 @@ function createComparisonRow(line, dialectInfo) {
   const ruby = document.createElement('ruby');
   ruby.textContent = line.客家語;
   const rt = document.createElement('rt');
-  let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示']);
+  let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
   const dialectCode = getDialectCode(dialectInfo.腔);
 
   if (dialectCode) {
@@ -6340,19 +6447,12 @@ function createComparisonRow(line, dialectInfo) {
   ruby.appendChild(rt);
   td2.appendChild(ruby);
   td2.appendChild(document.createElement('br'));
-  if (missingAudioInfo && missingAudioInfo.word === false) {
-    // No audio
-  } else {
+  
+  if (wordAudioSrc) {
     const audio1 = document.createElement('audio');
     audio1.className = 'media accordion-audio';
     audio1.controls = true;
     audio1.preload = 'none';
-    let wordAudioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
-    if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
-      wordAudioSrc = applyAudioProxy(
-        'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
-      );
-    }
     audio1.src = wordAudioSrc;
     td2.appendChild(audio1);
   }
@@ -6379,25 +6479,26 @@ function createComparisonRow(line, dialectInfo) {
     sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
     td3.appendChild(sentenceSpan);
     td3.appendChild(document.createElement('br'));
-    if (
-      dialectInfo.級名 === '高級' ||
-      (missingAudioInfo && missingAudioInfo.sentence === false)
-    ) {
-      // No audio
-    } else {
+    
+    if (sentenceAudioSrc) {
       const audio2 = document.createElement('audio');
       audio2.className = 'media accordion-audio';
       audio2.controls = true;
       audio2.preload = 'none';
-      audio2.src = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${句目錄}-${no[0]}-${mediaNo}s.mp3`);
+      audio2.src = sentenceAudioSrc;
       td3.appendChild(audio2);
     }
     td3.appendChild(document.createElement('br'));
-    const translationText = document.createElement('span');
-    translationText.innerHTML = line.翻譯
-      .replace(/"/g, '')
-      .replace(/\n/g, '<br>');
-    td3.appendChild(translationText);
+    
+    // Some GIP entries might not have a translation field. Use empty string if missing.
+    const translationStr = line.翻譯 || '';
+    if (translationStr) {
+      const translationText = document.createElement('span');
+      translationText.innerHTML = translationStr
+        .replace(/"/g, '')
+        .replace(/\n/g, '<br>');
+      td3.appendChild(translationText);
+    }
   } else {
     td3.classList.add('empty-sentence-cell');
   }

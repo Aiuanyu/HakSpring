@@ -508,6 +508,7 @@ tr.accordion-row {
 }
 
 tr.accordion-row.四縣,
+tr.accordion-row.南四縣,
 tr.accordion-row.海陸,
 tr.accordion-row.大埔,
 tr.accordion-row.饒平,
@@ -516,28 +517,33 @@ tr.accordion-row.詔安 {
 }
 
 tr.accordion-row.四縣 {
-  background-color: #678d3f;
+  background-color: #6f825e;
+}
+
+tr.accordion-row.南四縣 {
+  background-color: #667a57;
 }
 
 tr.accordion-row.海陸 {
-  background-color: #76ad67;
+  background-color: #7e9976;
 }
 
 tr.accordion-row.大埔 {
-  background-color: #5898a9;
+  background-color: #6c8c94;
 }
 
 tr.accordion-row.饒平 {
-  background-color: #834fa1;
+  background-color: #81698f;
 }
 
 tr.accordion-row.詔安 {
-  background-color: #974a47;
+  background-color: #916260;
 }
 
 @media (prefers-color-scheme: dark) {
 
   tr.accordion-row.四縣,
+tr.accordion-row.南四縣,
   tr.accordion-row.海陸,
   tr.accordion-row.大埔,
   tr.accordion-row.饒平,
@@ -584,27 +590,32 @@ tr.accordion-row.詔安 {
 
   #generated tr.accordion-row.四縣,
   #sandhi-showcase tr.accordion-row.四縣 {
-    background-color: #678d3f !important;
+    background-color: #6f825e !important;
+  }
+
+  #generated tr.accordion-row.南四縣,
+  #sandhi-showcase tr.accordion-row.南四縣 {
+    background-color: #667a57 !important;
   }
 
   #generated tr.accordion-row.海陸,
   #sandhi-showcase tr.accordion-row.海陸 {
-    background-color: #76ad67 !important;
+    background-color: #7e9976 !important;
   }
 
   #generated tr.accordion-row.大埔,
   #sandhi-showcase tr.accordion-row.大埔 {
-    background-color: #5898a9 !important;
+    background-color: #6c8c94 !important;
   }
 
   #generated tr.accordion-row.饒平,
   #sandhi-showcase tr.accordion-row.饒平 {
-    background-color: #834fa1 !important;
+    background-color: #81698f !important;
   }
 
   #generated tr.accordion-row.詔安,
   #sandhi-showcase tr.accordion-row.詔安 {
-    background-color: #974a47 !important;
+    background-color: #916260 !important;
   }
 }
 
@@ -2651,7 +2662,8 @@ input:checked+.slider:before {
 #infoModal .modal-dialog,
 #whatsNewModal .modal-dialog,
 #settingsModal .modal-dialog,
-#statsModal .modal-dialog {
+#statsModal .modal-dialog,
+#gameModal .modal-dialog {
   background-color: #fff;
   color: var(--main-text-color);
   border-radius: 10px;
@@ -2669,7 +2681,8 @@ input:checked+.slider:before {
 #infoModal .modal-header,
 #whatsNewModal .modal-header,
 #settingsModal .modal-header,
-#statsModal .modal-header {
+#statsModal .modal-header,
+#gameModal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2687,7 +2700,8 @@ input:checked+.slider:before {
 #infoModal .modal-title,
 #whatsNewModal .modal-title,
 #settingsModal .modal-title,
-#statsModal .modal-title {
+#statsModal .modal-title,
+#gameModal .modal-title {
   margin: 0;
   font-size: 1.3em;
   font-weight: 600;
@@ -2699,7 +2713,8 @@ input:checked+.slider:before {
 #whatsNewModal .modal-close-btn,
 #romanizerContainer .modal-close-btn,
 #settingsModal .modal-close-btn,
-#statsModal .modal-close-btn {
+#statsModal .modal-close-btn,
+#gameModal .modal-close-btn {
   background: none;
   border: none;
   font-size: 1.8rem;
@@ -2719,14 +2734,17 @@ input:checked+.slider:before {
 #settingsModal .modal-close-btn:hover,
 #settingsModal .modal-close-btn:focus-visible,
 #statsModal .modal-close-btn:hover,
-#statsModal .modal-close-btn:focus-visible {
+#statsModal .modal-close-btn:focus-visible,
+#gameModal .modal-close-btn:hover,
+#gameModal .modal-close-btn:focus-visible {
   color: #333;
 }
 
 #infoModal .modal-body,
 #whatsNewModal .modal-body,
 #settingsModal .modal-body,
-#statsModal .modal-body {
+#statsModal .modal-body,
+#gameModal .modal-body {
   padding: 20px 30px;
   flex-grow: 1;
   overflow-y: auto;
@@ -2784,7 +2802,8 @@ input:checked+.slider:before {
   #whatsNewModal .modal-dialog,
   #romanizerContainer .modal-dialog,
   #settingsModal .modal-dialog,
-  #statsModal .modal-dialog {
+  #statsModal .modal-dialog,
+  #gameModal .modal-dialog {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
 
@@ -2792,7 +2811,8 @@ input:checked+.slider:before {
   #whatsNewModal .modal-header,
   #dataManagementModal .modal-header,
   #settingsModal .modal-header,
-  #statsModal .modal-header {
+  #statsModal .modal-header,
+  #gameModal .modal-header {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
@@ -2801,7 +2821,8 @@ input:checked+.slider:before {
   #romanizerContainer .modal-close-btn,
   #dataManagementModal .modal-close-btn,
   #settingsModal .modal-close-btn,
-  #statsModal .modal-close-btn {
+  #statsModal .modal-close-btn,
+  #gameModal .modal-close-btn {
     color: #aaa;
   }
 
@@ -3382,13 +3403,15 @@ mark {
 /* Explicit CSS for Sandhi in Game UI to prevent body/button overrides */
 .game-option-btn ruby[class^="sandhi-"],
 .game-feedback ruby[class^="sandhi-"],
-.pinyin-text ruby[class^="sandhi-"] {
+.pinyin-text ruby[class^="sandhi-"],
+.daily-pinyin ruby[class^="sandhi-"] {
   font-family: var(--roman-font) !important;
   font-size: 1em !important;
 }
 .game-option-btn ruby[class^="sandhi-"] rt,
 .game-feedback ruby[class^="sandhi-"] rt,
-.pinyin-text ruby[class^="sandhi-"] rt {
+.pinyin-text ruby[class^="sandhi-"] rt,
+.daily-pinyin ruby[class^="sandhi-"] rt {
   font-family: var(--roman-font) !important;
   font-size: 50% !important;
 }
@@ -3722,7 +3745,7 @@ mark {
   /* 分底線摎文字隔較開 */
 }
 
-/* 暗夜模式个對應樣式 */
+/* 暗夜模式个對應樣式 --- */
 @media (prefers-color-scheme: dark) {
   .syllable-wrapper:hover {
     background-color: rgba(144, 202, 249, 0.15);
@@ -4818,3 +4841,346 @@ mark {
     color: var(--dark-link-color);
   }
 }
+
+/* --- Daily Word Modal Styles --- */
+
+:root {
+  --daily-overlay-bg: #FAF8F3;
+  --daily-card-bg: #FAF8F3;
+  --daily-card-text: #333333;
+  --daily-source-bg: #2A5043;
+  --daily-source-text: #ffffff;
+  --daily-meaning-bg: transparent;
+  --daily-border: rgba(0, 0, 0, 0.1);
+  --daily-badge-bg: #636D6A;
+  --daily-badge-text: #ffffff;
+  --daily-btn-border: rgba(0, 0, 0, 0.2);
+  --daily-btn-hover: rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --daily-overlay-bg: #242520;
+    --daily-card-bg: #2b2c26;
+    --daily-card-text: #e6e6e6;
+    --daily-source-bg: #1A362C;
+    --daily-source-text: #ffffff;
+    --daily-meaning-bg: transparent;
+    --daily-border: rgba(255, 255, 255, 0.1);
+    --daily-badge-bg: rgba(255, 255, 255, 0.2);
+    --daily-badge-text: #ccc;
+    --daily-btn-border: rgba(255, 255, 255, 0.2);
+    --daily-btn-hover: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.daily-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background-color: var(--daily-overlay-bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Enable scrolling */
+}
+
+.daily-fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 30px;
+  color: #a0a0a0;
+  font-family: var(--title-font);
+}
+
+.daily-app-title {
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  line-height: 1.4;
+}
+
+.daily-app-subtitle {
+  font-size: 0.9rem;
+  letter-spacing: 4px;
+}
+
+.daily-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.daily-header-date {
+  font-family: monospace;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.daily-close-btn {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  font-size: 2.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.daily-close-btn:hover, .daily-close-btn:focus-visible {
+  color: var(--daily-card-text);
+}
+
+.daily-card-container {
+  width: 90%;
+  max-width: 450px; /* Narrower to look more like the screenshot */
+  margin: 0 auto 60px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 10px;
+}
+
+.daily-card {
+  background-color: var(--daily-card-bg); /* Adaptive background */
+  border-radius: 12px;
+  border: 1px solid var(--daily-border);
+  display: flex;
+  flex-direction: column;
+  color: var(--daily-card-text);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.daily-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px;
+}
+
+.daily-cal-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.daily-cal-day {
+  background-color: #C23628; /* Reddish from the screenshot */
+  color: #fff;
+  font-size: 2rem;
+  font-family: var(--title-font);
+  font-weight: 300;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-cal-month {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.95rem;
+  color: #a0a0a0;
+  letter-spacing: 1px;
+}
+
+.daily-mode-badge {
+  border: 1px solid var(--daily-border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  color: #a0a0a0;
+}
+
+.daily-tear-line {
+  border-top: 2px dashed var(--daily-border);
+  margin: 0 24px;
+}
+
+.daily-word-section {
+  padding: 40px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.daily-fav-btn {
+  position: absolute;
+  top: 15px;
+  right: 24px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.daily-fav-btn:hover, .daily-fav-btn.active {
+  color: #C23628; /* Red for star active */
+}
+
+.daily-word {
+  font-family: var(--title-font);
+  font-size: 4rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  color: var(--daily-card-text);
+  line-height: 1.2;
+}
+
+/* 關閉每日一詞沙地(Sandhi)的多重顏色，只要保留變調數字顯示即可 */
+.daily-pinyin ruby[class^="sandhi-"] {
+  color: inherit !important;
+}
+
+.daily-pinyin {
+  font-family: var(--roman-font);
+  font-size: 1.5rem;
+  color: #C23628; /* Accent color for pinyin */
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+
+.daily-meta {
+  font-size: 0.85rem;
+  color: #777;
+  letter-spacing: 1px;
+}
+
+.daily-meaning-section {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: var(--daily-meaning-bg);
+  border-top: 1px solid var(--daily-border);
+}
+
+.daily-source-section {
+  padding: 16px 24px;
+  background-color: var(--daily-source-bg); /* Adaptive source background */
+  color: var(--daily-source-text);
+  font-size: 0.9rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.daily-lang-badge {
+  background-color: var(--daily-badge-bg);
+  color: var(--daily-badge-text);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.daily-meaning-text {
+  font-family: Iansui, '霞鶩文楷 TC', 'LXGW WenKai', tauhu-oo, serif;
+  font-size: 1.3rem;
+  color: var(--daily-card-text);
+}
+
+.daily-sentence-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 10px;
+  text-align: left;
+  border-left: 2px solid var(--daily-border);
+  padding-left: 12px;
+}
+
+.daily-sentence-badge {
+  font-size: 0.8rem;
+  color: #888;
+  padding-top: 4px;
+}
+
+.daily-sentence-text {
+  font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive;
+  font-size: 1.1rem;
+  color: var(--daily-card-text);
+  line-height: 1.5;
+}
+
+.daily-footer-stats {
+  text-align: center;
+  color: #777;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+/* Floating button for Daily Word (Restored) */
+.floating-daily-btn {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(calc(-50% - 60px));
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.floating-daily-btn:hover {
+  transform: translateY(calc(-50% - 60px)) scale(1.1);
+  background-color: var(--primary-btn-hover);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.daily-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.daily-btn-outline {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--daily-btn-border);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--daily-card-text);
+  font-family: var(--title-font);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 2px;
+}
+
+.daily-btn-outline:hover {
+  background-color: var(--daily-btn-hover);
+}
+
+.daily-fav-count-btn {
+  flex: 0.5;
+  color: #C23628;
+  border-color: rgba(194, 54, 40, 0.3);
+}
+.daily-fav-count-btn:hover {
+  background-color: rgba(194, 54, 40, 0.1);
+  border-color: rgba(194, 54, 40, 0.6);
+}
+
+.daily-playing { animation: pulse-playing 1.5s infinite ease-in-out; }
+.daily-playing i { color: var(--main-dark-blue) !important; }

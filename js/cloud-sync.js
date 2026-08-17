@@ -160,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, updated_at')
+      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, daily_favs, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -229,11 +229,17 @@ async function syncFromCloud() {
         localStorage.getItem('hakkaPrefsSynced') || '{}'
       );
 
+      const localFavs = JSON.parse(
+        localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
+      );
+      const cloudFavs = data.daily_favs || { items: [], tomb: {} };
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
       const mergedProgress = mergeProgress(localProgress, cloudProgress);
       const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
       const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, cloudStatsByLevel, syncedStatsByLevel);
+      const mergedFavs = mergeDailyFavs(localFavs, cloudFavs);
 
       // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
       // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
@@ -246,6 +252,7 @@ async function syncFromCloud() {
       localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
       localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
       localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
+      localStorage.setItem('hakkaDailyFavs', JSON.stringify(mergedFavs));
       // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
       // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
@@ -300,8 +307,10 @@ async function syncFromCloud() {
       const statsChanged =
         JSON.stringify(mergedStats) !== JSON.stringify(cloudStats) ||
         JSON.stringify(mergedStatsByLevel) !== JSON.stringify(cloudStatsByLevel);
+      const favsChanged =
+        JSON.stringify(mergedFavs) !== JSON.stringify(cloudFavs);
 
-      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged) {
+      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged) {
         console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
         await syncToCloud();
       } else {
@@ -348,6 +357,9 @@ async function syncFromCloud() {
     if (typeof window.updateProgressDropdown === 'function') {
       window.updateProgressDropdown();
     }
+    if (window.DailyWord && typeof window.DailyWord.refreshUI === 'function') {
+      window.DailyWord.refreshUI();
+    }
 
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');
@@ -389,6 +401,9 @@ async function syncToCloud() {
     const dailyStatsByLevel = JSON.parse(
       localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
     );
+    const dailyFavs = JSON.parse(
+      localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
@@ -398,6 +413,7 @@ async function syncToCloud() {
         learning_progress: learningProgress,
         daily_stats: dailyStats,
         daily_stats_by_level: dailyStatsByLevel,
+        daily_favs: dailyFavs,
         updated_at: new Date().toISOString(),
       },
       {
@@ -621,6 +637,61 @@ function mergeDailyStatsByLevel(localObj, cloudObj, syncedObj) {
   }
 
   return merged;
+}
+
+/**
+ * 每日一詞收藏合併：逐項單調（聯集）＋ tombstone
+ * items 與 tomb 皆存儲 { key: timestamp }，以最新時間為準。
+ */
+function mergeDailyFavs(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : { items: {}, tomb: {} };
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : { items: {}, tomb: {} };
+
+  // 1. 舊版陣列結構升級 (Migration)
+  const normalizeItems = (items) => {
+    if (Array.isArray(items)) {
+      const obj = {};
+      const now = Date.now();
+      items.forEach(key => { obj[key] = now; });
+      return obj;
+    }
+    return items || {};
+  };
+
+  const localItems = normalizeItems(local.items);
+  const cloudItems = normalizeItems(cloud.items);
+
+  // 2. 合併 tomb (取兩邊最新時間戳)
+  const mergedTomb = { ...(local.tomb || {}) };
+  for (const [key, ts] of Object.entries(cloud.tomb || {})) {
+    if (!mergedTomb[key] || ts > mergedTomb[key]) {
+      mergedTomb[key] = ts;
+    }
+  }
+
+  // 3. 合併 items (取兩邊最新時間戳)
+  const mergedItems = { ...localItems };
+  for (const [key, ts] of Object.entries(cloudItems)) {
+    if (!mergedItems[key] || ts > mergedItems[key]) {
+      mergedItems[key] = ts;
+    }
+  }
+
+  // 4. Tombstone 與 Items 競合判定
+  // 若項目存在於 tomb 中，且 tomb 時間較新，則將該 item 刪除；
+  // 若 item 的加入時間較新 (代表取消收藏後又重加)，則保留 item，並從 tomb 中移除。
+  for (const key of Object.keys(mergedTomb)) {
+    if (mergedItems[key] && mergedTomb[key] > mergedItems[key]) {
+      delete mergedItems[key];
+    } else if (mergedItems[key]) {
+      delete mergedTomb[key];
+    }
+  }
+
+  return {
+    items: mergedItems,
+    tomb: mergedTomb
+  };
 }
 
 /**

@@ -67,10 +67,11 @@
 
 ### Modal 視窗
 
-- **加新个 Modal**：若愛加上新个全螢幕 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。
+- **加新个 Modal**：若愛加上新个一般 modal，佢个結構摎行為愛同既有个 `#infoModal`、`#lookupHelpModal` 一致。
 - **HTML 結構**：新 modal 愛有一个根元素，包含 `.modal-overlay` class，還有一個子元素包含 `.modal-dialog` class。Dialog 內部愛有 `.modal-header`、`.modal-body`，還做得選愛無愛加 `.modal-footer`。
 - **CSS 樣式**：為著確保樣式一致，愛將新 modal 个 ID 加到 `style.css` 裡肚既有个群組選擇器。這包含基本樣式、暗色主題樣式，還有其他共享屬性。
 - **JavaScript 邏輯**：顯示／隱藏 modal 个邏輯愛寫在 `main.js` 个 `initializeAppUI` 函式裡肚。用 `style.display = 'flex'` 來顯示 modal，用 `style.display = 'none'` 來隱藏。
+- **全螢幕型 Modal 例外**：若新 modal 是全螢幕沉浸式體驗（如 `#dailyWordModal`），可使用獨立的 `xxx-fullscreen-modal` 結構與專屬 class，不強制套用上述共用的對話方塊規範。
 
 ### 頁首按鈕
 
@@ -166,7 +167,15 @@
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |
+| 日日一詞收藏 | `hakkaDailyFavs` | `daily_favs` | ✅ | 逐項單調（聯集）＋ tombstone |
+| 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
+
+#### 收藏／進度類 key 的年度 migration 提醒
+認證詞彙每年更新（113 → 114 → …），教典亦不定期更新。**級內編號（如 `1-1`）與教典序號在改版後會位移**，凡是以編號當 key 的使用者資料（SRS `progressKey`、日日一詞收藏 `hakkaDailyFavs`）都會對不上。
+- 新增這類資料時，**務必額外冗餘儲存「詞目字串」**，改版後才能用詞目回找新編號自動修復。
+- 換年度資料時，必須同步檢查：受影響的 key、是否需要 migration、migration 失敗的詞如何提示使用者。
+- 並在分類表補一列。
 
 - **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。
 
