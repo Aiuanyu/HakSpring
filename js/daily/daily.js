@@ -569,8 +569,8 @@ const DailyWord = (function () {
       btnFavToggle.addEventListener('click', (e) => {
         const fId = e.currentTarget.dataset.favid;
         DailyFavManager.toggleFav(fId);
-        // Re-render to update the star state and count
-        renderDailyWord('current'); 
+        // Only update UI elements without full re-render
+        refreshUI(); 
       });
     }
     if (btnFavList) {
@@ -795,9 +795,31 @@ const DailyWord = (function () {
     
     // Determine which view is currently active
     if (dailyModalBody.querySelector('#dailyBtnBack')) {
+      // Restore scroll position after rendering the list
+      const container = dailyModalBody.querySelector('.daily-card');
+      const scrollTop = container ? container.scrollTop : 0;
       renderFavoritesPanel();
+      const newContainer = dailyModalBody.querySelector('.daily-card');
+      if (newContainer) newContainer.scrollTop = scrollTop;
     } else {
-      renderDailyWord('current');
+      // Just update the UI states without re-rendering the whole card
+      const btnFavToggle = dailyModalBody.querySelector('.daily-fav-btn');
+      if (btnFavToggle) {
+        const fId = btnFavToggle.dataset.favid;
+        const isFav = DailyFavManager.isFav(fId);
+        btnFavToggle.innerHTML = isFav ? '★' : '☆';
+        if (isFav) {
+          btnFavToggle.classList.add('is-fav');
+        } else {
+          btnFavToggle.classList.remove('is-fav');
+        }
+      }
+      
+      const btnFavList = dailyModalBody.querySelector('#dailyBtnFavList');
+      if (btnFavList) {
+        const favCount = DailyFavManager.getAllFavs().length;
+        btnFavList.innerHTML = `<span style="color: #BE3B2B;">★</span> ${favCount.toLocaleString()}`;
+      }
     }
   }
 
