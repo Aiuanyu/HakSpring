@@ -46,6 +46,7 @@ const fixtures = [
   { pair: 'sán san', expected: '<ruby class="sandhi-t33">sán<rt>33</rt></ruby> san', dialect: 'ha', desc: '海陸 24+55->33' },
 
   // 大埔 (da)
+  { pair: 'sān sān', expected: '<ruby class="sandhi-t35">sān<rt>35</rt></ruby> sān', dialect: 'da', desc: '大埔 33+33->35' },
   { pair: 'sān sǎ', expected: '<ruby class="sandhi-t35">sān<rt>35</rt></ruby> sǎ', dialect: 'da', desc: '大埔 33+113->35' },
   { pair: 'sān sâ', expected: '<ruby class="sandhi-t35">sān<rt>35</rt></ruby> sâ', dialect: 'da', desc: '大埔 33+31->35' },
   { pair: 'sān sâd', expected: '<ruby class="sandhi-t35">sān<rt>35</rt></ruby> sâd', dialect: 'da', desc: '大埔 33+21->35' },
