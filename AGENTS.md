@@ -48,8 +48,10 @@
 - `invalidMediaChecker.html`: 用於檢查音檔連結是否有效。
 - `table-extractor.html`: 用於從應用程式中匯出帶有附加元數據的 CSV 檔案。
 
-## 字詞代號
+## 字詞代號與用語規範
 - `Romaine` = `Romanizer`、「蘿蔓生菜」= 羅馬字轉換工具模組
+- **【絕對原則】「復習」正字規範**：專案全體（包含 UI 介面、文案、說明文件、程式碼註解、Commit 訊息、對話筆記）統一使用正字 **「復習」**，**嚴禁**誤用「複習」（「復」為反覆溫習之意；「複」為複數、繁雜，兩字字義不同，切勿混淆）。
+
 
 ## Agent Coding Conventions
 - **Preserve existing comments:** When modifying code, do not remove or alter existing comments unless they are clearly outdated or incorrect. If you rewrite a block of code, make sure to carry over the original comments.

@@ -470,15 +470,25 @@ const DailyWord = (function () {
       }
     }
 
-    const sentenceBlock = sentenceParts.map(s => {
-      let cleanSentence = s.replace(/^(例|例如)\s*[：:]\s*/, '');
-      return `
+    let sentenceBlock = '';
+    if (sentenceParts.length > 0) {
+      const sentenceLines = sentenceParts.map(s => {
+        let cleanSentence = s.replace(/^(例|例如)\s*[：:]\s*/, '');
+        return `
+        <div class="daily-sentence-item">
+          <span class="daily-sentence-badge">例</span>
+          <span class="daily-sentence-text">${cleanSentence}</span>
+        </div>`;
+      }).join('');
+
+      sentenceBlock = `
       <div class="daily-sentence-block">
-        <span class="daily-sentence-badge">例</span>
-        <span class="daily-sentence-text">${cleanSentence}</span>
-        ${mainSentenceAudio ? `<button class="playBtn" data-src="${mainSentenceAudio}" style="background:none; border:none; color:#888; margin-left:6px; cursor:pointer;"><i class="fas fa-volume-up"></i></button>` : ''}
+        <div class="daily-sentence-list">
+          ${sentenceLines}
+        </div>
+        ${mainSentenceAudio ? `<button class="playBtn" data-src="${mainSentenceAudio}" style="background:none; border:none; color:#888; margin-left:8px; cursor:pointer; align-self: center; padding: 4px; font-size: 1.1em;" title="播放例句"><i class="fas fa-volume-up"></i></button>` : ''}
       </div>`;
-    }).join('');
+    }
 
     const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
     
@@ -556,11 +566,17 @@ const DailyWord = (function () {
     
     if (btnToday) {
       btnToday.addEventListener('click', () => {
+        if (typeof trackEvent === 'function') {
+          trackEvent('click_today', 'DailyWord', word);
+        }
         renderDailyWord('today');
       });
     }
     if (btnRandom) {
       btnRandom.addEventListener('click', () => {
+        if (typeof trackEvent === 'function') {
+          trackEvent('click_random', 'DailyWord', word);
+        }
         renderDailyWord('random');
         if (dailyModalBody) dailyModalBody.scrollTop = 0;
       });
@@ -568,13 +584,20 @@ const DailyWord = (function () {
     if (btnFavToggle) {
       btnFavToggle.addEventListener('click', (e) => {
         const fId = e.currentTarget.dataset.favid;
+        const willBeFav = !DailyFavManager.isFav(fId);
         DailyFavManager.toggleFav(fId);
+        if (typeof trackEvent === 'function') {
+          trackEvent('toggle_fav', 'DailyWord', willBeFav ? 'add' : 'remove');
+        }
         // Only update UI elements without full re-render
         refreshUI(); 
       });
     }
     if (btnFavList) {
       btnFavList.addEventListener('click', () => {
+        if (typeof trackEvent === 'function') {
+          trackEvent('view_fav_list', 'DailyWord', String(favCount));
+        }
         renderFavoritesPanel();
       });
     }
@@ -586,6 +609,10 @@ const DailyWord = (function () {
         e.stopPropagation();
         const src = this.dataset.src;
         if (src && typeof window.playAudioWithAnimation === 'function') {
+          const isSentence = this.title === '播放例句' || this.closest('.daily-sentence-block');
+          if (typeof trackEvent === 'function') {
+            trackEvent('play_audio', 'DailyWord', isSentence ? 'sentence' : 'word');
+          }
           window.playAudioWithAnimation(this, src);
         }
       });
@@ -597,6 +624,9 @@ const DailyWord = (function () {
        if (crossBtn && crossContainer) {
          crossBtn.addEventListener('click', () => {
            if (crossContainer.style.display === 'none') {
+             if (typeof trackEvent === 'function') {
+               trackEvent('expand_cross', 'DailyWord', word);
+             }
              crossContainer.style.display = 'block';
              crossBtn.querySelector('i').className = 'fas fa-minus-circle';
              
@@ -636,10 +666,13 @@ const DailyWord = (function () {
                    sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, '');
                    sentenceRaw = sentenceRaw.replace(/\s+(例|例如)\s*[：:]\s*/g, '<br>');
                    const parts = sentenceRaw.split('<br>').map(s => s.trim()).filter(s => s !== '');
-                   sentenceHTML = parts.map(s => {
-                     let cleanS = s.replace(/^(例|例如)\s*[：:]\s*/, '');
-                     return `<div class="daily-sentence-block" style="margin-top: 6px; font-size: 0.95em; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.02);"><span class="daily-sentence-badge" style="transform: scale(0.85); margin-right: 4px;">例</span><span class="daily-sentence-text">${cleanS}</span>${sentenceAudioUrl ? `<button class="playBtn" data-src="${sentenceAudioUrl}" style="background:none; border:none; color:#888; margin-left:6px; cursor:pointer;"><i class="fas fa-volume-up"></i></button>` : ''}</div>`;
-                   }).join('');
+                   if (parts.length > 0) {
+                     const sentenceItems = parts.map(s => {
+                       let cleanS = s.replace(/^(例|例如)\s*[：:]\s*/, '');
+                       return `<div class="daily-sentence-item" style="gap: 6px;"><span class="daily-sentence-badge" style="transform: scale(0.85); margin-right: 2px; padding-top: 2px;">例</span><span class="daily-sentence-text" style="font-size: 1rem;">${cleanS}</span></div>`;
+                     }).join('');
+                     sentenceHTML = `<div class="daily-sentence-block" style="margin-top: 6px; font-size: 0.95em; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.02); border-left: none;"><div class="daily-sentence-list" style="gap: 4px;">${sentenceItems}</div>${sentenceAudioUrl ? `<button class="playBtn" data-src="${sentenceAudioUrl}" style="background:none; border:none; color:#888; margin-left:8px; cursor:pointer; align-self: center; padding: 2px;" title="播放例句"><i class="fas fa-volume-up"></i></button>` : ''}</div>`;
+                   }
                  }
                  
                  const displayWord = foundItem['客家語'] === word ? '' : foundItem['客家語'];
@@ -676,6 +709,9 @@ const DailyWord = (function () {
                    subBtn.addEventListener('click', (e) => {
                      e.stopPropagation();
                      if (bodyDiv.style.display === 'none') {
+                       if (typeof trackEvent === 'function') {
+                         trackEvent('expand_cross_sentence', 'DailyWord', itemDialectInfo.腔名);
+                       }
                        expandSubAccordion();
                      } else {
                        bodyDiv.style.display = 'none';
@@ -689,6 +725,9 @@ const DailyWord = (function () {
                      e.stopPropagation();
                      expandSubAccordion();
                      const src = this.dataset.src;
+                     if (typeof trackEvent === 'function') {
+                       trackEvent('play_cross_audio', 'DailyWord', itemDialectInfo.腔名);
+                     }
                      if (src && typeof window.playAudioWithAnimation === 'function') {
                         window.playAudioWithAnimation(this, src);
                      }
@@ -698,13 +737,16 @@ const DailyWord = (function () {
                  // Also attach events to sentence play btns inside crossItem
                  const sentenceBtns = crossItem.querySelectorAll('.daily-cross-item-body .playBtn');
                  sentenceBtns.forEach(btn => {
-                    btn.addEventListener('click', function(e) {
-                      e.stopPropagation();
-                      const src = this.dataset.src;
-                      if (src && typeof window.playAudioWithAnimation === 'function') {
-                        window.playAudioWithAnimation(this, src);
-                      }
-                    });
+                     btn.addEventListener('click', function(e) {
+                       e.stopPropagation();
+                       const src = this.dataset.src;
+                       if (typeof trackEvent === 'function') {
+                         trackEvent('play_cross_sentence_audio', 'DailyWord', itemDialectInfo.腔名);
+                       }
+                       if (src && typeof window.playAudioWithAnimation === 'function') {
+                         window.playAudioWithAnimation(this, src);
+                       }
+                     });
                  });
                  
                  crossContainer.appendChild(crossItem);
@@ -773,6 +815,10 @@ const DailyWord = (function () {
     listItems.forEach(item => {
       item.addEventListener('click', (e) => {
         const targetFavId = e.currentTarget.dataset.favid;
+        const wordFav = targetFavId.substring(targetFavId.indexOf(':') + 1);
+        if (typeof trackEvent === 'function') {
+          trackEvent('fav_item_click', 'DailyWord', wordFav);
+        }
         renderDailyWord('specific', 0, targetFavId);
       });
     });
@@ -781,6 +827,9 @@ const DailyWord = (function () {
     if (btnClear) {
       btnClear.addEventListener('click', () => {
         if (confirm('確定要清空所有收藏的詞彙嗎？')) {
+          if (typeof trackEvent === 'function') {
+            trackEvent('clear_favs', 'DailyWord', '');
+          }
           DailyFavManager.clearAll();
           renderFavoritesPanel();
         }

@@ -56,7 +56,9 @@ function getWordsForDialectAndLevel(dialect, dataVarName) {
       const arr = data[key];
       if (!Array.isArray(arr)) continue;
       const due = arr[3];
-      if (due != null && due <= todayEpochDay) {
+      const interval = arr[1] || 0;
+      // 收集：今日到期/逾期詞，以及未來待復習（interval <= 30 保護熟詞）的詞所屬腔級
+      if (due != null && (due <= todayEpochDay || (due > todayEpochDay && interval <= 30))) {
         const match = key.match(/^[cg]([^0-9]+)/);
         if (match) varNames.add(match[1]);
       }
@@ -69,7 +71,7 @@ function getWordsForDialectAndLevel(dialect, dataVarName) {
       allWords = allWords.concat(getWordsForDialectAndLevel(dName, varName));
     }
     if (allWords.length === 0) {
-      throw new Error('這個腔級目前沒有到期要複習的詞，去學新詞或換一級吧！');
+      throw new Error('目前沒有到期或即將到期要復習的詞，去學新詞或換一級吧！');
     }
     return allWords;
   }

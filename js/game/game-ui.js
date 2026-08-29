@@ -328,11 +328,11 @@ function getSelectedTypes() {
   return types.length > 0 ? types : ['m']; // fallback to 'm'
 }
 
-// 記住上一局是不是「清債純複習」模式，讓「再來一局」沿用同模式（否則會跳回一般 10 題混合）。
+// 記住上一局是不是「清債純復習」模式，讓「再過搞一局」沿用同模式（否則會跳回一般 10 題混合）。
 let lastSessionWasReviewOnly = false;
 let lastReviewOnlyVarName = null;
 
-// 「再來一局」派發：清債局→再開一次清債（同腔級）；一般局→照設定面板重開。
+// 「再過搞一局」派發：清債局→再開一次清債（同腔級）；一般局→照設定面板重開。
 function retryGame() {
   if (lastSessionWasReviewOnly && lastReviewOnlyVarName) {
     startReviewDebtSession(lastReviewOnlyVarName);
@@ -394,8 +394,17 @@ async function startReviewDebtSession(dataVarName) {
   const loadingIndicator = document.getElementById('loading-indicator');
   const loadingText = document.getElementById('loading-text');
   
-  loadingText.textContent = '出題中，請小等一下……';
-  loadingIndicator.style.display = 'flex';
+  if (loadingIndicator && loadingText) {
+    if (dataVarName === 'ALL_OVERDUE') {
+      const today = Math.floor(Date.now() / 86400000);
+      const snapshot = typeof computeSrsSnapshot === 'function' ? computeSrsSnapshot(today) : null;
+      const todayDue = snapshot ? (snapshot.forecast[0] || 0) : 0;
+      loadingText.textContent = todayDue > 0 ? '正在載入跨腔級復習詞彙...' : '正在載入跨腔級提早復習詞彙...';
+    } else {
+      loadingText.textContent = '正在載入復習詞彙...';
+    }
+    loadingIndicator.style.display = 'flex';
+  }
   
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
@@ -492,17 +501,27 @@ function renderDueByLevel() {
   if (!el) return;
   if (typeof computeSrsSnapshot !== 'function') return;
   const today = Math.floor(Date.now() / 86400000);
-  const { byLevel } = computeSrsSnapshot(today);
+  const { byLevel, forecast } = computeSrsSnapshot(today);
   const entries = Object.entries(byLevel)
     .filter(([, v]) => v.total > 0)
     .sort((a, b) => b[1].due - a[1].due);        // 欠最多的排最上
   if (entries.length === 0) { el.innerHTML = ''; return; }
 
+  const todayDueTotal = forecast ? (forecast[0] || 0) : 0;
+  const futureDueTotal = forecast ? forecast.slice(1, 8).reduce((a, b) => a + b, 0) : 0;
+
+  let crossBtnText = '跨腔級全部做下復習';
+  let crossBtnStyle = 'background:#3b82f6;';
+  if (todayDueTotal === 0 && futureDueTotal > 0) {
+    crossBtnText = '🌱 跨腔級提早復習';
+    crossBtnStyle = 'background:#10b981;';
+  }
+
   let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0 8px;">
-      <h6 style="margin:0; font-size:0.9rem; font-weight:bold;">📅 各腔級今日待複習</h6>
+      <h6 style="margin:0; font-size:0.9rem; font-weight:bold;">📅 各腔級今日待復習</h6>
       <button class="review-debt-btn" data-varname="ALL_OVERDUE"
-              style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer; background:#3b82f6; color:#fff; font-weight:bold; font-size:0.85rem;">
-        跨腔級全部做下復習
+              style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer; ${crossBtnStyle} color:#fff; font-weight:bold; font-size:0.85rem;">
+        ${crossBtnText}
       </button>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">`;
@@ -523,7 +542,7 @@ function renderDueByLevel() {
       ? `<button class="review-debt-btn" data-varname="${varName}"
            style="border:none; border-radius:8px; padding:4px 12px; cursor:pointer;
                   background:#22c55e; color:#fff; font-weight:bold;">
-           複習 ${v.due} 題 →</button>`
+           復習 ${v.due} 題 →</button>`
       : `<span style="color:var(--text-muted,#999); font-size:0.85rem;">已清空 ✓</span>`;
 
     html += `<div>

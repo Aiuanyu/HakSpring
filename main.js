@@ -5835,7 +5835,7 @@ function initializeAppUI() {
     let originalDocTitle = document.title;
 
     // --- Daily Word Modal Logic ---
-    const openDailyModal = () => {
+    const openDailyModal = (source = 'direct') => {
       if (dailyWordModal) {
         dailyWordModal.style.display = 'flex';
         originalDocTitle = document.title;
@@ -5843,6 +5843,19 @@ function initializeAppUI() {
         if (location.hash !== '#daily') {
           history.pushState(null, '', location.pathname + location.search + '#daily');
         }
+
+        // GA Tracking: Virtual pageview & open event
+        if (typeof gtag === 'function') {
+          gtag('event', 'page_view', {
+            page_title: '日日一詞 - 客源翠 HakSpring',
+            page_location: window.location.href,
+            page_path: window.location.pathname + window.location.search + '#daily'
+          });
+        }
+        if (typeof trackEvent === 'function') {
+          trackEvent('open', 'DailyWord', source);
+        }
+
         if (window.DailyWord) {
           window.DailyWord.init();
         }
@@ -5861,7 +5874,7 @@ function initializeAppUI() {
     window.closeDailyModal = closeDailyModal;
 
     if (dailyWordBtn) {
-      dailyWordBtn.addEventListener('click', openDailyModal);
+      dailyWordBtn.addEventListener('click', () => openDailyModal('floating_btn'));
     }
     if (dailyCloseBtn) {
       dailyCloseBtn.addEventListener('click', closeDailyModal);
@@ -5870,11 +5883,11 @@ function initializeAppUI() {
 
     // Hash routing for #daily
     if (location.hash === '#daily') {
-      setTimeout(openDailyModal, 100);
+      setTimeout(() => openDailyModal('direct_hash'), 100);
     }
     window.addEventListener('hashchange', () => {
       if (location.hash === '#daily') {
-        openDailyModal();
+        openDailyModal('hashchange');
       } else {
         closeDailyModal();
       }

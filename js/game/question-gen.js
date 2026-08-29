@@ -329,16 +329,25 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
 
   let picked = [];
 
-  // 【新增】純複習模式：只出到期/逾期詞卡，不摻新詞、不墊未到期熟詞。
+  // 【升級】純復習/提早復習模式：
+  // 1. 優先出今日到期/逾期詞卡（due <= today，欠越久越先還）。
+  // 2. 若今日到期詞不夠 15 題（或為 0），自動從未到期詞（notDueWords，按 due 由小到大排：明天→後天...）補足至 15 題，實現提早復習！
+  // 3. 只有在兩者皆無時才拋出提示。
   if (reviewOnly) {
-    if (dueWords.length === 0) {
-      throw new Error('這個腔級目前沒有到期要複習的詞，去學新詞或換一級吧！');
-    }
-    // 到期債一次最多 15 題，逾期越久排越前（due 由小到大＝欠越久越先還）。
-    // 20260722 R：20 太多、一般人吃不消，改 15。
     const REVIEW_CAP = 15;
-    const sorted = [...dueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
-    picked = sorted.slice(0, Math.min(REVIEW_CAP, sorted.length));
+    const sortedDue = [...dueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
+    picked = sortedDue.slice(0, Math.min(REVIEW_CAP, sortedDue.length));
+
+    if (picked.length < REVIEW_CAP) {
+      // notDueWords 已排除 interval > 30 與今日已複習詞，依 due 由小到大排序（先抓明天→後天...）
+      const sortedNotDue = [...notDueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
+      const needed = REVIEW_CAP - picked.length;
+      picked = picked.concat(sortedNotDue.slice(0, needed));
+    }
+
+    if (picked.length === 0) {
+      throw new Error('目前沒有到期或即將到期要復習的詞，去學新詞或換一級吧！');
+    }
     // ↓ 跳過原本的 order/池組合與 padding，直接進「第二步：配題型」。
   } else {
     // mixMode 決定「抽取優先序」；今天複習過的一律墊底。
