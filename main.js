@@ -209,8 +209,8 @@ function toggleSearchAccordion(clickedButton, line) {
 
   const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
 
-  crossDialectResults.forEach(({ foundItem, itemDialectInfo }) => {
-    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip);
+  crossDialectResults.forEach(({ foundItem, itemDialectInfo, isDiffWord }) => {
+    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip, isDiffWord);
     newRow.classList.add('accordion-row');
     lastAppendedRow.after(newRow);
     lastAppendedRow = newRow;
@@ -314,6 +314,7 @@ let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨�
 let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
 let preprocessedDataCache = {};
 let indexedDataCache = {}; // <-- 新增此索引快取物件
+let crossDialectMap = null; // GIP 跨腔對照表 (from cross_dialect_map.json)
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
@@ -3783,6 +3784,18 @@ function initializeAppUI() {
     
     // 初始化沙盒展示區的音檔
     initShowcaseAudio();
+
+    // 載入 GIP 跨腔對照表
+    fetch('data/gip/cross_dialect_map.json?v=' + (window.DATA_VERSION || '1'))
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          crossDialectMap = data;
+          window.CROSS_DIALECT_CACHE = new WeakMap(); // 清除載入前可能暫存的降級查詢
+          console.log(`跨腔對照表載入完成：${Object.keys(data.groups).length} 群組，${Object.keys(data.wordIndex).length} 詞目索引`);
+        }
+      })
+      .catch(err => console.warn('跨腔對照表載入失敗（不影響基本功能）:', err));
   }
 
   function initShowcaseAudio() {
@@ -6302,51 +6315,97 @@ function findCrossDialectRows(line, dialectInfo, isGip) {
 
   const accents = ['四', '南', '海', '大', '平', '安'];
   const results = [];
-  
-  accents.forEach((accentKey) => {
-    // Skip if it is the current dialect
-    if (accentKey === dialectInfo.腔) {
-      return;
-    }
 
-    let dataVarName = '';
-    if (isGip) {
-      dataVarName = '教典' + accentKey;
-    } else {
-      dataVarName = accentKey + dialectInfo.級;
-    }
-    
-    const dataObject = window[dataVarName];
-    if (dataObject && Array.isArray(dataObject.content)) {
-      let foundItem = null;
-      if (isGip) {
-        // Match by 客家語 only for GIP
-        foundItem = dataObject.content.find(
-          (item) => item.客家語 === line.客家語
-        );
-      } else {
-        // Match by 編號 for CERT
-        foundItem = dataObject.content.find((item) => item.編號 === line.編號);
-      }
-      
-      if (foundItem) {
-        let itemDialectInfo;
-        if (isGip) {
-          const accentObj = ACCENT_INFO[accentKey] || { 腔名: '' };
-          itemDialectInfo = { 
-            腔: accentKey, 
-            腔名: accentObj.腔名, 
-            級: '', 
-            fullLvlName: accentObj.腔名 + '教典' 
-          };
-        } else {
-          itemDialectInfo = getDialectInfo(accentKey, dialectInfo.級);
+  if (!isGip) {
+    // === CERT: 現有邏輯不變，靠編號 join ===
+    accents.forEach((accentKey) => {
+      if (accentKey === dialectInfo.腔) return;
+      const dataVarName = accentKey + dialectInfo.級;
+      const dataObject = window[dataVarName];
+      if (dataObject && Array.isArray(dataObject.content)) {
+        const foundItem = dataObject.content.find((item) => item.編號 === line.編號);
+        if (foundItem) {
+          const itemDialectInfo = getDialectInfo(accentKey, dialectInfo.級);
+          results.push({ foundItem, itemDialectInfo, accentKey, dataVarName });
         }
-        results.push({ foundItem, itemDialectInfo, accentKey, dataVarName });
       }
-    }
-  });
-  window.CROSS_DIALECT_CACHE.set(line, results);
+    });
+  } else {
+    // === GIP: 三層階梯 Join ===
+    const myWord = line.客家語;
+    const myDialect = dialectInfo.腔;
+
+    // 嘗試用 crossDialectMap 查表
+    const group = crossDialectMap
+      ? (crossDialectMap.wordIndex[myWord]
+        ? crossDialectMap.groups[crossDialectMap.wordIndex[myWord]]
+        : null)
+      : null;
+
+    accents.forEach((accentKey) => {
+      if (accentKey === myDialect) return;
+
+      const dataVarName = '教典' + accentKey;
+      const dataObject = window[dataVarName];
+      if (!dataObject || !Array.isArray(dataObject.content)) return;
+
+      let foundItems = [];
+      let joinType = null;
+
+      if (group && group.members[accentKey]) {
+        // === 查表命中：直接從群組取 ===
+        joinType = group.joinType;
+        const memberList = group.members[accentKey];
+        memberList.forEach(({ idx, word }) => {
+          // idx 是 0-based CSV 行號，對應 content 陣列的 index
+          const item = dataObject.content[idx];
+          if (item && item.客家語 === word) {
+            foundItems.push(item);
+          } else {
+            // idx 可能因資料更新而位移，fallback 用詞目搜尋
+            const fallback = dataObject.content.find(i => i.客家語 === word);
+            if (fallback) foundItems.push(fallback);
+          }
+        });
+      } else {
+        // === 查表未命中（crossDialectMap 未載入或該詞不在表中）：fallback 到現有 Layer 1 邏輯 ===
+        const found = dataObject.content.find((item) => item.客家語 === myWord);
+        if (found) {
+          foundItems = [found];
+          joinType = 'word';
+        }
+      }
+
+      // 去重（同一 accentKey 不要重複推入相同的 item）
+      const seen = new Set();
+      foundItems.forEach((foundItem) => {
+        const itemKey = foundItem.編號 || foundItem.客家語;
+        if (seen.has(itemKey)) return;
+        seen.add(itemKey);
+
+        const accentObj = ACCENT_INFO[accentKey] || { 腔名: '' };
+        const itemDialectInfo = {
+          腔: accentKey,
+          腔名: accentObj.腔名,
+          級: '',
+          fullLvlName: accentObj.腔名 + '教典'
+        };
+        results.push({
+          foundItem,
+          itemDialectInfo,
+          accentKey,
+          dataVarName,
+          // 新增：標示此結果是哪一層 join 來的，以及是否為方言差
+          joinType: joinType,
+          isDiffWord: foundItem.客家語 !== myWord
+        });
+      });
+    });
+  }
+
+  if (crossDialectMap || !isGip) {
+    window.CROSS_DIALECT_CACHE.set(line, results);
+  }
   return results;
 }
 
@@ -6383,8 +6442,8 @@ function toggleAccordion(event, line, dialectInfo) {
   const isGip = line.sourceType === 'gip' || (!dialectInfo.級 && dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典'));
   const crossDialectResults = findCrossDialectRows(line, dialectInfo, isGip);
 
-  crossDialectResults.forEach(({ foundItem, itemDialectInfo }) => {
-    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip);
+  crossDialectResults.forEach(({ foundItem, itemDialectInfo, isDiffWord }) => {
+    const newRow = createComparisonRow(foundItem, itemDialectInfo, isGip, isDiffWord);
     newRow.classList.add('accordion-row');
     lastAppendedRow.after(newRow);
     lastAppendedRow = newRow;
@@ -6414,7 +6473,7 @@ function toggleAccordion(event, line, dialectInfo) {
   }
 }
 
-function createComparisonRow(line, dialectInfo, isGip) {
+function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   const item = document.createElement('tr');
   item.className = dialectInfo.腔名; // Add dialect class for styling
 
@@ -6426,6 +6485,7 @@ function createComparisonRow(line, dialectInfo, isGip) {
   sourceSpan.className = `dialect ${dialectInfo.腔名}`;
   sourceSpan.textContent = dialectInfo.腔名;
   td1.appendChild(sourceSpan);
+
   item.appendChild(td1);
 
   // Audio setup using unified helpers

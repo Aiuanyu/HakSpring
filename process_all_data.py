@@ -329,8 +329,231 @@ def process_directory(directory_path, source_type, all_maps):
         except Exception as e:
             print(f"  ✗ 錯誤：處理檔案 {filename} 時發生意外：{e}")
 
+def build_cross_dialect_map(script_dir):
+    """
+    三層階梯 Join：建立 GIP 教典跨腔對照表。
+    Layer 1: 詞目字串 → Layer 1.5: hk 概念代碼 → Layer 2: 長釋義
+    """
+    from collections import defaultdict
+
+    dialects = ['四', '海', '大', '平', '安', '南']
+    gip_dir = os.path.join(script_dir, 'data', 'gip')
+
+    # 1. 讀取全部 GIP CSV
+    all_records = []  # [{d, idx, word, def_norm, hk}, ...]
+    for d in dialects:
+        csv_path = None
+        for f in os.listdir(gip_dir):
+            if f.endswith(f'-{d}.csv'):
+                csv_path = os.path.join(gip_dir, f)
+                break
+        if not csv_path:
+            print(f'  ✗ 找不到 {d} 腔 CSV')
+            continue
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for idx, row in enumerate(reader):
+                audio = row.get('對應音檔名稱', '').strip()
+                hk_match = re.match(r'(hk\d+)', audio)
+                def_raw = row.get('釋義', '').strip()
+                def_norm = re.sub(r'[\s\u3000]+', '', def_raw).strip()
+                all_records.append({
+                    'd': d,
+                    'idx': idx,
+                    'word': row.get('詞目', '').strip(),
+                    'def_norm': def_norm,
+                    'hk': hk_match.group(1) if hk_match else '',
+                })
+
+    # 2. 建立群組（Union-Find 思路，但用 dict 合併）
+    # 每個 record 的唯一 ID: f"{d}-{idx}"
+    def rec_id(r):
+        return f"{r['d']}-{r['idx']}"
+
+    parent = {}  # rec_id -> group_id
+    groups = {}  # group_id -> { joinType, members: {d: [{idx, word}]} }
+    next_gid = [1]
+
+    def new_group(join_type):
+        gid = f"G{next_gid[0]:05d}"
+        next_gid[0] += 1
+        groups[gid] = {'joinType': join_type, 'members': defaultdict(list)}
+        return gid
+
+    def add_to_group(gid, record):
+        rid = rec_id(record)
+        if rid in parent:
+            return  # 已屬於某群組
+        parent[rid] = gid
+        groups[gid]['members'][record['d']].append({
+            'idx': record['idx'],
+            'word': record['word']
+        })
+
+    def merge_groups(gid_a, gid_b, preferred_type):
+        """將 gid_b 的所有成員併入 gid_a"""
+        if gid_a == gid_b:
+            return gid_a
+        for d, members in groups[gid_b]['members'].items():
+            for m in members:
+                rid = f"{d}-{m['idx']}"
+                parent[rid] = gid_a
+                groups[gid_a]['members'][d].append(m)
+        del groups[gid_b]
+        # joinType 取最高優先級
+        type_priority = {'word': 3, 'hk': 2, 'def': 1}
+        cur_a = groups[gid_a].get('joinType', 'def')
+        best_type = cur_a
+        if type_priority.get(preferred_type, 0) > type_priority.get(best_type, 0):
+            best_type = preferred_type
+        groups[gid_a]['joinType'] = best_type
+        return gid_a
+
+    # --- Layer 1: 詞目字串 ---
+    by_word = defaultdict(list)
+    for r in all_records:
+        by_word[r['word']].append(r)
+
+    for word, recs in by_word.items():
+        if len(recs) < 2:
+            continue
+        existing_gids = set()
+        for r in recs:
+            rid = rec_id(r)
+            if rid in parent:
+                existing_gids.add(parent[rid])
+        if existing_gids:
+            gid = existing_gids.pop()
+            for other_gid in existing_gids:
+                gid = merge_groups(gid, other_gid, 'word')
+        else:
+            gid = new_group('word')
+        for r in recs:
+            add_to_group(gid, r)
+
+    print(f'  Layer 1 (詞目字串): {len(groups)} 群組')
+
+    # --- Layer 1.5: hk 概念代碼 ---
+    by_hk = defaultdict(list)
+    for r in all_records:
+        if r['hk']:
+            by_hk[r['hk']].append(r)
+
+    for hk, recs in by_hk.items():
+        if len(recs) < 2:
+            continue
+        existing_gids = set()
+        for r in recs:
+            rid = rec_id(r)
+            if rid in parent:
+                existing_gids.add(parent[rid])
+
+        if existing_gids:
+            gid = existing_gids.pop()
+            for other_gid in existing_gids:
+                gid = merge_groups(gid, other_gid, 'hk')
+        else:
+            gid = new_group('hk')
+        for r in recs:
+            add_to_group(gid, r)
+
+    print(f'  Layer 1 + 1.5: {len(groups)} 群組')
+
+    # --- Layer 2: 長釋義（≥ 8 字 + 黑名單） ---
+    DEF_BLACKLIST_PREFIXES = ('見「', '同「')
+    DEF_BLACKLIST_EXACT = {'姓。', '地名。', '人名。', '全部。', '衣服。', '手掌。',
+                           '樹枝。', '蝸牛。'}
+
+    def is_def_eligible(d):
+        if not d or len(d) < 8:
+            return False
+        if d in DEF_BLACKLIST_EXACT:
+            return False
+        for prefix in DEF_BLACKLIST_PREFIXES:
+            if d.startswith(prefix):
+                return False
+        return True
+
+    by_def = defaultdict(list)
+    for r in all_records:
+        if is_def_eligible(r['def_norm']):
+            by_def[r['def_norm']].append(r)
+
+    for def_str, recs in by_def.items():
+        if len(recs) < 2:
+            continue
+        existing_gids = set()
+        for r in recs:
+            rid = rec_id(r)
+            if rid in parent:
+                existing_gids.add(parent[rid])
+
+        if existing_gids:
+            gid = existing_gids.pop()
+            for other_gid in existing_gids:
+                gid = merge_groups(gid, other_gid, 'def')
+        else:
+            gid = new_group('def')
+        for r in recs:
+            add_to_group(gid, r)
+
+    print(f'  Layer 1 + 1.5 + 2: {len(groups)} 群組')
+
+    # 3. 清理：只保留跨腔（≥ 2 個不同腔）的群組
+    final_groups = {}
+    for gid, g in groups.items():
+        if len(g['members']) >= 2:
+            final_groups[gid] = {
+                'joinType': g['joinType'],
+                'members': dict(g['members'])  # defaultdict → dict
+            }
+
+    # 4. 建立 wordIndex 反查表
+    word_index = {}
+    for gid, g in final_groups.items():
+        for d, members in g['members'].items():
+            for m in members:
+                w = m['word']
+                if w not in word_index:
+                    word_index[w] = gid
+                elif word_index[w] != gid:
+                    # 衝突：同一詞目在不同群組（極罕見，取群組較大的）
+                    existing_g = final_groups.get(word_index[w])
+                    if existing_g and len(existing_g['members']) < len(g['members']):
+                        word_index[w] = gid
+
+    # 5. 輸出
+    output = {
+        'version': '2026-09-05',
+        'groups': final_groups,
+        'wordIndex': word_index
+    }
+    output_path = os.path.join(gip_dir, 'cross_dialect_map.json')
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(output, f, ensure_ascii=False, separators=(',', ':'))
+
+    stats = {
+        'total_groups': len(final_groups),
+        'total_words_indexed': len(word_index),
+        'by_join_type': defaultdict(int)
+    }
+    for g in final_groups.values():
+        stats['by_join_type'][g['joinType']] += 1
+
+    print(f'  ✓ 輸出 {output_path}')
+    print(f'    群組: {stats["total_groups"]}, 詞目索引: {stats["total_words_indexed"]}')
+    print(f'    各層: {dict(stats["by_join_type"])}')
+
+
 if __name__ == '__main__':
+    import sys
     script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if '--only-map' in sys.argv:
+        print("\n--- 建立 GIP 跨腔對照表 ---")
+        build_cross_dialect_map(script_dir)
+        sys.exit(0)
+
     all_maps = {}
     try:
         with open(os.path.join(script_dir, 'tone_mapping.json'), 'r', encoding='utf-8') as f:
