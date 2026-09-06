@@ -202,5 +202,37 @@
 
 If you need to create a new branch for your work (e.g., to recover from an error or start a clean implementation), you **must** inform the user of the new branch name. Post a comment on the relevant GitHub Pull Request or Issue with the new branch name so that testing and deployment environments can be updated accordingly. Failure to do so will cause confusion and delays. **For follow-up work by the same Jules task/chat, you should commit to the existing branch used in the same task/chat to avoid creating unnecessary new branches.**
 
+## 多線並行與 Worktree 開發規範 (Multi-Track Worktree Workflow)
+
+當使用者指示「多線並行開發」、「分開進行」或目前主 repo 存在另一個分支的未完成檔案（例如稽核腳本、臨時資料）時，**必須**使用 Git Worktree 機制，嚴禁在主 repo 硬切分支或踩踏檔案。
+
+### 1. Worktree 建立原則
+- **目錄命名**：一律在 `/Users/gjrobert/NAS/projects/` 建立同層目錄，格式為 `HakSpring-<feature-name>`（例如 `HakSpring-cross-dialect`）。
+- **建立指令**：
+  ```bash
+  git worktree add /Users/gjrobert/NAS/projects/HakSpring-<feature-name> <branch-name>
+  ```
+- **主 Repo 復歸**：建立 worktree 前後，確保主 repo 乾淨切回原分支（如 `main`），不阻礙其他任務進行。
+
+### 2. 本地測試與 FreeFileSync 同步慣例
+- **Web 測試對應目錄**：一律鏡像至 `/Users/gjrobert/web/plain/HakSpring-<feature-name>`。
+- **FreeFileSync 雙軌設定**：
+  1. **一鍵雙同步（優先）**：在主目錄的 `HakSpring → localhost.ffs_gui` 內的 `<FolderPairs>` 中新增第二對 `<Pair>`：
+     ```xml
+     <Pair>
+         <Left>/Users/gjrobert/NAS/projects/HakSpring-<feature-name></Left>
+         <Right>/Users/gjrobert/web/plain/HakSpring-<feature-name></Right>
+     </Pair>
+     ```
+     讓使用者點一次「同步」即可同時更新主線與平行分支，零摩擦測試！
+  2. **專屬獨立設定檔**：在該 worktree 根目錄建立獨立的 `HakSpring-<feature-name> → localhost.ffs_gui`，僅包含該分支之單一 `<Pair>`，方便單獨作業。
+- **生命週期結束清理**：
+  當分支 merge 完畢後，執行：
+  ```bash
+  git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
+  git branch -d <branch-name>
+  ```
+  並同步復原 `HakSpring → localhost.ffs_gui` 的第二對 `<Pair>`。
+
 ## 快取更新慣例 (Cache Busting Conventions)
 - **更新靜態資源版本**: 當修改了專案的 `.css` 或 `.js` 檔案（特別是在頻繁測試的開發階段或發布新功能時），**必須**同步至 `index.html` 更新對應檔案載入標籤的查詢字串（Query String，如 `?v=4.2.1` 改為 `?v=4.2.2`）。這可以確保使用者的瀏覽器不會因為快取 (Cache) 而載入舊版的樣式或腳本，避免產生「程式碼已修改但畫面未生效」的誤判。
