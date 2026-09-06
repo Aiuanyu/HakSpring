@@ -688,8 +688,32 @@ function mergeDailyFavs(localObj, cloudObj) {
     }
   }
 
+  // 5. 跨腔重複收藏清理 (Deduplication by word/entry)
+  const dedupedItems = {};
+  const seenKeys = new Set();
+  const sortedItemKeys = Object.keys(mergedItems).sort((a, b) => (mergedItems[b] || 0) - (mergedItems[a] || 0));
+  for (const k of sortedItemKeys) {
+    const isGip = k.charAt(0) === 'g';
+    const colonIdx = k.indexOf(':');
+    const word = colonIdx !== -1 ? k.substring(colonIdx + 1) : k;
+    let dedupKey;
+    if (isGip) {
+      dedupKey = `g:${word}`;
+    } else {
+      const idPart = k.substring(0, colonIdx);
+      const m = idPart.match(/^c.(.*?)([0-9].*)$/);
+      dedupKey = m ? `c:${m[1]}|${m[2]}` : `c:${word}`;
+    }
+    if (seenKeys.has(dedupKey)) {
+      mergedTomb[k] = Date.now();
+    } else {
+      seenKeys.add(dedupKey);
+      dedupedItems[k] = mergedItems[k];
+    }
+  }
+
   return {
-    items: mergedItems,
+    items: dedupedItems,
     tomb: mergedTomb
   };
 }

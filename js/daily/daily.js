@@ -32,8 +32,45 @@ const DailyWord = (function () {
             parsed.items.forEach(key => { migratedItems[key] = now; });
             parsed.items = migratedItems;
           }
+
+          // Deduplicate items by (type + word / cert id) to clean up legacy duplicates
+          const rawItems = parsed.items || {};
+          const dedupedItems = {};
+          const seenKeys = new Set();
+          let hasDuplicates = false;
+
+          // Process newest first so the latest entry is preserved
+          const sortedKeys = Object.keys(rawItems).sort((a, b) => (rawItems[b] || 0) - (rawItems[a] || 0));
+          for (const k of sortedKeys) {
+            const isGip = k.charAt(0) === 'g';
+            const colonIdx = k.indexOf(':');
+            const word = colonIdx !== -1 ? k.substring(colonIdx + 1) : k;
+            let dedupKey;
+            if (isGip) {
+              dedupKey = `g:${word}`;
+            } else {
+              const idPart = k.substring(0, colonIdx);
+              const m = idPart.match(/^c.(.*?)([0-9].*)$/);
+              dedupKey = m ? `c:${m[1]}|${m[2]}` : `c:${word}`;
+            }
+
+            if (seenKeys.has(dedupKey)) {
+              hasDuplicates = true;
+              parsed.tomb = parsed.tomb || {};
+              parsed.tomb[k] = Date.now();
+            } else {
+              seenKeys.add(dedupKey);
+              dedupedItems[k] = rawItems[k];
+            }
+          }
+
+          if (hasDuplicates) {
+            parsed.items = dedupedItems;
+            this.saveFavs(parsed);
+          }
+
           return {
-            items: parsed.items || {},
+            items: dedupedItems,
             tomb: parsed.tomb || {}
           };
         }
@@ -49,12 +86,50 @@ const DailyWord = (function () {
         console.error('Error saving hakkaDailyFavs:', e);
       }
     },
+    findExistingKey: function(idString) {
+      if (!idString) return null;
+      const items = this.getFavs().items;
+      if (items[idString]) return idString;
+
+      const isGip = idString.charAt(0) === 'g';
+      const colonIdx = idString.indexOf(':');
+      const word = colonIdx !== -1 ? idString.substring(colonIdx + 1) : '';
+      if (!word) return null;
+
+      for (const existingKey of Object.keys(items)) {
+        const existingIsGip = existingKey.charAt(0) === 'g';
+        if (isGip !== existingIsGip) continue;
+        const existingWord = existingKey.substring(existingKey.indexOf(':') + 1);
+        if (existingWord === word) {
+          if (isGip) return existingKey;
+          const idPart1 = idString.substring(0, colonIdx);
+          const idPart2 = existingKey.substring(0, existingKey.indexOf(':'));
+          const m1 = idPart1.match(/^c.(.*?)([0-9].*)$/);
+          const m2 = idPart2.match(/^c.(.*?)([0-9].*)$/);
+          if (m1 && m2 && m1[1] === m2[1] && m1[2] === m2[2]) {
+            return existingKey;
+          }
+          return existingKey;
+        }
+      }
+      return null;
+    },
     toggleFav: function(idString) { // e.g. "c四基1-1:客家"
       const data = this.getFavs();
-      if (data.items[idString]) {
-        // Remove and tombstone
-        delete data.items[idString];
-        data.tomb[idString] = Date.now();
+      const existingKey = this.findExistingKey(idString);
+      if (existingKey) {
+        // Remove and tombstone existing key (and any potential duplicate of this word)
+        const colonIdx = idString.indexOf(':');
+        const word = colonIdx !== -1 ? idString.substring(colonIdx + 1) : '';
+        const isGip = idString.charAt(0) === 'g';
+        const now = Date.now();
+
+        for (const key of Object.keys(data.items)) {
+          if (key === existingKey || (isGip && key.charAt(0) === 'g' && key.substring(key.indexOf(':') + 1) === word)) {
+            delete data.items[key];
+            data.tomb[key] = now;
+          }
+        }
       } else {
         // Add
         data.items[idString] = Date.now();
@@ -63,7 +138,7 @@ const DailyWord = (function () {
       this.saveFavs(data);
     },
     isFav: function(idString) {
-      return !!this.getFavs().items[idString];
+      return !!this.findExistingKey(idString);
     },
     clearAll: function() {
       const data = this.getFavs();
@@ -76,6 +151,9 @@ const DailyWord = (function () {
     },
     getCount: function() {
       return Object.keys(this.getFavs().items).length;
+    },
+    getAllFavs: function() {
+      return Object.keys(this.getFavs().items);
     }
   };
 
@@ -196,9 +274,38 @@ const DailyWord = (function () {
     } else if (item.type === 'gip') {
       const word = item.key;
       const dialects = ['四', '海', '大', '平', '安', '南'];
-      const orderedDialects = [targetAccentShort, ...dialects.filter(d => d !== targetAccentShort)];
-      
-      for (const d of orderedDialects) {
+
+      // 1. 優先檢查門面腔是否已有完全同名詞目
+      const targetData = window['教典' + targetAccentShort];
+      if (targetData && Array.isArray(targetData.content)) {
+        const idx = targetData.content.findIndex(r => r['客家語'] === word && !r['客家語'].includes('此腔無此詞條'));
+        if (idx !== -1) return { row: targetData.content[idx], dialect: targetAccentShort, index: idx + 1 };
+      }
+
+      // 2. 門面腔反向對齊（Fallback 升級）：若門面腔無同名詞，嘗試透過 crossDialectMap 尋找門面腔對應之方言差詞目
+      const map = window.crossDialectMap;
+      if (map && map.wordIndex && map.groups) {
+        const groupId = map.wordIndex[word];
+        if (groupId && map.groups[groupId]) {
+          const group = map.groups[groupId];
+          if (group.members && group.members[targetAccentShort] && targetData && Array.isArray(targetData.content)) {
+            const memberList = group.members[targetAccentShort];
+            for (const member of memberList) {
+              let foundRow = targetData.content[member.idx];
+              if (!foundRow || foundRow['客家語'] !== member.word) {
+                foundRow = targetData.content.find(r => r['客家語'] === member.word && !r['客家語'].includes('此腔無此詞條'));
+              }
+              if (foundRow && foundRow['客家語'] && !foundRow['客家語'].includes('此腔無此詞條')) {
+                return { row: foundRow, dialect: targetAccentShort, index: (member.idx !== undefined ? member.idx + 1 : 1) };
+              }
+            }
+          }
+        }
+      }
+
+      // 3. 降級至其他腔調取原詞資料
+      const fallbackDialects = dialects.filter(d => d !== targetAccentShort);
+      for (const d of fallbackDialects) {
         const data = window['教典' + d];
         if (data && Array.isArray(data.content)) {
           const idx = data.content.findIndex(r => r['客家語'] === word && !r['客家語'].includes('此腔無此詞條'));
@@ -361,7 +468,14 @@ const DailyWord = (function () {
     currentDailyWordIdx = idx;
 
     const item = dailyPool[idx];
-    const targetAccent = getDisplayAccent();
+    let targetAccent = getDisplayAccent();
+    const effectiveFavId = (mode === 'specific' ? specificFavId : (mode === 'current' ? currentSpecificFavId : null));
+    if (effectiveFavId) {
+      const favDialect = effectiveFavId.charAt(1);
+      if (favDialect && ['四', '海', '大', '平', '安', '南'].includes(favDialect)) {
+        targetAccent = favDialect;
+      }
+    }
     const matchInfo = getRowForAccent(item, targetAccent);
 
     if (!matchInfo) {
@@ -499,8 +613,10 @@ const DailyWord = (function () {
     const sourcePrefix = isGip ? 'g' : 'c';
     const rowId = row['編號'] || row['序號'];
     const dataVarName = isGip ? dialect : dialect + level;
-    const favId = `${sourcePrefix}${dataVarName}${rowId}:${word}`;
-    const isFav = DailyFavManager.isFav(favId);
+    const computedFavId = `${sourcePrefix}${dataVarName}${rowId}:${word}`;
+    const existingFavKey = DailyFavManager.findExistingKey(computedFavId);
+    const favId = existingFavKey || computedFavId;
+    const isFav = !!existingFavKey;
     const favCount = DailyFavManager.getCount();
 
     dailyModalBody.innerHTML = `
@@ -596,7 +712,7 @@ const DailyWord = (function () {
     if (btnFavList) {
       btnFavList.addEventListener('click', () => {
         if (typeof trackEvent === 'function') {
-          trackEvent('view_fav_list', 'DailyWord', String(favCount));
+          trackEvent('view_fav_list', 'DailyWord', String(DailyFavManager.getCount()));
         }
         renderFavoritesPanel();
       });
@@ -855,7 +971,11 @@ const DailyWord = (function () {
       const btnFavToggle = dailyModalBody.querySelector('.daily-fav-btn');
       if (btnFavToggle) {
         const fId = btnFavToggle.dataset.favid;
-        const isFav = DailyFavManager.isFav(fId);
+        const existingKey = DailyFavManager.findExistingKey(fId);
+        const isFav = !!existingKey;
+        if (existingKey) {
+          btnFavToggle.dataset.favid = existingKey;
+        }
         btnFavToggle.innerHTML = isFav ? '★' : '☆';
         if (isFav) {
           btnFavToggle.classList.add('is-fav');
@@ -866,7 +986,7 @@ const DailyWord = (function () {
       
       const btnFavList = dailyModalBody.querySelector('#dailyBtnFavList');
       if (btnFavList) {
-        const favCount = DailyFavManager.getAllFavs().length;
+        const favCount = DailyFavManager.getCount();
         btnFavList.innerHTML = `<span style="color: #BE3B2B;">★</span> ${favCount.toLocaleString()}`;
       }
     }

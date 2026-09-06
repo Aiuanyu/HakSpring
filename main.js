@@ -3791,6 +3791,7 @@ function initializeAppUI() {
       .then(data => {
         if (data) {
           crossDialectMap = data;
+          window.crossDialectMap = data;
           window.CROSS_DIALECT_CACHE = new WeakMap(); // 清除載入前可能暫存的降級查詢
           console.log(`跨腔對照表載入完成：${Object.keys(data.groups).length} 群組，${Object.keys(data.wordIndex).length} 詞目索引`);
         }
