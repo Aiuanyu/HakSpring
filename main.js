@@ -926,8 +926,10 @@ function getSandhiHtml(htmlContent, dialectCode) {
   const PHONETIC_MARKERS = /(?:又(?:俗音|讀|音)|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為|詞目刪除)/g;
   htmlContent = htmlContent.replace(PHONETIC_MARKERS, '【$&】');
 
-  const BLOCKING_PUNCTUATION = '()（）【】';
-  const SKIPPABLE_PUNCTUATION = '\\s、';
+  // 阻斷標點：括號、頓號、逗號、分號、句號等皆為詞項邊界或語音停頓，不可跨越連讀變調。
+  // 僅空白（\s）為音節間隔，可跳過以比對前後音節。
+  const BLOCKING_PUNCTUATION = '()（）【】、，,；;。';
+  const SKIPPABLE_PUNCTUATION = '\\s';
   const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
   const TOKENIZER_REGEX = new RegExp(

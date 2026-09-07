@@ -40,6 +40,9 @@ const fixtures = [
   { pair: 'sán sán', expected: '<ruby class="sandhi-t11">sán<rt>11</rt></ruby> sán', dialect: 'si', desc: '四縣 24+24->11' },
   { pair: 'sán san', expected: '<ruby class="sandhi-t11">sán<rt>11</rt></ruby> san', dialect: 'si', desc: '四縣 24+55->11' },
   { pair: 'sán sad', expected: '<ruby class="sandhi-t11">sán<rt>11</rt></ruby> sad', dialect: 'si', desc: '四縣 24+5->11' },
+  { pair: 'ha ngi bài (ha bài、ha fǐ、ha lín、ha cii)', expected: 'ha ngi bài (ha bài、ha fǐ、ha lín、ha cii)', dialect: 'si', desc: '四縣 頓號阻斷變調（CERT 下二擺 lín 避變調）' },
+  { pair: 'sán、san', expected: 'sán、san', dialect: 'si', desc: '四縣 頓號阻斷 24+55 變調' },
+  { pair: 'sán，san', expected: 'sán，san', dialect: 'si', desc: '四縣 逗號阻斷 24+55 變調' },
 
   // 海陸 (ha)
   { pair: 'sad sà', expected: '<ruby class="sandhi-t2">sad<rt>2</rt></ruby> sà', dialect: 'ha', desc: '海陸 5+53->2' },
