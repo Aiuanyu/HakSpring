@@ -1574,6 +1574,23 @@ input:checked+.slider:before {
   /* Keep text centered */
 }
 
+.copy-url-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  padding: 3px;
+  margin-left: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: color 0.2s ease-in-out;
+}
+
+.copy-url-btn:hover {
+  color: var(--focus-glow-color);
+}
+
 /* --- 戰績面板 Tabs --- */
 .stats-tabs {
   display: flex;

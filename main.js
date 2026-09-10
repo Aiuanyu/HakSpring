@@ -2346,6 +2346,45 @@ function initializeAppUI() {
 
   const resultsSummaryContainer = document.getElementById('results-summary');
   const summaryTextContent = document.getElementById('summary-text-content');
+  const copyUrlBtn = document.getElementById('copyUrlBtn');
+
+  if (copyUrlBtn) {
+    copyUrlBtn.addEventListener('click', () => {
+      const currentUrl = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentUrl).then(showCopySuccess).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+
+      function fallbackCopy() {
+        const textarea = document.createElement('textarea');
+        textarea.value = currentUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showCopySuccess();
+        } catch (err) {
+          console.error('複製網址失敗:', err);
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+
+      function showCopySuccess() {
+        const originalHTML = copyUrlBtn.innerHTML;
+        copyUrlBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyUrlBtn.disabled = true;
+        setTimeout(() => {
+          copyUrlBtn.innerHTML = originalHTML;
+          copyUrlBtn.disabled = false;
+        }, 1500);
+      }
+    });
+  }
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const searchPopup = document.getElementById('search-popup');
