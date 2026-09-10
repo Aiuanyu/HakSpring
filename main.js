@@ -58,6 +58,8 @@ function handleDomainMigration() {
         'lastSearchMode',
         'lastSearchDialect',
         'hideInfoModal',
+        'autoBookmarkMode',
+        'certAdvancedRepeatCount',
       ];
       const migrationData = {};
       keysToMigrate.forEach(function (key) {
@@ -4844,6 +4846,13 @@ function initializeAppUI() {
     playAudio(currentAudioIndex, playbackSessionId); // <-- 【修改此行】傳入新的 ID
   }
 
+  function getCertAdvancedRepeatCount() {
+    const val = parseInt(localStorage.getItem('certAdvancedRepeatCount') || '2', 10);
+    if (isNaN(val) || val < 1) return 1;
+    if (val > 3) return 3;
+    return val;
+  }
+
   /**
    * 播放指定資料索引的音檔。這是新的播放核心。
    * @param {number} itemIndex - 在 activeCategoryData 中的索引。
@@ -4962,13 +4971,40 @@ function initializeAppUI() {
 
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
       currentAudio = wordAudio;
-      currentAudio.play().catch((e) => {
+
+      const targetRepeats =
+        g_currentDialectInfo && g_currentDialectInfo.級 === '高'
+          ? getCertAdvancedRepeatCount()
+          : 1;
+
+      let wordPlayCount = 0;
+
+      const onWordEnded = () => {
+        wordPlayCount++;
+        if (
+          wordPlayCount < targetRepeats &&
+          isPlaying &&
+          !isPaused &&
+          sessionId === playbackSessionId
+        ) {
+          wordAudio.currentTime = 0;
+          wordAudio.play().catch((e) => {
+            console.error('重播詞彙音檔失敗', e);
+            wordAudio.removeEventListener('ended', onWordEnded);
+            playSentence();
+          });
+        } else {
+          wordAudio.removeEventListener('ended', onWordEnded);
+          playSentence();
+        }
+      };
+
+      wordAudio.addEventListener('ended', onWordEnded, { signal });
+
+      wordAudio.play().catch((e) => {
         console.error('播放詞彙音檔失敗', e);
+        wordAudio.removeEventListener('ended', onWordEnded);
         playSentence();
-      });
-      currentAudio.addEventListener('ended', playSentence, {
-        once: true,
-        signal,
       });
     } else {
       playSentence();
@@ -5929,6 +5965,25 @@ function initializeAppUI() {
       });
     }
 
+    // --- CERT Advanced Repeat Setting Logic ---
+    const certAdvancedRepeatSlider = document.getElementById('certAdvancedRepeatSlider');
+    const certAdvancedRepeatValue = document.getElementById('certAdvancedRepeatValue');
+    if (certAdvancedRepeatSlider && certAdvancedRepeatValue) {
+      const savedCount = getCertAdvancedRepeatCount();
+      certAdvancedRepeatSlider.value = savedCount;
+      certAdvancedRepeatValue.textContent = savedCount;
+
+      const updateRepeatCount = (event) => {
+        const val = event.target.value;
+        certAdvancedRepeatValue.textContent = val;
+        localStorage.setItem('certAdvancedRepeatCount', val);
+        trackEvent('change', 'CertAdvancedRepeatCount', val);
+      };
+
+      certAdvancedRepeatSlider.addEventListener('input', updateRepeatCount);
+      certAdvancedRepeatSlider.addEventListener('change', updateRepeatCount);
+    }
+
     // --- Settings Modal Logic ---
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -6676,6 +6731,8 @@ function exportData() {
     'dontShowInfoModalAgain',
     'lastSearchMode',
     'lastSearchDialect',
+    'autoBookmarkMode',
+    'certAdvancedRepeatCount',
     // 'hideInfoModal' is often redundant with 'dontShowInfoModalAgain', so we can omit it.
   ];
 
@@ -6796,6 +6853,8 @@ async function importData() {
       'dontShowInfoModalAgain',
       'lastSearchMode',
       'lastSearchDialect',
+      'autoBookmarkMode',
+      'certAdvancedRepeatCount',
     ];
     for (const key in parsedData) {
       // 3. 基本个 key 驗證

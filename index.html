@@ -703,7 +703,7 @@
           <input type="text" id="userLocationInput" placeholder="例如：新竹頭前溪" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" />
         </div>
         <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
-        <div class="setting-item">
+        <div class="setting-item" style="margin-bottom: 20px;">
           <div class="setting-info">
             <label for="autoBookmarkToggle">一律更新書籤模式</label>
             <span
@@ -713,6 +713,15 @@
             <input type="checkbox" id="autoBookmarkToggle">
             <span class="toggle-slider"></span>
           </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="certAdvancedRepeatSlider">高級認證詞彙播放次數</label>
+            <span class="setting-description">高級認證詞彙放 <span id="certAdvancedRepeatValue">2</span> 擺</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="certAdvancedRepeatSlider" min="1" max="3" step="1" value="2" style="cursor: pointer;" />
+          </div>
         </div>
       </div>
     </div>
