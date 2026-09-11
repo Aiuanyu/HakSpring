@@ -2351,7 +2351,19 @@ function initializeAppUI() {
   const copyUrlBtn = document.getElementById('copyUrlBtn');
 
   if (copyUrlBtn) {
+    // 撳鈕預設个 icon HTML，在 handler 外背存做常數。
+    // 另外用一隻同步旗標檔重入：navigator.clipboard.writeText() 到
+    // showCopySuccess() 中間有一節無同步个空檔，該時 copyUrlBtn.disabled
+    // 都吂設做 true，若在該節再撳一擺，第二擺个 showCopySuccess() 會將
+    // 頭擺已經改做个打勾圖示錯認做「原本个圖示」存起來，setTimeout 還原
+    // 時就會卡在打勾圖示轉毋轉去。isCopying 在點下去該下就同步設 true，
+    // 恰好無恁个空檔。
+    const defaultIconHTML = copyUrlBtn.innerHTML;
+    let isCopying = false;
+
     copyUrlBtn.addEventListener('click', () => {
+      if (isCopying) return;
+      isCopying = true;
       const currentUrl = window.location.href;
       // 複製个內容：摘要文字換行後再擺網址。
       // 來源用 dataset.shareText —— 佢係專門為著分享做个版本，
@@ -2388,18 +2400,19 @@ function initializeAppUI() {
           showCopySuccess();
         } catch (err) {
           console.error('複製失敗:', err);
+          isCopying = false; // 複製失敗，將旗標放轉來，毋使卡核撳鈕
         } finally {
           document.body.removeChild(textarea);
         }
       }
 
       function showCopySuccess() {
-        const originalHTML = copyUrlBtn.innerHTML;
         copyUrlBtn.innerHTML = '<i class="fas fa-check"></i>';
         copyUrlBtn.disabled = true;
         setTimeout(() => {
-          copyUrlBtn.innerHTML = originalHTML;
+          copyUrlBtn.innerHTML = defaultIconHTML;
           copyUrlBtn.disabled = false;
+          isCopying = false;
         }, 1500);
       }
     });
