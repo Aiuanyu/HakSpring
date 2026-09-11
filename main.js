@@ -2150,6 +2150,8 @@ async function initializeApp() {
 
 function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
+  // 分享／複製文字用个站名，排在腔調名前背（例：客源翠四縣）
+  const SHARE_SITE_NAME = '客源翠';
   console.log('Initializing UI...');
 
   function updateAppTitles() {
@@ -2346,6 +2348,75 @@ function initializeAppUI() {
 
   const resultsSummaryContainer = document.getElementById('results-summary');
   const summaryTextContent = document.getElementById('summary-text-content');
+  const copyUrlBtn = document.getElementById('copyUrlBtn');
+
+  if (copyUrlBtn) {
+    // 撳鈕預設个 icon HTML，在 handler 外背存做常數。
+    // 另外用一隻同步旗標檔重入：navigator.clipboard.writeText() 到
+    // showCopySuccess() 中間有一節無同步个空檔，該時 copyUrlBtn.disabled
+    // 都吂設做 true，若在該節再撳一擺，第二擺个 showCopySuccess() 會將
+    // 頭擺已經改做个打勾圖示錯認做「原本个圖示」存起來，setTimeout 還原
+    // 時就會卡在打勾圖示轉毋轉去。isCopying 在點下去該下就同步設 true，
+    // 恰好無恁个空檔。
+    const defaultIconHTML = copyUrlBtn.innerHTML;
+    let isCopying = false;
+
+    copyUrlBtn.addEventListener('click', () => {
+      if (isCopying) return;
+      isCopying = true;
+      const currentUrl = window.location.href;
+      // 複製个內容：摘要文字換行後再擺網址。
+      // 來源用 dataset.shareText —— 佢係專門為著分享做个版本，
+      // 腔調名前背有加站名（例：（客源翠四縣）），畫面頂高个摘要毋使恁長。
+      // 退轉去用 originalText，係因為 adjustResultsSummaryFontSize() 會將
+      // 忒長个摘要改寫做兩行（line1 + <br> + line2.trim()），
+      // originalText 正係無經過改寫个原始值。
+      const summaryLine = summaryTextContent
+        ? (
+            summaryTextContent.dataset.shareText ||
+            summaryTextContent.dataset.originalText ||
+            summaryTextContent.textContent ||
+            ''
+          ).trim()
+        : '';
+      const textToCopy = summaryLine
+        ? `${summaryLine}\n${currentUrl}`
+        : currentUrl;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(showCopySuccess).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+
+      function fallbackCopy() {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showCopySuccess();
+        } catch (err) {
+          console.error('複製失敗:', err);
+          isCopying = false; // 複製失敗，將旗標放轉來，毋使卡核撳鈕
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+
+      function showCopySuccess() {
+        copyUrlBtn.innerHTML = '<i class="fas fa-check"></i>';
+        copyUrlBtn.disabled = true;
+        setTimeout(() => {
+          copyUrlBtn.innerHTML = defaultIconHTML;
+          copyUrlBtn.disabled = false;
+          isCopying = false;
+        }, 1500);
+      }
+    });
+  }
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const searchPopup = document.getElementById('search-popup');
@@ -2707,6 +2778,7 @@ function initializeAppUI() {
       if (summaryTextContent) {
         summaryTextContent.textContent = '';
         summaryTextContent.dataset.originalText = '';
+        summaryTextContent.dataset.shareText = '';
       }
       contentContainer.innerHTML =
         '<p style="text-align: center;">請輸入關鍵字</p>';
@@ -2912,6 +2984,8 @@ function initializeAppUI() {
       summaryTextContent.textContent =
         summaryText + `尋著 0 筆結果（${selectedDialect}）`;
       summaryTextContent.dataset.originalText = summaryTextContent.textContent;
+      summaryTextContent.dataset.shareText =
+        summaryText + `尋著 0 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
       updateResultsSummaryVisibility();
       return;
     }
@@ -2919,6 +2993,9 @@ function initializeAppUI() {
     summaryTextContent.textContent =
       summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
     summaryTextContent.dataset.originalText = summaryTextContent.textContent;
+    summaryTextContent.dataset.shareText =
+      summaryText +
+      `尋著 ${totalResults} 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
 
     const highlightRegex = new RegExp(
       `(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
@@ -3428,7 +3505,19 @@ function initializeAppUI() {
     );
     const minFontSize = g_summary_minFontSize;
     const breakThreshold = g_summary_breakThreshold;
-    const containerWidth = summaryText.clientWidth;
+    // #summary-text-content 已經無 flex-grow，係貼文字大細，
+    // 所以量測基準愛用外層 .summary-inline 个闊度減掉複製撳鈕摎間隙。
+    const summaryInline = summaryText.parentElement;
+    let containerWidth = summaryText.clientWidth;
+    if (summaryInline && summaryInline.classList.contains('summary-inline')) {
+      // copyUrlBtn 係 initializeAppUI() 外層 closure 已經有个常數，
+      // 毋使閣查一擺 DOM。
+      const gap =
+        parseFloat(window.getComputedStyle(summaryInline).columnGap) || 0;
+      const reserved = copyUrlBtn ? copyUrlBtn.offsetWidth + gap : 0;
+      const available = summaryInline.clientWidth - reserved;
+      if (available > 0) containerWidth = available;
+    }
     let currentSize = initialFontSize;
     let needsLineBreak = false;
 
@@ -4436,6 +4525,7 @@ function initializeAppUI() {
         }
         summaryTextContent.textContent = summaryText;
         summaryTextContent.dataset.originalText = summaryText; // Set data attribute with the full text
+        summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
         const resultsSummaryContainer =
           document.getElementById('results-summary');
         if (resultsSummaryContainer && !autoPlayTargetRowId) {
