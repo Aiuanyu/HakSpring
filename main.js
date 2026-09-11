@@ -2351,15 +2351,29 @@ function initializeAppUI() {
   if (copyUrlBtn) {
     copyUrlBtn.addEventListener('click', () => {
       const currentUrl = window.location.href;
+      // 複製个內容：摘要文字換行後再擺網址。
+      // 用 dataset.originalText 做來源，因為 adjustResultsSummaryFontSize()
+      // 會將忒長个摘要改寫做兩行（line1 + <br> + line2.trim()），
+      // originalText 正係無經過改寫个原始值。
+      const summaryLine = summaryTextContent
+        ? (
+            summaryTextContent.dataset.originalText ||
+            summaryTextContent.textContent ||
+            ''
+          ).trim()
+        : '';
+      const textToCopy = summaryLine
+        ? `${summaryLine}\n${currentUrl}`
+        : currentUrl;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(currentUrl).then(showCopySuccess).catch(fallbackCopy);
+        navigator.clipboard.writeText(textToCopy).then(showCopySuccess).catch(fallbackCopy);
       } else {
         fallbackCopy();
       }
 
       function fallbackCopy() {
         const textarea = document.createElement('textarea');
-        textarea.value = currentUrl;
+        textarea.value = textToCopy;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
@@ -2368,7 +2382,7 @@ function initializeAppUI() {
           document.execCommand('copy');
           showCopySuccess();
         } catch (err) {
-          console.error('複製網址失敗:', err);
+          console.error('複製失敗:', err);
         } finally {
           document.body.removeChild(textarea);
         }
