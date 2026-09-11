@@ -2150,6 +2150,13 @@ async function initializeApp() {
   }
 }
 
+function getCertAdvancedRepeatCount() {
+  const val = parseInt(localStorage.getItem('certAdvancedRepeatCount') || '2', 10);
+  if (isNaN(val) || val < 1) return 1;
+  if (val > 3) return 3;
+  return val;
+}
+
 function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   console.log('Initializing UI...');
@@ -4846,13 +4853,6 @@ function initializeAppUI() {
     playAudio(currentAudioIndex, playbackSessionId); // <-- 【修改此行】傳入新的 ID
   }
 
-  function getCertAdvancedRepeatCount() {
-    const val = parseInt(localStorage.getItem('certAdvancedRepeatCount') || '2', 10);
-    if (isNaN(val) || val < 1) return 1;
-    if (val > 3) return 3;
-    return val;
-  }
-
   /**
    * 播放指定資料索引的音檔。這是新的播放核心。
    * @param {number} itemIndex - 在 activeCategoryData 中的索引。
@@ -5973,15 +5973,15 @@ function initializeAppUI() {
       certAdvancedRepeatSlider.value = savedCount;
       certAdvancedRepeatValue.textContent = savedCount;
 
-      const updateRepeatCount = (event) => {
+      certAdvancedRepeatSlider.addEventListener('input', (event) => {
         const val = event.target.value;
         certAdvancedRepeatValue.textContent = val;
         localStorage.setItem('certAdvancedRepeatCount', val);
-        trackEvent('change', 'CertAdvancedRepeatCount', val);
-      };
+      });
 
-      certAdvancedRepeatSlider.addEventListener('input', updateRepeatCount);
-      certAdvancedRepeatSlider.addEventListener('change', updateRepeatCount);
+      certAdvancedRepeatSlider.addEventListener('change', (event) => {
+        trackEvent('change', 'CertAdvancedRepeatCount', event.target.value);
+      });
     }
 
     // --- Settings Modal Logic ---
@@ -6956,6 +6956,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     classifyTone,
     getSandhiHtml,
-    formatPhoneticForDisplay
+    formatPhoneticForDisplay,
+    getCertAdvancedRepeatCount
   };
 }
