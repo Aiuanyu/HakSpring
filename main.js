@@ -3467,18 +3467,7 @@ function initializeAppUI() {
     );
     const minFontSize = g_summary_minFontSize;
     const breakThreshold = g_summary_breakThreshold;
-    // #summary-text-content 已經無 flex-grow，係貼文字大細，
-    // 所以量測基準愛用外層 .summary-inline 个闊度減掉複製撳鈕摎間隙。
-    const summaryInline = summaryText.parentElement;
-    let containerWidth = summaryText.clientWidth;
-    if (summaryInline && summaryInline.classList.contains('summary-inline')) {
-      const copyUrlButton = document.getElementById('copyUrlBtn');
-      const gap =
-        parseFloat(window.getComputedStyle(summaryInline).columnGap) || 0;
-      const reserved = copyUrlButton ? copyUrlButton.offsetWidth + gap : 0;
-      const available = summaryInline.clientWidth - reserved;
-      if (available > 0) containerWidth = available;
-    }
+    const containerWidth = summaryText.clientWidth;
     let currentSize = initialFontSize;
     let needsLineBreak = false;
 
