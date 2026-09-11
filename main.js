@@ -2150,6 +2150,8 @@ async function initializeApp() {
 
 function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
+  // 分享／複製文字用个站名，排在腔調名前背（例：客源翠四縣）
+  const SHARE_SITE_NAME = '客源翠';
   console.log('Initializing UI...');
 
   function updateAppTitles() {
@@ -2352,11 +2354,14 @@ function initializeAppUI() {
     copyUrlBtn.addEventListener('click', () => {
       const currentUrl = window.location.href;
       // 複製个內容：摘要文字換行後再擺網址。
-      // 用 dataset.originalText 做來源，因為 adjustResultsSummaryFontSize()
-      // 會將忒長个摘要改寫做兩行（line1 + <br> + line2.trim()），
+      // 來源用 dataset.shareText —— 佢係專門為著分享做个版本，
+      // 腔調名前背有加站名（例：（客源翠四縣）），畫面頂高个摘要毋使恁長。
+      // 退轉去用 originalText，係因為 adjustResultsSummaryFontSize() 會將
+      // 忒長个摘要改寫做兩行（line1 + <br> + line2.trim()），
       // originalText 正係無經過改寫个原始值。
       const summaryLine = summaryTextContent
         ? (
+            summaryTextContent.dataset.shareText ||
             summaryTextContent.dataset.originalText ||
             summaryTextContent.textContent ||
             ''
@@ -2760,6 +2765,7 @@ function initializeAppUI() {
       if (summaryTextContent) {
         summaryTextContent.textContent = '';
         summaryTextContent.dataset.originalText = '';
+        summaryTextContent.dataset.shareText = '';
       }
       contentContainer.innerHTML =
         '<p style="text-align: center;">請輸入關鍵字</p>';
@@ -2965,6 +2971,8 @@ function initializeAppUI() {
       summaryTextContent.textContent =
         summaryText + `尋著 0 筆結果（${selectedDialect}）`;
       summaryTextContent.dataset.originalText = summaryTextContent.textContent;
+      summaryTextContent.dataset.shareText =
+        summaryText + `尋著 0 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
       updateResultsSummaryVisibility();
       return;
     }
@@ -2972,6 +2980,9 @@ function initializeAppUI() {
     summaryTextContent.textContent =
       summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
     summaryTextContent.dataset.originalText = summaryTextContent.textContent;
+    summaryTextContent.dataset.shareText =
+      summaryText +
+      `尋著 ${totalResults} 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
 
     const highlightRegex = new RegExp(
       `(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
@@ -4500,6 +4511,7 @@ function initializeAppUI() {
         }
         summaryTextContent.textContent = summaryText;
         summaryTextContent.dataset.originalText = summaryText; // Set data attribute with the full text
+        summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
         const resultsSummaryContainer =
           document.getElementById('results-summary');
         if (resultsSummaryContainer && !autoPlayTargetRowId) {
