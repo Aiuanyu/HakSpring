@@ -1599,6 +1599,11 @@ input:checked+.slider:before {
   color: var(--focus-glow-color);
 }
 
+.copy-url-btn:disabled {
+  cursor: default;
+  /* 複製成功後 1.5 秒撳鈕暫時毋做得撳，游標毋使閣顯示做「做得撳」个手指形 */
+}
+
 /* --- 戰績面板 Tabs --- */
 .stats-tabs {
   display: flex;

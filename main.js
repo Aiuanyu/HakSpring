@@ -3510,10 +3510,11 @@ function initializeAppUI() {
     const summaryInline = summaryText.parentElement;
     let containerWidth = summaryText.clientWidth;
     if (summaryInline && summaryInline.classList.contains('summary-inline')) {
-      const copyUrlButton = document.getElementById('copyUrlBtn');
+      // copyUrlBtn 係 initializeAppUI() 外層 closure 已經有个常數，
+      // 毋使閣查一擺 DOM。
       const gap =
         parseFloat(window.getComputedStyle(summaryInline).columnGap) || 0;
-      const reserved = copyUrlButton ? copyUrlButton.offsetWidth + gap : 0;
+      const reserved = copyUrlBtn ? copyUrlBtn.offsetWidth + gap : 0;
       const available = summaryInline.clientWidth - reserved;
       if (available > 0) containerWidth = available;
     }
