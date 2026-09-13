@@ -2165,6 +2165,8 @@ function getCertAdvancedRepeatCount() {
  * @param {boolean} isPaused - 是否處於暫停狀態。
  * @param {*} sessionId - 這擺播放个 session id。
  * @param {*} playbackSessionId - 目前有效个 session id。
+ * @param {number} itemIndex - 這擺播放个項目索引。
+ * @param {number} currentAudioIndex - 目前正經在播个項目索引。
  */
 function shouldRepeatWord(
   wordPlayCount,
@@ -2173,12 +2175,15 @@ function shouldRepeatWord(
   isPaused,
   sessionId,
   playbackSessionId,
+  itemIndex,
+  currentAudioIndex,
 ) {
   return (
     wordPlayCount < targetRepeats &&
     isPlaying &&
     !isPaused &&
-    sessionId === playbackSessionId
+    sessionId === playbackSessionId &&
+    itemIndex === currentAudioIndex
   );
 }
 
@@ -5014,6 +5019,8 @@ function initializeAppUI() {
             isPaused,
             sessionId,
             playbackSessionId,
+            itemIndex,
+            currentAudioIndex,
           )
         ) {
           wordAudio.currentTime = 0;

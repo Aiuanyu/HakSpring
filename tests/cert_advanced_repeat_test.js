@@ -46,30 +46,38 @@ assert.strictEqual(getCertAdvancedRepeatCount(), 2, 'NaN repeat count should fal
 console.log('🎉 All CERT Advanced repeat count tests passed successfully!');
 
 // Test 4: shouldRepeatWord() — the decision logic behind onWordEnded in playAudio.
+// Last two args are (itemIndex, currentAudioIndex): they must match, or the
+// `ended` event is stale (e.g. a hardware/media-key skip moved on to a
+// different item without aborting the outgoing word audio).
 assert.strictEqual(
-  shouldRepeatWord(1, 3, true, false, 's1', 's1'),
+  shouldRepeatWord(1, 3, true, false, 's1', 's1', 0, 0),
   true,
-  'Should repeat while under target count and session is still current',
+  'Should repeat while under target count and session/item are still current',
 );
 assert.strictEqual(
-  shouldRepeatWord(3, 3, true, false, 's1', 's1'),
+  shouldRepeatWord(3, 3, true, false, 's1', 's1', 0, 0),
   false,
   'Should stop once target repeat count is reached',
 );
 assert.strictEqual(
-  shouldRepeatWord(1, 3, false, false, 's1', 's1'),
+  shouldRepeatWord(1, 3, false, false, 's1', 's1', 0, 0),
   false,
   'Should stop when playback is no longer active',
 );
 assert.strictEqual(
-  shouldRepeatWord(1, 3, true, true, 's1', 's1'),
+  shouldRepeatWord(1, 3, true, true, 's1', 's1', 0, 0),
   false,
   'Should stop when playback is paused',
 );
 assert.strictEqual(
-  shouldRepeatWord(1, 3, true, false, 's1', 's2'),
+  shouldRepeatWord(1, 3, true, false, 's1', 's2', 0, 0),
   false,
   'Should stop when the session has moved on (stale ended event)',
+);
+assert.strictEqual(
+  shouldRepeatWord(1, 3, true, false, 's1', 's1', 0, 1),
+  false,
+  'Should stop when a media-key skip advanced to a different item without a new session',
 );
 
 console.log('🎉 All CERT Advanced repeat-decision tests passed successfully!');
