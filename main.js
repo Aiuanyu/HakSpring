@@ -2152,9 +2152,34 @@ async function initializeApp() {
 
 function getCertAdvancedRepeatCount() {
   const val = parseInt(localStorage.getItem('certAdvancedRepeatCount') || '2', 10);
-  if (isNaN(val) || val < 1) return 1;
+  if (isNaN(val) || val < 1) return 2;
   if (val > 3) return 3;
   return val;
+}
+
+/**
+ * 決定詞彙音檔是否應該再重播一擺。
+ * @param {number} wordPlayCount - 該詞彙音檔已經播放个次數（含這擺）。
+ * @param {number} targetRepeats - 設定个目標播放次數。
+ * @param {boolean} isPlaying - 是否還在播放狀態。
+ * @param {boolean} isPaused - 是否處於暫停狀態。
+ * @param {*} sessionId - 這擺播放个 session id。
+ * @param {*} playbackSessionId - 目前有效个 session id。
+ */
+function shouldRepeatWord(
+  wordPlayCount,
+  targetRepeats,
+  isPlaying,
+  isPaused,
+  sessionId,
+  playbackSessionId,
+) {
+  return (
+    wordPlayCount < targetRepeats &&
+    isPlaying &&
+    !isPaused &&
+    sessionId === playbackSessionId
+  );
 }
 
 function initializeAppUI() {
@@ -4982,10 +5007,14 @@ function initializeAppUI() {
       const onWordEnded = () => {
         wordPlayCount++;
         if (
-          wordPlayCount < targetRepeats &&
-          isPlaying &&
-          !isPaused &&
-          sessionId === playbackSessionId
+          shouldRepeatWord(
+            wordPlayCount,
+            targetRepeats,
+            isPlaying,
+            isPaused,
+            sessionId,
+            playbackSessionId,
+          )
         ) {
           wordAudio.currentTime = 0;
           wordAudio.play().catch((e) => {
@@ -6957,6 +6986,7 @@ if (typeof module !== 'undefined' && module.exports) {
     classifyTone,
     getSandhiHtml,
     formatPhoneticForDisplay,
-    getCertAdvancedRepeatCount
+    getCertAdvancedRepeatCount,
+    shouldRepeatWord
   };
 }

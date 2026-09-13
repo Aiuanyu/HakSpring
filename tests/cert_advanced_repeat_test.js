@@ -18,7 +18,7 @@ global.localStorage = {
   clear: () => { Object.keys(localStorageStore).forEach(k => delete localStorageStore[k]); }
 };
 
-const { getCertAdvancedRepeatCount } = require('../main.js');
+const { getCertAdvancedRepeatCount, shouldRepeatWord } = require('../main.js');
 
 // Test 1: Default value when localStorage is empty
 localStorage.clear();
@@ -31,17 +31,48 @@ assert.strictEqual(getCertAdvancedRepeatCount(), 1, 'Repeat count should be 1');
 localStorage.setItem('certAdvancedRepeatCount', '3');
 assert.strictEqual(getCertAdvancedRepeatCount(), 3, 'Repeat count should be 3');
 
-// Test 3: Clamping invalid / out-of-bound values
+// Test 3: Clamping invalid / out-of-bound values.
+// Corrupted/invalid values fall back to the same documented default (2) as
+// an unset key, rather than a separate "1" fallback.
 localStorage.setItem('certAdvancedRepeatCount', '0');
-assert.strictEqual(getCertAdvancedRepeatCount(), 1, 'Repeat count < 1 should clamp to 1');
+assert.strictEqual(getCertAdvancedRepeatCount(), 2, 'Repeat count < 1 should fall back to default (2)');
 
 localStorage.setItem('certAdvancedRepeatCount', '5');
 assert.strictEqual(getCertAdvancedRepeatCount(), 3, 'Repeat count > 3 should clamp to 3');
 
 localStorage.setItem('certAdvancedRepeatCount', 'invalid');
-assert.strictEqual(getCertAdvancedRepeatCount(), 1, 'NaN repeat count should fallback to 1');
+assert.strictEqual(getCertAdvancedRepeatCount(), 2, 'NaN repeat count should fall back to default (2)');
 
-console.log('🎉 All CERT Advanced repeat tests passed successfully!');
+console.log('🎉 All CERT Advanced repeat count tests passed successfully!');
+
+// Test 4: shouldRepeatWord() — the decision logic behind onWordEnded in playAudio.
+assert.strictEqual(
+  shouldRepeatWord(1, 3, true, false, 's1', 's1'),
+  true,
+  'Should repeat while under target count and session is still current',
+);
+assert.strictEqual(
+  shouldRepeatWord(3, 3, true, false, 's1', 's1'),
+  false,
+  'Should stop once target repeat count is reached',
+);
+assert.strictEqual(
+  shouldRepeatWord(1, 3, false, false, 's1', 's1'),
+  false,
+  'Should stop when playback is no longer active',
+);
+assert.strictEqual(
+  shouldRepeatWord(1, 3, true, true, 's1', 's1'),
+  false,
+  'Should stop when playback is paused',
+);
+assert.strictEqual(
+  shouldRepeatWord(1, 3, true, false, 's1', 's2'),
+  false,
+  'Should stop when the session has moved on (stale ended event)',
+);
+
+console.log('🎉 All CERT Advanced repeat-decision tests passed successfully!');
 
 // `require('../main.js')` fires off the app's async initializeApp() bootstrap
 // (guarded only by `typeof window !== 'undefined'`), which is expected to
