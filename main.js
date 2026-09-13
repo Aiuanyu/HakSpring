@@ -58,6 +58,8 @@ function handleDomainMigration() {
         'lastSearchMode',
         'lastSearchDialect',
         'hideInfoModal',
+        'autoBookmarkMode',
+        'certAdvancedRepeatCount',
       ];
       const migrationData = {};
       keysToMigrate.forEach(function (key) {
@@ -2146,6 +2148,43 @@ async function initializeApp() {
     // The specific error message is already set by the throwing function
     // loadingText.textContent = '應用程式載入失敗，請重新整理頁面再試一次。';
   }
+}
+
+function getCertAdvancedRepeatCount() {
+  const val = parseInt(localStorage.getItem('certAdvancedRepeatCount') || '2', 10);
+  if (isNaN(val) || val < 1) return 2;
+  if (val > 3) return 3;
+  return val;
+}
+
+/**
+ * 決定詞彙音檔是否應該再重播一擺。
+ * @param {number} wordPlayCount - 該詞彙音檔已經播放个次數（含這擺）。
+ * @param {number} targetRepeats - 設定个目標播放次數。
+ * @param {boolean} isPlaying - 是否還在播放狀態。
+ * @param {boolean} isPaused - 是否處於暫停狀態。
+ * @param {*} sessionId - 這擺播放个 session id。
+ * @param {*} playbackSessionId - 目前有效个 session id。
+ * @param {number} itemIndex - 這擺播放个項目索引。
+ * @param {number} currentAudioIndex - 目前正經在播个項目索引。
+ */
+function shouldRepeatWord(
+  wordPlayCount,
+  targetRepeats,
+  isPlaying,
+  isPaused,
+  sessionId,
+  playbackSessionId,
+  itemIndex,
+  currentAudioIndex,
+) {
+  return (
+    wordPlayCount < targetRepeats &&
+    isPlaying &&
+    !isPaused &&
+    sessionId === playbackSessionId &&
+    itemIndex === currentAudioIndex
+  );
 }
 
 function initializeAppUI() {
@@ -5052,13 +5091,46 @@ function initializeAppUI() {
 
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
       currentAudio = wordAudio;
-      currentAudio.play().catch((e) => {
+
+      const targetRepeats =
+        g_currentDialectInfo && g_currentDialectInfo.級 === '高'
+          ? getCertAdvancedRepeatCount()
+          : 1;
+
+      let wordPlayCount = 0;
+
+      const onWordEnded = () => {
+        wordPlayCount++;
+        if (
+          shouldRepeatWord(
+            wordPlayCount,
+            targetRepeats,
+            isPlaying,
+            isPaused,
+            sessionId,
+            playbackSessionId,
+            itemIndex,
+            currentAudioIndex,
+          )
+        ) {
+          wordAudio.currentTime = 0;
+          wordAudio.play().catch((e) => {
+            console.error('重播詞彙音檔失敗', e);
+            wordAudio.removeEventListener('ended', onWordEnded);
+            playSentence();
+          });
+        } else {
+          wordAudio.removeEventListener('ended', onWordEnded);
+          playSentence();
+        }
+      };
+
+      wordAudio.addEventListener('ended', onWordEnded, { signal });
+
+      wordAudio.play().catch((e) => {
         console.error('播放詞彙音檔失敗', e);
+        wordAudio.removeEventListener('ended', onWordEnded);
         playSentence();
-      });
-      currentAudio.addEventListener('ended', playSentence, {
-        once: true,
-        signal,
       });
     } else {
       playSentence();
@@ -6019,6 +6091,25 @@ function initializeAppUI() {
       });
     }
 
+    // --- CERT Advanced Repeat Setting Logic ---
+    const certAdvancedRepeatSlider = document.getElementById('certAdvancedRepeatSlider');
+    const certAdvancedRepeatValue = document.getElementById('certAdvancedRepeatValue');
+    if (certAdvancedRepeatSlider && certAdvancedRepeatValue) {
+      const savedCount = getCertAdvancedRepeatCount();
+      certAdvancedRepeatSlider.value = savedCount;
+      certAdvancedRepeatValue.textContent = savedCount;
+
+      certAdvancedRepeatSlider.addEventListener('input', (event) => {
+        const val = event.target.value;
+        certAdvancedRepeatValue.textContent = val;
+        localStorage.setItem('certAdvancedRepeatCount', val);
+      });
+
+      certAdvancedRepeatSlider.addEventListener('change', (event) => {
+        trackEvent('change', 'CertAdvancedRepeatCount', event.target.value);
+      });
+    }
+
     // --- Settings Modal Logic ---
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -6766,6 +6857,8 @@ function exportData() {
     'dontShowInfoModalAgain',
     'lastSearchMode',
     'lastSearchDialect',
+    'autoBookmarkMode',
+    'certAdvancedRepeatCount',
     // 'hideInfoModal' is often redundant with 'dontShowInfoModalAgain', so we can omit it.
   ];
 
@@ -6886,6 +6979,8 @@ async function importData() {
       'dontShowInfoModalAgain',
       'lastSearchMode',
       'lastSearchDialect',
+      'autoBookmarkMode',
+      'certAdvancedRepeatCount',
     ];
     for (const key in parsedData) {
       // 3. 基本个 key 驗證
@@ -6987,6 +7082,8 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     classifyTone,
     getSandhiHtml,
-    formatPhoneticForDisplay
+    formatPhoneticForDisplay,
+    getCertAdvancedRepeatCount,
+    shouldRepeatWord
   };
 }

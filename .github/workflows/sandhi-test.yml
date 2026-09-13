@@ -7,6 +7,7 @@ on:
       - 'sandhi_rules.json'
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
+      - 'tests/cert_advanced_repeat_test.js'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -14,6 +15,7 @@ on:
       - 'sandhi_rules.json'
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
+      - 'tests/cert_advanced_repeat_test.js'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -26,3 +28,5 @@ jobs:
           node-version: '20'
       - name: Run sandhi fixture regression
         run: node tests/sandhi_fixture_test.js
+      - name: Run CERT Advanced repeat tests
+        run: node tests/cert_advanced_repeat_test.js
