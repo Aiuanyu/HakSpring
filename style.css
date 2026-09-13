@@ -1565,13 +1565,43 @@ input:checked+.slider:before {
   overflow: hidden;
 }
 
-#summary-text-content {
+/* 摘要文字摎複製撳鈕包做一組，撳鈕緊貼文字，成組共下置中。
+   外層佔滿賰下个闊度，好比得 adjustResultsSummaryFontSize() 有準確个量測基準。 */
+.summary-inline {
+  display: flex;
   flex-grow: 1;
-  /* Allow the text to take up available space */
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+#summary-text-content {
   min-width: 0;
   /* Prevent text from overflowing its container */
   text-align: center;
   /* Keep text centered */
+}
+
+.copy-url-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+  padding: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: color 0.2s ease-in-out;
+}
+
+.copy-url-btn:hover {
+  color: var(--focus-glow-color);
+}
+
+.copy-url-btn:disabled {
+  cursor: default;
+  /* 複製成功後 1.5 秒撳鈕暫時毋做得撳，游標毋使閣顯示做「做得撳」个手指形 */
 }
 
 /* --- 戰績面板 Tabs --- */
