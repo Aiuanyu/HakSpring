@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.6.5" />
+  <link rel="stylesheet" href="style.css?v=4.6.7" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -25,7 +25,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
-  <script type="text/javascript" src="main.js?v=4.5.9" defer></script>
+  <script type="text/javascript" src="main.js?v=4.5.11" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
   <script type="text/javascript" src="js/game/game-progress.js?v=4.9.1" defer></script>
@@ -566,7 +566,12 @@
     </div>
     <!-- ↑↑↑ 貼在這裡 ↑↑↑ -->
 
-    <div id="results-summary"><span id="summary-text-content"></span></div>
+    <div id="results-summary">
+      <span class="summary-inline">
+        <span id="summary-text-content"></span>
+        <button id="copyUrlBtn" type="button" class="copy-url-btn" title="複製網址" aria-label="複製網址"><i class="fas fa-link"></i></button>
+      </span>
+    </div>
     
     <div id="generated"></div>
 
