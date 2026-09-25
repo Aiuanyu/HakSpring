@@ -176,6 +176,7 @@
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |
 | 日日一詞收藏 | `hakkaDailyFavs` | `daily_favs` | ✅ | 逐項單調（聯集）＋ tombstone |
+| 熟悉度 | `hakkaFamiliarity` | `familiarity` | ✅ | LWW per-key |
 | 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
 

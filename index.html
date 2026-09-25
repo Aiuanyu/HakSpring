@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.6.7" />
+  <link rel="stylesheet" href="style.css?v=4.7.4" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -25,17 +25,18 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
-  <script type="text/javascript" src="main.js?v=4.5.11" defer></script>
+  <script type="text/javascript" src="main.js?v=4.5.22" defer></script>
   <script type="text/javascript" src="js/romanizer.js" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
   <script type="text/javascript" src="js/game/game-progress.js?v=4.9.1" defer></script>
   <script type="text/javascript" src="js/game/game-data.js?v=4.3.4" defer></script>
   <script type="text/javascript" src="js/game/phonology-rules.js?v=4.3.2" defer></script>
-  <script type="text/javascript" src="js/game/question-gen.js?v=4.8.6" defer></script>
+  <script type="text/javascript" src="js/game/question-gen.js?v=4.8.7" defer></script>
   <script type="text/javascript" src="js/game/srs.js?v=4.8.1" defer></script>
-  <script type="text/javascript" src="js/game/game-ui.js?v=4.10.3" defer></script>
-  <script type="text/javascript" src="js/cloud-sync.js?v=4.6.6" defer></script>
-  <script type="text/javascript" src="js/daily/daily.js?v=2.1.10" defer></script>
+  <script type="text/javascript" src="js/familiarity.js?v=1.0.1" defer></script>
+  <script type="text/javascript" src="js/game/game-ui.js?v=4.10.7" defer></script>
+  <script type="text/javascript" src="js/cloud-sync.js?v=4.6.8" defer></script>
+  <script type="text/javascript" src="js/daily/daily.js?v=2.1.12" defer></script>
   
   <!-- Driver.js for Onboarding -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
@@ -478,6 +479,7 @@
               <span id="game-new-badge" class="new-badge" style="display: none;">新進度！</span>
             </div>
             <div class="game-question-card">
+              <button id="game-fav-btn" class="game-fav-btn" title="收藏" type="button">🤍</button>
               <h1 id="game-target-word"></h1>
               <p id="game-target-pinyin" class="pinyin-text"></p>
               <button id="game-play-audio-btn" style="display: none;"><i class="fas fa-volume-up"></i></button>

@@ -136,6 +136,14 @@ const DailyWord = (function () {
         delete data.tomb[idString];
       }
       this.saveFavs(data);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('hakkaFavChanged', {
+          detail: { idString, isFav: this.isFav(idString) }
+        }));
+        if (typeof window.triggerCloudSync === 'function') {
+          window.triggerCloudSync();
+        }
+      }
     },
     isFav: function(idString) {
       return !!this.findExistingKey(idString);
@@ -995,7 +1003,21 @@ const DailyWord = (function () {
   return {
     init,
     renderDailyWord,
-    refreshUI
+    refreshUI,
+    DailyFavManager,
+    isFav: (idString) => DailyFavManager.isFav(idString),
+    toggleFav: (idString) => {
+      DailyFavManager.toggleFav(idString);
+      if (typeof window !== 'undefined' && typeof window.triggerCloudSync === 'function') {
+        window.triggerCloudSync();
+      }
+      try {
+        refreshUI();
+      } catch (e) {
+        // refreshUI 可能在 dailyModal 未開啟時忽略
+      }
+      return DailyFavManager.isFav(idString);
+    }
   };
 })();
 

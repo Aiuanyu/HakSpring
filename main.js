@@ -322,6 +322,7 @@ let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕
 let lastSelectionRectForMobile = null; // <-- 新增：手機版最後選取範圍 (分按鈕點擊時用)
 let currentDataVarName = ''; // Keep track of the active file var name
 let isNavigatingViaCode = false; // <--- 在這裡新增這一行
+let currentFamiliarityFilter = 'all'; // 'all' | 'hard-only' | 'exclude-easy' | 'fav-only'
 let activeCategoryData = [];
 let firstLoadedIndex = 0;
 let lastLoadedIndex = 0;
@@ -1949,7 +1950,7 @@ function handleDataImport() {
 
           const bookmarkMap = new Map();
           combinedBookmarks.forEach((bm) => {
-            const key = `${bm.tableName}||${bm.cat}`;
+            const key = `${bm.tableName}||${bm.cat}||${bm.filter || 'all'}`;
             const existing = bookmarkMap.get(key);
             if (!existing || bm.timestamp > existing.timestamp) {
               bookmarkMap.set(key, bm);
@@ -1959,8 +1960,8 @@ function handleDataImport() {
           let mergedBookmarks = Array.from(bookmarkMap.values());
           mergedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
 
-          if (mergedBookmarks.length > 10) {
-            mergedBookmarks = mergedBookmarks.slice(0, 10);
+          if (mergedBookmarks.length > 15) {
+            mergedBookmarks = mergedBookmarks.slice(0, 15);
           }
 
           localStorage.setItem(
@@ -2560,9 +2561,12 @@ function initializeAppUI() {
 
     if (!progressDropdown) return;
 
-    const previousValue = progressDropdown.value;
-
-    const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    const deduped = deduplicateBookmarks(bookmarks);
+    if (deduped.length !== bookmarks.length) {
+      bookmarks = deduped;
+      localStorage.setItem('hakkaBookmarks', JSON.stringify(bookmarks));
+    }
 
     progressDropdown.innerHTML =
       '<option selected disabled>擇進前个進度</option>';
@@ -2572,8 +2576,9 @@ function initializeAppUI() {
 
     bookmarks.forEach((bookmark, index) => {
       const option = document.createElement('option');
+      const filterPrefix = getFilterPrefix(bookmark.filter);
       if (bookmark.isLevelFinished) {
-        option.textContent = `${bookmark.tableName}全部放送煞，重新開始？`;
+        option.textContent = `${filterPrefix}${bookmark.tableName}全部放送煞，重新開始？`;
       } else {
         let displayCat = bookmark.cat;
         const dataVar = mapTableNameToDataVar(bookmark.tableName);
@@ -2584,23 +2589,51 @@ function initializeAppUI() {
           );
           displayCat = formatCategoryLabel(fullCat);
         }
-        option.textContent = `${bookmark.tableName} - ${displayCat} - #${bookmark.rowId} (${bookmark.percentage}%)`;
+        option.textContent = `${filterPrefix}${bookmark.tableName} - ${displayCat} - #${bookmark.rowId} (${bookmark.percentage}%)`;
       }
-      option.value = bookmark.tableName + '||' + bookmark.cat;
+      option.value =
+        bookmark.tableName +
+        '||' +
+        bookmark.cat +
+        '||' +
+        (bookmark.filter || 'all');
       progressDropdown.appendChild(option);
     });
 
-    if (previousValue && previousValue !== '擇進前个進度') {
+    let valueToSelect = null;
+    if (g_currentDialectInfo && g_currentCategory) {
+      const currentExpectedValue =
+        g_currentDialectInfo.fullLvlName +
+        '||' +
+        g_currentCategory +
+        '||' +
+        (currentFamiliarityFilter || 'all');
+      if (progressDropdown.querySelector(`option[value="${currentExpectedValue}"]`)) {
+        valueToSelect = currentExpectedValue;
+      }
+    }
+    if (!valueToSelect && previousValue && previousValue !== '擇進前个進度') {
+      if (progressDropdown.querySelector(`option[value="${previousValue}"]`)) {
+        valueToSelect = previousValue;
+      }
+    }
+
+    if (valueToSelect) {
       const newOptionToSelect = progressDropdown.querySelector(
-        `option[value="${previousValue}"]`,
+        `option[value="${valueToSelect}"]`,
       );
       if (newOptionToSelect) {
         newOptionToSelect.selected = true;
         const selectedBookmark = bookmarks.find(
-          (bm) => bm.tableName + '||' + bm.cat === previousValue,
+          (bm) =>
+            bm.tableName +
+              '||' +
+              bm.cat +
+              '||' +
+              (bm.filter || 'all') ===
+            valueToSelect,
         );
         if (selectedBookmark && progressDetailsSpan) {
-          // [Fix] Reconstruct the link instead of setting plain text
           let baseURL = '';
           if (window.location.protocol === 'file:') {
             baseURL = window.location.href.substring(
@@ -2621,7 +2654,10 @@ function initializeAppUI() {
             selectedBookmark.tableName,
           );
           if (dialectLevelCodes) {
-            const shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${selectedBookmark.cat}&row=${selectedBookmark.rowId}`;
+            let shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${selectedBookmark.cat}&row=${selectedBookmark.rowId}`;
+            if (selectedBookmark.filter && selectedBookmark.filter !== 'all') {
+              shareURL += `&filter=${encodeURIComponent(selectedBookmark.filter)}`;
+            }
             const linkElement = document.createElement('a');
             linkElement.href = shareURL;
             linkElement.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
@@ -2644,6 +2680,23 @@ function initializeAppUI() {
   // 【新增】將 updateProgressDropdown 暴露到全域，讓 cloud-sync.js 能存取
   window.updateProgressDropdown = updateProgressDropdown;
 
+  /**
+   * 去重清洗書籤清單：確保同表格 + 同過濾模式只保留最新一筆進度
+   */
+  function deduplicateBookmarks(bookmarks) {
+    if (!Array.isArray(bookmarks)) return [];
+    const seen = new Set();
+    const result = [];
+    for (const bm of bookmarks) {
+      const key = `${bm.tableName}||${bm.filter || 'all'}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(bm);
+      }
+    }
+    return result;
+  }
+
   function saveBookmark(
     rowId,
     percentage,
@@ -2654,6 +2707,9 @@ function initializeAppUI() {
     restartCat = null,
   ) {
     let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+    bookmarks = deduplicateBookmarks(bookmarks);
+
+    const targetFilter = currentFamiliarityFilter || 'all';
     const newBookmark = {
       rowId: rowId,
       percentage: percentage,
@@ -2662,45 +2718,24 @@ function initializeAppUI() {
       timestamp: Date.now(),
       isLevelFinished: isLevelFinished,
       restartCat: restartCat,
+      filter: targetFilter,
     };
 
-    // 1. 移除已存在的完全相同的紀錄 (同表格同類別)
-    const existingIndex = bookmarks.findIndex(
+    // 1. 移除同表格同 filter 的所有舊紀錄（確保同腔級同模式永遠只保留最新一筆進度，不會殘留舊類別）
+    bookmarks = bookmarks.filter(
       (bm) =>
-        bm.tableName === newBookmark.tableName && bm.cat === newBookmark.cat,
+        !(
+          bm.tableName === newBookmark.tableName &&
+          (bm.filter || 'all') === targetFilter
+        ),
     );
-    if (existingIndex > -1) {
-      bookmarks.splice(existingIndex, 1);
-    }
+
     // 2. 將新紀錄加到最前面
     bookmarks.unshift(newBookmark);
 
-    // 3. 如果紀錄超過 10 筆，執行您微調過的汰換邏輯
-    if (bookmarks.length > 10) {
-      let indexToDelete = -1;
-      let foundMatch = false;
-
-      // 從最舊的開始往前找 (但不包含最新的第0筆)
-      for (let i = bookmarks.length - 1; i >= 1; i--) {
-        const currentBookmark = bookmarks[i];
-        // 檢查是否為「同表格，但不同類別」
-        if (
-          currentBookmark.tableName === newBookmark.tableName &&
-          currentBookmark.cat !== newBookmark.cat
-        ) {
-          indexToDelete = i;
-          foundMatch = true;
-          break; // 找到目標，停止搜尋
-        }
-      }
-
-      // 如果找到了符合條件的，就刪除它
-      if (foundMatch) {
-        bookmarks.splice(indexToDelete, 1);
-      } else {
-        // 如果沒找到，才刪除最舊的一筆 (也就是最後一筆)
-        bookmarks.pop();
-      }
+    // 3. 全域上限 15 筆：若超過 15 筆，移除最舊的一筆
+    while (bookmarks.length > 15) {
+      bookmarks.pop();
     }
 
     // 4. 儲存更新後的紀錄
@@ -2734,7 +2769,11 @@ function initializeAppUI() {
 
       const dialectLevelCodes = extractDialectLevelCodes(tableName);
       if (dialectLevelCodes) {
-        const shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
+        let shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${category}&row=${rowId}`;
+        const currentFilter = newBookmark.filter || currentFamiliarityFilter || 'all';
+        if (currentFilter && currentFilter !== 'all') {
+          shareURL += `&filter=${encodeURIComponent(currentFilter)}`;
+        }
         const linkElement = document.createElement('a');
         linkElement.href = shareURL;
         linkElement.textContent = `#${rowId} (${percentage}%)`;
@@ -2748,6 +2787,70 @@ function initializeAppUI() {
           tableName,
         );
       }
+    }
+  }
+
+  /**
+   * 隨模式切換、總數變動或手動操作，即時重算當前模式下的百分比並更新 UI
+   */
+  function syncProgressWithCurrentMode() {
+    if (!g_currentCategory || !activeCategoryData || !g_currentDialectInfo) {
+      updateProgressDropdown();
+      return;
+    }
+
+    const totalRows = activeCategoryData.length;
+    const currentTableName = g_currentDialectInfo.fullLvlName;
+    const currentFilter = currentFamiliarityFilter || 'all';
+
+    if (totalRows === 0) {
+      const progressDetailsSpan = document.getElementById('progressDetails');
+      if (progressDetailsSpan) progressDetailsSpan.innerHTML = '';
+      updateProgressDropdown();
+      return;
+    }
+
+    // 1. 先確認是否有正在播放的行
+    let targetRowId = null;
+    let targetIndex = -1;
+
+    if (isPlaying && currentAudioIndex >= 0 && currentAudioIndex < activeCategoryData.length) {
+      targetIndex = currentAudioIndex;
+      targetRowId = activeCategoryData[targetIndex].編號.split('-')[1];
+    } else {
+      // 2. 若無播放，看既有書籤（優先找同表格同類別同 filter，其次同表格同類別任何 filter）
+      const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
+      const matchExact = bookmarks.find(
+        (bm) => bm.tableName === currentTableName && bm.cat === g_currentCategory && (bm.filter || 'all') === currentFilter
+      );
+      const matchAny = bookmarks.find(
+        (bm) => bm.tableName === currentTableName && bm.cat === g_currentCategory
+      );
+      const cand = matchExact || matchAny;
+      if (cand && cand.rowId) {
+        const normId = normalizeRowId(cand.rowId);
+        const idx = activeCategoryData.findIndex(
+          (item) => item.編號.split('-')[1] === normId
+        );
+        if (idx !== -1) {
+          targetIndex = idx;
+          targetRowId = activeCategoryData[targetIndex].編號.split('-')[1];
+        }
+      }
+    }
+
+    if (targetIndex !== -1 && targetRowId) {
+      const paddedRowId = padRowIdForLegacy(targetRowId);
+      const percentage = (((targetIndex + 1) / totalRows) * 100).toFixed(2);
+      saveBookmark(
+        paddedRowId,
+        percentage,
+        g_currentCategory,
+        currentTableName,
+        isPlaying,
+      );
+    } else {
+      updateProgressDropdown();
     }
   }
 
@@ -3759,13 +3862,27 @@ function initializeAppUI() {
             const bookmarks =
               JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
             const firstBookmark = bookmarks.find(
-              (bm) => bm.tableName + '||' + bm.cat === selectedValue,
+              (bm) =>
+                bm.tableName +
+                  '||' +
+                  bm.cat +
+                  '||' +
+                  (bm.filter || 'all') ===
+                selectedValue,
             );
 
             if (firstBookmark) {
               const targetTableName = firstBookmark.tableName;
               const targetCategory = firstBookmark.cat;
               const targetRowIdToGo = firstBookmark.rowId;
+              const targetFilter = firstBookmark.filter || 'all';
+
+              currentFamiliarityFilter = targetFilter;
+              const filterSelect = document.getElementById('famFilterSelect');
+              if (filterSelect) {
+                filterSelect.value = targetFilter;
+              }
+
               const dataVarName = mapTableNameToDataVar(targetTableName);
 
               if (dataVarName) {
@@ -4170,6 +4287,12 @@ function initializeAppUI() {
       newUrl.searchParams.delete('iab');
       newUrl.searchParams.delete('kiong');
 
+      if (currentFamiliarityFilter && currentFamiliarityFilter !== 'all') {
+        newUrl.searchParams.set('filter', currentFamiliarityFilter);
+      } else {
+        newUrl.searchParams.delete('filter');
+      }
+
       // 只有在產生的新 URL 和當前 URL 不同的情況下，才執行 pushState
       if (newUrl.toString() !== window.location.href) {
         history.pushState({}, '', newUrl.toString());
@@ -4399,6 +4522,236 @@ function initializeAppUI() {
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
   }
 
+  function isLineMatchingFilter(line, dataVarName, filter) {
+    if (filter === 'all') return true;
+    const itemKey = `c${dataVarName}${line.編號}`;
+    const favId = `c${dataVarName}${line.編號}:${line.客家語}`;
+
+    if (filter === 'hard-only') {
+      return typeof getFamiliarity === 'function' && getFamiliarity(itemKey) === -1;
+    }
+    if (filter === 'exclude-easy') {
+      return typeof getFamiliarity === 'function' ? getFamiliarity(itemKey) !== 1 : true;
+    }
+    if (filter === 'fav-only') {
+      return typeof DailyWord !== 'undefined' && DailyWord.isFav ? DailyWord.isFav(favId) : false;
+    }
+    return true;
+  }
+
+  function getFilterPrefix(filter) {
+    if (filter === 'hard-only') return '[難詞] ';
+    if (filter === 'exclude-easy') return '[簡單詞外] ';
+    if (filter === 'fav-only') return '[收囥詞] ';
+    return '';
+  }
+
+  function getFilterSuffix(filter) {
+    if (filter === 'hard-only') return '（單淨難詞）';
+    if (filter === 'exclude-easy') return '（無顯示簡單詞）';
+    if (filter === 'fav-only') return '（收囥詞）';
+    return '';
+  }
+
+  function setupFamiliarityFilterUI() {
+    const resultsSummaryContainer = document.getElementById('results-summary');
+    if (!resultsSummaryContainer) return;
+
+    let filterControls = document.getElementById('famFilterControls');
+    if (!filterControls) {
+      filterControls = document.createElement('span');
+      filterControls.id = 'famFilterControls';
+      filterControls.className = 'fam-filter-controls';
+      filterControls.innerHTML = `
+        <select id="famFilterSelect" class="fam-filter-select" aria-label="詞彙過濾">
+          <option value="all">全部</option>
+          <option value="hard-only">單淨難詞 🔴</option>
+          <option value="exclude-easy">無顯示簡單詞</option>
+          <option value="fav-only">收囥詞 ❤️</option>
+        </select>
+      `;
+      resultsSummaryContainer.appendChild(filterControls);
+
+      const select = filterControls.querySelector('#famFilterSelect');
+      select.value = currentFamiliarityFilter;
+      select.addEventListener('change', (e) => {
+        currentFamiliarityFilter = e.target.value;
+        if (g_currentCategory && g_currentLevelData && g_currentDialectInfo) {
+          updateUrlForCategory(g_currentDialectInfo, g_currentCategory);
+          buildTableAndSetupPlayback(
+            g_currentCategory,
+            g_currentLevelData,
+            g_currentDialectInfo,
+          );
+          syncProgressWithCurrentMode();
+        }
+      });
+    } else {
+      const select = filterControls.querySelector('#famFilterSelect');
+      if (select) select.value = currentFamiliarityFilter;
+    }
+  }
+
+  function updateCategorySummaryCount() {
+    const summaryTextContent = document.getElementById('summary-text-content');
+    if (!summaryTextContent) return;
+    const currentCount = activeCategoryData.length;
+    const originalText = summaryTextContent.dataset.originalText || '';
+    const updatedOriginal = originalText.replace(/\(\d+\)/, `(${currentCount})`);
+    summaryTextContent.dataset.originalText = updatedOriginal;
+    summaryTextContent.textContent = `${updatedOriginal}${getFilterSuffix(currentFamiliarityFilter)}`;
+    if (summaryTextContent.dataset.shareText) {
+      summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${updatedOriginal}`;
+    }
+  }
+
+  function hasMatchingWordsAfterCategory(category, filter) {
+    if (filter === 'all' || !Array.isArray(categoryList) || categoryList.length === 0) {
+      return false;
+    }
+    const currentIdx = categoryList.indexOf(category);
+    if (currentIdx === -1 || currentIdx >= categoryList.length - 1) {
+      return false;
+    }
+    if (!g_currentLevelData || !Array.isArray(g_currentLevelData)) {
+      return false;
+    }
+    const currentVar =
+      currentDataVarName ||
+      (g_currentDialectInfo && g_currentDialectInfo.腔 && g_currentDialectInfo.級
+        ? g_currentDialectInfo.腔 + g_currentDialectInfo.級
+        : '');
+    const remainingCategories = new Set(categoryList.slice(currentIdx + 1));
+
+    return g_currentLevelData.some((line) => {
+      const itemCat = line.分類 ? line.分類.replace(/^\d+/, '') : '';
+      if (!remainingCategories.has(itemCat)) return false;
+      return isLineMatchingFilter(line, currentVar, filter);
+    });
+  }
+
+  function renderFilteredEmptyState() {
+    const contentContainer = document.getElementById('generated');
+    if (!contentContainer) return;
+
+    let emptyMsg = '本類別目前無符合條件个內容，故所全部無顯示';
+    if (currentFamiliarityFilter === 'hard-only') {
+      emptyMsg = '本類別目前無你設定个難詞，故所全部無顯示';
+    } else if (currentFamiliarityFilter === 'exclude-easy') {
+      emptyMsg = '本類別目前全部都係你設定个簡單詞，故所全部無顯示';
+    } else if (currentFamiliarityFilter === 'fav-only') {
+      emptyMsg = '本類別目前你無收藏任何詞，故所全部無顯示';
+    }
+
+    if (
+      currentFamiliarityFilter !== 'all' &&
+      !hasMatchingWordsAfterCategory(g_currentCategory, currentFamiliarityFilter)
+    ) {
+      emptyMsg += '<br>係講緊停在這畫面，表示後背都無難詞／收囥詞吔';
+      playEndOfPlayback();
+    }
+
+    contentContainer.innerHTML = `<p class="fam-filter-empty-msg" style="text-align: center; margin-top: 35px; font-size: 1.1em; color: var(--main-text-color); opacity: 0.85;">${emptyMsg}</p>`;
+    document.querySelector('#audioControls')?.remove();
+    const navBottom = renderCategoryNavBottom(g_currentCategory);
+    if (navBottom) {
+      contentContainer.appendChild(navBottom);
+    }
+  }
+
+  function checkAndFilterOutRow(tr) {
+    if (currentFamiliarityFilter === 'all') return;
+    const itemKey = tr.dataset.itemKey;
+    const favId = tr.dataset.favId;
+    const lineNo = tr.dataset.lineNo;
+
+    let stillMatches = true;
+    if (currentFamiliarityFilter === 'hard-only') {
+      stillMatches = typeof getFamiliarity === 'function' && getFamiliarity(itemKey) === -1;
+    } else if (currentFamiliarityFilter === 'exclude-easy') {
+      stillMatches = typeof getFamiliarity === 'function' ? getFamiliarity(itemKey) !== 1 : true;
+    } else if (currentFamiliarityFilter === 'fav-only') {
+      stillMatches = typeof DailyWord !== 'undefined' && DailyWord.isFav ? DailyWord.isFav(favId) : false;
+    }
+
+    if (!stillMatches) {
+      const isCurrentPlayingRow = isPlaying && (
+        tr.id === 'nowPlaying' ||
+        tr.classList.contains('now-playing') ||
+        (activeCategoryData[currentAudioIndex] && activeCategoryData[currentAudioIndex].編號 === lineNo)
+      );
+
+      if (isCurrentPlayingRow) {
+        if (isSingleWordLooping) stopSingleWordLoop();
+
+        // --- 正在播放的那一行被消掉：無縫由下一行馬上遞補播放 ---
+        // 1. 作廢舊行的所有非同步播放回呼（重複播放、句音檔排程等）
+        playbackSessionId = Date.now();
+        const currentSession = playbackSessionId;
+
+        // 2. 立即停止當前正在播放的音訊
+        if (currentAudio) {
+          try {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+          } catch (e) {}
+          currentAudio = null;
+        }
+
+        // 3. 立即移除 DOM 與陣列資料
+        tr.remove();
+        const idx = activeCategoryData.findIndex((item) => item.編號 === lineNo);
+        if (idx !== -1) {
+          activeCategoryData.splice(idx, 1);
+          // 此時原本在 idx + 1 的項目自動遞補至 idx，即 currentAudioIndex 位置
+        }
+        updateCategorySummaryCount();
+
+        // 4. 檢查是否已無項目
+        const tbody = document.querySelector('#category-table tbody');
+        if ((!tbody || tbody.children.length === 0) && activeCategoryData.length === 0) {
+          stopPlayback();
+          renderFilteredEmptyState();
+          return;
+        }
+
+        // 5. 確保播放狀態為進行中，無縫播放遞補上來的這一行
+        isPlaying = true;
+        isPaused = false;
+        if (currentAudioIndex < activeCategoryData.length) {
+          playAudio(currentAudioIndex, currentSession);
+        } else {
+          // 已到本類別最後一筆，前進下一類別
+          advanceToNextCategory();
+        }
+      } else {
+        // --- 非正在播放的行：平滑淡出後移除 ---
+        tr.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        tr.style.opacity = '0';
+        tr.style.transform = 'scale(0.96)';
+        setTimeout(() => {
+          tr.remove();
+          const idx = activeCategoryData.findIndex((item) => item.編號 === lineNo);
+          if (idx !== -1) {
+            activeCategoryData.splice(idx, 1);
+            if (idx < currentAudioIndex) {
+              currentAudioIndex--;
+            }
+          }
+          updateCategorySummaryCount();
+          syncProgressWithCurrentMode();
+          const tbody = document.querySelector('#category-table tbody');
+          if ((!tbody || tbody.children.length === 0) && activeCategoryData.length === 0) {
+            if (isPlaying) {
+              stopPlayback();
+            }
+            renderFilteredEmptyState();
+          }
+        }, 250);
+      }
+    }
+  }
+
   function buildTableAndSetupPlayback(
     category,
     vocabularyArray,
@@ -4417,13 +4770,12 @@ function initializeAppUI() {
     isPaused = false;
     window.removeEventListener('scroll', scrollHandler); // Remove old listener
 
-    // 2. Filter data and handle empty category
-    activeCategoryData = vocabularyArray.filter(
+    // 2. Filter data by category first
+    const rawCategoryData = vocabularyArray.filter(
       (line) => line.分類 && line.分類.replace(/^\d+/, '') === category,
     );
-    const totalResults = activeCategoryData.length;
 
-    if (totalResults === 0) {
+    if (rawCategoryData.length === 0) {
       // If in cross-category playback mode, handle advancing automatically
       if (isCrossCategoryPlaying) {
         console.log(
@@ -4447,9 +4799,73 @@ function initializeAppUI() {
         // Original behavior when not in continuous play mode
         contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容。</p>`;
         document.querySelector('#audioControls')?.remove();
+        document.querySelector('#famFilterControls')?.remove();
         updateResultsSummaryVisibility();
       }
       return; // Important to stop further execution for this empty category
+    }
+
+    // 2.1 套用熟悉度與收藏過濾
+    const currentVar = currentDataVarName || (dialectInfo.腔 && dialectInfo.級 ? (dialectInfo.腔 + dialectInfo.級) : '');
+    activeCategoryData = rawCategoryData.filter(line => isLineMatchingFilter(line, currentVar, currentFamiliarityFilter));
+    const totalResults = activeCategoryData.length;
+
+    if (totalResults === 0) {
+      if (isCrossCategoryPlaying) {
+        const hasWordsAfter = hasMatchingWordsAfterCategory(
+          category,
+          currentFamiliarityFilter,
+        );
+        if (hasWordsAfter) {
+          console.log(
+            `類別「${category}」過濾後無項目，但後續類別仍有符合項目，自動跳下一類...`,
+          );
+          advanceToNextCategory();
+          return;
+        } else {
+          isCrossCategoryPlaying = false;
+        }
+      }
+
+      contentContainer.innerHTML = '';
+      document.querySelector('#audioControls')?.remove();
+      setupFamiliarityFilterUI();
+
+      let emptyMsg = '本類別目前無符合條件个內容，故所全部無顯示';
+      if (currentFamiliarityFilter === 'hard-only') {
+        emptyMsg = '本類別目前無你設定个難詞，故所全部無顯示';
+      } else if (currentFamiliarityFilter === 'exclude-easy') {
+        emptyMsg = '本類別目前全部都係你設定个簡單詞，故所全部無顯示';
+      } else if (currentFamiliarityFilter === 'fav-only') {
+        emptyMsg = '本類別目前你無收藏任何詞，故所全部無顯示';
+      }
+
+      if (
+        currentFamiliarityFilter !== 'all' &&
+        !hasMatchingWordsAfterCategory(category, currentFamiliarityFilter)
+      ) {
+        emptyMsg += '<br>係講緊停在這畫面，表示後背都無難詞／收囥詞吔';
+        playEndOfPlayback();
+      }
+
+      contentContainer.innerHTML = `<p class="fam-filter-empty-msg" style="text-align: center; margin-top: 35px; font-size: 1.1em; color: var(--main-text-color); opacity: 0.85;">${emptyMsg}</p>`;
+
+      const summaryTextContent = document.getElementById('summary-text-content');
+      if (summaryTextContent) {
+        const fullCategoryName = getFullOfficialCategoryName(category, rawCategoryData);
+        const formattedCategory = formatCategoryLabel(fullCategoryName);
+        const summaryText = `${dialectInfo.fullLvlName}：${formattedCategory} (0)`;
+        summaryTextContent.textContent = `${summaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
+        summaryTextContent.dataset.originalText = summaryText;
+        summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
+      }
+
+      const fullCategoryName = getFullOfficialCategoryName(category, rawCategoryData);
+      const formattedCategory = formatCategoryLabel(fullCategoryName);
+      updatePageTitle([dialectInfo.fullLvlName, formattedCategory]);
+      setTimeout(adjustHeaderFontSizeOnOverflow, 0);
+      updateResultsSummaryVisibility();
+      return;
     }
 
     // 3. Determine initial rendering range
@@ -4487,6 +4903,7 @@ function initializeAppUI() {
       totalResults,
       autoPlayTargetRowId,
     );
+    setupFamiliarityFilterUI();
     setupDynamicEventListeners(dialectInfo, category);
 
     // 6. Setup infinite scroll
@@ -4514,7 +4931,154 @@ function initializeAppUI() {
     updatePageTitle([dialectInfo.fullLvlName, formattedCategory]);
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
     updateResultsSummaryVisibility();
+    if (!autoPlayTargetRowId && !isCrossCategoryPlaying) {
+      syncProgressWithCurrentMode();
+    }
     isCrossCategoryPlaying = false; // 這隻旗標應該愛放在這位，做毋得放在函式最頭前
+  }
+
+  function updateFamBtnGroup(famGroup, itemKey) {
+    const easyBtn = famGroup.querySelector('.easy-btn');
+    const hardBtn = famGroup.querySelector('.hard-btn');
+    if (!easyBtn || !hardBtn) return;
+
+    const currentGrade = typeof getFamiliarity === 'function' ? getFamiliarity(itemKey) : 0;
+    const suggestion = typeof getFamiliaritySuggestion === 'function' ? getFamiliaritySuggestion(itemKey) : null;
+
+    // 易 按鈕
+    if (currentGrade === 1) {
+      if (suggestion === 'cancel-easy') {
+        easyBtn.innerHTML = '簡？';
+        easyBtn.title = '這隻詞對你像形過難，敢愛取消「簡單」標記？';
+        easyBtn.className = 'fam-btn easy-btn active suggest-cancel';
+      } else {
+        easyBtn.innerHTML = '🟢';
+        easyBtn.title = '已標記為簡單（點擊取消）';
+        easyBtn.className = 'fam-btn easy-btn active';
+      }
+    } else {
+      if (suggestion === 'easy') {
+        easyBtn.innerHTML = '簡？';
+        easyBtn.title = '你像形對這隻詞有熟，敢愛標簡單？';
+        easyBtn.className = 'fam-btn easy-btn suggest-easy';
+      } else {
+        easyBtn.innerHTML = '🟢';
+        easyBtn.title = '標記為簡單（已熟）';
+        easyBtn.className = 'fam-btn easy-btn';
+      }
+    }
+
+    // 難 按鈕
+    if (currentGrade === -1) {
+      if (suggestion === 'cancel-hard') {
+        hardBtn.innerHTML = '難？';
+        hardBtn.title = '你像形對這隻詞有熟，敢愛取消「困難」標記？';
+        hardBtn.className = 'fam-btn hard-btn active suggest-cancel';
+      } else {
+        hardBtn.innerHTML = '🔴';
+        hardBtn.title = '已標記為困難（點擊取消）';
+        hardBtn.className = 'fam-btn hard-btn active';
+      }
+    } else {
+      if (suggestion === 'hard') {
+        hardBtn.innerHTML = '難？';
+        hardBtn.title = '這隻詞對你像形過難，敢愛標難？';
+        hardBtn.className = 'fam-btn hard-btn suggest-hard';
+      } else {
+        hardBtn.innerHTML = '🔴';
+        hardBtn.title = '標記為困難';
+        hardBtn.className = 'fam-btn hard-btn';
+      }
+    }
+  }
+  window.updateFamBtnGroup = updateFamBtnGroup;
+
+  /**
+   * 渲染 CERT 主表底部的「上一類」、「下一類」導覽按鈕
+   * @param {string} category - 目前類別代碼
+   * @returns {HTMLElement|null}
+   */
+  function renderCategoryNavBottom(category) {
+    if (!categoryList || categoryList.length <= 1) return null;
+
+    const currentIdx = categoryList.indexOf(category);
+    if (currentIdx === -1) return null;
+
+    const navContainer = document.createElement('div');
+    navContainer.id = 'categoryNavBottom';
+    navContainer.className = 'category-nav-bottom';
+
+    // 上一類
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'cat-nav-btn prev-cat-btn';
+
+    if (currentIdx > 0) {
+      const prevCatValue = categoryList[currentIdx - 1];
+      const prevCatLabel = typeof formatCategoryLabel === 'function'
+        ? formatCategoryLabel(prevCatValue)
+        : prevCatValue;
+      prevBtn.innerHTML = `
+        <i class="fas fa-chevron-left"></i>
+        <div class="cat-nav-text">
+          <span class="cat-nav-label">上一類</span>
+          <span class="cat-nav-name" title="${prevCatLabel}">${prevCatLabel}</span>
+        </div>
+      `;
+      prevBtn.onclick = () => {
+        const prevRadio = document.querySelector(`input[name="category"][value="${prevCatValue}"]`);
+        if (prevRadio) {
+          prevRadio.click();
+        }
+      };
+    } else {
+      prevBtn.disabled = true;
+      prevBtn.innerHTML = `
+        <i class="fas fa-chevron-left"></i>
+        <div class="cat-nav-text">
+          <span class="cat-nav-label">上一類</span>
+          <span class="cat-nav-name">已是第一類</span>
+        </div>
+      `;
+    }
+
+    // 下一類
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'cat-nav-btn next-cat-btn';
+
+    if (currentIdx < categoryList.length - 1) {
+      const nextCatValue = categoryList[currentIdx + 1];
+      const nextCatLabel = typeof formatCategoryLabel === 'function'
+        ? formatCategoryLabel(nextCatValue)
+        : nextCatValue;
+      nextBtn.innerHTML = `
+        <div class="cat-nav-text">
+          <span class="cat-nav-label">下一類</span>
+          <span class="cat-nav-name" title="${nextCatLabel}">${nextCatLabel}</span>
+        </div>
+        <i class="fas fa-chevron-right"></i>
+      `;
+      nextBtn.onclick = () => {
+        const nextRadio = document.querySelector(`input[name="category"][value="${nextCatValue}"]`);
+        if (nextRadio) {
+          nextRadio.click();
+        }
+      };
+    } else {
+      nextBtn.disabled = true;
+      nextBtn.innerHTML = `
+        <div class="cat-nav-text">
+          <span class="cat-nav-label">下一類</span>
+          <span class="cat-nav-name">已是最後一類</span>
+        </div>
+        <i class="fas fa-chevron-right"></i>
+      `;
+    }
+
+    navContainer.appendChild(prevBtn);
+    navContainer.appendChild(nextBtn);
+    return navContainer;
   }
 
   function renderCategoryItems(
@@ -4562,7 +5126,7 @@ function initializeAppUI() {
         if (totalResults > 0) {
           summaryText += ` (${totalResults})`;
         }
-        summaryTextContent.textContent = summaryText;
+        summaryTextContent.textContent = `${summaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
         summaryTextContent.dataset.originalText = summaryText; // Set data attribute with the full text
         summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
         const resultsSummaryContainer =
@@ -4580,6 +5144,11 @@ function initializeAppUI() {
       table.setAttribute('width', '100%');
       tbody = table.createTBody();
       contentContainer.appendChild(table);
+
+      const navBottom = renderCategoryNavBottom(category);
+      if (navBottom) {
+        contentContainer.appendChild(navBottom);
+      }
     } else {
       table = document.getElementById('category-table');
       tbody = table.tBodies[0];
@@ -4628,6 +5197,7 @@ function initializeAppUI() {
       const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
       const 句目錄 = `${句目錄級}/${dialectInfo.檔腔}/${pre112Insertion句}${dialectInfo.檔級}${dialectInfo.檔腔}`;
       const item = document.createElement('tr');
+      item.dataset.lineNo = line.編號;
 
       const td1 = document.createElement('td');
       td1.className = 'no';
@@ -4668,6 +5238,45 @@ function initializeAppUI() {
       loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
       td1.appendChild(loopOneBtn);
 
+      // --- 收藏 + 熟悉度標記按鈕（接在 td1 現有按鈕後） ---
+      td1.appendChild(document.createElement('br'));
+      const famGroup = document.createElement('span');
+      famGroup.className = 'fam-btn-group';
+
+      const currentVar = currentDataVarName || (dialectInfo.腔 && dialectInfo.級 ? (dialectInfo.腔 + dialectInfo.級) : '');
+      const itemKey = `c${currentVar}${line.編號}`;
+      const favId = `c${currentVar}${line.編號}:${line.客家語}`;
+
+      // ❤️ 收藏按鈕
+      const favBtn = document.createElement('button');
+      favBtn.className = 'fam-btn fav-btn';
+      favBtn.title = '收藏';
+      const isFaved = typeof DailyWord !== 'undefined'
+        && DailyWord.isFav
+        && DailyWord.isFav(favId);
+      favBtn.innerHTML = isFaved ? '❤️' : '🤍';
+      favBtn.dataset.favId = favId;
+      favBtn.dataset.itemKey = itemKey;
+      if (isFaved) favBtn.classList.add('faved');
+
+      // 🟢 易 按鈕
+      const easyBtn = document.createElement('button');
+      easyBtn.className = 'fam-btn easy-btn';
+      easyBtn.dataset.itemKey = itemKey;
+
+      // 🔴 難 按鈕
+      const hardBtn = document.createElement('button');
+      hardBtn.className = 'fam-btn hard-btn';
+      hardBtn.dataset.itemKey = itemKey;
+
+      famGroup.appendChild(favBtn);
+      famGroup.appendChild(easyBtn);
+      famGroup.appendChild(hardBtn);
+      updateFamBtnGroup(famGroup, itemKey);
+      td1.appendChild(famGroup);
+
+      item.dataset.itemKey = itemKey;
+      item.dataset.favId = favId;
       item.appendChild(td1);
 
       const td2 = document.createElement('td');
@@ -4707,9 +5316,7 @@ function initializeAppUI() {
 
         // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
         const wordPlayHandler = () => {
-          const autoBookmarkEnabled =
-            localStorage.getItem('autoBookmarkMode') === 'true';
-          if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
+          if (dialectInfo.腔 && dialectInfo.級) {
             const itemIndex = activeCategoryData.findIndex(
               (item) => item.編號 === line.編號,
             );
@@ -4785,9 +5392,7 @@ function initializeAppUI() {
 
           // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
           const sentencePlayHandler = () => {
-            const autoBookmarkEnabled =
-              localStorage.getItem('autoBookmarkMode') === 'true';
-            if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
+            if (dialectInfo.腔 && dialectInfo.級) {
               const itemIndex = activeCategoryData.findIndex(
                 (item) => item.編號 === line.編號,
               );
@@ -5652,18 +6257,38 @@ function initializeAppUI() {
     if (!autoPlayTargetRowId) return;
 
     const normalizedTargetId = normalizeRowId(autoPlayTargetRowId);
-    const itemIndex = activeCategoryData.findIndex(
+    let itemIndex = activeCategoryData.findIndex(
       (item) => item.編號.split('-')[1] === normalizedTargetId,
     );
     if (itemIndex === -1) {
-      console.error(
-        '無法在資料中找到 autoPlayTargetRowId:',
-        autoPlayTargetRowId,
-      );
-      return;
+      if (activeCategoryData.length > 0) {
+        const targetNum = parseInt(normalizedTargetId, 10);
+        let bestIndex = -1;
+        for (let i = 0; i < activeCategoryData.length; i++) {
+          const itemNum = parseInt(activeCategoryData[i].編號.split('-')[1], 10);
+          if (itemNum <= targetNum) {
+            bestIndex = i;
+          } else {
+            break;
+          }
+        }
+        itemIndex = bestIndex !== -1 ? bestIndex : (targetNum > parseInt(activeCategoryData[activeCategoryData.length - 1].編號.split('-')[1], 10) ? activeCategoryData.length - 1 : 0);
+        console.warn(
+          `handleAutoPlay: 過濾後找不到 rowId ${autoPlayTargetRowId}，智慧對齊至最接近項目 index ${itemIndex} (${activeCategoryData[itemIndex].編號})`,
+        );
+      } else {
+        console.error(
+          '無法在資料中找到 autoPlayTargetRowId 且過濾後無任何項目:',
+          autoPlayTargetRowId,
+        );
+        return;
+      }
     }
 
-    const targetRow = document.querySelector(`a[name="${normalizedTargetId}"]`);
+    const actualRowId =
+      activeCategoryData[itemIndex]?.編號?.split('-')[1] ||
+      normalizedTargetId;
+    const targetRow = document.querySelector(`a[name="${actualRowId}"]`);
     if (targetRow) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => {
@@ -5765,7 +6390,18 @@ function initializeAppUI() {
     const categoryParam = urlParams.get('category');
     const rowParam = urlParams.get('row');
     const romParam = urlParams.get('rom');
+    const filterParam = urlParams.get('filter');
     successfullyLoadedFromUrl = false;
+
+    if (filterParam && ['all', 'hard-only', 'exclude-easy', 'fav-only'].includes(filterParam)) {
+      currentFamiliarityFilter = filterParam;
+    } else {
+      currentFamiliarityFilter = 'all';
+    }
+    const filterSelect = document.getElementById('famFilterSelect');
+    if (filterSelect) {
+      filterSelect.value = currentFamiliarityFilter;
+    }
 
     if (musiidParam && caParam) {
       const itemsPerPage = parseInt(bidsuParam) || 50;
@@ -5836,10 +6472,25 @@ function initializeAppUI() {
                   successfullyLoadedFromUrl = true;
                   if (progressDropdown) {
                     const targetValue =
-                      targetTableName + '||' + decodedCategory;
-                    const optionToSelect = progressDropdown.querySelector(
+                      targetTableName +
+                      '||' +
+                      decodedCategory +
+                      '||' +
+                      (currentFamiliarityFilter || 'all');
+                    let optionToSelect = progressDropdown.querySelector(
                       `option[value="${targetValue}"]`,
                     );
+                    if (!optionToSelect) {
+                      optionToSelect = Array.from(
+                        progressDropdown.options,
+                      ).find(
+                        (opt) =>
+                          opt.value &&
+                          opt.value.startsWith(
+                            targetTableName + '||' + decodedCategory + '||',
+                          ),
+                      );
+                    }
                     if (optionToSelect) {
                       optionToSelect.selected = true;
                     } else {
@@ -6401,7 +7052,13 @@ function initializeAppUI() {
         JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
       // [修正] 先從 bookmarks 陣列中找到完整的書籤物件
       const selectedBookmark = bookmarks.find(
-        (bm) => bm.tableName + '||' + bm.cat === selectedValue,
+        (bm) =>
+          bm.tableName +
+            '||' +
+            bm.cat +
+            '||' +
+            (bm.filter || 'all') ===
+          selectedValue,
       );
 
       if (selectedBookmark) {
@@ -6409,6 +7066,14 @@ function initializeAppUI() {
         const targetTableName = selectedBookmark.tableName;
         let targetCategory = selectedBookmark.cat;
         let targetRowIdToGo = selectedBookmark.rowId; // <--- 這樣才能正確取得 rowId
+        const targetFilter = selectedBookmark.filter || 'all';
+
+        // 恢復過濾模式
+        currentFamiliarityFilter = targetFilter;
+        const filterSelect = document.getElementById('famFilterSelect');
+        if (filterSelect) {
+          filterSelect.value = targetFilter;
+        }
 
         // 如果是已完成的級別，重新開始
         if (selectedBookmark.isLevelFinished) {
@@ -6420,7 +7085,11 @@ function initializeAppUI() {
           // 【使用者回饋修正】點選重新開始時，先移除原本的「已完成」書籤
           let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
           const oldIndex = bookmarks.findIndex(
-            (bm) => bm.tableName === targetTableName && bm.cat === originalFinishedCat && bm.isLevelFinished
+            (bm) =>
+              bm.tableName === targetTableName &&
+              bm.cat === originalFinishedCat &&
+              (bm.filter || 'all') === targetFilter &&
+              bm.isLevelFinished,
           );
           if (oldIndex > -1) {
             bookmarks.splice(oldIndex, 1);
@@ -6484,6 +7153,61 @@ function initializeAppUI() {
       if (!isNaN(rowIndex) && g_currentSearchResults[rowIndex]) {
         toggleSearchAccordion(button, g_currentSearchResults[rowIndex]);
       }
+      return;
+    }
+
+    const btn = event.target.closest('.fam-btn');
+    if (btn) {
+      const itemKey = btn.dataset.itemKey;
+
+      if (btn.classList.contains('fav-btn')) {
+        const favId = btn.dataset.favId;
+        if (typeof DailyWord !== 'undefined' && DailyWord.toggleFav) {
+          const nowFaved = DailyWord.toggleFav(favId);
+          btn.innerHTML = nowFaved ? '❤️' : '🤍';
+          btn.classList.toggle('faved', !!nowFaved);
+        }
+      } else if (btn.classList.contains('easy-btn')) {
+        if (typeof getFamiliarity === 'function' && typeof setFamiliarity === 'function') {
+          const current = getFamiliarity(itemKey);
+          const newGrade = current === 1 ? 0 : 1;
+          setFamiliarity(itemKey, newGrade);
+          const famGroup = btn.closest('.fam-btn-group');
+          if (famGroup && typeof updateFamBtnGroup === 'function') {
+            updateFamBtnGroup(famGroup, itemKey);
+          }
+        }
+      } else if (btn.classList.contains('hard-btn')) {
+        if (typeof getFamiliarity === 'function' && typeof setFamiliarity === 'function') {
+          const current = getFamiliarity(itemKey);
+          const newGrade = current === -1 ? 0 : -1;
+          setFamiliarity(itemKey, newGrade);
+          const famGroup = btn.closest('.fam-btn-group');
+          if (famGroup && typeof updateFamBtnGroup === 'function') {
+            updateFamBtnGroup(famGroup, itemKey);
+          }
+        }
+      }
+
+      const tr = btn.closest('tr');
+      if (tr) {
+        checkAndFilterOutRow(tr);
+      }
+    }
+  });
+
+  window.addEventListener('hakkaFavChanged', function () {
+    if (typeof DailyWord === 'undefined' || !DailyWord.isFav) return;
+    document.querySelectorAll('.fav-btn').forEach((btn) => {
+      if (!btn.dataset.favId) return;
+      const isFaved = DailyWord.isFav(btn.dataset.favId);
+      btn.innerHTML = isFaved ? '❤️' : '🤍';
+      btn.classList.toggle('faved', isFaved);
+    });
+    if (currentFamiliarityFilter === 'fav-only') {
+      document.querySelectorAll('#category-table tbody tr').forEach((tr) => {
+        checkAndFilterOutRow(tr);
+      });
     }
   });
 

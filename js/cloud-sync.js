@@ -3,7 +3,7 @@
  * HakSpring - 使用 Supabase 進行書籤同步
  */
 
-const BOOKMARK_LIMIT = 10;
+const BOOKMARK_LIMIT = 15;
 const SYNC_DEBOUNCE_MS = 30000; // 30 秒
 const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
 const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
@@ -160,7 +160,7 @@ async function syncFromCloud() {
     // 加入 timeout 機制
     const queryPromise = client
       .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, daily_favs, updated_at')
+      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, daily_favs, familiarity, updated_at')
       .eq('user_id', cloudSyncState.user.id)
       .maybeSingle();
 
@@ -234,12 +234,18 @@ async function syncFromCloud() {
       );
       const cloudFavs = data.daily_favs || { items: [], tomb: {} };
 
+      const localFamiliarity = JSON.parse(
+        localStorage.getItem('hakkaFamiliarity') || '{}'
+      );
+      const cloudFamiliarity = data.familiarity || {};
+
       // 2. 合併資料
       const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
       const mergedProgress = mergeProgress(localProgress, cloudProgress);
       const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
       const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, cloudStatsByLevel, syncedStatsByLevel);
       const mergedFavs = mergeDailyFavs(localFavs, cloudFavs);
+      const mergedFamiliarity = mergeFamiliarity(localFamiliarity, cloudFamiliarity);
 
       // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
       // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
@@ -253,6 +259,7 @@ async function syncFromCloud() {
       localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
       localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
       localStorage.setItem('hakkaDailyFavs', JSON.stringify(mergedFavs));
+      localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
       // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
       // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
 
@@ -360,6 +367,9 @@ async function syncFromCloud() {
     if (window.DailyWord && typeof window.DailyWord.refreshUI === 'function') {
       window.DailyWord.refreshUI();
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('hakkaFavChanged'));
+    }
 
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');
@@ -404,6 +414,9 @@ async function syncToCloud() {
     const dailyFavs = JSON.parse(
       localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
     );
+    const familiarity = JSON.parse(
+      localStorage.getItem('hakkaFamiliarity') || '{}'
+    );
 
     const { error } = await client.from('user_sync_data').upsert(
       {
@@ -414,6 +427,7 @@ async function syncToCloud() {
         daily_stats: dailyStats,
         daily_stats_by_level: dailyStatsByLevel,
         daily_favs: dailyFavs,
+        familiarity: familiarity,
         updated_at: new Date().toISOString(),
       },
       {
@@ -447,27 +461,27 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
   // 合併所有書籤
   const allBookmarks = [...cloud, ...local];
 
-  // 用 tableName 為 key，只保留每個表格中 timestamp 最新的書籤
-  const tableMap = new Map();
+  // 用 tableName + cat + filter 為 key，保留相同書籤中 timestamp 較新的
+  const bookmarkMap = new Map();
 
   allBookmarks.forEach((bm) => {
-    const tableKey = bm.tableName;
-    const existing = tableMap.get(tableKey);
+    const key = `${bm.tableName}||${bm.cat}||${bm.filter || 'all'}`;
+    const existing = bookmarkMap.get(key);
 
     if (!existing) {
-      tableMap.set(tableKey, bm);
+      bookmarkMap.set(key, bm);
     } else {
       // 比較 timestamp，保留較新的
       const currentTime = bm.timestamp || 0;
       const existingTime = existing.timestamp || 0;
       if (currentTime > existingTime) {
-        tableMap.set(tableKey, bm);
+        bookmarkMap.set(key, bm);
       }
     }
   });
 
   // 轉回陣列並依 timestamp 排序
-  let merged = Array.from(tableMap.values());
+  let merged = Array.from(bookmarkMap.values());
   merged.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
   // 限制數量
@@ -716,6 +730,27 @@ function mergeDailyFavs(localObj, cloudObj) {
     items: dedupedItems,
     tomb: mergedTomb
   };
+}
+
+/**
+ * 熟悉度標記合併：LWW per-key（後蓋前，取 timestamp 較新者）
+ * 結構：{ [itemKey]: [grade, updated_at] }
+ */
+function mergeFamiliarity(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+
+  const merged = { ...cloud };
+  for (const key in local) {
+    const localEntry = local[key];
+    const cloudEntry = cloud[key];
+    const localTs = Array.isArray(localEntry) ? localEntry[1] : 0;
+    const cloudTs = Array.isArray(cloudEntry) ? cloudEntry[1] : 0;
+    if (!cloudEntry || localTs >= cloudTs) {
+      merged[key] = localEntry;
+    }
+  }
+  return merged;
 }
 
 /**

@@ -297,11 +297,20 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   // 一局題數：以「可用的詞」為上限。
   const MAX_QUESTIONS = Math.min(10, wordsWithM.length);
 
-  const dueWords = wordsWithM.filter(x => x.mProgress && x.mProgress.due <= todayEpochDay);
+  // 套用熟悉度修正計算有效到期日
+  const getEffectiveDue = (x) => {
+    if (!x.mProgress) return Infinity;
+    const itemKey = x.word.progressKey ? x.word.progressKey.replace(/\|.*$/, '') : '';
+    return typeof getAdjustedDue === 'function'
+      ? getAdjustedDue(x.mProgress.due, x.mProgress.interval, itemKey, todayEpochDay)
+      : x.mProgress.due;
+  };
+
+  const dueWords = wordsWithM.filter(x => x.mProgress && getEffectiveDue(x) <= todayEpochDay);
   const unseenWords = wordsWithM.filter(x => !x.mProgress);
-  const notDueAll = wordsWithM.filter(x => x.mProgress && x.mProgress.due > todayEpochDay);
+  const notDueAll = wordsWithM.filter(x => x.mProgress && getEffectiveDue(x) > todayEpochDay);
   
-  // 「今天已複習過」的詞（SM-2 反推：最後複習日 = due - interval）排到最後一池，
+  // 「今天已復習過」的詞（SM-2 反推：最後復習日 = due - interval）排到最後一池，
   // 否則「循序＋無到期詞」時 notDue 湊數池永遠從編號最小取，每一局都從 1-1 重考同一批。
   const reviewedToday = x => (x.mProgress.due - x.mProgress.interval) === todayEpochDay;
   
@@ -315,9 +324,9 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     if (needed <= 0 || pool.length === 0) return [];
     if (orderMode === 'sequential') {
       if (isPadding) {
-        // 湊數池即使在循序模式，也改為優先取「離到期日較近」的詞 (due 由小到大)，
+        // 湊數池即使在循序模式，也改為優先取「離有效到期日較近」的詞 (due 由小到大)，
         // 避免永遠抓編號最小的詞 (如 1-1) 造成惡性循環。
-        return [...pool].sort((a, b) => a.mProgress.due - b.mProgress.due).slice(0, needed);
+        return [...pool].sort((a, b) => getEffectiveDue(a) - getEffectiveDue(b)).slice(0, needed);
       }
       return [...pool].sort((a, b) => compareByWordId(a.word, b.word)).slice(0, needed);
     }
@@ -335,12 +344,12 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   // 3. 只有在兩者皆無時才拋出提示。
   if (reviewOnly) {
     const REVIEW_CAP = 15;
-    const sortedDue = [...dueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
+    const sortedDue = [...dueWords].sort((a, b) => getEffectiveDue(a) - getEffectiveDue(b));
     picked = sortedDue.slice(0, Math.min(REVIEW_CAP, sortedDue.length));
 
     if (picked.length < REVIEW_CAP) {
-      // notDueWords 已排除 interval > 30 與今日已複習詞，依 due 由小到大排序（先抓明天→後天...）
-      const sortedNotDue = [...notDueWords].sort((a, b) => a.mProgress.due - b.mProgress.due);
+      // notDueWords 已排除 interval > 30 與今日已復習詞，依有效 due 由小到大排序（先抓明天→後天...）
+      const sortedNotDue = [...notDueWords].sort((a, b) => getEffectiveDue(a) - getEffectiveDue(b));
       const needed = REVIEW_CAP - picked.length;
       picked = picked.concat(sortedNotDue.slice(0, needed));
     }

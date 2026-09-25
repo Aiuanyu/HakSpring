@@ -74,6 +74,15 @@ function initGameUI() {
   const gameRetryBtn = document.getElementById('gameRetryBtn');
   const gamePlayAudioBtn = document.getElementById('game-play-audio-btn');
 
+  window.addEventListener('hakkaFavChanged', function () {
+    const gameFavBtn = document.getElementById('game-fav-btn');
+    if (gameFavBtn && gameFavBtn.dataset.favId && typeof DailyWord !== 'undefined' && DailyWord.isFav) {
+      const isFaved = DailyWord.isFav(gameFavBtn.dataset.favId);
+      gameFavBtn.innerHTML = isFaved ? '❤️' : '🤍';
+      gameFavBtn.classList.toggle('faved', isFaved);
+    }
+  });
+
   const handleStartGameClick = () => {
     if (typeof trackEvent === 'function') {
       trackEvent('open_modal', 'Game', 'floating_btn');
@@ -620,6 +629,31 @@ function renderQuestion() {
   const newBadge = document.getElementById('game-new-badge');
   newBadge.style.display = question.isNew ? 'inline-block' : 'none';
 
+  // 遊戲題目 ❤️ 收藏按鈕更新
+  const gameFavBtn = document.getElementById('game-fav-btn');
+  if (gameFavBtn) {
+    const targetWord = question.targetWord;
+    const currentVar = targetWord.dataVarName || getQuestionDataVarName(question);
+    const wordId = targetWord['編號'] || targetWord['序號'] || '';
+    const wordHakka = targetWord['客家語'] || '';
+    const s = (targetWord.source === 'gip' || (currentVar && currentVar.startsWith('教典'))) ? 'g' : 'c';
+    const favId = `${s}${currentVar}${wordId}:${wordHakka}`;
+
+    const isFaved = typeof DailyWord !== 'undefined' && DailyWord.isFav && DailyWord.isFav(favId);
+    gameFavBtn.innerHTML = isFaved ? '❤️' : '🤍';
+    gameFavBtn.dataset.favId = favId;
+    gameFavBtn.classList.toggle('faved', !!isFaved);
+
+    gameFavBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (typeof DailyWord !== 'undefined' && DailyWord.toggleFav) {
+        const nowFaved = DailyWord.toggleFav(favId);
+        gameFavBtn.innerHTML = nowFaved ? '❤️' : '🤍';
+        gameFavBtn.classList.toggle('faved', !!nowFaved);
+      }
+    };
+  }
+
   // Apply pastel background color to modal dialog
   const gameModalDialog = document.querySelector('#gameModal .modal-dialog');
   if (gameModalDialog) {
@@ -985,12 +1019,15 @@ async function saveProgressAndNext(lastResult) {
   typeLastGrade[question.type] = lastResult;
 
   const todayEpochDay = Math.floor(Date.now() / 86400000);
+  let updatedProgress;
   if (question.isPlanting && lastResult !== 'again') {
     // 種植連發題答對：只記 typeReps，不推進 SM-2（避免同日兩次曝光雙重加速排程）
-    await putProgress(wordKey, { ...existingProgress, typeReps, typeLastGrade });
+    updatedProgress = { ...existingProgress, typeReps, typeLastGrade };
+    await putProgress(wordKey, updatedProgress);
   } else {
     const newState = computeSM2(existingProgress, lastResult, todayEpochDay);
-    await putProgress(wordKey, { ...newState, typeReps, typeLastGrade });
+    updatedProgress = { ...newState, typeReps, typeLastGrade };
+    await putProgress(wordKey, updatedProgress);
   }
 
   currentQuestionIndex++;
