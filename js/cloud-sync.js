@@ -461,11 +461,11 @@ function mergeBookmarks(localBookmarks, cloudBookmarks) {
   // 合併所有書籤
   const allBookmarks = [...cloud, ...local];
 
-  // 用 tableName + cat + filter 為 key，保留相同書籤中 timestamp 較新的
+  // 用 tableName + filter 為 key，確保同一腔級同一模式只保留最新一筆進度
   const bookmarkMap = new Map();
 
   allBookmarks.forEach((bm) => {
-    const key = `${bm.tableName}||${bm.cat}||${bm.filter || 'all'}`;
+    const key = `${bm.tableName}||${bm.filter || 'all'}`;
     const existing = bookmarkMap.get(key);
 
     if (!existing) {

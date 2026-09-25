@@ -3,7 +3,7 @@
 
 const FAMILIARITY_KEY = 'hakkaFamiliarity';
 
-// grade: 1（易）、-1（難）、0（普通＝刪除該筆）
+// grade: 1（易）、-1（難）、0（普通＝tombstone 紀錄，防止雲端舊資料復活）
 // itemKey: progressKey 去掉 |m 尾段，例如 "c四基1-1"
 function setFamiliarity(itemKey, grade) {
   let data = {};
@@ -13,11 +13,8 @@ function setFamiliarity(itemKey, grade) {
     console.error('Failed to parse familiarity data:', e);
   }
 
-  if (grade === 0) {
-    delete data[itemKey];
-  } else {
-    data[itemKey] = [grade, Date.now()]; // [grade, updated_at]
-  }
+  // 儲存 [grade, updated_at]，grade 為 0 代表 tombstone（普通/取消標記）
+  data[itemKey] = [grade, Date.now()];
 
   try {
     localStorage.setItem(FAMILIARITY_KEY, JSON.stringify(data));
@@ -43,12 +40,22 @@ function getFamiliarity(itemKey) {
 
   const entry = data[itemKey];
   if (!entry) return 0; // 普通
-  return Array.isArray(entry) ? entry[0] : entry;
+  const grade = Array.isArray(entry) ? entry[0] : entry;
+  return grade || 0;
 }
 
 function getAllFamiliarity() {
   try {
-    return JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
+    const raw = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
+    const result = {};
+    for (const key in raw) {
+      const entry = raw[key];
+      const grade = Array.isArray(entry) ? entry[0] : entry;
+      if (grade === 1 || grade === -1) {
+        result[key] = entry;
+      }
+    }
+    return result;
   } catch (e) {
     console.error('Failed to parse familiarity data:', e);
     return {};

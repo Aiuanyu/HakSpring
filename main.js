@@ -2561,6 +2561,8 @@ function initializeAppUI() {
 
     if (!progressDropdown) return;
 
+    const previousValue = progressDropdown.value;
+
     let bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
     const deduped = deduplicateBookmarks(bookmarks);
     if (deduped.length !== bookmarks.length) {
@@ -5316,7 +5318,9 @@ function initializeAppUI() {
 
         // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
         const wordPlayHandler = () => {
-          if (dialectInfo.腔 && dialectInfo.級) {
+          const autoBookmarkEnabled =
+            localStorage.getItem('autoBookmarkMode') === 'true';
+          if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
             const itemIndex = activeCategoryData.findIndex(
               (item) => item.編號 === line.編號,
             );
@@ -5392,7 +5396,9 @@ function initializeAppUI() {
 
           // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---
           const sentencePlayHandler = () => {
-            if (dialectInfo.腔 && dialectInfo.級) {
+            const autoBookmarkEnabled =
+              localStorage.getItem('autoBookmarkMode') === 'true';
+            if (autoBookmarkEnabled && dialectInfo.腔 && dialectInfo.級) {
               const itemIndex = activeCategoryData.findIndex(
                 (item) => item.編號 === line.編號,
               );
