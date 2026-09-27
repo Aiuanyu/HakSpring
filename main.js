@@ -3112,6 +3112,7 @@ function initializeAppUI() {
     const contentContainer = document.getElementById('generated');
     contentContainer.innerHTML = '';
     document.querySelector('#audioControls')?.remove();
+    hideFamiliarityFilterUI();
 
     const totalResults = results.length;
     const totalPages = Math.ceil(totalResults / itemsPerPage);
@@ -3198,6 +3199,22 @@ function initializeAppUI() {
       let fullSourceName = getFullLevelName(line.sourceName);
       sourceSpan.textContent = `(${fullSourceName})`;
       td1.appendChild(sourceSpan);
+
+      // --- 搜尋結果加 🤍 收藏按鈕 ---
+      const sourcePrefix = isGip ? 'g' : 'c';
+      const favId = `${sourcePrefix}${line.sourceName}${line.編號 || ''}:${line.客家語}`;
+      const favBtn = document.createElement('button');
+      favBtn.className = 'fam-btn fav-btn';
+      favBtn.title = '收藏';
+      const isFaved = typeof DailyWord !== 'undefined'
+        && DailyWord.isFav
+        && DailyWord.isFav(favId);
+      favBtn.innerHTML = isFaved ? '❤️' : '🤍';
+      if (isFaved) favBtn.classList.add('faved');
+      favBtn.dataset.favId = favId;
+      td1.appendChild(document.createTextNode(' '));
+      td1.appendChild(favBtn);
+
       item.appendChild(td1);
 
       const td2 = document.createElement('td');
@@ -4526,8 +4543,13 @@ function initializeAppUI() {
 
   function isLineMatchingFilter(line, dataVarName, filter) {
     if (filter === 'all') return true;
-    const itemKey = `c${dataVarName}${line.編號}`;
-    const favId = `c${dataVarName}${line.編號}:${line.客家語}`;
+    const isGip = Boolean(
+      (line && (line.source === 'gip' || line.sourceType === 'gip')) ||
+      (typeof dataVarName === 'string' && (dataVarName.startsWith('教典') || dataVarName.startsWith('gip')))
+    );
+    const sourcePrefix = isGip ? 'g' : 'c';
+    const itemKey = `${sourcePrefix}${dataVarName}${line.編號}`;
+    const favId = `${sourcePrefix}${dataVarName}${line.編號}:${line.客家語}`;
 
     if (filter === 'hard-only') {
       return typeof getFamiliarity === 'function' && getFamiliarity(itemKey) === -1;
@@ -4556,25 +4578,34 @@ function initializeAppUI() {
   }
 
   function setupFamiliarityFilterUI() {
-    const resultsSummaryContainer = document.getElementById('results-summary');
-    if (!resultsSummaryContainer) return;
-
-    let filterControls = document.getElementById('famFilterControls');
-    if (!filterControls) {
-      filterControls = document.createElement('span');
-      filterControls.id = 'famFilterControls';
-      filterControls.className = 'fam-filter-controls';
-      filterControls.innerHTML = `
-        <select id="famFilterSelect" class="fam-filter-select" aria-label="詞彙過濾">
-          <option value="all">全部</option>
-          <option value="hard-only">單淨難詞 🔴</option>
-          <option value="exclude-easy">無顯示簡單詞</option>
-          <option value="fav-only">收囥詞 ❤️</option>
-        </select>
+    let panel = document.getElementById('famFilterFloatingPanel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'famFilterFloatingPanel';
+      panel.className = 'fam-filter-floating-panel';
+      panel.innerHTML = `
+        <div class="fam-filter-controls" id="famFilterControls">
+          <select id="famFilterSelect" class="fam-filter-select" aria-label="詞彙過濾">
+            <option value="all">全部</option>
+            <option value="hard-only">單淨難詞 🔴</option>
+            <option value="exclude-easy">無顯示簡單詞</option>
+            <option value="fav-only">收囥詞 ❤️</option>
+          </select>
+        </div>
       `;
-      resultsSummaryContainer.appendChild(filterControls);
+      const summaryElem = document.getElementById('results-summary');
+      if (summaryElem && summaryElem.parentNode) {
+        summaryElem.parentNode.insertBefore(panel, summaryElem.nextSibling);
+      } else {
+        const headerElem = document.getElementById('header');
+        if (headerElem && headerElem.parentNode) {
+          headerElem.parentNode.insertBefore(panel, headerElem.nextSibling);
+        } else {
+          document.body.appendChild(panel);
+        }
+      }
 
-      const select = filterControls.querySelector('#famFilterSelect');
+      const select = panel.querySelector('#famFilterSelect');
       select.value = currentFamiliarityFilter;
       select.addEventListener('change', (e) => {
         currentFamiliarityFilter = e.target.value;
@@ -4589,8 +4620,16 @@ function initializeAppUI() {
         }
       });
     } else {
-      const select = filterControls.querySelector('#famFilterSelect');
+      panel.style.display = 'flex';
+      const select = panel.querySelector('#famFilterSelect');
       if (select) select.value = currentFamiliarityFilter;
+    }
+  }
+
+  function hideFamiliarityFilterUI() {
+    const panel = document.getElementById('famFilterFloatingPanel');
+    if (panel) {
+      panel.style.display = 'none';
     }
   }
 
@@ -4801,7 +4840,7 @@ function initializeAppUI() {
         // Original behavior when not in continuous play mode
         contentContainer.innerHTML = `<p style="text-align: center; margin-top: 20px;">${dialectInfo.級名} 無「${category}」个內容。</p>`;
         document.querySelector('#audioControls')?.remove();
-        document.querySelector('#famFilterControls')?.remove();
+        hideFamiliarityFilterUI();
         updateResultsSummaryVisibility();
       }
       return; // Important to stop further execution for this empty category
@@ -4809,7 +4848,12 @@ function initializeAppUI() {
 
     // 2.1 套用熟悉度與收藏過濾
     const currentVar = currentDataVarName || (dialectInfo.腔 && dialectInfo.級 ? (dialectInfo.腔 + dialectInfo.級) : '');
-    activeCategoryData = rawCategoryData.filter(line => isLineMatchingFilter(line, currentVar, currentFamiliarityFilter));
+    if (typeof beginFamiliarityBatch === 'function') beginFamiliarityBatch();
+    try {
+      activeCategoryData = rawCategoryData.filter(line => isLineMatchingFilter(line, currentVar, currentFamiliarityFilter));
+    } finally {
+      if (typeof endFamiliarityBatch === 'function') endFamiliarityBatch();
+    }
     const totalResults = activeCategoryData.length;
 
     if (totalResults === 0) {
@@ -5161,6 +5205,9 @@ function initializeAppUI() {
       return;
     }
 
+    const isGipData = Boolean(
+      dialectInfo && dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典')
+    );
     const fragment = document.createDocumentFragment();
 
     for (const line of itemsToRender) {
@@ -5241,13 +5288,22 @@ function initializeAppUI() {
       td1.appendChild(loopOneBtn);
 
       // --- 收藏 + 熟悉度標記按鈕（接在 td1 現有按鈕後） ---
-      td1.appendChild(document.createElement('br'));
+      const famBr = document.createElement('br');
+      famBr.className = 'fam-btn-br';
+      td1.appendChild(famBr);
       const famGroup = document.createElement('span');
       famGroup.className = 'fam-btn-group';
 
       const currentVar = currentDataVarName || (dialectInfo.腔 && dialectInfo.級 ? (dialectInfo.腔 + dialectInfo.級) : '');
-      const itemKey = `c${currentVar}${line.編號}`;
-      const favId = `c${currentVar}${line.編號}:${line.客家語}`;
+      const isGip = Boolean(
+        isGipData ||
+        (line && (line.source === 'gip' || line.sourceType === 'gip')) ||
+        (typeof currentVar === 'string' && currentVar.startsWith('教典')) ||
+        (dialectInfo && dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典'))
+      );
+      const sourcePrefix = isGip ? 'g' : 'c';
+      const itemKey = `${sourcePrefix}${currentVar}${line.編號}`;
+      const favId = `${sourcePrefix}${currentVar}${line.編號}:${line.客家語}`;
 
       // ❤️ 收藏按鈕
       const favBtn = document.createElement('button');
@@ -5286,7 +5342,6 @@ function initializeAppUI() {
       const ruby = document.createElement('ruby');
       ruby.textContent = line.客家語;
       const rt = document.createElement('rt');
-      const isGipData = dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典');
       let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGipData);
       const dialectCode = getDialectCode(dialectInfo.腔);
 
@@ -7174,20 +7229,16 @@ function initializeAppUI() {
           btn.classList.toggle('faved', !!nowFaved);
         }
       } else if (btn.classList.contains('easy-btn')) {
-        if (typeof getFamiliarity === 'function' && typeof setFamiliarity === 'function') {
-          const current = getFamiliarity(itemKey);
-          const newGrade = current === 1 ? 0 : 1;
-          setFamiliarity(itemKey, newGrade);
+        if (typeof toggleFamiliarity === 'function') {
+          toggleFamiliarity(itemKey, 1);
           const famGroup = btn.closest('.fam-btn-group');
           if (famGroup && typeof updateFamBtnGroup === 'function') {
             updateFamBtnGroup(famGroup, itemKey);
           }
         }
       } else if (btn.classList.contains('hard-btn')) {
-        if (typeof getFamiliarity === 'function' && typeof setFamiliarity === 'function') {
-          const current = getFamiliarity(itemKey);
-          const newGrade = current === -1 ? 0 : -1;
-          setFamiliarity(itemKey, newGrade);
+        if (typeof toggleFamiliarity === 'function') {
+          toggleFamiliarity(itemKey, -1);
           const famGroup = btn.closest('.fam-btn-group');
           if (famGroup && typeof updateFamBtnGroup === 'function') {
             updateFamBtnGroup(famGroup, itemKey);

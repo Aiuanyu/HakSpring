@@ -270,7 +270,12 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     throw new Error(`無法取得詞彙資料（${dataVarName}），請確定資料庫已載入。`);
   }
 
-  const todayEpochDay = Math.floor(Date.now() / 86400000);
+  if (typeof beginFamiliarityBatch === 'function') {
+    beginFamiliarityBatch();
+  }
+
+  try {
+    const todayEpochDay = Math.floor(Date.now() / 86400000);
 
   // ── 第一步：只選「詞」──────────────────────────────
   // 每個詞的新舊狀態一律以 |m（錨點題型）的進度為準。
@@ -476,6 +481,11 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
   }
 
   return session;
+  } finally {
+    if (typeof endFamiliarityBatch === 'function') {
+      endFamiliarityBatch();
+    }
+  }
 }
 
 /**

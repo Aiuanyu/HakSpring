@@ -3,14 +3,33 @@
 
 const FAMILIARITY_KEY = 'hakkaFamiliarity';
 
+// 批次快取支援（供出題排序或主表篩選時減少重複 JSON.parse）
+let _famBatchCache = null;
+
+function beginFamiliarityBatch() {
+  try {
+    _famBatchCache = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
+  } catch (e) {
+    _famBatchCache = {};
+  }
+}
+
+function endFamiliarityBatch() {
+  _famBatchCache = null;
+}
+
 // grade: 1（易）、-1（難）、0（普通＝tombstone 紀錄，防止雲端舊資料復活）
 // itemKey: progressKey 去掉 |m 尾段，例如 "c四基1-1"
 function setFamiliarity(itemKey, grade) {
   let data = {};
-  try {
-    data = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
-  } catch (e) {
-    console.error('Failed to parse familiarity data:', e);
+  if (_famBatchCache !== null) {
+    data = _famBatchCache;
+  } else {
+    try {
+      data = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
+    } catch (e) {
+      console.error('Failed to parse familiarity data:', e);
+    }
   }
 
   // 儲存 [grade, updated_at]，grade 為 0 代表 tombstone（普通/取消標記）
@@ -30,18 +49,30 @@ function setFamiliarity(itemKey, grade) {
 }
 
 function getFamiliarity(itemKey) {
-  let data = {};
-  try {
-    data = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
-  } catch (e) {
-    console.error('Failed to parse familiarity data:', e);
-    return 0;
+  let data;
+  if (_famBatchCache !== null) {
+    data = _famBatchCache;
+  } else {
+    try {
+      data = JSON.parse(localStorage.getItem(FAMILIARITY_KEY) || '{}');
+    } catch (e) {
+      console.error('Failed to parse familiarity data:', e);
+      return 0;
+    }
   }
 
   const entry = data[itemKey];
   if (!entry) return 0; // 普通
   const grade = Array.isArray(entry) ? entry[0] : entry;
   return grade || 0;
+}
+
+// 切換特定熟悉度等級（易 1 或 難 -1），若當前已是該等級則切回 0（普通）
+function toggleFamiliarity(itemKey, targetGrade) {
+  const current = getFamiliarity(itemKey);
+  const newGrade = current === targetGrade ? 0 : targetGrade;
+  setFamiliarity(itemKey, newGrade);
+  return newGrade;
 }
 
 function getAllFamiliarity() {
@@ -123,6 +154,9 @@ if (typeof window !== 'undefined') {
   window.FAMILIARITY_KEY = FAMILIARITY_KEY;
   window.setFamiliarity = setFamiliarity;
   window.getFamiliarity = getFamiliarity;
+  window.toggleFamiliarity = toggleFamiliarity;
+  window.beginFamiliarityBatch = beginFamiliarityBatch;
+  window.endFamiliarityBatch = endFamiliarityBatch;
   window.getAllFamiliarity = getAllFamiliarity;
   window.getFamiliaritySuggestion = getFamiliaritySuggestion;
   window.FAMILIARITY_MULTIPLIER = FAMILIARITY_MULTIPLIER;

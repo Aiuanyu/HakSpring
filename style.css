@@ -5329,9 +5329,43 @@ mark {
 }
 
 @media screen and (max-width: 768px) {
-  .fam-btn-group {
-    margin-left: 6px;
-    margin-top: 0;
+  #generated tr {
+    position: relative;
+    /* 不加額外 padding-left，完全不占卡片文字寬度 */
+  }
+  #generated td.no {
+    position: static;
+    padding-right: 0 !important;
+  }
+  #generated td.no::before {
+    position: absolute;
+    top: 0.5em;
+    left: 10px;
+  }
+  #generated td.no .fam-btn-group {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    z-index: 3;
+    width: 24px;
+  }
+  #generated td.no .fam-btn-group .fam-btn {
+    padding: 2px 0;
+    font-size: 1.15em;
+    line-height: 1;
+    margin: 0;
+  }
+  .fam-btn-br {
+    display: none;
   }
 }
 
@@ -5365,22 +5399,47 @@ mark {
   }
 }
 
-/* --- Phase 5: 主表熟悉度與收藏過濾器 --- */
-.fam-filter-controls {
+/* --- Phase 5: 主表熟悉度與收藏過濾器 (右上角浮動小面板) --- */
+.fam-filter-floating-panel {
+  position: sticky;
+  top: 146px;
+  z-index: 4;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  padding: 0 15px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+@media screen and (min-width: 1024px) {
+  .fam-filter-floating-panel {
+    top: 152px;
+  }
+}
+
+.fam-filter-floating-panel .fam-filter-controls {
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  margin-left: 8px;
-  flex-shrink: 0;
+  background: rgba(170, 150, 183, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .fam-filter-select {
-  padding: 3px 8px;
-  font-size: 0.88rem;
+  padding: 2px 8px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--main-text-color, #2b2b2b);
   background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
@@ -5402,11 +5461,18 @@ mark {
 }
 
 @media (prefers-color-scheme: dark) {
+  .fam-filter-floating-panel .fam-filter-controls {
+    background: rgba(40, 40, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
   .fam-filter-select {
     color: #e0e0e0;
-    background-color: #2a2a2a;
+    background-color: rgba(50, 50, 50, 0.9);
     border-color: rgba(255, 255, 255, 0.25);
   }
+
   .fam-filter-select:hover,
   .fam-filter-select:focus {
     border-color: var(--focus-glow-color, #c084fc);
