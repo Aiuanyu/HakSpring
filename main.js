@@ -1775,7 +1775,27 @@ async function fetchAndCacheDataInDB(db, newVersion) {
     await dbClear(db, STORE_FILES);
     console.log('舊快取資料已清除。');
 
-    // 步驟 1: 平行 fetch 所有 JSON 檔並直接解析
+    // 進度分配：下載 0~50%、解析處理 50~100%（寫入交易為同步，瞬間完成）
+    const totalFiles = DATA_FILES_TO_CACHE.length;
+    const showProgress = (percent) => {
+      loadingText.textContent = `當在該處理最新資料... (${percent}%)`;
+    };
+    // 讓出主執行緒，使瀏覽器有機會重繪進度（⚠️ 不可在 IndexedDB 交易期間使用，會使交易自動結束）
+    // 先等 requestAnimationFrame（確保有繪製），再 setTimeout；背景分頁 rAF 會暫停，故加 50ms 保底避免卡住
+    const yieldToPaint = () =>
+      new Promise((resolve) => {
+        const fallback = setTimeout(resolve, 50);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            clearTimeout(fallback);
+            resolve();
+          }, 0);
+        });
+      });
+
+    // 步驟 1: 平行 fetch 所有 JSON 檔並直接解析，每完成一個檔案就更新進度
+    let downloadedCount = 0;
+    showProgress(0);
     const jsonDataArray = await Promise.all(
       DATA_FILES_TO_CACHE.map((filePath) =>
         fetch(`${filePath}?cachebust=${new Date().getTime()}`)
@@ -1786,44 +1806,47 @@ async function fetchAndCacheDataInDB(db, newVersion) {
           .catch((err) => {
             console.error(err);
             return null; // 若失敗則返回 null
+          })
+          .finally(() => {
+            downloadedCount++;
+            showProgress(Math.round((downloadedCount / totalFiles) * 50));
           }),
       ),
     );
 
-    // 步驟 2: 建立單一交易
+    // 步驟 2: 在交易「外面」逐檔解析、切 chunk（可讓出畫面更新進度），暫存成待寫入清單
+    const entriesToPut = [];
+    const hasDownloadFailure = jsonDataArray.some((d) => d === null);
+    for (const [index, dataObject] of jsonDataArray.entries()) {
+      if (dataObject !== null) {
+        const filePath = DATA_FILES_TO_CACHE[index];
+        // [修正] 直接呼叫統一的工具函式來生成 key
+        const keyName = getKeyNameFromPath(filePath);
+
+        if (!keyName) {
+          console.warn(`無法為檔案路徑生成 key: ${filePath}`);
+        } else if (dataObject.content && typeof dataObject.content === 'string') {
+          const parsedData = parseUnifiedCsv(dataObject.content);
+          const numChunks = Math.ceil(parsedData.length / CHUNK_SIZE);
+          entriesToPut.push([{ chunkCount: numChunks, isChunked: true }, keyName]);
+          for (let i = 0; i < numChunks; i++) {
+            const chunk = parsedData.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            entriesToPut.push([chunk, `${keyName}_chunk_${i}`]);
+          }
+        } else {
+          entriesToPut.push([dataObject, keyName]);
+        }
+      }
+      jsonDataArray[index] = null; // 處理完就釋放，減少記憶體同時佔用
+      showProgress(50 + Math.round(((index + 1) / totalFiles) * 50));
+      await yieldToPaint();
+    }
+
+    // 步驟 3: 建立單一交易，同步寫入全部資料（交易期間不可 await 非 IDB 的 Promise）
     const transaction = db.transaction([STORE_FILES], 'readwrite');
     const fileStore = transaction.objectStore(STORE_FILES);
-
-    // 步驟 3: 在單一交易內，循序處理並儲存每個資料物件
-    for (const [index, dataObject] of jsonDataArray.entries()) {
-      if (dataObject === null) continue; // 跳過下載或解析失敗的檔案
-
-      const filePath = DATA_FILES_TO_CACHE[index];
-      // [修正] 直接呼叫統一的工具函式來生成 key
-      const keyName = getKeyNameFromPath(filePath);
-
-      if (!keyName) {
-        console.warn(`無法為檔案路徑生成 key: ${filePath}`);
-        continue;
-      }
-
-      let dataToStore = dataObject;
-
-      if (dataToStore.content && typeof dataToStore.content === 'string') {
-        const parsedData = parseUnifiedCsv(dataToStore.content);
-        const numChunks = Math.ceil(parsedData.length / CHUNK_SIZE);
-        fileStore.put({ chunkCount: numChunks, isChunked: true }, keyName);
-        for (let i = 0; i < numChunks; i++) {
-          const chunk = parsedData.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-          fileStore.put(chunk, `${keyName}_chunk_${i}`);
-        }
-      } else {
-        fileStore.put(dataToStore, keyName);
-      }
-      const progress = Math.round(
-        ((index + 1) / DATA_FILES_TO_CACHE.length) * 100,
-      );
-      loadingText.textContent = `當在該處理最新資料... (${progress}%)`;
+    for (const [value, key] of entriesToPut) {
+      fileStore.put(value, key);
     }
 
     // 等待交易完成
@@ -1838,8 +1861,13 @@ async function fetchAndCacheDataInDB(db, newVersion) {
       };
     });
 
-    await dbPut(db, STORE_VERSION, newVersion, 'currentVersion');
-    console.log('所有新資料已處理並快取。');
+    if (hasDownloadFailure) {
+      // 有檔案下載失敗就毋寫入新版本號，下擺開啟會再重抓，避免缺檔个快取被當成最新
+      console.warn('部分資料檔下載失敗，未更新版本號，下擺開啟會重新下載。');
+    } else {
+      await dbPut(db, STORE_VERSION, newVersion, 'currentVersion');
+      console.log('所有新資料已處理並快取。');
+    }
   } catch (error) {
     console.error('快取資料時發生嚴重錯誤:', error);
     loadingText.textContent = '資料處理失敗，請重新整理頁面。';
