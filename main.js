@@ -1781,7 +1781,17 @@ async function fetchAndCacheDataInDB(db, newVersion) {
       loadingText.textContent = `當在該處理最新資料... (${percent}%)`;
     };
     // 讓出主執行緒，使瀏覽器有機會重繪進度（⚠️ 不可在 IndexedDB 交易期間使用，會使交易自動結束）
-    const yieldToPaint = () => new Promise((resolve) => setTimeout(resolve, 0));
+    // 先等 requestAnimationFrame（確保有繪製），再 setTimeout；背景分頁 rAF 會暫停，故加 50ms 保底避免卡住
+    const yieldToPaint = () =>
+      new Promise((resolve) => {
+        const fallback = setTimeout(resolve, 50);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            clearTimeout(fallback);
+            resolve();
+          }, 0);
+        });
+      });
 
     // 步驟 1: 平行 fetch 所有 JSON 檔並直接解析，每完成一個檔案就更新進度
     let downloadedCount = 0;
@@ -1806,6 +1816,7 @@ async function fetchAndCacheDataInDB(db, newVersion) {
 
     // 步驟 2: 在交易「外面」逐檔解析、切 chunk（可讓出畫面更新進度），暫存成待寫入清單
     const entriesToPut = [];
+    const hasDownloadFailure = jsonDataArray.some((d) => d === null);
     for (const [index, dataObject] of jsonDataArray.entries()) {
       if (dataObject !== null) {
         const filePath = DATA_FILES_TO_CACHE[index];
@@ -1826,6 +1837,7 @@ async function fetchAndCacheDataInDB(db, newVersion) {
           entriesToPut.push([dataObject, keyName]);
         }
       }
+      jsonDataArray[index] = null; // 處理完就釋放，減少記憶體同時佔用
       showProgress(50 + Math.round(((index + 1) / totalFiles) * 50));
       await yieldToPaint();
     }
@@ -1849,8 +1861,13 @@ async function fetchAndCacheDataInDB(db, newVersion) {
       };
     });
 
-    await dbPut(db, STORE_VERSION, newVersion, 'currentVersion');
-    console.log('所有新資料已處理並快取。');
+    if (hasDownloadFailure) {
+      // 有檔案下載失敗就毋寫入新版本號，下擺開啟會再重抓，避免缺檔个快取被當成最新
+      console.warn('部分資料檔下載失敗，未更新版本號，下擺開啟會重新下載。');
+    } else {
+      await dbPut(db, STORE_VERSION, newVersion, 'currentVersion');
+      console.log('所有新資料已處理並快取。');
+    }
   } catch (error) {
     console.error('快取資料時發生嚴重錯誤:', error);
     loadingText.textContent = '資料處理失敗，請重新整理頁面。';
