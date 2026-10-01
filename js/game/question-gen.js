@@ -360,12 +360,15 @@ async function generateGameSession(dialect, dataVarName, { orderMode = 'random',
     }
 
     if (picked.length === 0) {
+      if (reviewedTodayWords.length > 0) {
+        throw new Error('今晡日這隻腔級个待復習詞都復習忒吔！做得去學新詞或換其他腔級搞喔。');
+      }
       throw new Error('目前沒有到期或即將到期要復習的詞，去學新詞或換一級吧！');
     }
     // ↓ 跳過原本的 order/池組合與 padding，直接進「第二步：配題型」。
   } else {
-    // mixMode 決定「抽取優先序」；今天複習過的一律墊底。
-    // reviewFirst + 有勾副題型：到期詞 → 【已解鎖未到期詞（可出副題型鞏固）】→ 新詞 → 今日已複習。
+    // mixMode 決定「抽取優先序」；今天復習過的一律墊底。
+    // reviewFirst + 有勾副題型：到期詞 → 【已解鎖未到期詞（可出副題型鞏固）】→ 新詞 → 今日已復習。
     //   把 notDueWords 排在 unseenWords 前，避免「解鎖詞少、到期詞不夠」時整局被新詞 |m 灌滿、
     //   副題型（拼音/克漏字…）搶不到主格（20260714 回報：復習卻像衝新進度、拼音幾乎不出）。
     // reviewFirst + 只勾 |m：維持舊序（新詞優先於未到期），照常細水推新詞。

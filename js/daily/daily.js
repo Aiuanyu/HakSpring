@@ -1008,9 +1008,6 @@ const DailyWord = (function () {
     isFav: (idString) => DailyFavManager.isFav(idString),
     toggleFav: (idString) => {
       DailyFavManager.toggleFav(idString);
-      if (typeof window !== 'undefined' && typeof window.triggerCloudSync === 'function') {
-        window.triggerCloudSync();
-      }
       try {
         refreshUI();
       } catch (e) {

@@ -51,16 +51,30 @@ function getWordsForDialectAndLevel(dialect, dataVarName) {
     const data = JSON.parse(localStorage.getItem('hakkaLearningProgress') || '{}');
     const todayEpochDay = Math.floor(Date.now() / 86400000);
     const varNames = new Set();
-    for (const key in data) {
-      if (!key.endsWith('|m')) continue;
-      const arr = data[key];
-      if (!Array.isArray(arr)) continue;
-      const due = arr[3];
-      const interval = arr[1] || 0;
-      // 收集：今日到期/逾期詞，以及未來待復習（interval <= 30 保護熟詞）的詞所屬腔級
-      if (due != null && (due <= todayEpochDay || (due > todayEpochDay && interval <= 30))) {
-        const match = key.match(/^[cg]([^0-9]+)/);
-        if (match) varNames.add(match[1]);
+
+    if (typeof beginFamiliarityBatch === 'function') {
+      beginFamiliarityBatch();
+    }
+    try {
+      for (const key in data) {
+        if (!key.endsWith('|m')) continue;
+        const arr = data[key];
+        if (!Array.isArray(arr)) continue;
+        const due = arr[3];
+        const interval = arr[1] || 0;
+        const itemKey = key.slice(0, -2);
+        const effectiveDue = (typeof getAdjustedDue === 'function')
+          ? getAdjustedDue(due, interval, itemKey, todayEpochDay)
+          : due;
+        // 收集：今日到期/逾期詞，以及未來待復習（interval <= 30 保護熟詞）的詞所屬腔級
+        if (effectiveDue != null && (effectiveDue <= todayEpochDay || (effectiveDue > todayEpochDay && interval <= 30))) {
+          const match = key.match(/^[cg]([^0-9]+)/);
+          if (match) varNames.add(match[1]);
+        }
+      }
+    } finally {
+      if (typeof endFamiliarityBatch === 'function') {
+        endFamiliarityBatch();
       }
     }
     

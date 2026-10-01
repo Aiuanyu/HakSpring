@@ -1019,15 +1019,12 @@ async function saveProgressAndNext(lastResult) {
   typeLastGrade[question.type] = lastResult;
 
   const todayEpochDay = Math.floor(Date.now() / 86400000);
-  let updatedProgress;
   if (question.isPlanting && lastResult !== 'again') {
     // 種植連發題答對：只記 typeReps，不推進 SM-2（避免同日兩次曝光雙重加速排程）
-    updatedProgress = { ...existingProgress, typeReps, typeLastGrade };
-    await putProgress(wordKey, updatedProgress);
+    await putProgress(wordKey, { ...existingProgress, typeReps, typeLastGrade });
   } else {
     const newState = computeSM2(existingProgress, lastResult, todayEpochDay);
-    updatedProgress = { ...newState, typeReps, typeLastGrade };
-    await putProgress(wordKey, updatedProgress);
+    await putProgress(wordKey, { ...newState, typeReps, typeLastGrade });
   }
 
   currentQuestionIndex++;

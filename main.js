@@ -1950,7 +1950,7 @@ function handleDataImport() {
 
           const bookmarkMap = new Map();
           combinedBookmarks.forEach((bm) => {
-            const key = `${bm.tableName}||${bm.cat}||${bm.filter || 'all'}`;
+            const key = `${bm.tableName}||${bm.filter || 'all'}`;
             const existing = bookmarkMap.get(key);
             if (!existing || bm.timestamp > existing.timestamp) {
               bookmarkMap.set(key, bm);
@@ -2571,7 +2571,7 @@ function initializeAppUI() {
     }
 
     progressDropdown.innerHTML =
-      '<option selected disabled>擇進前个進度</option>';
+      '<option selected disabled>認證詞彙進度擇單</option>';
     if (bookmarks.length === 0 && progressDetailsSpan) {
       progressDetailsSpan.textContent = '';
     }
@@ -2614,68 +2614,60 @@ function initializeAppUI() {
         valueToSelect = currentExpectedValue;
       }
     }
-    if (!valueToSelect && previousValue && previousValue !== '擇進前个進度') {
+    if (!valueToSelect && previousValue && previousValue !== '認證詞彙進度擇單' && previousValue !== '進度擇單' && previousValue !== '擇進前个進度') {
       if (progressDropdown.querySelector(`option[value="${previousValue}"]`)) {
         valueToSelect = previousValue;
       }
     }
 
     if (valueToSelect) {
-      const newOptionToSelect = progressDropdown.querySelector(
-        `option[value="${valueToSelect}"]`,
+      const selectedBookmark = bookmarks.find(
+        (bm) =>
+          bm.tableName +
+            '||' +
+            bm.cat +
+            '||' +
+            (bm.filter || 'all') ===
+          valueToSelect,
       );
-      if (newOptionToSelect) {
-        newOptionToSelect.selected = true;
-        const selectedBookmark = bookmarks.find(
-          (bm) =>
-            bm.tableName +
-              '||' +
-              bm.cat +
-              '||' +
-              (bm.filter || 'all') ===
-            valueToSelect,
-        );
-        if (selectedBookmark && progressDetailsSpan) {
-          let baseURL = '';
-          if (window.location.protocol === 'file:') {
-            baseURL = window.location.href.substring(
-              0,
-              window.location.href.lastIndexOf('/') + 1,
-            );
-          } else {
-            let path = window.location.pathname;
-            baseURL =
-              window.location.origin +
-              path.substring(0, path.lastIndexOf('/') + 1);
-            if (!baseURL.endsWith('/')) {
-              baseURL += '/';
-            }
-          }
-
-          const dialectLevelCodes = extractDialectLevelCodes(
-            selectedBookmark.tableName,
+      if (selectedBookmark && progressDetailsSpan) {
+        let baseURL = '';
+        if (window.location.protocol === 'file:') {
+          baseURL = window.location.href.substring(
+            0,
+            window.location.href.lastIndexOf('/') + 1,
           );
-          if (dialectLevelCodes) {
-            let shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${selectedBookmark.cat}&row=${selectedBookmark.rowId}`;
-            if (selectedBookmark.filter && selectedBookmark.filter !== 'all') {
-              shareURL += `&filter=${encodeURIComponent(selectedBookmark.filter)}`;
-            }
-            const linkElement = document.createElement('a');
-            linkElement.href = shareURL;
-            linkElement.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
-            linkElement.style.marginLeft = '5px';
-            progressDetailsSpan.innerHTML = '';
-            progressDetailsSpan.appendChild(linkElement);
-          } else {
-            progressDetailsSpan.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+        } else {
+          let path = window.location.pathname;
+          baseURL =
+            window.location.origin +
+            path.substring(0, path.lastIndexOf('/') + 1);
+          if (!baseURL.endsWith('/')) {
+            baseURL += '/';
           }
         }
-      } else {
-        progressDropdown.selectedIndex = 0;
+
+        const dialectLevelCodes = extractDialectLevelCodes(
+          selectedBookmark.tableName,
+        );
+        if (dialectLevelCodes) {
+          let shareURL = `${baseURL}?dialect=${dialectLevelCodes.dialect}&level=${dialectLevelCodes.level}&category=${selectedBookmark.cat}&row=${selectedBookmark.rowId}`;
+          if (selectedBookmark.filter && selectedBookmark.filter !== 'all') {
+            shareURL += `&filter=${encodeURIComponent(selectedBookmark.filter)}`;
+          }
+          const linkElement = document.createElement('a');
+          linkElement.href = shareURL;
+          linkElement.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+          linkElement.style.marginLeft = '5px';
+          progressDetailsSpan.innerHTML = '';
+          progressDetailsSpan.appendChild(linkElement);
+        } else {
+          progressDetailsSpan.textContent = `#${selectedBookmark.rowId} (${selectedBookmark.percentage}%)`;
+        }
       }
-    } else {
-      progressDropdown.selectedIndex = 0;
     }
+    // 選單外觀常駐顯示「認證詞彙進度擇單」，不被長書籤名稱佔據狹小手機空間
+    progressDropdown.selectedIndex = 0;
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
   }
 
@@ -4664,11 +4656,16 @@ function initializeAppUI() {
         : '');
     const remainingCategories = new Set(categoryList.slice(currentIdx + 1));
 
-    return g_currentLevelData.some((line) => {
-      const itemCat = line.分類 ? line.分類.replace(/^\d+/, '') : '';
-      if (!remainingCategories.has(itemCat)) return false;
-      return isLineMatchingFilter(line, currentVar, filter);
-    });
+    if (typeof beginFamiliarityBatch === 'function') beginFamiliarityBatch();
+    try {
+      return g_currentLevelData.some((line) => {
+        const itemCat = line.分類 ? line.分類.replace(/^\d+/, '') : '';
+        if (!remainingCategories.has(itemCat)) return false;
+        return isLineMatchingFilter(line, currentVar, filter);
+      });
+    } finally {
+      if (typeof endFamiliarityBatch === 'function') endFamiliarityBatch();
+    }
   }
 
   function renderFilteredEmptyState() {
@@ -4702,6 +4699,8 @@ function initializeAppUI() {
 
   function checkAndFilterOutRow(tr) {
     if (currentFamiliarityFilter === 'all') return;
+    // 防禦：僅限主分類表格（#category-table）且具備 lineNo 與 itemKey 的資料列才執行主表消行
+    if (!tr || !tr.closest('#category-table') || !tr.dataset.lineNo || !tr.dataset.itemKey) return;
     const itemKey = tr.dataset.itemKey;
     const favId = tr.dataset.favId;
     const lineNo = tr.dataset.lineNo;
@@ -4744,9 +4743,15 @@ function initializeAppUI() {
         const idx = activeCategoryData.findIndex((item) => item.編號 === lineNo);
         if (idx !== -1) {
           activeCategoryData.splice(idx, 1);
-          // 此時原本在 idx + 1 的項目自動遞補至 idx，即 currentAudioIndex 位置
+          if (idx < lastLoadedIndex) {
+            lastLoadedIndex = Math.max(0, lastLoadedIndex - 1);
+          }
+          if (idx < firstLoadedIndex) {
+            firstLoadedIndex = Math.max(0, firstLoadedIndex - 1);
+          }
         }
         updateCategorySummaryCount();
+        syncProgressWithCurrentMode();
 
         // 4. 檢查是否已無項目
         const tbody = document.querySelector('#category-table tbody');
@@ -4777,6 +4782,12 @@ function initializeAppUI() {
             activeCategoryData.splice(idx, 1);
             if (idx < currentAudioIndex) {
               currentAudioIndex--;
+            }
+            if (idx < lastLoadedIndex) {
+              lastLoadedIndex = Math.max(0, lastLoadedIndex - 1);
+            }
+            if (idx < firstLoadedIndex) {
+              firstLoadedIndex = Math.max(0, firstLoadedIndex - 1);
             }
           }
           updateCategorySummaryCount();
@@ -4873,28 +4884,8 @@ function initializeAppUI() {
         }
       }
 
-      contentContainer.innerHTML = '';
-      document.querySelector('#audioControls')?.remove();
       setupFamiliarityFilterUI();
-
-      let emptyMsg = '本類別目前無符合條件个內容，故所全部無顯示';
-      if (currentFamiliarityFilter === 'hard-only') {
-        emptyMsg = '本類別目前無你設定个難詞，故所全部無顯示';
-      } else if (currentFamiliarityFilter === 'exclude-easy') {
-        emptyMsg = '本類別目前全部都係你設定个簡單詞，故所全部無顯示';
-      } else if (currentFamiliarityFilter === 'fav-only') {
-        emptyMsg = '本類別目前你無收藏任何詞，故所全部無顯示';
-      }
-
-      if (
-        currentFamiliarityFilter !== 'all' &&
-        !hasMatchingWordsAfterCategory(category, currentFamiliarityFilter)
-      ) {
-        emptyMsg += '<br>係講緊停在這畫面，表示後背都無難詞／收囥詞吔';
-        playEndOfPlayback();
-      }
-
-      contentContainer.innerHTML = `<p class="fam-filter-empty-msg" style="text-align: center; margin-top: 35px; font-size: 1.1em; color: var(--main-text-color); opacity: 0.85;">${emptyMsg}</p>`;
+      renderFilteredEmptyState();
 
       const summaryTextContent = document.getElementById('summary-text-content');
       if (summaryTextContent) {
@@ -5660,9 +5651,9 @@ function initializeAppUI() {
 
     // --- 【新增】播放器同步預載入機制 ---
     const PRELOAD_THRESHOLD = 5;
-    // 檢查是否接近已載入項目的結尾，且還有更多項目未載入，且目前不在載入中
+    // 檢查是否接近或超出已載入項目的結尾，且還有更多項目未載入，且目前不在載入中
     if (
-      itemIndex >= lastLoadedIndex - PRELOAD_THRESHOLD &&
+      (itemIndex >= lastLoadedIndex - PRELOAD_THRESHOLD || itemIndex >= lastLoadedIndex) &&
       lastLoadedIndex < activeCategoryData.length &&
       !isLoadingMoreItems
     ) {
@@ -5671,7 +5662,7 @@ function initializeAppUI() {
       );
       isLoadingMoreItems = true; // 防止重複觸發
       const start = lastLoadedIndex;
-      const end = Math.min(start + ITEMS_PER_LOAD, activeCategoryData.length);
+      const end = Math.min(Math.max(start + ITEMS_PER_LOAD, itemIndex + 1), activeCategoryData.length);
       if (start < end) {
         const itemsToRender = activeCategoryData.slice(start, end);
         renderCategoryItems(
@@ -5692,13 +5683,41 @@ function initializeAppUI() {
     const currentItemData = activeCategoryData[itemIndex];
     const rowId = currentItemData.編號.split('-')[1];
 
-    const targetRow = document
+    let targetRow = document
       .querySelector(`a[name="${rowId}"]`)
       ?.closest('tr');
 
     if (!targetRow) {
-      console.warn(`項目 #${itemIndex} (ID: ${rowId}) 不在畫面上，播放停止。`);
-      stopPlayback(); // 使用無聲的停止
+      console.warn(`項目 #${itemIndex} (ID: ${rowId}) 暫時不在畫面上，嘗試立即補載入...`);
+      if (lastLoadedIndex < activeCategoryData.length) {
+        const start = lastLoadedIndex;
+        const end = Math.min(Math.max(start + ITEMS_PER_LOAD, itemIndex + 1), activeCategoryData.length);
+        if (start < end) {
+          const itemsToRender = activeCategoryData.slice(start, end);
+          renderCategoryItems(
+            itemsToRender,
+            g_currentDialectInfo,
+            g_currentCategory,
+            false,
+            activeCategoryData.length,
+            null,
+            false,
+          );
+          lastLoadedIndex = end;
+          targetRow = document
+            .querySelector(`a[name="${rowId}"]`)
+            ?.closest('tr');
+        }
+      }
+    }
+
+    if (!targetRow) {
+      console.warn(`項目 #${itemIndex} (ID: ${rowId}) 補載入後仍不在畫面上，跳過此項前進下一項。`);
+      if (itemIndex + 1 < activeCategoryData.length) {
+        playAudio(itemIndex + 1, sessionId);
+      } else {
+        advanceToNextCategory();
+      }
       return;
     }
 
@@ -7108,7 +7127,7 @@ function initializeAppUI() {
   progressDropdown.addEventListener('change', function () {
     const selectedValue = this.value;
 
-    if (selectedValue && selectedValue !== '擇進前个進度') {
+    if (selectedValue && selectedValue !== '認證詞彙進度擇單' && selectedValue !== '進度擇單' && selectedValue !== '擇進前个進度') {
       const bookmarks =
         JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
       // [修正] 先從 bookmarks 陣列中找到完整的書籤物件
@@ -7193,6 +7212,8 @@ function initializeAppUI() {
         alert('載入選定進度時發生錯誤：選項與儲存資料不符。');
       }
     }
+    // 選取後恢復顯示「認證詞彙進度擇單」
+    this.selectedIndex = 0;
   });
 
   window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
