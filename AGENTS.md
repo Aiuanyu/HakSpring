@@ -32,6 +32,7 @@
 - **資料區塊 (Chunking)**: 大型資料集會被自動切割成 500 筆記錄的區塊 (chunks) 儲存。
 - **搜尋索引 (Search Index)**: 應用程式會在記憶體中建立一個搜尋索引 (`indexedDataCache`) 以加速查詢。
 - **版本控制 (Versioning)**: 應用程式透過 `data/data_version.json` 檔案來追蹤資料版本。開發時可使用 `?force-refresh=true` URL 參數來強制清除快取。
+- **【鐵則】改資料愛 bump `data/data_version.json`**：凡是修改 `data/` 底下个 CSV／JSON（含重跑 `process_all_data.py` 產生个 `.json`），**必須**同步更新 `data/data_version.json` 个 `version`（格式 `YYYYMMDDHH`，例：`2026092913`）。前端係比對版本號來決定愛毋愛重抓資料，版本一樣，已經有 IndexedDB 快取个使用者（尤其手機）就**永遠看無新資料**。`process_all_data.py` 毋會自動 bump，愛人工（抑係 AI）記得改。（2026-09 詔安調符校正就係因為漏 bump，害使用者拖足久正更新著。）
 
 ### 音檔 URL 規則 (Audio URL Structure)
 
