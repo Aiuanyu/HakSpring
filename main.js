@@ -2823,7 +2823,6 @@ function initializeAppUI() {
 
     const totalRows = activeCategoryData.length;
     const currentTableName = g_currentDialectInfo.fullLvlName;
-    const currentFilter = currentFamiliarityFilter || 'all';
 
     if (totalRows === 0) {
       const progressDetailsSpan = document.getElementById('progressDetails');
@@ -2832,36 +2831,10 @@ function initializeAppUI() {
       return;
     }
 
-    // 1. 先確認是否有正在播放的行
-    let targetRowId = null;
-    let targetIndex = -1;
-
+    // 【核心原則】只有在「正在播放（isPlaying）」的情境下，才隨播放行即時更新並儲存書籤
     if (isPlaying && currentAudioIndex >= 0 && currentAudioIndex < activeCategoryData.length) {
-      targetIndex = currentAudioIndex;
-      targetRowId = activeCategoryData[targetIndex].編號.split('-')[1];
-    } else {
-      // 2. 若無播放，看既有書籤（優先找同表格同類別同 filter，其次同表格同類別任何 filter）
-      const bookmarks = JSON.parse(localStorage.getItem('hakkaBookmarks')) || [];
-      const matchExact = bookmarks.find(
-        (bm) => bm.tableName === currentTableName && bm.cat === g_currentCategory && (bm.filter || 'all') === currentFilter
-      );
-      const matchAny = bookmarks.find(
-        (bm) => bm.tableName === currentTableName && bm.cat === g_currentCategory
-      );
-      const cand = matchExact || matchAny;
-      if (cand && cand.rowId) {
-        const normId = normalizeRowId(cand.rowId);
-        const idx = activeCategoryData.findIndex(
-          (item) => item.編號.split('-')[1] === normId
-        );
-        if (idx !== -1) {
-          targetIndex = idx;
-          targetRowId = activeCategoryData[targetIndex].編號.split('-')[1];
-        }
-      }
-    }
-
-    if (targetIndex !== -1 && targetRowId) {
+      const targetIndex = currentAudioIndex;
+      const targetRowId = activeCategoryData[targetIndex].編號.split('-')[1];
       const paddedRowId = padRowIdForLegacy(targetRowId);
       const percentage = (((targetIndex + 1) / totalRows) * 100).toFixed(2);
       saveBookmark(
@@ -2869,9 +2842,10 @@ function initializeAppUI() {
         percentage,
         g_currentCategory,
         currentTableName,
-        isPlaying,
+        true,
       );
     } else {
+      // 未在播放狀態（如切換過濾模式、瀏覽不同類別）：純更新 UI，絕對不主動寫入或覆寫任何書籤！
       updateProgressDropdown();
     }
   }
@@ -4636,7 +4610,6 @@ function initializeAppUI() {
             g_currentLevelData,
             g_currentDialectInfo,
           );
-          syncProgressWithCurrentMode();
         }
       });
     } else {
