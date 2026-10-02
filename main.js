@@ -3203,7 +3203,7 @@ function initializeAppUI() {
       const isFaved = typeof DailyWord !== 'undefined'
         && DailyWord.isFav
         && DailyWord.isFav(favId);
-      favBtn.innerHTML = isFaved ? '❤️' : '🤍';
+      favBtn.innerHTML = '❤️';
       if (isFaved) favBtn.classList.add('faved');
       favBtn.dataset.favId = favId;
       td1.appendChild(document.createTextNode(' '));
@@ -5304,7 +5304,7 @@ function initializeAppUI() {
       const isFaved = typeof DailyWord !== 'undefined'
         && DailyWord.isFav
         && DailyWord.isFav(favId);
-      favBtn.innerHTML = isFaved ? '❤️' : '🤍';
+      favBtn.innerHTML = '❤️';
       favBtn.dataset.favId = favId;
       favBtn.dataset.itemKey = itemKey;
       if (isFaved) favBtn.classList.add('faved');
@@ -7247,7 +7247,6 @@ function initializeAppUI() {
         const favId = btn.dataset.favId;
         if (typeof DailyWord !== 'undefined' && DailyWord.toggleFav) {
           const nowFaved = DailyWord.toggleFav(favId);
-          btn.innerHTML = nowFaved ? '❤️' : '🤍';
           btn.classList.toggle('faved', !!nowFaved);
         }
       } else if (btn.classList.contains('easy-btn')) {
@@ -7280,7 +7279,6 @@ function initializeAppUI() {
     document.querySelectorAll('.fav-btn').forEach((btn) => {
       if (!btn.dataset.favId) return;
       const isFaved = DailyWord.isFav(btn.dataset.favId);
-      btn.innerHTML = isFaved ? '❤️' : '🤍';
       btn.classList.toggle('faved', isFaved);
     });
     if (currentFamiliarityFilter === 'fav-only') {

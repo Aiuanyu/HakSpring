@@ -78,7 +78,6 @@ function initGameUI() {
     const gameFavBtn = document.getElementById('game-fav-btn');
     if (gameFavBtn && gameFavBtn.dataset.favId && typeof DailyWord !== 'undefined' && DailyWord.isFav) {
       const isFaved = DailyWord.isFav(gameFavBtn.dataset.favId);
-      gameFavBtn.innerHTML = isFaved ? '❤️' : '🤍';
       gameFavBtn.classList.toggle('faved', isFaved);
     }
   });
@@ -640,7 +639,7 @@ function renderQuestion() {
     const favId = `${s}${currentVar}${wordId}:${wordHakka}`;
 
     const isFaved = typeof DailyWord !== 'undefined' && DailyWord.isFav && DailyWord.isFav(favId);
-    gameFavBtn.innerHTML = isFaved ? '❤️' : '🤍';
+    gameFavBtn.innerHTML = '❤️';
     gameFavBtn.dataset.favId = favId;
     gameFavBtn.classList.toggle('faved', !!isFaved);
 
@@ -648,7 +647,6 @@ function renderQuestion() {
       e.stopPropagation();
       if (typeof DailyWord !== 'undefined' && DailyWord.toggleFav) {
         const nowFaved = DailyWord.toggleFav(favId);
-        gameFavBtn.innerHTML = nowFaved ? '❤️' : '🤍';
         gameFavBtn.classList.toggle('faved', !!nowFaved);
       }
     };

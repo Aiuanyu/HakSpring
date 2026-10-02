@@ -5243,13 +5243,14 @@ mark {
   cursor: pointer;
   font-size: 1.05em;
   padding: 1px 3px;
-  opacity: 0.4;
+  opacity: 0.35;
   transition: opacity 0.2s, transform 0.15s;
   vertical-align: middle;
   line-height: 1;
 }
 .fam-btn:hover {
   transform: scale(1.2);
+  opacity: 0.75;
 }
 .fam-btn.active,
 .fam-btn.faved {
@@ -5258,7 +5259,10 @@ mark {
 
 @media (prefers-color-scheme: dark) {
   .fam-btn {
-    opacity: 0.35;
+    opacity: 0.38;
+  }
+  .fam-btn:hover {
+    opacity: 0.8;
   }
   .fam-btn.active,
   .fam-btn.faved {
@@ -5378,13 +5382,14 @@ mark {
   border: none;
   cursor: pointer;
   font-size: 1.4em;
-  opacity: 0.4;
+  opacity: 0.35;
   transition: opacity 0.2s, transform 0.15s;
   padding: 4px;
   line-height: 1;
 }
 .game-fav-btn:hover {
   transform: scale(1.2);
+  opacity: 0.75;
 }
 .game-fav-btn.faved {
   opacity: 1.0;
@@ -5392,7 +5397,10 @@ mark {
 
 @media (prefers-color-scheme: dark) {
   .game-fav-btn {
-    opacity: 0.35;
+    opacity: 0.38;
+  }
+  .game-fav-btn:hover {
+    opacity: 0.8;
   }
   .game-fav-btn.faved {
     opacity: 1.0;
