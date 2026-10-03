@@ -1,0 +1,9 @@
+# Cloudflare Pages：入口檔摎版本檔每擺都愛問伺服器，避免手機卡著舊 index.html
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/data/data_version.json
+  Cache-Control: no-store
+/service-worker.js
+  Cache-Control: no-cache
