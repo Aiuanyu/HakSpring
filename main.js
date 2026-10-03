@@ -2115,6 +2115,16 @@ async function initializeApp() {
         const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
         deleteRequest.onsuccess = () => {
           console.log('IndexedDB 已成功刪除。');
+          // 清掉網址个 force-refresh 參數，避免書籤／重新整理每擺都清快取
+          urlParams.delete('force-refresh');
+          const cleanQuery = urlParams.toString();
+          history.replaceState(
+            null,
+            '',
+            window.location.pathname +
+              (cleanQuery ? '?' + cleanQuery : '') +
+              window.location.hash,
+          );
           resolve();
         };
         deleteRequest.onerror = (event) => {
@@ -7205,7 +7215,26 @@ function initializeAppUI() {
               '無法找到對應的資料變數:',
               dataVarName || targetTableName,
             );
-            alert('載入選定進度時發生錯誤：找不到對應的資料集。');
+            // 多半係本機資料快取（IndexedDB）過時抑毋齊，問一下就自動清快取重載，免使用者手動加 ?force-refresh=true
+            // 用 sessionStorage 記一擺：已經清過快取還是找無，就毋再問，避免無限迴圈
+            let alreadyRetried = false;
+            try {
+              alreadyRetried = sessionStorage.getItem('bookmarkRefreshTried') === '1';
+            } catch (e) {}
+            if (alreadyRetried) {
+              alert('載入選定進度時發生錯誤：找不到對應的資料集。');
+            } else if (
+              confirm(
+                '載入選定進度時，本機資料集過時抑毋齊。\n愛現在清掉快取、重新下載資料無？',
+              )
+            ) {
+              try {
+                sessionStorage.setItem('bookmarkRefreshTried', '1');
+              } catch (e) {}
+              const refreshUrl = new URL(window.location.href);
+              refreshUrl.searchParams.set('force-refresh', 'true');
+              window.location.href = refreshUrl.toString();
+            }
           }
         }
       } else {

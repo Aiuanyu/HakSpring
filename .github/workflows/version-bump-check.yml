@@ -1,0 +1,43 @@
+name: Version bump check
+
+# 改資料愛 bump data/data_version.json，改 js/css 愛 bump index.html 个 ?v=，
+# 無就手機（IndexedDB／瀏覽器快取）永遠看無新資料摎新程式。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 檢查版本號有 bump
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then BASE="$PR_BASE"; else BASE="$PUSH_BEFORE"; fi
+          # force-push 抑新分支時 base 可能無在 clone 肚，就略過
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then exit 0; fi
+          CHANGED=$(git diff --name-only "$BASE" HEAD)
+          fail=0
+
+          if echo "$CHANGED" | grep -E '^data/.*\.(csv|json)$' | grep -qv '^data/data_version.json$'; then
+            if [ "$(git show "$BASE:data/data_version.json" 2>/dev/null | tr -d '[:space:]')" = "$(tr -d '[:space:]' < data/data_version.json)" ]; then
+              echo "::error file=data/data_version.json::改著 data/ 底下个資料，但係 data/data_version.json 个 version 無變（愛 bump，格式 YYYYMMDDHH）"
+              fail=1
+            fi
+          fi
+
+          if echo "$CHANGED" | grep -E '^(main\.js|style\.css|js/.*\.js)$' | grep -q .; then
+            if ! git diff -U0 "$BASE" HEAD -- index.html | grep -qE '^\+.*\?v='; then
+              echo "::error file=index.html::改著 js／css，但係 index.html 个 ?v= 查詢字串無變（純改註解亦愛 bump，或者 bump 一下無妨）"
+              fail=1
+            fi
+          fi
+          exit $fail
