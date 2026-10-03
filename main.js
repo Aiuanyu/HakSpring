@@ -7205,7 +7205,16 @@ function initializeAppUI() {
               '無法找到對應的資料變數:',
               dataVarName || targetTableName,
             );
-            alert('載入選定進度時發生錯誤：找不到對應的資料集。');
+            // 多半係本機資料快取（IndexedDB）過時抑毋齊，問一下就自動清快取重載，免使用者手動加 ?force-refresh=true
+            if (
+              confirm(
+                '載入選定進度時，本機資料集過時抑毋齊。\n愛現在清掉快取、重新下載資料無？',
+              )
+            ) {
+              const refreshUrl = new URL(window.location.href);
+              refreshUrl.searchParams.set('force-refresh', 'true');
+              window.location.href = refreshUrl.toString();
+            }
           }
         }
       } else {
