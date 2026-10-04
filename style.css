@@ -5708,23 +5708,14 @@ mark {
   /* 試做：取消 margin-top: -0.5em 上抬 */
 }
 
-/* Firefox 系 phonetic-only ruby 个 label 對齊補正（僅窄螢幕）
-   現象：phonetic-only 个 ruby base 係 font-size:0／line-height:0（高度 0），
-   Firefox 下 ruby 盒子撐毋高，貼頂个 label 會比羅馬字較高。Chromium 無這个問題。
-   為何限窄螢幕：寬螢幕（>768px）下 rt 字級同 ruby 一樣（1em），label 本來就對齊；
-   窄螢幕（<=768px，見上方 #generated 等 td[data-label="詞彙"] rt 个 0.8em 規則）
-   rt 縮成 ruby 个 0.8 倍，推測係 ruby 本身（字級 1.3em）个行高比 rt 行高較高，
-   差額就係 label 偏高个量（此為推測，未經 Firefox 工具驗證）。
-   做法：Firefox 限定（@supports -moz-appearance）將 ruby 視覺上往上提，
-   position: relative 毋影響版面佔位。提升量愛用 Zen 實測，改 --ff-phonetic-only-lift。 */
 /* 【備用，目前停用】Firefox 系 phonetic-only ruby 上提補正：
    現象：phonetic-only 个 ruby base 係 font-size:0／line-height:0（高度 0），
    Firefox 下 ruby 盒子撐毋高，貼頂个 label 會比羅馬字較高；Chromium 無此問題。
    觀察：寬螢幕（rt=1em）本來就對齊，窄螢幕（rt=0.8em）先偏高。
    推測（未經驗證）：ruby 本身行高比較細个 rt 行高較高，差額就係 label 偏高个量，
    實測約需上提 0.4em（跟 ruby 字級）。
-   窄螢幕 rt 改回 1em（見上方 td[data-label="詞彙"] rt 規則）後，label 已經對齊，
-   故以下規則停用。若日後又需愛縮細窄螢幕 rt，可解除註解再用 Zen 實測調整量。
+   窄螢幕 rt 改回 1em（見上方 td[data-label="詞彙"] rt 規則）後，預期 label 會對齊（待 Zen 實測確認），
+   故以下規則先停用。若日後又需愛縮細窄螢幕 rt，可解除註解再用 Zen 實測調整量。
 @media screen and (max-width: 768px) {
   @supports (-moz-appearance: none) {
     .variant-ruby-phonetic-only {
