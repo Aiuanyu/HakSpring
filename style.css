@@ -5706,14 +5706,22 @@ mark {
   /* 試做：取消 margin-top: -0.5em 上抬 */
 }
 
-/* 試做：Firefox 系 phonetic-only ruby 个 base 高度 0，ruby 盒子無法撐高，
-   羅馬字會比（貼頂个）label 較低；Firefox 限定將 ruby 視覺上往上提補回。
-   Chromium 毋受影響。提升量愛用 Zen 實測調整（--ff-phonetic-only-lift，單位 em 跟 ruby 字級）。 */
-@supports (-moz-appearance: none) {
-  .variant-ruby-phonetic-only {
-    --ff-phonetic-only-lift: 0.4em;
-    position: relative;
-    top: calc(-1 * var(--ff-phonetic-only-lift));
+/* Firefox 系 phonetic-only ruby 个 label 對齊補正（僅窄螢幕）
+   現象：phonetic-only 个 ruby base 係 font-size:0／line-height:0（高度 0），
+   Firefox 下 ruby 盒子撐毋高，貼頂个 label 會比羅馬字較高。Chromium 無這个問題。
+   為何限窄螢幕：寬螢幕（>768px）下 rt 字級同 ruby 一樣（1em），label 本來就對齊；
+   窄螢幕（<=768px，見上方 #generated 等 td[data-label="詞彙"] rt 个 0.8em 規則）
+   rt 縮成 ruby 个 0.8 倍，推測係 ruby 本身（字級 1.3em）个行高比 rt 行高較高，
+   差額就係 label 偏高个量（此為推測，未經 Firefox 工具驗證）。
+   做法：Firefox 限定（@supports -moz-appearance）將 ruby 視覺上往上提，
+   position: relative 毋影響版面佔位。提升量愛用 Zen 實測，改 --ff-phonetic-only-lift。 */
+@media screen and (max-width: 768px) {
+  @supports (-moz-appearance: none) {
+    .variant-ruby-phonetic-only {
+      --ff-phonetic-only-lift: 0.4em;
+      position: relative;
+      top: calc(-1 * var(--ff-phonetic-only-lift));
+    }
   }
 }
 
