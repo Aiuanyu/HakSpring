@@ -3430,18 +3430,22 @@ mark {
   margin-top: 10px;
 }
 
-/* Explicit CSS for Sandhi in Game UI to prevent body/button overrides */
+/* Explicit CSS for Sandhi in Game UI & Daily Word to prevent body/button overrides */
 .game-option-btn ruby[class^="sandhi-"],
 .game-feedback ruby[class^="sandhi-"],
 .pinyin-text ruby[class^="sandhi-"],
-.daily-pinyin ruby[class^="sandhi-"] {
+.daily-pinyin ruby[class^="sandhi-"],
+.daily-cross-pinyin ruby[class^="sandhi-"],
+#dailyCrossContainer ruby[class^="sandhi-"] {
   font-family: var(--roman-font) !important;
   font-size: 1em !important;
 }
 .game-option-btn ruby[class^="sandhi-"] rt,
 .game-feedback ruby[class^="sandhi-"] rt,
 .pinyin-text ruby[class^="sandhi-"] rt,
-.daily-pinyin ruby[class^="sandhi-"] rt {
+.daily-pinyin ruby[class^="sandhi-"] rt,
+.daily-cross-pinyin ruby[class^="sandhi-"] rt,
+#dailyCrossContainer ruby[class^="sandhi-"] rt {
   font-family: var(--roman-font) !important;
   font-size: 50% !important;
 }
@@ -4662,11 +4666,11 @@ mark {
 
 /* Pinyin Practice Mode Specifics */
 .game-mandarin-translation {
-  /* 華語(Chinese)不特設字型，沿用網頁 body 預設（Iansui）即可 */
-  font-size: 0.45em;
+  /* 華語(Chinese)不特設字型，沿用網頁 body 預設（Iansui）即可；比照原版 3em * 0.45em = 1.35rem 設定穩定字級，清晰大方 */
+  font-size: 1.35rem;
   color: var(--text-color);
-  opacity: 0.8;
-  margin-top: 5px;
+  opacity: 0.85;
+  margin-top: 8px;
   font-weight: normal;
 }
 
@@ -5642,6 +5646,416 @@ mark {
   }
 }
 
+/* ==========================================================================
+   子方言區域變體區塊樣式 (Sub-dialect Regional Variants)
+   - 視覺平等原則：各變體（主音與各副音）字型大小、粗細、透明度完全一致
+   - 模式 1 phoneticOnly 支援：標音直接使用 --roman-font 呈現
+   - 四縣（北/南/美）與饒平（竹/卓/桃/卓桃）專屬標籤配色與暗色支援
+   ========================================================================== */
+
+/* 變體容器：使用 inline-flex，在 text-align: center 的 td 內自然水平置中 */
+.vocab-variants {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35em;
+  padding: 0.15em 0;
+  text-align: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+/* 窄螢幕卡片模式下內部文字靠左對齊 */
+@media screen and (max-width: 768px) {
+  .vocab-variants {
+    text-align: left;
+    align-items: flex-start;
+  }
+}
+
+/* 單一變體行：改為頂部對齊 (flex-start)，視覺平等 */
+.variant {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45em;
+  line-height: 1.4;
+}
+
+/* 具有漢字 base 的 ruby（主詞與字詞變體）：增加底部留白，避免漢字 base 壓到下一行變體的標音與變調 */
+.variant ruby:not(.variant-ruby-phonetic-only) {
+  padding-bottom: 0.35em;
+  margin-bottom: 0.1em;
+}
+
+/* 地區標籤 badge：上抬 margin-top 以平衡 ruby 撐高的高度 */
+.variant-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.18em 0.4em;
+  border-radius: 3px;
+  vertical-align: top;
+  cursor: default;
+  min-width: 1.3em;
+  text-align: center;
+  user-select: none;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: -0.5em;
+}
+
+/* 四縣系 Badge 色彩 */
+.variant-label-北 { background: #3b82f6; color: white; }
+.variant-label-南 { background: #f59e0b; color: white; }
+.variant-label-美 { background: #ec4899; color: white; }
+
+/* 饒平系 Badge 色彩 */
+.variant-label-竹 { background: #06b6d4; color: white; }
+.variant-label-卓 { background: #8b5cf6; color: white; }
+.variant-label-桃 { background: #10b981; color: white; }
+.variant-label-卓桃 { background: linear-gradient(135deg, #8b5cf6, #10b981); color: white; }
+
+/* phoneticOnly 變體的 hidden base：font-size: 0 有效減少行高，不可見且防圈選 */
+.variant-hidden-base {
+  visibility: hidden;
+  user-select: none;
+  font-size: 0;
+  line-height: 0;
+}
 
 
+/* 確保 .vocab-variants 全域正確套用字型 */
+.vocab-variants ruby:not(.variant-ruby-phonetic-only) {
+  font-family: var(--title-font) !important;
+}
+.vocab-variants rt,
+.vocab-variants ruby[class^="sandhi-"] {
+  font-family: var(--roman-font) !important;
+}
+.vocab-variants ruby[class^="sandhi-"] rt {
+  font-family: var(--roman-font) !important;
+}
+.variant-ruby-phonetic-only rt {
+  font-family: var(--roman-font) !important;
+}
+
+/* 深色模式支援 */
+@media (prefers-color-scheme: dark) {
+  .variant-label-北 { background: #2563eb; }
+  .variant-label-南 { background: #d97706; }
+  .variant-label-美 { background: #db2777; }
+  .variant-label-竹 { background: #0891b2; }
+  .variant-label-卓 { background: #7c3aed; }
+  .variant-label-桃 { background: #059669; }
+  .variant-label-卓桃 { background: linear-gradient(135deg, #7c3aed, #059669); }
+}
+
+/* 例句區域變體彩繪標記（南四縣橘／卓蘭色／桃園色／卓桃漸層色） */
+.sentence-variant {
+  font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive !important;
+  padding: 0;
+  margin: 0;
+  border-radius: 3px;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.sentence-variant-南 {
+  background-color: rgba(245, 158, 11, 0.22);
+}
+
+.sentence-variant-卓 {
+  background-color: rgba(139, 92, 246, 0.22);
+}
+
+.sentence-variant-桃 {
+  background-color: rgba(16, 185, 129, 0.22);
+}
+
+.sentence-variant-卓桃 {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(16, 185, 129, 0.22));
+}
+
+@media (prefers-color-scheme: dark) {
+  .sentence-variant-南 {
+    background-color: rgba(245, 158, 11, 0.32);
+  }
+  .sentence-variant-卓 {
+    background-color: rgba(139, 92, 246, 0.32);
+  }
+  .sentence-variant-桃 {
+    background-color: rgba(16, 185, 129, 0.32);
+  }
+  .sentence-variant-卓桃 {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.32), rgba(16, 185, 129, 0.32));
+  }
+}
+
+/* ==========================================================================
+   P1-β / P1-補: 變體展示層專屬樣式（遊戲題幹、回饋區、選項按鈕與日日一詞主卡片）
+   ========================================================================== */
+
+#gameModal .vocab-variants,
+#dailyWordModal .vocab-variants {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+}
+#dailyWordModal .daily-variants-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 1. 精簡版變體基礎樣式（.variant-compact） */
+.variant-compact {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.variant-compact-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.35;
+}
+
+.variant-compact-line .variant-label {
+  margin-top: 0 !important;
+  align-self: center !important;
+  font-size: 0.75em;
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.variant-compact-text {
+  font-size: inherit;
+}
+
+.variant-compact-word,
+.variant-compact-text.variant-compact-word,
+.variant-compact-word .variant-compact-text {
+  font-family: var(--title-font) !important;
+}
+
+.variant-compact-phonetic,
+.variant-compact-text.variant-compact-phonetic,
+.variant-compact-phonetic .variant-compact-text,
+.variant-compact ruby[class^="sandhi-"],
+.variant-compact rt {
+  font-family: var(--roman-font) !important;
+}
+
+.variant-compact ruby[class^="sandhi-"] {
+  font-size: 1em !important;
+  color: inherit !important;
+}
+
+.variant-compact ruby[class^="sandhi-"] rt {
+  font-size: 50% !important;
+  color: inherit !important;
+}
+
+/* 2. 遊戲題幹排版（#game-target-word 與 #game-target-pinyin） */
+#game-target-word .variant-compact {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  margin: 4px auto;
+}
+#game-target-word .variant-compact-line {
+  justify-content: center;
+  gap: 8px;
+}
+#game-target-word .variant-compact-word {
+  font-family: var(--title-font) !important;
+  font-size: 1em !important; /* 嚴格比照既有 h1 之 3em，保持 100% 原始大小 */
+  font-weight: 700;
+  color: inherit;
+}
+#game-target-word .variant-compact .variant-label {
+  font-size: 0.45em !important;
+}
+
+#game-target-pinyin .variant-compact {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 5px;
+  margin: 0 auto;
+}
+#game-target-pinyin .variant-compact-line {
+  justify-content: center;
+  gap: 8px;
+}
+#game-target-pinyin .variant-compact-phonetic {
+  font-family: var(--roman-font) !important;
+  font-size: 1em !important; /* 嚴格比照既有 .pinyin-text 之 1.5em，不再二次放大！ */
+  color: inherit;
+}
+#game-target-pinyin .variant-compact .variant-label {
+  font-size: 0.65em !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #game-target-word .variant-compact-word {
+    color: var(--text-color, #eee);
+  }
+  #game-target-pinyin .variant-compact-phonetic {
+    color: #bbb;
+  }
+}
+
+/* 3. 遊戲回饋區排版（#game-feedback 與 .game-feedback-variants） */
+.game-feedback-variants {
+  display: flex;
+  justify-content: center;
+  margin: 6px auto;
+  font-size: 0.9em; /* 嚴格比照既有回饋區拼音之 0.9em */
+  opacity: 0.9;
+}
+.game-feedback-variants .variant-compact {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+.game-feedback-variants .variant-compact-line {
+  justify-content: center;
+  gap: 6px;
+}
+.game-feedback-variants .variant-compact-phonetic {
+  font-family: var(--roman-font) !important;
+  font-size: 1em !important; /* 繼承 0.9em，完全對齊無變體詞條！ */
+  color: inherit;
+}
+.game-feedback-variants .variant-compact-word {
+  font-family: var(--title-font) !important;
+  font-size: 1.2em !important; /* 嚴格比照無變體正確字詞之 1.2em */
+  font-weight: 700;
+  color: inherit;
+}
+.game-feedback-variants .variant-compact .variant-label {
+  font-size: 0.7em !important;
+}
+
+/* 4. 遊戲選項按鈕內的精簡變體（.game-option-btn） */
+.game-option-btn .variant-compact {
+  text-align: left;
+  align-items: flex-start;
+}
+.game-option-btn .variant-compact-word {
+  font-family: var(--title-font) !important;
+  font-size: 1.15em;
+  font-weight: 700;
+}
+.game-option-btn .variant-compact-phonetic {
+  font-family: var(--roman-font) !important;
+  font-size: 1.05em;
+}
+
+/* 5. 日日一詞主詞卡片排版（.daily-word 與 .daily-pinyin） */
+.daily-word .variant-compact {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.daily-word .variant-compact-line {
+  justify-content: center;
+  gap: 10px;
+}
+.daily-word .variant-compact-word {
+  font-family: var(--title-font) !important;
+  font-size: 3rem !important;
+  font-weight: bold;
+  color: var(--daily-card-text);
+  letter-spacing: 2px;
+}
+.daily-word .variant-compact .variant-label {
+  font-size: 1rem !important;
+  padding: 0.15em 0.45em !important;
+  border-radius: 4px;
+}
+
+/* 嚴格鎖定主卡片拼音，不洩漏至跨腔面板 */
+.daily-word-section .daily-pinyin.daily-pinyin-variants .variant-compact {
+  text-align: center;
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+.daily-word-section .daily-pinyin.daily-pinyin-variants .variant-compact-line {
+  justify-content: center;
+  gap: 8px;
+}
+.daily-word-section .daily-pinyin.daily-pinyin-variants .variant-compact-phonetic {
+  font-family: var(--roman-font) !important;
+  font-size: 1.5rem !important;
+  color: #C23628 !important; /* 主卡片專屬典型紅 */
+  letter-spacing: 1px;
+}
+.daily-word-section .daily-pinyin.daily-pinyin-variants .variant-compact .variant-label {
+  font-size: 0.85rem !important;
+  padding: 0.15em 0.4em !important;
+  border-radius: 3px;
+}
+
+/* 6. 日日一詞跨腔讀音區專屬樣式（#dailyCrossContainer）——絕不染紅、絕不放大！ */
+#dailyCrossContainer .daily-pinyin,
+#dailyCrossContainer .daily-cross-pinyin,
+#dailyCrossContainer .variant-compact-phonetic,
+#dailyCrossContainer .variant-compact-text {
+  font-family: var(--roman-font) !important;
+  font-size: 0.9em !important; /* 保持跨腔次要大小，絕不放大 */
+  color: #777 !important; /* 保持次要灰，絕不染紅！ */
+  letter-spacing: normal;
+}
+#dailyCrossContainer .variant-compact-word {
+  font-family: var(--title-font) !important;
+  font-size: 1.05em !important;
+  color: var(--daily-card-text) !important;
+  font-weight: bold;
+}
+#dailyCrossContainer .variant-compact {
+  gap: 2px;
+}
+#dailyCrossContainer .variant-compact-line {
+  gap: 5px;
+}
+#dailyCrossContainer .variant-compact .variant-label {
+  font-size: 0.7em !important;
+  padding: 0.1em 0.35em !important;
+}
+#dailyCrossContainer ruby[class^="sandhi-"],
+.daily-cross-pinyin ruby[class^="sandhi-"] {
+  font-family: var(--roman-font) !important;
+  font-size: 1em !important;
+  color: inherit !important;
+}
+#dailyCrossContainer ruby[class^="sandhi-"] rt,
+.daily-cross-pinyin ruby[class^="sandhi-"] rt {
+  font-family: var(--roman-font) !important;
+  font-size: 50% !important;
+  color: inherit !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #dailyCrossContainer .daily-pinyin,
+  #dailyCrossContainer .daily-cross-pinyin,
+  #dailyCrossContainer .variant-compact-phonetic,
+  #dailyCrossContainer .variant-compact-text {
+    color: #aaa !important;
+  }
+}
 

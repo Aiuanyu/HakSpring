@@ -567,7 +567,9 @@ function formatPhoneticForDisplay(text, isGip = false) {
   result = result.replace(/\(\s+/g, '(');
   // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
   result = result.replace(/\s+\)/g, ')');
-  // 4. 教典詞音開頭的「特」加上【】
+  // 4. 讀音有 (...) 時，( 前面若無空白且非括號開頭，加上半形空格以提升視覺美觀與清晰度
+  result = result.replace(/([^\s【（(\[])\(/g, '$1 (');
+  // 5. 教典詞音開頭的「特」加上【】
   if (isGip) {
     result = result.replace(/^特(?=\s*[a-zA-Z])/, '【特】');
   }
@@ -888,6 +890,327 @@ function getDialectCode(dialect) {
   if (s.includes('詔安') || s === '安') return 'zh';
   if (s.includes('饒平') || s === '平' || s === '饒') return 'rh';
   return null;
+}
+
+/**
+ * 判斷該腔調是否需要進行區域變體解析（僅四縣與饒平認證詞彙需要）
+ * @param {string} dialect
+ * @returns {'四縣'|'饒平'|null}
+ */
+function getVariantDialectType(dialect) {
+  if (!dialect) return null;
+  const s = String(dialect);
+  if (s.includes('四縣') || s.includes('四') || s.includes('南')) return '四縣';
+  if (s.includes('饒平') || s.includes('平') || s.includes('饒')) return '饒平';
+  return null;
+}
+
+/**
+ * 建立單一變體區塊元素（包含地區標籤與 ruby/phonetic）
+ * 視覺平等設計：各變體（主音與各副音）字型大小、粗細、透明度完全一致。
+ * 
+ * @param {object} entry - 變體資料物件 { label, title, word, phonetic, phoneticOnly }
+ * @param {string} dialectName - 腔調名稱
+ * @param {boolean} isGipData - 是否為教典資料
+ * @param {boolean} isMain - 是否為主音
+ * @param {object} [highlightOptions] - 搜尋高亮選項
+ * @returns {HTMLElement}
+ */
+function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOptions, fallbackWord) {
+  const block = document.createElement('div');
+  block.className = isMain ? 'variant variant-main' : 'variant variant-sub';
+
+  // 1. 地區標籤 badge
+  if (entry.label) {
+    const badge = document.createElement('span');
+    badge.className = `variant-label variant-label-${entry.label}`;
+    badge.textContent = entry.label;
+    if (entry.title) badge.title = entry.title;
+    block.appendChild(badge);
+  }
+
+  // 2. 標音處理（格式化 + sandhi 變調）
+  let phoneticText = formatPhoneticForDisplay(entry.phonetic, isGipData);
+  const dialectCode = getDialectCode(dialectName);
+  // 根據官方資料，饒平變調規則僅針對新竹腔說明；變體（卓蘭、桃園、卓桃）不套用 sandhi
+  const shouldApplySandhi = dialectCode && (dialectCode !== 'rh' || isMain);
+  if (shouldApplySandhi) {
+    phoneticText = getSandhiHtml(phoneticText, dialectCode);
+  }
+
+  // 3. 內容渲染
+  if (entry.phoneticOnly) {
+    // 模式 1：採用 ruby + hidden base 結構
+    // 讓變體標音原生以 rt 渲染，大小、字型、粗細與寬窄螢幕縮放永遠與主音 rt 100% 同步，且音節水平精準對齊
+    const ruby = document.createElement('ruby');
+    ruby.className = 'variant-ruby-phonetic-only';
+    const hiddenBase = document.createElement('span');
+    hiddenBase.className = 'variant-hidden-base';
+    hiddenBase.textContent = fallbackWord || '';
+    const rt = document.createElement('rt');
+    rt.innerHTML = phoneticText;
+    ruby.appendChild(hiddenBase);
+    ruby.appendChild(rt);
+    block.appendChild(ruby);
+  } else {
+    // 完整 ruby 渲染（漢字 + rt 標音）
+    const ruby = document.createElement('ruby');
+    if (highlightOptions && highlightOptions.highlightWord && highlightOptions.highlightRegex) {
+      ruby.innerHTML = entry.word.replace(highlightOptions.highlightRegex, '<mark>$1</mark>');
+    } else {
+      ruby.textContent = entry.word;
+    }
+    const rt = document.createElement('rt');
+    rt.innerHTML = phoneticText;
+    ruby.appendChild(rt);
+    block.appendChild(ruby);
+  }
+
+  return block;
+}
+
+/**
+ * 建立詞彙變體容器元素（.vocab-variants）（P1-0 共用地基）。
+ * 若詞條含有變體且非教典資料，則回傳包含主音與所有變體的 DOM element；
+ * 若無變體或為教典資料，回傳 null。
+ * 
+ * @param {object} line - 詞條資料物件
+ * @param {object|string} [dialectInfo] - 腔調資訊物件或腔名（例如 '四縣' 或 { 腔: '四縣' }）
+ * @param {boolean} [isGipData] - 是否為教典資料
+ * @param {object} [highlightOptions] - 搜尋反白選項 { highlightWord: boolean, highlightRegex: RegExp }
+ * @returns {HTMLElement|null}
+ */
+function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
+  if (!line || typeof line !== 'object') return null;
+
+  const isGip = typeof isGipData === 'boolean'
+    ? isGipData
+    : (line.sourceType === 'gip' || line.source === 'gip' || (typeof line.dataVarName === 'string' && line.dataVarName.startsWith('教典')));
+  if (isGip) return null;
+
+  const dialectName = typeof dialectInfo === 'string' ? dialectInfo : (dialectInfo && dialectInfo.腔);
+
+  // 取得變體解析資訊
+  let v = null;
+  if (typeof getLineVariants === 'function') {
+    v = getLineVariants(line, dialectName);
+  } else if (typeof parseVariants === 'function') {
+    const rawWord = line['客家語'] || line.word || '';
+    const rawPhonetic = line['客語標音_顯示'] || line.phonetic || line['標音'] || '';
+    const dialectType = typeof getVariantDialectType === 'function' ? getVariantDialectType(dialectName) : null;
+    v = parseVariants(rawWord, rawPhonetic, dialectType);
+  }
+
+  if (!v || !v.hasVariants) {
+    return null;
+  }
+
+  // 決定傳入 createVariantBlock 的 dialectName
+  let finalDialectName = dialectName;
+  if (!finalDialectName) {
+    finalDialectName = v.dialectType === '四縣' ? '四縣' : (v.dialectType === '饒平' ? '饒平' : '');
+  }
+
+  const container = document.createElement('div');
+  container.className = 'vocab-variants';
+
+  // 主音
+  container.appendChild(
+    createVariantBlock(v.main, finalDialectName, false, /* isMain */ true, highlightOptions, v.main.word)
+  );
+
+  // 各變體
+  for (const variant of v.variants) {
+    container.appendChild(
+      createVariantBlock(variant, finalDialectName, false, /* isMain */ false, highlightOptions, v.main.word)
+    );
+  }
+
+  return container;
+}
+
+/**
+ * 精簡版變體顯示：逐行「badge + 文字」，不用 ruby。無變體回傳 null（呼叫端走原路）。
+ * @param {string} rawWord 原始客家語（可含【】；part='phonetic' 時可傳 ''）
+ * @param {string} rawPhonetic 原始標音（可含【】；part='word' 時可傳 ''）
+ * @param {string} dialectName 腔名或 dataVarName（內部用 getVariantDialectType 判斷）
+ * @param {{ part?: 'word'|'phonetic'|'both', sandhi?: boolean, splitOr?: boolean }} [opts]
+ * @returns {string|null}
+ */
+function buildVariantsCompactHTML(rawWord, rawPhonetic, dialectName, opts) {
+  opts = opts || {};
+  const part = opts.part || 'both';
+
+  const dialectType = typeof getVariantDialectType === 'function' ? getVariantDialectType(dialectName) : null;
+  if (!dialectType) return null;
+
+  if (typeof parseVariants !== 'function') return null;
+  const parsed = parseVariants(rawWord || '', rawPhonetic || '', dialectType);
+  if (!parsed || !parsed.hasVariants) return null;
+
+  const lines = [];
+
+  if (part === 'word') {
+    // 檢查字詞是否有變體：若所有變體皆與主詞相同（純標音變體），回傳 null 走原路
+    const hasDifferentWord = parsed.variants.some(v => v.word && v.word !== parsed.main.word);
+    if (!hasDifferentWord) {
+      return null;
+    }
+
+    lines.push({
+      label: parsed.main.label,
+      text: parsed.main.word
+    });
+
+    for (const v of parsed.variants) {
+      lines.push({
+        label: v.label,
+        text: v.word || parsed.main.word
+      });
+    }
+  } else if (part === 'phonetic') {
+    const processPhonetic = (p, label) => {
+      let ph = p || '';
+      if (opts.splitOr) {
+        ph = ph.split('或')[0].trim();
+      }
+      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false) : ph;
+
+      let shouldSandhi = !!opts.sandhi;
+      if (dialectType === '饒平' && label !== '竹') {
+        shouldSandhi = false;
+      }
+      if (shouldSandhi && typeof window !== 'undefined' && typeof window.getSandhiPronunciation === 'function') {
+        const sandhiRes = window.getSandhiPronunciation(ph, dialectType);
+        if (sandhiRes && sandhiRes.sandhi) ph = sandhiRes.sandhi;
+      }
+      return ph;
+    };
+
+    lines.push({
+      label: parsed.main.label,
+      text: processPhonetic(parsed.main.phonetic, parsed.main.label)
+    });
+
+    for (const v of parsed.variants) {
+      lines.push({
+        label: v.label,
+        text: processPhonetic(v.phonetic, v.label)
+      });
+    }
+  } else {
+    const processPhonetic = (p, label) => {
+      let ph = p || '';
+      if (opts.splitOr) ph = ph.split('或')[0].trim();
+      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false) : ph;
+      let shouldSandhi = !!opts.sandhi;
+      if (dialectType === '饒平' && label !== '竹') shouldSandhi = false;
+      if (shouldSandhi && typeof window !== 'undefined' && typeof window.getSandhiPronunciation === 'function') {
+        const sandhiRes = window.getSandhiPronunciation(ph, dialectType);
+        if (sandhiRes && sandhiRes.sandhi) ph = sandhiRes.sandhi;
+      }
+      return ph;
+    };
+
+    lines.push({
+      label: parsed.main.label,
+      word: parsed.main.word,
+      phonetic: processPhonetic(parsed.main.phonetic, parsed.main.label),
+      text: `${parsed.main.word} ${processPhonetic(parsed.main.phonetic, parsed.main.label)}`
+    });
+
+    for (const v of parsed.variants) {
+      lines.push({
+        label: v.label,
+        word: v.word || parsed.main.word,
+        phonetic: processPhonetic(v.phonetic, v.label),
+        text: `${v.word || parsed.main.word} ${processPhonetic(v.phonetic, v.label)}`
+      });
+    }
+  }
+
+  if (lines.length === 0) return null;
+
+  const linesHTML = lines.map(line => {
+    let content = '';
+    if (part === 'word') {
+      content = `<span class="variant-compact-text variant-compact-word">${line.text}</span>`;
+    } else if (part === 'phonetic') {
+      content = `<span class="variant-compact-text variant-compact-phonetic">${line.text}</span>`;
+    } else {
+      content = `<span class="variant-compact-text"><span class="variant-compact-word">${line.word || ''}</span> <span class="variant-compact-phonetic">${line.phonetic || ''}</span></span>`;
+    }
+    return `<span class="variant-compact-line"><span class="variant-label variant-label-${line.label}">${line.label}</span>${content}</span>`;
+  }).join('');
+
+  return `<span class="variant-compact variant-compact-${part}">${linesHTML}</span>`;
+}
+
+/**
+ * 取得詞條音檔之提示文字
+ * cert 音檔在四縣先讀北再讀南；饒平竹卓桃皆讀，因此提示所有方言讀音
+ */
+function getVariantAudioTitle(dialectType) {
+  const type = typeof getVariantDialectType === 'function' ? getVariantDialectType(dialectType) : dialectType;
+  if (type === '四縣') {
+    return '播放發音（含北四縣、南四縣）';
+  } else if (type === '饒平') {
+    return '播放發音（含新竹、卓蘭、桃園）';
+  }
+  return '播放發音';
+}
+
+if (typeof window !== 'undefined') {
+  window.buildVariantsElement = buildVariantsElement;
+  window.buildVariantsCompactHTML = buildVariantsCompactHTML;
+  window.getVariantAudioTitle = getVariantAudioTitle;
+  window.getSandhiPronunciation = getSandhiPronunciation;
+}
+
+/**
+ * 渲染詞彙儲存格（含子方言區域變體支援）。
+ * 若詞條含有【】變體標記且為四縣或饒平認證資料，則渲染為多列平等的變體區塊；
+ * 否則維持原有的單一 ruby 渲染。
+ * 
+ * @param {HTMLElement} td - 目標 td 元素
+ * @param {object} line - 詞條資料物件
+ * @param {object|string} dialectInfo - 腔調資訊物件或腔調字串（例如 { 腔: '四縣' } 或 '四縣'）
+ * @param {boolean} isGipData - 是否為教典資料
+ * @param {object} [highlightOptions] - 搜尋反白選項 { highlightWord: boolean, highlightRegex: RegExp }
+ */
+function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOptions) {
+  const dialectName = typeof dialectInfo === 'string' ? dialectInfo : (dialectInfo && dialectInfo.腔);
+  const isGip = typeof isGipData === 'boolean' 
+    ? isGipData 
+    : (line && (line.sourceType === 'gip' || line.source === 'gip' || (typeof line.dataVarName === 'string' && line.dataVarName.startsWith('教典'))));
+
+  // 嘗試建置變體容器
+  if (typeof buildVariantsElement === 'function') {
+    const container = buildVariantsElement(line, dialectName, isGip, highlightOptions);
+    if (container) {
+      td.appendChild(container);
+      return;
+    }
+  }
+
+  // 原始渲染路徑（無變體、非四饒或教典）
+  const rawWord = (line && line['客家語']) || '';
+  const rawPhonetic = (line && line['客語標音_顯示']) || '';
+  const ruby = document.createElement('ruby');
+  if (highlightOptions && highlightOptions.highlightWord && highlightOptions.highlightRegex) {
+    ruby.innerHTML = rawWord.replace(highlightOptions.highlightRegex, '<mark>$1</mark>');
+  } else {
+    ruby.textContent = rawWord;
+  }
+  const rt = document.createElement('rt');
+  let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip);
+  const dialectCode = getDialectCode(dialectName);
+  if (dialectCode) {
+    phoneticText = getSandhiHtml(phoneticText, dialectCode);
+  }
+  rt.innerHTML = phoneticText;
+  ruby.appendChild(rt);
+  td.appendChild(ruby);
 }
 
 function classifyTone(syllable, dialectCode) {
@@ -3141,6 +3464,12 @@ function initializeAppUI() {
       'ig',
     );
 
+    const highlightHtmlText = (html, regex) => {
+      if (!html || !regex) return html;
+      const safeRegex = new RegExp(`(<[^>]+>)|${regex.source}`, regex.flags);
+      return html.replace(safeRegex, (match, tag) => tag ? tag : `<mark>${match}</mark>`);
+    };
+
     const createResultRow = (line, highlight, rowIndex) => {
       globalRowIndex++;
       if (!line || !line['客家語']) return null;
@@ -3213,20 +3542,10 @@ function initializeAppUI() {
 
       const td2 = document.createElement('td');
       td2.dataset.label = '詞彙';
-      const ruby = document.createElement('ruby');
-      ruby.innerHTML = highlight.word
-        ? line['客家語'].replace(highlightRegex, '<mark>$1</mark>')
-        : line['客家語'];
-      const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
-      const dialectCode = getDialectCode(selectedDialect);
-
-      if (dialectCode) {
-        phoneticText = getSandhiHtml(phoneticText, dialectCode);
-      }
-      rt.innerHTML = phoneticText;
-      ruby.appendChild(rt);
-      td2.appendChild(ruby);
+      renderVocabWithVariants(td2, line, selectedDialect, isGip, {
+        highlightWord: highlight.word,
+        highlightRegex: highlightRegex
+      });
       td2.appendChild(document.createElement('br'));
 
       const dataKey = line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
@@ -3271,11 +3590,14 @@ function initializeAppUI() {
       if (line['例句'] && line['例句'].trim() !== '') {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
-        sentenceSpan.innerHTML = (
-          highlight.sentence
-            ? line['例句'].replace(highlightRegex, '<mark>$1</mark>')
-            : line['例句']
-        ).replace(/\n/g, '<br>');
+        let rawSentence = line['例句'].replace(/"/g, '').replace(/\n/g, '<br>');
+        if (typeof formatSentenceVariants === 'function') {
+          rawSentence = formatSentenceVariants(rawSentence, line.sourceName || line.腔調);
+        }
+        if (highlight.sentence && highlightRegex) {
+          rawSentence = highlightHtmlText(rawSentence, highlightRegex);
+        }
+        sentenceSpan.innerHTML = rawSentence;
         td3.appendChild(sentenceSpan);
         td3.appendChild(document.createElement('br'));
 
@@ -5331,18 +5653,7 @@ function initializeAppUI() {
 
       const td2 = document.createElement('td');
       td2.dataset.label = '詞彙';
-      const ruby = document.createElement('ruby');
-      ruby.textContent = line.客家語;
-      const rt = document.createElement('rt');
-      let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGipData);
-      const dialectCode = getDialectCode(dialectInfo.腔);
-
-      if (dialectCode) {
-        phoneticText = getSandhiHtml(phoneticText, dialectCode);
-      }
-      rt.innerHTML = phoneticText;
-      ruby.appendChild(rt);
-      td2.appendChild(ruby);
+      renderVocabWithVariants(td2, line, dialectInfo, isGipData);
       td2.appendChild(document.createElement('br'));
       if (missingAudioInfo && missingAudioInfo.word === false) {
         const dummyAudio = document.createElement('audio');
@@ -5420,9 +5731,12 @@ function initializeAppUI() {
       if (line.例句 && line.例句.trim() !== '') {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
-        sentenceSpan.innerHTML = line.例句
+        const rawSentence = line.例句
           .replace(/"/g, '')
           .replace(/\n/g, '<br>');
+        sentenceSpan.innerHTML = typeof formatSentenceVariants === 'function'
+          ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
+          : rawSentence;
         td3.appendChild(sentenceSpan);
         td3.appendChild(document.createElement('br'));
         if (
@@ -7492,18 +7806,7 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   // TD2: Vocabulary
   const td2 = document.createElement('td');
   td2.dataset.label = '詞彙';
-  const ruby = document.createElement('ruby');
-  ruby.textContent = line.客家語;
-  const rt = document.createElement('rt');
-  let phoneticText = formatPhoneticForDisplay(line['客語標音_顯示'], isGip);
-  const dialectCode = getDialectCode(dialectInfo.腔);
-
-  if (dialectCode) {
-    phoneticText = getSandhiHtml(phoneticText, dialectCode);
-  }
-  rt.innerHTML = phoneticText;
-  ruby.appendChild(rt);
-  td2.appendChild(ruby);
+  renderVocabWithVariants(td2, line, dialectInfo, isGip);
   td2.appendChild(document.createElement('br'));
   
   if (wordAudioSrc) {
@@ -7534,7 +7837,10 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   if (line.例句 && line.例句.trim() !== '') {
     const sentenceSpan = document.createElement('span');
     sentenceSpan.className = 'sentence';
-    sentenceSpan.innerHTML = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+    const rawSentence = line.例句.replace(/"/g, '').replace(/\n/g, '<br>');
+    sentenceSpan.innerHTML = typeof formatSentenceVariants === 'function'
+      ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
+      : rawSentence;
     td3.appendChild(sentenceSpan);
     td3.appendChild(document.createElement('br'));
     
@@ -7875,7 +8181,7 @@ async function displayGitCommitInfo() {
 }
 
 // Start the application
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && (typeof module === 'undefined' || !module.exports)) {
   initializeApp();
 }
 
@@ -7883,8 +8189,16 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     classifyTone,
     getSandhiHtml,
+    getSandhiPronunciation,
     formatPhoneticForDisplay,
     getCertAdvancedRepeatCount,
-    shouldRepeatWord
+    shouldRepeatWord,
+    getDialectCode,
+    getVariantDialectType,
+    buildVariantsElement,
+    buildVariantsCompactHTML,
+    getVariantAudioTitle,
+    renderVocabWithVariants,
+    createVariantBlock
   };
 }

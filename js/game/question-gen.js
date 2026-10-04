@@ -2,8 +2,18 @@
 // Handles question generation, distractor selection, and session setup
 
 // 載入版本 banner：在 Console 看到這行＝新版 JS 有載到（cache 驗證用）
-const QUESTION_GEN_VERSION = '4.6.3';
+const QUESTION_GEN_VERSION = '4.9.1';
 console.info(`[HakSpring Game] question-gen.js v${QUESTION_GEN_VERSION} loaded`);
+
+// Node.js 測試環境相容引入
+if (typeof getLineVariants === 'undefined' && typeof require !== 'undefined') {
+  try {
+    const vp = require('../variant-parser.js');
+    if (vp && vp.getLineVariants) {
+      global.getLineVariants = vp.getLineVariants;
+    }
+  } catch (e) {}
+}
 
 /**
  * Clean Cloze Word by removing bracketed variants and parenthesized content
@@ -61,12 +71,21 @@ function isTooSimilar(str1, str2) {
  * Priority: Same 分類 -> Same 詞性1 -> Random.
  */
 function generateDistractors(targetWord, allWords, returnField = '華語詞義') {
+  const targetVariants = (typeof getLineVariants === 'function') ? getLineVariants(targetWord) : null;
+  const targetCleanWord = targetVariants ? targetVariants.cleanWord : targetWord.客家語;
+
   // Filter out the target word itself, and words with similar/identical meanings
-  const validPool = allWords.filter(w => 
-    w.progressKey !== targetWord.progressKey && 
-    !isTooSimilar(w.華語詞義, targetWord.華語詞義) &&
-    (returnField === '華語詞義' || !isTooSimilar(w[returnField], targetWord[returnField]))
-  );
+  const validPool = allWords.filter(w => {
+    if (w.progressKey === targetWord.progressKey) return false;
+    if (isTooSimilar(w.華語詞義, targetWord.華語詞義)) return false;
+    if (returnField === '華語詞義') return true;
+    if (returnField === '客家語') {
+      const wv = (typeof getLineVariants === 'function') ? getLineVariants(w) : null;
+      const wClean = wv ? wv.cleanWord : w.客家語;
+      return !isTooSimilar(wClean, targetCleanWord);
+    }
+    return !isTooSimilar(w[returnField], targetWord[returnField]);
+  });
   
   let candidates = validPool.filter(w => targetWord.分類 && w.分類 === targetWord.分類);
   
@@ -627,4 +646,16 @@ function buildOptionsForType(target, type, allWords) {
     [options[i], options[j]] = [options[j], options[i]];
   }
   return options;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    cleanClozeWord,
+    countHanChars,
+    getChineseCharCount,
+    buildOptionsForType,
+    generateDistractors,
+    generatePinyinDistractors,
+    generateGameSession
+  };
 }

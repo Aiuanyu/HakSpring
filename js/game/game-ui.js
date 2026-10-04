@@ -669,14 +669,21 @@ function renderQuestion() {
   targetWordElem.style.removeProperty('display');
   pinyinElem.style.removeProperty('display');
 
+  const qVariants = (typeof getLineVariants === 'function') ? getLineVariants(question.targetWord) : null;
+  const cleanWord = question.cleanWord || (qVariants ? qVariants.cleanWord : question.targetWord.客家語);
+  const cleanPhonetic = question.cleanPhonetic || (qVariants ? qVariants.cleanPhonetic : (question.targetWord.客語標音_顯示 || question.targetWord.標音));
+
   if (question.type === 'p') {
     pinyinElem.style.display = 'none'; // hide pinyin in prompt for pinyin test
-    // If they have mandarin translation toggled on, we can append it
-    const showMandarin = true; // Later we can add a toggle, for now just append it
+    const wordCompact = typeof buildVariantsCompactHTML === 'function'
+      ? buildVariantsCompactHTML(question.targetWord.客家語, '', getQuestionDataVarName(question), { part: 'word' })
+      : null;
+    const displayWord = wordCompact || question.targetWord.客家語;
+    const showMandarin = true;
     if (showMandarin && question.targetWord.華語詞義) {
-      targetWordElem.innerHTML = `${question.targetWord.客家語}<div class="game-mandarin-translation">${question.targetWord.華語詞義}</div>`;
+      targetWordElem.innerHTML = `${displayWord}<div class="game-mandarin-translation">${question.targetWord.華語詞義}</div>`;
     } else {
-      targetWordElem.innerHTML = question.targetWord.客家語;
+      targetWordElem.innerHTML = displayWord;
     }
   } else if (question.type === 'l') {
     // 聽力題：隱藏目標詞和拼音，只播音檔
@@ -689,14 +696,37 @@ function renderQuestion() {
     targetWordElem.style.setProperty('font-size', '1.3em', 'important');
   } else if (question.type === 'c') {
     pinyinElem.style.display = 'none';
-    targetWordElem.innerHTML = question.clozeSentence;
+    const dialectName = getQuestionDataVarName(question);
+    targetWordElem.innerHTML = typeof formatSentenceVariants === 'function'
+      ? formatSentenceVariants(question.clozeSentence, dialectName)
+      : question.clozeSentence;
     // 例句用「文源楷書 Marion Bunguan」那組（同主表例句 .sentence 的字型）
     targetWordElem.style.setProperty('font-family', "'Marion', 'Marion+jfBunguan', tauhu-oo, cursive", 'important');
     targetWordElem.style.setProperty('font-size', '1.3em', 'important');
   } else {
-    targetWordElem.textContent = question.targetWord.客家語;
+    // m 題型：保持經典題幹格局（上方大字、下方拼音）；有變體時，用 compact 渲染各自的字詞與拼音
+    const dialectName = getQuestionDataVarName(question);
+    const wordCompact = (qVariants && qVariants.hasVariants && typeof buildVariantsCompactHTML === 'function')
+      ? buildVariantsCompactHTML(question.targetWord.客家語, '', dialectName, { part: 'word' })
+      : null;
+    const pinyinCompact = (qVariants && qVariants.hasVariants && typeof buildVariantsCompactHTML === 'function')
+      ? buildVariantsCompactHTML(question.targetWord.客家語, question.targetWord.客語標音_顯示 || question.targetWord.標音, dialectName, { part: 'phonetic', sandhi: true })
+      : null;
+
+    targetWordElem.style.display = 'block';
+    if (wordCompact) {
+      targetWordElem.innerHTML = wordCompact;
+    } else {
+      targetWordElem.textContent = cleanWord;
+    }
+
     pinyinElem.style.display = 'block';
-    pinyinElem.innerHTML = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
+    if (pinyinCompact) {
+      pinyinElem.innerHTML = pinyinCompact;
+    } else {
+      const rawPhonetic = question.targetWord.客語標音_顯示 || question.targetWord.標音;
+      pinyinElem.innerHTML = formatGamePinyinWithSandhi(rawPhonetic, dialectName);
+    }
   }
   
   // Audio button hidden until they answer correctly
@@ -720,22 +750,38 @@ function renderQuestion() {
       btn.style.fontFamily = 'var(--title-font)';
       btn.style.textAlign = 'left';
       btn.style.padding = '10px 15px'; // Adjust padding for taller button
-      const optPinyin = formatGamePinyinWithSandhi(opt.客語標音_顯示 || opt.標音, (opt.dataVarName || getQuestionDataVarName(question)));
+
+      const wordCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML(opt.客家語, '', (opt.dataVarName || getQuestionDataVarName(question)), { part: 'word' })
+        : null;
+      const optWordHTML = wordCompact || opt.客家語;
+
+      const pinyinCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML('', (opt.客語標音_顯示 || opt.標音), (opt.dataVarName || getQuestionDataVarName(question)), { part: 'phonetic', sandhi: true })
+        : null;
+      const optPinyinHTML = pinyinCompact || formatGamePinyinWithSandhi(opt.客語標音_顯示 || opt.標音, (opt.dataVarName || getQuestionDataVarName(question)));
       const optMandarin = opt.華語詞義;
+
       // 3行排列
       const contentHtml = `
         <div style="display: inline-flex; flex-direction: column; vertical-align: middle;">
-          <span style="font-family: var(--title-font); font-size: 1.2em; line-height: 1.2;">${opt.客家語}</span>
-          <span style="font-family: var(--roman-font); font-size: 0.85em; color: #555; line-height: 1.2; margin-top: 2px;">${optPinyin}</span>
+          <span style="font-family: var(--title-font); font-size: 1.2em; line-height: 1.2;">${optWordHTML}</span>
+          <span style="font-family: var(--roman-font); font-size: 0.85em; color: #555; line-height: 1.2; margin-top: 2px;">${optPinyinHTML}</span>
           <span style="font-size: 0.8em; color: #888; line-height: 1.2; margin-top: 2px;">${optMandarin}</span>
         </div>
       `;
       displayOpt = contentHtml;
     } else if (question.type === 'p') {
       btn.classList.add('game-pinyin-option');
-      displayOpt = `<span class="pinyin-text">${formatGamePinyinWithSandhi(opt, getQuestionDataVarName(question))}</span>`;
+      const pinyinCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML('', opt, getQuestionDataVarName(question), { part: 'phonetic', sandhi: true })
+        : null;
+      displayOpt = pinyinCompact || `<span class="pinyin-text">${formatGamePinyinWithSandhi(opt, getQuestionDataVarName(question))}</span>`;
     } else if (question.type === 'd') {
-      displayOpt = `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
+      const wordCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML(opt, '', getQuestionDataVarName(question), { part: 'word' })
+        : null;
+      displayOpt = wordCompact || `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
     } else if (question.type === 'c') {
       // 克漏字選項是客語詞 → 用 --title-font（比照 |d）
       displayOpt = `<span style="font-family: var(--title-font); font-size: 1.2em;">${opt}</span>`;
@@ -872,6 +918,10 @@ async function handleAnswer(selectedOption, btnElement) {
   let isCorrect = false;
   let correctText = '';
   
+  const qVariants = (typeof getLineVariants === 'function') ? getLineVariants(question.targetWord) : null;
+  const cleanWord = question.cleanWord || (qVariants ? qVariants.cleanWord : question.targetWord.客家語);
+  const cleanPhonetic = question.cleanPhonetic || (qVariants ? qVariants.cleanPhonetic : (question.targetWord.客語標音_顯示 || question.targetWord.標音));
+
   if (question.type === 'p') {
     correctText = question.targetWord.客語標音_顯示 || question.targetWord.標音;
     isCorrect = selectedOption === correctText;
@@ -916,6 +966,8 @@ async function handleAnswer(selectedOption, btnElement) {
     }
   });
 
+  const hasVariants = !!(qVariants && qVariants.hasVariants && typeof buildVariantsElement === 'function');
+
   if (isCorrect) {
     btnElement.classList.add('correct');
     feedback.className = 'game-feedback correct';
@@ -923,8 +975,17 @@ async function handleAnswer(selectedOption, btnElement) {
     
     const msg = document.createElement('div');
     if (question.type === 'd' || question.type === 'c') {
-      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
-      msg.innerHTML = `著！（你覺著這題會難無：）<div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
+      const dialectName = getQuestionDataVarName(question);
+      const feedbackPinyinCompact = (hasVariants && typeof buildVariantsCompactHTML === 'function')
+        ? buildVariantsCompactHTML(question.targetWord.客家語, question.targetWord.客語標音_顯示 || question.targetWord.標音, dialectName, { part: 'phonetic', sandhi: true })
+        : null;
+      if (feedbackPinyinCompact) {
+        msg.innerHTML = `著！（你覺著這題會難無：）<div class="game-feedback-variants" style="margin-top: 8px;">${feedbackPinyinCompact}</div>`;
+      } else {
+        const rawPhonetic = question.targetWord.客語標音_顯示 || question.targetWord.標音;
+        const pinyinHtml = formatGamePinyinWithSandhi(rawPhonetic, dialectName);
+        msg.innerHTML = `著！（你覺著這題會難無：）<div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
+      }
     } else {
       msg.textContent = '著！（你覺著這題會難無：）';
     }
@@ -965,17 +1026,44 @@ async function handleAnswer(selectedOption, btnElement) {
         if (question.type === 'p') {
           const kbdMatch = btn.innerHTML.match(/<kbd[^>]*>.*?<\/kbd>/);
           const kbdHTML = kbdMatch ? kbdMatch[0] : '';
-          btn.innerHTML = `${kbdHTML} ${highlightDiff(selectedOption, correctText)}`;
+          const pinyinCompact = typeof buildVariantsCompactHTML === 'function'
+            ? buildVariantsCompactHTML('', correctText, getQuestionDataVarName(question), { part: 'phonetic', sandhi: true })
+            : null;
+          if (pinyinCompact) {
+            btn.innerHTML = `${kbdHTML} ${pinyinCompact}`;
+          } else {
+            btn.innerHTML = `${kbdHTML} ${highlightDiff(selectedOption, correctText)}`;
+          }
         }
       }
     });
     
     const msg = document.createElement('div');
     if (question.type === 'p') {
-      msg.innerHTML = `毋著。正確答案係：${highlightDiff(selectedOption, correctText)}`;
+      const pinyinCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML('', correctText, getQuestionDataVarName(question), { part: 'phonetic', sandhi: true })
+        : null;
+      if (pinyinCompact) {
+        msg.innerHTML = `毋著。正確答案係：${pinyinCompact}`;
+      } else {
+        msg.innerHTML = `毋著。正確答案係：${highlightDiff(selectedOption, correctText)}`;
+      }
     } else if (question.type === 'd' || question.type === 'c') {
-      const pinyinHtml = formatGamePinyinWithSandhi(question.targetWord.客語標音_顯示 || question.targetWord.標音, getQuestionDataVarName(question));
-      msg.innerHTML = `毋著。正確答案係：<span style="font-family: var(--title-font); font-size: 1.2em;">${correctText}</span><div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
+      const wordCompact = typeof buildVariantsCompactHTML === 'function'
+        ? buildVariantsCompactHTML(correctText, '', getQuestionDataVarName(question), { part: 'word' })
+        : null;
+      const displayCorrectWord = wordCompact || `<span style="font-family: var(--title-font); font-size: 1.2em;">${correctText}</span>`;
+      const dialectName = getQuestionDataVarName(question);
+      const feedbackPinyinCompact = (hasVariants && typeof buildVariantsCompactHTML === 'function')
+        ? buildVariantsCompactHTML(question.targetWord.客家語, question.targetWord.客語標音_顯示 || question.targetWord.標音, dialectName, { part: 'phonetic', sandhi: true })
+        : null;
+      if (feedbackPinyinCompact) {
+        msg.innerHTML = `毋著。正確答案係：${displayCorrectWord}<div class="game-feedback-variants" style="margin-top: 8px;">${feedbackPinyinCompact}</div>`;
+      } else {
+        const rawPhonetic = question.targetWord.客語標音_顯示 || question.targetWord.標音;
+        const pinyinHtml = formatGamePinyinWithSandhi(rawPhonetic, dialectName);
+        msg.innerHTML = `毋著。正確答案係：${displayCorrectWord}<div style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">拼音：<span class="pinyin-text">${pinyinHtml}</span></div>`;
+      }
     } else {
       msg.textContent = `毋著。正確答案係：${correctText}`;
     }
@@ -1078,7 +1166,12 @@ function appendSentenceUI(feedback, question) {
     sentenceDisplay.className = 'game-sentence-display';
     
     const sentenceText = document.createElement('div');
-    const formatText = (text) => text ? text.replace(/\n/g, '<br>') : '';
+    const dialectName = getQuestionDataVarName(question);
+    const formatText = (text) => {
+      if (!text) return '';
+      const formatted = text.replace(/\n/g, '<br>');
+      return typeof formatSentenceVariants === 'function' ? formatSentenceVariants(formatted, dialectName) : formatted;
+    };
     const hakkaText = `<span class="sentence" style="font-size: 1.1em;">${formatText(question.targetWord.例句)}</span>`;
     
     const fullSourceName = `cert${getQuestionDataVarName(question)}`;

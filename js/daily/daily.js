@@ -517,15 +517,20 @@ const DailyWord = (function () {
     }
     
     const modeText = (mode === 'specific') ? '收藏詞' : (isToday ? (dialect === '安' ? '今日' : '今晡日') : '隨機拈詞');
-    const word = row['客家語'];
+    const rawWord = row['客家語'] || '';
+    const rawPinyin = row['客語標音_顯示'] || row['客語標音_查詢'] || '';
+    const rowVariants = (item.type === 'cert' && typeof getLineVariants === 'function')
+      ? getLineVariants(row, typeof getDialectFullName === 'function' ? getDialectFullName(dialect) : dialect)
+      : null;
+    const word = rowVariants ? rowVariants.cleanWord : rawWord;
+    const cleanPinyin = rowVariants ? rowVariants.cleanPhonetic : rawPinyin;
     
     // Use main.js formatter if available
     let pinyinHTML = '';
-    const rawPinyin = row['客語標音_顯示'] || row['客語標音_查詢'] || '';
     
     // First, format and clean the base pinyin
     if (item.type === 'cert') {
-        pinyinHTML = rawPinyin.split('或')[0].trim();
+        pinyinHTML = cleanPinyin.split('或')[0].trim();
     } else {
         pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true) : rawPinyin;
     }
@@ -596,6 +601,9 @@ const DailyWord = (function () {
     if (sentenceParts.length > 0) {
       const sentenceLines = sentenceParts.map(s => {
         let cleanSentence = s.replace(/^(例|例如)\s*[：:]\s*/, '');
+        if (typeof formatSentenceVariants === 'function') {
+          cleanSentence = formatSentenceVariants(cleanSentence, dialect);
+        }
         return `
         <div class="daily-sentence-item">
           <span class="daily-sentence-badge">例</span>
@@ -621,11 +629,24 @@ const DailyWord = (function () {
     const sourcePrefix = isGip ? 'g' : 'c';
     const rowId = row['編號'] || row['序號'];
     const dataVarName = isGip ? dialect : dialect + level;
-    const computedFavId = `${sourcePrefix}${dataVarName}${rowId}:${word}`;
+    const computedFavId = `${sourcePrefix}${dataVarName}${rowId}:${rawWord}`;
     const existingFavKey = DailyFavManager.findExistingKey(computedFavId);
     const favId = existingFavKey || computedFavId;
     const isFav = !!existingFavKey;
     const favCount = DailyFavManager.getCount();
+
+    const dialectFullName = typeof getDialectFullName === 'function' ? getDialectFullName(dialect) : dialect;
+    const hasVariants = !!(rowVariants && rowVariants.hasVariants);
+    const wordCompactHTML = (hasVariants && typeof buildVariantsCompactHTML === 'function')
+      ? buildVariantsCompactHTML(rawWord, rawPinyin, dialectFullName, { part: 'word' })
+      : null;
+    const pinyinCompactHTML = (hasVariants && typeof buildVariantsCompactHTML === 'function')
+      ? buildVariantsCompactHTML(rawWord, rawPinyin, dialectFullName, { part: 'phonetic', sandhi: true, splitOr: true })
+      : null;
+
+    const audioTitle = typeof getVariantAudioTitle === 'function'
+      ? getVariantAudioTitle(item.type === 'cert' ? dialectFullName : '')
+      : '播放發音';
 
     dailyModalBody.innerHTML = `
       <div class="daily-card-container">
@@ -646,12 +667,14 @@ const DailyWord = (function () {
           <div class="daily-word-section">
             <button class="daily-fav-btn ${isFav ? 'active' : ''}" data-favid="${favId}" title="加入收藏">${isFav ? '★' : '☆'}</button>
             <div class="daily-word">
-              ${word}
+              ${wordCompactHTML || word}
             </div>
-            <div class="daily-pinyin-wrapper" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 30px;">
-              <div class="daily-pinyin" style="margin-bottom: 0;">${pinyinHTML}</div>
-              ${mainWordAudio ? `<button class="playBtn" data-src="${mainWordAudio}" style="background:none; border:none; color:var(--daily-card-text); font-size: 0.8em; cursor:pointer; padding: 2px;"><i class="fas fa-volume-up"></i></button>` : ''}
-              ${crossBtnHTML}
+            <div class="daily-pinyin-wrapper" style="display: flex; ${pinyinCompactHTML ? 'flex-direction: column;' : 'flex-wrap: wrap;'} align-items: center; justify-content: center; gap: 8px; margin-bottom: 30px;">
+              <div class="daily-pinyin ${pinyinCompactHTML ? 'daily-pinyin-variants' : ''}" style="margin-bottom: 0;">${pinyinCompactHTML || pinyinHTML}</div>
+              <div class="daily-pinyin-controls" style="display: inline-flex; align-items: center; gap: 6px; ${pinyinCompactHTML ? 'margin-top: 4px;' : 'margin-left: 2px;'}">
+                ${mainWordAudio ? `<button class="playBtn" data-src="${mainWordAudio}" style="background:none; border:none; color:var(--daily-card-text); font-size: 0.85em; cursor:pointer; padding: 2px;" title="${audioTitle}"><i class="fas fa-volume-up"></i></button>` : ''}
+                ${crossBtnHTML}
+              </div>
             </div>
             <div class="daily-meta">${metaStr}</div>
             
@@ -759,16 +782,29 @@ const DailyWord = (function () {
                  const crossItem = document.createElement('div');
                  crossItem.className = 'daily-cross-item';
                  
-                 let crossPinyin = foundItem['客語標音_顯示'] || foundItem['客語標音_查詢'] || '';
+                 const rawCrossPinyin = foundItem['客語標音_顯示'] || foundItem['客語標音_查詢'] || '';
+                 let crossPinyin = '';
                  if (!isGip) {
-                   crossPinyin = crossPinyin.split('或')[0].trim();
+                   const compactCrossPinyin = typeof buildVariantsCompactHTML === 'function'
+                     ? buildVariantsCompactHTML('', rawCrossPinyin, itemDialectInfo.腔名, { part: 'phonetic', sandhi: true, splitOr: true })
+                     : null;
+                   if (compactCrossPinyin) {
+                     crossPinyin = compactCrossPinyin;
+                   } else {
+                     crossPinyin = rawCrossPinyin.split('或')[0].trim();
+                     if (typeof window.getSandhiPronunciation === 'function') {
+                       const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
+                       const sandhiResult = window.getSandhiPronunciation(crossPinyin, fullDialectName);
+                       if (sandhiResult) crossPinyin = sandhiResult.sandhi;
+                     }
+                   }
                  } else {
-                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(crossPinyin, true) : crossPinyin;
-                 }
-                 if (typeof window.getSandhiPronunciation === 'function') {
-                   const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
-                   const sandhiResult = window.getSandhiPronunciation(crossPinyin, fullDialectName);
-                   if (sandhiResult) crossPinyin = sandhiResult.sandhi;
+                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawCrossPinyin, true) : rawCrossPinyin;
+                   if (typeof window.getSandhiPronunciation === 'function') {
+                     const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
+                     const sandhiResult = window.getSandhiPronunciation(crossPinyin, fullDialectName);
+                     if (sandhiResult) crossPinyin = sandhiResult.sandhi;
+                   }
                  }
                  
                  let audioUrl = '';
@@ -793,13 +829,29 @@ const DailyWord = (function () {
                    if (parts.length > 0) {
                      const sentenceItems = parts.map(s => {
                        let cleanS = s.replace(/^(例|例如)\s*[：:]\s*/, '');
+                       if (typeof formatSentenceVariants === 'function') {
+                         cleanS = formatSentenceVariants(cleanS, itemDialectInfo.腔名 || itemDialectInfo.腔);
+                       }
                        return `<div class="daily-sentence-item" style="gap: 6px;"><span class="daily-sentence-badge" style="transform: scale(0.85); margin-right: 2px; padding-top: 2px;">例</span><span class="daily-sentence-text" style="font-size: 1rem;">${cleanS}</span></div>`;
                      }).join('');
                      sentenceHTML = `<div class="daily-sentence-block" style="margin-top: 6px; font-size: 0.95em; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.02); border-left: none;"><div class="daily-sentence-list" style="gap: 4px;">${sentenceItems}</div>${sentenceAudioUrl ? `<button class="playBtn" data-src="${sentenceAudioUrl}" style="background:none; border:none; color:#888; margin-left:8px; cursor:pointer; align-self: center; padding: 2px;" title="播放例句"><i class="fas fa-volume-up"></i></button>` : ''}</div>`;
                    }
                  }
                  
-                 const displayWord = foundItem['客家語'] === word ? '' : foundItem['客家語'];
+                 let displayWord = '';
+                 const compactCrossWord = (!isGip && typeof buildVariantsCompactHTML === 'function')
+                   ? buildVariantsCompactHTML(foundItem['客家語'], '', itemDialectInfo.腔名, { part: 'word' })
+                   : null;
+                 if (compactCrossWord) {
+                   displayWord = compactCrossWord;
+                 } else {
+                   const rawCrossWord = foundItem['客家語'] || '';
+                   const crossVariants = (!isGip && typeof getLineVariants === 'function')
+                     ? getLineVariants(foundItem, typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名)
+                     : null;
+                   const cleanCrossWord = crossVariants ? crossVariants.cleanWord : rawCrossWord;
+                   displayWord = cleanCrossWord === word ? '' : cleanCrossWord;
+                 }
                  
                  crossItem.innerHTML = `
                    <div style="margin-bottom: 8px; border-radius: 6px; background: rgba(0,0,0,0.03); padding: 6px; border: 1px solid rgba(0,0,0,0.05);">
@@ -807,7 +859,7 @@ const DailyWord = (function () {
                        <div style="display: flex; align-items: center; gap: 8px;">
                           <span class="source-tag ${isGip ? 'gip' : 'cert'}-source" style="font-size: 0.8em; padding: 2px 6px;">${itemDialectInfo.腔名}</span>
                           ${displayWord ? `<span style="font-size: 1.05em; color: var(--daily-card-text); font-weight: bold;">${displayWord}</span>` : ''}
-                         <span class="daily-pinyin" style="font-size: 0.9em; margin-bottom: 0; color: #777;">${crossPinyin}</span>
+                         <span class="daily-cross-pinyin" style="font-size: 0.9em; margin-bottom: 0; color: #777;">${crossPinyin}</span>
                        </div>
                        <div style="display: flex; align-items: center; gap: 6px;">
                          ${audioUrl ? `<button class="crossWordPlayBtn number-btn" data-src="${audioUrl}" style="border-radius: 50%; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; background: white;"><i class="fas fa-play" style="font-size: 10px; margin-left: 2px; color: #555;"></i></button>` : ''}
