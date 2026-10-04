@@ -5706,6 +5706,18 @@ mark {
   /* 試做：取消 margin-top: -0.5em 上抬 */
 }
 
+/* 試做（方案 B）：phonetic-only 个 base 無高度，Firefox 下 ruby 盒子頂端對毋著 rt，
+   label 會比羅馬字較高；對有 phonetic-only ruby 个變體行，將 label 向下推。
+   數值係按手機截圖估算（約 8px ≒ 0.7em，label 字級約 11.5px），桌面 ruby 較大故略加。 */
+.variant:has(> .variant-ruby-phonetic-only) > .variant-label {
+  margin-top: 0.8em;
+}
+@media screen and (max-width: 768px) {
+  .variant:has(> .variant-ruby-phonetic-only) > .variant-label {
+    margin-top: 0.7em;
+  }
+}
+
 /* 四縣系 Badge 色彩 */
 .variant-label-北 { background: #3b82f6; color: white; }
 .variant-label-南 { background: #f59e0b; color: white; }
