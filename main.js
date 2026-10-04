@@ -921,15 +921,12 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   block.className = isMain ? 'variant variant-main' : 'variant variant-sub';
 
   // 1. 地區標籤 badge
-  let phoneticOnlyBadge = null;
   if (entry.label) {
     const badge = document.createElement('span');
     badge.className = `variant-label variant-label-${entry.label}`;
     badge.textContent = entry.label;
     if (entry.title) badge.title = entry.title;
-    // phonetic-only 行个 label 會放入 rt 肚（見下方），避免對齊受 ruby base 高度影響
-    if (!entry.phoneticOnly) block.appendChild(badge);
-    else phoneticOnlyBadge = badge;
+    block.appendChild(badge);
   }
 
   // 2. 標音處理（格式化 + sandhi 變調）
@@ -951,7 +948,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     hiddenBase.className = 'variant-hidden-base';
     hiddenBase.textContent = fallbackWord || '';
     const rt = document.createElement('rt');
-    rt.innerHTML = (phoneticOnlyBadge ? phoneticOnlyBadge.outerHTML : '') + phoneticText;
+    rt.innerHTML = phoneticText;
     ruby.appendChild(hiddenBase);
     ruby.appendChild(rt);
     block.appendChild(ruby);

@@ -5706,15 +5706,15 @@ mark {
   /* 試做：取消 margin-top: -0.5em 上抬 */
 }
 
-/* 試做：phonetic-only 个 label 放入 rt 肚，同羅馬字共用一行文字行，
-   對齊毋使靠 ruby 盒子（Chromium／Firefox 對 base 無高度个處理無共樣）。
-   間距取代原本 .variant 个 gap；原本个 flex-start／上抬對呢類行無用。 */
-.variant-ruby-phonetic-only rt .variant-label {
-  display: inline-flex;
-  vertical-align: middle;
-  margin-right: 0.45em;
-  /* rt 字級比 .variant 大，label 原本个 0.72em 會變大，改用 rem 對齊其他行个大小 */
-  font-size: 0.72rem;
+/* 試做：Firefox 系 phonetic-only ruby 个 base 高度 0，ruby 盒子無法撐高，
+   羅馬字會比（貼頂个）label 較低；Firefox 限定將 ruby 視覺上往上提補回。
+   Chromium 毋受影響。提升量愛用 Zen 實測調整（--ff-phonetic-only-lift，單位 em 跟 ruby 字級）。 */
+@supports (-moz-appearance: none) {
+  .variant-ruby-phonetic-only {
+    --ff-phonetic-only-lift: 0.4em;
+    position: relative;
+    top: calc(-1 * var(--ff-phonetic-only-lift));
+  }
 }
 
 /* 四縣系 Badge 色彩 */
