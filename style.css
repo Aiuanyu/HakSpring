@@ -2284,8 +2284,10 @@ input:checked+.slider:before {
   #generated td[data-label="詞彙"] rt,
   #sandhi-showcase td[data-label="詞彙"] rt,
   #comparison-table td[data-label="詞彙"] rt {
-    font-size: 0.8em;
-    /* 標音相對縮小 */
+    font-size: 1em;
+    /* 原本係 0.8em（標音相對縮小）。改 1em 同寬螢幕一致：
+       Firefox 下 rt 比 ruby 細時，phonetic-only 行个 label 會比羅馬字較高
+       （詳見 style.css 後段 --ff-phonetic-only-lift 个備用規則註解）。 */
   }
 
   /* 調整音檔控制項 */
@@ -5703,8 +5705,27 @@ mark {
   user-select: none;
   flex-shrink: 0;
   align-self: flex-start;
-  margin-top: -0.5em;
+  /* 試做：取消 margin-top: -0.5em 上抬 */
 }
+
+/* 【備用，目前停用】Firefox 系 phonetic-only ruby 上提補正：
+   現象：phonetic-only 个 ruby base 係 font-size:0／line-height:0（高度 0），
+   Firefox 下 ruby 盒子撐毋高，貼頂个 label 會比羅馬字較高；Chromium 無此問題。
+   觀察：寬螢幕（rt=1em）本來就對齊，窄螢幕（rt=0.8em）先偏高。
+   推測（未經驗證）：ruby 本身行高比較細个 rt 行高較高，差額就係 label 偏高个量，
+   實測約需上提 0.4em（跟 ruby 字級）。
+   窄螢幕 rt 改回 1em（見上方 td[data-label="詞彙"] rt 規則）後，預期 label 會對齊（待 Zen 實測確認），
+   故以下規則先停用。若日後又需愛縮細窄螢幕 rt，可解除註解再用 Zen 實測調整量。
+@media screen and (max-width: 768px) {
+  @supports (-moz-appearance: none) {
+    .variant-ruby-phonetic-only {
+      --ff-phonetic-only-lift: 0.4em;
+      position: relative;
+      top: calc(-1 * var(--ff-phonetic-only-lift));
+    }
+  }
+}
+*/
 
 /* 四縣系 Badge 色彩 */
 .variant-label-北 { background: #3b82f6; color: white; }
@@ -5757,10 +5778,24 @@ mark {
   font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive !important;
   padding: 0;
   margin: 0;
-  border-radius: 3px;
+  border-radius: 1em;
   display: inline;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+/* 饒平由 3 個 span 拼成一段「（卓／桃）」：卓＝左段、卓桃＝中間斜線、桃＝右段。
+   border-radius 四角順序為 左上 右上 右下 左下：
+   左段只圓左側、右段只圓右側，中間斜線不圓，拼起來外觀係一个完整个圓角膠囊。
+   單獨一個 span 个卓桃（整段「（啞狗）」）毋是接續，仍然四角全圓。 */
+.sentence-variant-卓 {
+  border-radius: 1em 0 0 1em;
+}
+.sentence-variant-桃 {
+  border-radius: 0 1em 1em 0;
+}
+.sentence-variant-卓 + .sentence-variant-卓桃 {
+  border-radius: 0;
 }
 
 .sentence-variant-南 {
