@@ -165,16 +165,17 @@ it('Pattern 1 (phoneticOnly): renders .vocab-variants with ruby.variant-ruby-pho
   // 變體音 (南) -> phoneticOnly (ruby + hidden base + rt)
   const subBlock = container.children[1];
   assert.strictEqual(subBlock.className, 'variant variant-sub');
-  const subBadge = subBlock.children[0];
-  assert.strictEqual(subBadge.className, 'variant-label variant-label-南');
-  assert.strictEqual(subBadge.textContent, '南');
-  const subRuby = subBlock.children[1];
+  // phoneticOnly 行：label 放入 rt 肚（rt.firstChild），ruby 係 block 个第一个子元素
+  const subRuby = subBlock.children[0];
   assert.strictEqual(subRuby.tagName, 'RUBY');
   assert.strictEqual(subRuby.className, 'variant-ruby-phonetic-only');
   assert.strictEqual(subRuby.children[0].className, 'variant-hidden-base');
   assert.strictEqual(subRuby.children[0].textContent, '著著');
   assert.strictEqual(subRuby.children[1].tagName, 'RT');
-  assert.strictEqual(subRuby.children[1].innerHTML, 'cog dô');
+  assert.strictEqual(
+    subRuby.children[1].innerHTML,
+    '<span class="variant-label variant-label-南">南</span>cog dô'
+  );
 });
 
 it('Pattern 2 (word + phonetic variants): Raoping dual variants', () => {
