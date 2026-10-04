@@ -5778,10 +5778,24 @@ mark {
   font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive !important;
   padding: 0;
   margin: 0;
-  border-radius: 3px;
+  border-radius: 1em;
   display: inline;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+/* 饒平由 3 個 span 拼成一段「（卓／桃）」：卓＝左段、卓桃＝中間斜線、桃＝右段。
+   border-radius 四角順序為 左上 右上 右下 左下：
+   左段只圓左側、右段只圓右側，中間斜線不圓，拼起來外觀係一个完整个圓角膠囊。
+   單獨一個 span 个卓桃（整段「（啞狗）」）毋是接續，仍然四角全圓。 */
+.sentence-variant-卓 {
+  border-radius: 1em 0 0 1em;
+}
+.sentence-variant-桃 {
+  border-radius: 0 1em 1em 0;
+}
+.sentence-variant-卓 + .sentence-variant-卓桃 {
+  border-radius: 0;
 }
 
 .sentence-variant-南 {
