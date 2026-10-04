@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=4.7.30" />
+  <link rel="stylesheet" href="style.css?v=4.7.32" />
   <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
   <!-- 先載入外部 SDK -->
@@ -25,9 +25,9 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
-  <script type="text/javascript" src="js/variant-parser.js?v=1.0.4" defer></script>
-  <script type="text/javascript" src="main.js?v=4.5.41" defer></script>
-  <script type="text/javascript" src="js/romanizer.js" defer></script>
+  <script type="text/javascript" src="js/variant-parser.js?v=1.0.5" defer></script>
+  <script type="text/javascript" src="main.js?v=4.5.44" defer></script>
+  <script type="text/javascript" src="js/romanizer.js?v=1.0.1" defer></script>
   <script type="text/javascript" src="js/supabase-config.js" defer></script>
   <script type="text/javascript" src="js/game/game-progress.js?v=4.9.2" defer></script>
   <script type="text/javascript" src="js/game/game-data.js?v=4.3.5" defer></script>
@@ -37,7 +37,7 @@
   <script type="text/javascript" src="js/familiarity.js?v=1.0.2" defer></script>
   <script type="text/javascript" src="js/game/game-ui.js?v=4.10.15" defer></script>
   <script type="text/javascript" src="js/cloud-sync.js?v=4.6.8" defer></script>
-  <script type="text/javascript" src="js/daily/daily.js?v=2.1.19" defer></script>
+  <script type="text/javascript" src="js/daily/daily.js?v=2.1.20" defer></script>
   
   <!-- Driver.js for Onboarding -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
@@ -532,13 +532,15 @@
           <div class="modal-header">
             <h2>蘿蔓生菜 - 客語羅馬字轉換器</h2>
             <select id="romanizer-dialect-selector">
-              <option selected disabled>擇腔調</option>
-              <option>四縣</option>
-              <option>海陸</option>
-              <option>大埔</option>
-              <option>饒平</option>
-              <option>詔安</option>
-              <option>南四縣</option>
+              <option value="北四縣" selected>北四縣</option>
+              <option value="南四縣">南四縣</option>
+              <option value="南四縣（美濃）">南四縣（美濃）</option>
+              <option value="海陸">海陸</option>
+              <option value="大埔">大埔</option>
+              <option value="饒平（新竹）">饒平（新竹）</option>
+              <option value="饒平（卓蘭）">饒平（卓蘭）</option>
+              <option value="饒平（桃園）">饒平（桃園）</option>
+              <option value="詔安">詔安</option>
             </select>
             <!-- 【新增】連詞模式選擇器 -->
             <select id="romanizer-joining-mode-selector">

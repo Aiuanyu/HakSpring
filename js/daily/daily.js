@@ -858,7 +858,7 @@ const DailyWord = (function () {
                      <div class="daily-cross-item-header" style="display: flex; align-items: center; justify-content: space-between;">
                        <div style="display: flex; align-items: center; gap: 8px;">
                           <span class="source-tag ${isGip ? 'gip' : 'cert'}-source" style="font-size: 0.8em; padding: 2px 6px;">${itemDialectInfo.腔名}</span>
-                          ${displayWord ? `<span style="font-size: 1.05em; color: var(--daily-card-text); font-weight: bold;">${displayWord}</span>` : ''}
+                          ${displayWord ? `<span class="daily-cross-word" style="font-family: var(--title-font); font-size: 1.05em; color: var(--daily-card-text); font-weight: bold;">${displayWord}</span>` : ''}
                          <span class="daily-cross-pinyin" style="font-size: 0.9em; margin-bottom: 0; color: #777;">${crossPinyin}</span>
                        </div>
                        <div style="display: flex; align-items: center; gap: 6px;">

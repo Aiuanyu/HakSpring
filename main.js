@@ -621,6 +621,90 @@ function isSourceMatchingDialect(source, dialect) {
   return source.startsWith(dialect);
 }
 
+/**
+ * 取得 Romanizer 模式資訊
+ * @param {string} mode - Romanizer 模式名稱
+ * @returns {{ baseDialect: string, pickChain: string[][] | null }}
+ */
+function getRomanizerModeInfo(mode) {
+  switch (mode) {
+    case '北四縣':
+      return { baseDialect: '四縣', pickChain: [['北']] };
+    case '南四縣':
+      return { baseDialect: '南四縣', pickChain: [['南']] };
+    case '南四縣（美濃）':
+      return { baseDialect: '南四縣', pickChain: [['美'], ['南']] };
+    case '饒平（新竹）':
+      return { baseDialect: '饒平', pickChain: [['竹']] };
+    case '饒平（卓蘭）':
+      return { baseDialect: '饒平', pickChain: [['卓', '卓桃']] };
+    case '饒平（桃園）':
+      return { baseDialect: '饒平', pickChain: [['桃', '卓桃']] };
+    default:
+      return { baseDialect: mode, pickChain: null };
+  }
+}
+
+/**
+ * 把一筆 reading 依 Romanizer 模式之 pickChain 展開為專屬讀音陣列
+ * @param {Object} reading - 字典讀音物件
+ * @param {string[][] | null} pickChain - 標籤群組順序陣列
+ * @param {string} [searchText] - 搜尋文字（可選，用於字詞變體過濾）
+ * @returns {Object[]} 解析後的專屬讀音陣列
+ */
+function resolveReadingForMode(reading, pickChain, searchText) {
+  if (!reading) return [];
+  if (!pickChain || !reading.variants || reading.variants.length === 0) {
+    return [reading];
+  }
+
+  let matchedItems = [];
+  for (const group of pickChain) {
+    const vMatches = reading.variants.filter((v) => group.includes(v.label));
+    if (vMatches.length > 0) {
+      matchedItems = vMatches.map((v) => ({ ...v, inherited: false }));
+      break;
+    }
+    if (reading.mainVariant && group.includes(reading.mainVariant.label)) {
+      matchedItems = [{ ...reading.mainVariant, inherited: false }];
+      break;
+    }
+  }
+
+  if (matchedItems.length === 0 && reading.mainVariant) {
+    matchedItems = [{ ...reading.mainVariant, inherited: true }];
+  }
+
+  const result = [];
+  const trimmedSearch = searchText ? searchText.trim() : '';
+
+  matchedItems.forEach((item) => {
+    const displayWord =
+      item.word ||
+      (reading.mainVariant && reading.mainVariant.word) ||
+      reading.originalTerm;
+
+    if (trimmedSearch && !displayWord.includes(trimmedSearch)) {
+      return;
+    }
+
+    const resolved = {
+      ...reading,
+      pronunciation: item.phonetic,
+      originalTerm: displayWord,
+      variants: null,
+      resolvedLabel: item.label,
+      inherited: item.inherited || false,
+    };
+    if (trimmedSearch && displayWord === trimmedSearch) {
+      resolved.isExactMatch = true;
+    }
+    result.push(resolved);
+  });
+
+  return result;
+}
+
 function findPronunciationsInAllDataAsync(searchText, callback) {
   console.log('findPronunciationsInAllDataAsync called with:', searchText);
   if (!searchText || searchText.trim().length === 0) {
@@ -1143,7 +1227,7 @@ function buildVariantsCompactHTML(rawWord, rawPhonetic, dialectName, opts) {
     return `<span class="variant-compact-line"><span class="variant-label variant-label-${line.label}">${line.label}</span>${content}</span>`;
   }).join('');
 
-  return `<span class="variant-compact variant-compact-${part}">${linesHTML}</span>`;
+  return `<span class="variant-compact variant-compact-part-${part}">${linesHTML}</span>`;
 }
 
 /**
@@ -1165,6 +1249,8 @@ if (typeof window !== 'undefined') {
   window.buildVariantsCompactHTML = buildVariantsCompactHTML;
   window.getVariantAudioTitle = getVariantAudioTitle;
   window.getSandhiPronunciation = getSandhiPronunciation;
+  window.getRomanizerModeInfo = getRomanizerModeInfo;
+  window.resolveReadingForMode = resolveReadingForMode;
 }
 
 /**
@@ -1449,6 +1535,7 @@ function showPronunciationPopup(
   anchorElementOrRect,
   callbackOnSelect,
   contextualDialect = null,
+  options = {},
 ) {
   const popupEl = document.getElementById('selectionPopup');
   const contentEl = document.getElementById('selectionPopupContent');
@@ -1508,12 +1595,27 @@ function showPronunciationPopup(
       const showAllAccents = showOtherAccentsToggle.checked;
       let currentDialect =
         contextualDialect || currentActiveMainDialectName || '四縣';
+      const modeInfo = typeof getRomanizerModeInfo === 'function'
+        ? getRomanizerModeInfo(currentDialect)
+        : { baseDialect: currentDialect, pickChain: null };
+      const baseDialect = modeInfo.baseDialect;
+      const pickChain = modeInfo.pickChain;
+
       let displayReadings = [...allReadings];
 
       if (!showAllAccents) {
         displayReadings = displayReadings.filter((r) =>
-          isSourceMatchingDialect(r.source, currentDialect),
+          isSourceMatchingDialect(r.source, baseDialect),
         );
+      }
+
+      if (options.resolveSubDialect && pickChain && typeof resolveReadingForMode === 'function') {
+        displayReadings = displayReadings.flatMap((r) => {
+          if (isSourceMatchingDialect(r.source, baseDialect)) {
+            return resolveReadingForMode(r, pickChain, selectedText);
+          }
+          return [r];
+        });
       }
 
       displayReadings.sort((a, b) => {
@@ -1529,21 +1631,107 @@ function showPronunciationPopup(
       if (displayReadings.length > 0) {
         const accordionContainer = document.createElement('div');
         accordionContainer.className = 'accordion-container';
+
+        const LABEL_TITLE_MAP = {
+          '北': '北四縣',
+          '南': '南四縣',
+          '美': '美濃',
+          '竹': '新竹',
+          '卓': '卓蘭',
+          '桃': '桃園',
+          '卓桃': '卓蘭/桃園',
+        };
+
         displayReadings.forEach((reading) => {
           const itemDiv = document.createElement('div');
           itemDiv.className = 'accordion-item';
           const headerBtn = document.createElement('button');
           headerBtn.className = 'accordion-header';
-          const sandhiResult = getSandhiPronunciation(
-            reading.pronunciation,
-            reading.source,
-          );
-          let headerText = sandhiResult
-            ? `<span class="pronunciation-text">${sandhiResult.sandhi}</span>`
-            : `<span class="pronunciation-text">${reading.pronunciation}</span>`;
-          if (!reading.isExactMatch) {
-            headerText += ` (詞目: ${reading.originalTerm})`;
+
+          let headerText = '';
+          let audioTitle = '播放讀音';
+
+          if (reading.resolvedLabel) {
+            // Case 1: Romanizer 專屬讀音模式
+            const labelTitle = LABEL_TITLE_MAP[reading.resolvedLabel] || reading.resolvedLabel;
+            let allowSandhi = true;
+            if (baseDialect === '饒平') {
+              allowSandhi = (currentDialect === '饒平（新竹）');
+            }
+            const sandhiResult = allowSandhi
+              ? getSandhiPronunciation(reading.pronunciation, reading.source)
+              : null;
+            const phoneticDisplay = sandhiResult ? sandhiResult.sandhi : reading.pronunciation;
+            headerText = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.resolvedLabel}" title="${labelTitle}">${reading.resolvedLabel}</span><span class="pronunciation-text">${phoneticDisplay}</span></div>`;
+            if (!reading.isExactMatch) {
+              headerText += ` <span class="popup-original-term">(詞目: ${reading.originalTerm})</span>`;
+            }
+            if (reading.inherited) {
+              audioTitle = '播放讀音';
+            } else if (typeof getVariantAudioTitle === 'function' && reading.variantType) {
+              audioTitle = getVariantAudioTitle(reading.variantType);
+            }
+          } else if (reading.variants && reading.variants.length > 0 && reading.mainVariant) {
+            // Case 2: 主表選字彈窗（或未解析子方言的其他腔）——堆疊顯示所有變體
+            // 【地區平等機制】：以使用者所選/所查文字 (selectedText) 為主體。
+            // 若所選文字為變體詞（如選「番鹼」），則南四縣行隱藏詞目，改由北四縣行顯示「茶箍」；
+            // 饒平 2 元或 3 元對換（如「生牙包」vs「發牙包」）亦完全同理對稱。
+            const allWords = [
+              reading.mainVariant.word || reading.originalTerm,
+              ...reading.variants.map((v) => v.word || reading.mainVariant.word || reading.originalTerm),
+            ];
+            const trimmedSelected = (selectedText || '').trim();
+            let baseWord = reading.mainVariant.word || reading.originalTerm;
+            if (trimmedSelected) {
+              const matchedWord = allWords.find((w) => w === trimmedSelected || w.includes(trimmedSelected));
+              if (matchedWord) {
+                baseWord = matchedWord;
+              }
+            }
+
+            const mainLabelTitle = reading.mainVariant.title || LABEL_TITLE_MAP[reading.mainVariant.label] || reading.mainVariant.label;
+            const mainSandhi = getSandhiPronunciation(reading.mainVariant.phonetic, reading.source);
+            const mainPhonetic = mainSandhi ? mainSandhi.sandhi : reading.mainVariant.phonetic;
+            const mainWord = reading.mainVariant.word || reading.originalTerm;
+            const hasDiffWordMain = mainWord !== baseWord;
+            const mainWordHtml = hasDiffWordMain ? `<span class="popup-variant-word">${mainWord}</span>` : '';
+            const mainLineHtml = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.mainVariant.label}" title="${mainLabelTitle}">${reading.mainVariant.label}</span><span class="pronunciation-text">${mainPhonetic}</span>${mainWordHtml}</div>`;
+
+            const subLinesHtml = reading.variants.map((v) => {
+              const subLabelTitle = v.title || LABEL_TITLE_MAP[v.label] || v.label;
+              const allowSubSandhi = reading.variantType !== '饒平';
+              const subSandhi = allowSubSandhi
+                ? getSandhiPronunciation(v.phonetic, reading.source)
+                : null;
+              const subPhonetic = subSandhi ? subSandhi.sandhi : v.phonetic;
+              const vWord = v.word || reading.mainVariant.word || reading.originalTerm;
+              const hasDiffWordSub = vWord !== baseWord;
+              const wordHtml = hasDiffWordSub ? `<span class="popup-variant-word">${vWord}</span>` : '';
+              return `<div class="popup-variant-line"><span class="variant-label variant-label-${v.label}" title="${subLabelTitle}">${v.label}</span><span class="pronunciation-text">${subPhonetic}</span>${wordHtml}</div>`;
+            }).join('');
+
+            headerText = `<div class="popup-variant-lines">${mainLineHtml}${subLinesHtml}</div>`;
+            if (!reading.isExactMatch) {
+              const displayOriginalTerm = baseWord || reading.originalTerm;
+              headerText += ` <span class="popup-original-term">(詞目: ${displayOriginalTerm})</span>`;
+            }
+            if (typeof getVariantAudioTitle === 'function' && reading.variantType) {
+              audioTitle = getVariantAudioTitle(reading.variantType);
+            }
+          } else {
+            // Case 3: 無變體一般詞條
+            const sandhiResult = getSandhiPronunciation(
+              reading.pronunciation,
+              reading.source,
+            );
+            headerText = sandhiResult
+              ? `<span class="pronunciation-text">${sandhiResult.sandhi}</span>`
+              : `<span class="pronunciation-text">${reading.pronunciation}</span>`;
+            if (!reading.isExactMatch) {
+              headerText += ` (詞目: ${reading.originalTerm})`;
+            }
           }
+
           let audioUrl = reading.audioDetails
             ? constructWordAudioUrl(
                 reading.audioDetails.lineData,
@@ -1552,7 +1740,7 @@ function showPronunciationPopup(
             : null;
           if (audioUrl) audioUrl = applyAudioProxy(audioUrl);
           let audioElementHTML = audioUrl
-            ? `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="播放讀音" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>`
+            ? `<button class="popup-audio-play-btn" data-audio-src="${audioUrl}" title="${audioTitle}" style="background:none; border:none; color:inherit; font-size:1.1em; padding:0 5px; margin-left:8px; vertical-align:middle; cursor:pointer;"><i class="fas fa-volume-up"></i></button>`
             : '';
           let substituteButtonHTML =
             typeof callbackOnSelect === 'function'
@@ -4346,23 +4534,47 @@ function initializeAppUI() {
       }
 
       vocabularyArray.forEach((line) => {
-        const term = line.客家語 ? line.客家語.trim() : null;
-        if (term && term.length > 0) {
-          if (!indexedDataCache[term]) {
-            indexedDataCache[term] = [];
+        const rawTerm = line.客家語 ? line.客家語.trim() : null;
+        if (!rawTerm || rawTerm.length === 0) return;
+        const v = typeof getLineVariants === 'function'
+          ? getLineVariants({ ...line, sourceName, sourceType: isGipData ? 'gip' : 'cert' })
+          : null;
+        const hasV = v && v.hasVariants;
+        const formattedMainPhonetic = formatPhoneticForDisplay(
+          hasV ? v.main.phonetic : line['客語標音_顯示'],
+          isGipData,
+        );
+        const entry = {
+          pronunciation: formattedMainPhonetic,
+          source: sourceName,
+          isExactMatch: true,
+          originalTerm: hasV ? v.main.word : rawTerm,
+          mandarinMeaning: line.華語詞義,
+          audioDetails: {
+            lineData: { ...line },
+            fullSourceName: isGipData ? 'gip' : 'cert' + dataVarName,
+          },
+          variantType: hasV ? v.dialectType : null,
+          mainVariant: hasV ? { ...v.main, phonetic: formattedMainPhonetic } : null,
+          variants: hasV
+            ? v.variants.map((x) => ({
+                ...x,
+                phonetic: formatPhoneticForDisplay(x.phonetic, false),
+              }))
+            : null,
+        };
+        const keys = new Set([
+          entry.originalTerm,
+          ...(entry.variants || []).filter((x) => x.word).map((x) => x.word),
+        ]);
+        keys.forEach((k) => {
+          if (k && k.length > 0) {
+            if (!indexedDataCache[k]) {
+              indexedDataCache[k] = [];
+            }
+            indexedDataCache[k].push(entry);
           }
-          indexedDataCache[term].push({
-            pronunciation: formatPhoneticForDisplay(line['客語標音_顯示'], isGipData),
-            source: sourceName,
-            isExactMatch: true,
-            originalTerm: term,
-            mandarinMeaning: line.華語詞義,
-            audioDetails: {
-              lineData: { ...line },
-              fullSourceName: isGipData ? 'gip' : 'cert' + dataVarName,
-            },
-          });
-        }
+        });
       });
     }
 
@@ -8228,6 +8440,8 @@ if (typeof module !== 'undefined' && module.exports) {
     buildVariantsCompactHTML,
     getVariantAudioTitle,
     renderVocabWithVariants,
-    createVariantBlock
+    createVariantBlock,
+    getRomanizerModeInfo,
+    resolveReadingForMode
   };
 }

@@ -5990,12 +5990,12 @@ mark {
 }
 .game-option-btn .variant-compact-word {
   font-family: var(--title-font) !important;
-  font-size: 1.15em;
+  font-size: 1em !important; /* 保持與一般選項文字 100% 同大，不再放大！ */
   font-weight: 700;
 }
 .game-option-btn .variant-compact-phonetic {
   font-family: var(--roman-font) !important;
-  font-size: 1.05em;
+  font-size: 1em !important; /* 保持與一般拼音 100% 同大，不再放大！ */
 }
 
 /* 5. 日日一詞主詞卡片排版（.daily-word 與 .daily-pinyin） */
@@ -6056,6 +6056,7 @@ mark {
   color: #777 !important; /* 保持次要灰，絕不染紅！ */
   letter-spacing: normal;
 }
+#dailyCrossContainer .daily-cross-word,
 #dailyCrossContainer .variant-compact-word {
   font-family: var(--title-font) !important;
   font-size: 1.05em !important;
@@ -6091,6 +6092,50 @@ mark {
   #dailyCrossContainer .variant-compact-phonetic,
   #dailyCrossContainer .variant-compact-text {
     color: #aaa !important;
+  }
+}
+
+/* P1-γ：主表選字 Popup 與專屬讀音徽章排版 */
+.popup-variant-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.popup-variant-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  line-height: 1.4;
+}
+
+#selectionPopup .variant-label {
+  margin-top: 0 !important;
+  align-self: center !important;
+  font-size: 0.8em;
+  padding: 0.15em 0.45em;
+  border-radius: 3px;
+  line-height: 1.1;
+}
+
+.popup-variant-word {
+  font-family: var(--title-font) !important;
+  opacity: 0.75;
+  margin-left: 0.2em;
+}
+
+.popup-original-term {
+  font-size: 0.9em;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .popup-variant-word {
+    color: #cbd5e1;
+  }
+  .popup-original-term {
+    color: #94a3b8;
   }
 }
 
