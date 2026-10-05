@@ -2164,6 +2164,9 @@ input:checked+.slider:before {
     /* 移除表格外框 */
     width: 100%;
     /* 確保表格寬度 */
+    table-layout: fixed;
+    /* 卡片模式 tr 已經係 block，欄寬毋使 auto 計算。Chrome 算 ruby 个 min-content 係全寬，
+       auto layout 會照最長个變體標音撐闊歸隻表格（超出螢幕），固定佈局就毋會。 */
   }
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
@@ -5682,6 +5685,19 @@ mark {
   line-height: 1.4;
 }
 
+/* 讓 Chrome 系个變體 ruby 也會自動換行（同無變體个詞共樣）：
+   inline-flex 容器摎 flex item 預設 min-width:auto，ruby 个最小寬度 = 全寬，
+   又無限寬，長標音（例：發燒（作燒））就毋會換行、爆出 td。
+   故容器摎變體行限寬 100%，ruby 个 min-width 歸零，正得 shrink 摎換行。 */
+.vocab-variants,
+.variant {
+  max-width: 100%;
+}
+
+.variant ruby {
+  min-width: 0;
+}
+
 /* 具有漢字 base 的 ruby（主詞與字詞變體）：增加底部留白，避免漢字 base 壓到下一行變體的標音與變調 */
 .variant ruby:not(.variant-ruby-phonetic-only) {
   padding-bottom: 0.35em;
@@ -5738,11 +5754,13 @@ mark {
 .variant-label-桃 { background: #10b981; color: white; }
 .variant-label-卓桃 { background: linear-gradient(135deg, #8b5cf6, #10b981); color: white; }
 
-/* phoneticOnly 變體的 hidden base：font-size: 0 有效減少行高，不可見且防圈選 */
+/* phoneticOnly 變體的 hidden base：不可見且防圈選，line-height: 0 減少行高。
+   font-size 毋做 0 而做 1px：Chrome ruby 个換行點係 base 提供个，
+   base 寬度若係 0 就無任何斷點，長標音（rt）會一行到底爆出 td。 */
 .variant-hidden-base {
   visibility: hidden;
   user-select: none;
-  font-size: 0;
+  font-size: 1px;
   line-height: 0;
 }
 
