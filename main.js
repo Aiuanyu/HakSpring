@@ -120,7 +120,9 @@ function isFirefox() {
 }
 
 function adjustRubyFontSize(rubyElement) {
-  if (!isFirefox()) return;
+  // Firefox 全部 ruby 都縮；其他瀏覽器（Chrome 系）ruby 本來就毋會換行，
+  // 地區變體（.variant）多一个 badge 標籤摎 gap 會撐爆 td，故變體行嘛愛縮
+  if (!isFirefox() && !rubyElement.closest('.variant')) return;
   const tdElement = rubyElement.closest('td');
   if (!tdElement) return;
   rubyElement.style.fontSize = '';
@@ -234,11 +236,10 @@ function toggleSearchAccordion(clickedButton, line) {
 
   g_isAccordionScrolling = true;
   try {
-    if (isFirefox()) {
-      const table = parentRow.closest('table');
-      if (table) {
-        adjustAllRubyFontSizes(table);
-      }
+    // adjustAllRubyFontSizes 內部會自家判斷瀏覽器（Firefox 全縮，其他淨縮變體行）
+    const table = parentRow.closest('table');
+    if (table) {
+      adjustAllRubyFontSizes(table);
     }
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch (e) {
@@ -251,9 +252,11 @@ function toggleSearchAccordion(clickedButton, line) {
 }
 
 function adjustAllRubyFontSizes(containerElement) {
-  if (!isFirefox()) return;
+  // 非 Firefox 淨處理地區變體行个 ruby（見 adjustRubyFontSize 註解）
   const rubyElements = containerElement.querySelectorAll(
-    'td[data-label="詞彙"] ruby',
+    isFirefox()
+      ? 'td[data-label="詞彙"] ruby'
+      : 'td[data-label="詞彙"] .variant > ruby',
   );
   rubyElements.forEach((rubyElement) => {
     rubyElement.style.fontSize = '';
@@ -8014,11 +8017,10 @@ function toggleAccordion(event, line, dialectInfo) {
 
   g_isAccordionScrolling = true;
   try {
-    if (isFirefox()) {
-      const table = parentRow.closest('table');
-      if (table) {
-        adjustAllRubyFontSizes(table);
-      }
+    // adjustAllRubyFontSizes 內部會自家判斷瀏覽器（Firefox 全縮，其他淨縮變體行）
+    const table = parentRow.closest('table');
+    if (table) {
+      adjustAllRubyFontSizes(table);
     }
     parentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch (e) {
