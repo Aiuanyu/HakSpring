@@ -5682,6 +5682,19 @@ mark {
   line-height: 1.4;
 }
 
+/* 讓 Chrome 系个變體 ruby 也會自動換行（同無變體个詞共樣）：
+   inline-flex 容器摎 flex item 預設 min-width:auto，ruby 个最小寬度 = 全寬，
+   又無限寬，長標音（例：發燒（作燒））就毋會換行、爆出 td。
+   故容器摎變體行限寬 100%，ruby 个 min-width 歸零，正得 shrink 摎換行。 */
+.vocab-variants,
+.variant {
+  max-width: 100%;
+}
+
+.variant ruby {
+  min-width: 0;
+}
+
 /* 具有漢字 base 的 ruby（主詞與字詞變體）：增加底部留白，避免漢字 base 壓到下一行變體的標音與變調 */
 .variant ruby:not(.variant-ruby-phonetic-only) {
   padding-bottom: 0.35em;
