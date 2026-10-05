@@ -1141,16 +1141,24 @@ function buildVariantsCompactHTML(rawWord, rawPhonetic, dialectName, opts) {
       return null;
     }
 
-    lines.push({
-      label: parsed.main.label,
-      text: parsed.main.word
-    });
+    const candidateLines = [
+      { label: parsed.main.label, text: parsed.main.word },
+      ...parsed.variants.map(v => ({ label: v.label, text: v.word || parsed.main.word }))
+    ];
 
-    for (const v of parsed.variants) {
-      lines.push({
-        label: v.label,
-        text: v.word || parsed.main.word
-      });
+    if (opts.baseWord) {
+      const hasDiffWithBase = candidateLines.some(line => line.text !== opts.baseWord);
+      if (!hasDiffWithBase) {
+        return null;
+      }
+      for (const line of candidateLines) {
+        lines.push({
+          label: line.label,
+          text: line.text === opts.baseWord ? '～' : line.text
+        });
+      }
+    } else {
+      lines.push(...candidateLines);
     }
   } else if (part === 'phonetic') {
     const processPhonetic = (p, label) => {
@@ -3797,12 +3805,12 @@ function initializeAppUI() {
         }
         sentenceSpan.innerHTML = rawSentence;
         td3.appendChild(sentenceSpan);
-        td3.appendChild(document.createElement('br'));
 
         if (line.sourceType === 'cert') {
           const dataKey = 'cert' + line.sourceName;
           const audioUrl = constructSentenceAudioUrl(line, dataKey);
           if (audioUrl) {
+            td3.appendChild(document.createElement('br'));
             const audio2 = document.createElement('audio');
             audio2.className = 'media';
             audio2.controls = true;
@@ -5960,7 +5968,6 @@ function initializeAppUI() {
           ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
           : rawSentence;
         td3.appendChild(sentenceSpan);
-        td3.appendChild(document.createElement('br'));
         if (
           dialectInfo.級名 === '高級' ||
           (missingAudioInfo && missingAudioInfo.sentence === false)
@@ -5971,6 +5978,7 @@ function initializeAppUI() {
           dummyAudio.style.display = 'none';
           td3.appendChild(dummyAudio);
         } else {
+          td3.appendChild(document.createElement('br'));
           const audio2 = document.createElement('audio');
           audio2.className = 'media';
           audio2.controls = true;
@@ -8083,9 +8091,9 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
       ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
       : rawSentence;
     td3.appendChild(sentenceSpan);
-    td3.appendChild(document.createElement('br'));
     
     if (sentenceAudioSrc) {
+      td3.appendChild(document.createElement('br'));
       const audio2 = document.createElement('audio');
       audio2.className = 'media accordion-audio';
       audio2.controls = true;

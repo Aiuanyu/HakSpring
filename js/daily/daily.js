@@ -840,7 +840,7 @@ const DailyWord = (function () {
                  
                  let displayWord = '';
                  const compactCrossWord = (!isGip && typeof buildVariantsCompactHTML === 'function')
-                   ? buildVariantsCompactHTML(foundItem['客家語'], '', itemDialectInfo.腔名, { part: 'word' })
+                   ? buildVariantsCompactHTML(foundItem['客家語'], '', itemDialectInfo.腔名, { part: 'word', baseWord: word })
                    : null;
                  if (compactCrossWord) {
                    displayWord = compactCrossWord;

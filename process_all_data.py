@@ -82,7 +82,41 @@ def parse_example_sentence_field(example_field_text):
             example_sentences.append(sentence.strip() + delimiter)
     if len(split_parts) % 2 == 1 and split_parts[-1].strip():
         example_sentences.append(split_parts[-1].strip())
-    return "<br>".join(s.strip() for s in example_sentences), translation_text
+    raw_example = "<br>".join(s.strip() for s in example_sentences)
+    return clean_example_sentence(raw_example), translation_text
+
+def clean_example_sentence(text):
+    if not text:
+        return ""
+    lines = re.split(r'<br\s*/?>|\n', text, flags=re.IGNORECASE)
+    cleaned_lines = []
+    for line in lines:
+        s = line.strip()
+        if not s:
+            cleaned_lines.append("")
+            continue
+        s = re.sub(r'^(?:例如|例句|例|如)[：:\s]+', '', s)
+        s = re.sub(r'^例如(?=[\u4e00-\u9fa5])', '', s)
+        all_quotes = re.findall(r'「([^」]+)」', s)
+        stripped = re.sub(r'^(?:例如|例|如)\s*', '', s)
+        stripped = re.sub(r'「[^」]+」', '', stripped)
+        stripped = re.sub(r'[、，\s。！？]', '', stripped)
+        if len(all_quotes) >= 2 and stripped == "":
+            sub_sents = []
+            for q in all_quotes:
+                q = q.strip()
+                if not re.search(r'[。！？]$', q):
+                    q += "。"
+                sub_sents.append(q)
+            cleaned_lines.append("<br>".join(sub_sents))
+            continue
+        s = re.sub(r'^(?:例如|例|如)\s*「', '「', s)
+        if len(all_quotes) == 1:
+            single_match = re.match(r'^「([^」]+)」([。！？]?)$', s)
+            if single_match:
+                s = single_match.group(1) + (single_match.group(2) or "。")
+        cleaned_lines.append(s)
+    return "<br>".join(cleaned_lines)
 
 def expand_reverse_map(dialect_reverse_map, vowel_map):
     expanded_map = {}
@@ -227,7 +261,7 @@ def parse_cert_csv(file_path, dialect_reverse_map, vowel_map, vowel_priority):
                 '編號': row.get('編號', ''),
                 '客家語': row.get(f'{dialect_prefix}客家語', ''),
                 '華語詞義': row.get(f'{dialect_prefix}華語詞義', ''),
-                '例句': row.get(f'{dialect_prefix}例句', row.get('例句', '')),
+                '例句': clean_example_sentence(row.get(f'{dialect_prefix}例句', row.get('例句', ''))),
                 '翻譯': row.get(f'{dialect_prefix}翻譯', row.get('翻譯', '')),
                 '備註': row.get('備註', ''),
                 '分類': row.get('分類', ''),

@@ -1167,12 +1167,16 @@ function appendSentenceUI(feedback, question) {
     
     const sentenceText = document.createElement('div');
     const dialectName = getQuestionDataVarName(question);
-    const formatText = (text) => {
+    const formatHakkaSentence = (text) => {
       if (!text) return '';
-      const formatted = text.replace(/\n/g, '<br>');
+      const formatted = text.replace(/"/g, '').replace(/\n/g, '<br>');
       return typeof formatSentenceVariants === 'function' ? formatSentenceVariants(formatted, dialectName) : formatted;
     };
-    const hakkaText = `<span class="sentence" style="font-size: 1.1em;">${formatText(question.targetWord.例句)}</span>`;
+    const formatTranslation = (text) => {
+      if (!text) return '';
+      return text.replace(/"/g, '').replace(/\n/g, '<br>');
+    };
+    const hakkaText = `<span class="sentence" style="font-size: 1.1em;">${formatHakkaSentence(question.targetWord.例句)}</span>`;
     
     const fullSourceName = `cert${getQuestionDataVarName(question)}`;
     const audioUrl = typeof constructSentenceAudioUrl === 'function' ? constructSentenceAudioUrl(question.targetWord, fullSourceName) : null;
@@ -1202,7 +1206,7 @@ function appendSentenceUI(feedback, question) {
     
     const translationTextValue = question.targetWord.翻譯 ? question.targetWord.翻譯.trim() : '';
     if (translationTextValue && translationTextValue !== '-') {
-      sentenceText.insertAdjacentHTML('beforeend', `<br><strong>翻譯：</strong> ${formatText(question.targetWord.翻譯)}`);
+      sentenceText.insertAdjacentHTML('beforeend', `<br><strong>翻譯：</strong> ${formatTranslation(question.targetWord.翻譯)}`);
     }
     
     sentenceDisplay.appendChild(sentenceText);

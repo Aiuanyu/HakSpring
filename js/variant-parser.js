@@ -447,12 +447,86 @@ function getLineVariants(line, fallbackDialect) {
  * 處理例句中的區域變體詞彩繪標註
  * 將四縣與饒平認證例句中的（變體詞）加上專屬半透明底色（南四縣橘／卓蘭色／桃園色／卓桃漸層色）
  *
+/**
+ * 清除例句句首的贅詞與引號（如「例如：」、「例：」、「例句：」、「例「……」」、「如「……」」）
+ * 並將詞組並列（例如「A」、「B」。）轉化為分行獨立子句（A。<br>B。）
+ * 
+ * @param {string} text - 原始例句文字
+ * @returns {string} 清洗後的例句文字
+ */
+function cleanExampleSentence(text) {
+  if (!text || typeof text !== 'string') return text || '';
+
+  // 依 <br> 或換行符切分子句
+  const lines = text.split(/<br\s*\/?>|\n/i);
+  const cleanedLines = [];
+
+  for (let line of lines) {
+    let s = line.trim();
+    if (!s) {
+      cleanedLines.push('');
+      continue;
+    }
+
+    // 1. 去除句首引導詞（例如、例句、例、如）＋ 冒號/空格
+    s = s.replace(/^(?:例如|例句|例|如)[：:\s]+/g, '');
+    // 去除開頭無冒號之直述「例如」（後緊接漢字，如「例如觀看出殯...」）
+    s = s.replace(/^例如(?=[\u4e00-\u9fa5])/g, '');
+
+    // 2. 檢測是否為 G 類「多組引號並列片語」：如 例如「A」、「B」。 或 如「A」、「B」、「C」
+    const allQuotes = [];
+    const quoteRegex = /「([^」]+)」/g;
+    let m;
+    while ((m = quoteRegex.exec(s)) !== null) {
+      allQuotes.push(m[1]);
+    }
+
+    // 檢驗扣除前綴與所有「...」引號塊之後，是否僅剩分隔標點（頓號、逗號、空格、句尾標點）
+    const stripped = s.replace(/^(?:例如|例|如)\s*/, '')
+      .replace(/「[^」]+」/g, '')
+      .replace(/[、，\s。！？]/g, '');
+
+    if (allQuotes.length >= 2 && stripped === '') {
+      // G 類：將各引號片語轉為獨立句子，補齊句號，並以 <br> 連接
+      const subSents = allQuotes.map(q => {
+        let trimmed = q.trim();
+        if (!/[。！？]$/.test(trimmed)) trimmed += '。';
+        return trimmed;
+      });
+      cleanedLines.push(subSents.join('<br>'));
+      continue;
+    }
+
+    // 3. 去除引導詞後緊接「 的情況（例如「...」 或 例「...」 或 如「...」）
+    s = s.replace(/^(?:例如|例|如)\s*「/g, '「');
+
+    // 4. 單一整句被「...」包裹：剝除外層引號
+    if (allQuotes.length === 1) {
+      const singleMatch = s.match(/^「([^」]+)」([。！？]?)$/);
+      if (singleMatch) {
+        s = singleMatch[1] + (singleMatch[2] || '。');
+      }
+    }
+
+    cleanedLines.push(s);
+  }
+
+  return cleanedLines.join('<br>');
+}
+
+/**
+ * 格式化例句中的次方言變體標記，依腔調塗上專屬半透明底色
+ * 同時自動清洗句首贅詞（例如：、例：、例「...」等）
+ * 
  * @param {string} text - 原始例句文字
  * @param {string} [dialectName] - 腔調名稱或代號（如 '四縣', '饒平', '四中高', '平中高' 等）
  * @returns {string} 處理後的 HTML 字串
  */
 function formatSentenceVariants(text, dialectName) {
   if (!text || typeof text !== 'string') return text || '';
+
+  // 先進行全量例句句首贅詞與引號清洗（全腔調與教典通用）
+  text = cleanExampleSentence(text);
 
   let dialectType = null;
   if (typeof getVariantDialectType === 'function') {
@@ -467,7 +541,7 @@ function formatSentenceVariants(text, dialectName) {
     else if (s.includes('饒平') || s.includes('平') || s.includes('饒')) dialectType = '饒平';
   }
 
-  // 非四縣或饒平，直接回傳原文字
+  // 非四縣或饒平，直接回傳已清洗文字
   if (dialectType !== '四縣' && dialectType !== '饒平') {
     return text;
   }
@@ -478,6 +552,7 @@ function formatSentenceVariants(text, dialectName) {
   return text.replace(/[（\(]([^）\)]+)[）\)]/g, (match, content) => {
     if (GENRE_REGEX.test(match)) {
       return match;
+
     }
 
     if (dialectType === '四縣') {
@@ -509,6 +584,7 @@ if (typeof module !== 'undefined' && module.exports) {
     buildRaopingVariants,
     parseVariants,
     getLineVariants,
+    cleanExampleSentence,
     formatSentenceVariants
   };
 }
@@ -516,5 +592,6 @@ if (typeof window !== 'undefined') {
   window.parseVariants = parseVariants;
   window.splitBrackets = splitBrackets;
   window.getLineVariants = getLineVariants;
+  window.cleanExampleSentence = cleanExampleSentence;
   window.formatSentenceVariants = formatSentenceVariants;
 }

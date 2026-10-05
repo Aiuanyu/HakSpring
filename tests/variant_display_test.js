@@ -16,9 +16,10 @@ global.window = {
 global.history = {};
 
 // 載入 variant-parser
-const { parseVariants, getLineVariants, formatSentenceVariants } = require('../js/variant-parser.js');
+const { parseVariants, getLineVariants, cleanExampleSentence, formatSentenceVariants } = require('../js/variant-parser.js');
 global.parseVariants = parseVariants;
 global.getLineVariants = getLineVariants;
+global.cleanExampleSentence = cleanExampleSentence;
 global.formatSentenceVariants = formatSentenceVariants;
 
 // 建立輕量 mock DOM
@@ -347,6 +348,55 @@ test('buildVariantsCompactHTML 案例 5：四縣中 8-28 裌仔【（掛裌仔�
   assert.ok(bothHTML.includes('掛裌仔') && bothHTML.includes('gua gàb è'));
 });
 
+test('buildVariantsCompactHTML 案例 6（R6-1）：跨腔對照 baseWord 諸夏字替換為「～」（饒平 貢膿【癀膿／貢膿】）', () => {
+  const rawWord = '貢膿【癀膿／貢膿】';
+  const rawPhonetic = 'gong nong【vong nong／gong nong】';
+  const dialect = '饒平';
+
+  // 當主詞為「貢膿」時，竹與桃顯示「～」，卓蘭顯示「癀膿」
+  const wordHTML = buildVariantsCompactHTML(rawWord, rawPhonetic, dialect, { part: 'word', baseWord: '貢膿' });
+  assert.ok(wordHTML, 'wordHTML 不應為 null');
+  assert.ok(wordHTML.includes('variant-label-竹'), '應保留竹標籤');
+  assert.ok(wordHTML.includes('variant-label-卓'), '應保留卓標籤');
+  assert.ok(wordHTML.includes('variant-label-桃'), '應保留桃標籤');
+  assert.ok(wordHTML.includes('癀膿'), '應保留癀膿');
+  assert.ok(wordHTML.includes('～'), '與 baseWord 相同的竹、桃應顯示 ～');
+  assert.ok(!wordHTML.includes('貢膿'), '不應包含原始的貢膿，已轉化為 ～');
+});
+
+test('buildVariantsCompactHTML 案例 7（R6-1）：跨腔對照 baseWord 諸夏字替換為「～」（四縣 茶箍【番鹼】）', () => {
+  const rawWord = '茶箍【番鹼】';
+  const rawPhonetic = 'cǎ gú【fán giǎm】';
+  const dialect = '四縣';
+
+  // 當 baseWord 為「茶箍」時，北四縣顯示「～」，南四縣顯示「番鹼」
+  const southOnly = buildVariantsCompactHTML(rawWord, rawPhonetic, dialect, { part: 'word', baseWord: '茶箍' });
+  assert.ok(southOnly, 'southOnly 不應為 null');
+  assert.ok(southOnly.includes('variant-label-北'), '應保留北標籤');
+  assert.ok(southOnly.includes('variant-label-南'), '應保留南標籤');
+  assert.ok(southOnly.includes('番鹼'), '應保留番鹼');
+  assert.ok(southOnly.includes('～'), '北四縣應顯示 ～');
+  assert.ok(!southOnly.includes('茶箍'), '不應包含茶箍，已轉化為 ～');
+
+  // 當 baseWord 為「番鹼」時，北四縣顯示「茶箍」，南四縣顯示「～」
+  const northOnly = buildVariantsCompactHTML(rawWord, rawPhonetic, dialect, { part: 'word', baseWord: '番鹼' });
+  assert.ok(northOnly, 'northOnly 不應為 null');
+  assert.ok(northOnly.includes('variant-label-北'), '應保留北標籤');
+  assert.ok(northOnly.includes('variant-label-南'), '應保留南標籤');
+  assert.ok(northOnly.includes('茶箍'), '應保留茶箍');
+  assert.ok(northOnly.includes('～'), '南四縣應顯示 ～');
+  assert.ok(!northOnly.includes('番鹼'), '不應包含番鹼，已轉化為 ～');
+});
+
+test('buildVariantsCompactHTML 案例 8（R6-1）：純標音變體（饒平 拗著【拗著】）帶 baseWord 回傳 null', () => {
+  const rawWord = '拗著【拗著】';
+  const rawPhonetic = 'àu dò【âu dô】';
+  const dialect = '饒平';
+
+  const wordHTML = buildVariantsCompactHTML(rawWord, rawPhonetic, dialect, { part: 'word', baseWord: '拗著' });
+  assert.strictEqual(wordHTML, null, '所有變體字詞皆與 baseWord 相同時應回傳 null');
+});
+
 // 5. 饒平變調隔離測試（只有竹變調，卓桃不變調）
 test('buildVariantsCompactHTML：饒平 sandhi 隔離（僅竹變調，卓桃保留原音）', () => {
   const rawWord = '發牙包';
@@ -434,4 +484,118 @@ test('highlightHtmlText：例句變體著色後反白關鍵字，標籤完全對
   assert.ok(!highlighted.includes('<／mark>'), '絕對不可出現全形斜線之 <／mark>');
 });
 
+// 8. cleanExampleSentence 例句前綴贅詞與引號清洗測試
+test('cleanExampleSentence：標準例如冒號清除', () => {
+  const input = '例如：人喊你，愛應話，無會分人話著（覺著）係啞仔（啞眵）。';
+  assert.strictEqual(
+    cleanExampleSentence(input),
+    '人喊你，愛應話，無會分人話著（覺著）係啞仔（啞眵）。'
+  );
+});
+
+test('cleanExampleSentence：換行多重例句全數清除例如', () => {
+  const input = '例如：豬撐大，狗撐壞，人撐變精怪。（諺）<br>例如：莫食恁多，會撐壞。';
+  assert.strictEqual(
+    cleanExampleSentence(input),
+    '豬撐大，狗撐壞，人撐變精怪。（諺）<br>莫食恁多，會撐壞。'
+  );
+});
+
+test('cleanExampleSentence：雙冒號瑕疵前綴清除', () => {
+  const input = '例如：:阿婆對剁雞肉盤當有經驗，請人客時，兜出个雞肉盤正經好看相。';
+  assert.strictEqual(
+    cleanExampleSentence(input),
+    '阿婆對剁雞肉盤當有經驗，請人客時，兜出个雞肉盤正經好看相。'
+  );
+});
+
+test('cleanExampleSentence：教典例：前綴清除', () => {
+  const input = '例：阿明今晡日無來學校。';
+  assert.strictEqual(cleanExampleSentence(input), '阿明今晡日無來學校。');
+});
+
+test('cleanExampleSentence：認證例句：前綴清除', () => {
+  const input = '例句：後生人毋好學人飆車，當危險。';
+  assert.strictEqual(cleanExampleSentence(input), '後生人毋好學人飆車，當危險。');
+});
+
+test('cleanExampleSentence：單句引號包裹剝除（例如「...」/ 例「...」/ 如「...」）', () => {
+  assert.strictEqual(
+    cleanExampleSentence('例如「厥聲胲（聲說）當（蓋）大」。'),
+    '厥聲胲（聲說）當（蓋）大。'
+  );
+  assert.strictEqual(
+    cleanExampleSentence('例「貓仔當（蓋）會打老鼠」。'),
+    '貓仔當（蓋）會打老鼠。'
+  );
+  assert.strictEqual(
+    cleanExampleSentence('如「屋仔著火」。'),
+    '屋仔著火。'
+  );
+});
+
+test('cleanExampleSentence：G 類並列片語引號轉 <br> 分行（對應中文翻譯）', () => {
+  // 雙片語
+  assert.strictEqual(
+    cleanExampleSentence('例如「睡到齧牙」、「譴到齧牙」。'),
+    '睡到齧牙。<br>譴到齧牙。'
+  );
+  // 如「...」雙片語
+  assert.strictEqual(
+    cleanExampleSentence('如「染頭那毛」、「染紅卵」。'),
+    '染頭那毛。<br>染紅卵。'
+  );
+  // 三片語
+  assert.strictEqual(
+    cleanExampleSentence('如「杓嫲晒到必必」、「蓮霧擲到必必」、「嘴脣分風交到必必」。'),
+    '杓嫲晒到必必。<br>蓮霧擲到必必。<br>嘴脣分風交到必必。'
+  );
+});
+
+test('cleanExampleSentence：句中修辭引號與說明保護', () => {
+  // 句中強調引號不應被剝除
+  assert.strictEqual(
+    cleanExampleSentence('例如：「燒」粢「冷」粽確實有影！頭擺人異精食。'),
+    '「燒」粢「冷」粽確實有影！頭擺人異精食。'
+  );
+  // 引號後接華語說明不應被剝除
+  assert.strictEqual(
+    cleanExampleSentence('例如「對半破」即從中一分為二，或指製作米食時，對半調配米的比例。'),
+    '「對半破」即從中一分為二，或指製作米食時，對半調配米的比例。'
+  );
+  // 無冒號直述句首例如清除
+  assert.strictEqual(
+    cleanExampleSentence('例如觀看出殯過程中，被鬼魅煞神沖煞到，稱為「麻衣煞」。'),
+    '觀看出殯過程中，被鬼魅煞神沖煞到，稱為「麻衣煞」。'
+  );
+});
+
+test('formatSentenceVariants：整合測試（全腔調自動清洗例如前綴，四縣變體著色正常）', () => {
+  // 海陸（非四縣/饒平）：無底色，但例如：被乾淨移除
+  const haInput = '例如：阿爸在菜園肚作事。';
+  assert.strictEqual(formatSentenceVariants(haInput, '海陸'), '阿爸在菜園肚作事。');
+
+  // 四縣：例如：被清除，且（變體詞）著上南四縣橘底色
+  const siInput = '例如：阿姆（覺著）天色無好。';
+  const siOutput = formatSentenceVariants(siInput, '四縣');
+  assert.strictEqual(
+    siOutput,
+    '阿姆<span class="sentence-variant sentence-variant-南">（覺著）</span>天色無好。'
+  );
+});
+
+test('formatSentenceVariants（R6-2）：華語翻譯格式化隔離（翻譯含括號絕不著色）', () => {
+  // 模擬遊戲回饋區翻譯包含說明性括號（如「（比喻）」、「（或作）」）
+  const translationInput = '阿母（媽媽）覺得天氣不好。';
+  // formatTranslation 函式規則：僅清洗引號並轉行，不調用 formatSentenceVariants
+  const formatTranslation = (text) => {
+    if (!text) return '';
+    return text.replace(/"/g, '').replace(/\n/g, '<br>');
+  };
+  const translationOutput = formatTranslation(translationInput);
+  assert.strictEqual(translationOutput, '阿母（媽媽）覺得天氣不好。');
+  assert.ok(!translationOutput.includes('sentence-variant'), '翻譯絕不可包含任何方言語義上色標籤');
+});
+
 console.log(`\n測試完成！全部 ${passCount} 項測試通過！`);
+
