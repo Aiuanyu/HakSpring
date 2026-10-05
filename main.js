@@ -259,19 +259,6 @@ function adjustAllRubyFontSizes(containerElement) {
     rubyElement.style.fontSize = '';
     adjustRubyFontSize(rubyElement);
   });
-  // 地區變體：同一个 .vocab-variants 肚个主音摎各變體愛用共樣字級（取最細个），避免大細無一
-  containerElement.querySelectorAll('.vocab-variants').forEach((group) => {
-    const rubies = Array.from(group.querySelectorAll('ruby'))
-      .filter((r) => r.closest('.variant') && !r.parentElement.closest('ruby'));
-    const sizes = rubies
-      .map((r) => parseFloat(r.style.fontSize))
-      .filter((s) => !isNaN(s));
-    if (sizes.length === 0) return;
-    const minSize = Math.min(...sizes);
-    rubies.forEach((r) => {
-      r.style.fontSize = `${minSize}px`;
-    });
-  });
 }
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
