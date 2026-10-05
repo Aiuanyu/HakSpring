@@ -2164,6 +2164,9 @@ input:checked+.slider:before {
     /* 移除表格外框 */
     width: 100%;
     /* 確保表格寬度 */
+    table-layout: fixed;
+    /* 卡片模式 tr 已經係 block，欄寬毋使 auto 計算。Chrome 算 ruby 个 min-content 係全寬，
+       auto layout 會照最長个變體標音撐闊歸隻表格（超出螢幕），固定佈局就毋會。 */
   }
 
   /* 隱藏傳統表格標頭 (雖然目前無用著 thead，但係留著較好) */
