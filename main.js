@@ -137,6 +137,15 @@ function adjustRubyFontSize(rubyElement) {
   } else {
     availableWidth = tdElement.clientWidth - buffer;
   }
+  // 地區變體（.variant）：ruby 左爿有 badge 標籤摎 gap，愛先扣掉，無就會算毋準、畫面又撐寬
+  const variantBlock = rubyElement.closest('.variant');
+  if (variantBlock) {
+    const label = variantBlock.querySelector('.variant-label');
+    if (label) {
+      const gap = parseFloat(window.getComputedStyle(variantBlock).columnGap) || 0;
+      availableWidth -= label.offsetWidth + gap;
+    }
+  }
   if (rubyWidth > availableWidth) {
     let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
     const minSize = 10;
@@ -249,6 +258,19 @@ function adjustAllRubyFontSizes(containerElement) {
   rubyElements.forEach((rubyElement) => {
     rubyElement.style.fontSize = '';
     adjustRubyFontSize(rubyElement);
+  });
+  // 地區變體：同一个 .vocab-variants 肚个主音摎各變體愛用共樣字級（取最細个），避免大細無一
+  containerElement.querySelectorAll('.vocab-variants').forEach((group) => {
+    const rubies = Array.from(group.querySelectorAll('ruby'))
+      .filter((r) => r.closest('.variant') && !r.parentElement.closest('ruby'));
+    const sizes = rubies
+      .map((r) => parseFloat(r.style.fontSize))
+      .filter((s) => !isNaN(s));
+    if (sizes.length === 0) return;
+    const minSize = Math.min(...sizes);
+    rubies.forEach((r) => {
+      r.style.fontSize = `${minSize}px`;
+    });
   });
 }
 const DATA_FILES_TO_CACHE = [
