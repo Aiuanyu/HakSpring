@@ -137,6 +137,15 @@ function adjustRubyFontSize(rubyElement) {
   } else {
     availableWidth = tdElement.clientWidth - buffer;
   }
+  // 地區變體（.variant）：ruby 左爿有 badge 標籤摎 gap，愛先扣掉，無就會算毋準、畫面又撐寬
+  const variantBlock = rubyElement.closest('.variant');
+  if (variantBlock) {
+    const label = variantBlock.querySelector('.variant-label');
+    if (label) {
+      const gap = parseFloat(window.getComputedStyle(variantBlock).columnGap) || 0;
+      availableWidth -= label.offsetWidth + gap;
+    }
+  }
   if (rubyWidth > availableWidth) {
     let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
     const minSize = 10;
