@@ -2280,7 +2280,7 @@ input:checked+.slider:before {
   #generated td[data-label="詞彙"] ruby,
   #sandhi-showcase td[data-label="詞彙"] ruby,
   #comparison-table td[data-label="詞彙"] ruby {
-    font-size: 1.3em;
+    font-size: 1.2em;
     /* 調整字體大小 */
   }
 
