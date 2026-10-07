@@ -155,91 +155,107 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
     return null;
   }
 
-  function splitBase(html) {
-    const tokens = tokenize(html);
+  function splitTokens(tokens, isRt, targetCount) {
     const segs = [];
-    let cur = '';
-    for (const t of tokens) {
-      if (t.isTag) {
-        cur += t.text;
-      } else {
-        const parts = t.text.split(/(?=[（\(])|(?<=[／\/])/);
-        for (let j = 0; j < parts.length; j++) {
-          if (j > 0 && cur.trim().length > 0) {
-            segs.push(cur);
-            cur = '';
-          } else if (j === 0 && /^[（\(]/.test(parts[j]) && cur.trim().length > 0) {
-            segs.push(cur);
-            cur = '';
-          }
-          cur += parts[j];
-        }
+    let curSeg = '';
+    const openTags = [];
+
+    function pushSegment() {
+      if (curSeg.trim().length > 0) {
+        let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
+        segs.push(curSeg + closeStr);
+        let openStr = openTags.map(tag => tag.full).join('');
+        curSeg = openStr;
       }
     }
-    if (cur) segs.push(cur);
-    return segs;
-  }
-
-  function splitRt(html, targetCount) {
-    const tokens = tokenize(html);
-    const segs = [];
-    let cur = '';
 
     for (let i = 0; i < tokens.length; i++) {
       const t = tokens[i];
       if (t.isTag) {
-        if (
-          /^<span[^>]*class="[^"]*phonetic-paren[^"]*"[^>]*>/i.test(t.text) &&
-          cur.trim().length > 0 &&
-          segs.length < targetCount - 1
-        ) {
-          segs.push(cur);
-          cur = '';
+        let doSplitBefore = false;
+        if (isRt && targetCount !== undefined && segs.length < targetCount - 1) {
+          if (/class="[^"]*phonetic-paren[^"]*"/i.test(t.text)) {
+            // Only split on the opening parenthesis span
+            if (i + 1 < tokens.length && /^[（\(]/.test(tokens[i+1].text)) {
+              if (curSeg.trim().length > 0) doSplitBefore = true;
+            }
+          }
         }
-        cur += t.text;
+
+        if (doSplitBefore) pushSegment();
+
+        const match = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
+        if (match) {
+          const tagName = match[1].toLowerCase();
+          const isCloseTag = t.text.startsWith('</');
+          const isSelfClosing = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(tagName);
+
+          if (!isCloseTag && !isSelfClosing) {
+            openTags.push({ tag: tagName, full: t.text });
+          } else if (isCloseTag) {
+            for (let j = openTags.length - 1; j >= 0; j--) {
+              if (openTags[j].tag === tagName) {
+                openTags.splice(j, 1);
+                break;
+              }
+            }
+          }
+        }
+
+        curSeg += t.text;
       } else {
         let text = t.text;
-        if (segs.length < targetCount - 1) {
-          let re;
-          if (baseHasParen && baseHasSlash) {
-            re = /(?=[（\(])|(?<=[／\/])/;
-          } else if (baseHasParen) {
-            re = /(?=[（\(])/;
-          } else {
-            re = /(?<=[／\/])/;
-          }
-          let parts = text.split(re);
-          for (let j = 0; j < parts.length; j++) {
-            if (j > 0 && cur.trim().length > 0 && segs.length < targetCount - 1) {
-              segs.push(cur);
-              cur = '';
-            } else if (
-              j === 0 &&
-              /^[（\(]/.test(parts[j]) &&
-              cur.trim().length > 0 &&
-              segs.length < targetCount - 1
-            ) {
-              segs.push(cur);
-              cur = '';
+        let iPos = 0;
+        while (iPos < text.length) {
+          let char = text[iPos];
+          let doSplitBefore = false;
+          let doSplitAfter = false;
+
+          if (!isRt || targetCount === undefined || segs.length < targetCount - 1) {
+            if (!isRt || (isRt && baseHasParen)) {
+              if (char === '（' || char === '(') doSplitBefore = true;
             }
-            cur += parts[j];
+            if (!isRt || (isRt && baseHasSlash)) {
+              if (char === '／' || char === '/') doSplitAfter = true;
+            }
           }
-        } else {
-          cur += text;
+
+          if (doSplitBefore) {
+            if (curSeg.trim().length > 0) pushSegment();
+            curSeg += char;
+          } else if (doSplitAfter) {
+            curSeg += char;
+            if (curSeg.trim().length > 0 && (!isRt || targetCount === undefined || segs.length < targetCount - 1)) {
+              pushSegment();
+            }
+          } else {
+            curSeg += char;
+          }
+          iPos++;
         }
       }
     }
-    if (cur) segs.push(cur);
+
+    if (curSeg.trim().length > 0) {
+      let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
+      segs.push(curSeg + closeStr);
+    }
+
     return segs;
   }
 
-  const baseSegs = splitBase(baseHtml);
+  let baseSegs = splitTokens(baseTokens, false);
   if (baseSegs.length <= 1) return null;
 
-  let rtSegs = splitRt(rtHtml || '', baseSegs.length);
-  while (rtSegs.length < baseSegs.length) {
-    rtSegs.push('');
+  let rtTokens = tokenize(rtHtml || '');
+  let rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+
+  // If the RT segment length mismatches, fallback to non-split to avoid phonetics misaligning
+  if (baseSegs.length !== rtSegs.length) {
+    return null;
   }
+
+  rtSegs = rtSegs.map((seg, i) => i > 0 ? seg.trimStart() : seg);
 
   return { baseSegs, rtSegs };
 }
@@ -251,10 +267,15 @@ function adjustRubyFontSize(targetElement) {
   let rubyElement = targetElement;
   let splitGroup = rubyElement.closest ? rubyElement.closest('.ruby-split-group') : null;
   if (splitGroup) {
+    if (!splitGroup.parentNode) return; // Prevent TypeError if group is detached
     const unsplitBase = splitGroup.dataset.unsplitBase;
     const unsplitRt = splitGroup.dataset.unsplitRt;
     const restoredRuby = document.createElement('ruby');
-    restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
+    if (unsplitRt) {
+      restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
+    } else {
+      restoredRuby.innerHTML = unsplitBase;
+    }
     splitGroup.parentNode.replaceChild(restoredRuby, splitGroup);
     rubyElement = restoredRuby;
   }
@@ -314,7 +335,11 @@ function adjustRubyFontSize(targetElement) {
       splitRes.baseSegs.forEach((bSeg, idx) => {
         const lineRuby = document.createElement('ruby');
         const rSeg = splitRes.rtSegs[idx] || '';
-        lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
+        if (rSeg) {
+          lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
+        } else {
+          lineRuby.innerHTML = bSeg;
+        }
         group.appendChild(lineRuby);
         if (idx < splitRes.baseSegs.length - 1) {
           group.appendChild(document.createElement('br'));
@@ -324,15 +349,17 @@ function adjustRubyFontSize(targetElement) {
       rubyElement.parentNode.replaceChild(group, rubyElement);
 
       // 分別計算各行 ruby 的文字大小
-      const lineRubies = group.querySelectorAll('ruby');
+      const lineRubies = group.querySelectorAll(':scope > ruby');
       lineRubies.forEach((lineRuby) => {
         lineRuby.style.fontSize = '';
+        const lineStyle = window.getComputedStyle(lineRuby);
+        const lineFontSize = parseFloat(lineStyle.fontSize);
         const lineRubyWidth = lineRuby.scrollWidth;
         if (lineRubyWidth > availableWidth) {
-          let lineSize = Math.floor((currentFontSize * availableWidth) / lineRubyWidth);
+          let lineSize = Math.floor((lineFontSize * availableWidth) / lineRubyWidth);
           const minSize = 10;
           lineSize = Math.max(lineSize, minSize);
-          if (lineSize < currentFontSize) {
+          if (lineSize < lineFontSize) {
             lineRuby.style.fontSize = `${lineSize}px`;
           }
         }
@@ -450,6 +477,18 @@ function adjustAllRubyFontSizes(containerElement) {
     'td[data-label="詞彙"] ruby, td[data-label="詞彙"] .ruby-split-group',
   );
   rubyElements.forEach((rubyElement) => {
+    // Skip inner rubies inside a .ruby-split-group (they are handled by the group)
+    if (rubyElement.tagName.toLowerCase() === 'ruby' && rubyElement.closest('.ruby-split-group')) {
+      return;
+    }
+    // Skip sandhi rubies nested inside an <rt> tag
+    if (rubyElement.tagName.toLowerCase() === 'ruby' && rubyElement.closest('rt')) {
+      return;
+    }
+    // Prevent operating on detached nodes
+    if (!rubyElement.isConnected && !rubyElement.parentNode) {
+      return;
+    }
     rubyElement.style.fontSize = '';
     adjustRubyFontSize(rubyElement);
   });

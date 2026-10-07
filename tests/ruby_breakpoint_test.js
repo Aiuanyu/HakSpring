@@ -78,7 +78,7 @@ runTest('Word with slashes ／ splits at slash', () => {
   assert.strictEqual(res.baseSegs[0], '在／');
   assert.strictEqual(res.baseSegs[1], '佇');
   assert.strictEqual(res.rtSegs[0], 'cāi /');
-  assert.strictEqual(res.rtSegs[1], ' chǔ');
+  assert.strictEqual(res.rtSegs[1], 'chǔ');
 });
 
 // 5. No breakpoints
@@ -100,3 +100,11 @@ runTest('Word with multiple items in parentheses', () => {
 });
 
 console.log(`🎉 All ${passedTests} ruby breakpoint unit tests passed successfully!\n`);
+
+// 7. RT mismatch falls back
+runTest('Mismatched segments fallback to null', () => {
+  const base = '沙壩（沙埔、沙灘）';
+  const rt = 'sá ba'; // Missing the second part
+  const res = splitRubyByBaseBreakpoints(base, rt);
+  assert.strictEqual(res, null);
+});
