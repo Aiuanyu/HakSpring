@@ -119,10 +119,173 @@ function isFirefox() {
   return navigator.userAgent.toLowerCase().includes('firefox');
 }
 
-function adjustRubyFontSize(rubyElement) {
-  if (!isFirefox()) return;
+/**
+ * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
+ * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
+ *
+ * @param {string} baseHtml - ruby 基礎文字（漢字/詞彙 HTML）
+ * @param {string} rtHtml - ruby rt 標音 HTML
+ * @returns {{ baseSegs: string[], rtSegs: string[] } | null} 切分後的段落，若無斷點則回傳 null
+ */
+function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
+  if (!baseHtml) return null;
+
+  function tokenize(html) {
+    const tokens = [];
+    const re = /<[^>]+>|[^<]+/g;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      tokens.push({ text: m[0], isTag: m[0].startsWith('<') });
+    }
+    return tokens;
+  }
+
+  const baseTokens = tokenize(baseHtml || '');
+  let baseHasParen = false;
+  let baseHasSlash = false;
+
+  for (const t of baseTokens) {
+    if (!t.isTag) {
+      if (/[（\(]/.test(t.text)) baseHasParen = true;
+      if (/[／\/]/.test(t.text)) baseHasSlash = true;
+    }
+  }
+
+  if (!baseHasParen && !baseHasSlash) {
+    return null;
+  }
+
+  function splitTokens(tokens, isRt, targetCount) {
+    const segs = [];
+    let curSeg = '';
+    const openTags = [];
+
+    function pushSegment() {
+      if (curSeg.trim().length > 0) {
+        let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
+        segs.push(curSeg + closeStr);
+        let openStr = openTags.map(tag => tag.full).join('');
+        curSeg = openStr;
+      }
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (t.isTag) {
+        let doSplitBefore = false;
+        if (isRt && targetCount !== undefined && segs.length < targetCount - 1) {
+          if (/class="[^"]*phonetic-paren[^"]*"/i.test(t.text)) {
+            // Only split on the opening parenthesis span
+            if (i + 1 < tokens.length && /^[（\(]/.test(tokens[i+1].text)) {
+              if (curSeg.trim().length > 0) doSplitBefore = true;
+            }
+          }
+        }
+
+        if (doSplitBefore) pushSegment();
+
+        const match = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
+        if (match) {
+          const tagName = match[1].toLowerCase();
+          const isCloseTag = t.text.startsWith('</');
+          const isSelfClosing = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(tagName);
+
+          if (!isCloseTag && !isSelfClosing) {
+            openTags.push({ tag: tagName, full: t.text });
+          } else if (isCloseTag) {
+            for (let j = openTags.length - 1; j >= 0; j--) {
+              if (openTags[j].tag === tagName) {
+                openTags.splice(j, 1);
+                break;
+              }
+            }
+          }
+        }
+
+        curSeg += t.text;
+      } else {
+        let text = t.text;
+        let iPos = 0;
+        while (iPos < text.length) {
+          let char = text[iPos];
+          let doSplitBefore = false;
+          let doSplitAfter = false;
+
+          if (!isRt || targetCount === undefined || segs.length < targetCount - 1) {
+            if (!isRt || (isRt && baseHasParen)) {
+              if (char === '（' || char === '(') doSplitBefore = true;
+            }
+            if (!isRt || (isRt && baseHasSlash)) {
+              if (char === '／' || char === '/') doSplitAfter = true;
+            }
+          }
+
+          if (doSplitBefore) {
+            if (curSeg.trim().length > 0) pushSegment();
+            curSeg += char;
+          } else if (doSplitAfter) {
+            curSeg += char;
+            if (curSeg.trim().length > 0 && (!isRt || targetCount === undefined || segs.length < targetCount - 1)) {
+              pushSegment();
+            }
+          } else {
+            curSeg += char;
+          }
+          iPos++;
+        }
+      }
+    }
+
+    if (curSeg.trim().length > 0) {
+      let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
+      segs.push(curSeg + closeStr);
+    }
+
+    return segs;
+  }
+
+  let baseSegs = splitTokens(baseTokens, false);
+  if (baseSegs.length <= 1) return null;
+
+  let rtTokens = tokenize(rtHtml || '');
+  let rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+
+  // If the RT segment length mismatches, fallback to non-split to avoid phonetics misaligning
+  if (baseSegs.length !== rtSegs.length) {
+    return null;
+  }
+
+  rtSegs = rtSegs.map((seg, i) => i > 0 ? seg.trimStart() : seg);
+
+  return { baseSegs, rtSegs };
+}
+
+function adjustRubyFontSize(targetElement) {
+  if (!isFirefox() || !targetElement) return;
+
+  // 若目標屬於已切分的群組，還原為單一 ruby 後再重新評估
+  let rubyElement = targetElement;
+  let splitGroup = rubyElement.closest ? rubyElement.closest('.ruby-split-group') : null;
+  if (splitGroup) {
+    if (!splitGroup.parentNode) return; // Prevent TypeError if group is detached
+    const unsplitBase = splitGroup.dataset.unsplitBase;
+    const unsplitRt = splitGroup.dataset.unsplitRt;
+    const restoredRuby = document.createElement('ruby');
+    if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
+      restoredRuby.classList.add('variant-ruby-phonetic-only');
+    }
+    if (unsplitRt) {
+      restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
+    } else {
+      restoredRuby.innerHTML = unsplitBase;
+    }
+    splitGroup.parentNode.replaceChild(restoredRuby, splitGroup);
+    rubyElement = restoredRuby;
+  }
+
   const tdElement = rubyElement.closest('td');
   if (!tdElement) return;
+
   rubyElement.style.fontSize = '';
   const forcedStyle = window.getComputedStyle(rubyElement);
   const currentFontSize = parseFloat(forcedStyle.fontSize);
@@ -137,7 +300,8 @@ function adjustRubyFontSize(rubyElement) {
   } else {
     availableWidth = tdElement.clientWidth - buffer;
   }
-  // 地區變體（.variant）：ruby 左爿有 badge 標籤摎 gap，愛先扣掉，無就會算毋準、畫面又撐寬
+
+  // 地區變體（.variant）：ruby 左爿有 badge 標籤摎 gap，愛先扣掉
   const variantBlock = rubyElement.closest('.variant');
   if (variantBlock) {
     const label = variantBlock.querySelector('.variant-label');
@@ -146,7 +310,77 @@ function adjustRubyFontSize(rubyElement) {
       availableWidth -= label.offsetWidth + gap;
     }
   }
+
+  // 要不要斷都以該行有沒有要縮小文字（rubyWidth > availableWidth）而定
   if (rubyWidth > availableWidth) {
+    const rtElement = rubyElement.querySelector('rt');
+    let baseHtml = '';
+    let rtHtml = '';
+    if (rtElement) {
+      rtHtml = rtElement.innerHTML;
+      const clone = rubyElement.cloneNode(true);
+      const cloneRt = clone.querySelector('rt');
+      if (cloneRt) cloneRt.remove();
+      baseHtml = clone.innerHTML;
+    } else {
+      baseHtml = rubyElement.innerHTML;
+    }
+
+    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml);
+    if (splitRes && splitRes.baseSegs && splitRes.baseSegs.length > 1) {
+      // 依斷點重繪為不同行 ruby
+      const group = document.createElement('span');
+      group.className = 'ruby-split-group';
+      group.style.display = 'inline-flex';
+      group.style.flexDirection = 'column';
+
+      const isPhoneticOnly = rubyElement.classList.contains('variant-ruby-phonetic-only');
+      if (isPhoneticOnly) {
+        group.classList.add('variant-ruby-phonetic-only');
+      } else {
+        group.style.rowGap = '1em';
+        group.style.marginBottom = '0.5em';
+      }
+
+      group.dataset.unsplitBase = baseHtml;
+      group.dataset.unsplitRt = rtHtml;
+
+      splitRes.baseSegs.forEach((bSeg, idx) => {
+        const lineRuby = document.createElement('ruby');
+        if (isPhoneticOnly) {
+          lineRuby.classList.add('variant-ruby-phonetic-only');
+        }
+        const rSeg = splitRes.rtSegs[idx] || '';
+        if (rSeg) {
+          lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
+        } else {
+          lineRuby.innerHTML = bSeg;
+        }
+        group.appendChild(lineRuby);
+      });
+
+      rubyElement.parentNode.replaceChild(group, rubyElement);
+
+      // 分別計算各行 ruby 的文字大小
+      const lineRubies = group.querySelectorAll(':scope > ruby');
+      lineRubies.forEach((lineRuby) => {
+        lineRuby.style.fontSize = '';
+        const lineStyle = window.getComputedStyle(lineRuby);
+        const lineFontSize = parseFloat(lineStyle.fontSize);
+        const lineRubyWidth = lineRuby.scrollWidth;
+        if (lineRubyWidth > availableWidth) {
+          let lineSize = Math.floor((lineFontSize * availableWidth) / lineRubyWidth);
+          const minSize = 10;
+          lineSize = Math.max(lineSize, minSize);
+          if (lineSize < lineFontSize) {
+            lineRuby.style.fontSize = `${lineSize}px`;
+          }
+        }
+      });
+      return;
+    }
+
+    // 無斷點可切分時，常規縮小文字
     let newSize = Math.floor((currentFontSize * availableWidth) / rubyWidth);
     const minSize = 10;
     newSize = Math.max(newSize, minSize);
@@ -251,11 +485,23 @@ function toggleSearchAccordion(clickedButton, line) {
 }
 
 function adjustAllRubyFontSizes(containerElement) {
-  if (!isFirefox()) return;
+  if (!isFirefox() || !containerElement) return;
   const rubyElements = containerElement.querySelectorAll(
-    'td[data-label="詞彙"] ruby',
+    'td[data-label="詞彙"] ruby, td[data-label="詞彙"] .ruby-split-group',
   );
   rubyElements.forEach((rubyElement) => {
+    // Skip inner rubies inside a .ruby-split-group (they are handled by the group)
+    if (rubyElement.tagName.toLowerCase() === 'ruby' && rubyElement.closest('.ruby-split-group')) {
+      return;
+    }
+    // Skip sandhi rubies nested inside an <rt> tag
+    if (rubyElement.tagName.toLowerCase() === 'ruby' && rubyElement.closest('rt')) {
+      return;
+    }
+    // Prevent operating on detached nodes
+    if (!rubyElement.isConnected && !rubyElement.parentNode) {
+      return;
+    }
     rubyElement.style.fontSize = '';
     adjustRubyFontSize(rubyElement);
   });
@@ -1268,6 +1514,9 @@ if (typeof window !== 'undefined') {
   window.getSandhiPronunciation = getSandhiPronunciation;
   window.getRomanizerModeInfo = getRomanizerModeInfo;
   window.resolveReadingForMode = resolveReadingForMode;
+  window.splitRubyByBaseBreakpoints = splitRubyByBaseBreakpoints;
+  window.adjustRubyFontSize = adjustRubyFontSize;
+  window.adjustAllRubyFontSizes = adjustAllRubyFontSizes;
 }
 
 /**
@@ -8459,6 +8708,9 @@ if (typeof module !== 'undefined' && module.exports) {
     renderVocabWithVariants,
     createVariantBlock,
     getRomanizerModeInfo,
-    resolveReadingForMode
+    resolveReadingForMode,
+    splitRubyByBaseBreakpoints,
+    adjustRubyFontSize,
+    adjustAllRubyFontSizes
   };
 }
