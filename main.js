@@ -330,7 +330,15 @@ function adjustRubyFontSize(targetElement) {
       group.className = 'ruby-split-group';
       group.style.display = 'inline-flex';
       group.style.flexDirection = 'column';
-      group.style.rowGap = '0.5em';
+
+      const isPhoneticOnly = rubyElement.classList.contains('variant-ruby-phonetic-only');
+      if (isPhoneticOnly) {
+        group.classList.add('variant-ruby-phonetic-only');
+      } else {
+        group.style.rowGap = '1em';
+        group.style.marginBottom = '0.5em';
+      }
+
       group.dataset.unsplitBase = baseHtml;
       group.dataset.unsplitRt = rtHtml;
 
