@@ -328,7 +328,9 @@ function adjustRubyFontSize(targetElement) {
       // 依斷點重繪為不同行 ruby
       const group = document.createElement('span');
       group.className = 'ruby-split-group';
-      group.style.display = 'inline-block';
+      group.style.display = 'inline-flex';
+      group.style.flexDirection = 'column';
+      group.style.rowGap = '0.5em';
       group.dataset.unsplitBase = baseHtml;
       group.dataset.unsplitRt = rtHtml;
 
@@ -341,9 +343,6 @@ function adjustRubyFontSize(targetElement) {
           lineRuby.innerHTML = bSeg;
         }
         group.appendChild(lineRuby);
-        if (idx < splitRes.baseSegs.length - 1) {
-          group.appendChild(document.createElement('br'));
-        }
       });
 
       rubyElement.parentNode.replaceChild(group, rubyElement);
