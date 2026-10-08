@@ -271,6 +271,9 @@ function adjustRubyFontSize(targetElement) {
     const unsplitBase = splitGroup.dataset.unsplitBase;
     const unsplitRt = splitGroup.dataset.unsplitRt;
     const restoredRuby = document.createElement('ruby');
+    if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
+      restoredRuby.classList.add('variant-ruby-phonetic-only');
+    }
     if (unsplitRt) {
       restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
     } else {
