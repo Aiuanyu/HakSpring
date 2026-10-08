@@ -344,6 +344,9 @@ function adjustRubyFontSize(targetElement) {
 
       splitRes.baseSegs.forEach((bSeg, idx) => {
         const lineRuby = document.createElement('ruby');
+        if (isPhoneticOnly) {
+          lineRuby.classList.add('variant-ruby-phonetic-only');
+        }
         const rSeg = splitRes.rtSegs[idx] || '';
         if (rSeg) {
           lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
