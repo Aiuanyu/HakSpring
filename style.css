@@ -6161,14 +6161,14 @@ mark {
 .phonetic-note-label {
   display: inline-block;
   font-family: var(--title-font, inherit);
-  font-size: 0.78em;
+  font-size: 0.39em;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.05em;
   padding: 0.22em 0.65em;
   margin: 0 0.15em;
   border-radius: 0.9em;
-  vertical-align: middle;
+  vertical-align: top;
   color: #fff;
   background: linear-gradient(180deg, #3f9a76 0%, #2a7a5a 100%);
   border: 1px solid #206449;
