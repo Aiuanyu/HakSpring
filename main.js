@@ -839,28 +839,10 @@ function formatPhoneticForDisplay(text, isGip = false) {
  */
 function renderPhoneticNoteLabels(html) {
   if (!html) return html;
-  const NOTE_REGEX =
-    /【(特|又讀|又音|又俗音|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為)】/g;
-  if (!html.match(NOTE_REGEX)) return html;
-  // 以 label 為界，切成「label 頭前」、「label＋佢後背音節們」、「下一隻 label＋佢个音節們」，
-  // 各自包成 inline-flex 物件（.phonetic-note-seg），讓 rt 肚底（Firefox ruby 毋會換行）
-  // 也做得在物件之間換行；物件肚底个 label 摎音節們係各別 flex item，毋會斷開。
-  // 註：label 本身毋會在 sandhi ruby 肚底（sandhi 只包單一音節），故按 label 切開 HTML 係安全个。
-  const parts = html.split(NOTE_REGEX);
-  // split 帶捕獲群組：[前, 註記1, 後1, 註記2, 後2, ...]
-  const wrapText = (t) => {
-    t = t.trim();
-    return t ? `<span class="phonetic-note-text">${t}</span>` : '';
-  };
-  const segs = [];
-  const head = wrapText(parts[0]);
-  if (head) segs.push(`<span class="phonetic-note-seg">${head}</span>`);
-  for (let i = 1; i < parts.length; i += 2) {
-    segs.push(
-      `<span class="phonetic-note-seg"><span class="phonetic-note-label">${parts[i]}</span>${wrapText(parts[i + 1] || '')}</span>`,
-    );
-  }
-  return segs.join(' ');
+  return html.replace(
+    /【(特|又讀|又音|又俗音|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為)】/g,
+    '<span class="phonetic-note-label">$1</span>',
+  );
 }
 
 /**
