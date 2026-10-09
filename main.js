@@ -585,6 +585,10 @@ let isLoadingMoreItems = false;
 let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
+let g_pendingScrollToCenter = false;
+let g_lastRenderTime = 0;
+let lastViewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+let lastViewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
 const ITEMS_PER_LOAD = 20;
 let g_summary_minFontSize = 10;
 let g_summary_breakThreshold = 16;
@@ -3107,7 +3111,7 @@ function initializeAppUI() {
   }
 
   function updateLastCenteredRow() {
-    if (isRepositioning) return;
+    if (isRepositioning || isLoadingMoreItems) return;
 
     const table = document.getElementById('category-table');
     if (!table || (isPlaying && !isPaused)) {
@@ -3142,7 +3146,7 @@ function initializeAppUI() {
     }
   }
 
-  const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 100;
+  const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 50;
   const DEBOUNCE_REPOSITION_ACTIONS_MS = 150;
   const REPOSITION_FLAG_RESET_DELAY_MS = 300;
 
@@ -3152,6 +3156,10 @@ function initializeAppUI() {
   );
 
   const debouncedRepositionActions = debounce(() => {
+    // Read and reset the flag inside the debounced function
+    const shouldScrollToCenter = g_pendingScrollToCenter;
+    g_pendingScrollToCenter = false;
+
     // This contains the actual logic, which is debounced.
     // Defer the scrolling to prevent race conditions with layout reflow.
     setTimeout(() => {
@@ -3160,7 +3168,7 @@ function initializeAppUI() {
         if (nowPlayingRow) {
           nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+      } else if (shouldScrollToCenter && lastCenteredRow && document.body.contains(lastCenteredRow)) {
         lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 0);
@@ -3227,10 +3235,42 @@ function initializeAppUI() {
     }, REPOSITION_FLAG_RESET_DELAY_MS);
   }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
-  function repositionViewport() {
-    if (g_isAccordionScrolling) return; // Don't reposition if accordion is scrolling
-    // This function is called directly by the event listener.
-    // It sets the flag immediately and then calls the debounced actions.
+  function repositionViewport(options = {}) {
+    if (g_isAccordionScrolling) return;
+
+    let shouldScroll = false;
+    if (options.fromRender) {
+      if (!isLoadingMoreItems) {
+        shouldScroll = true;
+      }
+    } else {
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+      const timeSinceLastRender = Date.now() - g_lastRenderTime;
+
+      // Only scroll to center if:
+      // 1. Width changed (device rotation, desktop window resize)
+      // 2. OR it's been triggered by layout shift that isn't a direct resize event (e.g. font size change)
+      // AND it's not immediately after a render (to prevent interference with auto play)
+      // We explicitly IGNORE height-only changes on mobile (address bar hiding/showing).
+      if (timeSinceLastRender > 500) {
+        if (currentWidth !== lastViewportWidth || Math.abs(currentHeight - lastViewportHeight) > 100) {
+           // It's a significant resize (width change or large height change like keyboard)
+           shouldScroll = true;
+        } else if (currentWidth === lastViewportWidth && currentHeight === lastViewportHeight) {
+            // This handles cases like ResizeObserver triggering for non-viewport size changes (e.g. font scaling)
+            shouldScroll = true;
+        }
+      }
+
+      lastViewportWidth = currentWidth;
+      lastViewportHeight = currentHeight;
+    }
+
+    if (shouldScroll) {
+        g_pendingScrollToCenter = true;
+    }
+
     isRepositioning = true;
     debouncedRepositionActions();
   }
@@ -4265,7 +4305,7 @@ function initializeAppUI() {
 
     updateResultsSummaryVisibility();
 
-    setTimeout(() => repositionViewport(), 0); // Trigger font size adjustment after table is rendered
+    setTimeout(() => repositionViewport({ fromRender: true }), 0); // Trigger font size adjustment after table is rendered
 
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
@@ -6342,7 +6382,8 @@ function initializeAppUI() {
       tbody.appendChild(fragment);
     }
 
-    setTimeout(() => repositionViewport(), 50);
+    g_lastRenderTime = Date.now();
+    setTimeout(() => repositionViewport({ fromRender: true }), 50);
   }
 
   function scrollHandler() {
@@ -8084,7 +8125,7 @@ function initializeAppUI() {
   window.addEventListener('resize', repositionViewport);
 
   // Initial call to set things right
-  repositionViewport();
+  repositionViewport({ fromRender: true });
 
   contentContainer.addEventListener('click', function (event) {
     const button = event.target.closest('.crossDialectBtn');
