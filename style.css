@@ -6168,7 +6168,7 @@ mark {
   padding: 0.22em 0.65em;
   margin: 0 0.15em;
   border-radius: 0.9em;
-  vertical-align: top;
+  vertical-align: middle;
   color: #fff;
   background: linear-gradient(180deg, #3f9a76 0%, #2a7a5a 100%);
   border: 1px solid #206449;
