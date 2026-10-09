@@ -6159,7 +6159,8 @@ mark {
 
 /* 讀音註記 label（【特】、【又讀】…）：單色（客源翠主色）、大圓角、浮凸立體 */
 .phonetic-note-label {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-family: var(--title-font, inherit);
   font-size: 0.39em;
   font-weight: 700;
