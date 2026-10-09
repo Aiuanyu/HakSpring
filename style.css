@@ -6159,8 +6159,8 @@ mark {
 
 /* 讀音註記 label（【特】、【又讀】…）：單色（客源翠主色）、大圓角、浮凸立體 */
 .phonetic-note-label {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  flex-shrink: 0;
   font-family: var(--title-font, inherit);
   font-size: 0.39em;
   font-weight: 700;
@@ -6197,10 +6197,11 @@ mark {
    物件之間做得換行（Firefox ruby/rt 肚底毋會自動換行，用 flex 物件來補） */
 .phonetic-note-seg {
   display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap; /* label 恆在左邊，毋跌到音節上背；音節係在 .phonetic-note-text 內部換行 */
+  align-items: center; /* label 摎音節們垂直置中 */
   vertical-align: middle;
 }
 .phonetic-note-text {
   display: inline;
+  min-width: 0;
 }
