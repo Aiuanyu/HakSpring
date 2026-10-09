@@ -810,6 +810,26 @@ function trackEvent(action, category, label) {
 // --- IndexedDB Helper Functions (Improved Error Handling) ---
 
 /**
+ * 教典讀音欄个註記名稱（對照 data/gip/*.csv 實際出現个寫法，逐隻明確列舉，毋用 `?` 省字）。
+ * 順序愛「長个在前」（又俗音 > 又讀、特殊音 > 特、合音讀 > 合音…），正規表示式正毋會先食著短个。
+ * 新增註記種類只愛改這位；【南】【卓】等地區標記毋在此列（另由變體 label 處理）。
+ */
+const PHONETIC_NOTE_NAMES = [
+  '又俗音', '又讀', '又音', '俗音', '特殊音',
+  '小稱變調讀本調為', '小稱變調讀', '合音讀', '合音',
+  '後字變調讀', '後字變調', '本調為',
+  '特', '文', '白',
+];
+const PHONETIC_NOTE_ALT = PHONETIC_NOTE_NAMES.join('|');
+// 已經包好【】个註記 → 轉做 label（split 帶捕獲群組）
+const PHONETIC_NOTE_BRACKETED_REGEX = new RegExp(`【(${PHONETIC_NOTE_ALT})】`, 'g');
+// 教典原始資料个註記無【】：出現在開頭抑係空白／逗號等分隔後背，且後背接標音（可有「2.」等編號）
+const PHONETIC_NOTE_RAW_REGEX = new RegExp(
+  `(^|[\\s\u3000，、；])(${PHONETIC_NOTE_ALT})(?=\\s*[0-9.]*\\s*[a-zA-Z])`,
+  'g',
+);
+
+/**
  * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @returns {string} 格式化後个淨俐字串。
@@ -824,23 +844,25 @@ function formatPhoneticForDisplay(text, isGip = false) {
   result = result.replace(/\s+\)/g, ')');
   // 4. 讀音有 (...) 時，( 前面若無空白且非括號開頭，加上半形空格以提升視覺美觀與清晰度
   result = result.replace(/([^\s【（(\[])\(/g, '$1 (');
-  // 5. 教典詞音開頭的「特」加上【】
+  // 5. 教典詞音裡肚个註記（特、文、白、又讀、俗音…）加上【】，後尾才轉做 label
   if (isGip) {
-    result = result.replace(/^特(?=\s*[a-zA-Z])/, '【特】');
+    result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
   }
   return result;
 }
 
 /**
- * 將讀音欄裡个註記標記（【特】、【又讀】、【俗音】…）抽出來，轉做 inline 个小 label。
- * 只處理已知个讀音註記；【南】【卓】這類地區標記毋在此列（另由變體 label 處理）。
- * @param {string} html - 已經格式化（可含 sandhi ruby）个標音 HTML 字串。
+ * 將讀音欄裡个註記標記（【特】、【文】、【白】、【又讀】、【俗音】…）抽出來，轉做 inline 个小 label。
+ * 註記名稱見 PHONETIC_NOTE_NAMES。【南】【卓】這類地區標記毋會轉（另由變體 label 處理）。
+ * 注意：輸入係「已經格式化个 HTML 字串」（可含 sandhi ruby），輸出亦係 HTML，
+ * 只可傳專案自家資料衍生个內容，毋好直接傳使用者輸入。
+ * @param {string} html - 已經格式化个標音 HTML 字串。
  * @returns {string}
  */
 function renderPhoneticNoteLabels(html) {
   if (!html) return html;
   return html.replace(
-    /【(特|又讀|又音|又俗音|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為)】/g,
+    PHONETIC_NOTE_BRACKETED_REGEX,
     '<span class="phonetic-note-label">$1</span>',
   );
 }
@@ -1615,7 +1637,7 @@ function classifyTone(syllable, dialectCode) {
 function getSandhiHtml(htmlContent, dialectCode) {
   // 資料陷阱防護：把 GIP 資料裡个漢字標記（又讀、俗音、小稱變調讀…）
   // 包成【】，讓 tokenizer 視為阻斷邊界，sandhi 毋會跨越這兜標記。
-  const PHONETIC_MARKERS = /(?:又(?:俗音|讀|音)|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為|詞目刪除)/g;
+  const PHONETIC_MARKERS = /(?<!【)(?:又(?:俗音|讀|音)|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為|詞目刪除)(?!】)/g;
   htmlContent = htmlContent.replace(PHONETIC_MARKERS, '【$&】');
 
   // 阻斷標點：括號、頓號、逗號、分號、句號等皆為詞項邊界或語音停頓，不可跨越連讀變調。
@@ -8712,6 +8734,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getSandhiHtml,
     getSandhiPronunciation,
     formatPhoneticForDisplay,
+    renderPhoneticNoteLabels,
     getCertAdvancedRepeatCount,
     shouldRepeatWord,
     getDialectCode,

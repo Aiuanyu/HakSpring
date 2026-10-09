@@ -6161,7 +6161,7 @@ mark {
 .phonetic-note-label {
   display: inline-block;
   font-family: var(--title-font, inherit);
-  font-size: 0.39em;
+  font-size: 0.75em;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.05em;
@@ -6170,21 +6170,20 @@ mark {
   border-radius: 0.9em;
   vertical-align: middle;
   color: #fff;
-  background: linear-gradient(180deg, #3f9a76 0%, #2a7a5a 100%);
-  border: 1px solid #206449;
+  background: linear-gradient(180deg, #2b8362 0%, #1f6a4c 100%); /* 白字對比 ≥ 4.5:1 */
+  border: 1px solid #185a3f;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -1px 0 rgba(0, 0, 0, 0.18),
     0 1px 2px rgba(0, 0, 0, 0.25);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
   cursor: default;
-  user-select: none;
   white-space: nowrap;
 }
 @media (prefers-color-scheme: dark) {
   .phonetic-note-label {
-    background: linear-gradient(180deg, #4fb28b 0%, #328c69 100%);
-    border-color: #1d5c43;
+    background: linear-gradient(180deg, #2a8765 0%, #1f6a4c 100%);
+    border-color: #4fb28b;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.28),
       inset 0 -1px 0 rgba(0, 0, 0, 0.3),
