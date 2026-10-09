@@ -577,7 +577,9 @@ function renderDueByLevel() {
 
 function formatGamePinyinWithSandhi(pinyinStr, targetVarName) {
   if (!pinyinStr) return '';
-  let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr) : pinyinStr;
+  // 教典資料（dataVarName 以「教」起頭）開頭个「特」會補上【】，後尾才轉做 label
+  const isGipVar = !!targetVarName && String(targetVarName).startsWith('教');
+  let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr, isGipVar) : pinyinStr;
   
   if (typeof getSandhiHtml === 'function') {
     // 先試資料變數前綴（單一腔字），再退回完整腔名；共用 main.js 的 getDialectCode
@@ -589,10 +591,11 @@ function formatGamePinyinWithSandhi(pinyinStr, targetVarName) {
       null;
 
     if (dialectCode) {
-      return getSandhiHtml(formatted, dialectCode);
+      formatted = getSandhiHtml(formatted, dialectCode);
     }
   }
-  return formatted;
+  // 讀音註記（【特】、【又讀】…）轉做小 label
+  return typeof renderPhoneticNoteLabels === 'function' ? renderPhoneticNoteLabels(formatted) : formatted;
 }
 
 // 中斷並清掉所有進行中的遊戲音效（換題、關 modal、進下一題時都用）。

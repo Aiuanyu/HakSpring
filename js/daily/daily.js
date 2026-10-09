@@ -551,6 +551,10 @@ const DailyWord = (function () {
         window.adjustRubyFontSize(span);
         pinyinHTML = span.innerHTML;
     }
+    // 讀音註記（【特】、【又讀】…）轉做小 label
+    if (typeof window.renderPhoneticNoteLabels === 'function') {
+        pinyinHTML = window.renderPhoneticNoteLabels(pinyinHTML);
+    }
     
     let metaStr = '';
     if (item.type === 'cert') {
@@ -807,6 +811,10 @@ const DailyWord = (function () {
                    }
                  }
                  
+                 if (typeof window.renderPhoneticNoteLabels === 'function') {
+                   crossPinyin = window.renderPhoneticNoteLabels(crossPinyin);
+                 }
+
                  let audioUrl = '';
                  let sentenceAudioUrl = '';
                  if (typeof constructWordAudioUrl === 'function') {
