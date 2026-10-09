@@ -1,0 +1,71 @@
+name: Data version bump check
+
+on:
+  push:
+    paths:
+      - 'data/cert/**.json'
+      - 'data/gip/**.json'
+      - 'tone_mapping.json'
+      - 'reverse_tone_mapping.json'
+      - 'sandhi_rules.json'
+      - 'NAmedias.json'
+      - 'exclusions.json'
+      - 'data/data_version.json'
+      - '.github/workflows/data-version-check.yml'
+  pull_request:
+    paths:
+      - 'data/cert/**.json'
+      - 'data/gip/**.json'
+      - 'tone_mapping.json'
+      - 'reverse_tone_mapping.json'
+      - 'sandhi_rules.json'
+      - 'NAmedias.json'
+      - 'exclusions.json'
+      - 'data/data_version.json'
+      - '.github/workflows/data-version-check.yml'
+
+jobs:
+  check-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 確認 data_version.json 有同步 bump
+        run: |
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            # 三點 diff（merge-base）：只看這個 PR 分支自己新增的內容，
+            # 不受 base 分支後續異動影響（落後 rebase 的長壽命 PR 才不會誤判）
+            RANGE="$BASE...$HEAD"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.event.after }}"
+
+            # push 到新分支時 before 會是全 0，且一次 push 可能帶多筆 commit，
+            # 用跟預設分支的 merge-base 當起點，涵蓋這個分支自己所有的 commit
+            if [ -z "$BASE" ] || [[ "$BASE" =~ ^0+$ ]]; then
+              git fetch origin "$DEFAULT_BRANCH" --quiet
+              BASE=$(git merge-base "origin/$DEFAULT_BRANCH" "$HEAD")
+            fi
+            RANGE="$BASE..$HEAD"
+          fi
+
+          CHANGED=$(git diff --name-only "$RANGE")
+          echo "變更檔案："
+          echo "$CHANGED"
+
+          DATA_CHANGED=$(echo "$CHANGED" | grep -E '^(data/(cert|gip)/.*\.json|tone_mapping\.json|reverse_tone_mapping\.json|sandhi_rules\.json|NAmedias\.json|exclusions\.json)$' || true)
+          VERSION_CHANGED=$(echo "$CHANGED" | grep -E '^data/data_version\.json$' || true)
+
+          if [ -n "$DATA_CHANGED" ] && [ -z "$VERSION_CHANGED" ]; then
+            echo "::error::以下資料檔已變更，但 data/data_version.json 沒有同步 bump，會害使用者端 IndexedDB 版本比對通過、抓不到新資料（就是 force-refresh 那個坑）："
+            echo "$DATA_CHANGED"
+            exit 1
+          fi
+
+          echo "✅ 資料檔版本檢查通過。"
