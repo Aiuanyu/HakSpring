@@ -832,6 +832,20 @@ function formatPhoneticForDisplay(text, isGip = false) {
 }
 
 /**
+ * 將讀音欄裡个註記標記（【特】、【又讀】、【俗音】…）抽出來，轉做 inline 个小 label。
+ * 只處理已知个讀音註記；【南】【卓】這類地區標記毋在此列（另由變體 label 處理）。
+ * @param {string} html - 已經格式化（可含 sandhi ruby）个標音 HTML 字串。
+ * @returns {string}
+ */
+function renderPhoneticNoteLabels(html) {
+  if (!html) return html;
+  return html.replace(
+    /【(特|又讀|又音|又俗音|俗音|小稱變調讀(?:本調為)?|特殊音|合音讀?|後字變調讀?|本調為)】/g,
+    '<span class="phonetic-note-label">$1</span>',
+  );
+}
+
+/**
  * 根據羅馬字拼音个分隔規則，準確計算音節數量。
  * @param {string} romanizationText - 包含羅馬字拼音个字串。
  * @returns {number} - 實際个音節數量。
@@ -1287,7 +1301,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     hiddenBase.className = 'variant-hidden-base';
     hiddenBase.textContent = fallbackWord || '';
     const rt = document.createElement('rt');
-    rt.innerHTML = phoneticText;
+    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
     ruby.appendChild(hiddenBase);
     ruby.appendChild(rt);
     block.appendChild(ruby);
@@ -1300,7 +1314,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
       ruby.textContent = entry.word;
     }
     const rt = document.createElement('rt');
-    rt.innerHTML = phoneticText;
+    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
     ruby.appendChild(rt);
     block.appendChild(ruby);
   }
@@ -1560,7 +1574,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   if (dialectCode) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
-  rt.innerHTML = phoneticText;
+  rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
   ruby.appendChild(rt);
   td.appendChild(ruby);
 }
