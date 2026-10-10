@@ -3146,9 +3146,10 @@ function initializeAppUI() {
     }
   }
 
-  const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 50;
+  const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 100;
   const DEBOUNCE_REPOSITION_ACTIONS_MS = 150;
   const REPOSITION_FLAG_RESET_DELAY_MS = 300;
+  const VIEWPORT_HEIGHT_JITTER_PX = 100; // 高度變動 ≤ 呢个值視為網址列收放
 
   const debouncedUpdateLastCenteredRow = debounce(
     updateLastCenteredRow,
@@ -3255,13 +3256,13 @@ function initializeAppUI() {
       // AND it's not immediately after a render (to prevent interference with auto play)
       // We explicitly IGNORE height-only changes on mobile (address bar hiding/showing).
       if (timeSinceLastRender > 500) {
-        if (currentWidth !== lastViewportWidth || Math.abs(currentHeight - lastViewportHeight) > 100) {
-           // It's a significant resize (width change or large height change like keyboard)
-           shouldScroll = true;
-        } else if (currentWidth === lastViewportWidth && currentHeight === lastViewportHeight) {
-            // This handles cases like ResizeObserver triggering for non-viewport size changes (e.g. font scaling)
-            shouldScroll = true;
-        }
+        // 要忽略个情況：寬度無變、高度只小幅變動（手機網址列收放）
+        const heightOnlySmallChange =
+          currentWidth === lastViewportWidth &&
+          currentHeight !== lastViewportHeight &&
+          Math.abs(currentHeight - lastViewportHeight) <=
+            VIEWPORT_HEIGHT_JITTER_PX;
+        shouldScroll = !heightOnlySmallChange;
       }
     }
 
@@ -3270,7 +3271,7 @@ function initializeAppUI() {
     lastViewportHeight = currentHeight;
 
     if (shouldScroll) {
-        g_pendingScrollToCenter = true;
+      g_pendingScrollToCenter = true;
     }
 
     isRepositioning = true;
@@ -6387,11 +6388,11 @@ function initializeAppUI() {
     }
 
     g_lastRenderTime = Date.now();
-    if (!isInfiniteScroll) {
-      setTimeout(() => repositionViewport({ fromRender: true }), 50);
-    } else {
-      setTimeout(() => repositionViewport({ fromRender: true, noScroll: true }), 50);
-    }
+    setTimeout(
+      () =>
+        repositionViewport({ fromRender: true, noScroll: isInfiniteScroll }),
+      50,
+    );
   }
 
   function scrollHandler() {
@@ -8130,11 +8131,11 @@ function initializeAppUI() {
   window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
   // Set up a ResizeObserver to handle font size changes and other layout shifts
   if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(repositionViewport);
+    const resizeObserver = new ResizeObserver(() => repositionViewport());
     resizeObserver.observe(document.body, { box: 'border-box' });
   }
   // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', repositionViewport);
+  window.addEventListener('resize', () => repositionViewport());
 
   // Initial call to set things right
   repositionViewport({ fromRender: true });
