@@ -1508,8 +1508,8 @@
         <!-- 3 buttons will be moved here by JS -->
         <span id="audioControlsPlaceholder"></span>
         <div class="speed-control-dropdown">
-          <button id="speedControlBtn" title="播放速度">1.0x</button>
-          <ul id="speedControlMenu" class="speed-menu" style="display: none;">
+          <button id="speedControlBtn" title="播放速度" aria-haspopup="menu" aria-expanded="false">1.0x</button>
+          <ul id="speedControlMenu" class="speed-menu" style="display: none;" role="menu">
             <li data-speed="0.5">0.5x</li>
             <li data-speed="0.75">0.75x</li>
             <li data-speed="1.0" class="active">1.0x</li>
@@ -1517,6 +1517,14 @@
             <li data-speed="1.5">1.5x</li>
             <li data-speed="2.0">2.0x</li>
             <li data-speed="3.0">3.0x</li>
+          </ul>
+        </div>
+        <div class="speed-control-dropdown repeat-control-dropdown">
+          <button id="repeatControlBtn" title="每詞播放次數" aria-haspopup="menu" aria-expanded="false">1次</button>
+          <ul id="repeatControlMenu" class="speed-menu" style="display: none;" role="menu">
+            <li data-repeat="1" class="active">1次</li>
+            <li data-repeat="2">2次</li>
+            <li data-repeat="3">3次</li>
           </ul>
         </div>
       </div>

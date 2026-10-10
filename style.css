@@ -687,7 +687,8 @@ tr.accordion-row.南四縣,
   display: none;
   /* 預設隱藏 */
   position: fixed;
-  bottom: 80px;
+  bottom: 10px;
+  transition: bottom 0.3s ease;
   right: 10px;
   z-index: 99;
   border: none;
@@ -709,6 +710,15 @@ tr.accordion-row.南四縣,
 #backToTopBtn i {
   color: white;
 }
+
+body.audio-panel-visible #backToTopBtn {
+  bottom: 80px; /* 當播放面板顯示時，將按鈕往上移 */
+}
+
+body.audio-panel-visible {
+  padding-bottom: 70px; /* 避免底部內容被播放面板擋住 */
+}
+
 
 button.playFromThisRow i {
   cursor: pointer;
@@ -6161,26 +6171,7 @@ mark {
       0 1px 3px rgba(0, 0, 0, 0.55);
   }
 
-  /* --- 新播放控制面板 (暗黑模式) --- */
-  #newAudioControlsPanel {
-    background-color: rgba(26, 42, 36, 0.9); /* 更深色的半透明背景 */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
-  }
 
-  .speed-menu {
-    background-color: rgba(26, 42, 36, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-  }
-
-  #speedControlBtn {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-  }
-
-  #speedControlBtn:hover {
-    background-color: rgba(255, 255, 255, 0.35) !important;
-  }
 }
 
 
@@ -6259,6 +6250,10 @@ mark {
   color: #e74c3c;
 }
 
+#newAudioControlsPanel button.active {
+  color: #e67e22; /* 較亮的橘色，與原本的分類循環啟動顏色一致 */
+}
+
 /* 速度控制下拉選單 */
 .speed-control-dropdown {
   position: relative;
@@ -6277,6 +6272,7 @@ mark {
   width: auto;
   height: 32px;
   padding: 0 10px;
+  white-space: nowrap;
   background-color: rgba(255, 255, 255, 0.15) !important; /* 蓋過上面的 background: none */
 }
 
@@ -6322,6 +6318,33 @@ mark {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+
+.repeat-control-dropdown {
+  margin-left: 2px;
+  padding-left: 8px;
+}
+#repeatControlBtn {
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--title-font);
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+#repeatControlBtn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+@media screen and (max-width: 400px) {
+  #repeatControlBtn {
+    font-size: 12px;
+    padding: 0 6px;
+    height: 28px;
+  }
+}
+
 /* 窄螢幕自適應：讓按鈕小一點，以塞入同一行 */
 @media screen and (max-width: 400px) {
   #newAudioControlsPanel {
@@ -6348,5 +6371,28 @@ mark {
     font-size: 12px;
     padding: 0 6px;
     height: 28px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* --- 新播放控制面板 (暗黑模式) --- */
+  #newAudioControlsPanel {
+    background-color: rgba(26, 42, 36, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
+  }
+
+  .speed-menu {
+    background-color: rgba(26, 42, 36, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+  }
+
+  #speedControlBtn {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  #speedControlBtn:hover {
+    background-color: rgba(255, 255, 255, 0.35) !important;
   }
 }

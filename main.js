@@ -3092,12 +3092,15 @@ function setupPlaybackSpeedControls() {
   if (btn && menu) {
     btn.onclick = function(e) {
       e.stopPropagation();
-      menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+      const isHidden = menu.style.display === 'none';
+      menu.style.display = isHidden ? 'flex' : 'none';
+      btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
     };
 
     document.addEventListener('click', function closeMenuOutside(e) {
       if (!menu.contains(e.target) && e.target !== btn) {
         menu.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
       }
     });
 
@@ -3116,13 +3119,97 @@ function setupPlaybackSpeedControls() {
   }
 }
 
+
+function updateRepeatMenuUI(repeatCount) {
+  const btn = document.getElementById('repeatControlBtn');
+  if (btn) btn.textContent = repeatCount + '次';
+
+  document.querySelectorAll('#repeatControlMenu li').forEach(li => {
+    if (parseInt(li.dataset.repeat, 10) === parseInt(repeatCount, 10)) {
+      li.classList.add('active');
+    } else {
+      li.classList.remove('active');
+    }
+  });
+}
+
+function updateRepeatControlState() {
+  const btn = document.getElementById('repeatControlBtn');
+  if (btn) {
+    if (isSingleWordLooping) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+
+      // Update UI to reflect current global setting or default
+      const count = getGlobalRepeatCount();
+      updateRepeatMenuUI(count);
+    }
+  }
+}
+
+function getGlobalRepeatCount() {
+  if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
+    return getCertAdvancedRepeatCount();
+  }
+  const val = parseInt(localStorage.getItem('globalRepeatCount') || '1', 10);
+  if (isNaN(val) || val < 1) return 1;
+  if (val > 3) return 3;
+  return val;
+}
+
+function setupRepeatControls() {
+  const btn = document.getElementById('repeatControlBtn');
+  const menu = document.getElementById('repeatControlMenu');
+
+  if (btn && menu) {
+    btn.onclick = function(e) {
+      if (btn.disabled) return;
+      e.stopPropagation();
+      const isHidden = menu.style.display === 'none';
+      menu.style.display = isHidden ? 'flex' : 'none';
+      btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    };
+
+    document.addEventListener('click', function closeRepeatMenuOutside(e) {
+      if (!menu.contains(e.target) && e.target !== btn) {
+        menu.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    menu.onclick = function(e) {
+      if (e.target.tagName === 'LI') {
+        const newRepeat = parseInt(e.target.dataset.repeat, 10);
+
+        if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
+          localStorage.setItem('certAdvancedRepeatCount', newRepeat);
+        } else {
+          localStorage.setItem('globalRepeatCount', newRepeat);
+        }
+
+        updateRepeatMenuUI(newRepeat);
+        menu.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    };
+  }
+}
+
 function updateNewAudioControlsVisibility() {
   const panel = document.getElementById('newAudioControlsPanel');
   if (panel) {
-    if (isPlaying || isSingleWordLooping) {
+    if (isPlaying || isPaused || isSingleWordLooping) {
       panel.style.display = 'flex';
+      document.body.classList.add('audio-panel-visible');
+      updateRepeatControlState();
     } else {
       panel.style.display = 'none';
+      document.body.classList.remove('audio-panel-visible');
     }
   }
 }
@@ -3130,6 +3217,7 @@ function updateNewAudioControlsVisibility() {
 function initializeAppUI() {
   // All the original code from DOMContentLoaded goes here
   setupPlaybackSpeedControls();
+  setupRepeatControls();
   // 分享／複製文字用个站名，排在腔調名前背（例：客源翠四縣）
   const SHARE_SITE_NAME = '客源翠';
   console.log('Initializing UI...');
@@ -6708,10 +6796,7 @@ function initializeAppUI() {
       currentAudio = wordAudio;
       applyPlaybackSpeedAndPitch(currentAudio);
 
-      const targetRepeats =
-        g_currentDialectInfo && g_currentDialectInfo.級 === '高'
-          ? getCertAdvancedRepeatCount()
-          : 1;
+      const targetRepeats = getGlobalRepeatCount();
 
       let wordPlayCount = 0;
 
@@ -7139,6 +7224,7 @@ function initializeAppUI() {
         }
         const nowPlayingRow = document.getElementById('nowPlaying');
         if (isPaused) {
+          applyPlaybackSpeedAndPitch(currentAudio);
           currentAudio?.play().catch((e) => console.error('恢復播放失敗:', e));
           isPaused = false;
           this.innerHTML = '<i class="fas fa-pause"></i>';
