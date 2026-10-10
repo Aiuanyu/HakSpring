@@ -6586,6 +6586,7 @@ function initializeAppUI() {
             activeCategoryData.length,
             null,
             false,
+            true,
           );
           lastLoadedIndex = end;
           targetRow = document
