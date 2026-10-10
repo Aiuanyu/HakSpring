@@ -3041,6 +3041,32 @@ function shouldRepeatWord(
 }
 
 
+// 是否為認證「高級」詞（高級詞摎非高級詞，播放速度分開記）
+function isAdvancedLevel() {
+  return !!(g_currentDialectInfo && g_currentDialectInfo.級 === '高');
+}
+
+function getPlaybackSpeedStorageKey() {
+  return isAdvancedLevel() ? 'playbackSpeedAdvanced' : 'playbackSpeed';
+}
+
+// 依目前級別，從 localStorage 載入對應个播放速度（預設 1x）
+function loadPlaybackSpeedForCurrentLevel() {
+  let speed = 1.0;
+  try {
+    const saved = localStorage.getItem(getPlaybackSpeedStorageKey());
+    if (saved) {
+      const parsed = parseFloat(saved);
+      if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 3.0) speed = parsed;
+    }
+  } catch (e) {
+    console.warn('讀取播放速度失敗:', e);
+  }
+  g_playbackSpeed = speed;
+  updateSpeedMenuUI(speed);
+  return speed;
+}
+
 function updateSpeedMenuUI(speed) {
   const btn = document.getElementById('speedControlBtn');
   // 整數補 .0（1 → 1.0x），0.75／1.25 等照原樣顯示，毋使 toFixed(1) 四捨五入變 0.8x／1.3x
@@ -3075,17 +3101,7 @@ function applyGlobalSpeedToAudioElements() {
 }
 
 function setupPlaybackSpeedControls() {
-  const savedSpeed = localStorage.getItem('playbackSpeed');
-  if (savedSpeed) {
-    let parsedSpeed = parseFloat(savedSpeed);
-    if (isNaN(parsedSpeed) || parsedSpeed < 0.5 || parsedSpeed > 3.0) {
-      parsedSpeed = 1.0;
-    }
-    g_playbackSpeed = parsedSpeed;
-  } else {
-    g_playbackSpeed = 1.0;
-  }
-  updateSpeedMenuUI(g_playbackSpeed);
+  loadPlaybackSpeedForCurrentLevel();
 
   const btn = document.getElementById('speedControlBtn');
   const menu = document.getElementById('speedControlMenu');
@@ -3110,7 +3126,11 @@ function setupPlaybackSpeedControls() {
         const newSpeed = parseFloat(e.target.dataset.speed);
         if (isNaN(newSpeed) || newSpeed < 0.5 || newSpeed > 3.0) return;
         g_playbackSpeed = newSpeed;
-        localStorage.setItem('playbackSpeed', newSpeed);
+        try {
+          localStorage.setItem(getPlaybackSpeedStorageKey(), newSpeed);
+        } catch (err) {
+          console.warn('儲存播放速度失敗:', err);
+        }
 
         updateSpeedMenuUI(newSpeed);
         applyGlobalSpeedToAudioElements();
@@ -3208,6 +3228,9 @@ function updateNewAudioControlsVisibility() {
     if (isPlaying || isPaused || isSingleWordLooping) {
       panel.style.display = 'flex';
       document.body.classList.add('audio-panel-visible');
+      // 切換級別後，速度愛換成該級別个記憶值
+      loadPlaybackSpeedForCurrentLevel();
+      applyGlobalSpeedToAudioElements();
       updateRepeatControlState();
     } else {
       panel.style.display = 'none';
@@ -6777,20 +6800,21 @@ function initializeAppUI() {
       playAudio(currentAudioIndex + 1, sessionId);
     };
 
-    const playSentence = () => {
+    // next：例句播完（抑係無例句）以後愛做个事，預設係接去下一項
+    const playSentence = (next = playNextItem) => {
       if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
         currentAudio = sentenceAudio;
         applyPlaybackSpeedAndPitch(currentAudio);
         currentAudio.play().catch((e) => {
           console.error('播放例句音檔失敗', e);
-          playNextItem();
+          next();
         });
-        currentAudio.addEventListener('ended', playNextItem, {
+        currentAudio.addEventListener('ended', next, {
           once: true,
           signal,
         });
       } else {
-        playNextItem();
+        next();
       }
     };
 
@@ -6802,8 +6826,40 @@ function initializeAppUI() {
 
       let wordPlayCount = 0;
 
+      // 非高級詞：次數係「詞 → 句」成對重複（詞 → 句 → 詞 → 句）；高級詞維持詞重複 N 擺再接例句
+      const pairMode = !isAdvancedLevel();
+
       const onWordEnded = () => {
         wordPlayCount++;
+        if (pairMode) {
+          playSentence(() => {
+            if (
+              shouldRepeatWord(
+                wordPlayCount,
+                targetRepeats,
+                isPlaying,
+                isPaused,
+                sessionId,
+                playbackSessionId,
+                itemIndex,
+                currentAudioIndex,
+              )
+            ) {
+              currentAudio = wordAudio;
+              wordAudio.currentTime = 0;
+              applyPlaybackSpeedAndPitch(wordAudio);
+              wordAudio.play().catch((e) => {
+                console.error('重播詞彙音檔失敗', e);
+                wordAudio.removeEventListener('ended', onWordEnded);
+                playNextItem();
+              });
+            } else {
+              wordAudio.removeEventListener('ended', onWordEnded);
+              playNextItem();
+            }
+          });
+          return;
+        }
         if (
           shouldRepeatWord(
             wordPlayCount,
