@@ -180,6 +180,8 @@
 | 熟悉度 | `hakkaFamiliarity` | `familiarity` | ✅ | LWW per-key |
 | 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
+| 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
+| 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
 #### 收藏／進度類 key 的年度 migration 提醒
 認證詞彙每年更新（113 → 114 → …），教典亦不定期更新。**級內編號（如 `1-1`）與教典序號在改版後會位移**，凡是以編號當 key 的使用者資料（SRS `progressKey`、日日一詞收藏 `hakkaDailyFavs`）都會對不上。

@@ -3043,7 +3043,8 @@ function shouldRepeatWord(
 
 function updateSpeedMenuUI(speed) {
   const btn = document.getElementById('speedControlBtn');
-  if (btn) btn.textContent = speed.toFixed(1) + 'x';
+  // 整數補 .0（1 → 1.0x），0.75／1.25 等照原樣顯示，毋使 toFixed(1) 四捨五入變 0.8x／1.3x
+  if (btn) btn.textContent = (Number.isInteger(speed) ? speed.toFixed(1) : String(speed)) + 'x';
 
   document.querySelectorAll('#speedControlMenu li').forEach(li => {
     if (parseFloat(li.dataset.speed) === parseFloat(speed)) {
@@ -3107,6 +3108,7 @@ function setupPlaybackSpeedControls() {
     menu.onclick = function(e) {
       if (e.target.tagName === 'LI') {
         const newSpeed = parseFloat(e.target.dataset.speed);
+        if (isNaN(newSpeed) || newSpeed < 0.5 || newSpeed > 3.0) return;
         g_playbackSpeed = newSpeed;
         localStorage.setItem('playbackSpeed', newSpeed);
 
@@ -7107,6 +7109,9 @@ function initializeAppUI() {
     button.innerHTML = '<i class="fas fa-stop"></i>';
     button.classList.add('looping');
     row.classList.add('looping-row');
+
+    // 單詞循環開始，愛顯示浮動控制面板
+    updateNewAudioControlsVisibility();
 
     const playSentence = () => {
       if (!isSingleWordLooping || signal.aborted) return;
