@@ -687,7 +687,7 @@ tr.accordion-row.南四縣,
   display: none;
   /* 預設隱藏 */
   position: fixed;
-  bottom: 10px;
+  bottom: 80px;
   right: 10px;
   z-index: 99;
   border: none;
@@ -710,29 +710,6 @@ tr.accordion-row.南四縣,
   color: white;
 }
 
-/* 播放全部 */
-#audioControls {
-  /* 如果 #audioControls 沒有其他 flex 相關設定，
-     可以加上 flex-shrink: 0 確保它也不會被壓縮 */
-  flex-shrink: 0;
-  margin-left: 1%;
-  /* display: inline-flex; */
-  /* 如果原本有 display，確保與 flex 容器兼容 */
-  /* align-items: center; */
-  /* 確保按鈕垂直對齊 */
-}
-
-#audioControls button {
-  border: none;
-  font-size: clamp(15px, 2vw, 22px);
-  /* margin: 0 5px;*/
-  background: none;
-  padding: 0;
-  margin: 0 3px;
-  vertical-align: middle;
-}
-
-#audioControls button i,
 button.playFromThisRow i {
   cursor: pointer;
   background: green;
@@ -742,18 +719,15 @@ button.playFromThisRow i {
   padding: 0.5em;
 }
 
-#audioControls button.playable i,
 button.playFromThisRow.playable i {
   background-color: green !important;
 }
 
-#audioControls button.ongoing i,
 button.playFromThisRow.ongoing i {
   background-color: yellow !important;
   color: var(--main-text-color);
 }
 
-#audioControls button.ended i,
 button.playFromThisRow.ended i {
   background-color: red !important;
 }
@@ -1872,7 +1846,6 @@ input:checked+.slider:before {
   }
 
   /* 播放控制按鈕 */
-  #audioControls button i,
   button.playFromThisRow i {
     background: var(--dark-primary-accent);
     /* 主要強調色 */
@@ -1882,14 +1855,12 @@ input:checked+.slider:before {
     /* 陰影加深 */
   }
 
-  #audioControls button.ongoing i,
   button.playFromThisRow.ongoing i {
     background-color: #ffd700 !important;
     /* 黃色 */
     color: var(--dark-button-text-color);
   }
 
-  #audioControls button.ended i,
   button.playFromThisRow.ended i {
     background-color: #b71c1c !important;
     /* 深紅色 */
@@ -6188,5 +6159,173 @@ mark {
       inset 0 1px 0 rgba(255, 255, 255, 0.28),
       inset 0 -1px 0 rgba(0, 0, 0, 0.3),
       0 1px 3px rgba(0, 0, 0, 0.55);
+  }
+}
+
+
+
+/* --- 新播放控制面板 --- */
+#newAudioControlsPanel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+
+  background-color: rgba(36, 93, 72, 0.85); /* 根據 --main-text-color (#245d48) 延伸的半透明深色 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  border-radius: 50px;
+  padding: 8px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* 確保只有一行 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 寬度控制 */
+  max-width: 90vw;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+#newAudioControlsPanel .controls-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+#newAudioControlsPanel button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+#newAudioControlsPanel button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+#newAudioControlsPanel button:active {
+  transform: scale(0.95);
+}
+
+/* 針對播放中、暫停、結束等狀態顏色微調 */
+#newAudioControlsPanel button.ongoing {
+  color: #f1c40f;
+}
+
+#newAudioControlsPanel button.ended {
+  color: #ffffff;
+}
+
+#newAudioControlsPanel button.looping {
+  color: #e74c3c;
+}
+
+/* 速度控制下拉選單 */
+.speed-control-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#speedControlBtn {
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--title-font);
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  background-color: rgba(255, 255, 255, 0.15) !important; /* 蓋過上面的 background: none */
+}
+
+#speedControlBtn:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.speed-menu {
+  position: absolute;
+  bottom: 110%; /* 向上展開 */
+  right: 0;
+  background-color: rgba(36, 93, 72, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+  min-width: 80px;
+  z-index: 100;
+  flex-direction: column;
+}
+
+.speed-menu li {
+  padding: 8px 16px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+  font-family: var(--title-font);
+  transition: background-color 0.2s;
+}
+
+.speed-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.speed-menu li.active {
+  color: #f1c40f;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 窄螢幕自適應：讓按鈕小一點，以塞入同一行 */
+@media screen and (max-width: 400px) {
+  #newAudioControlsPanel {
+    padding: 6px 10px;
+  }
+
+  #newAudioControlsPanel .controls-container {
+    gap: 5px;
+  }
+
+  #newAudioControlsPanel button {
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .speed-control-dropdown {
+    padding-left: 8px;
+    margin-left: 2px;
+  }
+
+  #speedControlBtn {
+    font-size: 12px;
+    padding: 0 6px;
+    height: 28px;
   }
 }
