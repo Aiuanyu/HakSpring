@@ -6257,7 +6257,15 @@ mark {
 }
 
 #newAudioControlsPanel button.active {
-  color: #e67e22; /* 較亮的橘色，與原本的分類循環啟動顏色一致 */
+  /* 分類循環啟動：整顆按鈕底色變半透明橘，摎面板个綠色融合 */
+  background-color: rgba(230, 126, 34, 0.6);
+  color: #ffffff;
+}
+
+/* 蓋過全域 button#loopCategoryBtn.active i 个橘底，免得只有 icon 一塊橘 */
+#newAudioControlsPanel button#loopCategoryBtn.active i {
+  background: none;
+  color: inherit;
 }
 
 /* 速度控制下拉選單 */
@@ -6273,7 +6281,7 @@ mark {
 #speedControlBtn {
   font-size: 14px;
   font-weight: bold;
-  font-family: var(--roman-font);
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
   border-radius: 12px;
   width: auto;
   height: 32px;
@@ -6310,7 +6318,7 @@ mark {
   cursor: pointer;
   font-size: 14px;
   text-align: center;
-  font-family: var(--roman-font);
+  font-family: var(--roman-font) !important;
   transition: background-color 0.2s;
 }
 
@@ -6332,7 +6340,7 @@ mark {
 #repeatControlBtn {
   font-size: 14px;
   font-weight: bold;
-  font-family: var(--roman-font);
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
   border-radius: 12px;
   width: auto;
   height: 32px;
