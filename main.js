@@ -3043,7 +3043,7 @@ function shouldRepeatWord(
 
 function updateSpeedMenuUI(speed) {
   const btn = document.getElementById('speedControlBtn');
-  if (btn) btn.textContent = speed + 'x';
+  if (btn) btn.textContent = speed.toFixed(1) + 'x';
 
   document.querySelectorAll('#speedControlMenu li').forEach(li => {
     if (parseFloat(li.dataset.speed) === parseFloat(speed)) {
@@ -3054,22 +3054,37 @@ function updateSpeedMenuUI(speed) {
   });
 }
 
+function applyPlaybackSpeedAndPitch(audioElement) {
+  if (audioElement) {
+    audioElement.playbackRate = g_playbackSpeed;
+    if ('preservesPitch' in audioElement) {
+      audioElement.preservesPitch = true;
+    }
+  }
+}
+
 function applyGlobalSpeedToAudioElements() {
   if (currentAudio) {
-    currentAudio.playbackRate = g_playbackSpeed;
+    applyPlaybackSpeedAndPitch(currentAudio);
   }
   if (isSingleWordLooping) {
-    if (singleLoopingAudio.word) singleLoopingAudio.word.playbackRate = g_playbackSpeed;
-    if (singleLoopingAudio.sentence) singleLoopingAudio.sentence.playbackRate = g_playbackSpeed;
+    if (singleLoopingAudio.word) applyPlaybackSpeedAndPitch(singleLoopingAudio.word);
+    if (singleLoopingAudio.sentence) applyPlaybackSpeedAndPitch(singleLoopingAudio.sentence);
   }
 }
 
 function setupPlaybackSpeedControls() {
   const savedSpeed = localStorage.getItem('playbackSpeed');
   if (savedSpeed) {
-    g_playbackSpeed = parseFloat(savedSpeed);
-    updateSpeedMenuUI(g_playbackSpeed);
+    let parsedSpeed = parseFloat(savedSpeed);
+    if (isNaN(parsedSpeed) || parsedSpeed < 0.5 || parsedSpeed > 3.0) {
+      parsedSpeed = 1.0;
+    }
+    g_playbackSpeed = parsedSpeed;
+  } else {
+    g_playbackSpeed = 1.0;
   }
+  updateSpeedMenuUI(g_playbackSpeed);
 
   const btn = document.getElementById('speedControlBtn');
   const menu = document.getElementById('speedControlMenu');
@@ -3080,7 +3095,7 @@ function setupPlaybackSpeedControls() {
       menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
     };
 
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function closeMenuOutside(e) {
       if (!menu.contains(e.target) && e.target !== btn) {
         menu.style.display = 'none';
       }
@@ -6675,7 +6690,7 @@ function initializeAppUI() {
     const playSentence = () => {
       if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
         currentAudio = sentenceAudio;
-        currentAudio.playbackRate = g_playbackSpeed;
+        applyPlaybackSpeedAndPitch(currentAudio);
         currentAudio.play().catch((e) => {
           console.error('播放例句音檔失敗', e);
           playNextItem();
@@ -6691,7 +6706,7 @@ function initializeAppUI() {
 
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
       currentAudio = wordAudio;
-      currentAudio.playbackRate = g_playbackSpeed;
+      applyPlaybackSpeedAndPitch(currentAudio);
 
       const targetRepeats =
         g_currentDialectInfo && g_currentDialectInfo.級 === '高'
@@ -6715,7 +6730,7 @@ function initializeAppUI() {
           )
         ) {
           wordAudio.currentTime = 0;
-          wordAudio.playbackRate = g_playbackSpeed;
+          applyPlaybackSpeedAndPitch(wordAudio);
           wordAudio.play().catch((e) => {
             console.error('重播詞彙音檔失敗', e);
             wordAudio.removeEventListener('ended', onWordEnded);
@@ -6729,7 +6744,7 @@ function initializeAppUI() {
 
       wordAudio.addEventListener('ended', onWordEnded, { signal });
 
-      wordAudio.playbackRate = g_playbackSpeed;
+      applyPlaybackSpeedAndPitch(wordAudio);
       wordAudio.play().catch((e) => {
         console.error('播放詞彙音檔失敗', e);
         wordAudio.removeEventListener('ended', onWordEnded);
@@ -7014,7 +7029,7 @@ function initializeAppUI() {
       if (!isSingleWordLooping || signal.aborted) return;
       if (sentenceAudio && sentenceAudio.src) {
         sentenceAudio.currentTime = 0;
-        sentenceAudio.playbackRate = g_playbackSpeed;
+        applyPlaybackSpeedAndPitch(sentenceAudio);
         sentenceAudio.play().catch((e) => {
           console.error('單詞循環播放例句失敗:', e);
           setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO);
@@ -7033,7 +7048,7 @@ function initializeAppUI() {
       if (!isSingleWordLooping || signal.aborted) return;
       if (wordAudio && wordAudio.src) {
         wordAudio.currentTime = 0;
-        wordAudio.playbackRate = g_playbackSpeed;
+        applyPlaybackSpeedAndPitch(wordAudio);
         wordAudio.play().catch((e) => {
           console.error('單詞循環播放詞彙失敗:', e);
           playSentence();

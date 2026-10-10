@@ -6160,14 +6160,34 @@ mark {
       inset 0 -1px 0 rgba(0, 0, 0, 0.3),
       0 1px 3px rgba(0, 0, 0, 0.55);
   }
-}
 
+  /* --- 新播放控制面板 (暗黑模式) --- */
+  #newAudioControlsPanel {
+    background-color: rgba(26, 42, 36, 0.9); /* 更深色的半透明背景 */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
+  }
+
+  .speed-menu {
+    background-color: rgba(26, 42, 36, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+  }
+
+  #speedControlBtn {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  #speedControlBtn:hover {
+    background-color: rgba(255, 255, 255, 0.35) !important;
+  }
+}
 
 
 /* --- 新播放控制面板 --- */
 #newAudioControlsPanel {
   position: fixed;
-  bottom: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 90;
@@ -6178,6 +6198,7 @@ mark {
 
   border-radius: 50px;
   padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
 
