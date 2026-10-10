@@ -7060,8 +7060,6 @@ function initializeAppUI() {
 
     stopSingleWordLoop();
 
-    updateNewAudioControlsVisibility();
-
     // --- Auto Bookmark Mode: Save bookmark when starting single word loop ---
     const autoBookmarkEnabled =
       localStorage.getItem('autoBookmarkMode') === 'true';
