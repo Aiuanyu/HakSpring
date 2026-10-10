@@ -585,6 +585,10 @@ let isLoadingMoreItems = false;
 let lastCenteredRow = null;
 let isRepositioning = false;
 let g_isAccordionScrolling = false;
+let g_pendingScrollToCenter = false;
+let g_lastRenderTime = 0;
+let lastViewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+let lastViewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
 const ITEMS_PER_LOAD = 20;
 let g_summary_minFontSize = 10;
 let g_summary_breakThreshold = 16;
@@ -3107,7 +3111,7 @@ function initializeAppUI() {
   }
 
   function updateLastCenteredRow() {
-    if (isRepositioning) return;
+    if (isRepositioning || isLoadingMoreItems) return;
 
     const table = document.getElementById('category-table');
     if (!table || (isPlaying && !isPaused)) {
@@ -3145,6 +3149,7 @@ function initializeAppUI() {
   const DEBOUNCE_UPDATE_CENTERED_ROW_MS = 100;
   const DEBOUNCE_REPOSITION_ACTIONS_MS = 150;
   const REPOSITION_FLAG_RESET_DELAY_MS = 300;
+  const VIEWPORT_HEIGHT_JITTER_PX = 100; // 高度變動 ≤ 呢个值視為網址列收放
 
   const debouncedUpdateLastCenteredRow = debounce(
     updateLastCenteredRow,
@@ -3152,6 +3157,10 @@ function initializeAppUI() {
   );
 
   const debouncedRepositionActions = debounce(() => {
+    // Read and reset the flag inside the debounced function
+    const shouldScrollToCenter = g_pendingScrollToCenter;
+    g_pendingScrollToCenter = false;
+
     // This contains the actual logic, which is debounced.
     // Defer the scrolling to prevent race conditions with layout reflow.
     setTimeout(() => {
@@ -3160,7 +3169,7 @@ function initializeAppUI() {
         if (nowPlayingRow) {
           nowPlayingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } else if (lastCenteredRow && document.body.contains(lastCenteredRow)) {
+      } else if (shouldScrollToCenter && lastCenteredRow && document.body.contains(lastCenteredRow)) {
         lastCenteredRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 0);
@@ -3227,10 +3236,44 @@ function initializeAppUI() {
     }, REPOSITION_FLAG_RESET_DELAY_MS);
   }, DEBOUNCE_REPOSITION_ACTIONS_MS);
 
-  function repositionViewport() {
-    if (g_isAccordionScrolling) return; // Don't reposition if accordion is scrolling
-    // This function is called directly by the event listener.
-    // It sets the flag immediately and then calls the debounced actions.
+  function repositionViewport(options = {}) {
+    if (g_isAccordionScrolling) return;
+
+    let shouldScroll = false;
+    const currentWidth = window.innerWidth;
+    const currentHeight = window.innerHeight;
+
+    if (options.fromRender) {
+      if (!options.noScroll) {
+        shouldScroll = true;
+      }
+    } else {
+      const timeSinceLastRender = Date.now() - g_lastRenderTime;
+
+      // Only scroll to center if:
+      // 1. Width changed (device rotation, desktop window resize)
+      // 2. OR it's been triggered by layout shift that isn't a direct resize event (e.g. font size change)
+      // AND it's not immediately after a render (to prevent interference with auto play)
+      // We explicitly IGNORE height-only changes on mobile (address bar hiding/showing).
+      if (timeSinceLastRender > 500) {
+        // 要忽略个情況：寬度無變、高度只小幅變動（手機網址列收放）
+        const heightOnlySmallChange =
+          currentWidth === lastViewportWidth &&
+          currentHeight !== lastViewportHeight &&
+          Math.abs(currentHeight - lastViewportHeight) <=
+            VIEWPORT_HEIGHT_JITTER_PX;
+        shouldScroll = !heightOnlySmallChange;
+      }
+    }
+
+    // Always update these baselines to accurately measure the *next* resize delta
+    lastViewportWidth = currentWidth;
+    lastViewportHeight = currentHeight;
+
+    if (shouldScroll) {
+      g_pendingScrollToCenter = true;
+    }
+
     isRepositioning = true;
     debouncedRepositionActions();
   }
@@ -4265,7 +4308,7 @@ function initializeAppUI() {
 
     updateResultsSummaryVisibility();
 
-    setTimeout(() => repositionViewport(), 0); // Trigger font size adjustment after table is rendered
+    setTimeout(() => repositionViewport({ fromRender: true }), 0); // Trigger font size adjustment after table is rendered
 
     setTimeout(() => {
       const firstResultElement = contentContainer.querySelector('h4, table');
@@ -5231,6 +5274,7 @@ function initializeAppUI() {
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
+    lastCenteredRow = null; // Reset centered row on new data generation to prevent stale scrolling
     currentDataVarName = content.name; // Keep track of the active file var name
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
@@ -5973,6 +6017,7 @@ function initializeAppUI() {
     totalResults,
     autoPlayTargetRowId = null,
     prepend = false,
+    isInfiniteScroll = false,
   ) {
     const contentContainer = document.getElementById('generated');
     let table = document.getElementById('category-table');
@@ -6342,7 +6387,12 @@ function initializeAppUI() {
       tbody.appendChild(fragment);
     }
 
-    setTimeout(() => repositionViewport(), 50);
+    g_lastRenderTime = Date.now();
+    setTimeout(
+      () =>
+        repositionViewport({ fromRender: true, noScroll: isInfiniteScroll }),
+      50,
+    );
   }
 
   function scrollHandler() {
@@ -6372,6 +6422,7 @@ function initializeAppUI() {
           activeCategoryData.length,
           null,
           false,
+          true,
         );
         lastLoadedIndex = end;
       }
@@ -6394,6 +6445,7 @@ function initializeAppUI() {
           false,
           activeCategoryData.length,
           null,
+          true,
           true,
         );
         firstLoadedIndex = start;
@@ -6512,6 +6564,7 @@ function initializeAppUI() {
           activeCategoryData.length,
           null,
           false,
+          true,
         );
         lastLoadedIndex = end;
       }
@@ -6541,6 +6594,7 @@ function initializeAppUI() {
             activeCategoryData.length,
             null,
             false,
+            true,
           );
           lastLoadedIndex = end;
           targetRow = document
@@ -8077,14 +8131,14 @@ function initializeAppUI() {
   window.addEventListener('scroll', debouncedUpdateLastCenteredRow);
   // Set up a ResizeObserver to handle font size changes and other layout shifts
   if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(repositionViewport);
+    const resizeObserver = new ResizeObserver(() => repositionViewport());
     resizeObserver.observe(document.body, { box: 'border-box' });
   }
   // Always listen to the resize event as a fallback and for window resizes
-  window.addEventListener('resize', repositionViewport);
+  window.addEventListener('resize', () => repositionViewport());
 
   // Initial call to set things right
-  repositionViewport();
+  repositionViewport({ fromRender: true });
 
   contentContainer.addEventListener('click', function (event) {
     const button = event.target.closest('.crossDialectBtn');
