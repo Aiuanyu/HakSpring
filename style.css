@@ -6183,16 +6183,15 @@ mark {
   transform: translateX(-50%);
   z-index: 90;
 
-  /* 亮色主題：淺色面板，摎下面深綠色个按鈕拉開對比 */
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(36, 93, 72, 0.85); /* 根據 --main-text-color (#245d48) 延伸的半透明深色 */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   border-radius: 50px;
   padding: 8px 16px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 5px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(36, 93, 72, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   /* 確保只有一行 */
   display: flex;
@@ -6202,6 +6201,7 @@ mark {
   /* 寬度控制 */
   max-width: calc(100vw - 16px);
   width: auto;
+  white-space: nowrap;
   transition: all 0.3s ease;
 }
 
@@ -6213,7 +6213,7 @@ mark {
 }
 
 #newAudioControlsPanel button {
-  background: var(--main-text-color);
+  background: none;
   border: none;
   color: #ffffff;
   font-size: 20px;
@@ -6229,8 +6229,13 @@ mark {
   height: 40px;
 }
 
+#newAudioControlsPanel button i {
+  color: inherit;
+  background: none;
+}
+
 #newAudioControlsPanel button:hover {
-  background-color: #1a4535;
+  background-color: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
 }
 
@@ -6248,11 +6253,11 @@ mark {
 }
 
 #newAudioControlsPanel button.looping {
-  background-color: #c0392b;
+  color: #e74c3c;
 }
 
 #newAudioControlsPanel button.active {
-  background-color: #e67e22; /* 較亮的橘色，與原本的分類循環啟動顏色一致 */
+  color: #e67e22; /* 較亮的橘色，與原本的分類循環啟動顏色一致 */
 }
 
 /* 速度控制下拉選單 */
@@ -6262,7 +6267,7 @@ mark {
   align-items: center;
   margin-left: 5px;
   padding-left: 12px;
-  border-left: 1px solid rgba(36, 93, 72, 0.3);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 #speedControlBtn {
@@ -6274,18 +6279,18 @@ mark {
   height: 32px;
   padding: 0 10px;
   white-space: nowrap;
-  background-color: var(--main-text-color) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important; /* 蓋過上面的 background: none */
 }
 
 #speedControlBtn:hover {
-  background-color: #1a4535 !important;
+  background-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 .speed-menu {
   position: absolute;
   bottom: 110%; /* 向上展開 */
   right: 0;
-  background-color: rgba(36, 93, 72, 0.97);
+  background-color: rgba(36, 93, 72, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -6333,38 +6338,19 @@ mark {
   height: 32px;
   padding: 0 10px;
   white-space: nowrap;
-  background-color: var(--main-text-color) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
 }
 #repeatControlBtn:hover:not(:disabled) {
-  background-color: #1a4535 !important;
+  background-color: rgba(255, 255, 255, 0.3) !important;
 }
+/* 窄螢幕：面板愛撐到容得下全部按鈕同一橫列（毋縮細按鈕、毋換行） */
 @media screen and (max-width: 400px) {
-  #repeatControlBtn {
-    font-size: 12px;
-    padding: 0 6px;
-    height: 28px;
-  }
-}
-
-/* 窄螢幕：面板拉寬到幾乎滿版，所有按鈕維持同一橫列 */
-@media screen and (max-width: 600px) {
   #newAudioControlsPanel {
-    left: 8px;
-    right: 8px;
-    transform: none;
-    max-width: none;
-    padding: 6px 8px;
-    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 10px;
   }
 
   #newAudioControlsPanel .controls-container {
-    width: 100%;
     gap: 4px;
-    justify-content: space-around;
-  }
-
-  #audioControlsPlaceholder {
-    display: contents;
   }
 
   #newAudioControlsPanel button {
@@ -6392,45 +6378,17 @@ mark {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
   }
 
-  #newAudioControlsPanel button {
-    background: none;
-  }
-
-  #newAudioControlsPanel button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
-
-  #newAudioControlsPanel button.ongoing {
-    color: #f1c40f;
-  }
-
-  #newAudioControlsPanel button.looping {
-    background: none;
-    color: #e74c3c;
-  }
-
-  #newAudioControlsPanel button.active {
-    background: none;
-    color: #e67e22;
-  }
-
-  .speed-control-dropdown {
-    border-left-color: rgba(255, 255, 255, 0.3);
-  }
-
   .speed-menu {
     background-color: rgba(26, 42, 36, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
   }
 
-  #speedControlBtn,
-  #repeatControlBtn {
+  #speedControlBtn {
     background-color: rgba(255, 255, 255, 0.2) !important;
   }
 
-  #speedControlBtn:hover,
-  #repeatControlBtn:hover:not(:disabled) {
+  #speedControlBtn:hover {
     background-color: rgba(255, 255, 255, 0.35) !important;
   }
 }
