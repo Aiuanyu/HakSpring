@@ -3239,11 +3239,14 @@ function initializeAppUI() {
     if (g_isAccordionScrolling) return;
 
     let shouldScroll = false;
+    const currentWidth = window.innerWidth;
+    const currentHeight = window.innerHeight;
+
     if (options.fromRender) {
-      shouldScroll = true;
+      if (!options.noScroll) {
+        shouldScroll = true;
+      }
     } else {
-      const currentWidth = window.innerWidth;
-      const currentHeight = window.innerHeight;
       const timeSinceLastRender = Date.now() - g_lastRenderTime;
 
       // Only scroll to center if:
@@ -3260,10 +3263,11 @@ function initializeAppUI() {
             shouldScroll = true;
         }
       }
-
-      lastViewportWidth = currentWidth;
-      lastViewportHeight = currentHeight;
     }
+
+    // Always update these baselines to accurately measure the *next* resize delta
+    lastViewportWidth = currentWidth;
+    lastViewportHeight = currentHeight;
 
     if (shouldScroll) {
         g_pendingScrollToCenter = true;
@@ -5269,6 +5273,7 @@ function initializeAppUI() {
   // --- generate() 函式從這裡開始 ---
   function generate(content, initialCategory = null, targetRowId = null) {
     console.log('Generate called for:', content.name);
+    lastCenteredRow = null; // Reset centered row on new data generation to prevent stale scrolling
     currentDataVarName = content.name; // Keep track of the active file var name
     currentActiveDialectLevelFullName = getFullLevelName(content.name);
     g_currentLevelData = [...content.content]; // Create a mutable copy to be sorted
@@ -6384,6 +6389,8 @@ function initializeAppUI() {
     g_lastRenderTime = Date.now();
     if (!isInfiniteScroll) {
       setTimeout(() => repositionViewport({ fromRender: true }), 50);
+    } else {
+      setTimeout(() => repositionViewport({ fromRender: true, noScroll: true }), 50);
     }
   }
 
