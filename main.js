@@ -3240,9 +3240,7 @@ function initializeAppUI() {
 
     let shouldScroll = false;
     if (options.fromRender) {
-      if (!isLoadingMoreItems) {
-        shouldScroll = true;
-      }
+      shouldScroll = true;
     } else {
       const currentWidth = window.innerWidth;
       const currentHeight = window.innerHeight;
@@ -6013,6 +6011,7 @@ function initializeAppUI() {
     totalResults,
     autoPlayTargetRowId = null,
     prepend = false,
+    isInfiniteScroll = false,
   ) {
     const contentContainer = document.getElementById('generated');
     let table = document.getElementById('category-table');
@@ -6383,7 +6382,9 @@ function initializeAppUI() {
     }
 
     g_lastRenderTime = Date.now();
-    setTimeout(() => repositionViewport({ fromRender: true }), 50);
+    if (!isInfiniteScroll) {
+      setTimeout(() => repositionViewport({ fromRender: true }), 50);
+    }
   }
 
   function scrollHandler() {
@@ -6413,6 +6414,7 @@ function initializeAppUI() {
           activeCategoryData.length,
           null,
           false,
+          true,
         );
         lastLoadedIndex = end;
       }
@@ -6435,6 +6437,7 @@ function initializeAppUI() {
           false,
           activeCategoryData.length,
           null,
+          true,
           true,
         );
         firstLoadedIndex = start;
@@ -6553,6 +6556,7 @@ function initializeAppUI() {
           activeCategoryData.length,
           null,
           false,
+          true,
         );
         lastLoadedIndex = end;
       }
