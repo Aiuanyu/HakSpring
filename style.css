@@ -94,16 +94,19 @@
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
 
+  --iMazinGrace-1-rgb: 170, 150, 183;
+  /* 新增 RGB 版本方便用 rgba() */
+
   /* --- Audio Controls Panel Variables (Light Mode: Lavender) --- */
   --audio-panel-bg: rgba(var(--iMazinGrace-1-rgb), 0.85);
   --audio-panel-border: rgba(255, 255, 255, 0.3);
   --audio-panel-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.1);
   --audio-panel-fg: #3e2a47;
   --audio-panel-btn-hover-bg: rgba(255, 255, 255, 0.5);
-  --audio-panel-btn-ongoing-fg: #d35400;
+  --audio-panel-btn-ongoing-fg: #8a3a00;
   --audio-panel-btn-ended-fg: #3e2a47;
-  --audio-panel-btn-looping-fg: #c0392b;
-  --audio-panel-btn-active-bg: rgba(230, 110, 34, 0.8);
+  --audio-panel-btn-looping-fg: #8e1f14;
+  --audio-panel-btn-active-bg: rgba(170, 70, 0, 0.85);
   --audio-panel-btn-active-fg: #ffffff;
   --audio-panel-divider: rgba(62, 42, 71, 0.2);
   --audio-panel-dropdown-btn-bg: rgba(255, 255, 255, 0.4);
@@ -112,9 +115,7 @@
   --audio-panel-menu-border: rgba(255, 255, 255, 0.4);
   --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15);
   --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.3);
-  --audio-panel-menu-active-fg: #d35400;
-  --iMazinGrace-1-rgb: 170, 150, 183;
-  /* 新增 RGB 版本方便用 rgba() */
+  --audio-panel-menu-active-fg: #8a3a00;
   --paused-yellow-rgb: 255, 250, 205;
   /* RGB 版本方便用 rgba() */
   --paused-yellow: rgba(var(--paused-yellow-rgb), 1);
@@ -1678,8 +1679,8 @@ input:checked+.slider:before {
     /* 暗模式下个黃色，愛確定在深色背景看得清楚 */
     --dark-paused-yellow-rgb: 255, 255, 150;
 
-    /* --- Audio Controls Panel Variables (Dark Mode: Original Green) --- */
-    --audio-panel-bg: rgba(36, 93, 72, 0.85);
+    /* --- Audio Controls Panel Variables (Dark Mode: 原本个深墨綠) --- */
+    --audio-panel-bg: rgba(26, 42, 36, 0.9);
     --audio-panel-border: rgba(255, 255, 255, 0.2);
     --audio-panel-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
     --audio-panel-fg: #ffffff;
@@ -1690,10 +1691,10 @@ input:checked+.slider:before {
     --audio-panel-btn-active-bg: rgba(230, 126, 34, 0.6);
     --audio-panel-btn-active-fg: #ffffff;
     --audio-panel-divider: rgba(255, 255, 255, 0.3);
-    --audio-panel-dropdown-btn-bg: rgba(255, 255, 255, 0.15);
-    --audio-panel-dropdown-btn-hover-bg: rgba(255, 255, 255, 0.3);
-    --audio-panel-menu-bg: rgba(36, 93, 72, 0.95);
-    --audio-panel-menu-border: rgba(255, 255, 255, 0.15);
+    --audio-panel-dropdown-btn-bg: rgba(255, 255, 255, 0.2);
+    --audio-panel-dropdown-btn-hover-bg: rgba(255, 255, 255, 0.35);
+    --audio-panel-menu-bg: rgba(26, 42, 36, 0.95);
+    --audio-panel-menu-border: rgba(255, 255, 255, 0.2);
     --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
     --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.1);
     --audio-panel-menu-active-fg: #f1c40f;
@@ -6298,7 +6299,7 @@ mark {
 }
 
 #newAudioControlsPanel button.active {
-  /* 分類循環啟動 */
+  /* 分類循環啟動：整顆按鈕底色變半透明橘，淺色模式用較深个橘摎薰衣草面板區隔，暗色模式摎綠色面板融合 */
   background-color: var(--audio-panel-btn-active-bg);
   color: var(--audio-panel-btn-active-fg);
 }
