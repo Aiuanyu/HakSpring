@@ -3148,7 +3148,7 @@ function setupPlaybackSpeedControls() {
 
 function updateRepeatMenuUI(repeatCount) {
   const btn = document.getElementById('repeatControlBtn');
-  if (btn) btn.textContent = repeatCount + '次';
+  if (btn) btn.textContent = repeatCount + '擺';
 
   document.querySelectorAll('#repeatControlMenu li').forEach(li => {
     if (parseInt(li.dataset.repeat, 10) === parseInt(repeatCount, 10)) {

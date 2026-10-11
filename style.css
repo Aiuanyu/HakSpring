@@ -93,8 +93,30 @@
   --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
+
   --iMazinGrace-1-rgb: 170, 150, 183;
   /* 新增 RGB 版本方便用 rgba() */
+
+  /* --- Audio Controls Panel Variables (Light Mode: Lavender) --- */
+  --audio-panel-bg: rgba(var(--iMazinGrace-1-rgb), 0.85);
+  --audio-panel-border: rgba(255, 255, 255, 0.3);
+  --audio-panel-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.1);
+  --audio-panel-fg: #3e2a47;
+  --audio-panel-btn-hover-bg: rgba(255, 255, 255, 0.5);
+  --audio-panel-btn-ongoing-fg: #8a3a00;
+  --audio-panel-btn-ended-fg: #3e2a47;
+  --audio-panel-btn-looping-fg: #8e1f14;
+  --audio-panel-btn-active-bg: rgba(170, 70, 0, 0.85);
+  --audio-panel-btn-active-fg: #ffffff;
+  --audio-panel-divider: rgba(62, 42, 71, 0.2);
+  --audio-panel-dropdown-btn-bg: rgba(255, 255, 255, 0.4);
+  --audio-panel-dropdown-btn-hover-bg: rgba(255, 255, 255, 0.7);
+  --audio-panel-menu-bg: rgba(var(--iMazinGrace-1-rgb), 0.95);
+  --audio-panel-menu-border: rgba(255, 255, 255, 0.4);
+  --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15);
+  --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.3);
+  --audio-panel-menu-active-fg: #8a3a00;
+  --audio-panel-accent-fg: var(--main-text-color); /* 類／速／擺 三鈕：主色墨綠（對比約 3.4~4.8:1） */
   --paused-yellow-rgb: 255, 250, 205;
   /* RGB 版本方便用 rgba() */
   --paused-yellow: rgba(var(--paused-yellow-rgb), 1);
@@ -1657,6 +1679,28 @@ input:checked+.slider:before {
     --dark-paused-yellow: rgba(var(--dark-paused-yellow-rgb), 0.5);
     /* 暗模式下个黃色，愛確定在深色背景看得清楚 */
     --dark-paused-yellow-rgb: 255, 255, 150;
+
+    /* --- Audio Controls Panel Variables (Dark Mode: 原本个深墨綠) --- */
+    --audio-panel-bg: rgba(26, 42, 36, 0.9);
+    --audio-panel-border: rgba(255, 255, 255, 0.2);
+    --audio-panel-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
+    --audio-panel-fg: #ffffff;
+    --audio-panel-btn-hover-bg: rgba(255, 255, 255, 0.2);
+    --audio-panel-btn-ongoing-fg: #f1c40f;
+    --audio-panel-btn-ended-fg: #ffffff;
+    --audio-panel-btn-looping-fg: #e74c3c;
+    --audio-panel-btn-active-bg: rgba(230, 126, 34, 0.6);
+    --audio-panel-btn-active-fg: #ffffff;
+    --audio-panel-divider: rgba(255, 255, 255, 0.3);
+    --audio-panel-dropdown-btn-bg: rgba(255, 255, 255, 0.2);
+    --audio-panel-dropdown-btn-hover-bg: rgba(255, 255, 255, 0.35);
+    --audio-panel-menu-bg: rgba(26, 42, 36, 0.95);
+    --audio-panel-menu-border: rgba(255, 255, 255, 0.2);
+    --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+    --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.1);
+    --audio-panel-menu-active-fg: #f1c40f;
+    --audio-panel-accent-fg: #d9cbe3; /* 類／速／擺 三鈕：淡薰衣草紫（對比約 5.2~10:1，原 #aa96b7 在按鈕底僅 3.0 毋夠） */
+
     /* --- Focus Glow Variables (Dark Mode) --- */
     --focus-glow-color: rgba(96, 165, 250, 0.75);
     /* 暗夜模式用較亮、較飽和个藍色 */
@@ -6183,15 +6227,15 @@ mark {
   transform: translateX(-50%);
   z-index: 90;
 
-  background-color: rgba(36, 93, 72, 0.85); /* 根據 --main-text-color (#245d48) 延伸的半透明深色 */
+  background-color: var(--audio-panel-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   border-radius: 50px;
   padding: 8px 16px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--audio-panel-box-shadow);
+  border: 1px solid var(--audio-panel-border);
 
   /* 確保只有一行 */
   display: flex;
@@ -6215,7 +6259,7 @@ mark {
 #newAudioControlsPanel button {
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--audio-panel-fg);
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
@@ -6235,7 +6279,7 @@ mark {
 }
 
 #newAudioControlsPanel button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--audio-panel-btn-hover-bg);
   transform: scale(1.1);
 }
 
@@ -6245,21 +6289,28 @@ mark {
 
 /* 針對播放中、暫停、結束等狀態顏色微調 */
 #newAudioControlsPanel button.ongoing {
-  color: #f1c40f;
+  color: var(--audio-panel-btn-ongoing-fg);
 }
 
 #newAudioControlsPanel button.ended {
-  color: #ffffff;
+  color: var(--audio-panel-btn-ended-fg);
 }
 
 #newAudioControlsPanel button.looping {
-  color: #e74c3c;
+  color: var(--audio-panel-btn-looping-fg);
 }
 
 #newAudioControlsPanel button.active {
-  /* 分類循環啟動：整顆按鈕底色變半透明橘，摎面板个綠色融合 */
-  background-color: rgba(230, 126, 34, 0.6);
-  color: #ffffff;
+  /* 分類循環啟動：整顆按鈕底色變半透明橘，淺色模式用較深个橘摎薰衣草面板區隔，暗色模式摎綠色面板融合 */
+  background-color: var(--audio-panel-btn-active-bg);
+  color: var(--audio-panel-btn-active-fg);
+}
+
+/* 類／速／擺 三鈕个文字色（循環啟動時 .active 維持白字） */
+#newAudioControlsPanel button#loopCategoryBtn:not(.active),
+#newAudioControlsPanel #speedControlBtn,
+#newAudioControlsPanel #repeatControlBtn {
+  color: var(--audio-panel-accent-fg);
 }
 
 /* 蓋過全域 button#loopCategoryBtn.active i 个橘底，免得只有 icon 一塊橘 */
@@ -6275,10 +6326,11 @@ mark {
   align-items: center;
   margin-left: 5px;
   padding-left: 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 1px solid var(--audio-panel-divider);
 }
 
 #speedControlBtn {
+  color: var(--audio-panel-fg);
   font-size: 14px;
   font-weight: bold;
   font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
@@ -6287,26 +6339,26 @@ mark {
   height: 32px;
   padding: 0 10px;
   white-space: nowrap;
-  background-color: rgba(255, 255, 255, 0.15) !important; /* 蓋過上面的 background: none */
+  background-color: var(--audio-panel-dropdown-btn-bg) !important; /* 蓋過上面的 background: none */
 }
 
 #speedControlBtn:hover {
-  background-color: rgba(255, 255, 255, 0.3) !important;
+  background-color: var(--audio-panel-dropdown-btn-hover-bg) !important;
 }
 
 .speed-menu {
   position: absolute;
   bottom: 110%; /* 向上展開 */
   right: 0;
-  background-color: rgba(36, 93, 72, 0.95);
+  background-color: var(--audio-panel-menu-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--audio-panel-menu-border);
   border-radius: 12px;
   list-style: none;
   padding: 8px 0;
   margin: 0;
-  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--audio-panel-menu-shadow);
   min-width: 80px;
   z-index: 100;
   flex-direction: column;
@@ -6314,7 +6366,7 @@ mark {
 
 .speed-menu li {
   padding: 8px 16px;
-  color: #fff;
+  color: var(--audio-panel-fg);
   cursor: pointer;
   font-size: 14px;
   text-align: center;
@@ -6323,13 +6375,13 @@ mark {
 }
 
 .speed-menu li:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--audio-panel-btn-hover-bg);
 }
 
 .speed-menu li.active {
-  color: #f1c40f;
+  color: var(--audio-panel-menu-active-fg);
   font-weight: bold;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--audio-panel-menu-active-bg);
 }
 
 
@@ -6338,6 +6390,7 @@ mark {
   padding-left: 8px;
 }
 #repeatControlBtn {
+  color: var(--audio-panel-fg);
   font-size: 14px;
   font-weight: bold;
   font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
@@ -6346,10 +6399,10 @@ mark {
   height: 32px;
   padding: 0 10px;
   white-space: nowrap;
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: var(--audio-panel-dropdown-btn-bg) !important;
 }
 #repeatControlBtn:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.3) !important;
+  background-color: var(--audio-panel-dropdown-btn-hover-bg) !important;
 }
 /* 窄螢幕：面板愛撐到容得下全部按鈕同一橫列（毋縮細按鈕、毋換行） */
 @media screen and (max-width: 400px) {
@@ -6378,25 +6431,3 @@ mark {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  /* --- 新播放控制面板 (暗黑模式) --- */
-  #newAudioControlsPanel {
-    background-color: rgba(26, 42, 36, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4);
-  }
-
-  .speed-menu {
-    background-color: rgba(26, 42, 36, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
-  }
-
-  #speedControlBtn {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-  }
-
-  #speedControlBtn:hover {
-    background-color: rgba(255, 255, 255, 0.35) !important;
-  }
-}
