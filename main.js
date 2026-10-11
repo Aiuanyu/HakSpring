@@ -6819,7 +6819,12 @@ function initializeAppUI() {
 
     // 更新 UI 並儲存書籤
     addNowPlaying(targetRow);
-    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // 窄螢幕（手機版 td 變垂直排列）時，不要整列捲動，改為播個別音檔時捲動 td
+    if (window.innerWidth > 768) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     const bookmarkButton = targetRow.querySelector('.bookmarkBtn');
     if (bookmarkButton) {
       const rowId = bookmarkButton.dataset.rowId;
@@ -6857,6 +6862,10 @@ function initializeAppUI() {
     // next：例句播完（抑係無例句）以後愛做个事，預設係接去下一項
     const playSentence = (next = playNextItem) => {
       if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
+        if (window.innerWidth <= 768) {
+          const td = sentenceAudio.closest('td');
+          if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         currentAudio = sentenceAudio;
         applyPlaybackSpeedAndPitch(currentAudio);
         currentAudio.play().catch((e) => {
@@ -6873,6 +6882,10 @@ function initializeAppUI() {
     };
 
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
+      if (window.innerWidth <= 768) {
+        const td = wordAudio.closest('td');
+        if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       currentAudio = wordAudio;
       applyPlaybackSpeedAndPitch(currentAudio);
 
