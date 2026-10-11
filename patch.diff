@@ -1,0 +1,357 @@
+<<<<<<< SEARCH
+/* --- 新播放控制面板 --- */
+#newAudioControlsPanel {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+
+  background-color: rgba(36, 93, 72, 0.85); /* 根據 --main-text-color (#245d48) 延伸的半透明深色 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  border-radius: 50px;
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* 確保只有一行 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 寬度控制 */
+  max-width: calc(100vw - 16px);
+  width: auto;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+#newAudioControlsPanel .controls-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+#newAudioControlsPanel button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+#newAudioControlsPanel button i {
+  color: inherit;
+  background: none;
+}
+
+#newAudioControlsPanel button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+#newAudioControlsPanel button:active {
+  transform: scale(0.95);
+}
+
+/* 針對播放中、暫停、結束等狀態顏色微調 */
+#newAudioControlsPanel button.ongoing {
+  color: #f1c40f;
+}
+
+#newAudioControlsPanel button.ended {
+  color: #ffffff;
+}
+
+#newAudioControlsPanel button.looping {
+  color: #e74c3c;
+}
+
+#newAudioControlsPanel button.active {
+  /* 分類循環啟動：整顆按鈕底色變半透明橘，摎面板个綠色融合 */
+  background-color: rgba(230, 126, 34, 0.6);
+  color: #ffffff;
+}
+
+/* 蓋過全域 button#loopCategoryBtn.active i 个橘底，免得只有 icon 一塊橘 */
+#newAudioControlsPanel button#loopCategoryBtn.active i {
+  background: none;
+  color: inherit;
+}
+
+/* 速度控制下拉選單 */
+.speed-control-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#speedControlBtn {
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.15) !important; /* 蓋過上面的 background: none */
+}
+
+#speedControlBtn:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.speed-menu {
+  position: absolute;
+  bottom: 110%; /* 向上展開 */
+  right: 0;
+  background-color: rgba(36, 93, 72, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+  min-width: 80px;
+  z-index: 100;
+  flex-direction: column;
+}
+
+.speed-menu li {
+  padding: 8px 16px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+  font-family: var(--roman-font) !important;
+  transition: background-color 0.2s;
+}
+
+.speed-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.speed-menu li.active {
+  color: #f1c40f;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.repeat-control-dropdown {
+  margin-left: 2px;
+  padding-left: 8px;
+}
+#repeatControlBtn {
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+#repeatControlBtn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+=======
+/* --- 新播放控制面板 --- */
+#newAudioControlsPanel {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.85); /* 薰衣草紫亮色模式底色 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  border-radius: 50px;
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  /* 確保只有一行 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 寬度控制 */
+  max-width: calc(100vw - 16px);
+  width: auto;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+#newAudioControlsPanel .controls-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+#newAudioControlsPanel button {
+  background: none;
+  border: none;
+  color: #3e2a47; /* 搭配薰衣草紫的深紫色圖示 */
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+#newAudioControlsPanel button i {
+  color: inherit;
+  background: none;
+}
+
+#newAudioControlsPanel button:hover {
+  background-color: rgba(255, 255, 255, 0.5); /* 亮色底，使用較明顯的白色半透明 */
+  transform: scale(1.1);
+}
+
+#newAudioControlsPanel button:active {
+  transform: scale(0.95);
+}
+
+/* 針對播放中、暫停、結束等狀態顏色微調 */
+#newAudioControlsPanel button.ongoing {
+  color: #d35400; /* 深橘色，在亮色底上較明顯 */
+}
+
+#newAudioControlsPanel button.ended {
+  color: #3e2a47;
+}
+
+#newAudioControlsPanel button.looping {
+  color: #c0392b; /* 深紅色 */
+}
+
+#newAudioControlsPanel button.active {
+  /* 分類循環啟動：整顆按鈕底色變半透明橘，搭配薰衣草紫微調飽和度 */
+  background-color: rgba(230, 110, 34, 0.8);
+  color: #ffffff; /* 啟動時文字反白 */
+}
+
+/* 蓋過全域 button#loopCategoryBtn.active i 个橘底，免得只有 icon 一塊橘 */
+#newAudioControlsPanel button#loopCategoryBtn.active i {
+  background: none;
+  color: inherit;
+}
+
+/* 速度控制下拉選單 */
+.speed-control-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(62, 42, 71, 0.2); /* 亮色底分隔線 */
+}
+
+#speedControlBtn {
+  color: #3e2a47;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.4) !important; /* 蓋過上面的 background: none */
+}
+
+#speedControlBtn:hover {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.speed-menu {
+  position: absolute;
+  bottom: 110%; /* 向上展開 */
+  right: 0;
+  background-color: rgba(var(--iMazinGrace-1-rgb), 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15);
+  min-width: 80px;
+  z-index: 100;
+  flex-direction: column;
+}
+
+.speed-menu li {
+  padding: 8px 16px;
+  color: #3e2a47;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+  font-family: var(--roman-font) !important;
+  transition: background-color 0.2s;
+}
+
+.speed-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.speed-menu li.active {
+  color: #d35400;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+.repeat-control-dropdown {
+  margin-left: 2px;
+  padding-left: 8px;
+}
+#repeatControlBtn {
+  color: #3e2a47;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: var(--roman-font) !important; /* 毋畀 body * 蓋掉 */
+  border-radius: 12px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
+#repeatControlBtn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+>>>>>>> REPLACE
