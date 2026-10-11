@@ -116,6 +116,7 @@
   --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15);
   --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.3);
   --audio-panel-menu-active-fg: #8a3a00;
+  --audio-panel-accent-fg: var(--main-text-color); /* 類／速／擺 三鈕：主色墨綠（對比約 3.4~4.8:1） */
   --paused-yellow-rgb: 255, 250, 205;
   /* RGB 版本方便用 rgba() */
   --paused-yellow: rgba(var(--paused-yellow-rgb), 1);
@@ -1698,6 +1699,7 @@ input:checked+.slider:before {
     --audio-panel-menu-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
     --audio-panel-menu-active-bg: rgba(255, 255, 255, 0.1);
     --audio-panel-menu-active-fg: #f1c40f;
+    --audio-panel-accent-fg: #d9cbe3; /* 類／速／擺 三鈕：淡薰衣草紫（對比約 5.2~10:1，原 #aa96b7 在按鈕底僅 3.0 毋夠） */
 
     /* --- Focus Glow Variables (Dark Mode) --- */
     --focus-glow-color: rgba(96, 165, 250, 0.75);
@@ -6302,6 +6304,13 @@ mark {
   /* 分類循環啟動：整顆按鈕底色變半透明橘，淺色模式用較深个橘摎薰衣草面板區隔，暗色模式摎綠色面板融合 */
   background-color: var(--audio-panel-btn-active-bg);
   color: var(--audio-panel-btn-active-fg);
+}
+
+/* 類／速／擺 三鈕个文字色（循環啟動時 .active 維持白字） */
+#newAudioControlsPanel button#loopCategoryBtn:not(.active),
+#newAudioControlsPanel #speedControlBtn,
+#newAudioControlsPanel #repeatControlBtn {
+  color: var(--audio-panel-accent-fg);
 }
 
 /* 蓋過全域 button#loopCategoryBtn.active i 个橘底，免得只有 icon 一塊橘 */
