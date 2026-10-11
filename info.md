@@ -56,8 +56,8 @@
 
 ---
 
-網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2.5 Pro
-更新日期：2025/9/10
+網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2.5+／Claude 4+ 歷代模型（客源翠開發第 <span data-day-count="2025-03-01"></span> 日）
+更新日期詳見[最新消息](#show-whats-new)
 
 #### 銘謝
 - 再會豆腐字、芫荽體、辰宇落雁體
