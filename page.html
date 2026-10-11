@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客源翠 HakSpring</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="page.css?v=1.0.0">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/md-dynamic.js?v=1.0.0"></script>
+</head>
+<body>
+  <nav class="page-nav">
+    <a href="./" class="page-nav-link" id="back-to-home">
+      <span>🌱 來去客源翠</span>
+    </a>
+    <span class="page-nav-brand">客源翠 HakSpring</span>
+  </nav>
+
+  <main class="page-container">
+    <article class="page-content" id="article-content">
+      <!-- 內容將動態載入 -->
+    </article>
+  </main>
+
+  <script>
+    (function () {
+      const container = document.getElementById('article-content');
+      const params = new URLSearchParams(window.location.search);
+      const pageKey = params.get('p') || '';
+
+      function renderNotFound(message) {
+        document.title = '尋無這頁 - 客源翠';
+        container.innerHTML = `
+          <div class="page-not-found">
+            <h2>尋無這頁</h2>
+            <p>${message || '抱歉，搵毋著你想愛讀个內容。'}</p>
+            <a href="./" class="page-home-btn">轉去客源翠首頁</a>
+          </div>
+        `;
+      }
+
+      // 嚴格白名單驗證：僅允許小寫英數字與連字號
+      if (!pageKey || !/^[a-z0-9-]+$/.test(pageKey)) {
+        renderNotFound('網址參數格式毋著或無指定頁面。');
+        return;
+      }
+
+      fetch('pages/' + pageKey + '.md')
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+          }
+          return res.text();
+        })
+        .then((markdown) => {
+          container.innerHTML = marked.parse(markdown);
+
+          // 呼叫動態標籤填值函式
+          if (typeof renderDynamicMarkdownTags === 'function') {
+            renderDynamicMarkdownTags(container);
+          }
+
+          // 取文章第一個 H1 標題更新 document.title
+          const firstHeading = container.querySelector('h1');
+          if (firstHeading && firstHeading.textContent.trim()) {
+            document.title = firstHeading.textContent.trim() + ' - 客源翠';
+          }
+        })
+        .catch((err) => {
+          console.warn('載入頁面失敗：', err);
+          renderNotFound('抱歉，此篇文章可能尚未建立或路徑有誤。');
+        });
+    })();
+  </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ global.document = {
 };
 global.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
 
-const { calculateDayCount, renderDynamicMarkdownTags } = require('../main.js');
+const { calculateDayCount, renderDynamicMarkdownTags } = require('../js/md-dynamic.js');
 
 // 1. 測試 calculateDayCount 基本邏輯
 // 同一天為 Day 1

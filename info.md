@@ -56,7 +56,7 @@
 
 ---
 
-網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2.5+／Claude 4+ 歷代模型（客源翠開發第 <span data-day-count="2025-03-01"></span> 日）
+網頁程式開發：[Aiuanyu 愛灣語江瑋平律師](https://portaly.cc/aiuanyu) x Gemini 2.5+／Claude 4+ 歷代模型（客源翠開發第 <span data-day-count="2025-03-01"></span> 日）｜[關於客源翠](page.html?p=about)
 更新日期詳見[最新消息](#show-whats-new)
 
 #### 銘謝
