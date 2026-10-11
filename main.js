@@ -6725,6 +6725,23 @@ function initializeAppUI() {
   }
 
   /**
+   * Helper function: Check if the layout is narrow (e.g. mobile stacked td).
+   */
+  function isNarrowLayout() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
+  /**
+   * Helper function: Scroll a specific td into view.
+   */
+  function scrollTdIntoView(audioElement) {
+    if (audioElement && isNarrowLayout()) {
+      const td = audioElement.closest('td');
+      if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  /**
    * 播放指定資料索引的音檔。這是新的播放核心。
    * @param {number} itemIndex - 在 activeCategoryData 中的索引。
    */
@@ -6817,11 +6834,21 @@ function initializeAppUI() {
       return;
     }
 
+    const audioElementsInRow = Array.from(
+      targetRow.querySelectorAll('audio.media'),
+    );
+    const wordAudio = audioElementsInRow[0];
+    const sentenceAudio = audioElementsInRow[1];
+
     // 更新 UI 並儲存書籤
     addNowPlaying(targetRow);
 
     // 窄螢幕（手機版 td 變垂直排列）時，不要整列捲動，改為播個別音檔時捲動 td
-    if (window.innerWidth > 768) {
+    // 若兩個音檔皆被跳過或沒有音檔，則退回捲動 tr 確保焦點
+    const willSkipBoth = (!wordAudio || wordAudio.dataset.skip === 'true') &&
+                         (!sentenceAudio || sentenceAudio.dataset.skip === 'true');
+
+    if (!isNarrowLayout() || willSkipBoth) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -6847,11 +6874,6 @@ function initializeAppUI() {
     navigator.mediaSession.playbackState = 'playing';
     // --- 【整合結束】 ---
 
-    const audioElementsInRow = Array.from(
-      targetRow.querySelectorAll('audio.media'),
-    );
-    const wordAudio = audioElementsInRow[0];
-    const sentenceAudio = audioElementsInRow[1];
     const signal = audioAbortController.signal;
 
     const playNextItem = () => {
@@ -6862,10 +6884,7 @@ function initializeAppUI() {
     // next：例句播完（抑係無例句）以後愛做个事，預設係接去下一項
     const playSentence = (next = playNextItem) => {
       if (sentenceAudio && sentenceAudio.dataset.skip !== 'true' && isPlaying) {
-        if (window.innerWidth <= 768) {
-          const td = sentenceAudio.closest('td');
-          if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        scrollTdIntoView(sentenceAudio);
         currentAudio = sentenceAudio;
         applyPlaybackSpeedAndPitch(currentAudio);
         currentAudio.play().catch((e) => {
@@ -6882,10 +6901,7 @@ function initializeAppUI() {
     };
 
     if (wordAudio && wordAudio.dataset.skip !== 'true' && isPlaying) {
-      if (window.innerWidth <= 768) {
-        const td = wordAudio.closest('td');
-        if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      scrollTdIntoView(wordAudio);
       currentAudio = wordAudio;
       applyPlaybackSpeedAndPitch(currentAudio);
 

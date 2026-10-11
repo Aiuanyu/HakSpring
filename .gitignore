@@ -8,3 +8,4 @@
 data/cert_113/
 data/cert_114/
 *.code-workspace
+test-results/
