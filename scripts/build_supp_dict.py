@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-客源翠補字典（第一層）：從認證、教典个詞條逐字對齊，補教典無獨立建字个單字音。
+客源翠補字典：從認證、教典个詞條逐字對齊，補教典無獨立建字个單字音。
 
 做法：
 1. 呼叫 scripts/supp_expand_variants.js，用 js/variant-parser.js 展開【】變體。
 2. 拆「又讀／文／白」等異讀，展開「屁（屁卵）」這種括號同義詞。
 3. 字數摎音節數共樣个詞，逐字配對（例：藍衫 ↔ lǎm sám → 藍 = lǎm）。
-4. 每腔：該腔認證、教典全部無單字條目个字，收佢在詞裡肚出現過个全部讀音。
+4. 每腔：該腔認證、教典全部無單字條目个字，收佢在詞裡肚出現過个全部讀音（分類「補字典」）。
+5. 多音字補音：有單字條目个字，詞裡肚另外有單字條目無收个讀音（含淨差調），
+   在詞裡出現 POLY_MIN_COUNT 擺以上正收（分類「多音字補音」）。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -38,6 +40,8 @@ LABEL_NAMES = {'北': '北四縣', '南': '南四縣', '美': '美濃', '竹': '
 MAIN_LABEL = {'四': '北', '南': '南', '平': '竹'}
 
 DEFINITION = '（教典未獨立建字，愛灣語客源翠程式自動補音，無釋義）'
+POLY_DEFINITION = '（教典未獨立建此音，愛灣語客源翠程式自動補音，無釋義）'
+POLY_MIN_COUNT = 3
 MAX_EXAMPLES = 5
 
 HAN = re.compile(r'[㐀-䶿一-鿿豈-﫿\U00020000-\U0003ffff]')
@@ -133,6 +137,7 @@ def main():
 
     gip_numeric = load_gip_numeric()
     singles = defaultdict(set)  # 腔 → 有單字條目个字
+    single_readings = defaultdict(lambda: defaultdict(set))  # 腔 → 字 → 單字條目个讀音
     # 腔 → 字 → 讀音 → {'count', 'examples': [(詞, 標音, 來源)], 'labels': set}
     readings = defaultdict(lambda: defaultdict(lambda: defaultdict(
         lambda: {'count': 0, 'examples': [], 'labels': set()})))
@@ -149,12 +154,14 @@ def main():
                 stats[d]['pairs'] += 1
                 if len(HAN.findall(word)) == 1 and len(word.strip()) == 1:
                     singles[d].add(word.strip())
+                    for syl in SYLLABLE.findall(phon):
+                        single_readings[d][word.strip()].add(unicodedata.normalize('NFC', syl))
                 pairs = align(word, phon)
                 if not pairs:
                     continue
                 stats[d]['aligned'] += 1
                 for ch, syl in pairs:
-                    rec = readings[d][ch][syl]
+                    rec = readings[d][ch][unicodedata.normalize('NFC', syl)]
                     rec['count'] += 1
                     for lab in (['卓', '桃'] if o['label'] == '卓桃' else [o['label']]):
                         rec['labels'].add(lab or MAIN_LABEL.get(d, ''))
@@ -163,17 +170,32 @@ def main():
 
     out_dir = os.path.join(ROOT, 'data', 'supp')
     os.makedirs(out_dir, exist_ok=True)
-    print('--- 補字典（第一層：詞裡有、單字無）---')
+    print('--- 補字典（詞裡有、單字無）＋多音字補音 ---')
     for d in DIALECTS:
         dmap = reverse_map[REVERSE_KEY[d]]
         rows = []
+        # 補字典：無單字條目个字，收全部讀音
         chars = [(ch, rs) for ch, rs in readings[d].items() if ch not in singles[d]]
+        # 多音字補音：有單字條目，淨收單字條目無个讀音，而且出現夠多擺
+        poly = []
+        for ch, rs in readings[d].items():
+            if ch not in singles[d]:
+                continue
+            extra = {syl: rec for syl, rec in rs.items()
+                     if syl not in single_readings[d][ch] and rec['count'] >= POLY_MIN_COUNT}
+            if extra:
+                poly.append((ch, extra))
         # 排序：出現總次數多个先，再照字
         chars.sort(key=lambda x: (-sum(r['count'] for r in x[1].values()), x[0]))
-        for ch, rs in chars:
+        poly.sort(key=lambda x: (-sum(r['count'] for r in x[1].values()), x[0]))
+        groups = [(ch, rs, '補字典', DEFINITION, '') for ch, rs in chars]
+        groups += [(ch, rs, '多音字補音', POLY_DEFINITION,
+                    '單字條目已有 ' + '、'.join(sorted(single_readings[d][ch])) + '；')
+                   for ch, rs in poly]
+        for ch, rs, category, definition, prefix in groups:
             for syl, rec in sorted(rs.items(), key=lambda x: -x[1]['count']):
                 examples = '、'.join(f'{w}（{p}，{s}）' for w, p, s in rec['examples'])
-                note = f'出現 {rec["count"]} 擺；出處：{examples}'
+                note = f'{prefix}出現 {rec["count"]} 擺；出處：{examples}'
                 labels = [l for l in LABEL_NAMES if l in rec['labels']]
                 if labels and labels != [MAIN_LABEL.get(d)]:
                     note = '腔內：' + '、'.join(LABEL_NAMES[l] for l in labels) + '；' + note
@@ -184,9 +206,9 @@ def main():
                     '客語標音_顯示': syl,
                     '客語標音_查詢': gip_numeric.get((d, ch, syl)) or comprehensive_clean_spacing(
                         convert_diacritic_to_numeric(syl, dmap, vowel_map, vowel_priority)),
-                    '華語詞義': DEFINITION,
+                    '華語詞義': definition,
                     '備註': note,
-                    '分類': '補字典',
+                    '分類': category,
                     'sourceName': f'補字典{d}',
                     'sourceType': 'supp',
                 })
@@ -202,7 +224,9 @@ def main():
         with open(base + '.json', 'w', encoding='utf-8') as f:
             json.dump({'name': f'補字典{d}', 'content': buf.getvalue()}, f, ensure_ascii=False, indent=2)
         s = stats[d]
-        print(f'  {DIALECT_NAMES[d]}：{len(chars)} 字、{len(rows)} 音'
+        poly_count = sum(len(rs) for _, rs in poly)
+        print(f'  {DIALECT_NAMES[d]}：補字典 {len(chars)} 字、{len(rows) - poly_count} 音；'
+              f'多音字補音 {len(poly)} 字、{poly_count} 音'
               f'（單字條目 {len(singles[d])} 字；詞 {s["pairs"]} 筆，對齊 {s["aligned"]} 筆）')
 
 
