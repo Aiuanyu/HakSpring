@@ -837,9 +837,12 @@ const PHONETIC_NOTE_RAW_REGEX = new RegExp(
 /**
  * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
+ * @param {string} text - 原始標音字串。
+ * @param {boolean} [isGip=false] - 是否為教典資料。
+ * @param {string} [dialect] - 腔調名稱（如「四縣」、「南四縣」、「海陸」等）。
  * @returns {string} 格式化後个淨俐字串。
  */
-function formatPhoneticForDisplay(text, isGip = false) {
+function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   if (!text) return '';
   // 1. 拿忒全形括號【】（）前後个所有空白
   let result = text.replace(/\s*([【（】）])\s*/g, '$1');
@@ -852,6 +855,13 @@ function formatPhoneticForDisplay(text, isGip = false) {
   // 5. 教典詞音裡肚个註記（特、文、白、又讀、俗音…）加上【】，後尾才轉做 label
   if (isGip) {
     result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
+  }
+  // 6. 若啟用四縣 PFS 白話字顯示且為四縣/南四縣腔，轉為 PFS
+  const converter = typeof pfsConverter !== 'undefined'
+    ? pfsConverter
+    : (typeof window !== 'undefined' && window.pfsConverter);
+  if (converter && converter.isPfsDisplayActive(dialect)) {
+    result = converter.toPFS(result);
   }
   return result;
 }
@@ -1310,7 +1320,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   }
 
   // 2. 標音處理（格式化 + sandhi 變調）
-  let phoneticText = formatPhoneticForDisplay(entry.phonetic, isGipData);
+  let phoneticText = formatPhoneticForDisplay(entry.phonetic, isGipData, dialectName);
   const dialectCode = getDialectCode(dialectName);
   // 根據官方資料，饒平變調規則僅針對新竹腔說明；變體（卓蘭、桃園、卓桃）不套用 sandhi
   const shouldApplySandhi = dialectCode && (dialectCode !== 'rh' || isMain);
@@ -1462,7 +1472,7 @@ function buildVariantsCompactHTML(rawWord, rawPhonetic, dialectName, opts) {
       if (opts.splitOr) {
         ph = ph.split('或')[0].trim();
       }
-      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false) : ph;
+      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false, dialectType) : ph;
 
       let shouldSandhi = !!opts.sandhi;
       if (dialectType === '饒平' && label !== '竹') {
@@ -1490,7 +1500,7 @@ function buildVariantsCompactHTML(rawWord, rawPhonetic, dialectName, opts) {
     const processPhonetic = (p, label) => {
       let ph = p || '';
       if (opts.splitOr) ph = ph.split('或')[0].trim();
-      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false) : ph;
+      ph = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(ph, false, dialectType) : ph;
       let shouldSandhi = !!opts.sandhi;
       if (dialectType === '饒平' && label !== '竹') shouldSandhi = false;
       if (shouldSandhi && typeof window !== 'undefined' && typeof window.getSandhiPronunciation === 'function') {
@@ -1596,7 +1606,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
     ruby.textContent = rawWord;
   }
   const rt = document.createElement('rt');
-  let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip);
+  let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip, dialectName);
   const dialectCode = getDialectCode(dialectName);
   if (dialectCode) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
@@ -1958,6 +1968,23 @@ function showPronunciationPopup(
           let headerText = '';
           let audioTitle = '播放讀音';
 
+          // 動態依當前顯示腳本（PFS / HPP）確保標音格式化
+          const ensurePhoneticScript = (readingItem, fallbackPh, source) => {
+            const raw = (readingItem && readingItem.rawPhonetic) || fallbackPh;
+            const isGip = Boolean(
+              (readingItem && readingItem.source && String(readingItem.source).includes('教典')) ||
+              (source && String(source).includes('教典'))
+            );
+            if (typeof formatPhoneticForDisplay === 'function') {
+              return formatPhoneticForDisplay(raw, isGip, source);
+            }
+            return raw;
+          };
+          const renderNote = (html) =>
+            typeof renderPhoneticNoteLabels === 'function'
+              ? renderPhoneticNoteLabels(html)
+              : html;
+
           if (reading.resolvedLabel) {
             // Case 1: Romanizer 專屬讀音模式
             const labelTitle = LABEL_TITLE_MAP[reading.resolvedLabel] || reading.resolvedLabel;
@@ -1965,11 +1992,12 @@ function showPronunciationPopup(
             if (baseDialect === '饒平') {
               allowSandhi = (currentDialect === '饒平（新竹）');
             }
+            const formattedPron = ensurePhoneticScript(reading, reading.pronunciation, reading.source || currentDialect);
             const sandhiResult = allowSandhi
-              ? getSandhiPronunciation(reading.pronunciation, reading.source)
+              ? getSandhiPronunciation(formattedPron, reading.source)
               : null;
-            const phoneticDisplay = sandhiResult ? sandhiResult.sandhi : reading.pronunciation;
-            headerText = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.resolvedLabel}" title="${labelTitle}">${reading.resolvedLabel}</span><span class="pronunciation-text">${phoneticDisplay}</span></div>`;
+            const phoneticDisplay = sandhiResult ? sandhiResult.sandhi : formattedPron;
+            headerText = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.resolvedLabel}" title="${labelTitle}">${reading.resolvedLabel}</span><span class="pronunciation-text">${renderNote(phoneticDisplay)}</span></div>`;
             if (!reading.isExactMatch) {
               headerText += ` <span class="popup-original-term">(詞目: ${reading.originalTerm})</span>`;
             }
@@ -1996,25 +2024,29 @@ function showPronunciationPopup(
               }
             }
 
+            const mainDialectSource = reading.variantType || reading.source;
+            const formattedMainP = ensurePhoneticScript(reading.mainVariant, reading.mainVariant.phonetic, mainDialectSource);
             const mainLabelTitle = reading.mainVariant.title || LABEL_TITLE_MAP[reading.mainVariant.label] || reading.mainVariant.label;
-            const mainSandhi = getSandhiPronunciation(reading.mainVariant.phonetic, reading.source);
-            const mainPhonetic = mainSandhi ? mainSandhi.sandhi : reading.mainVariant.phonetic;
+            const mainSandhi = getSandhiPronunciation(formattedMainP, reading.source);
+            const mainPhonetic = mainSandhi ? mainSandhi.sandhi : formattedMainP;
             const mainWord = reading.mainVariant.word || reading.originalTerm;
             const hasDiffWordMain = mainWord !== baseWord;
             const mainWordHtml = hasDiffWordMain ? `<span class="popup-variant-word">${mainWord}</span>` : '';
-            const mainLineHtml = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.mainVariant.label}" title="${mainLabelTitle}">${reading.mainVariant.label}</span><span class="pronunciation-text">${mainPhonetic}</span>${mainWordHtml}</div>`;
+            const mainLineHtml = `<div class="popup-variant-line"><span class="variant-label variant-label-${reading.mainVariant.label}" title="${mainLabelTitle}">${reading.mainVariant.label}</span><span class="pronunciation-text">${renderNote(mainPhonetic)}</span>${mainWordHtml}</div>`;
 
             const subLinesHtml = reading.variants.map((v) => {
+              const subDialectSource = v.label === '南' ? '南四縣' : mainDialectSource;
+              const formattedSubP = ensurePhoneticScript(v, v.phonetic, subDialectSource);
               const subLabelTitle = v.title || LABEL_TITLE_MAP[v.label] || v.label;
               const allowSubSandhi = reading.variantType !== '饒平';
               const subSandhi = allowSubSandhi
-                ? getSandhiPronunciation(v.phonetic, reading.source)
+                ? getSandhiPronunciation(formattedSubP, reading.source)
                 : null;
-              const subPhonetic = subSandhi ? subSandhi.sandhi : v.phonetic;
+              const subPhonetic = subSandhi ? subSandhi.sandhi : formattedSubP;
               const vWord = v.word || reading.mainVariant.word || reading.originalTerm;
               const hasDiffWordSub = vWord !== baseWord;
               const wordHtml = hasDiffWordSub ? `<span class="popup-variant-word">${vWord}</span>` : '';
-              return `<div class="popup-variant-line"><span class="variant-label variant-label-${v.label}" title="${subLabelTitle}">${v.label}</span><span class="pronunciation-text">${subPhonetic}</span>${wordHtml}</div>`;
+              return `<div class="popup-variant-line"><span class="variant-label variant-label-${v.label}" title="${subLabelTitle}">${v.label}</span><span class="pronunciation-text">${renderNote(subPhonetic)}</span>${wordHtml}</div>`;
             }).join('');
 
             headerText = `<div class="popup-variant-lines">${mainLineHtml}${subLinesHtml}</div>`;
@@ -2027,13 +2059,13 @@ function showPronunciationPopup(
             }
           } else {
             // Case 3: 無變體一般詞條
+            const formattedPron = ensurePhoneticScript(reading, reading.pronunciation, reading.source);
             const sandhiResult = getSandhiPronunciation(
-              reading.pronunciation,
+              formattedPron,
               reading.source,
             );
-            headerText = sandhiResult
-              ? `<span class="pronunciation-text">${sandhiResult.sandhi}</span>`
-              : `<span class="pronunciation-text">${reading.pronunciation}</span>`;
+            const displayPhonetic = sandhiResult ? sandhiResult.sandhi : formattedPron;
+            headerText = `<span class="pronunciation-text">${renderNote(displayPhonetic)}</span>`;
             if (!reading.isExactMatch) {
               headerText += ` (詞目: ${reading.originalTerm})`;
             }
@@ -3951,7 +3983,7 @@ function initializeAppUI() {
     return mapping[simplified] || null;
   }
 
-  function performSearch(page = 1, itemsPerPage = 50) {
+  function performSearch(page = 1, itemsPerPage = 50, options = {}) {
     const selectedDialect = document.querySelector(
       '#search-popup input[name="dialect"]:checked',
     ).value;
@@ -4157,6 +4189,7 @@ function initializeAppUI() {
       selectedDialect,
       page,
       itemsPerPage,
+      options,
     );
   }
 
@@ -4168,7 +4201,9 @@ function initializeAppUI() {
     selectedDialect,
     page = 1,
     itemsPerPage = 50,
+    options = {},
   ) {
+    options = options || {};
     g_currentSearchResults = results; // Store results globally
     let globalRowIndex = (page - 1) * itemsPerPage;
     const contentContainer = document.getElementById('generated');
@@ -4512,15 +4547,17 @@ function initializeAppUI() {
 
     setTimeout(() => repositionViewport({ fromRender: true }), 0); // Trigger font size adjustment after table is rendered
 
-    setTimeout(() => {
-      const firstResultElement = contentContainer.querySelector('h4, table');
-      if (firstResultElement) {
-        firstResultElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
-    }, 100);
+    if (!options?.preserveScroll) {
+      setTimeout(() => {
+        const firstResultElement = contentContainer.querySelector('h4, table');
+        if (firstResultElement) {
+          firstResultElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+      }, 100);
+    }
   }
 
   /**
@@ -4732,11 +4769,21 @@ function initializeAppUI() {
     const summaryInline = summaryText.parentElement;
     let containerWidth = summaryText.clientWidth;
     if (summaryInline && summaryInline.classList.contains('summary-inline')) {
-      // copyUrlBtn 係 initializeAppUI() 外層 closure 已經有个常數，
-      // 毋使閣查一擺 DOM。
+      // .summary-inline 裡肚除了摘要文字，還有複製網址撳鈕、PFS／HPP 切換掣等，
+      // 所以愛將「所有看得見个兄弟元素」个闊度（含左右 margin）摎各自前頭个間隙
+      // 全部扣掉，毋係淨扣 copyUrlBtn（後來加个按鈕就會漏扣，文字會摎按鈕重疊）。
       const gap =
         parseFloat(window.getComputedStyle(summaryInline).columnGap) || 0;
-      const reserved = copyUrlBtn ? copyUrlBtn.offsetWidth + gap : 0;
+      let reserved = 0;
+      Array.from(summaryInline.children).forEach((child) => {
+        if (child === summaryText || child.offsetWidth === 0) return;
+        const style = window.getComputedStyle(child);
+        reserved +=
+          child.offsetWidth +
+          (parseFloat(style.marginLeft) || 0) +
+          (parseFloat(style.marginRight) || 0) +
+          gap;
+      });
       const available = summaryInline.clientWidth - reserved;
       if (available > 0) containerWidth = available;
     }
@@ -5087,12 +5134,16 @@ function initializeAppUI() {
           ? getLineVariants({ ...line, sourceName, sourceType: isGipData ? 'gip' : 'cert' })
           : null;
         const hasV = v && v.hasVariants;
+        const entryDialect = hasV ? v.dialectType : (line.腔調 || sourceName);
+        const rawPhonetic = hasV ? v.main.phonetic : line['客語標音_顯示'];
         const formattedMainPhonetic = formatPhoneticForDisplay(
-          hasV ? v.main.phonetic : line['客語標音_顯示'],
+          rawPhonetic,
           isGipData,
+          entryDialect,
         );
         const entry = {
           pronunciation: formattedMainPhonetic,
+          rawPhonetic: rawPhonetic,
           source: sourceName,
           isExactMatch: true,
           originalTerm: hasV ? v.main.word : rawTerm,
@@ -5102,11 +5153,14 @@ function initializeAppUI() {
             fullSourceName: isGipData ? 'gip' : 'cert' + dataVarName,
           },
           variantType: hasV ? v.dialectType : null,
-          mainVariant: hasV ? { ...v.main, phonetic: formattedMainPhonetic } : null,
+          mainVariant: hasV
+            ? { ...v.main, phonetic: formattedMainPhonetic, rawPhonetic: v.main.phonetic }
+            : null,
           variants: hasV
             ? v.variants.map((x) => ({
                 ...x,
-                phonetic: formatPhoneticForDisplay(x.phonetic, false),
+                phonetic: formatPhoneticForDisplay(x.phonetic, false, entryDialect),
+                rawPhonetic: x.phonetic,
               }))
             : null,
         };
@@ -7996,6 +8050,132 @@ function initializeAppUI() {
         );
       });
     }
+
+    // --- PFS Script Toggle & Header/Summary Badge Setting Logic ---
+    function updateScriptModeUI(scriptValue) {
+      const isPfs = scriptValue === 'pfs';
+      const badgeBtn = document.getElementById('scriptModeToggleBtn');
+      const badgeText = document.getElementById('scriptModeBadgeText');
+      if (badgeBtn && badgeText) {
+        if (isPfs) {
+          badgeText.textContent = '四 PFS';
+          badgeBtn.classList.add('is-pfs');
+          badgeBtn.setAttribute('title', '當前顯示：四 PFS（點擊切換為 HPP）');
+        } else {
+          badgeText.textContent = 'HPP';
+          badgeBtn.classList.remove('is-pfs');
+          badgeBtn.setAttribute('title', '當前顯示：HPP（點擊切換為 四 PFS）');
+        }
+      }
+      const dailyBtn = document.getElementById('dailyScriptModeToggleBtn');
+      if (dailyBtn) {
+        dailyBtn.textContent = isPfs ? '四 PFS' : 'HPP';
+        if (isPfs) dailyBtn.classList.add('is-pfs');
+        else dailyBtn.classList.remove('is-pfs');
+      }
+      const toggle = document.getElementById('pfsScriptToggle');
+      if (toggle && toggle.checked !== isPfs) {
+        toggle.checked = isPfs;
+      }
+      // 切換掣文字會在「HPP」摎「四 PFS」之間變，闊度無共樣，愛重算摘要字型大細
+      if (typeof adjustResultsSummaryFontSize === 'function') {
+        adjustResultsSummaryFontSize();
+      }
+    }
+
+    function setHakfaDisplayScript(scriptValue) {
+      localStorage.setItem('hakfaDisplayScript', scriptValue);
+      updateScriptModeUI(scriptValue);
+      trackEvent('toggle', 'PfsDisplayScript', scriptValue);
+
+      // 發送全域事件通知其他元件（如遊戲模式、日日一詞、羅馬字轉換工具）
+      window.dispatchEvent(
+        new CustomEvent('hakfaDisplayScriptChanged', {
+          detail: { script: scriptValue },
+        }),
+      );
+
+      // 觸發雲端同步偏好更新
+      if (typeof window.triggerCloudSync === 'function') {
+        window.triggerCloudSync();
+      }
+
+      // 記住當前捲動高度，避免重新算繪時畫面跳動回頂端
+      const savedScrollY = window.scrollY;
+
+      // 1. 若當前畫面正在顯示主分類／認證／教典表格（#category-table 存在）
+      const categoryTable = document.getElementById('category-table');
+      if (
+        categoryTable &&
+        g_currentCategory &&
+        g_currentDialectInfo &&
+        activeCategoryData &&
+        activeCategoryData.length > 0
+      ) {
+        const tbody = categoryTable.tBodies[0];
+        if (tbody) {
+          const currentHeight = tbody.offsetHeight;
+          tbody.style.minHeight = currentHeight + 'px';
+          tbody.innerHTML = '';
+          const itemsToRender = activeCategoryData.slice(
+            firstLoadedIndex,
+            lastLoadedIndex,
+          );
+          // isInitialLoad 傳入 false，避免觸發 resultsSummaryContainer.scrollIntoView
+          renderCategoryItems(
+            itemsToRender,
+            g_currentDialectInfo,
+            g_currentCategory,
+            false,
+          );
+          tbody.style.minHeight = '';
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          });
+        }
+      }
+      // 2. 若當前畫面正在顯示搜尋結果（URL 含 ca 參數，且無 category-table）
+      else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasSearchParam = urlParams.has('ca') && urlParams.get('ca').trim().length > 0;
+        const isSearchContent = Boolean(document.querySelector('#generated .results-section-heading'));
+        if ((hasSearchParam || isSearchContent) && typeof performSearch === 'function') {
+          const page = parseInt(urlParams.get('iab'), 10) || 1;
+          const itemsPerPage = parseInt(urlParams.get('bidsu'), 10) || 50;
+          performSearch(page, itemsPerPage, { preserveScroll: true });
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+        }
+      }
+    }
+
+    window.setHakfaDisplayScript = setHakfaDisplayScript;
+    window.updateScriptModeUI = updateScriptModeUI;
+
+    const currentScript = localStorage.getItem('hakfaDisplayScript') || 'hagpin';
+    updateScriptModeUI(currentScript);
+
+    const pfsScriptToggle = document.getElementById('pfsScriptToggle');
+    if (pfsScriptToggle) {
+      pfsScriptToggle.checked = currentScript === 'pfs';
+      pfsScriptToggle.addEventListener('change', (event) => {
+        setHakfaDisplayScript(event.target.checked ? 'pfs' : 'hagpin');
+      });
+    }
+
+    const scriptModeToggleBtn = document.getElementById('scriptModeToggleBtn');
+    if (scriptModeToggleBtn) {
+      scriptModeToggleBtn.addEventListener('click', () => {
+        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hagpin';
+        setHakfaDisplayScript(current === 'pfs' ? 'hagpin' : 'pfs');
+      });
+    }
+
+    window.addEventListener('hakfaDisplayScriptChanged', (event) => {
+      if (event.detail && event.detail.script) {
+        updateScriptModeUI(event.detail.script);
+      }
+    });
 
     // --- CERT Advanced Repeat Setting Logic ---
     const certAdvancedRepeatSlider = document.getElementById('certAdvancedRepeatSlider');

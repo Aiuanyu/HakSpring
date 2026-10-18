@@ -579,7 +579,8 @@ function formatGamePinyinWithSandhi(pinyinStr, targetVarName) {
   if (!pinyinStr) return '';
   // 教典資料（dataVarName 以「教」起頭）開頭个「特」會補上【】，後尾才轉做 label
   const isGipVar = !!targetVarName && String(targetVarName).startsWith('教');
-  let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr, isGipVar) : pinyinStr;
+  const activeDialect = targetVarName || (typeof gameActiveDialect !== 'undefined' ? gameActiveDialect : '');
+  let formatted = typeof formatPhoneticForDisplay === 'function' ? formatPhoneticForDisplay(pinyinStr, isGipVar, activeDialect) : pinyinStr;
   
   if (typeof getSandhiHtml === 'function') {
     // 先試資料變數前綴（單一腔字），再退回完整腔名；共用 main.js 的 getDialectCode

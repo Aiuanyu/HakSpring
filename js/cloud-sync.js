@@ -195,6 +195,8 @@ async function syncFromCloud() {
       const localPrefs = {
         romanizerJoiningMode:
           localStorage.getItem('romanizerJoiningMode') || 'none',
+        hakfaDisplayScript:
+          localStorage.getItem('hakfaDisplayScript') || 'hagpin',
         gameLastDataVarName:
           localStorage.getItem('hakkaGameLastDataVarName') || '',
         userName: localStorage.getItem('hakkaUserName') || '',
@@ -273,6 +275,14 @@ async function syncFromCloud() {
       }
       localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
 
+      let finalHakfaDisplayScript = localPrefs.hakfaDisplayScript;
+      if (localPrefs.hakfaDisplayScript === (syncedPrefs.hakfaDisplayScript || 'hagpin')) {
+        if (cloudPrefs.hakfaDisplayScript !== undefined && cloudPrefs.hakfaDisplayScript !== null) {
+          finalHakfaDisplayScript = cloudPrefs.hakfaDisplayScript;
+        }
+      }
+      localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
+
       // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
       let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
       if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
@@ -306,6 +316,7 @@ async function syncFromCloud() {
       // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
         finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
+        finalHakfaDisplayScript !== (cloudPrefs.hakfaDisplayScript || 'hagpin') ||
         finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
         finalUserName !== (cloudPrefs.userName || '') ||
         finalUserLocation !== (cloudPrefs.userLocation || '');
@@ -331,6 +342,7 @@ async function syncFromCloud() {
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: finalRomanizerJoiningMode,
+          hakfaDisplayScript: finalHakfaDisplayScript,
           gameLastDataVarName: finalGameLastDataVarName,
           userName: finalUserName,
           userLocation: finalUserLocation,
@@ -353,6 +365,7 @@ async function syncFromCloud() {
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
+          hakfaDisplayScript: localStorage.getItem('hakfaDisplayScript') || 'hagpin',
           gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
           userName: localStorage.getItem('hakkaUserName') || '',
           userLocation: localStorage.getItem('hakkaUserLocation') || '',
@@ -397,6 +410,8 @@ async function syncToCloud() {
     const preferences = {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
+      hakfaDisplayScript:
+        localStorage.getItem('hakfaDisplayScript') || 'hagpin',
       gameLastDataVarName:
         localStorage.getItem('hakkaGameLastDataVarName') || '',
       userName: localStorage.getItem('hakkaUserName') || '',

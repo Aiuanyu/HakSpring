@@ -530,9 +530,12 @@ const DailyWord = (function () {
     
     // First, format and clean the base pinyin
     if (item.type === 'cert') {
-        pinyinHTML = cleanPinyin.split('或')[0].trim();
+        const baseCertPhonetic = cleanPinyin.split('或')[0].trim();
+        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function'
+            ? window.formatPhoneticForDisplay(baseCertPhonetic, false, dialect)
+            : baseCertPhonetic;
     } else {
-        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true) : rawPinyin;
+        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true, dialect) : rawPinyin;
     }
     
     // Apply sandhi
@@ -651,6 +654,7 @@ const DailyWord = (function () {
     const audioTitle = typeof getVariantAudioTitle === 'function'
       ? getVariantAudioTitle(item.type === 'cert' ? dialectFullName : '')
       : '播放發音';
+    const isPfs = typeof localStorage !== 'undefined' && localStorage.getItem('hakfaDisplayScript') === 'pfs';
 
     dailyModalBody.innerHTML = `
       <div class="daily-card-container">
@@ -663,7 +667,17 @@ const DailyWord = (function () {
                 <div>${weekdayStr}</div>
               </div>
             </div>
-            <div class="daily-mode-badge">${modeText}</div>
+            <div class="daily-header-badges" style="display: flex; align-items: center; gap: 8px;">
+              <button
+                id="dailyScriptModeToggleBtn"
+                class="daily-mode-badge daily-script-btn ${isPfs ? 'is-pfs' : ''}"
+                title="切換拼音顯示模式（四 PFS／HPP）"
+                style="cursor: pointer; background: none; font-family: inherit;"
+              >
+                ${isPfs ? '四 PFS' : 'HPP'}
+              </button>
+              <div class="daily-mode-badge">${modeText}</div>
+            </div>
           </div>
           
           <div class="daily-tear-line"></div>
@@ -714,6 +728,25 @@ const DailyWord = (function () {
     const btnRandom = dailyModalBody.querySelector('#dailyBtnRandom');
     const btnFavToggle = dailyModalBody.querySelector('.daily-fav-btn');
     const btnFavList = dailyModalBody.querySelector('#dailyBtnFavList');
+    const dailyScriptBtn = dailyModalBody.querySelector('#dailyScriptModeToggleBtn');
+
+    if (dailyScriptBtn) {
+      dailyScriptBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hagpin';
+        const next = current === 'pfs' ? 'hagpin' : 'pfs';
+        if (typeof window.setHakfaDisplayScript === 'function') {
+          window.setHakfaDisplayScript(next);
+        } else {
+          localStorage.setItem('hakfaDisplayScript', next);
+          window.dispatchEvent(
+            new CustomEvent('hakfaDisplayScriptChanged', {
+              detail: { script: next },
+            }),
+          );
+        }
+      });
+    }
     
     if (btnToday) {
       btnToday.addEventListener('click', () => {
@@ -803,7 +836,8 @@ const DailyWord = (function () {
                      }
                    }
                  } else {
-                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawCrossPinyin, true) : rawCrossPinyin;
+                   const crossDialectName = itemDialectInfo.腔名 || itemDialectInfo.腔;
+                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawCrossPinyin, true, crossDialectName) : rawCrossPinyin;
                    if (typeof window.getSandhiPronunciation === 'function') {
                      const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
                      const sandhiResult = window.getSandhiPronunciation(crossPinyin, fullDialectName);
@@ -1059,6 +1093,14 @@ const DailyWord = (function () {
       }
     }
   }
+
+  // 切換 PFS／HPP 顯示時，若日日一詞視窗開著，就用目前个字重新算繪卡片
+  window.addEventListener('hakfaDisplayScriptChanged', () => {
+    const dailyModal = document.getElementById('dailyWordModal');
+    if (dailyModal && dailyModal.style.display !== 'none' && currentDailyWordIdx !== null) {
+      renderDailyWord('current');
+    }
+  });
 
   return {
     init,
