@@ -154,6 +154,14 @@ assert.strictEqual(isSiXianDialect('大埔'), false);
 assert.strictEqual(isSiXianDialect('饒平'), false);
 assert.strictEqual(isSiXianDialect('詔安'), false);
 
+// 「四海大平安」等含其他腔名用字个合稱，絕不可當成四縣
+assert.strictEqual(isSiXianDialect('四海大平安'), false);
+assert.strictEqual(isSiXianDialect('海陸基'), false);
+assert.strictEqual(isSiXianDialect('大埔中高'), false);
+assert.strictEqual(isSiXianDialect('南四縣'), true);
+assert.strictEqual(isSiXianDialect('四中高'), true);
+assert.strictEqual(isSiXianDialect('東南'), false);
+
 console.log('  ✅ 8. 腔調識別（四縣/南四縣）保護測試 PASS');
 
 // 9. 對照表範例自動核對：pages/pfs.md 內所有「HagPinPlus ↔ PFS」單音節範例，須與引擎輸出一致

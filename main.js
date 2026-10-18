@@ -1616,7 +1616,25 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   td.appendChild(ruby);
 }
 
+/**
+ * 目前是否處於「四縣 PFS 顯示」：此時進到變調函式个標音已經係 PFS，
+ * 調符摎音節間个連字號都摎 HagPinPlus 無共樣，愛改用 PFS 个方式判斷調類摎切音節。
+ * @param {string} dialectCode - getDialectCode() 个結果
+ * @returns {boolean}
+ */
+function isPfsSandhiMode(dialectCode) {
+  if (dialectCode !== 'si') return false;
+  const converter = typeof pfsConverter !== 'undefined'
+    ? pfsConverter
+    : (typeof window !== 'undefined' && window.pfsConverter);
+  return !!(converter && converter.isPfsDisplayActive('四縣'));
+}
+
 function classifyTone(syllable, dialectCode) {
+  if (isPfsSandhiMode(dialectCode)) {
+    const converter = typeof pfsConverter !== 'undefined' ? pfsConverter : window.pfsConverter;
+    return converter.classifyPfsTone(syllable);
+  }
   // 順帶檢查 vowel_map 存在：本函式已改走 NFD 拆調號、不再直接用 vowel_map，
   // 但它與 dialect_reverse_map 同在 reverse_tone_mapping.json，故拿它當「反查表資料已載入」的存在性檢查。
   if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
@@ -1658,7 +1676,8 @@ function getSandhiHtml(htmlContent, dialectCode) {
   // 阻斷標點：括號、頓號、逗號、分號、句號等皆為詞項邊界或語音停頓，不可跨越連讀變調。
   // 僅空白（\s）為音節間隔，可跳過以比對前後音節。
   const BLOCKING_PUNCTUATION = '()（）【】、，,；;。';
-  const SKIPPABLE_PUNCTUATION = '\\s';
+  // PFS 顯示時，詞內音節係用連字號 - 相連，也愛當做音節間隔
+  const SKIPPABLE_PUNCTUATION = isPfsSandhiMode(dialectCode) ? '\\s\\-' : '\\s';
   const ALL_PUNCTUATION_CHARS = SKIPPABLE_PUNCTUATION + BLOCKING_PUNCTUATION;
 
   const TOKENIZER_REGEX = new RegExp(

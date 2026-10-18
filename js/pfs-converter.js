@@ -60,7 +60,28 @@
   function isSiXianDialect(dialect) {
     if (!dialect) return false;
     const s = String(dialect);
-    return s.includes('四') || s.includes('南') || s === 'si' || s === 'na';
+    if (s === 'si' || s === 'na') return true;
+    // 資料變數與腔名皆以「四」或「南」起頭（四縣、南四縣、北四縣、四基、教典四、教典南…），
+    // 但「四海大平安」這類合稱含有其他腔名用字，絕不可當成四縣
+    if (/[海陸埔饒平詔安大]/.test(s)) return false;
+    return /^(教典)?(北|南)?(四|南)/.test(s);
+  }
+
+  /**
+   * 判斷一個「已經轉成 PFS」的四縣音節屬於哪個調類（供變調判斷用）
+   * 陰平 ˆ→24、陽平 ̀→11、上聲 ́→31、陽入 ̍→5；無調符者，-p/-t/-k 結尾是陰入 2，其餘是去聲 55
+   * @param {string} syllable 單一 PFS 音節
+   * @returns {string|null} 調值字串；不是音節（含數字、標點等）則回傳 null
+   */
+  function classifyPfsTone(syllable) {
+    if (!syllable || !isHakfaSyllable(syllable)) return null;
+    const nfd = String(syllable).normalize('NFD');
+    const mark = nfd.match(/[\u0302\u0300\u0301\u030d]/);
+    if (mark) {
+      return { '\u0302': '24', '\u0300': '11', '\u0301': '31', '\u030d': '5' }[mark[0]];
+    }
+    const base = nfd.replace(/[\u0300-\u036f]/g, '');
+    return /[ptk]$/i.test(base) ? '2' : '55';
   }
 
   /**
@@ -321,6 +342,7 @@
     convertSyllableToPFS,
     toPFS,
     isSiXianDialect,
-    isPfsDisplayActive
+    isPfsDisplayActive,
+    classifyPfsTone
   };
 });
