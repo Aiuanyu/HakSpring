@@ -540,6 +540,13 @@ const DATA_FILES_TO_CACHE = [
   'data/gip/20250630-大.json',
   'data/gip/20250630-平.json',
   'data/gip/20250630-安.json',
+  // 客源翠補字典（教典無獨立建字个單字音，見 data/supp/README.md）
+  'data/supp/補字典-四.json',
+  'data/supp/補字典-南.json',
+  'data/supp/補字典-海.json',
+  'data/supp/補字典-大.json',
+  'data/supp/補字典-平.json',
+  'data/supp/補字典-安.json',
   // 其他資料
   'tone_mapping.json',
   'reverse_tone_mapping.json',
@@ -1082,6 +1089,8 @@ function findPronunciationsInAllData(searchText) {
 
 function constructWordAudioUrl(lineData, fullSourceName) {
   if (!fullSourceName) return null;
+  // 補字典係程式自動補个音，無音檔
+  if (fullSourceName.startsWith('supp') || fullSourceName.includes('補字典')) return null;
   const isGip = fullSourceName.startsWith('gip') || fullSourceName.includes('教典');
   const isCert = fullSourceName.startsWith('cert') || (!isGip && typeof getDialectInfo === 'function'); // Fallback
 
@@ -2514,6 +2523,11 @@ function getKeyNameFromPath(filePath) {
     return gipMap[gipKey];
   }
 
+  if (filePath.includes('/supp/')) {
+    // 補字典檔：'補字典-四' → '補字典四'
+    return fileName.replace('-', '');
+  }
+
   // 3. 處理其餘的特殊檔案
   const otherMap = {
     tone_mapping: 'toneMappingData',
@@ -2527,6 +2541,10 @@ function getKeyNameFromPath(filePath) {
 
 function getFullLevelName(varName) {
   if (!varName) return '未知級別';
+  if (varName.startsWith('補字典')) {
+    const accent = ACCENT_INFO[varName.substring(3)];
+    return accent ? `${accent.腔名}補字典` : varName;
+  }
   if (varName.startsWith('教典')) {
     const gipNameMap = {
       教典四: '四縣教典',
@@ -3651,6 +3669,16 @@ function initializeAppUI() {
     南四縣: window['教典南'],
   };
 
+  // --- 客源翠補字典 ---
+  const suppData = {
+    四縣: window['補字典四'],
+    海陸: window['補字典海'],
+    大埔: window['補字典大'],
+    饒平: window['補字典平'],
+    詔安: window['補字典安'],
+    南四縣: window['補字典南'],
+  };
+
   function updateProgressDropdown() {
     const progressDropdown = document.getElementById('progressDropdown');
     const progressDetailsSpan = document.getElementById('progressDetails');
@@ -4032,6 +4060,22 @@ function initializeAppUI() {
       combinedData = combinedData.concat(gipParsedData);
     }
 
+    // 補字典無釋義，淨用客文查詞
+    const suppDialectData = suppData[selectedDialect];
+    if (
+      searchMode === '客話' &&
+      suppDialectData &&
+      suppDialectData.content &&
+      Array.isArray(suppDialectData.content)
+    ) {
+      const suppParsedData = suppDialectData.content;
+      suppParsedData.forEach((item) => {
+        item.sourceName = suppDialectData.name;
+        item.sourceType = 'supp';
+      });
+      combinedData = combinedData.concat(suppParsedData);
+    }
+
     let results;
     if (searchMode === '客話') {
       const lowerCaseKeyword = keyword.toLowerCase();
@@ -4240,8 +4284,13 @@ function initializeAppUI() {
       let 級 = '';
       let originalDialectInfo = {};
       const isGip = line.sourceType === 'gip' || line.sourceName.startsWith('教典');
+      const isSupp = line.sourceType === 'supp';
 
-      if (isGip) {
+      if (isSupp) {
+         腔 = line.sourceName.replace('補字典', '');
+         const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
+         originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '補字典' };
+      } else if (isGip) {
          腔 = line.sourceName.replace('教典', '');
          const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
          originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '教典' };
@@ -4251,7 +4300,8 @@ function initializeAppUI() {
          originalDialectInfo = getDialectInfo(腔, 級);
       }
 
-      const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
+      // 補字典還無跨腔對照（認證靠編號、教典靠跨腔表，補字典兩樣都無）
+      const crossDialectResults = isSupp ? [] : findCrossDialectRows(line, originalDialectInfo, isGip);
 
       if (crossDialectResults.length > 0) {
         const crossDialectBtn = document.createElement('button');
@@ -4280,8 +4330,11 @@ function initializeAppUI() {
       favBtn.innerHTML = '❤️';
       if (isFaved) favBtn.classList.add('faved');
       favBtn.dataset.favId = favId;
-      td1.appendChild(document.createTextNode(' '));
-      td1.appendChild(favBtn);
+      // 收藏 ID 淨分認證（c）、教典（g），補字典先毋做收藏
+      if (!isSupp) {
+        td1.appendChild(document.createTextNode(' '));
+        td1.appendChild(favBtn);
+      }
 
       item.appendChild(td1);
 
@@ -4293,7 +4346,9 @@ function initializeAppUI() {
       });
       td2.appendChild(document.createElement('br'));
 
-      const dataKey = line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
+      const dataKey = isSupp
+        ? null
+        : line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
       let audioSrc = constructWordAudioUrl(line, dataKey);
       if (audioSrc) {
         audioSrc = applyAudioProxy(audioSrc);
@@ -4309,7 +4364,7 @@ function initializeAppUI() {
       }
 
       if (
-        line.sourceType !== 'gip' ||
+        (line.sourceType !== 'gip' && !isSupp) ||
         (line.sourceType === 'gip' && line['詞目音檔名'])
       ) {
         td2.appendChild(document.createElement('br'));
