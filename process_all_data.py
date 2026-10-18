@@ -620,4 +620,8 @@ if __name__ == '__main__':
     import build_supp_dict
     build_supp_dict.main()
 
+    # 次方言補音（推導認證無標个南四縣音），用著補字典个對齊工具，見 data/sub-dialects-fill/README.md
+    import build_subdialect_fill
+    build_subdialect_fill.main()
+
     

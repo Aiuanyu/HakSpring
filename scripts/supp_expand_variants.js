@@ -4,7 +4,8 @@
  *
  * 由 scripts/build_supp_dict.py 呼叫，毋使單獨執行。
  * 輸入：data/cert/113*.json、data/gip/*.json（process_all_data.py 產出个 JSON）
- * 輸出（stdout，一行一筆 JSON）：{ file, sourceName, word, phonetic, label }
+ * 輸出（stdout，一行一筆 JSON）：{ file, sourceName, id, pos, word, phonetic, label }
+ *   id：編號；pos：詞性1（次方言補音用）
  *   label：四縣 北／南／美，饒平 竹／卓／桃，其他腔空字串
  */
 
@@ -59,7 +60,11 @@ for (const file of files) {
     const parsed = getLineVariants(line);
     const emit = (word, phonetic, label) => {
       if (word && phonetic) {
-        out.push(JSON.stringify({ file: path.basename(file), sourceName: line.sourceName, word, phonetic, label: label || '' }));
+        out.push(JSON.stringify({
+          file: path.basename(file), sourceName: line.sourceName,
+          id: r[idx['編號']], pos: r[idx['詞性1']] || '',
+          word, phonetic, label: label || '',
+        }));
       }
     };
     if (parsed.main) emit(parsed.main.word, parsed.main.phonetic, parsed.main.label);
