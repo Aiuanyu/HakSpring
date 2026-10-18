@@ -179,6 +179,18 @@ console.log('  ✅ 8. 腔調識別（四縣/南四縣）保護測試 PASS');
   assert.strictEqual(convertSyllableToPFS('m̌'), 'm̀');
 }
 
+// 顯示模式偏好值正規化：舊值 hagpin 一律當 hpp
+{
+  const { normalizeDisplayScript } = require('../js/pfs-converter.js');
+  assert.strictEqual(normalizeDisplayScript('pfs'), 'pfs');
+  assert.strictEqual(normalizeDisplayScript('gip'), 'gip');
+  assert.strictEqual(normalizeDisplayScript('hpp'), 'hpp');
+  assert.strictEqual(normalizeDisplayScript('hagpin'), 'hpp');
+  assert.strictEqual(normalizeDisplayScript(null), 'hpp');
+  assert.strictEqual(normalizeDisplayScript(undefined), 'hpp');
+  assert.strictEqual(normalizeDisplayScript('亂寫'), 'hpp');
+}
+
 console.log('  ✅ 9. 對照表範例與引擎一致 PASS');
 
 // 10. 詞組範例：引擎一律吃「音節間有空格」的 HagPinPlus；文件上的連寫是另一條顯示路線，不進引擎

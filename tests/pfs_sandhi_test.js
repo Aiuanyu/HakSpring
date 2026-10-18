@@ -83,7 +83,7 @@ assert.strictEqual(getDialectCode('大埔'), 'da');
 console.log('  ✅ 4. 非四縣腔不受影響 PASS');
 
 // 5. 切回 HagPinPlus 後，行為恢復成原本
-global.localStorage._v = 'hagpin';
+global.localStorage._v = 'hpp';
 assert.strictEqual(strip(getSandhiHtml('sán sán', 'si')), '[sán→11] sán');
 console.log('  ✅ 5. 切回 HPP 恢復原行為 PASS');
 

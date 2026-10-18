@@ -113,6 +113,15 @@
   }
 
   /**
+   * 正規化「顯示模式」偏好值：pfs／gip 保持原樣，其餘（含舊值 hagpin、空值）一律視為 hpp
+   * @param {string|null|undefined} value
+   * @returns {'hpp'|'pfs'|'gip'}
+   */
+  function normalizeDisplayScript(value) {
+    return value === 'pfs' || value === 'gip' ? value : 'hpp';
+  }
+
+  /**
    * 單一音節 HagPinPlus 轉 PFS
    * @param {string} syllable
    * @returns {string}
@@ -343,6 +352,7 @@
     toPFS,
     isSiXianDialect,
     isPfsDisplayActive,
+    normalizeDisplayScript,
     classifyPfsTone
   };
 });

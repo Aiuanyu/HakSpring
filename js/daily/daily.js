@@ -733,8 +733,8 @@ const DailyWord = (function () {
     if (dailyScriptBtn) {
       dailyScriptBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hagpin';
-        const next = current === 'pfs' ? 'hagpin' : 'pfs';
+        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hpp';
+        const next = current === 'pfs' ? 'hpp' : 'pfs';
         if (typeof window.setHakfaDisplayScript === 'function') {
           window.setHakfaDisplayScript(next);
         } else {

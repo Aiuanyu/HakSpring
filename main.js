@@ -8102,6 +8102,49 @@ function initializeAppUI() {
       }
     }
 
+    /**
+     * 就地重新產生主表每一列「詞彙」格个標音（詞目 ruby／變體區塊），
+     * 保留 <tr>、<audio>、書籤等其他元素，所以自動播放毋會被中斷。
+     * @returns {number} 更新到幾列
+     */
+    function refreshCategoryPhoneticsInPlace() {
+      const table = document.getElementById('category-table');
+      const tbody = table && table.tBodies[0];
+      if (!tbody || !g_currentDialectInfo || !activeCategoryData) return 0;
+      const isGipData = Boolean(
+        g_currentDialectInfo.fullLvlName &&
+          g_currentDialectInfo.fullLvlName.includes('教典'),
+      );
+      const lineByNo = new Map();
+      activeCategoryData
+        .slice(firstLoadedIndex, lastLoadedIndex)
+        .forEach((line) => lineByNo.set(String(line.編號), line));
+      let updated = 0;
+      tbody.querySelectorAll('tr[data-line-no]').forEach((tr) => {
+        const line = lineByNo.get(tr.dataset.lineNo);
+        const td = tr.querySelector('td[data-label="詞彙"]');
+        // 詞彙格結構：[ruby／變體區塊] <br> [音檔] <br> [詞義] ；標音就在第一个 <br> 前頭
+        const firstBr = td && td.querySelector(':scope > br');
+        if (!line || !firstBr) return;
+        const scratch = document.createElement('div');
+        renderVocabWithVariants(scratch, line, g_currentDialectInfo, isGipData);
+        while (td.firstChild && td.firstChild !== firstBr) {
+          td.removeChild(td.firstChild);
+        }
+        while (scratch.firstChild) {
+          td.insertBefore(scratch.firstChild, firstBr);
+        }
+        updated++;
+      });
+      if (updated > 0) {
+        setTimeout(
+          () => repositionViewport({ fromRender: true, noScroll: true }),
+          50,
+        );
+      }
+      return updated;
+    }
+
     function setHakfaDisplayScript(scriptValue) {
       localStorage.setItem('hakfaDisplayScript', scriptValue);
       updateScriptModeUI(scriptValue);
@@ -8131,28 +8174,9 @@ function initializeAppUI() {
         activeCategoryData &&
         activeCategoryData.length > 0
       ) {
-        const tbody = categoryTable.tBodies[0];
-        if (tbody) {
-          const currentHeight = tbody.offsetHeight;
-          tbody.style.minHeight = currentHeight + 'px';
-          tbody.innerHTML = '';
-          const itemsToRender = activeCategoryData.slice(
-            firstLoadedIndex,
-            lastLoadedIndex,
-          );
-          // isInitialLoad 傳入 false，避免觸發 resultsSummaryContainer.scrollIntoView
-          renderCategoryItems(
-            itemsToRender,
-            g_currentDialectInfo,
-            g_currentCategory,
-            false,
-          );
-          tbody.style.minHeight = '';
-          window.scrollTo({ top: savedScrollY, behavior: 'instant' });
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
-          });
-        }
+        // 就地更新詞彙格个標音，毋重畫整張表：重畫會換掉 <audio> 摎正在播放个列，
+        // 自動播放會中斷，播放控制个 UI 也會摎新畫面脫鉤。
+        refreshCategoryPhoneticsInPlace();
       }
       // 2. 若當前畫面正在顯示搜尋結果（URL 含 ca 參數，且無 category-table）
       else {
@@ -8171,22 +8195,32 @@ function initializeAppUI() {
     window.setHakfaDisplayScript = setHakfaDisplayScript;
     window.updateScriptModeUI = updateScriptModeUI;
 
-    const currentScript = localStorage.getItem('hakfaDisplayScript') || 'hagpin';
+    // 舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值就地升級
+    const currentScript = window.pfsConverter
+      ? window.pfsConverter.normalizeDisplayScript(
+          localStorage.getItem('hakfaDisplayScript'),
+        )
+      : localStorage.getItem('hakfaDisplayScript') === 'pfs'
+        ? 'pfs'
+        : 'hpp';
+    if (localStorage.getItem('hakfaDisplayScript') === 'hagpin') {
+      localStorage.setItem('hakfaDisplayScript', 'hpp');
+    }
     updateScriptModeUI(currentScript);
 
     const pfsScriptToggle = document.getElementById('pfsScriptToggle');
     if (pfsScriptToggle) {
       pfsScriptToggle.checked = currentScript === 'pfs';
       pfsScriptToggle.addEventListener('change', (event) => {
-        setHakfaDisplayScript(event.target.checked ? 'pfs' : 'hagpin');
+        setHakfaDisplayScript(event.target.checked ? 'pfs' : 'hpp');
       });
     }
 
     const scriptModeToggleBtn = document.getElementById('scriptModeToggleBtn');
     if (scriptModeToggleBtn) {
       scriptModeToggleBtn.addEventListener('click', () => {
-        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hagpin';
-        setHakfaDisplayScript(current === 'pfs' ? 'hagpin' : 'pfs');
+        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hpp';
+        setHakfaDisplayScript(current === 'pfs' ? 'hpp' : 'pfs');
       });
     }
 

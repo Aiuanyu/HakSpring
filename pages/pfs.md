@@ -1,4 +1,4 @@
-# 客語白話字（PFS）與客拼對照表
+# 客語白話字（PFS）與 HagPinPlus 對照表
 
 客語白話字（Pha̍k-fa-sṳ，簡稱 **PFS**）係 19 世紀歐洲巴色差會（Basel Mission）宣教師為了傳道與記錄客家話所創製个羅馬字書寫系統，至今在臺灣基督長老教會及《客語聖經：現代台灣客語譯本》中廣泛使用，為客族語文數位化與經典文獻的重要資產。
 
@@ -33,7 +33,7 @@
 
 客語白話字在塞音上維持傳統歐洲羅馬字之無氣清音（`p, t, k`）與送氣清音（`ph, th, kh`）表記，且不區分尖團細音，齒齦與齦齶塞擦音統記為 `ch, chh, s`：
 
-| 國際音標 | HagPinPlus / 客拼 (四縣) | PFS (四縣) | 例字 | HagPinPlus 拼法 | PFS 拼法 | 轉換規則說明 |
+| 國際音標 | HagPinPlus (四縣) | PFS (四縣) | 例字 | HagPinPlus 拼法 | PFS 拼法 | 轉換規則說明 |
 | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **[p]** | `b` | `p` | 伯公 | `bàggúng` | `pak-kûng` | `b` 轉換為 `p` |
 | **[pʰ]** | `p` | `ph` | 白話 | `pagfa` | `pha̍k-fa` | `p` 轉換為 `ph` |
@@ -61,26 +61,26 @@
 
 ## 三、 韻母與韻尾對照表（Finals & Rhymes Mapping）
 
-| 類別 | 國際音標 | HagPinPlus / 客拼 | PFS (四縣) | 例字（HagPinPlus ↔ PFS） | 說明 |
+| 類別 | 國際音標 | HagPinPlus | PFS (四縣) | 例字（HagPinPlus ↔ PFS） | 說明 |
 | :--- | :---: | :---: | :---: | :--- | :--- |
 | **單元音** | [a] | `a` | `a` | 阿 `á` ↔ `â` | 維持 `a` |
 | | [e] | `e` | `e` | 泥 `ne` ↔ `ne` | 維持 `e` |
 | | [i] | `i` | `i` | 機 `gí` ↔ `kî` | 維持 `i` |
 | | [o] | `o` | `o` | 歌 `gó` ↔ `kô` | 維持 `o` |
 | | [u] | `u` | `u` | 烏 `vú` ↔ `vû` | 維持 `u` |
-| **空韻/央元音** | [ɨ] | `ii` | `ṳ` | 詞 `cǐi` ↔ `chhṳ̀`、四 `sii` ↔ `sṳ` | 客拼雙寫 `ii`，PFS 採帶下點之 `ṳ` (U+1E73) |
+| **空韻/央元音** | [ɨ] | `ii` | `ṳ` | 詞 `cǐi` ↔ `chhṳ̀`、四 `sii` ↔ `sṳ` | HagPinPlus 雙寫 `ii`，PFS 採帶下點之 `ṳ` (U+1E73) |
 | **央元音帶尾韻** | [ɨm] | `iim` | `ṳm` | 針 `zíim` ↔ `chṳ̂m`、沈 `sìim` ↔ `sṳ́m` | 央元音雙唇鼻音韻 |
 | | [ɨn] | `iin` | `ṳn` | 進 `ziin` ↔ `chṳn`、趁 `ciin` ↔ `chhṳn` | 央元音齒齦鼻音韻 |
 | | [ɨp̚] | `iib` | `ṳp` | 拾 `siib` ↔ `sṳ̍p`、汁 `zìib` ↔ `chṳp` | 央元音雙唇入聲韻 |
 | | [ɨt̚] | `iid` | `ṳt` | 質 `zìid` ↔ `chṳt`、出 `cùd` ↔ `chhut` | 央元音齒齦入聲韻 |
-| **塞音入聲韻尾** | [p̚] | `-b` | `-p` | 合 `hab` ↔ `ha̍p`、笠 `lìb` ↔ `lip` | 客拼 `-b` 轉為清塞音 `-p` |
-| | [t̚] | `-d` | `-t` | 決 `gièd` ↔ `kiet`、拔 `bad` ↔ `pa̍t` | 客拼 `-d` 轉為清塞音 `-t` |
-| | [k̚] | `-g` | `-k` | 六 `liùg` ↔ `liuk`、玉 `ngiug` ↔ `ngiu̍k` | 客拼 `-g` 轉為清塞音 `-k` |
+| **塞音入聲韻尾** | [p̚] | `-b` | `-p` | 合 `hab` ↔ `ha̍p`、笠 `lìb` ↔ `lip` | HagPinPlus `-b` 轉為清塞音 `-p` |
+| | [t̚] | `-d` | `-t` | 決 `gièd` ↔ `kiet`、拔 `bad` ↔ `pa̍t` | HagPinPlus `-d` 轉為清塞音 `-t` |
+| | [k̚] | `-g` | `-k` | 六 `liùg` ↔ `liuk`、玉 `ngiug` ↔ `ngiu̍k` | HagPinPlus `-g` 轉為清塞音 `-k` |
 | **鼻音韻尾** | [m], [n], [ŋ] | `-m`, `-n`, `-ng` | `-m`, `-n`, `-ng` | 庵 `ám` ↔ `âm`、天 `tién` ↔ `thiên` | 完全相同 |
 | **複合韻母** | [ai], [au], [oi], [ui] | `ai`, `au`, `oi`, `ui` | `ai`, `au`, `oi`, `ui` | 開 `kói` ↔ `khôi`、外 `ngoi` ↔ `ngoi` | 完全相同 |
 | | [eu] | `eu` | `eu` | 走 `zèu` ↔ `chéu`、頭 `těu` ↔ `thèu` | 完全相同 |
 | | [iau], [iu] | `iau`, `iu` | `iau`, `iu` | 鳥 `diáu` ↔ `tiâu`、秋 `qiú` ↔ `chhiû` | 完全相同 |
-| | [ue] | `ue` | `oe` | 國 `guèd` ↔ `koet`、耿 `guèn` ↔ `koén`、潰 `kue` ↔ `khoe` | 客拼 `ue` 在 PFS 書寫作 `oe` |
+| | [ue] | `ue` | `oe` | 國 `guèd` ↔ `koet`、耿 `guèn` ↔ `koén`、潰 `kue` ↔ `khoe` | HagPinPlus `ue` 在 PFS 書寫作 `oe` |
 | **成音節鼻音** | [m̩], [n̩], [ŋ̍] | `m`, `n`, `ng` | `m`, `n`, `ng` | 毋 `m̌` ↔ `m̀`、黃 `vǒng` ↔ `vòng` | 完全相同 |
 
 ---

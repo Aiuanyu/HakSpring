@@ -8,6 +8,11 @@ const SYNC_DEBOUNCE_MS = 30000; // 30 秒
 const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
 const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
 
+// 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'
+function normalizeDisplayScript(value) {
+  return value === 'pfs' || value === 'gip' ? value : 'hpp';
+}
+
 // 同步狀態
 let cloudSyncState = {
   isLoggedIn: false,
@@ -195,8 +200,9 @@ async function syncFromCloud() {
       const localPrefs = {
         romanizerJoiningMode:
           localStorage.getItem('romanizerJoiningMode') || 'none',
-        hakfaDisplayScript:
-          localStorage.getItem('hakfaDisplayScript') || 'hagpin',
+        hakfaDisplayScript: normalizeDisplayScript(
+          localStorage.getItem('hakfaDisplayScript'),
+        ),
         gameLastDataVarName:
           localStorage.getItem('hakkaGameLastDataVarName') || '',
         userName: localStorage.getItem('hakkaUserName') || '',
@@ -276,9 +282,9 @@ async function syncFromCloud() {
       localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
 
       let finalHakfaDisplayScript = localPrefs.hakfaDisplayScript;
-      if (localPrefs.hakfaDisplayScript === (syncedPrefs.hakfaDisplayScript || 'hagpin')) {
+      if (localPrefs.hakfaDisplayScript === normalizeDisplayScript(syncedPrefs.hakfaDisplayScript)) {
         if (cloudPrefs.hakfaDisplayScript !== undefined && cloudPrefs.hakfaDisplayScript !== null) {
-          finalHakfaDisplayScript = cloudPrefs.hakfaDisplayScript;
+          finalHakfaDisplayScript = normalizeDisplayScript(cloudPrefs.hakfaDisplayScript);
         }
       }
       localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
@@ -316,7 +322,7 @@ async function syncFromCloud() {
       // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
         finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
-        finalHakfaDisplayScript !== (cloudPrefs.hakfaDisplayScript || 'hagpin') ||
+        finalHakfaDisplayScript !== normalizeDisplayScript(cloudPrefs.hakfaDisplayScript) ||
         finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
         finalUserName !== (cloudPrefs.userName || '') ||
         finalUserLocation !== (cloudPrefs.userLocation || '');
@@ -365,7 +371,7 @@ async function syncFromCloud() {
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
-          hakfaDisplayScript: localStorage.getItem('hakfaDisplayScript') || 'hagpin',
+          hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
           gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
           userName: localStorage.getItem('hakkaUserName') || '',
           userLocation: localStorage.getItem('hakkaUserLocation') || '',
@@ -410,8 +416,9 @@ async function syncToCloud() {
     const preferences = {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
-      hakfaDisplayScript:
-        localStorage.getItem('hakfaDisplayScript') || 'hagpin',
+      hakfaDisplayScript: normalizeDisplayScript(
+        localStorage.getItem('hakfaDisplayScript'),
+      ),
       gameLastDataVarName:
         localStorage.getItem('hakkaGameLastDataVarName') || '',
       userName: localStorage.getItem('hakkaUserName') || '',
