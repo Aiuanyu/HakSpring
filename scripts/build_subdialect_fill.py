@@ -8,7 +8,7 @@
    a. 詞尾「仔」照詞性：形容詞、副詞 → é，名詞 → è
    b. 字級對照：由已標南音个認證詞、教典四縣／南四縣共詞，學「這隻字北讀 X、南讀 Y」
    c. 系統規則：舌根音、喉音、零聲母 + -ien/-ied → -ian/-iad
-   d. 以上都無：音節照北四縣（記做 same）
+   d. 以上都無：音節照北四縣（記做 same）；有這種音節个詞條算推毋出，毋寫進附表，另外列在 待審-南四縣
 單字詞查教典時，教典个音摎逐音節推導無共樣，記做 gip-check（可能係同形異義，愛人工確認）。
 
 輸出：data/sub-dialects-fill/南四縣.json 摎 .csv（附表，以「來源＋編號」對到原詞條，原始資料毋動）；
@@ -249,44 +249,69 @@ def evaluate(cert, gip):
         print(f'  {k:14s} {v["ok"]:5d}／{v["n"]:5d}  {v["ok"] / v["n"]:.1%}')
 
 
+LAYER_NAMES = {'gip': '教典南四縣', 'gip-check': '教典南四縣', 'table': '字級對照',
+               'zai': '系統規則', 'rule-ien': '系統規則'}
+
+
+def entry_layer(how, sm):
+    """整條个推導層；有音節無證據（same）就回傳 None（推毋出，毋寫進附表）。"""
+    if how in ('gip', 'gip-check'):
+        return LAYER_NAMES[how]
+    if how == 'same' or 'same' in sm:
+        return None
+    return '系統規則' if any(h in ('zai', 'rule-ien') for h in sm) else '字級對照'
+
+
+def write_rows(base, rows, extra=None):
+    with open(base + '.json', 'w', encoding='utf-8') as f:
+        json.dump({**(extra or {}), 'entries': rows}, f, ensure_ascii=False, indent=1)
+    buf = io.StringIO(newline='')
+    w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()), lineterminator='\n')
+    w.writeheader()
+    w.writerows([{k: (' '.join(v) if isinstance(v, list) else v) for k, v in r.items()} for r in rows])
+    with open(base + '.csv', 'w', encoding='utf-8-sig', newline='') as f:
+        f.write(buf.getvalue())
+
+
 def main():
     cert, gip = load_entries()
     if '--eval' in sys.argv:
         evaluate(cert, gip)
         return
     table = learn_table([p for e in cert.values() for p in cert_pairs(e)] + gip_pairs(gip))
-    rows = []
+    rows, pending = [], []
     for (fname, eid), e in cert.items():
         if e['south'] or not e['north']:
             continue
         south, how, sm = derive(e, table, gip)
-        rows.append({
-            'source': fname.replace('.json', '').lstrip('0123456789'),
+        layer = entry_layer(how, sm)
+        row = {
+            '來源檔': fname.replace('.json', ''),   # 例：113四高
             '編號': eid,
-            '客家語': e['word'],
+            '詞目': e['word'],
             '北四縣': e['north'],
-            '南四縣': south,
-            'method': how,
-            'syllable_methods': ' '.join(sm),
-            'same_as_north': syllables(south) == syllables(e['north']),
-        })
+            '讀音': south,                           # HagPinPlus 調符，摎認證標音共樣格式
+            '變體': ['南'],
+            '推導層': layer,
+            '待確認': how == 'gip-check',            # 單字詞，教典音摎逐音節推導無共樣
+            '同北四縣': syllables(south) == syllables(e['north']),
+            '逐音節': ' '.join(sm),
+        }
+        (rows if layer else pending).append(row)
     os.makedirs(OUT_DIR, exist_ok=True)
-    base = os.path.join(OUT_DIR, '南四縣')
-    with open(base + '.json', 'w', encoding='utf-8') as f:
-        json.dump({'name': '次方言補音南四縣', 'from': '四縣認證', 'entries': rows}, f, ensure_ascii=False, indent=1)
-    buf = io.StringIO(newline='')
-    w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()), lineterminator='\n')
-    w.writeheader()
-    w.writerows(rows)
-    with open(base + '.csv', 'w', encoding='utf-8-sig', newline='') as f:
-        f.write(buf.getvalue())
+    meta = {'name': '次方言補音', 'from': '認證四縣', 'schema': 'data/sub-dialects-fill/README.md'}
+    write_rows(os.path.join(OUT_DIR, '南四縣'), rows, meta)
+    # 推毋出个（有音節無證據）：毋寫進附表，另外列分審音工具
+    write_rows(os.path.join(OUT_DIR, '待審-南四縣'), pending, {**meta, 'note': '推毋出，毋係附表'})
     # 網站用个精簡版：淨收推導結果摎北四縣無共樣个，鍵係「來源|編號」（例：四基|1-3）
-    web = {f"{r['source']}|{r['編號']}": [r['南四縣'], r['method']] for r in rows if not r['same_as_north']}
-    with open(base + '.web.json', 'w', encoding='utf-8') as f:
+    web = {f"{r['來源檔'].lstrip('0123456789')}|{r['編號']}": [r['讀音'], r['推導層']]
+           for r in rows if not r['同北四縣']}
+    with open(os.path.join(OUT_DIR, '南四縣.web.json'), 'w', encoding='utf-8') as f:
         json.dump(web, f, ensure_ascii=False, separators=(',', ':'))
-    c = Counter(r['method'] for r in rows)
-    diff = sum(1 for r in rows if not r['same_as_north'])
-    print(f'--- 次方言補音（南四縣）---\n  補 {len(rows)} 條；推導結果摎北四縣無共樣个 {diff} 條；方法：{dict(c)}')
+    c = Counter(r['推導層'] for r in rows)
+    diff = sum(1 for r in rows if not r['同北四縣'])
+    print(f'--- 次方言補音（南四縣）---\n  附表 {len(rows)} 條（摎北四縣無共樣 {diff} 條）；推導層：{dict(c)}；'
+          f'待確認 {sum(r["待確認"] for r in rows)}；推毋出（待審）{len(pending)} 條')
 
 
 if __name__ == '__main__':
