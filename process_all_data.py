@@ -609,9 +609,15 @@ if __name__ == '__main__':
         'gip': os.path.join(script_dir, 'data', 'gip')
     }
 
-    for source_type, source_path in source_map.items():
-        process_directory(source_path, source_type, all_maps)
-        
-    print("\n--- 全部 CSV 處理完成 ---")
+    if '--only-supp' not in sys.argv:
+        for source_type, source_path in source_map.items():
+            process_directory(source_path, source_type, all_maps)
+
+        print("\n--- 全部 CSV 處理完成 ---")
+
+    # 補字典係對認證、教典 JSON 推出來个，認證、教典一更新就愛重建（見 data/supp/README.md）
+    sys.path.insert(0, os.path.join(script_dir, 'scripts'))
+    import build_supp_dict
+    build_supp_dict.main()
 
     
