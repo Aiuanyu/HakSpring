@@ -240,13 +240,17 @@ If you need to create a new branch for your work (e.g., to recover from an error
      ```
      讓使用者點一次「同步」即可同時更新主線與平行分支，零摩擦測試！
   2. **專屬獨立設定檔**：在該 worktree 根目錄建立獨立的 `HakSpring-<feature-name> → localhost.ffs_gui`，僅包含該分支之單一 `<Pair>`，方便單獨作業。
-- **生命週期結束清理**：
-  當分支 merge 完畢後，執行：
-  ```bash
-  git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
-  git branch -d <branch-name>
-  ```
-  並同步復原 `HakSpring → localhost.ffs_gui` 的第二對 `<Pair>`。
+- **生命週期結束清理（由 AI agent 負責執行，毋使等使用者開口）**：
+  當分支 merge 完畢（或使用者明講毋愛該 worktree 吔），AI agent 愛**自家**做完下列清理，毋可以淨留 worktree 就算：
+  1. 刪掉主目錄 `HakSpring → localhost.ffs_gui` 內該分支个第二對 `<Pair>`（左邊係 `/Users/gjrobert/NAS/projects/HakSpring-<feature-name>` 該對）。
+  2. 刪掉 worktree 根目錄个專屬設定檔 `HakSpring-<feature-name> → localhost.ffs_gui`。
+  3. 移除 worktree 摎分支：
+     ```bash
+     git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
+     git branch -d <branch-name>
+     ```
+  4. `/Users/gjrobert/web/plain/HakSpring-<feature-name>` 這個網站鏡像目錄係刪除動作，愛先問過使用者正做。
+  改設定檔前先備份，改完用 diff 確認淨有該對 `<Pair>` 無去；注意保留原檔个行尾（CRLF），毋好改成 LF。
 
 ## 快取更新慣例 (Cache Busting Conventions)
 - **更新靜態資源版本**: 當修改了專案的 `.css` 或 `.js` 檔案（特別是在頻繁測試的開發階段或發布新功能時），**必須**同步至 `index.html` 更新對應檔案載入標籤的查詢字串（Query String，如 `?v=4.2.1` 改為 `?v=4.2.2`）。這可以確保使用者的瀏覽器不會因為快取 (Cache) 而載入舊版的樣式或腳本，避免產生「程式碼已修改但畫面未生效」的誤判。
