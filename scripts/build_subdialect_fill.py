@@ -121,11 +121,14 @@ def load_entries():
         src = o['sourceName']
         if src.startswith('四縣'):
             e = cert.setdefault((o['file'], o['id']), {'word': None, 'pos': o['pos'], 'north': None,
-                                                      'south': None, 'south_word': None, 'src': src})
+                                                      'south': None, 'south_word': None, 'src': src,
+                                                      'meinung': None, 'meinung_word': None})
             if o['label'] == '北' and e['north'] is None:
                 e['word'], e['north'] = o['word'], o['phonetic']
             elif o['label'] == '南' and e['south'] is None:
                 e['south'], e['south_word'] = o['phonetic'], o['word']
+            elif o['label'] == '美' and e['meinung'] is None:
+                e['meinung'], e['meinung_word'] = o['phonetic'], o['word']
         elif src in ('教典四', '教典南'):
             r = first_reading(o['phonetic'])
             if r:
@@ -273,6 +276,79 @@ def write_rows(base, rows, extra=None):
         f.write(buf.getvalue())
 
 
+def tone_24_to_33(phonetic):
+    """美濃：24 調（á）一律改 33 調（ā）。平哥个規則；認證標个美濃音聲調還係寫 24，驗毋著。"""
+    d = unicodedata.normalize('NFD', phonetic)
+    return nfc(d.replace('\u0301', '\u0304'))
+
+
+def meinung_table(cert):
+    """認證已標美濃音个詞：（字、南四縣音節）→ 美濃音節。南四縣無標就用北四縣做底。"""
+    pairs = []
+    for e in cert.values():
+        if not e['meinung'] or e['meinung_word'] != e['word']:
+            continue
+        base = e['south'] if e['south'] and e['south_word'] == e['word'] else e['north']
+        a, b = aligned(e['word'], base or ''), aligned(e['word'], e['meinung'])
+        if a and b:
+            pairs += [(ch, x, y) for ch, x, y in zip(a[0], a[1], b[1])]
+    return learn_table(pairs)
+
+
+def derive_meinung(word, south, table):
+    """由南四縣音推美濃音：字級對照（認證已標个美濃音）→ 24 調改 33 調。"""
+    al = aligned(word, south)
+    out, used_table = south, False
+    if al:
+        matches = list(SYLLABLE.finditer(south))
+        for i in reversed(range(len(matches))):
+            m = matches[i]
+            c = table.get((al[0][i], nfc(m.group())))
+            if c:
+                top = c.most_common(1)[0][0]
+                if top != nfc(m.group()):
+                    out = out[:m.start()] + top + out[m.end():]
+                    used_table = True
+    return tone_24_to_33(out), used_table
+
+
+def build_meinung(cert, south_rows):
+    """認證四縣詞條（無標美濃音个）→ 美濃附表。南四縣音愛有：認證原標，抑係南四縣附表推得出來个。"""
+    table = meinung_table(cert)
+    derived_south = {(r['來源檔'], r['編號']): r for r in south_rows}
+    rows, skipped = [], 0
+    for (fname, eid), e in cert.items():
+        if e['meinung'] or not e['north']:
+            continue
+        key = (fname.replace('.json', ''), eid)
+        if e['south']:
+            south, south_word, south_layer = e['south'], e['south_word'], '認證原標'
+        elif key in derived_south:
+            r = derived_south[key]
+            south, south_word, south_layer = r['讀音'], e['word'], r['推導層']
+        else:
+            skipped += 1        # 南四縣推毋出，美濃乜推毋出
+            continue
+        meinung, used_table = derive_meinung(south_word, south, table)
+        row = {
+            '來源檔': key[0],
+            '編號': eid,
+            '詞目': e['word'],
+            '北四縣': e['north'],
+            '讀音': meinung,
+            '變體': ['美濃'],
+            '推導層': '系統規則',      # 美濃跟南四縣＋24 改 33，都係系統規則
+            '待確認': False,
+            '同南四縣': syllables(meinung) == syllables(south),
+            '南四縣來源': south_layer,
+            '用著字級對照': used_table,
+        }
+        if south_word != e['word']:
+            row['讀音詞目'] = south_word   # 認證南四縣用另一隻詞（例：鍬布脣→車布脣）
+        rows.append(row)
+    return rows, skipped
+
+
 def main():
     cert, gip = load_entries()
     if '--eval' in sys.argv:
@@ -308,6 +384,19 @@ def main():
            for r in rows if not r['同北四縣']}
     with open(os.path.join(OUT_DIR, '南四縣.web.json'), 'w', encoding='utf-8') as f:
         json.dump(web, f, ensure_ascii=False, separators=(',', ':'))
+    # 美濃：以南四縣（認證原標＋上背推得出來个）做底
+    m_rows, m_skipped = build_meinung(cert, rows)
+    for r in m_rows:
+        r.setdefault('讀音詞目', '')
+    write_rows(os.path.join(OUT_DIR, '美濃'), m_rows, {**meta, 'base': '南四縣（認證原標＋南四縣附表）'})
+    m_web = {f"{r['來源檔'].lstrip('0123456789')}|{r['編號']}": [r['讀音'], r['推導層']]
+             for r in m_rows if not r['同南四縣']}
+    with open(os.path.join(OUT_DIR, '美濃.web.json'), 'w', encoding='utf-8') as f:
+        json.dump(m_web, f, ensure_ascii=False, separators=(',', ':'))
+    m_diff = sum(1 for r in m_rows if not r['同南四縣'])
+    print(f'--- 次方言補音（美濃）---\n  附表 {len(m_rows)} 條（摎南四縣無共樣 {m_diff} 條；'
+          f'用著字級對照 {sum(r["用著字級對照"] for r in m_rows)} 條）；南四縣推毋出致使跳過 {m_skipped} 條')
+
     c = Counter(r['推導層'] for r in rows)
     diff = sum(1 for r in rows if not r['同北四縣'])
     print(f'--- 次方言補音（南四縣）---\n  附表 {len(rows)} 條（摎北四縣無共樣 {diff} 條）；推導層：{dict(c)}；'
