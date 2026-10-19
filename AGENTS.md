@@ -51,6 +51,8 @@
 
 ## 字詞代號與用語規範
 - `Romaine` = `Romanizer`、「蘿蔓生菜」= 羅馬字轉換工具模組
+- **【族名與語名規範】一律使用 `hakfa`（Hakfa）／嚴禁使用 `hakka`**：
+    專案全體（包含程式碼命名、變數、檔名、路徑、文件與 UI），若涉及客語羅馬化代號或族語命名，**嚴禁使用 ❌ `hakka`，一律使用 ⭕ `hakfa`（有大寫時就大寫，如 `Hakfa`）**。原因：臺灣客人大體喊自家 Hagngin、喊族語 Hakfa。
 - **【絕對原則】「復習」正字規範**：專案全體（包含 UI 介面、文案、說明文件、程式碼註解、Commit 訊息、對話筆記）統一使用正字 **「復習」**，**嚴禁**誤用「複習」（「復」為反覆溫習之意；「複」為複數、繁雜，兩字字義不同，切勿混淆）。
 
 
@@ -60,6 +62,11 @@
 ## 檔案操作慣例 (File Operation Conventions)
 - **確認檔案存在**: 在執行任何建立新檔案的指令（例如 `create_file`）之前，必須先用 `ls` 指令確認該檔案是否已存在。
 - **理解使用者意圖**: 若目標檔案已存在，應先用 `read_file` 讀取其內容。必須理解使用者的意圖很可能是要「修改」或「新增內容」到現有檔案，而不是完全「覆寫」。除非使用者明確指示要覆寫，否則應優先考慮使用 `replace_with_git_merge_diff` 或其他非破壞性的方式進行修改。
+
+## 與 Obsidian 筆記庫个關係 (Obsidian Vault Rules)
+- 開發筆記放在 Obsidian vault：`/Users/gjrobert/NAS/Obsidian/Main/創作/程式/HakSpring/`（總覽 `HakSpring.md`，各功能一篇，如 `PFS.md`）。
+- **【鐵律】有做事就要寫 Obsidian**：只要做了事（改程式、改文件、改設定、做研究、下決定），都愛在對應个筆記裡肚留下紀錄，寫清楚做了甚麼、為甚麼、動著哪兜檔案、哪兜驗證過吔、哪兜還無驗證。沿用該筆記既有个分段慣例（R／G／C 系列 h3），毋好淨在對話裡肚講煞。Commit message 係例外（見下背）。
+- **【Obsidian 渲染避坑】反引號後背毋好緊接點號**：凡係反引號開頭、後背緊接 dot（例如單獨表示副檔名），兩者中間愛插 1 個全形空格，寫做 `　.md`、`　.json`。完整檔名或路徑（如 `pages/pfs.md`）毋受影響。這條適用全部軟體專案，包含文件、筆記、commit message 摎程式碼註解。
 
 ## 提交慣例 (Submission Conventions)
 - **【鐵則】Commit Message 必須使用客語（Hakka）撰寫**：
@@ -173,6 +180,7 @@
 | 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
 | 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
 | 遊戲上次腔調/級別 | `hakkaGameLastDataVarName` | `preferences` | ✅ | LWW（空字串視為未設定，不覆蓋本地） |
+| 標音顯示模式（HPP／PFS） | `hakfaDisplayScript` | `preferences` | ✅ | LWW（值為 `hpp`／`pfs`／`gip`；舊值 `hagpin` 讀取時視為 `hpp`；雲端拉下新值時會即時更新畫面） |
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |
@@ -233,13 +241,17 @@ If you need to create a new branch for your work (e.g., to recover from an error
      ```
      讓使用者點一次「同步」即可同時更新主線與平行分支，零摩擦測試！
   2. **專屬獨立設定檔**：在該 worktree 根目錄建立獨立的 `HakSpring-<feature-name> → localhost.ffs_gui`，僅包含該分支之單一 `<Pair>`，方便單獨作業。
-- **生命週期結束清理**：
-  當分支 merge 完畢後，執行：
-  ```bash
-  git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
-  git branch -d <branch-name>
-  ```
-  並同步復原 `HakSpring → localhost.ffs_gui` 的第二對 `<Pair>`。
+- **生命週期結束清理（由 AI agent 負責執行，毋使等使用者開口）**：
+  當分支 merge 完畢（或使用者明講毋愛該 worktree 吔），AI agent 愛**自家**做完下列清理，毋可以淨留 worktree 就算：
+  1. 刪掉主目錄 `HakSpring → localhost.ffs_gui` 內該分支个第二對 `<Pair>`（左邊係 `/Users/gjrobert/NAS/projects/HakSpring-<feature-name>` 該對）。
+  2. 刪掉 worktree 根目錄个專屬設定檔 `HakSpring-<feature-name> → localhost.ffs_gui`。
+  3. 移除 worktree 摎分支：
+     ```bash
+     git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
+     git branch -d <branch-name>
+     ```
+  4. `/Users/gjrobert/web/plain/HakSpring-<feature-name>` 這個網站鏡像目錄係刪除動作，愛先問過使用者正做。
+  改設定檔前先備份，改完用 diff 確認淨有該對 `<Pair>` 無去；注意保留原檔个行尾（CRLF），毋好改成 LF。
 
 ## 快取更新慣例 (Cache Busting Conventions)
 - **更新靜態資源版本**: 當修改了專案的 `.css` 或 `.js` 檔案（特別是在頻繁測試的開發階段或發布新功能時），**必須**同步至 `index.html` 更新對應檔案載入標籤的查詢字串（Query String，如 `?v=4.2.1` 改為 `?v=4.2.2`）。這可以確保使用者的瀏覽器不會因為快取 (Cache) 而載入舊版的樣式或腳本，避免產生「程式碼已修改但畫面未生效」的誤判。

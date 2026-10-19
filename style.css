@@ -2550,6 +2550,159 @@ input:checked+.slider:before {
   /* 用 focus 光暈色做 hover 效果 */
 }
 
+/* --- Script Mode Badge Button (四 PFS / HPP) --- */
+.script-mode-badge {
+  background: #ffffff;
+  border: 1.5px solid rgba(36, 93, 72, 0.35);
+  border-radius: 14px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--main-text-color, #245d48);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  font-family: var(--roman-font), var(--title-font) !important;
+  box-shadow: 0 1px 3px rgba(36, 93, 72, 0.1);
+  margin-left: 8px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+#scriptModeBadgeText,
+.script-mode-badge span {
+  font-family: var(--roman-font), var(--title-font) !important;
+  letter-spacing: 0.02em;
+}
+
+.script-mode-badge:hover {
+  background: rgba(36, 93, 72, 0.08);
+  border-color: var(--main-text-color, #245d48);
+  box-shadow: 0 2px 5px rgba(36, 93, 72, 0.2);
+  transform: translateY(-0.5px);
+}
+
+.script-mode-badge.is-pfs {
+  background: linear-gradient(135deg, #f5eefc, #ebe0f5);
+  color: #553466;
+  border-color: #a88cb9;
+  box-shadow: 0 1px 3px rgba(112, 88, 124, 0.18);
+}
+
+.script-mode-badge.is-pfs:hover {
+  background: linear-gradient(135deg, #ede1f8, #e1d0f0);
+  border-color: #8f6f9f;
+  color: #401f52;
+  box-shadow: 0 2px 5px rgba(112, 88, 124, 0.25);
+  transform: translateY(-0.5px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .script-mode-badge {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--main-text-color);
+    box-shadow: none;
+  }
+  .script-mode-badge:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--focus-glow-color, #a8d5e5);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  .script-mode-badge.is-pfs {
+    background: linear-gradient(135deg, #8e7399, #a387af);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .script-mode-badge.is-pfs:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* 教典條目釋義／例句借自別腔時，標註來源个小字 */
+.borrowed-note {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+/* 窄螢幕：減少摘要列左右留白，讓摘要文字（含自動縮字）和切換鈕有更多空間，按鈕也更靠邊 */
+@media screen and (max-width: 768px) {
+  #results-summary {
+    padding-left: 6px;
+    padding-right: 6px;
+    gap: 6px;
+  }
+  .summary-inline {
+    gap: 2px;
+  }
+  .script-mode-badge {
+    margin-left: 4px;
+    padding: 2px 8px;
+  }
+}
+
+/* --- 日日一詞右上拼音切換膠囊按鈕 (四 PFS / HPP) --- */
+.daily-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.daily-script-btn {
+  font-family: var(--roman-font), var(--title-font) !important;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  user-select: none;
+  cursor: pointer;
+  background: none;
+  color: #555555;
+  border: 1px solid var(--daily-border, #d0d0d0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.daily-script-btn:hover {
+  background-color: rgba(36, 93, 72, 0.06);
+  border-color: var(--main-text-color, #245d48);
+  color: var(--main-text-color, #245d48);
+}
+
+.daily-script-btn.is-pfs {
+  background: linear-gradient(135deg, #f5eefc, #ebe0f5) !important;
+  color: #553466 !important;
+  border-color: #a88cb9 !important;
+  box-shadow: 0 1px 3px rgba(112, 88, 124, 0.18);
+}
+
+.daily-script-btn.is-pfs:hover {
+  background: linear-gradient(135deg, #ede1f8, #e1d0f0) !important;
+  border-color: #8f6f9f !important;
+  color: #401f52 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .daily-script-btn {
+    color: #a0a0a0;
+    border-color: var(--daily-border, #444);
+    box-shadow: none;
+  }
+  .daily-script-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--focus-glow-color, #a8d5e5);
+    color: #ffffff;
+  }
+  .daily-script-btn.is-pfs {
+    background: linear-gradient(135deg, #8e7399, #a387af) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+  }
+}
+
 /* --- 浮動開始遊戲按鈕 (寬版專用) --- */
 .floating-game-btn {
   position: fixed;
