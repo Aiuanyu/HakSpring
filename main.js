@@ -2108,7 +2108,20 @@ function showPronunciationPopup(
           headerBtn.innerHTML = `<div class="accordion-header-content">${headerText}<span class="pronunciation-source">(${reading.source})</span></div><div class="accordion-header-controls">${audioElementHTML}${substituteButtonHTML}<span class="indicator">+</span></div>`;
           const panelDiv = document.createElement('div');
           panelDiv.className = 'accordion-panel';
-          panelDiv.innerHTML = `<p><strong>華語詞義：</strong> ${(reading.mandarinMeaning || '無資料').replace(/"/g, '')}</p>`;
+          let popupMeaning = reading.mandarinMeaning || '';
+          let popupBorrowNote = '';
+          const popupLine = reading.audioDetails && reading.audioDetails.lineData;
+          if (!String(popupMeaning).trim() && popupLine && /^教典/.test(reading.source || '')) {
+            // 教典條目釋義空，借用別腔同詞目
+            const popupAccent = String(reading.source).replace('教典', '');
+            const popupCross = findCrossDialectRows(popupLine, { 腔: popupAccent }, true);
+            const popupBorrowed = borrowMissingGipFields(popupLine, popupAccent, popupCross);
+            if (popupBorrowed && popupBorrowed.meaning) {
+              popupMeaning = popupBorrowed.meaning;
+              popupBorrowNote = `<p class="borrowed-note"><small>${popupBorrowed.note}</small></p>`;
+            }
+          }
+          panelDiv.innerHTML = `<p><strong>華語詞義：</strong> ${(popupMeaning || '無資料').replace(/"/g, '')}</p>${popupBorrowNote}`;
 
           itemDiv.appendChild(headerBtn);
           itemDiv.appendChild(panelDiv);
@@ -4306,6 +4319,8 @@ function initializeAppUI() {
       }
 
       const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
+      // 教典條目釋義摎例句都空時，借用別腔同詞目（見 borrowMissingGipFields）
+      const borrowed = isGip ? borrowMissingGipFields(line, 腔, crossDialectResults) : null;
 
       if (crossDialectResults.length > 0) {
         const crossDialectBtn = document.createElement('button');
@@ -4369,13 +4384,20 @@ function initializeAppUI() {
         td2.appendChild(document.createElement('br'));
       }
       const meaningText = document.createElement('span');
-      const processedMeaning = line['華語詞義']
+      const processedMeaning = ((borrowed && borrowed.meaning) || line['華語詞義'])
         .replace(/"/g, '')
         .replace(/\n/g, '<br>');
       meaningText.innerHTML = highlight.meaning
         ? processedMeaning.replace(highlightRegex, '<mark>$1</mark>')
         : processedMeaning;
       td2.appendChild(meaningText);
+      if (borrowed && borrowed.note) {
+        td2.appendChild(document.createElement('br'));
+        const borrowedNote = document.createElement('small');
+        borrowedNote.className = 'borrowed-note';
+        borrowedNote.textContent = borrowed.note;
+        td2.appendChild(borrowedNote);
+      }
       if (line.備註 && line.備註.trim() !== '') {
         const notesP = document.createElement('p');
         notesP.className = 'notes';
@@ -4386,10 +4408,12 @@ function initializeAppUI() {
 
       const td3 = document.createElement('td');
       td3.dataset.label = '例句';
-      if (line['例句'] && line['例句'].trim() !== '') {
+      const sentenceSource = (borrowed && borrowed.sentence) || line['例句'];
+      const translationSource = borrowed && borrowed.sentence ? borrowed.translation : line['翻譯'];
+      if (sentenceSource && sentenceSource.trim() !== '') {
         const sentenceSpan = document.createElement('span');
         sentenceSpan.className = 'sentence';
-        let rawSentence = line['例句'].replace(/"/g, '').replace(/\n/g, '<br>');
+        let rawSentence = sentenceSource.replace(/"/g, '').replace(/\n/g, '<br>');
         if (typeof formatSentenceVariants === 'function') {
           rawSentence = formatSentenceVariants(rawSentence, line.sourceName || line.腔調);
         }
@@ -4417,8 +4441,8 @@ function initializeAppUI() {
         const translationText = document.createElement('span');
         translationText.innerHTML = (
           highlight.translation
-            ? line['翻譯'].replace(highlightRegex, '<mark>$1</mark>')
-            : line['翻譯']
+            ? translationSource.replace(highlightRegex, '<mark>$1</mark>')
+            : translationSource
         )
           .replace(/"/g, '')
           .replace(/\n/g, '<br>');
@@ -8845,6 +8869,48 @@ function findCrossDialectRows(line, dialectInfo, isGip) {
   return results;
 }
 
+/**
+ * 教典有些條目原始資料釋義摎例句都係空个（例如教典四縣「腍腍」），但別腔同詞目有。
+ * 這時借用別腔个資料：釋義（華語，毋分腔）優先借姊妹腔（四縣⇄南四縣），無正借別腔；
+ * 例句（連翻譯）淨借姊妹腔（語感相近），別腔个例句毋借。
+ * @param {object} line - 教典條目
+ * @param {string} dialect - 該條目个腔別（'四'、'南'…）
+ * @param {Array} crossResults - findCrossDialectRows() 个結果
+ * @returns {null|{meaning:string, sentence:string, translation:string, note:string}} 無需借用或借無著就回 null
+ */
+function borrowMissingGipFields(line, dialect, crossResults) {
+  if (!line) return null;
+  if (String(line['華語詞義'] || '').trim() || String(line['例句'] || '').trim()) return null;
+  const siblingKey = dialect === '四' ? '南' : dialect === '南' ? '四' : '';
+  const ordered = (crossResults || [])
+    .slice()
+    .sort((a, b) => (b.accentKey === siblingKey) - (a.accentKey === siblingKey));
+  const meaningSrc = ordered.find(
+    (r) => r.foundItem && String(r.foundItem['華語詞義'] || '').trim(),
+  );
+  const sentenceSrc = ordered.find(
+    (r) => r.accentKey === siblingKey && r.foundItem && String(r.foundItem['例句'] || '').trim(),
+  );
+  if (!meaningSrc && !sentenceSrc) return null;
+  const nameOf = (r) => '教典' + ((r.itemDialectInfo && r.itemDialectInfo.腔名) || r.accentKey);
+  let note;
+  if (meaningSrc && sentenceSrc && meaningSrc.accentKey === sentenceSrc.accentKey) {
+    note = `釋義、例句借自${nameOf(meaningSrc)}`;
+  } else {
+    const parts = [];
+    if (meaningSrc) parts.push(`釋義借自${nameOf(meaningSrc)}`);
+    if (sentenceSrc) parts.push(`例句借自${nameOf(sentenceSrc)}`);
+    note = parts.join('，');
+  }
+  return {
+    meaning: meaningSrc ? String(meaningSrc.foundItem['華語詞義']) : '',
+    sentence: sentenceSrc ? String(sentenceSrc.foundItem['例句']) : '',
+    translation: sentenceSrc ? String(sentenceSrc.foundItem['翻譯'] || '') : '',
+    note: `（${note}）`,
+  };
+}
+window.borrowMissingGipFields = borrowMissingGipFields;
+
 function toggleAccordion(event, line, dialectInfo) {
   const clickedButton = event.currentTarget;
   const parentRow = clickedButton.closest('tr');
@@ -9327,6 +9393,7 @@ if (typeof module !== 'undefined' && module.exports) {
     classifyTone,
     getSandhiHtml,
     getSandhiPronunciation,
+    borrowMissingGipFields,
     formatPhoneticForDisplay,
     renderPhoneticNoteLabels,
     getCertAdvancedRepeatCount,

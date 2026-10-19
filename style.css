@@ -2625,6 +2625,12 @@ input:checked+.slider:before {
   }
 }
 
+/* 教典條目釋義／例句借自別腔時，標註來源个小字 */
+.borrowed-note {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
 /* 窄螢幕：減少摘要列左右留白，讓摘要文字（含自動縮字）和切換鈕有更多空間，按鈕也更靠邊 */
 @media screen and (max-width: 768px) {
   #results-summary {

@@ -583,23 +583,15 @@ const DailyWord = (function () {
     let meaning = row['華語詞義'] || '';
     let sentenceRaw = row['例句'] ? String(row['例句']).replace(/"/g, '') : '';
 
-    // 教典有些條目原始資料釋義摎例句都係空个（例如四縣腔「腍腍」），但其他腔同詞目有。
-    // 這時借用：釋義（華語，毋分腔）優先借姊妹腔（四縣⇄南四縣），無正借別腔；
-    // 例句淨借姊妹腔（語感相近），別腔个例句毋借。
-    let borrowedNote = '';
-    if (isGip && !meaning.trim() && !sentenceRaw.trim()) {
-      const siblingKey = dialect === '四' ? '南' : dialect === '南' ? '四' : '';
-      const ordered = crossDialectResults.slice().sort((a, b) => (b.accentKey === siblingKey) - (a.accentKey === siblingKey));
-      const meaningSrc = ordered.find(r => r.foundItem && String(r.foundItem['華語詞義'] || '').trim());
-      const sentenceSrc = ordered.find(r => r.accentKey === siblingKey && r.foundItem && String(r.foundItem['例句'] || '').trim());
-      if (meaningSrc) meaning = meaningSrc.foundItem['華語詞義'];
-      if (sentenceSrc) sentenceRaw = String(sentenceSrc.foundItem['例句']).replace(/"/g, '');
-      const names = [];
-      if (meaningSrc) names.push('釋義借自教典' + (meaningSrc.itemDialectInfo && meaningSrc.itemDialectInfo.腔名 || meaningSrc.accentKey));
-      if (sentenceSrc && (!meaningSrc || sentenceSrc.accentKey !== meaningSrc.accentKey)) names.push('例句借自教典' + (sentenceSrc.itemDialectInfo && sentenceSrc.itemDialectInfo.腔名 || sentenceSrc.accentKey));
-      if (names.length) borrowedNote = '（' + names.join('，') + '）';
+    // 教典條目釋義摎例句都空時，借用別腔同詞目（共用 main.js 个 borrowMissingGipFields）
+    if (isGip && typeof window.borrowMissingGipFields === 'function') {
+      const borrowed = window.borrowMissingGipFields(row, dialect, crossDialectResults);
+      if (borrowed) {
+        if (borrowed.meaning) meaning = borrowed.meaning;
+        if (borrowed.sentence) sentenceRaw = borrowed.sentence.replace(/"/g, '');
+        metaStr += borrowed.note;
+      }
     }
-    if (borrowedNote) metaStr += borrowedNote;
     sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, ''); // Ensure newlines are <br>
     
     // Also split by " 例：" (space + 例：)
