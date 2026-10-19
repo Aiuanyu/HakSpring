@@ -13,18 +13,18 @@ assert.strictEqual(convertSyllableToGIP('bán'), 'banˊ'); // 銳音
 assert.strictEqual(convertSyllableToGIP('bàn'), 'banˋ'); // 重音
 assert.strictEqual(convertSyllableToGIP('běn'), 'benˇ'); // 抑揚
 assert.strictEqual(convertSyllableToGIP('bân'), 'ban\u02C6'); // 折音（U+02C6）
-assert.strictEqual(convertSyllableToGIP('bān'), 'ban˖'); // 長音
+assert.strictEqual(convertSyllableToGIP('bān'), 'ban+'); // 長音（ASCII 加號）
 assert.strictEqual(convertSyllableToGIP('ban'), 'ban'); // 無調符
 console.log('  ✅ 1. 調符對照 PASS');
 
-// 2. 字元碼位：務必是修飾字母（客委會表格个寫法），毋係 ASCII
+// 2. 字元碼位：折音用修飾字母 ˆ（U+02C6），長音用 ASCII 个 +（˖ U+02D6 太細，毋採用）
 assert.strictEqual(TONE_SYMBOLS['́'], 'ˊ');
 assert.strictEqual(TONE_SYMBOLS['̀'], 'ˋ');
 assert.strictEqual(TONE_SYMBOLS['̌'], 'ˇ');
 assert.strictEqual(TONE_SYMBOLS['̂'], 'ˆ');
-assert.strictEqual(TONE_SYMBOLS['̄'], '˖');
+assert.strictEqual(TONE_SYMBOLS['̄'], '+');
 assert.strictEqual(convertSyllableToGIP('bân').slice(-1).codePointAt(0), 0x02c6);
-assert.strictEqual(convertSyllableToGIP('bān').slice(-1).codePointAt(0), 0x02d6);
+assert.strictEqual(convertSyllableToGIP('bān').slice(-1).codePointAt(0), 0x2b);
 console.log('  ✅ 2. 修飾字母碼位 PASS');
 
 // 3. 實際詞句（預先組合字元與組合字元兩種輸入都要一樣）
@@ -102,8 +102,8 @@ console.log('  ✅ 6. 三態分流與循環 PASS');
       if (c || f.length) { f.push(c); rows.push(f); }
       return rows;
     };
-    // 官方原檔个 ASCII ^ 摎 + ，正規化成修飾字母再比
-    const norm = (s) => (s || '').replace(/\^/g, 'ˆ').replace(/\+/g, '˖').normalize('NFC');
+    // 官方原檔个 ASCII ^ 正規化成 ˆ（U+02C6）再比；+ 本來就係 ASCII，毋使轉
+    const norm = (s) => (s || '').replace(/\^/g, 'ˆ').normalize('NFC');
     const toks = (s) => s.replace(/[【】（）()／/,，]/g, ' ').split(/\s+/).filter(Boolean);
     let aligned = 0, tokens = 0, bad = 0;
     for (const name of fs.readdirSync(rawDir).filter((n) => /^113.*\.csv$/.test(n))) {
