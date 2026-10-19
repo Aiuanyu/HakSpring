@@ -569,15 +569,6 @@ const DailyWord = (function () {
       metaStr = `${sourceName}第 ${formattedIndex} 條`;
     }
     
-    const meaning = row['華語詞義'] || '';
-    let sentenceRaw = row['例句'] ? String(row['例句']).replace(/"/g, '') : '';
-    sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, ''); // Ensure newlines are <br>
-    
-    // Also split by " 例：" (space + 例：)
-    sentenceRaw = sentenceRaw.replace(/\s+(例|例如)\s*[：:]\s*/g, '<br>');
-    
-    const sentenceParts = sentenceRaw.split('<br>').map(s => s.trim()).filter(s => s !== '');
-
     let isGip = item.type !== 'cert';
     let originalDialectInfo = {};
     if (isGip) {
@@ -586,6 +577,36 @@ const DailyWord = (function () {
        originalDialectInfo = typeof getDialectInfo === 'function' ? getDialectInfo(dialect, level) : {腔: dialect, 級: level};
     }
     
+
+    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
+
+    let meaning = row['華語詞義'] || '';
+    let sentenceRaw = row['例句'] ? String(row['例句']).replace(/"/g, '') : '';
+
+    // 教典有些條目原始資料釋義摎例句都係空个（例如四縣腔「腍腍」），但其他腔同詞目有。
+    // 這時借用：釋義（華語，毋分腔）優先借姊妹腔（四縣⇄南四縣），無正借別腔；
+    // 例句淨借姊妹腔（語感相近），別腔个例句毋借。
+    let borrowedNote = '';
+    if (isGip && !meaning.trim() && !sentenceRaw.trim()) {
+      const siblingKey = dialect === '四' ? '南' : dialect === '南' ? '四' : '';
+      const ordered = crossDialectResults.slice().sort((a, b) => (b.accentKey === siblingKey) - (a.accentKey === siblingKey));
+      const meaningSrc = ordered.find(r => r.foundItem && String(r.foundItem['華語詞義'] || '').trim());
+      const sentenceSrc = ordered.find(r => r.accentKey === siblingKey && r.foundItem && String(r.foundItem['例句'] || '').trim());
+      if (meaningSrc) meaning = meaningSrc.foundItem['華語詞義'];
+      if (sentenceSrc) sentenceRaw = String(sentenceSrc.foundItem['例句']).replace(/"/g, '');
+      const names = [];
+      if (meaningSrc) names.push('釋義借自教典' + (meaningSrc.itemDialectInfo && meaningSrc.itemDialectInfo.腔名 || meaningSrc.accentKey));
+      if (sentenceSrc && (!meaningSrc || sentenceSrc.accentKey !== meaningSrc.accentKey)) names.push('例句借自教典' + (sentenceSrc.itemDialectInfo && sentenceSrc.itemDialectInfo.腔名 || sentenceSrc.accentKey));
+      if (names.length) borrowedNote = '（' + names.join('，') + '）';
+    }
+    if (borrowedNote) metaStr += borrowedNote;
+    sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, ''); // Ensure newlines are <br>
+    
+    // Also split by " 例：" (space + 例：)
+    sentenceRaw = sentenceRaw.replace(/\s+(例|例如)\s*[：:]\s*/g, '<br>');
+    
+    const sentenceParts = sentenceRaw.split('<br>').map(s => s.trim()).filter(s => s !== '');
+
     let lineForAudio = Object.assign({}, row, {
       sourceType: isGip ? 'gip' : 'cert',
       sourceName: isGip ? '教典' + dialect : dialect + level
@@ -627,7 +648,6 @@ const DailyWord = (function () {
       </div>`;
     }
 
-    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
     
     const crossBtnHTML = crossDialectResults.length > 0 ? 
       `<button id="dailyCrossBtn" class="crossDialectBtn" style="font-size: 0.8em; padding: 2px; margin-left: 2px; vertical-align: middle;"><i class="fas fa-plus-circle"></i></button>` : '';
