@@ -27,7 +27,7 @@ from collections import Counter, defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from build_supp_dict import (  # noqa: E402
-    HAN, SYLLABLE, READING_SPLIT, expand_parens, load_variants,
+    HAN, SYLLABLE, expand_parens, load_variants, split_readings,
 )
 
 OUT_DIR = os.path.join(ROOT, 'data', 'sub-dialects-fill')
@@ -88,16 +88,12 @@ def zai_by_pos(pos):
     return None
 
 
-NOTE_SPLIT = re.compile(r'特')
-
-
 def first_reading(phonetic):
-    """取第一隻讀音，拆忒「又讀／文／白／特」等註記，音節用一隻空白隔開。"""
-    for part in READING_SPLIT.split(phonetic):
-        for p in NOTE_SPLIT.split(part):
-            sylls = SYLLABLE.findall(p)
-            if sylls:
-                return ' '.join(nfc(x) for x in sylls)
+    """取第一隻正式讀音（拆忒「又讀／文／白／特」，丟忒「合音」「小稱變調讀」等），音節用一隻空白隔開。"""
+    for p in split_readings(phonetic):
+        sylls = SYLLABLE.findall(p)
+        if sylls:
+            return ' '.join(nfc(x) for x in sylls)
     return ''
 
 
