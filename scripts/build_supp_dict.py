@@ -4,7 +4,7 @@
 
 做法：
 1. 呼叫 scripts/supp_expand_variants.js，用 js/variant-parser.js 展開【】變體。
-2. 拆「又讀／文／白」等異讀，展開「屁（屁卵）」這種括號同義詞。
+2. 拆「又讀／文／白／特」等異讀（合音、小稱變調等變調後个讀法丟忒），展開「屁（屁卵）」這種括號同義詞。
 3. 字數摎音節數共樣个詞，逐字配對（例：藍衫 ↔ lǎm sám → 藍 = lǎm）。
 4. 每腔：該腔認證、教典全部無單字條目个字，收佢在詞裡肚出現過个全部讀音（分類「補字典」）。
 5. 多音字補音：有單字條目个字，詞裡肚另外有單字條目無收个讀音（含淨差調），
@@ -47,7 +47,26 @@ MAX_EXAMPLES = 5
 HAN = re.compile(r'[㐀-䶿一-鿿豈-﫿\U00020000-\U0003ffff]')
 # 音節：拉丁字母（含調符、組合附加符號）
 SYLLABLE = re.compile(r"[a-zA-ZÀ-ɏḀ-ỿ̀-ͯ']+")
-READING_SPLIT = re.compile(r'(?:又讀|又俗音|俗音|又音|又|文|白)\s*\d*\s*\.?')
+# 教典讀音欄个註記（對照 main.js PHONETIC_NOTE_NAMES 摎 data/gip 實際出現个寫法）
+# 另一隻正式讀音：拆開、全部收
+READING_NOTES = ['又俗音', '又讀', '又音', '俗音', '特殊音', '特', '又', '文', '白']
+# 合音、變調後个讀法，毋係字本身个讀音：拆開、丟忒
+DROP_NOTES = ['小稱變調讀本調為', '小稱變調讀', '為後字變調', '後字變調讀', '後字變調',
+              '本調為', '合音讀', '合音']
+_NOTES = sorted(READING_NOTES + DROP_NOTES, key=len, reverse=True)
+NOTE_SPLIT = re.compile('(' + '|'.join(_NOTES) + r')\s*\d*\s*\.?')
+# 舊名，保留分 split 用（無分種類）
+READING_SPLIT = re.compile('(?:' + '|'.join(_NOTES) + r')\s*\d*\s*\.?')
+
+
+def split_readings(phonetic):
+    """讀音欄拆做幾隻正式讀音；合音、變調後个讀法丟忒。"""
+    parts = NOTE_SPLIT.split(phonetic)
+    readings = [parts[0]]
+    for note, seg in zip(parts[1::2], parts[2::2]):
+        if note not in DROP_NOTES:
+            readings.append(seg)
+    return [r.strip() for r in readings if r.strip()]
 
 
 def target_dialect(source_name, label):
@@ -147,7 +166,7 @@ def main():
         d = target_dialect(o['sourceName'], o['label'])
         if not d:
             continue
-        for ph in [p.strip() for p in READING_SPLIT.split(o['phonetic']) if p.strip()]:
+        for ph in split_readings(o['phonetic']):
             for word, phon in expand_parens(o['word'], ph):
                 if not word or not phon:
                     continue
