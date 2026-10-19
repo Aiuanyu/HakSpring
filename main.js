@@ -1377,20 +1377,25 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
  * @returns {HTMLElement|null}
  */
 /**
- * 次方言補音（data/sub-dialects-fill/）：認證無標南音个四縣詞條，資料端推導个南四縣音。
- * 網站淨讀精簡版 南四縣.web.json：{ '四基|1-3': [南四縣標音, 推導方法] }，淨收摎北四縣無共樣个。
+ * 次方言補音（data/sub-dialects-fill/）：認證無標个次方言音，資料端推導。
+ * 網站淨讀精簡版 *.web.json：{ '四基|1-3': [標音, 推導層] }
+ * - 南四縣.web.json：淨收摎北四縣無共樣个
+ * - 美濃.web.json：淨收摎南四縣無共樣个
  */
-window.SUB_DIALECT_FILL = window.SUB_DIALECT_FILL || { 南: null };
+window.SUB_DIALECT_FILL = window.SUB_DIALECT_FILL || { 南: null, 美: null };
+const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
 // 一開始就抓（比 IndexedDB 讀資料較早好），載入好發 subdialectfill:ready 事件
-fetch('data/sub-dialects-fill/南四縣.web.json', { cache: 'no-cache' })
-  .then((res) => (res.ok ? res.json() : null))
-  .then((data) => {
-    if (!data) return;
-    window.SUB_DIALECT_FILL.南 = data;
-    console.log(`次方言補音載入完成：南四縣 ${Object.keys(data).length} 條`);
-    document.dispatchEvent(new Event('subdialectfill:ready'));
-  })
-  .catch((err) => console.warn('次方言補音載入失敗（不影響基本功能）:', err));
+Object.entries(SUB_DIALECT_FILL_FILES).forEach(([label, file]) => {
+  fetch(`data/sub-dialects-fill/${file}.web.json`, { cache: 'no-cache' })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (!data) return;
+      window.SUB_DIALECT_FILL[label] = data;
+      console.log(`次方言補音載入完成：${file} ${Object.keys(data).length} 條`);
+      document.dispatchEvent(new Event('subdialectfill:ready'));
+    })
+    .catch((err) => console.warn(`次方言補音（${file}）載入失敗（不影響基本功能）:`, err));
+});
 
 const CERT_LEVEL_SHORT = { 基礎級: '基', 初級: '初', 中級: '中', 中高級: '中高', 高級: '高' };
 
@@ -1409,12 +1414,13 @@ function getSubDialectFillKey(line) {
 }
 
 /**
- * 這條詞个推導南四縣音；無就回傳 null。
+ * 這條詞个推導次方言音；無就回傳 null。
  * @param {object} line
+ * @param {string} [label='南'] - 變體標籤：南、美
  * @returns {{phonetic: string, method: string}|null}
  */
-function getSubDialectFill(line) {
-  const map = window.SUB_DIALECT_FILL && window.SUB_DIALECT_FILL.南;
+function getSubDialectFill(line, label = '南') {
+  const map = window.SUB_DIALECT_FILL && window.SUB_DIALECT_FILL[label];
   if (!map) return null;
   const key = getSubDialectFillKey(line);
   const hit = key && map[key];
@@ -1442,32 +1448,35 @@ function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
     v = parseVariants(rawWord, rawPhonetic, dialectType);
   }
 
-  // 次方言補音：無標南音个四縣認證詞條，加推導个南四縣音
-  const fill = getSubDialectFill(line);
-  if (fill && !(v && v.variants && v.variants.some((x) => x.label === '南'))) {
-    if (!v || !v.hasVariants) {
-      v = {
-        hasVariants: true,
-        dialectType: '四縣',
-        main: {
-          label: '北',
-          title: '北四縣',
-          word: line['客家語'] || '',
-          phonetic: line['客語標音_顯示'] || '',
-          phoneticOnly: false,
-        },
-        variants: [],
-      };
+  // 次方言補音：認證無標个南四縣、美濃音，加推導个
+  const SUB_DIALECT_TITLES = { 南: '南四縣', 美: '美濃' };
+  ['南', '美'].forEach((label) => {
+    const fill = getSubDialectFill(line, label);
+    if (fill && !(v && v.variants && v.variants.some((x) => x.label === label))) {
+      if (!v || !v.hasVariants) {
+        v = {
+          hasVariants: true,
+          dialectType: '四縣',
+          main: {
+            label: '北',
+            title: '北四縣',
+            word: line['客家語'] || '',
+            phonetic: line['客語標音_顯示'] || '',
+            phoneticOnly: false,
+          },
+          variants: [],
+        };
+      }
+      v.variants.push({
+        label,
+        title: `${SUB_DIALECT_TITLES[label]}（程式推導，認證無標）`,
+        word: v.main.word,
+        phonetic: fill.phonetic,
+        phoneticOnly: true,
+        derived: true,
+      });
     }
-    v.variants.push({
-      label: '南',
-      title: '南四縣（程式推導，認證無標）',
-      word: v.main.word,
-      phonetic: fill.phonetic,
-      phoneticOnly: true,
-      derived: true,
-    });
-  }
+  });
 
   if (!v || !v.hasVariants) {
     return null;
