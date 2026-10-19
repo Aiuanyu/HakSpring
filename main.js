@@ -8349,6 +8349,18 @@ function initializeAppUI() {
   const whatsNewContent = document.getElementById('whats-new-content');
   let newWhatsNewVersion = null;
 
+  // 新消息（whatsnew.md）个連結一律開新分頁，毋會跳離目前个頁面（hash 錨點連結除外）
+  function forceLinksToNewTab(container) {
+    if (!container) return;
+    container.querySelectorAll('a').forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      if (href && !href.startsWith('#')) {
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+  }
+
   // Helper function to fetch and return markdown content, following DRY principle
   async function fetchWhatsNewContent() {
     const cacheBustUrl = `whatsnew.md?t=${new Date().getTime()}`;
@@ -8381,6 +8393,7 @@ function initializeAppUI() {
         newWhatsNewVersion = serverVersion;
         whatsNewContent.innerHTML = marked.parse(markdownContent);
         renderDynamicMarkdownTags(whatsNewContent);
+        forceLinksToNewTab(whatsNewContent);
         whatsNewModal.classList.add('is-visible');
       } else {
         if (localStorage.getItem('seenOnboarding20260705') !== 'true') {
@@ -8408,6 +8421,7 @@ function initializeAppUI() {
       newWhatsNewVersion = versionMatch ? parseInt(versionMatch[1], 10) : null;
       whatsNewContent.innerHTML = marked.parse(markdownContent);
       renderDynamicMarkdownTags(whatsNewContent);
+      forceLinksToNewTab(whatsNewContent);
       whatsNewModal.classList.add('is-visible');
     } catch (error) {
       console.error('Failed to load whatsnew.md:', error);
