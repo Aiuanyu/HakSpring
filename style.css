@@ -2594,6 +2594,18 @@ input:checked+.slider:before {
   box-shadow: 0 1px 3px rgba(112, 88, 124, 0.18);
 }
 
+.script-mode-badge.is-gip {
+  background: linear-gradient(135deg, #fbf3e6, #f3e4cb);
+  color: #6b4a1e;
+  border-color: #c9a574;
+  box-shadow: 0 1px 3px rgba(150, 110, 50, 0.18);
+}
+
+.script-mode-badge.is-gip:hover {
+  background: linear-gradient(135deg, #f7ead3, #eedcbd);
+  border-color: #b18a55;
+}
+
 .script-mode-badge.is-pfs:hover {
   background: linear-gradient(135deg, #ede1f8, #e1d0f0);
   border-color: #8f6f9f;
@@ -2621,6 +2633,15 @@ input:checked+.slider:before {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
   .script-mode-badge.is-pfs:hover {
+    filter: brightness(1.1);
+  }
+  .script-mode-badge.is-gip {
+    background: linear-gradient(135deg, #9a7a4c, #b08f5e);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .script-mode-badge.is-gip:hover {
     filter: brightness(1.1);
   }
 }
@@ -2679,6 +2700,18 @@ input:checked+.slider:before {
   box-shadow: 0 1px 3px rgba(112, 88, 124, 0.18);
 }
 
+.daily-script-btn.is-gip {
+  background: linear-gradient(135deg, #fbf3e6, #f3e4cb) !important;
+  color: #6b4a1e !important;
+  border-color: #c9a574 !important;
+  box-shadow: 0 1px 3px rgba(150, 110, 50, 0.18);
+}
+
+.daily-script-btn.is-gip:hover {
+  background: linear-gradient(135deg, #f7ead3, #eedcbd) !important;
+  border-color: #b18a55 !important;
+}
+
 .daily-script-btn.is-pfs:hover {
   background: linear-gradient(135deg, #ede1f8, #e1d0f0) !important;
   border-color: #8f6f9f !important;
@@ -2698,6 +2731,11 @@ input:checked+.slider:before {
   }
   .daily-script-btn.is-pfs {
     background: linear-gradient(135deg, #8e7399, #a387af) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+  }
+  .daily-script-btn.is-gip {
+    background: linear-gradient(135deg, #9a7a4c, #b08f5e) !important;
     color: #ffffff !important;
     border-color: rgba(255, 255, 255, 0.35) !important;
   }

@@ -856,12 +856,20 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   if (isGip) {
     result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
   }
-  // 6. 若啟用四縣 PFS 白話字顯示且為四縣/南四縣腔，轉為 PFS
+  // 6. 依目前顯示模式轉換：pfs 淨轉四縣／南四縣；gip（教育部客拼）五腔都轉；hpp 維持原樣
   const converter = typeof pfsConverter !== 'undefined'
     ? pfsConverter
     : (typeof window !== 'undefined' && window.pfsConverter);
-  if (converter && converter.isPfsDisplayActive(dialect)) {
-    result = converter.toPFS(result);
+  if (converter) {
+    const script = converter.getEffectiveScript(dialect);
+    if (script === 'pfs') {
+      result = converter.toPFS(result);
+    } else if (script === 'gip') {
+      const gip = typeof gipConverter !== 'undefined'
+        ? gipConverter
+        : (typeof window !== 'undefined' && window.gipConverter);
+      if (gip) result = gip.toGIP(result);
+    }
   }
   return result;
 }
@@ -1640,6 +1648,14 @@ function classifyTone(syllable, dialectCode) {
   if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
     return null;
   }
+  // GIP（教育部客拼）个調號係貼在音節字母後面个符號（bodˋ），先拆出來，後面个入聲判斷摎調號判斷才正確。
+  // ^、+ 係教育部原檔用个 ASCII 寫法；ˆ（U+02C6）、˖（U+02D6）係客委會表格个修飾字母寫法。
+  let gipSymbol = null;
+  const gipMatch = syllable.match(/^(.+?)([\u02CA\u02C7\u02CB\u02C6\u02D6^+])$/);
+  if (gipMatch) {
+    syllable = gipMatch[1];
+    gipSymbol = gipMatch[2];
+  }
   // -b/-d 結尾是入聲；-g 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
   const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
   // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
@@ -1657,7 +1673,18 @@ function classifyTone(syllable, dialectCode) {
   const toneMatch = nfdSyllable.match(/[\u0301\u0300\u030C\u0302\u0304]/);
   
   let aForm = 'a';
-  if (toneMatch) {
+  if (gipSymbol) {
+    const gipMarks = {
+      '\u02CA': '\u0301',
+      '\u02C7': '\u030C',
+      '\u02CB': '\u0300',
+      '\u02C6': '\u0302',
+      '^': '\u0302',
+      '\u02D6': '\u0304',
+      '+': '\u0304',
+    };
+    aForm = ('a' + gipMarks[gipSymbol]).normalize('NFC');
+  } else if (toneMatch) {
     aForm = ('a' + toneMatch[0]).normalize('NFC');
   }
 
@@ -8094,33 +8121,36 @@ function initializeAppUI() {
       });
     }
 
-    // --- PFS Script Toggle & Header/Summary Badge Setting Logic ---
+    // --- 顯示模式（HPP／四 PFS／GIP）切換鈕摎設定選單 ---
+    const SCRIPT_LABELS = { hpp: 'HPP', pfs: '四 PFS', gip: 'GIP' };
+
     function updateScriptModeUI(scriptValue) {
-      const isPfs = scriptValue === 'pfs';
+      const converter = typeof pfsConverter !== 'undefined' ? pfsConverter : window.pfsConverter;
+      const script = converter ? converter.normalizeDisplayScript(scriptValue) : 'hpp';
+      const nextScript = converter ? converter.nextDisplayScript(script) : script;
+      const label = SCRIPT_LABELS[script];
+      const title = `當前顯示：${label}（點擊切換為 ${SCRIPT_LABELS[nextScript]}）`;
+
       const badgeBtn = document.getElementById('scriptModeToggleBtn');
       const badgeText = document.getElementById('scriptModeBadgeText');
       if (badgeBtn && badgeText) {
-        if (isPfs) {
-          badgeText.textContent = '四 PFS';
-          badgeBtn.classList.add('is-pfs');
-          badgeBtn.setAttribute('title', '當前顯示：四 PFS（點擊切換為 HPP）');
-        } else {
-          badgeText.textContent = 'HPP';
-          badgeBtn.classList.remove('is-pfs');
-          badgeBtn.setAttribute('title', '當前顯示：HPP（點擊切換為 四 PFS）');
-        }
+        badgeText.textContent = label;
+        badgeBtn.classList.toggle('is-pfs', script === 'pfs');
+        badgeBtn.classList.toggle('is-gip', script === 'gip');
+        badgeBtn.setAttribute('title', title);
       }
       const dailyBtn = document.getElementById('dailyScriptModeToggleBtn');
       if (dailyBtn) {
-        dailyBtn.textContent = isPfs ? '四 PFS' : 'HPP';
-        if (isPfs) dailyBtn.classList.add('is-pfs');
-        else dailyBtn.classList.remove('is-pfs');
+        dailyBtn.textContent = label;
+        dailyBtn.classList.toggle('is-pfs', script === 'pfs');
+        dailyBtn.classList.toggle('is-gip', script === 'gip');
+        dailyBtn.setAttribute('title', `${title}。PFS 淨影響四縣／南四縣`);
       }
-      const toggle = document.getElementById('pfsScriptToggle');
-      if (toggle && toggle.checked !== isPfs) {
-        toggle.checked = isPfs;
+      const select = document.getElementById('displayScriptSelect');
+      if (select && select.value !== script) {
+        select.value = script;
       }
-      // 切換掣文字會在「HPP」摎「四 PFS」之間變，闊度無共樣，愛重算摘要字型大細
+      // 切換掣文字闊度會跟等變，愛重算摘要字型大細
       if (typeof adjustResultsSummaryFontSize === 'function') {
         adjustResultsSummaryFontSize();
       }
@@ -8252,11 +8282,11 @@ function initializeAppUI() {
     }
     updateScriptModeUI(currentScript);
 
-    const pfsScriptToggle = document.getElementById('pfsScriptToggle');
-    if (pfsScriptToggle) {
-      pfsScriptToggle.checked = currentScript === 'pfs';
-      pfsScriptToggle.addEventListener('change', (event) => {
-        setHakfaDisplayScript(event.target.checked ? 'pfs' : 'hpp');
+    const displayScriptSelect = document.getElementById('displayScriptSelect');
+    if (displayScriptSelect) {
+      displayScriptSelect.value = currentScript;
+      displayScriptSelect.addEventListener('change', (event) => {
+        setHakfaDisplayScript(event.target.value);
       });
     }
 
