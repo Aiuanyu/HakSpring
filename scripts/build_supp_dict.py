@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from process_all_data import (  # noqa: E402
     UNIFIED_SCHEMA_HEADERS, convert_diacritic_to_numeric, expand_reverse_map,
-    comprehensive_clean_spacing,
+    comprehensive_clean_spacing, convert_phonetic_string,
 )
 
 DIALECTS = ['四', '海', '大', '平', '安', '南']
@@ -138,6 +138,44 @@ def load_gip_numeric():
     return result
 
 
+def load_gip_readings(d):
+    """教典原始 CSV 个音讀 → 詞目 → [讀音…]（調符、音節一隻空白隔開）。
+
+    愛讀原始 CSV：處理過个「客語標音_顯示」會共全形空白壓做半形，讀音中間个邊界就無忒。
+    音讀欄：全形空白隔開幾隻讀音（有時無註記，第二隻係變調形式，例：kong31 ngiu<u>24</u>），
+    再拆「又讀／特…」註記，丟忒「合音」「（後字變調）」等。
+    """
+    with open(os.path.join(ROOT, 'tone_mapping.json'), encoding='utf-8') as f:
+        tm = json.load(f)
+    tone_map = {'vowel_priority': tm.get('vowel_priority', []),
+                'tones': {**tm.get('default_tones', {}), **tm.get('dialect_maps', {}).get(d, {})}}
+    gip_dir = os.path.join(ROOT, 'data', 'gip')
+    fname = next(f for f in os.listdir(gip_dir) if f.endswith(f'-{d}.csv'))
+    out = defaultdict(list)
+    with open(os.path.join(gip_dir, fname), encoding='utf-8-sig') as f:
+        for row in csv.DictReader(f):
+            raw = re.sub(r'</?u>', '', row['音讀'])
+            raw = re.sub(r'（[^）]*）', '', raw)
+            for seg in raw.split('\u3000'):
+                for reading in split_readings(seg):
+                    sylls = SYLLABLE.findall(convert_phonetic_string(reading, tone_map))
+                    r = ' '.join(unicodedata.normalize('NFC', x) for x in sylls)
+                    if r and r not in out[row['詞目']]:
+                        out[row['詞目']].append(r)
+    return out
+
+
+def load_records():
+    """認證：經 variant-parser 展開【】變體；教典：無【】，直接讀原始 CSV（保留讀音邊界）。"""
+    for o in load_variants():
+        if not o['sourceName'].startswith('教典'):
+            yield o
+    for d in DIALECTS:
+        for word, readings in load_gip_readings(d).items():
+            for r in readings:
+                yield {'sourceName': f'教典{d}', 'label': '', 'word': word, 'phonetic': r}
+
+
 def load_variants():
     js = os.path.join(ROOT, 'scripts', 'supp_expand_variants.js')
     res = subprocess.run(['node', js], capture_output=True, text=True, check=True)
@@ -162,7 +200,7 @@ def main():
         lambda: {'count': 0, 'examples': [], 'labels': set()})))
     stats = defaultdict(lambda: {'pairs': 0, 'aligned': 0})
 
-    for o in load_variants():
+    for o in load_records():
         d = target_dialect(o['sourceName'], o['label'])
         if not d:
             continue
