@@ -27,7 +27,7 @@ from collections import Counter, defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from build_supp_dict import (  # noqa: E402
-    HAN, SYLLABLE, expand_parens, load_variants, split_readings,
+    HAN, SYLLABLE, load_gip_readings, load_variants,
 )
 
 OUT_DIR = os.path.join(ROOT, 'data', 'sub-dialects-fill')
@@ -88,15 +88,6 @@ def zai_by_pos(pos):
     return None
 
 
-def first_reading(phonetic):
-    """取第一隻正式讀音（拆忒「又讀／文／白／特」，丟忒「合音」「小稱變調讀」等），音節用一隻空白隔開。"""
-    for p in split_readings(phonetic):
-        sylls = SYLLABLE.findall(p)
-        if sylls:
-            return ' '.join(nfc(x) for x in sylls)
-    return ''
-
-
 def syllables(phonetic):
     return [nfc(x) for x in SYLLABLE.findall(phonetic)]
 
@@ -125,10 +116,9 @@ def load_entries():
                 e['south'], e['south_word'] = o['phonetic'], o['word']
             elif o['label'] == '美' and e['meinung'] is None:
                 e['meinung'], e['meinung_word'] = o['phonetic'], o['word']
-        elif src in ('教典四', '教典南'):
-            r = first_reading(o['phonetic'])
-            if r:
-                gip[src[2]][o['word']].append(r)
+    for d in ('四', '南'):
+        for word, readings in load_gip_readings(d).items():
+            gip[d][word] += readings
     return cert, gip
 
 
@@ -164,7 +154,9 @@ def gip_pairs(gip):
 def derive(e, table, gip):
     """回傳（南四縣標音、整條方法、逐音節方法）。"""
     south, how, methods = derive_syllables(e, table)
-    candidates = gip['南'].get(e['word'])
+    # 音節數摎北四縣無共樣个教典讀音毋用（多半係合音抑係無共樣个詞形，例：幾下 giá／gì há）
+    n_north = len(syllables(e['north']))
+    candidates = [c for c in gip['南'].get(e['word'], []) if len(syllables(c)) == n_north]
     if candidates:
         # 教典南四縣可能有同形異義（例：擔 dám／dam），揀摎逐音節推導最近个該隻
         pred = syllables(south)
