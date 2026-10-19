@@ -191,6 +191,28 @@ console.log('  ✅ 8. 腔調識別（四縣/南四縣）保護測試 PASS');
   assert.strictEqual(normalizeDisplayScript('亂寫'), 'hpp');
 }
 
+// 切換鈕循環：集中在 nextDisplayScript（GIP 實作前只有 hpp／pfs 兩態）
+{
+  const { nextDisplayScript } = require('../js/pfs-converter.js');
+  assert.strictEqual(nextDisplayScript('hpp'), 'pfs');
+  assert.strictEqual(nextDisplayScript('pfs'), 'hpp');
+  assert.strictEqual(nextDisplayScript('hagpin'), 'pfs'); // 舊值當 hpp
+  assert.strictEqual(nextDisplayScript(null), 'pfs');
+  assert.strictEqual(nextDisplayScript('gip'), 'hpp'); // gip 是循環終點，回到 hpp
+}
+
+// 括號註記：漢字註記（【南】【又讀】）原樣保留，括號內个讀音變體照常轉換
+{
+  const { toPFS } = require('../js/pfs-converter.js');
+  assert.strictEqual(toPFS('bòd zìi【南】').normalize('NFC'), 'pot-chṳ́【南】'.normalize('NFC'));
+  assert.strictEqual(toPFS('特ià【又讀】').normalize('NFC'), '特yá【又讀】'.normalize('NFC'));
+  assert.strictEqual(toPFS('só/sǒ【卓】').normalize('NFC'), 'sô/sò【卓】'.normalize('NFC'));
+  assert.strictEqual(
+    toPFS('bòd zìi (piang zìi)').normalize('NFC'),
+    'pot-chṳ́ (phiang-chṳ́)'.normalize('NFC'),
+  );
+}
+
 console.log('  ✅ 9. 對照表範例與引擎一致 PASS');
 
 // 10. 詞組範例：引擎一律吃「音節間有空格」的 HagPinPlus；文件上的連寫是另一條顯示路線，不進引擎

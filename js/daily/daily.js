@@ -667,12 +667,11 @@ const DailyWord = (function () {
                 <div>${weekdayStr}</div>
               </div>
             </div>
-            <div class="daily-header-badges" style="display: flex; align-items: center; gap: 8px;">
+            <div class="daily-header-badges">
               <button
                 id="dailyScriptModeToggleBtn"
                 class="daily-mode-badge daily-script-btn ${isPfs ? 'is-pfs' : ''}"
-                title="切換拼音顯示模式（四 PFS／HPP）"
-                style="cursor: pointer; background: none; font-family: inherit;"
+                title="切換拼音顯示模式（四 PFS／HPP）。淨影響四縣／南四縣"
               >
                 ${isPfs ? '四 PFS' : 'HPP'}
               </button>
@@ -733,8 +732,12 @@ const DailyWord = (function () {
     if (dailyScriptBtn) {
       dailyScriptBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hpp';
-        const next = current === 'pfs' ? 'hpp' : 'pfs';
+        const converter = window.pfsConverter;
+        if (!converter) return;
+        const current = typeof window.getHakfaDisplayScript === 'function'
+          ? window.getHakfaDisplayScript()
+          : converter.normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'));
+        const next = converter.nextDisplayScript(current);
         if (typeof window.setHakfaDisplayScript === 'function') {
           window.setHakfaDisplayScript(next);
         } else {

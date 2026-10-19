@@ -8145,10 +8145,39 @@ function initializeAppUI() {
       return updated;
     }
 
+    /**
+     * 讀目前个顯示模式（hpp／pfs／gip）；舊值 hagpin 或空值一律當 hpp。
+     * 正規化个實作只放在 pfs-converter.js 一處。
+     */
+    function getHakfaDisplayScript() {
+      const converter = typeof pfsConverter !== 'undefined'
+        ? pfsConverter
+        : window.pfsConverter;
+      return converter
+        ? converter.normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'))
+        : 'hpp';
+    }
+
+    /**
+     * 使用者主動切換顯示模式：存值、記事件、套用到畫面，最後觸發雲端同步。
+     */
     function setHakfaDisplayScript(scriptValue) {
       localStorage.setItem('hakfaDisplayScript', scriptValue);
-      updateScriptModeUI(scriptValue);
       trackEvent('toggle', 'PfsDisplayScript', scriptValue);
+      applyHakfaDisplayScript(scriptValue);
+
+      // 觸發雲端同步偏好更新
+      if (typeof window.triggerCloudSync === 'function') {
+        window.triggerCloudSync();
+      }
+    }
+
+    /**
+     * 把顯示模式套用到畫面（開關、膠囊鈕、已算繪个標音）。
+     * 不寫 localStorage、不觸發同步，所以雲端拉下別台裝置个偏好時也做得直接呼叫。
+     */
+    function applyHakfaDisplayScript(scriptValue) {
+      updateScriptModeUI(scriptValue);
 
       // 發送全域事件通知其他元件（如遊戲模式、日日一詞、羅馬字轉換工具）
       window.dispatchEvent(
@@ -8156,11 +8185,6 @@ function initializeAppUI() {
           detail: { script: scriptValue },
         }),
       );
-
-      // 觸發雲端同步偏好更新
-      if (typeof window.triggerCloudSync === 'function') {
-        window.triggerCloudSync();
-      }
 
       // 記住當前捲動高度，避免重新算繪時畫面跳動回頂端
       const savedScrollY = window.scrollY;
@@ -8193,16 +8217,12 @@ function initializeAppUI() {
     }
 
     window.setHakfaDisplayScript = setHakfaDisplayScript;
+    window.applyHakfaDisplayScript = applyHakfaDisplayScript;
+    window.getHakfaDisplayScript = getHakfaDisplayScript;
     window.updateScriptModeUI = updateScriptModeUI;
 
     // 舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值就地升級
-    const currentScript = window.pfsConverter
-      ? window.pfsConverter.normalizeDisplayScript(
-          localStorage.getItem('hakfaDisplayScript'),
-        )
-      : localStorage.getItem('hakfaDisplayScript') === 'pfs'
-        ? 'pfs'
-        : 'hpp';
+    const currentScript = getHakfaDisplayScript();
     if (localStorage.getItem('hakfaDisplayScript') === 'hagpin') {
       localStorage.setItem('hakfaDisplayScript', 'hpp');
     }
@@ -8219,8 +8239,11 @@ function initializeAppUI() {
     const scriptModeToggleBtn = document.getElementById('scriptModeToggleBtn');
     if (scriptModeToggleBtn) {
       scriptModeToggleBtn.addEventListener('click', () => {
-        const current = localStorage.getItem('hakfaDisplayScript') === 'pfs' ? 'pfs' : 'hpp';
-        setHakfaDisplayScript(current === 'pfs' ? 'hpp' : 'pfs');
+        const converter = typeof pfsConverter !== 'undefined'
+          ? pfsConverter
+          : window.pfsConverter;
+        if (!converter) return;
+        setHakfaDisplayScript(converter.nextDisplayScript(getHakfaDisplayScript()));
       });
     }
 

@@ -180,6 +180,7 @@
 | 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
 | 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
 | 遊戲上次腔調/級別 | `hakkaGameLastDataVarName` | `preferences` | ✅ | LWW（空字串視為未設定，不覆蓋本地） |
+| 標音顯示模式（HPP／PFS） | `hakfaDisplayScript` | `preferences` | ✅ | LWW（值為 `hpp`／`pfs`／`gip`；舊值 `hagpin` 讀取時視為 `hpp`；雲端拉下新值時會即時更新畫面） |
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |

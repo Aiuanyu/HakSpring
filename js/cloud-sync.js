@@ -8,9 +8,12 @@ const SYNC_DEBOUNCE_MS = 30000; // 30 秒
 const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
 const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
 
-// 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'
+// 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'。
+// 正規化个實作只放在 js/pfs-converter.js，這裡淨轉呼叫（index.html 先載入佢）。
 function normalizeDisplayScript(value) {
-  return value === 'pfs' || value === 'gip' ? value : 'hpp';
+  return window.pfsConverter
+    ? window.pfsConverter.normalizeDisplayScript(value)
+    : 'hpp';
 }
 
 // 同步狀態
@@ -288,6 +291,13 @@ async function syncFromCloud() {
         }
       }
       localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
+      // 另一台裝置改過顯示模式：本機值被雲端覆寫以後，愛讓開關、膠囊鈕摎已經算繪个標音一齊更新
+      if (
+        finalHakfaDisplayScript !== localPrefs.hakfaDisplayScript &&
+        typeof window.applyHakfaDisplayScript === 'function'
+      ) {
+        window.applyHakfaDisplayScript(finalHakfaDisplayScript);
+      }
 
       // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
       let finalGameLastDataVarName = localPrefs.gameLastDataVarName;

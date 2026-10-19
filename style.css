@@ -2642,13 +2642,19 @@ input:checked+.slider:before {
 }
 
 /* --- 日日一詞右上拼音切換膠囊按鈕 (四 PFS / HPP) --- */
+.daily-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .daily-script-btn {
   font-family: var(--roman-font), var(--title-font) !important;
   letter-spacing: 0.02em;
   transition: all 0.2s ease;
   user-select: none;
   cursor: pointer;
-  background-color: #ffffff;
+  background: none;
   color: #555555;
   border: 1px solid var(--daily-border, #d0d0d0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -2675,7 +2681,6 @@ input:checked+.slider:before {
 
 @media (prefers-color-scheme: dark) {
   .daily-script-btn {
-    background-color: rgba(255, 255, 255, 0.05);
     color: #a0a0a0;
     border-color: var(--daily-border, #444);
     box-shadow: none;

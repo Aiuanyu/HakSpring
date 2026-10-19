@@ -122,6 +122,17 @@
   }
 
   /**
+   * 下一個顯示模式（切換鈕點一下之後）。
+   * 目前只有 hpp／pfs 兩態；GIP 實作後改成 hpp → pfs → gip → hpp 三態循環。
+   * 集中在這裡，主表、日日一詞个切換鈕就毋使各自寫判斷。
+   * @param {string|null|undefined} current
+   * @returns {'hpp'|'pfs'|'gip'}
+   */
+  function nextDisplayScript(current) {
+    return normalizeDisplayScript(current) === 'hpp' ? 'pfs' : 'hpp';
+  }
+
+  /**
    * 單一音節 HagPinPlus 轉 PFS
    * @param {string} syllable
    * @returns {string}
@@ -353,6 +364,7 @@
     isSiXianDialect,
     isPfsDisplayActive,
     normalizeDisplayScript,
+    nextDisplayScript,
     classifyPfsTone
   };
 });
