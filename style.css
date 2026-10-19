@@ -2707,7 +2707,8 @@ input:checked+.slider:before {
 .floating-game-btn {
   position: fixed;
   right: 20px;
-  top: 50%;
+  /* 比正中央再往下一點，自動播放捲動到置中个例句就較毋會被遮著 */
+  top: calc(50% + 140px);
   transform: translateY(-50%);
   background-color: var(--primary-btn-bg);
   color: var(--primary-btn-text);
@@ -5355,7 +5356,8 @@ mark {
 .floating-daily-btn {
   position: fixed;
   right: 20px;
-  top: 50%;
+  /* 摎遊戲入口鈕同步往下移（兩鈕維持相隔 60px） */
+  top: calc(50% + 140px);
   transform: translateY(calc(-50% - 60px));
   background-color: var(--primary-btn-bg);
   color: var(--primary-btn-text);
