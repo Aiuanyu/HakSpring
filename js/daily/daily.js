@@ -666,7 +666,12 @@ const DailyWord = (function () {
     const audioTitle = typeof getVariantAudioTitle === 'function'
       ? getVariantAudioTitle(item.type === 'cert' ? dialectFullName : '')
       : '播放發音';
-    const isPfs = typeof localStorage !== 'undefined' && localStorage.getItem('hakfaDisplayScript') === 'pfs';
+    const scriptLabels = { hpp: 'HPP', pfs: '四 PFS', gip: 'GIP' };
+    const currentScript = typeof window.getHakfaDisplayScript === 'function'
+      ? window.getHakfaDisplayScript()
+      : (window.pfsConverter
+        ? window.pfsConverter.normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'))
+        : 'hpp');
 
     dailyModalBody.innerHTML = `
       <div class="daily-card-container">
@@ -682,10 +687,10 @@ const DailyWord = (function () {
             <div class="daily-header-badges">
               <button
                 id="dailyScriptModeToggleBtn"
-                class="daily-mode-badge daily-script-btn ${isPfs ? 'is-pfs' : ''}"
-                title="切換拼音顯示模式（四 PFS／HPP）。淨影響四縣／南四縣"
+                class="daily-mode-badge daily-script-btn ${currentScript === 'pfs' ? 'is-pfs' : ''} ${currentScript === 'gip' ? 'is-gip' : ''}"
+                title="切換拼音顯示模式（HPP → 四 PFS → GIP）。PFS 淨影響四縣／南四縣"
               >
-                ${isPfs ? '四 PFS' : 'HPP'}
+                ${scriptLabels[currentScript]}
               </button>
               <div class="daily-mode-badge">${modeText}</div>
             </div>

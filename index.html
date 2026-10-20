@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.55" />
+    <link rel="stylesheet" href="style.css?v=4.7.56" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -44,11 +44,16 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/pfs-converter.js?v=1.0.5"
+      src="js/pfs-converter.js?v=1.0.6"
+      defer
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/gip-converter.js?v=1.0.1"
       defer
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.66" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.67" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.1" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -89,7 +94,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/daily/daily.js?v=2.1.28"
+      src="js/daily/daily.js?v=2.1.29"
       defer
     ></script>
 
@@ -1405,12 +1410,12 @@
               "
             />
           </div>
-          <!-- 四縣 PFS 白話字顯示開關 -->
+          <!-- 標音顯示方式（HPP／四 PFS／GIP） -->
           <div class="setting-item" style="margin-bottom: 20px">
             <div class="setting-info">
-              <label for="pfsScriptToggle">四縣（含南四縣）顯示 PFS 白話字</label>
+              <label for="displayScriptSelect">標音顯示方式</label>
               <span class="setting-description"
-                >以客語白話字（Pha̍k-fa-sṳ）顯示四縣與南四縣標音
+                >HPP 係 HagPinPlus（預設）；四 PFS 係用客語白話字顯示四縣與南四縣標音；GIP 係教育部客拼（五腔都有）
                 <a
                   href="page.html?p=pfs"
                   target="_blank"
@@ -1420,14 +1425,15 @@
                     text-decoration: underline;
                     margin-left: 4px;
                   "
-                  >查看對照表 ↗</a
+                  >查看 PFS 對照表 ↗</a
                 ></span
               >
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="pfsScriptToggle" />
-              <span class="toggle-slider"></span>
-            </label>
+            <select id="displayScriptSelect" class="form-select">
+              <option value="hpp">HPP</option>
+              <option value="pfs">四 PFS</option>
+              <option value="gip">GIP</option>
+            </select>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">

@@ -8,6 +8,14 @@ on:
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
       - 'tests/cert_advanced_repeat_test.js'
+      - 'js/pfs-converter.js'
+      - 'js/gip-converter.js'
+      - 'pages/pfs.md'
+      - 'tests/pfs_converter_test.js'
+      - 'tests/pfs_sandhi_test.js'
+      - 'tests/gip_converter_test.js'
+      - 'tests/gip_sandhi_test.js'
+      - 'tests/gip_borrow_test.js'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -16,6 +24,14 @@ on:
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
       - 'tests/cert_advanced_repeat_test.js'
+      - 'js/pfs-converter.js'
+      - 'js/gip-converter.js'
+      - 'pages/pfs.md'
+      - 'tests/pfs_converter_test.js'
+      - 'tests/pfs_sandhi_test.js'
+      - 'tests/gip_converter_test.js'
+      - 'tests/gip_sandhi_test.js'
+      - 'tests/gip_borrow_test.js'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -30,3 +46,13 @@ jobs:
         run: node tests/sandhi_fixture_test.js
       - name: Run CERT Advanced repeat tests
         run: node tests/cert_advanced_repeat_test.js
+      - name: Run PFS converter tests
+        run: node tests/pfs_converter_test.js
+      - name: Run PFS sandhi tests
+        run: node tests/pfs_sandhi_test.js
+      - name: Run GIP converter tests
+        run: node tests/gip_converter_test.js
+      - name: Run GIP sandhi tests
+        run: node tests/gip_sandhi_test.js
+      - name: Run GIP borrow tests
+        run: node tests/gip_borrow_test.js
