@@ -69,8 +69,68 @@ def convert_phonetic_string(phonetic_str, tone_map):
     converted_syllables = [convert_syllable(s, tone_map) for s in syllables if s]
     return " ".join(converted_syllables)
 
+# --- 教典例句：翻譯無括號个格式（見 data/annotations.md 第四節）---
+# 有兜教典例句毋係「例：客語。(華語)」，係「客語。 華語。」抑係「客1。(客2。) (華1。) 華2。」，
+# 前半客語、後半華語，中央用空白隔開。用客語、華語个特徵字判斷分界。
+# 淨收兩邊都常用个字以外个：蓋、當、著、該、麼、啊、莫在華語乜常見，毋算。
+HAKFA_MARKERS = set('个吔佢係毋恁仰摎𠊎㖠吂兜嗄恅厥𢯭')
+MANDARIN_MARKERS = set('的了他她們是很沒嗎什和跟呢吧那')
+WRAPPED_SENTENCE = re.compile(r'\(([^()]*?[。！？])\)')
+
+
+def _hakfa_score(text):
+    return sum(c in HAKFA_MARKERS for c in text) - sum(c in MANDARIN_MARKERS for c in text)
+
+
+def _wrapped_sentences(block):
+    """半形括號包規句个拆出來做另一句；全形括號係句肚个同義詞，毋拆。"""
+    out = []
+    for tok in re.split(r'[\s\u3000]+', block.strip()):
+        for part in WRAPPED_SENTENCE.split(tok):
+            if part.strip():
+                out.append(part.strip())
+    return out
+
+
+def split_unlabeled_example(text):
+    """無「例：」个教典例句，拆做（客語句、華語句）；無把握就回傳 None，維持舊做法。
+
+    兩邊句數愛共樣正採用，避免共詞語列舉（例：黏土。(國土。) 土產。）拆毋著。
+    """
+    toks = [t for t in re.split(r'[\s\u3000]+', text.strip()) if t]
+    if len(toks) < 2:
+        return None
+    scores = [_hakfa_score(t) for t in toks]
+    best = None
+    for k in range(1, len(toks)):
+        h, m = sum(scores[:k]), sum(scores[k:])
+        if h >= 1 and m <= 0 and (best is None or h - m > best[0]):
+            best = (h - m, k)
+    if best is None:
+        # 退路：淨兩段、兩段都夠長、長度相近，前段無比後段較像華語（「客語句。 華語句。」）
+        if len(toks) != 2:
+            return None
+        a, b = toks
+        if not (min(len(a), len(b)) >= 6 and 0.5 <= len(a) / len(b) <= 2 and scores[0] >= scores[1]
+                and re.search(r'[。！？]$', a) and re.search(r'[。！？]$', b)):
+            return None
+        best = (0, 1)
+    k = best[1]
+    hakfa = _wrapped_sentences(' '.join(toks[:k]))
+    mandarin = _wrapped_sentences(' '.join(toks[k:]))
+    if len(hakfa) != len(mandarin):
+        return None
+    return hakfa, mandarin
+
+
 def parse_example_sentence_field(example_field_text):
     if not example_field_text: return "", ""
+    stripped = example_field_text.strip()
+    if not stripped.startswith('例'):
+        split = split_unlabeled_example(stripped)
+        if split:
+            hakfa, mandarin = split
+            return clean_example_sentence("<br>".join(hakfa)), "<br>".join(mandarin)
     translations = re.findall(r'\((.*?)\)', example_field_text)
     translation_text = "<br>".join(t.strip() for t in translations)
     cleaned_example = re.sub(r'\s*\([^)]*\)', '', example_field_text).strip()
@@ -275,6 +335,35 @@ def parse_cert_csv(file_path, dialect_reverse_map, vowel_map, vowel_priority):
             data.append(standard_item)
     return data
 
+def split_gip_phonetic(original_phonetic, tone_map):
+    """教典音讀 →（顯示、查詢）。
+
+    音讀欄用全形空白隔開幾隻讀音（見 data/annotations.md 第三節）：
+    - 有註記个（又讀、特…）照舊，網站會轉做 label
+    - 無註記个第二讀音：摎頭前共樣（含拿忒 <u> 以後共樣）就去忒；無共樣用「 / 」隔開（同認證「同詞多音」寫法）
+    - 尾項个「（後字變調）」改做放在讀音頭前个註記，網站正會轉做 label
+    以前全形空白會壓做半形，幾隻讀音黏做一串（例：白果 ped gò pag gò）。
+    """
+    display, query, seen = [], [], set()
+    for seg in original_phonetic.split('\u3000'):
+        seg = re.sub(r'</?u>', '', seg).strip()
+        if not seg:
+            continue
+        note = re.search(r'\s*（([^）]*)）\s*$', seg)
+        if note:
+            seg = note.group(1) + seg[:note.start()].strip()
+        key = re.sub(r'\s+', ' ', seg)
+        if key in seen:
+            continue
+        seen.add(key)
+        shown = convert_phonetic_string(seg, tone_map)
+        if display and not re.match(r'^[\u4e00-\u9fff]', seg):
+            shown = '/ ' + shown
+        display.append(shown)
+        query.append(comprehensive_clean_spacing(seg))
+    return ' '.join(display), ' '.join(query)
+
+
 def parse_gip_csv(file_path, tone_map_data, dialect_char):
     data = []
     source_name = f"教典{dialect_char}"
@@ -289,6 +378,7 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char):
             original_phonetic = row.get('音讀', '')
             example_field = row.get('例句', '')
             cleaned_example, translation = parse_example_sentence_field(example_field)
+            phonetic_display, phonetic_query = split_gip_phonetic(original_phonetic, current_tone_map)
             standard_item.update({
                 '編號': f"gip-{idx+1}",
                 '客家語': row.get('詞目', ''),
@@ -296,8 +386,8 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char):
                 '詞目音檔名': row.get('對應音檔名稱', '').strip(),
                 '例句': cleaned_example,
                 '翻譯': translation,
-                '客語標音_顯示': convert_phonetic_string(original_phonetic, current_tone_map),
-                '客語標音_查詢': comprehensive_clean_spacing(original_phonetic),
+                '客語標音_顯示': phonetic_display,
+                '客語標音_查詢': phonetic_query,
                 '分類': '教典',
                 'sourceName': source_name,
                 'sourceType': 'gip'
