@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.48" />
+    <link rel="stylesheet" href="style.css?v=4.7.56" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -42,8 +42,18 @@
       src="js/variant-parser.js?v=1.0.6"
       defer
     ></script>
+    <script
+      type="text/javascript"
+      src="js/pfs-converter.js?v=1.0.6"
+      defer
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/gip-converter.js?v=1.0.1"
+      defer
+    ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.58" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.67" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.1" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -74,17 +84,17 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/game/game-ui.js?v=4.10.17"
+      src="js/game/game-ui.js?v=4.10.18"
       defer
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.6.8"
+      src="js/cloud-sync.js?v=4.6.11"
       defer
     ></script>
     <script
       type="text/javascript"
-      src="js/daily/daily.js?v=2.1.22"
+      src="js/daily/daily.js?v=2.1.29"
       defer
     ></script>
 
@@ -1154,6 +1164,13 @@
           >
             <i class="fas fa-link"></i>
           </button>
+          <button
+            id="scriptModeToggleBtn"
+            class="script-mode-badge"
+            title="切換拼音顯示模式（四 PFS／HPP）"
+          >
+            <span id="scriptModeBadgeText">HPP</span>
+          </button>
         </span>
       </div>
 
@@ -1392,6 +1409,31 @@
                 border: 1px solid #ccc;
               "
             />
+          </div>
+          <!-- 標音顯示方式（HPP／四 PFS／GIP） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="displayScriptSelect">標音顯示方式</label>
+              <span class="setting-description"
+                >HPP 係 HagPinPlus（預設）；四 PFS 係用客語白話字顯示四縣與南四縣標音；GIP 係教育部客拼（五腔都有）
+                <a
+                  href="page.html?p=pfs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="
+                    color: var(--primary-color, #2d6a4f);
+                    text-decoration: underline;
+                    margin-left: 4px;
+                  "
+                  >查看 PFS 對照表 ↗</a
+                ></span
+              >
+            </div>
+            <select id="displayScriptSelect" class="form-select">
+              <option value="hpp">HPP</option>
+              <option value="pfs">四 PFS</option>
+              <option value="gip">GIP</option>
+            </select>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">

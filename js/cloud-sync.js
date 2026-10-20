@@ -8,6 +8,14 @@ const SYNC_DEBOUNCE_MS = 30000; // 30 秒
 const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
 const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
 
+// 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'。
+// 正規化个實作只放在 js/pfs-converter.js，這裡淨轉呼叫（index.html 先載入佢）。
+function normalizeDisplayScript(value) {
+  return window.pfsConverter
+    ? window.pfsConverter.normalizeDisplayScript(value)
+    : 'hpp';
+}
+
 // 同步狀態
 let cloudSyncState = {
   isLoggedIn: false,
@@ -195,6 +203,9 @@ async function syncFromCloud() {
       const localPrefs = {
         romanizerJoiningMode:
           localStorage.getItem('romanizerJoiningMode') || 'none',
+        hakfaDisplayScript: normalizeDisplayScript(
+          localStorage.getItem('hakfaDisplayScript'),
+        ),
         gameLastDataVarName:
           localStorage.getItem('hakkaGameLastDataVarName') || '',
         userName: localStorage.getItem('hakkaUserName') || '',
@@ -273,6 +284,21 @@ async function syncFromCloud() {
       }
       localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
 
+      let finalHakfaDisplayScript = localPrefs.hakfaDisplayScript;
+      if (localPrefs.hakfaDisplayScript === normalizeDisplayScript(syncedPrefs.hakfaDisplayScript)) {
+        if (cloudPrefs.hakfaDisplayScript !== undefined && cloudPrefs.hakfaDisplayScript !== null) {
+          finalHakfaDisplayScript = normalizeDisplayScript(cloudPrefs.hakfaDisplayScript);
+        }
+      }
+      localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
+      // 另一台裝置改過顯示模式：本機值被雲端覆寫以後，愛讓開關、膠囊鈕摎已經算繪个標音一齊更新
+      if (
+        finalHakfaDisplayScript !== localPrefs.hakfaDisplayScript &&
+        typeof window.applyHakfaDisplayScript === 'function'
+      ) {
+        window.applyHakfaDisplayScript(finalHakfaDisplayScript);
+      }
+
       // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
       let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
       if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
@@ -306,6 +332,7 @@ async function syncFromCloud() {
       // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
       const prefsChanged =
         finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
+        finalHakfaDisplayScript !== normalizeDisplayScript(cloudPrefs.hakfaDisplayScript) ||
         finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
         finalUserName !== (cloudPrefs.userName || '') ||
         finalUserLocation !== (cloudPrefs.userLocation || '');
@@ -331,6 +358,7 @@ async function syncFromCloud() {
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: finalRomanizerJoiningMode,
+          hakfaDisplayScript: finalHakfaDisplayScript,
           gameLastDataVarName: finalGameLastDataVarName,
           userName: finalUserName,
           userLocation: finalUserLocation,
@@ -353,6 +381,7 @@ async function syncFromCloud() {
         'hakkaPrefsSynced',
         JSON.stringify({
           romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
+          hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
           gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
           userName: localStorage.getItem('hakkaUserName') || '',
           userLocation: localStorage.getItem('hakkaUserLocation') || '',
@@ -397,6 +426,9 @@ async function syncToCloud() {
     const preferences = {
       romanizerJoiningMode:
         localStorage.getItem('romanizerJoiningMode') || 'none',
+      hakfaDisplayScript: normalizeDisplayScript(
+        localStorage.getItem('hakfaDisplayScript'),
+      ),
       gameLastDataVarName:
         localStorage.getItem('hakkaGameLastDataVarName') || '',
       userName: localStorage.getItem('hakkaUserName') || '',
