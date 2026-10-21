@@ -151,9 +151,9 @@ def gip_pairs(gip):
     return out
 
 
-def derive(e, table, gip):
+def derive(e, table, gip, manual_chars=None):
     """回傳（南四縣標音、整條方法、逐音節方法）。"""
-    south, how, methods = derive_syllables(e, table)
+    south, how, methods = derive_syllables(e, table, manual_chars)
     # 音節數摎北四縣無共樣个教典讀音毋用（多半係合音抑係無共樣个詞形，例：幾下 giá／gì há）
     n_north = syllable_slots(e['north'])[2]
     candidates = [c for c in gip['南'].get(e['word'], []) if len(syllables(c)) == n_north]
@@ -184,7 +184,7 @@ def syllable_slots(phonetic):
     return matches, slots, slot + 1
 
 
-def derive_syllables(e, table):
+def derive_syllables(e, table, manual_chars=None):
     word, north = e['word'], e['north']
     matches, slots, n_slots = syllable_slots(north)
     han = HAN.findall(word)
@@ -194,7 +194,12 @@ def derive_syllables(e, table):
         syl = nfc(m.group())
         ch = chars[slots[i]] if chars else None
         new, how = None, None
-        if ch == '仔' and slots[i] == n_slots - 1:
+        # 人工字音（審音工具「依字歸組」）優先：（字、北音、詞性）→ 南音；詞性空白表示毋分詞性
+        if manual_chars and ch:
+            mc = manual_chars.get((ch, syl, e['pos'])) or manual_chars.get((ch, syl, ''))
+            if mc:
+                new, how = mc, 'manual'
+        if new is None and ch == '仔' and slots[i] == n_slots - 1:
             z = zai_by_pos(e['pos'])
             if z:
                 new, how = z, 'zai'
@@ -262,6 +267,9 @@ def entry_layer(how, sm):
         return LAYER_NAMES[how]
     if how == 'same' or 'same' in sm:
         return None
+    if sm and all(h == 'manual' for h in sm):
+        return '人工'
+    # 人工字音摎其他方法混用：取其他方法裡較弱个
     return '系統規則' if any(h in ('zai', 'rule-ien') for h in sm) else '字級對照'
 
 
@@ -385,6 +393,16 @@ def build_meinung_gip(gip, table):
 
 
 MANUAL_CSV = os.path.join(OUT_DIR, '人工-南四縣.csv')
+MANUAL_CHAR_CSV = os.path.join(OUT_DIR, '人工字音-南四縣.csv')
+
+
+def load_manual_chars():
+    """審音工具「依字歸組」个結果：（字、北音、詞性）→ 南音。詞性空白表示毋分詞性（淨「仔」分詞性）。"""
+    if not os.path.exists(MANUAL_CHAR_CSV):
+        return {}
+    with open(MANUAL_CHAR_CSV, encoding='utf-8-sig') as f:
+        return {(r['字'], nfc(r['北音']), r.get('詞性', '')): nfc(r['南音'].strip())
+                for r in csv.DictReader(f) if r.get('判定') == '採用' and r.get('南音', '').strip()}
 
 
 def load_manual():
@@ -403,11 +421,12 @@ def main():
         return
     table = learn_table([p for e in cert.values() for p in cert_pairs(e)] + gip_pairs(gip))
     manual = load_manual()
+    manual_chars = load_manual_chars()
     rows, pending = [], []
     for (fname, eid), e in cert.items():
         if e['south'] or not e['north']:
             continue
-        south, how, sm = derive(e, table, gip)
+        south, how, sm = derive(e, table, gip, manual_chars)
         layer = entry_layer(how, sm)
         key = (fname.replace('.json', ''), eid)
         if key in manual:

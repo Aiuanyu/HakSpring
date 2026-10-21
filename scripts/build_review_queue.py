@@ -6,6 +6,8 @@
 - 南四縣待審：次方言補音推毋出个認證四縣詞條（有音節無證據）。逐音節列出推導結果，
   待定个音節附候選（這隻字在教典南四縣、已標南音个認證詞裡肚出現過个南音，含次數摎出處詞）。
 - 教典待確認：單字詞，教典南四縣个音摎逐音節推導無共樣（gip-check，可能同形異義）。
+- 依字歸組：南四縣待審个待定音節，照（字、北音）歸組（「仔」再分詞性），一組定一擺，
+  套到全部有這隻音節个詞。結果匯出 data/sub-dialects-fill/人工字音-南四縣.csv。
 
 審好个結果由 HTML 匯出 data/sub-dialects-fill/人工-南四縣.csv，
 build_subdialect_fill.py 會當「人工」推導層讀轉去。
@@ -122,17 +124,36 @@ def main():
                               '教典南四縣': [[r, (meanings.get(e['word']) or [''])[min(i, len(meanings.get(e['word']) or ['']) - 1)]]
                                          for i, r in enumerate(gip_readings)]})
 
+    # 依字歸組：（字、北音、詞性）；詞性淨「仔」用，其他字毋分
+    groups = {}
+    for it in pending:
+        for s in it['音節']:
+            if s['方法'] != 'same' or not s['字']:
+                continue
+            pos = it['詞性'] if s['字'] == '仔' else ''
+            key = (s['字'], s['北'], pos)
+            g = groups.setdefault(key, {
+                'id': f"G|{s['字']}|{s['北']}|{pos}", 'queue': '依字歸組',
+                '字': s['字'], '北音': s['北'], '詞性': pos, '候選': s.get('候選', []), '詞條': [],
+            })
+            if not any(x['id'] == it['id'] for x in g['詞條']):
+                g['詞條'].append({'id': it['id'], '詞目': it['詞目'], '北四縣': it['北四縣'], '詞性': it['詞性'],
+                                 '華語詞義': (it.get('華語詞義') or '')[:30]})
+    group_list = sorted(groups.values(), key=lambda g: (-len(g['詞條']), g['字'], g['北音']))
+    for g in group_list:
+        g['條數'] = len(g['詞條'])
+
     tz = timezone(timedelta(hours=8))
     data = {
         'generated': datetime.now(tz).strftime('%Y-%m-%dT%H:%M:%S+08:00'),
         'note': '由 scripts/build_review_queue.py 產生，毋好手改。審音結果由 review-readings.html 匯出 data/sub-dialects-fill/人工-南四縣.csv。',
-        'queues': {'南四縣待審': pending, '教典待確認': gip_check},
+        'queues': {'依字歸組': group_list, '南四縣待審': pending, '教典待確認': gip_check},
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
     with_cands = sum(1 for it in pending if all(s.get('候選') for s in it['音節'] if s['方法'] == 'same'))
-    print(f'--- 審音佇列 ---\n  南四縣待審 {len(pending)} 條（待定音節全部有候選 {with_cands}）；教典待確認 {len(gip_check)} 條'
+    print(f'--- 審音佇列 ---\n  依字歸組 {len(group_list)} 組；南四縣待審 {len(pending)} 條（待定音節全部有候選 {with_cands}）；教典待確認 {len(gip_check)} 條'
           f'\n  → {os.path.relpath(OUT, ROOT)}（{os.path.getsize(OUT) // 1024} KB）')
 
 
