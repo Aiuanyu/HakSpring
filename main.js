@@ -5916,6 +5916,8 @@ function initializeAppUI() {
 
         // --- 正在播放的那一行被消掉：無縫由下一行馬上遞補播放 ---
         // 1. 作廢舊行的所有非同步播放回呼（重複播放、句音檔排程等）
+        audioAbortController.abort();
+        audioAbortController = new AbortController();
         playbackSessionId = Date.now();
         const currentSession = playbackSessionId;
 
