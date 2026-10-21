@@ -53,7 +53,7 @@
       defer
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.67" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.68" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.2" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -1434,6 +1434,19 @@
               <option value="pfs">四 PFS</option>
               <option value="gip">GIP</option>
             </select>
+          </div>
+          <!-- 次方言補音：美濃推導音（data/sub-dialects-fill/美濃.web.json，開了正下載） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="meinungFillToggle">顯示美濃推導音</label>
+              <span class="setting-description"
+                >認證、教典無標美濃音个詞，由南四縣音推導（24 調改 33 調等），多一列「美〔推導〕」</span
+              >
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="meinungFillToggle" />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">
