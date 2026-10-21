@@ -384,18 +384,35 @@ def build_meinung_gip(gip, table):
     return rows, web
 
 
+MANUAL_CSV = os.path.join(OUT_DIR, '人工-南四縣.csv')
+
+
+def load_manual():
+    """審音結果（review-readings.html 匯出）：（來源檔, 編號）→ 讀音。淨收判定「採用」个。"""
+    if not os.path.exists(MANUAL_CSV):
+        return {}
+    with open(MANUAL_CSV, encoding='utf-8-sig') as f:
+        return {(r['來源檔'], r['編號']): r['讀音'].strip()
+                for r in csv.DictReader(f) if r.get('判定') == '採用' and r.get('讀音', '').strip()}
+
+
 def main():
     cert, gip = load_entries()
     if '--eval' in sys.argv:
         evaluate(cert, gip)
         return
     table = learn_table([p for e in cert.values() for p in cert_pairs(e)] + gip_pairs(gip))
+    manual = load_manual()
     rows, pending = [], []
     for (fname, eid), e in cert.items():
         if e['south'] or not e['north']:
             continue
         south, how, sm = derive(e, table, gip)
         layer = entry_layer(how, sm)
+        key = (fname.replace('.json', ''), eid)
+        if key in manual:
+            # 人工審過：蓋過推導結果（含 gip-check）
+            south, how, sm, layer = manual[key], 'manual', [], '人工'
         row = {
             '來源檔': fname.replace('.json', ''),   # 例：113四高
             '編號': eid,

@@ -75,6 +75,17 @@
 
 `python3 process_all_data.py`（抑係 `--only-supp`）最尾會自動重建。全部係產生个檔，毋好手改。
 
+## 人工審音
+
+推毋出个（`待審-南四縣`）摎單字詞待確認个（`待確認`），用審音工具人工定音：
+
+1. `python3 scripts/build_review_queue.py`（`process_all_data.py` 最尾乜會跑）產生 `review/queue.json`。毋放 `data/`：網站毋讀這个檔。
+2. 本機伺服器開 `review-readings.html`。逐條揀候選音（這隻字在教典南四縣、已標南音个認證詞裡个南音，有次數摎出處），或直接改讀音欄；按「採用」抑係「不確定」。進度存在瀏覽器。
+3. 按「匯出 CSV」，存做 `data/sub-dialects-fill/人工-南四縣.csv`（欄位：來源檔、編號、詞目、讀音、判定、備註、時間、queue）。
+4. 重跑 `python3 process_all_data.py --only-supp`：判定「採用」个蓋過推導，推導層寫 `人工`；「不確定」个照舊。改著 `data/` 愛 bump `data_version.json`。
+
+審音頁會自動讀 repo 裡肚已經有个 `人工-南四縣.csv`（瀏覽器無記錄个正補），換電腦、下一輪乜接得落去。審過个條目重產佇列以後還在，做得轉去改。
+
 ## 符號與註記
 
 認證、教典資料裡个符號、註記怎樣拆，見 `data/annotations.md`。
