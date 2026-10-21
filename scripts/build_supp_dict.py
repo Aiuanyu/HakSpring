@@ -11,6 +11,8 @@
    在詞裡出現 POLY_MIN_COUNT 擺以上正收（分類「多音字補音」）。
 6. 擬音：data/supp/擬音-{腔}.csv（scripts/build_jf_nisim.py 產生）个字，該腔還係無音个，
    收第一候選（分類「擬音」）。這下淨四縣有。
+7. 沿襲：data/supp/人工沿襲.csv 人工指定「妳 沿襲 你」這種，該腔無單字條目个字，
+   全部讀音照抄來源字（分類「沿襲」，六腔都做）。優先過補字典、擬音。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -44,6 +46,7 @@ MAIN_LABEL = {'四': '北', '南': '南', '平': '竹'}
 DEFINITION = '（教典未獨立建字，愛灣語客源翠程式自動補音，無釋義）'
 POLY_DEFINITION = '（教典未獨立建此音，愛灣語客源翠程式自動補音，無釋義）'
 NISIM_DEFINITION = '（教典無收這隻字，愛灣語客源翠擬音、歡迎審查。目前無釋義）'
+INHERIT_DEFINITION = '（教典無收這隻字，音同「{}」，愛灣語客源翠補音。目前無釋義）'
 POLY_MIN_COUNT = 3
 MAX_EXAMPLES = 5
 
@@ -187,6 +190,15 @@ def load_variants():
             yield json.loads(line)
 
 
+def load_inherit():
+    """data/supp/人工沿襲.csv → 字 → (來源字, 備註)。"""
+    path = os.path.join(ROOT, 'data', 'supp', '人工沿襲.csv')
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding='utf-8-sig') as f:
+        return {r['字']: (r['沿襲'], r.get('備註', '')) for r in csv.DictReader(f) if r['字'] and r['沿襲']}
+
+
 def load_nisim(d):
     """data/supp/擬音-{腔}.csv → [{字, 讀音, 其他候選, 依據…}]；無檔案就係空个。"""
     path = os.path.join(ROOT, 'data', 'supp', f'擬音-{d}.csv')
@@ -244,7 +256,17 @@ def main():
         dmap = reverse_map[REVERSE_KEY[d]]
         rows = []
         # 補字典：無單字條目个字，收全部讀音
-        chars = [(ch, rs) for ch, rs in readings[d].items() if ch not in singles[d]]
+        # 沿襲：來源字个單字條目讀音，無就用來源字在詞裡肚个讀音
+        inherit = []
+        for ch, (src, memo) in load_inherit().items():
+            if ch in singles[d]:
+                continue
+            syls = sorted(single_readings[d][src]) if src in singles[d] else \
+                [syl for syl, _ in sorted(readings[d][src].items(), key=lambda x: -x[1]['count'])]
+            if syls:
+                inherit.append((ch, src, memo, syls))
+        inherited = {ch for ch, _, _, _ in inherit}
+        chars = [(ch, rs) for ch, rs in readings[d].items() if ch not in singles[d] and ch not in inherited]
         # 多音字補音：有單字條目，淨收單字條目無个讀音，而且出現夠多擺
         poly = []
         for ch, rs in readings[d].items():
@@ -261,7 +283,8 @@ def main():
         groups += [(ch, rs, '多音字補音', POLY_DEFINITION,
                     '單字條目已有 ' + '、'.join(sorted(single_readings[d][ch])) + '；')
                    for ch, rs in poly]
-        nisim = [r for r in load_nisim(d) if r['字'] not in singles[d] and r['字'] not in readings[d]]
+        nisim = [r for r in load_nisim(d) if r['字'] not in singles[d] and r['字'] not in readings[d]
+                 and r['字'] not in inherited]
         for ch, rs, category, definition, prefix in groups:
             for syl, rec in sorted(rs.items(), key=lambda x: -x[1]['count']):
                 examples = '、'.join(f'{w}（{p}，{s}）' for w, p, s in rec['examples'])
@@ -279,6 +302,22 @@ def main():
                     '華語詞義': definition,
                     '備註': note,
                     '分類': category,
+                    'sourceName': f'補字典{d}',
+                    'sourceType': 'supp',
+                })
+                rows.append(item)
+        for ch, src, memo, syls in inherit:
+            for syl in syls:
+                item = {h: '' for h in UNIFIED_SCHEMA_HEADERS}
+                item.update({
+                    '編號': f'supp-{len(rows) + 1}',
+                    '客家語': ch,
+                    '客語標音_顯示': syl,
+                    '客語標音_查詢': gip_numeric.get((d, src, syl)) or comprehensive_clean_spacing(
+                        convert_diacritic_to_numeric(syl, dmap, vowel_map, vowel_priority)),
+                    '華語詞義': INHERIT_DEFINITION.format(src),
+                    '備註': f'沿襲「{src}」（人工指定）' + (f'；{memo}' if memo else ''),
+                    '分類': '沿襲',
                     'sourceName': f'補字典{d}',
                     'sourceType': 'supp',
                 })
@@ -314,8 +353,9 @@ def main():
             json.dump({'name': f'補字典{d}', 'content': buf.getvalue()}, f, ensure_ascii=False, indent=2)
         s = stats[d]
         poly_count = sum(len(rs) for _, rs in poly)
-        print(f'  {DIALECT_NAMES[d]}：補字典 {len(chars)} 字、{len(rows) - poly_count - len(nisim)} 音；'
-              f'多音字補音 {len(poly)} 字、{poly_count} 音；擬音 {len(nisim)} 字'
+        inherit_count = sum(len(syls) for _, _, _, syls in inherit)
+        print(f'  {DIALECT_NAMES[d]}：補字典 {len(chars)} 字、{len(rows) - poly_count - inherit_count - len(nisim)} 音；'
+              f'多音字補音 {len(poly)} 字、{poly_count} 音；沿襲 {len(inherit)} 字、{inherit_count} 音；擬音 {len(nisim)} 字'
               f'（單字條目 {len(singles[d])} 字；詞 {s["pairs"]} 筆，對齊 {s["aligned"]} 筆）')
 
 
