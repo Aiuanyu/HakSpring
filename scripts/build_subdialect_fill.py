@@ -288,7 +288,7 @@ def write_rows(base, rows, extra=None):
 
 
 def tone_24_to_33(phonetic):
-    """美濃：24 調（á）一律改 33 調（ā）。平哥个規則；認證標个美濃音聲調還係寫 24，驗毋著。"""
+    """美濃：24 調（á）一律改 33 調（ā）。美濃腔系統規則；認證標个美濃音聲調還係寫 24，驗毋著。"""
     d = unicodedata.normalize('NFD', phonetic)
     return nfc(d.replace('\u0301', '\u0304'))
 
