@@ -191,14 +191,14 @@ console.log('  ✅ 8. 腔調識別（四縣/南四縣）保護測試 PASS');
   assert.strictEqual(normalizeDisplayScript('亂寫'), 'hpp');
 }
 
-// 切換鈕循環：集中在 nextDisplayScript（GIP 實作前只有 hpp／pfs 兩態）
+// 切換鈕循環：集中在 nextDisplayScript（hpp → pfs → gip → hpp）
 {
   const { nextDisplayScript } = require('../js/pfs-converter.js');
   assert.strictEqual(nextDisplayScript('hpp'), 'pfs');
-  assert.strictEqual(nextDisplayScript('pfs'), 'hpp');
+  assert.strictEqual(nextDisplayScript('pfs'), 'gip');
+  assert.strictEqual(nextDisplayScript('gip'), 'hpp'); // gip 是循環終點，回到 hpp
   assert.strictEqual(nextDisplayScript('hagpin'), 'pfs'); // 舊值當 hpp
   assert.strictEqual(nextDisplayScript(null), 'pfs');
-  assert.strictEqual(nextDisplayScript('gip'), 'hpp'); // gip 是循環終點，回到 hpp
 }
 
 // 括號註記：漢字註記（【南】【又讀】）原樣保留，括號內个讀音變體照常轉換

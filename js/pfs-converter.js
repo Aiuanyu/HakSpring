@@ -122,14 +122,32 @@
   }
 
   /**
-   * 下一個顯示模式（切換鈕點一下之後）。
-   * 目前只有 hpp／pfs 兩態；GIP 實作後改成 hpp → pfs → gip → hpp 三態循環。
+   * 下一個顯示模式（切換鈕點一下之後）：hpp → pfs → gip → hpp 三態循環。
    * 集中在這裡，主表、日日一詞个切換鈕就毋使各自寫判斷。
    * @param {string|null|undefined} current
    * @returns {'hpp'|'pfs'|'gip'}
    */
   function nextDisplayScript(current) {
-    return normalizeDisplayScript(current) === 'hpp' ? 'pfs' : 'hpp';
+    const c = normalizeDisplayScript(current);
+    return c === 'hpp' ? 'pfs' : c === 'pfs' ? 'gip' : 'hpp';
+  }
+
+  /**
+   * 實際生效个顯示模式：gip 作用於五腔；pfs 淨作用於四縣（含南四縣），別腔照舊顯示 hpp。
+   * @param {string} [dialect]
+   * @returns {'hpp'|'pfs'|'gip'}
+   */
+  function getEffectiveScript(dialect) {
+    let stored = 'hpp';
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage !== null) {
+        stored = normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'));
+      }
+    } catch (e) {
+      stored = 'hpp';
+    }
+    if (stored === 'gip') return 'gip';
+    return isPfsDisplayActive(dialect) ? 'pfs' : 'hpp';
   }
 
   /**
@@ -365,6 +383,7 @@
     isPfsDisplayActive,
     normalizeDisplayScript,
     nextDisplayScript,
+    getEffectiveScript,
     classifyPfsTone
   };
 });

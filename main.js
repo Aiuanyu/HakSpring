@@ -540,6 +540,13 @@ const DATA_FILES_TO_CACHE = [
   'data/gip/20250630-大.json',
   'data/gip/20250630-平.json',
   'data/gip/20250630-安.json',
+  // 客源翠補字典（教典無獨立建字个單字音，見 data/supp/README.md）
+  'data/supp/補字典-四.json',
+  'data/supp/補字典-南.json',
+  'data/supp/補字典-海.json',
+  'data/supp/補字典-大.json',
+  'data/supp/補字典-平.json',
+  'data/supp/補字典-安.json',
   // 其他資料
   'tone_mapping.json',
   'reverse_tone_mapping.json',
@@ -856,12 +863,20 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   if (isGip) {
     result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
   }
-  // 6. 若啟用四縣 PFS 白話字顯示且為四縣/南四縣腔，轉為 PFS
+  // 6. 依目前顯示模式轉換：pfs 淨轉四縣／南四縣；gip（教育部客拼）五腔都轉；hpp 維持原樣
   const converter = typeof pfsConverter !== 'undefined'
     ? pfsConverter
     : (typeof window !== 'undefined' && window.pfsConverter);
-  if (converter && converter.isPfsDisplayActive(dialect)) {
-    result = converter.toPFS(result);
+  if (converter) {
+    const script = converter.getEffectiveScript(dialect);
+    if (script === 'pfs') {
+      result = converter.toPFS(result);
+    } else if (script === 'gip') {
+      const gip = typeof gipConverter !== 'undefined'
+        ? gipConverter
+        : (typeof window !== 'undefined' && window.gipConverter);
+      if (gip) result = gip.toGIP(result);
+    }
   }
   return result;
 }
@@ -1092,6 +1107,8 @@ function findPronunciationsInAllData(searchText) {
 
 function constructWordAudioUrl(lineData, fullSourceName) {
   if (!fullSourceName) return null;
+  // 補字典係程式自動補个音，無音檔
+  if (fullSourceName.startsWith('supp') || fullSourceName.includes('補字典')) return null;
   const isGip = fullSourceName.startsWith('gip') || fullSourceName.includes('教典');
   const isCert = fullSourceName.startsWith('cert') || (!isGip && typeof getDialectInfo === 'function'); // Fallback
 
@@ -1317,6 +1334,13 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     badge.textContent = entry.label;
     if (entry.title) badge.title = entry.title;
     block.appendChild(badge);
+    if (entry.derived) {
+      const derived = document.createElement('span');
+      derived.className = 'variant-derived';
+      derived.textContent = '推導';
+      derived.title = '認證無標這隻音，客源翠程式推導（見 data/sub-dialects-fill/README.md）';
+      block.appendChild(derived);
+    }
   }
 
   // 2. 標音處理（格式化 + sandhi 變調）
@@ -1370,6 +1394,57 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
  * @param {object} [highlightOptions] - 搜尋反白選項 { highlightWord: boolean, highlightRegex: RegExp }
  * @returns {HTMLElement|null}
  */
+/**
+ * 次方言補音（data/sub-dialects-fill/）：認證無標个次方言音，資料端推導。
+ * 網站淨讀精簡版 *.web.json：{ '四基|1-3': [標音, 推導層] }
+ * - 南四縣.web.json：淨收摎北四縣無共樣个
+ * - 美濃.web.json：淨收摎南四縣無共樣个
+ */
+window.SUB_DIALECT_FILL = window.SUB_DIALECT_FILL || { 南: null, 美: null };
+const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
+// 一開始就抓（比 IndexedDB 讀資料較早好），載入好發 subdialectfill:ready 事件
+Object.entries(SUB_DIALECT_FILL_FILES).forEach(([label, file]) => {
+  fetch(`data/sub-dialects-fill/${file}.web.json`, { cache: 'no-cache' })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (!data) return;
+      window.SUB_DIALECT_FILL[label] = data;
+      console.log(`次方言補音載入完成：${file} ${Object.keys(data).length} 條`);
+      document.dispatchEvent(new Event('subdialectfill:ready'));
+    })
+    .catch((err) => console.warn(`次方言補音（${file}）載入失敗（不影響基本功能）:`, err));
+});
+
+const CERT_LEVEL_SHORT = { 基礎級: '基', 初級: '初', 中級: '中', 中高級: '中高', 高級: '高' };
+
+/**
+ * 認證詞條在附表个鍵：「四基|1-3」。sourceName 有時係「四基」，有時係「四縣基礎級」，兩種都接。
+ * @param {object} line
+ * @returns {string|null}
+ */
+function getSubDialectFillKey(line) {
+  if (!line || !line.編號) return null;
+  let src = String(line.sourceName || line.dataVarName || '');
+  const full = src.match(/^四縣(基礎級|初級|中高級|中級|高級)$/);
+  if (full) src = '四' + CERT_LEVEL_SHORT[full[1]];
+  if (!/^四(基|初|中|中高|高)$/.test(src)) return null;
+  return `${src}|${line.編號}`;
+}
+
+/**
+ * 這條詞个推導次方言音；無就回傳 null。
+ * @param {object} line
+ * @param {string} [label='南'] - 變體標籤：南、美
+ * @returns {{phonetic: string, method: string}|null}
+ */
+function getSubDialectFill(line, label = '南') {
+  const map = window.SUB_DIALECT_FILL && window.SUB_DIALECT_FILL[label];
+  if (!map) return null;
+  const key = getSubDialectFillKey(line);
+  const hit = key && map[key];
+  return hit ? { phonetic: hit[0], method: hit[1] } : null;
+}
+
 function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
   if (!line || typeof line !== 'object') return null;
 
@@ -1390,6 +1465,36 @@ function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
     const dialectType = typeof getVariantDialectType === 'function' ? getVariantDialectType(dialectName) : null;
     v = parseVariants(rawWord, rawPhonetic, dialectType);
   }
+
+  // 次方言補音：認證無標个南四縣、美濃音，加推導个
+  const SUB_DIALECT_TITLES = { 南: '南四縣', 美: '美濃' };
+  ['南', '美'].forEach((label) => {
+    const fill = getSubDialectFill(line, label);
+    if (fill && !(v && v.variants && v.variants.some((x) => x.label === label))) {
+      if (!v || !v.hasVariants) {
+        v = {
+          hasVariants: true,
+          dialectType: '四縣',
+          main: {
+            label: '北',
+            title: '北四縣',
+            word: line['客家語'] || '',
+            phonetic: line['客語標音_顯示'] || '',
+            phoneticOnly: false,
+          },
+          variants: [],
+        };
+      }
+      v.variants.push({
+        label,
+        title: `${SUB_DIALECT_TITLES[label]}（程式推導，認證無標）`,
+        word: v.main.word,
+        phonetic: fill.phonetic,
+        phoneticOnly: true,
+        derived: true,
+      });
+    }
+  });
 
   if (!v || !v.hasVariants) {
     return null;
@@ -1640,6 +1745,14 @@ function classifyTone(syllable, dialectCode) {
   if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
     return null;
   }
+  // GIP（教育部客拼）个調號係貼在音節字母後面个符號（bodˋ），先拆出來，後面个入聲判斷摎調號判斷才正確。
+  // ^、+ 係教育部原檔用个 ASCII 寫法；ˆ（U+02C6）、˖（U+02D6）係客委會表格个修飾字母寫法。
+  let gipSymbol = null;
+  const gipMatch = syllable.match(/^(.+?)([\u02CA\u02C7\u02CB\u02C6\u02D6^+])$/);
+  if (gipMatch) {
+    syllable = gipMatch[1];
+    gipSymbol = gipMatch[2];
+  }
   // -b/-d 結尾是入聲；-g 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
   const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
   // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
@@ -1657,7 +1770,18 @@ function classifyTone(syllable, dialectCode) {
   const toneMatch = nfdSyllable.match(/[\u0301\u0300\u030C\u0302\u0304]/);
   
   let aForm = 'a';
-  if (toneMatch) {
+  if (gipSymbol) {
+    const gipMarks = {
+      '\u02CA': '\u0301',
+      '\u02C7': '\u030C',
+      '\u02CB': '\u0300',
+      '\u02C6': '\u0302',
+      '^': '\u0302',
+      '\u02D6': '\u0304',
+      '+': '\u0304',
+    };
+    aForm = ('a' + gipMarks[gipSymbol]).normalize('NFC');
+  } else if (toneMatch) {
     aForm = ('a' + toneMatch[0]).normalize('NFC');
   }
 
@@ -2578,6 +2702,11 @@ function getKeyNameFromPath(filePath) {
     return gipMap[gipKey];
   }
 
+  if (filePath.includes('/supp/')) {
+    // 補字典檔：'補字典-四' → '補字典四'
+    return fileName.replace('-', '');
+  }
+
   // 3. 處理其餘的特殊檔案
   const otherMap = {
     tone_mapping: 'toneMappingData',
@@ -2591,6 +2720,10 @@ function getKeyNameFromPath(filePath) {
 
 function getFullLevelName(varName) {
   if (!varName) return '未知級別';
+  if (varName.startsWith('補字典')) {
+    const accent = ACCENT_INFO[varName.substring(3)];
+    return accent ? `${accent.腔名}補字典` : varName;
+  }
   if (varName.startsWith('教典')) {
     const gipNameMap = {
       教典四: '四縣教典',
@@ -3715,6 +3848,16 @@ function initializeAppUI() {
     南四縣: window['教典南'],
   };
 
+  // --- 客源翠補字典 ---
+  const suppData = {
+    四縣: window['補字典四'],
+    海陸: window['補字典海'],
+    大埔: window['補字典大'],
+    饒平: window['補字典平'],
+    詔安: window['補字典安'],
+    南四縣: window['補字典南'],
+  };
+
   function updateProgressDropdown() {
     const progressDropdown = document.getElementById('progressDropdown');
     const progressDetailsSpan = document.getElementById('progressDetails');
@@ -4096,6 +4239,22 @@ function initializeAppUI() {
       combinedData = combinedData.concat(gipParsedData);
     }
 
+    // 補字典無釋義，淨用客文查詞
+    const suppDialectData = suppData[selectedDialect];
+    if (
+      searchMode === '客話' &&
+      suppDialectData &&
+      suppDialectData.content &&
+      Array.isArray(suppDialectData.content)
+    ) {
+      const suppParsedData = suppDialectData.content;
+      suppParsedData.forEach((item) => {
+        item.sourceName = suppDialectData.name;
+        item.sourceType = 'supp';
+      });
+      combinedData = combinedData.concat(suppParsedData);
+    }
+
     let results;
     if (searchMode === '客話') {
       const lowerCaseKeyword = keyword.toLowerCase();
@@ -4307,8 +4466,13 @@ function initializeAppUI() {
       let 級 = '';
       let originalDialectInfo = {};
       const isGip = line.sourceType === 'gip' || line.sourceName.startsWith('教典');
+      const isSupp = line.sourceType === 'supp';
 
-      if (isGip) {
+      if (isSupp) {
+         腔 = line.sourceName.replace('補字典', '');
+         const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
+         originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '補字典' };
+      } else if (isGip) {
          腔 = line.sourceName.replace('教典', '');
          const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
          originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '教典' };
@@ -4318,7 +4482,8 @@ function initializeAppUI() {
          originalDialectInfo = getDialectInfo(腔, 級);
       }
 
-      const crossDialectResults = findCrossDialectRows(line, originalDialectInfo, isGip);
+      // 補字典還無跨腔對照（認證靠編號、教典靠跨腔表，補字典兩樣都無）
+      const crossDialectResults = isSupp ? [] : findCrossDialectRows(line, originalDialectInfo, isGip);
       // 教典條目釋義摎例句都空時，借用別腔同詞目（見 borrowMissingGipFields）
       const borrowed = isGip ? borrowMissingGipFields(line, 腔, crossDialectResults) : null;
 
@@ -4349,8 +4514,11 @@ function initializeAppUI() {
       favBtn.innerHTML = '❤️';
       if (isFaved) favBtn.classList.add('faved');
       favBtn.dataset.favId = favId;
-      td1.appendChild(document.createTextNode(' '));
-      td1.appendChild(favBtn);
+      // 收藏 ID 淨分認證（c）、教典（g），補字典先毋做收藏
+      if (!isSupp) {
+        td1.appendChild(document.createTextNode(' '));
+        td1.appendChild(favBtn);
+      }
 
       item.appendChild(td1);
 
@@ -4362,7 +4530,9 @@ function initializeAppUI() {
       });
       td2.appendChild(document.createElement('br'));
 
-      const dataKey = line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
+      const dataKey = isSupp
+        ? null
+        : line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
       let audioSrc = constructWordAudioUrl(line, dataKey);
       if (audioSrc) {
         audioSrc = applyAudioProxy(audioSrc);
@@ -4378,7 +4548,7 @@ function initializeAppUI() {
       }
 
       if (
-        line.sourceType !== 'gip' ||
+        (line.sourceType !== 'gip' && !isSupp) ||
         (line.sourceType === 'gip' && line['詞目音檔名'])
       ) {
         td2.appendChild(document.createElement('br'));
@@ -7647,6 +7817,13 @@ function initializeAppUI() {
 
   preprocessAllData(); // <-- 確保這一行被執行
 
+  // 次方言補音若比查詞結果較晚到，用共樣个條件重查一擺，分推導个南四縣音現出來
+  document.addEventListener('subdialectfill:ready', () => {
+    if (!g_currentSearchResults.length || !searchInput.value.trim()) return;
+    const params = new URLSearchParams(window.location.search);
+    performSearch(parseInt(params.get('iab')) || 1, parseInt(params.get('bidsu')) || 50);
+  });
+
   if (
     selectionPopup &&
     selectionPopupBackdrop &&
@@ -8096,33 +8273,36 @@ function initializeAppUI() {
       });
     }
 
-    // --- PFS Script Toggle & Header/Summary Badge Setting Logic ---
+    // --- 顯示模式（HPP／四 PFS／GIP）切換鈕摎設定選單 ---
+    const SCRIPT_LABELS = { hpp: 'HPP', pfs: '四 PFS', gip: 'GIP' };
+
     function updateScriptModeUI(scriptValue) {
-      const isPfs = scriptValue === 'pfs';
+      const converter = typeof pfsConverter !== 'undefined' ? pfsConverter : window.pfsConverter;
+      const script = converter ? converter.normalizeDisplayScript(scriptValue) : 'hpp';
+      const nextScript = converter ? converter.nextDisplayScript(script) : script;
+      const label = SCRIPT_LABELS[script];
+      const title = `當前顯示：${label}（點擊切換為 ${SCRIPT_LABELS[nextScript]}）`;
+
       const badgeBtn = document.getElementById('scriptModeToggleBtn');
       const badgeText = document.getElementById('scriptModeBadgeText');
       if (badgeBtn && badgeText) {
-        if (isPfs) {
-          badgeText.textContent = '四 PFS';
-          badgeBtn.classList.add('is-pfs');
-          badgeBtn.setAttribute('title', '當前顯示：四 PFS（點擊切換為 HPP）');
-        } else {
-          badgeText.textContent = 'HPP';
-          badgeBtn.classList.remove('is-pfs');
-          badgeBtn.setAttribute('title', '當前顯示：HPP（點擊切換為 四 PFS）');
-        }
+        badgeText.textContent = label;
+        badgeBtn.classList.toggle('is-pfs', script === 'pfs');
+        badgeBtn.classList.toggle('is-gip', script === 'gip');
+        badgeBtn.setAttribute('title', title);
       }
       const dailyBtn = document.getElementById('dailyScriptModeToggleBtn');
       if (dailyBtn) {
-        dailyBtn.textContent = isPfs ? '四 PFS' : 'HPP';
-        if (isPfs) dailyBtn.classList.add('is-pfs');
-        else dailyBtn.classList.remove('is-pfs');
+        dailyBtn.textContent = label;
+        dailyBtn.classList.toggle('is-pfs', script === 'pfs');
+        dailyBtn.classList.toggle('is-gip', script === 'gip');
+        dailyBtn.setAttribute('title', `${title}。PFS 淨影響四縣／南四縣`);
       }
-      const toggle = document.getElementById('pfsScriptToggle');
-      if (toggle && toggle.checked !== isPfs) {
-        toggle.checked = isPfs;
+      const select = document.getElementById('displayScriptSelect');
+      if (select && select.value !== script) {
+        select.value = script;
       }
-      // 切換掣文字會在「HPP」摎「四 PFS」之間變，闊度無共樣，愛重算摘要字型大細
+      // 切換掣文字闊度會跟等變，愛重算摘要字型大細
       if (typeof adjustResultsSummaryFontSize === 'function') {
         adjustResultsSummaryFontSize();
       }
@@ -8254,11 +8434,11 @@ function initializeAppUI() {
     }
     updateScriptModeUI(currentScript);
 
-    const pfsScriptToggle = document.getElementById('pfsScriptToggle');
-    if (pfsScriptToggle) {
-      pfsScriptToggle.checked = currentScript === 'pfs';
-      pfsScriptToggle.addEventListener('change', (event) => {
-        setHakfaDisplayScript(event.target.checked ? 'pfs' : 'hpp');
+    const displayScriptSelect = document.getElementById('displayScriptSelect');
+    if (displayScriptSelect) {
+      displayScriptSelect.value = currentScript;
+      displayScriptSelect.addEventListener('change', (event) => {
+        setHakfaDisplayScript(event.target.value);
       });
     }
 
