@@ -9,6 +9,8 @@
 4. 每腔：該腔認證、教典全部無單字條目个字，收佢在詞裡肚出現過个全部讀音（分類「補字典」）。
 5. 多音字補音：有單字條目个字，詞裡肚另外有單字條目無收个讀音（含淨差調），
    在詞裡出現 POLY_MIN_COUNT 擺以上正收（分類「多音字補音」）。
+6. 擬音：data/supp/擬音-{腔}.csv（scripts/build_jf_nisim.py 產生）个字，該腔還係無音个，
+   收第一候選（分類「擬音」）。這下淨四縣有。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -41,6 +43,7 @@ MAIN_LABEL = {'四': '北', '南': '南', '平': '竹'}
 
 DEFINITION = '（教典未獨立建字，愛灣語客源翠程式自動補音，無釋義）'
 POLY_DEFINITION = '（教典未獨立建此音，愛灣語客源翠程式自動補音，無釋義）'
+NISIM_DEFINITION = '（教典無收這隻字，愛灣語客源翠擬音、歡迎審查。目前無釋義）'
 POLY_MIN_COUNT = 3
 MAX_EXAMPLES = 5
 
@@ -184,6 +187,15 @@ def load_variants():
             yield json.loads(line)
 
 
+def load_nisim(d):
+    """data/supp/擬音-{腔}.csv → [{字, 讀音, 其他候選, 依據…}]；無檔案就係空个。"""
+    path = os.path.join(ROOT, 'data', 'supp', f'擬音-{d}.csv')
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding='utf-8-sig') as f:
+        return [r for r in csv.DictReader(f) if r['讀音']]
+
+
 def main():
     with open(os.path.join(ROOT, 'reverse_tone_mapping.json'), encoding='utf-8') as f:
         reverse = json.load(f)
@@ -249,6 +261,7 @@ def main():
         groups += [(ch, rs, '多音字補音', POLY_DEFINITION,
                     '單字條目已有 ' + '、'.join(sorted(single_readings[d][ch])) + '；')
                    for ch, rs in poly]
+        nisim = [r for r in load_nisim(d) if r['字'] not in singles[d] and r['字'] not in readings[d]]
         for ch, rs, category, definition, prefix in groups:
             for syl, rec in sorted(rs.items(), key=lambda x: -x[1]['count']):
                 examples = '、'.join(f'{w}（{p}，{s}）' for w, p, s in rec['examples'])
@@ -270,6 +283,25 @@ def main():
                     'sourceType': 'supp',
                 })
                 rows.append(item)
+        for r in nisim:
+            note = '擬音'
+            if r['其他候選']:
+                note += '；其他候選：' + r['其他候選']
+            if r['依據']:
+                note += '；依據：' + r['依據']
+            item = {h: '' for h in UNIFIED_SCHEMA_HEADERS}
+            item.update({
+                '編號': f'supp-{len(rows) + 1}',
+                '客家語': r['字'],
+                '客語標音_顯示': r['讀音'],
+                '客語標音_查詢': r['數字調'],
+                '華語詞義': NISIM_DEFINITION,
+                '備註': note,
+                '分類': '擬音',
+                'sourceName': f'補字典{d}',
+                'sourceType': 'supp',
+            })
+            rows.append(item)
 
         buf = io.StringIO(newline='')
         writer = csv.DictWriter(buf, fieldnames=UNIFIED_SCHEMA_HEADERS, lineterminator='\n')
@@ -282,8 +314,8 @@ def main():
             json.dump({'name': f'補字典{d}', 'content': buf.getvalue()}, f, ensure_ascii=False, indent=2)
         s = stats[d]
         poly_count = sum(len(rs) for _, rs in poly)
-        print(f'  {DIALECT_NAMES[d]}：補字典 {len(chars)} 字、{len(rows) - poly_count} 音；'
-              f'多音字補音 {len(poly)} 字、{poly_count} 音'
+        print(f'  {DIALECT_NAMES[d]}：補字典 {len(chars)} 字、{len(rows) - poly_count - len(nisim)} 音；'
+              f'多音字補音 {len(poly)} 字、{poly_count} 音；擬音 {len(nisim)} 字'
               f'（單字條目 {len(singles[d])} 字；詞 {s["pairs"]} 筆，對齊 {s["aligned"]} 筆）')
 
 
