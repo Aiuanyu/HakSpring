@@ -72,9 +72,25 @@
 - **【鐵則】Commit Message 必須使用客語（Hakka）撰寫**：
     - 專案的所有 Git commit message 內文與說明，**必須**使用臺灣客家語（四縣／海陸等共通詞彙，如「个」、「摎」、「在」、「肚底／裡肚」、「單淨」、「無共樣」、「毋使」等）撰寫。
     - **嚴禁**誤用臺灣話／閩南語詞彙（如「干焦」、「無仝」、「佮」、「佇」、「親像」等）或純華語長篇文言。保持客源翠專案作為客語母語數位典藏工具的文化自覺與語言一致性。
-- **Commit Message 審核與筆記維護原則**：
-    - Commit message **毋使寫來 Obsidian 筆記裡肚**（避免筆記內容過度冗長繁雜、重複堆疊已存在於 git log 或專案檔案的內容）。
-    - 需給平哥審核時，一律直接寫入專案根目錄的 `commit_msg.txt`，在筆記或對話中只要簡要提示該檔案路徑即可。待平哥審核完成並 commit 後，立即清理暫存的 `commit_msg.txt`。
+- **Commit Message 審核與提交流程**：
+    1. 先分析專案 Git 目前 staged 的 diff，歸納此次更新內容。
+    2. 依對話記憶提及不同 AI 模型，分別列出每個 AI 模型的分工及貢獻。
+    3. 先寫在專案根目錄的臨時 `commit_msg.txt` 中，供平哥審閱、直接編輯。
+    4. Commit message **毋使寫來 Obsidian 筆記裡肚**（避免筆記內容過度冗長繁雜、重複堆疊已存在於 git log 或專案檔案的內容）。
+    5. 平哥審核完成告知定稿後，再根據 `commit_msg.txt` 執行 commit。
+        - 絕對要小心避免那種會卡住終端機狀態的指令。
+        - 愛細膩莫 commit 著 `commit_msg.txt`；commit 煞後，暫存檔案愛提掉（清理）。
+- **貢獻者樣板 (Co-authors Template)**：commit 最尾照下背寫。
+    - 只列**實際改著這個 commit 內容**个 AI，一隻一行；淨參與討論、審查个毋列（做得寫在本文）。
+    - 模型名照該 session 實際用个模型；毋確定就寫工具名，毋好照抄別隻 commit 个名單。
+    - 信箱照工具：Claude Code（本機、雲端）用 `noreply@anthropic.com`；Antigravity 裡肚个模型用 `<model-id>@Antigravity`；其他工具照佢自家个預設。
+    - 簽名一律用 GitHub noreply 信箱，**毋好放真實 email**（repo 係公開个）。寫 commit message 个 AI 若無改著內容，做得寫在 `Signed-off-by` 後背括號 `(Commit Helper: …)`。
+```
+Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
+Co-authored-by: Gemini 3.8 Flash <Gemini-3-8-Flash@Antigravity>
+Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
+```
+    （例：兩隻 AI 都改著个時節。淨一隻改著就淨寫一行 `Co-authored-by`。）
 - **語意化 PR 標題**: 在建立 Pull Request (PR) 時，標題應清楚、簡潔地總結該次修改的核心內容，再加上要解決的 issue 編號。一個好的標題能讓團隊成員快速理解變更的目的。例如，使用 `feat: 新增用戶認證功能（整 #79）` 或 `fix: 修正頁首跑版問題（整 #116）`，而不是模糊的 `更新檔案` 或完全看不出意圖的 `Pull request for issue #79`。
 
 ## UI 元件慣例
