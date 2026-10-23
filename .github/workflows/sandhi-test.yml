@@ -18,6 +18,8 @@ on:
       - 'tests/gip_borrow_test.js'
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
+      - 'js/gip-superscript.js'
+      - 'tests/gip_superscript_test.js'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -36,6 +38,8 @@ on:
       - 'tests/gip_borrow_test.js'
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
+      - 'js/gip-superscript.js'
+      - 'tests/gip_superscript_test.js'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -62,3 +66,5 @@ jobs:
         run: node tests/gip_borrow_test.js
       - name: Run Romaine join tests
         run: node tests/romaine_join_test.js
+      - name: Run GIP superscript tests
+        run: node tests/gip_superscript_test.js

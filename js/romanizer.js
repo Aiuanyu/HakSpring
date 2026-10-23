@@ -496,6 +496,35 @@ document.addEventListener('DOMContentLoaded', () => {
     return hppText;
   }
 
+  /**
+   * 寫音節个畫面文字。GIP 顯示時，字尾个調符拆出來包成上標 <span class="gip-t">（摎其他畫面一致），
+   * 文字節點淨留字母，所以大小寫、連寫判斷等讀「第一个文字節點」个邏輯照常運作；
+   * 複製結果讀 textContent，調符仍然會跟著複製出去。
+   * @param {HTMLElement} wrapper - .syllable-wrapper
+   * @param {Text} textNode - wrapper 內底个文字節點
+   * @param {string} displayText - 愛顯示个完整文字（可能含 GIP 調符）
+   */
+  function setSyllableDisplay(wrapper, textNode, displayText) {
+    wrapper.querySelectorAll(':scope > .gip-t').forEach((s) => s.remove());
+    const gip = window.gipConverter;
+    if (isGipDisplay() && gip && displayText.length > 1 && gip.endsWithToneSymbol(displayText)) {
+      textNode.textContent = displayText.slice(0, -1);
+      const span = document.createElement('span');
+      span.className = 'gip-t';
+      span.textContent = displayText.slice(-1);
+      textNode.after(span);
+    } else {
+      textNode.textContent = displayText;
+    }
+  }
+
+  /** 音節畫面上看著个完整文字（字母 + 拆出去个上標調符），連寫判斷「有無調符」愛用這个 */
+  function getSyllableDisplayText(wrapper) {
+    const textNode = Array.from(wrapper.childNodes).find((n) => n.nodeType === Node.TEXT_NODE);
+    const tone = wrapper.querySelector(':scope > .gip-t');
+    return (textNode ? textNode.textContent : '') + (tone ? tone.textContent : '');
+  }
+
   /** 目前結果區係毋係用 GIP（教育部客拼）顯示 */
   function isGipDisplay() {
     const pfs = window.pfsConverter;
@@ -518,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isFirstCharUpper(current)) {
         next = next.charAt(0).toUpperCase() + next.slice(1);
       }
-      textNode.textContent = next;
+      setSyllableDisplay(wrapper, textNode, next);
     });
     // 連寫模式个撇號只在 HPP 顯示才加（GIP 毋使），所以切換顯示模式後愛重算音節之間个分隔符
     updateJoiningSeparators();
@@ -547,7 +576,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     wrapper.dataset.noCapitalize = 'true';
                 }
                 wrapper.dataset.hpp = token;
-                wrapper.appendChild(document.createTextNode(toDisplayRomanization(token)));
+                const syllableTextNode = document.createTextNode('');
+                wrapper.appendChild(syllableTextNode);
+                setSyllableDisplay(wrapper, syllableTextNode, toDisplayRomanization(token));
     
                 const uppercaseBtn = document.createElement('button');
                 uppercaseBtn.className = 'uppercase-btn';
@@ -707,7 +738,7 @@ function updateJoiningSeparators() {
                     const separator = getJoiningSeparator(
                         romanizerJoiningMode,
                         isGipDisplay(),
-                        s1TextNode.textContent,
+                        getSyllableDisplayText(s1),
                         s1Text,
                         s2Text,
                     );
