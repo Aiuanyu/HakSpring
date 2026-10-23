@@ -480,6 +480,50 @@ document.addEventListener('DOMContentLoaded', () => {
     return result;
   }
 
+  /**
+   * 將 HPP 音節轉成目前顯示模式个文字。目前淨有 GIP（教育部客拼）會轉；
+   * HPP 摎 PFS 維持原樣（PFS 个連寫設計未定案，留待未來）。
+   * 音節个「原文」一律存在 wrapper.dataset.hpp，連寫个撇號判斷愛用原文（HPP 个字母摎調符規則）。
+   * @param {string} hppText
+   * @returns {string}
+   */
+  function toDisplayRomanization(hppText) {
+    if (isGipDisplay()) {
+      return window.gipConverter.toGIP(hppText);
+    }
+    return hppText;
+  }
+
+  /** 目前結果區係毋係用 GIP（教育部客拼）顯示 */
+  function isGipDisplay() {
+    const pfs = window.pfsConverter;
+    return !!(pfs && window.gipConverter && pfs.getEffectiveScript(romanizerSelectedDialect) === 'gip');
+  }
+
+  /**
+   * 切換顯示模式時，逐個音節用 HPP 原文重算畫面文字（保留首字大寫狀態），
+   * 毋重建整個結果區，所以手動大小寫、刪除等編輯毋會丟。
+   */
+  function refreshRomanizerScriptDisplay() {
+    if (!romanizerOutput) return;
+    romanizerOutput.querySelectorAll('.syllable-wrapper').forEach((wrapper) => {
+      const raw = wrapper.dataset.hpp;
+      if (!raw) return;
+      const textNode = Array.from(wrapper.childNodes).find((n) => n.nodeType === Node.TEXT_NODE);
+      if (!textNode) return;
+      const current = textNode.textContent;
+      let next = toDisplayRomanization(raw);
+      if (current && current.charAt(0) !== current.charAt(0).toLowerCase()) {
+        next = next.charAt(0).toUpperCase() + next.slice(1);
+      }
+      textNode.textContent = next;
+    });
+    // 連寫模式个撇號只在 HPP 顯示才加（GIP 毋使），所以切換顯示模式後愛重算音節之間个分隔符
+    updateJoiningSeparators();
+    applyPunctuationSpacing();
+  }
+  window.addEventListener('hakfaDisplayScriptChanged', refreshRomanizerScriptDisplay);
+
   function tokenizeRomanization(text) {
     if (!text) return [];
     return text.match(/[【】（）()\/]|[^【】（）()\/\s]+/g) || [];
@@ -540,7 +584,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sourceSpan.dataset.noCapitalize) {
                     wrapper.dataset.noCapitalize = 'true';
                 }
-                wrapper.appendChild(document.createTextNode(token));
+                wrapper.dataset.hpp = token;
+                wrapper.appendChild(document.createTextNode(toDisplayRomanization(token)));
     
                 const uppercaseBtn = document.createElement('button');
                 uppercaseBtn.className = 'uppercase-btn';
@@ -694,16 +739,26 @@ function updateJoiningSeparators() {
                 const s2TextNode = Array.from(s2.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
 
                 if (s1TextNode && s2TextNode) {
-                    const s1Text = s1TextNode.textContent.toLowerCase();
-                    const s2Text = s2TextNode.textContent.toLowerCase();
+                    // 撇號判斷用 HPP 原文
+                    const s1Text = (s1.dataset.hpp || s1TextNode.textContent).toLowerCase();
+                    const s2Text = (s2.dataset.hpp || s2TextNode.textContent).toLowerCase();
                     let separator = '';
 
                     switch (romanizerJoiningMode) {
                         case 'hyphen': separator = '-'; break;
                         case 'space': separator = ' '; break;
                         case 'none':
-                            const tempString = applyApostropheRules(`${s1Text} ${s2Text}`);
-                            if (tempString.includes("'")) separator = "'";
+                            // 撇號係為著 HPP 連寫（音節之間無分隔字元）免得誤判音節界線才加个。
+                            // GIP 毋使撇號：前一隻音節有調符，調符就係界線，直接連起來；
+                            // 無調符則一律用空格隔開（毋再分判斷係無需要撇號）。
+                            if (isGipDisplay()) {
+                                if (!/[\u02CA\u02CB\u02C7\u02C6+]$/.test(s1TextNode.textContent)) {
+                                    separator = ' ';
+                                }
+                            } else {
+                                const tempString = applyApostropheRules(`${s1Text} ${s2Text}`);
+                                if (tempString.includes("'")) separator = "'";
+                            }
                             break;
                     }
 
