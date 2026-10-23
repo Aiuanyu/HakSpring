@@ -25,6 +25,9 @@
   'use strict';
 
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION', 'NOSCRIPT']);
+  // 說明文件、新消息、設定說明這類散文區（可能有 A+、C+ 這種一般文字）毋處理；
+  // 其他毋愛處理个地方，加 data-no-gip 屬性就會跳過
+  const PROSE_SELECTOR = '#info-content, #whats-new-content, #data-management-content, .setting-description, [data-no-gip]';
   const LETTER = 'A-Za-z\\u00C0-\\u024F\\u1E00-\\u1EFF';
 
   /** 「字母 + 調符」个正規式（字母後面緊接調符才算；+ 係 ASCII，所以愛前頭有字母） */
@@ -73,6 +76,7 @@
       if (p.nodeType !== 1) continue;
       if (SKIP_TAGS.has(p.tagName)) return true;
       if (p.classList.contains('gip-t') || p.id === 'romanizer-output') return true;
+      if (p.matches(PROSE_SELECTOR)) return true;
       if (p === document.body) break;
     }
     return false;
@@ -110,12 +114,19 @@
     });
   }
 
-  /** 離開 GIP 模式：把上標還原成純文字（Romaine 自家處理，跳過） */
+  /**
+   * 離開 GIP 模式：把上標還原成純文字（Romaine 自家處理，跳過）。
+   * 還原後要將相鄰个文字節點併轉去（normalize），毋然「字母」摎「調符」會分屬無共个文字節點，
+   * 下擺再切轉 GIP 時，切分邏輯逐節點處理就會比對毋著，上標會漏忒。
+   */
   function undecorateAll() {
+    const parents = new Set();
     document.querySelectorAll('.gip-t').forEach((span) => {
       if (span.closest('#romanizer-output')) return;
+      if (span.parentNode) parents.add(span.parentNode);
       span.replaceWith(document.createTextNode(span.textContent));
     });
+    parents.forEach((parent) => parent.normalize());
   }
 
   let pending = new Set();
@@ -131,12 +142,15 @@
     }
     const batch = pending;
     pending = new Set();
-    // 處理期間暫停觀察，免得自家个改動又觸發自家
+    // 處理期間暫停觀察，免得自家个改動又觸發自家；try/finally 確保出錯也會恢復觀察
     if (observer) observer.disconnect();
-    batch.forEach((node) => {
-      if (node.isConnected) decorateTree(node);
-    });
-    if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+    try {
+      batch.forEach((node) => {
+        if (node.isConnected) decorateTree(node);
+      });
+    } finally {
+      if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+    }
   }
 
   function schedule() {
@@ -159,18 +173,32 @@
     });
     observer.observe(document.body, OBSERVE_OPTIONS);
 
+    let rescanTimer = null;
     window.addEventListener('hakfaDisplayScriptChanged', () => {
+      // 快速連續切換時，取消前一擺排好但還毋曾執行个全頁掃描
+      if (rescanTimer) {
+        clearTimeout(rescanTimer);
+        rescanTimer = null;
+      }
       if (isGipMode()) {
         // 等主表、日日一詞等就地更新完，再全頁掃一擺（掃漏个也補著）
-        setTimeout(() => {
+        rescanTimer = setTimeout(() => {
+          rescanTimer = null;
+          if (!isGipMode()) return; // 等个時節模式又切走吔
           if (observer) observer.disconnect();
-          decorateTree(document.body);
-          if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+          try {
+            decorateTree(document.body);
+          } finally {
+            if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+          }
         }, 80);
       } else {
         if (observer) observer.disconnect();
-        undecorateAll();
-        if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+        try {
+          undecorateAll();
+        } finally {
+          if (observer) observer.observe(document.body, OBSERVE_OPTIONS);
+        }
       }
     });
 
