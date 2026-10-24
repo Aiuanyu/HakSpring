@@ -376,9 +376,372 @@
     return resultTokens.join('');
   }
 
+  /**
+   * 聲母長度優先對照表（PFS -> HPP）
+   */
+  const PFS_TO_HPP_INITIALS = [
+    ['chh', 'c'],
+    ['ch', 'z'],
+    ['ph', 'p'],
+    ['th', 't'],
+    ['kh', 'k'],
+    ['p', 'b'],
+    ['t', 'd'],
+    ['k', 'g'],
+    ['ng', 'ng'],
+    ['m', 'm'],
+    ['n', 'n'],
+    ['l', 'l'],
+    ['f', 'f'],
+    ['v', 'v'],
+    ['s', 's'],
+    ['h', 'h']
+  ];
+
+  /**
+   * 單一音節 臺灣客語白話字（PFS）轉 HagPinPlus（HPP）
+   * @param {string} syllable
+   * @returns {string}
+   */
+  function convertSyllableToHPP(syllable) {
+    if (!syllable || !/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\u0324]/.test(syllable)) {
+      return syllable;
+    }
+
+    const isAllUpper = syllable === syllable.toUpperCase() && /[a-zA-Z]/.test(syllable);
+    const isTitle = /^[A-Z]/.test(syllable);
+
+    // 1. 空韻預處理：將 ṳ (U+1E73), Ṳ (U+1E72) 以及帶下兩點之 ṳ (u + \u0324) 轉為 ii
+    let s = syllable.toLowerCase();
+    s = s.replace(/[\u1e73\u1e72]|u\u0324/g, 'ii');
+    if (s.includes('\u0324')) {
+      s = s.replace(/u([^\u0324]*)\u0324/g, 'ii$1');
+    }
+
+    // 2. Unicode NFD 分解以萃取 PFS 調符
+    const nfd = s.normalize('NFD');
+    const marks = [];
+    let base = '';
+    for (let i = 0; i < nfd.length; i++) {
+      const char = nfd[i];
+      if (/[\u0300-\u036f]/.test(char)) {
+        marks.push(char);
+      } else {
+        base += char;
+      }
+    }
+
+    // 3. 判斷聲調 (四縣六調：陰平 24: acute, 陽平 11: caron, 上聲 31: grave, 去聲 55: 無符, 陰入 2: grave, 陽入 5: 無符)
+    const isPfsRu = base.endsWith('p') || base.endsWith('t') || (base.endsWith('k') && !base.endsWith('ng'));
+    let hppToneMark = '';
+    let isRu = false;
+
+    if (isPfsRu) {
+      isRu = true;
+      if (marks.includes('\u030d') || marks.includes('\u0304')) {
+        hppToneMark = ''; // 陽入 5
+      } else {
+        hppToneMark = '\u0300'; // 陰入 2
+      }
+    } else {
+      if (marks.includes('\u0302')) {
+        hppToneMark = '\u0301'; // 陰平 24 (acute ́)
+      } else if (marks.includes('\u0300')) {
+        hppToneMark = '\u030c'; // 陽平 11 (caron ̌)
+      } else if (marks.includes('\u0301')) {
+        hppToneMark = '\u0300'; // 上聲 31 (grave ̀)
+      } else {
+        hppToneMark = ''; // 去聲 55
+      }
+    }
+
+    // 4. 聲母轉換 (細音 j, q, x 與洪音 z, c, s，零聲母 y-)
+    let hppInit = '';
+    let rhyme = base;
+
+    if (base.startsWith('y')) {
+      const rest = base.slice(1);
+      if (rest === 'i' || rest.startsWith('i')) {
+        rhyme = rest;
+      } else {
+        rhyme = 'i' + rest;
+      }
+    } else {
+      const PFS_INITS = [
+        ['chh', 'c'],
+        ['ch', 'z'],
+        ['ph', 'p'],
+        ['th', 't'],
+        ['kh', 'k'],
+        ['p', 'b'],
+        ['t', 'd'],
+        ['k', 'g'],
+        ['ng', 'ng'],
+        ['m', 'm'],
+        ['n', 'n'],
+        ['l', 'l'],
+        ['f', 'f'],
+        ['v', 'v'],
+        ['s', 's'],
+        ['h', 'h']
+      ];
+
+      let pMatched = '';
+      for (let i = 0; i < PFS_INITS.length; i++) {
+        const [p] = PFS_INITS[i];
+        if (base.startsWith(p)) {
+          pMatched = p;
+          rhyme = base.slice(p.length);
+          break;
+        }
+      }
+
+      // 細音判定（接齊齒呼 i 開頭，但排除空韻 ii）
+      const isXiYin = rhyme.startsWith('i') && !rhyme.startsWith('ii');
+
+      if (pMatched === 'ch') {
+        hppInit = isXiYin ? 'j' : 'z';
+      } else if (pMatched === 'chh') {
+        hppInit = isXiYin ? 'q' : 'c';
+      } else if (pMatched === 's') {
+        hppInit = isXiYin ? 'x' : 's';
+      } else if (pMatched === 'ph') {
+        hppInit = 'p';
+      } else if (pMatched === 'p') {
+        hppInit = 'b';
+      } else if (pMatched === 'th') {
+        hppInit = 't';
+      } else if (pMatched === 't') {
+        hppInit = 'd';
+      } else if (pMatched === 'kh') {
+        hppInit = 'k';
+      } else if (pMatched === 'k') {
+        hppInit = 'g';
+      } else {
+        hppInit = pMatched;
+      }
+    }
+
+    // 5. 韻尾與韻母轉換
+    if (isRu) {
+      if (rhyme.endsWith('p')) {
+        rhyme = rhyme.slice(0, -1) + 'b';
+      } else if (rhyme.endsWith('t')) {
+        rhyme = rhyme.slice(0, -1) + 'd';
+      } else if (rhyme.endsWith('k') && !rhyme.endsWith('ng')) {
+        rhyme = rhyme.slice(0, -1) + 'g';
+      }
+    }
+
+    // oe -> ue
+    if (rhyme.includes('oe')) {
+      rhyme = rhyme.replace(/oe/g, 'ue');
+    }
+
+    let stem = hppInit + rhyme;
+
+    // 6. HPP 調符落點配置 (a > e, o > ui 之 u > iu 之 u > ii 第一粒 i > u > i > n, m)
+    if (hppToneMark) {
+      const stemLower = stem.toLowerCase();
+      let targetIdx = -1;
+
+      if (stemLower.includes('a')) {
+        targetIdx = stemLower.indexOf('a');
+      } else if (stemLower.includes('e')) {
+        targetIdx = stemLower.indexOf('e');
+      } else if (stemLower.includes('o')) {
+        targetIdx = stemLower.indexOf('o');
+      } else if (stemLower.includes('ui')) {
+        targetIdx = stemLower.indexOf('ui'); // 標在 u
+      } else if (stemLower.includes('iu')) {
+        targetIdx = stemLower.indexOf('iu') + 1; // 標在 u
+      } else if (stemLower.includes('ii')) {
+        targetIdx = stemLower.indexOf('ii'); // 標在第一粒 i
+      } else if (stemLower.includes('u')) {
+        targetIdx = stemLower.indexOf('u');
+      } else if (stemLower.includes('i')) {
+        targetIdx = stemLower.indexOf('i');
+      } else if (stemLower.includes('n')) {
+        targetIdx = stemLower.indexOf('n');
+      } else if (stemLower.includes('m')) {
+        targetIdx = stemLower.indexOf('m');
+      }
+
+      if (targetIdx >= 0) {
+        stem =
+          stem.slice(0, targetIdx + 1) +
+          hppToneMark +
+          stem.slice(targetIdx + 1);
+      }
+    }
+
+    let result = stem.normalize('NFC');
+
+    // 7. 大小寫還原
+    if (isAllUpper) {
+      result = result.toUpperCase();
+    } else if (isTitle) {
+      result = result.charAt(0).toUpperCase() + result.slice(1);
+    }
+
+    return result;
+  }
+
+  /**
+   * Romaine 撇號隔音節判斷基底字母
+   */
+  function apostropheBaseLetter(ch) {
+    if (!ch) return '';
+    const base = ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    return /^[a-z]$/.test(base) ? base : '';
+  }
+
+  /**
+   * Romaine 兩隻音節中間个撇號規則（嚴謹八條規則）
+   * 摎客源翠企盤 engine/phonetics/src/hpp.rs hpp_boundary 共一套規則。
+   */
+  function needsApostrophe(prev, next) {
+    const prevChars = Array.from(prev.normalize('NFD').replace(/\p{M}/gu, ''));
+    const nextChars = Array.from(next.normalize('NFD').replace(/\p{M}/gu, ''));
+    const p = apostropheBaseLetter(prevChars[prevChars.length - 1]);
+    const n0 = apostropheBaseLetter(nextChars[0]);
+    const n1 = apostropheBaseLetter(nextChars[1]);
+    if (!p || !n0) return false;
+    const isVowel = (c) => 'aeiou'.includes(c);
+    if ('bdgmn'.includes(p) && isVowel(n0)) return true; // 1. 子音韻尾＋母音
+    if (p === 'a' && 'iu'.includes(n0)) return true; // 2. a＋i／u
+    if (p === 'e' && n0 === 'u') return true; // 3. e＋u
+    if (p === 'i' && isVowel(n0)) return true; // 4. i＋母音
+    if (p === 'o' && n0 === 'i') return true; // 5. o＋i
+    if (p === 'u' && 'aei'.includes(n0)) return true; // 6. u＋a／e／i
+    if (isVowel(p) && n0 === 'n' && n1 === 'g') return true; // 7. 母音＋ng
+    if (p === 'n' && n0 === 'g') return true; // 8. n＋g
+    return false;
+  }
+
+  /**
+   * 單一白話字詞（包含 hyphen 複合詞）轉 HagPinPlus（HPP）
+   * HPP 一律不保留連字號（hyphen），依照 Romaine 連寫加撇號規則緊密結合。
+   * @param {string} word
+   * @returns {string}
+   */
+  function convertWordPfsToHpp(word) {
+    if (!word) return '';
+    const syllables = word.split('-');
+    const converted = syllables.map((s) => convertSyllableToHPP(s));
+    let result = converted[0] || '';
+    for (let i = 1; i < converted.length; i++) {
+      if (needsApostrophe(converted[i - 1], converted[i])) {
+        result += "'";
+      }
+      result += converted[i];
+    }
+    return result;
+  }
+
+  /**
+   * 整串 臺灣客語白話字（PFS）轉為 HagPinPlus（HPP）
+   * 標點符號（含半形 ASCII 與全形）、HTML 標籤、空格皆完整隔離保留，詞內音節連寫無 hyphen。
+   * @param {string} text
+   * @returns {string}
+   */
+  function toHPP(text) {
+    if (!text || typeof text !== 'string') return text || '';
+    // 嚴密隔離：HTML 標籤、空白、漢字、全半形標點符號、數字
+    const tokens = text.split(
+      /(<[^>]+>|\s+|[\u3400-\u9fff]+|[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)/g
+    );
+    return tokens
+      .map((token) => {
+        if (!token) return '';
+        if (
+          token.startsWith('<') && token.endsWith('>') ||
+          /^\s+$/.test(token) ||
+          /^[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+$/.test(token) ||
+          /^[0-9.]+$/.test(token)
+        ) {
+          return token;
+        }
+        return convertWordPfsToHpp(token);
+      })
+      .join('');
+  }
+
+  /**
+   * 單一白話字詞轉教育部客家語拼音方案（GIP）
+   * GIP 一律不保留 hyphen；有調符用調符，沒調符加空格。
+   * @param {string} word
+   * @param {object} gipConverterObj
+   * @returns {string}
+   */
+  function convertWordPfsToGip(word, gipConverterObj) {
+    if (!word) return '';
+    const syllables = word.split('-');
+    const gipSyls = syllables.map((s) => {
+      const hpp = convertSyllableToHPP(s);
+      return gipConverterObj && gipConverterObj.convertSyllableToGIP
+        ? gipConverterObj.convertSyllableToGIP(hpp)
+        : hpp;
+    });
+
+    const TONE_SYMBOLS = ['ˊ', 'ˇ', 'ˋ', 'ˆ', '+'];
+    let result = gipSyls[0] || '';
+    for (let i = 1; i < gipSyls.length; i++) {
+      const prev = gipSyls[i - 1];
+      const prevLastChar = prev.slice(-1);
+      const hasTone = TONE_SYMBOLS.includes(prevLastChar);
+      if (!hasTone) {
+        result += ' '; // 沒調符加空格
+      }
+      result += gipSyls[i]; // 有調符直接相連
+    }
+    return result;
+  }
+
+  /**
+   * 整串 臺灣客語白話字（PFS）直接轉為 GIP
+   * @param {string} text
+   * @param {object} [gipConverterObj]
+   * @returns {string}
+   */
+  function toGIPFromPFS(text, gipConverterObj) {
+    if (!text || typeof text !== 'string') return text || '';
+    const gipObj =
+      gipConverterObj ||
+      (typeof gipConverter !== 'undefined'
+        ? gipConverter
+        : typeof window !== 'undefined'
+        ? window.gipConverter
+        : null);
+
+    const tokens = text.split(
+      /(<[^>]+>|\s+|[\u3400-\u9fff]+|[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)/g
+    );
+    return tokens
+      .map((token) => {
+        if (!token) return '';
+        if (
+          token.startsWith('<') && token.endsWith('>') ||
+          /^\s+$/.test(token) ||
+          /^[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+$/.test(token) ||
+          /^[0-9.]+$/.test(token)
+        ) {
+          return token;
+        }
+        return convertWordPfsToGip(token, gipObj);
+      })
+      .join('');
+  }
+
   return {
     convertSyllableToPFS,
     toPFS,
+    convertSyllableToHPP,
+    convertWordPfsToHpp,
+    toHPP,
+    convertWordPfsToGip,
+    toGIPFromPFS,
+    needsApostrophe,
     isSiXianDialect,
     isPfsDisplayActive,
     normalizeDisplayScript,
