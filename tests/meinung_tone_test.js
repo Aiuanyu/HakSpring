@@ -23,7 +23,7 @@ global.document = {
   createTreeWalker: () => ({ nextNode: () => null }),
 };
 global.NodeFilter = { SHOW_TEXT: 4 };
-const { getSandhiHtml } = require('../main.js');
+const { getSandhiHtml, getSubDialectFillKey, getSubDialectFill } = require('../main.js');
 
 const r33 = (s) => `<ruby class="sandhi-t33">${s}<rt>33</rt></ruby>`;
 const r11 = (s) => `<ruby class="sandhi-t11">${s}<rt>11</rt></ruby>`;
@@ -55,5 +55,37 @@ assert.strictEqual(getSandhiHtml('sān sǎ', 'da'), '<ruby class="sandhi-t35">s�
 meinung = 'true';
 const once = getSandhiHtml('sán', 'si');
 assert.strictEqual(getSandhiHtml(once, 'si'), once);
+
+// 【南】變體列：括號內个 24 調乜註 ruby 33（括號內不阻斷美濃模式）
+meinung = 'true';
+assert.strictEqual(getSandhiHtml('láng sùi【náng sùi】', 'si'), `${r33('láng')} sùi【${r33('náng')} sùi】`);
+assert.strictEqual(getSandhiHtml('í ien【í ian】', 'si'), `${r33('í')} ien【${r33('í')} ian】`);
+// 南四縣、四縣（認證／教典）傳進來个腔碼攏係 si（getDialectCode）
+const { getDialectCode } = require('../main.js');
+for (const name of ['四縣', '北四縣', '南四縣', '南四縣（美濃）', '南四縣教典', '四', '南']) {  // 設定選單、教典顯示名實際傳進來个腔名
+  assert.strictEqual(getDialectCode(name), 'si', name);
+}
+
+// 次方言補音鍵摎取值（getSubDialectFillKey／getSubDialectFill）
+assert.strictEqual(getSubDialectFillKey({ sourceName: '四基', 編號: '1-3' }), '四基|1-3');
+assert.strictEqual(getSubDialectFillKey({ sourceName: '四縣基礎級', 編號: '1-3' }), '四基|1-3'); // 全名也接
+assert.strictEqual(getSubDialectFillKey({ sourceName: '四縣中高級', 編號: '2-1' }), '四中高|2-1');
+assert.strictEqual(getSubDialectFillKey({ sourceName: '海基', 編號: '1-3' }), null);               // 非四縣
+assert.strictEqual(getSubDialectFillKey({ sourceName: '四基' }), null);                              // 無編號
+assert.strictEqual(getSubDialectFillKey({ sourceName: '教典四', 客家語: '冷水' }, '美'), '教典|冷水');
+assert.strictEqual(getSubDialectFillKey({ sourceName: '教典南', 客家語: ' 冷水 ' }, '美'), '教典|冷水'); // 教典四、南共用鍵
+assert.strictEqual(getSubDialectFillKey({ sourceName: '教典四', 客家語: '冷水' }, '南'), null);         // 教典無南附表
+assert.strictEqual(getSubDialectFillKey(null), null);
+
+window.SUB_DIALECT_FILL = { 南: { '四基|1-3': ['ngiad tién', '字級對照'] }, 美: { '四基|1-3': 'nāng sùi', '教典|冷水': 'nāng sùi' } };
+const line = { sourceName: '四基', 編號: '1-3' };
+meinung = 'true';
+assert.deepStrictEqual(getSubDialectFill(line, '南'), { phonetic: 'ngiad tién', method: '字級對照' }); // 陣列格式
+assert.deepStrictEqual(getSubDialectFill(line, '美'), { phonetic: 'nāng sùi', method: '系統規則' });   // 字串格式
+assert.strictEqual(getSubDialectFill({ sourceName: '教典南', 客家語: '冷水' }, '美').phonetic, 'nāng sùi');
+assert.strictEqual(getSubDialectFill({ sourceName: '四基', 編號: '9-9' }, '美'), null);               // 無這條
+meinung = 'false';
+assert.strictEqual(getSubDialectFill(line, '美'), null);                                             // 美濃腔關：回 null
+assert.deepStrictEqual(getSubDialectFill(line, '南'), { phonetic: 'ngiad tién', method: '字級對照' }); // 南四縣不受影響
 if (failed) { console.error(`\n❌ ${failed} 項失敗`); process.exit(1); }
 console.log(`✨ 美濃腔 ${cases.length} 項＋其他腔、重複處理 全部 PASS`);

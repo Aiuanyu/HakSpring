@@ -1398,8 +1398,8 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
  * 次方言補音（data/sub-dialects-fill/）：認證、教典無標个次方言音，資料端推導。
  * 網站淨讀精簡版 *.web.json：
  * - 南四縣.web.json：{ '四基|1-3': [標音, 推導層] }，淨收摎北四縣無共樣个；一開始就抓
- * - 美濃.web.json：{ '四基|1-3': 標音, '教典|詞目': 標音 }，淨收摎南四縣無共樣个；
- *   約 360 KB，設定「顯示美濃推導音」開了正抓（預設關）
+ * - 美濃.web.json：{ '四基|1-3': 標音, '教典|詞目': 標音 }，淨收詞彙性差異（用著字級對照个，例：冷 láng→nāng）；
+ *   約 11 KB，設定「美濃腔」開了正抓（預設關）
  */
 window.SUB_DIALECT_FILL = window.SUB_DIALECT_FILL || { 南: null, 美: null };
 const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
@@ -1483,7 +1483,7 @@ function getSubDialectFill(line, label = '南') {
 }
 
 /**
- * 教典詞條个變體區塊：教典本身無【】變體，淨在「顯示美濃推導音」開等時，加一列美濃推導音。
+ * 教典詞條个變體區塊：教典本身無【】變體，淨在設定「美濃腔」開等時，加一列美濃推導音（詞彙性差異个）。
  * @returns {HTMLElement|null}
  */
 function buildGipFillVariantsElement(line, dialectName, highlightOptions) {
@@ -8534,7 +8534,7 @@ function initializeAppUI() {
       }
     }
 
-    // --- 次方言補音：顯示美濃推導音（預設關；開了正下載 美濃.web.json） ---
+    // --- 次方言補音：美濃腔（預設關；開了正下載 美濃.web.json） ---
     const meinungFillToggle = document.getElementById('meinungFillToggle');
     if (meinungFillToggle) {
       meinungFillToggle.checked = isMeinungFillEnabled();
@@ -9732,6 +9732,8 @@ if (typeof module !== 'undefined' && module.exports) {
     getVariantAudioTitle,
     renderVocabWithVariants,
     createVariantBlock,
+    getSubDialectFillKey,
+    getSubDialectFill,
     getRomanizerModeInfo,
     resolveReadingForMode,
     splitRubyByBaseBreakpoints,

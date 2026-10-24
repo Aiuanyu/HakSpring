@@ -204,6 +204,7 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 | 熟悉度 | `hakkaFamiliarity` | `familiarity` | ✅ | LWW per-key |
 | 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
+| 美濃腔 | `showMeinungFill` | — | ❌ | 不同步（目前本機偏好；若要跟標音顯示模式 `hakfaDisplayScript` 共樣跨裝置帶著走，愛走 LWW，並同步改 `cloud-sync.js` 个 select、merge、寫回、upsert 四處） |
 | 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
 | 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
