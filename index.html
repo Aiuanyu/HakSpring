@@ -53,7 +53,7 @@
       defer
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.67" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.72" defer></script>
     <script
       type="text/javascript"
       src="js/gip-superscript.js?v=1.0.1"
@@ -95,7 +95,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.6.11"
+      src="js/cloud-sync.js?v=4.6.12"
       defer
     ></script>
     <script
@@ -1445,6 +1445,19 @@
               <option value="pfs">四 PFS</option>
               <option value="gip">GIP</option>
             </select>
+          </div>
+          <!-- 次方言補音：美濃腔（24 調註 33；詞彙性差異讀 data/sub-dialects-fill/美濃.web.json，開了正下載） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="meinungFillToggle">美濃腔</label>
+              <span class="setting-description"
+                >四縣、南四縣个陰平 24 調（ˊ）美濃都講 33。客源翠處理方式：24 調个音節上背註 33，毋再顯示 24 觸發个變調；美濃腔聲母韻母也無共樣个詞（例：冷 láng → nāng）另外多一列「美〔推導〕」</span
+              >
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="meinungFillToggle" />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">

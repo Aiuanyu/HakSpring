@@ -1395,16 +1395,36 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
  * @returns {HTMLElement|null}
  */
 /**
- * 次方言補音（data/sub-dialects-fill/）：認證無標个次方言音，資料端推導。
- * 網站淨讀精簡版 *.web.json：{ '四基|1-3': [標音, 推導層] }
- * - 南四縣.web.json：淨收摎北四縣無共樣个
- * - 美濃.web.json：淨收摎南四縣無共樣个
+ * 次方言補音（data/sub-dialects-fill/）：認證、教典無標个次方言音，資料端推導。
+ * 網站淨讀精簡版 *.web.json：
+ * - 南四縣.web.json：{ '四基|1-3': [標音, 推導層] }，淨收摎北四縣無共樣个；一開始就抓
+ * - 美濃.web.json：{ '四基|1-3': 標音, '教典|詞目': 標音 }，淨收詞彙性差異（用著字級對照个，例：冷 láng→nāng）；
+ *   約 11 KB，設定「美濃腔」開了正抓（預設關）
  */
 window.SUB_DIALECT_FILL = window.SUB_DIALECT_FILL || { 南: null, 美: null };
 const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
-// 一開始就抓（比 IndexedDB 讀資料較早好），載入好發 subdialectfill:ready 事件
-Object.entries(SUB_DIALECT_FILL_FILES).forEach(([label, file]) => {
-  fetch(`data/sub-dialects-fill/${file}.web.json`, { cache: 'no-cache' })
+const SUB_DIALECT_FILL_LOADING = {};
+const MEINUNG_FILL_STORAGE_KEY = 'showMeinungFill';
+
+/** 設定「美濃腔」有開無（預設關）。開等：四縣／南四縣个 24 調註 ruby 33，加詞彙性差異个美濃音一列。 */
+function isMeinungFillEnabled() {
+  try {
+    return localStorage.getItem(MEINUNG_FILL_STORAGE_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * 抓一份次方言補音精簡版；載入好發 subdialectfill:ready 事件。重複呼叫淨抓一擺。
+ * @param {string} label - 南、美
+ * @returns {Promise<void>}
+ */
+function loadSubDialectFill(label) {
+  if (window.SUB_DIALECT_FILL[label]) return Promise.resolve();
+  if (SUB_DIALECT_FILL_LOADING[label]) return SUB_DIALECT_FILL_LOADING[label];
+  const file = SUB_DIALECT_FILL_FILES[label];
+  SUB_DIALECT_FILL_LOADING[label] = fetch(`data/sub-dialects-fill/${file}.web.json`, { cache: 'no-cache' })
     .then((res) => (res.ok ? res.json() : null))
     .then((data) => {
       if (!data) return;
@@ -1412,19 +1432,33 @@ Object.entries(SUB_DIALECT_FILL_FILES).forEach(([label, file]) => {
       console.log(`次方言補音載入完成：${file} ${Object.keys(data).length} 條`);
       document.dispatchEvent(new Event('subdialectfill:ready'));
     })
-    .catch((err) => console.warn(`次方言補音（${file}）載入失敗（不影響基本功能）:`, err));
-});
+    .catch((err) => console.warn(`次方言補音（${file}）載入失敗（不影響基本功能）:`, err))
+    .finally(() => {
+      delete SUB_DIALECT_FILL_LOADING[label];
+    });
+  return SUB_DIALECT_FILL_LOADING[label];
+}
+
+// 一開始就抓（比 IndexedDB 讀資料較早好）
+loadSubDialectFill('南');
+if (isMeinungFillEnabled()) loadSubDialectFill('美');
 
 const CERT_LEVEL_SHORT = { 基礎級: '基', 初級: '初', 中級: '中', 中高級: '中高', 高級: '高' };
 
 /**
- * 認證詞條在附表个鍵：「四基|1-3」。sourceName 有時係「四基」，有時係「四縣基礎級」，兩種都接。
+ * 詞條在附表个鍵。認證：「四基|1-3」（sourceName 有時係「四基」，有時係「四縣基礎級」，兩種都接）；
+ * 教典（淨美濃有）：「教典|詞目」，教典四縣、南四縣共用。
  * @param {object} line
+ * @param {string} [label='南']
  * @returns {string|null}
  */
-function getSubDialectFillKey(line) {
-  if (!line || !line.編號) return null;
+function getSubDialectFillKey(line, label = '南') {
+  if (!line) return null;
   let src = String(line.sourceName || line.dataVarName || '');
+  if (src === '教典四' || src === '教典南') {
+    return label === '美' && line['客家語'] ? `教典|${line['客家語'].trim()}` : null;
+  }
+  if (!line.編號) return null;
   const full = src.match(/^四縣(基礎級|初級|中高級|中級|高級)$/);
   if (full) src = '四' + CERT_LEVEL_SHORT[full[1]];
   if (!/^四(基|初|中|中高|高)$/.test(src)) return null;
@@ -1438,11 +1472,42 @@ function getSubDialectFillKey(line) {
  * @returns {{phonetic: string, method: string}|null}
  */
 function getSubDialectFill(line, label = '南') {
+  if (label === '美' && !isMeinungFillEnabled()) return null;
   const map = window.SUB_DIALECT_FILL && window.SUB_DIALECT_FILL[label];
   if (!map) return null;
-  const key = getSubDialectFillKey(line);
+  const key = getSubDialectFillKey(line, label);
   const hit = key && map[key];
-  return hit ? { phonetic: hit[0], method: hit[1] } : null;
+  if (!hit) return null;
+  // 南四縣：[標音, 推導層]；美濃：標音（全部係系統規則）
+  return Array.isArray(hit) ? { phonetic: hit[0], method: hit[1] } : { phonetic: hit, method: '系統規則' };
+}
+
+/**
+ * 教典詞條个變體區塊：教典本身無【】變體，淨在設定「美濃腔」開等時，加一列美濃推導音（詞彙性差異个）。
+ * @returns {HTMLElement|null}
+ */
+function buildGipFillVariantsElement(line, dialectName, highlightOptions) {
+  const fill = getSubDialectFill(line, '美');
+  if (!fill) return null;
+  const src = String(line.sourceName || line.dataVarName || '');
+  const word = line['客家語'] || '';
+  const container = document.createElement('div');
+  container.className = 'vocab-variants';
+  container.appendChild(
+    createVariantBlock(
+      { label: src === '教典南' ? '南' : '北', title: src === '教典南' ? '南四縣' : '北四縣',
+        word, phonetic: line['客語標音_顯示'] || '', phoneticOnly: false },
+      dialectName, /* isGipData */ true, /* isMain */ true, highlightOptions, word,
+    ),
+  );
+  container.appendChild(
+    createVariantBlock(
+      { label: '美', title: '美濃（程式推導，教典無標）', word, phonetic: fill.phonetic,
+        phoneticOnly: true, derived: true },
+      dialectName, false, false, highlightOptions, word,
+    ),
+  );
+  return container;
 }
 
 function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
@@ -1451,9 +1516,9 @@ function buildVariantsElement(line, dialectInfo, isGipData, highlightOptions) {
   const isGip = typeof isGipData === 'boolean'
     ? isGipData
     : (line.sourceType === 'gip' || line.source === 'gip' || (typeof line.dataVarName === 'string' && line.dataVarName.startsWith('教典')));
-  if (isGip) return null;
-
   const dialectName = typeof dialectInfo === 'string' ? dialectInfo : (dialectInfo && dialectInfo.腔);
+  if (isGip) return buildGipFillVariantsElement(line, dialectName, highlightOptions);
+
 
   // 取得變體解析資訊
   let v = null;
@@ -1842,10 +1907,16 @@ function getSandhiHtml(htmlContent, dialectCode) {
   let modifiedTokens = [];
   let hasActualModification = false;
 
+  // 美濃模式（設定「美濃腔」開等，四縣／南四縣）：美濃个 24 調攏講 33，
+  // 所以四縣唯一一條變調規則（24 觸發）無機會；24 調个音節改註 ruby 33，毋做變調。
+  const meinungMode = dialectCode === 'si' && isMeinungFillEnabled();
+
   const applySandhiRule = (variant, next) => {
     let newTone = null;
 
-    if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
+    if (meinungMode) {
+      newTone = classifyTone(variant, dialectCode) === '24' ? '33' : null;
+    } else if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
       const frontTone = classifyTone(variant, dialectCode);
       const rule = window.sandhiRulesData[dialectCode][frontTone];
       if (rule) {
@@ -1921,7 +1992,8 @@ function getSandhiHtml(htmlContent, dialectCode) {
       break;
     }
 
-    if (currentToken.length === 0 || !nextWordToken) {
+    // 美濃模式毋使看後一隻音節（單音節、詞尾个 24 調乜愛註 ruby 33）
+    if (currentToken.length === 0 || (!meinungMode && !nextWordToken)) {
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -8424,6 +8496,14 @@ function initializeAppUI() {
         }),
       );
 
+      rerenderCurrentVocabDisplay();
+    }
+
+    /**
+     * 標音顯示方式變了（顯示模式、美濃推導音），重畫當前畫面个詞彙標音：
+     * 表格就地更新、查詞結果重查一擺。
+     */
+    function rerenderCurrentVocabDisplay() {
       // 記住當前捲動高度，避免重新算繪時畫面跳動回頂端
       const savedScrollY = window.scrollY;
 
@@ -8453,6 +8533,40 @@ function initializeAppUI() {
         }
       }
     }
+
+    // --- 次方言補音：美濃腔（預設關；開了正下載 美濃.web.json） ---
+    const meinungFillToggle = document.getElementById('meinungFillToggle');
+    if (meinungFillToggle) {
+      meinungFillToggle.checked = isMeinungFillEnabled();
+      meinungFillToggle.addEventListener('change', (event) => {
+        try {
+          localStorage.setItem(MEINUNG_FILL_STORAGE_KEY, String(event.target.checked));
+        } catch (e) {
+          // 無痕視窗等存毋著，淨這擺有效
+        }
+        trackEvent('toggle', 'MeinungFill', event.target.checked ? 'enabled' : 'disabled');
+        applyMeinungFillSetting(event.target.checked);
+        // 觸發雲端同步偏好更新
+        if (typeof window.triggerCloudSync === 'function') {
+          window.triggerCloudSync();
+        }
+      });
+    }
+
+    /**
+     * 把美濃腔套用到畫面（開關、已算繪个標音）。不寫 localStorage、不觸發同步，
+     * 所以雲端拉下別台裝置个偏好時也做得直接呼叫。
+     */
+    function applyMeinungFillSetting(enabled) {
+      const toggle = document.getElementById('meinungFillToggle');
+      if (toggle) toggle.checked = !!enabled;
+      if (enabled) {
+        loadSubDialectFill('美').then(rerenderCurrentVocabDisplay);
+      } else {
+        rerenderCurrentVocabDisplay();
+      }
+    }
+    window.applyMeinungFillSetting = applyMeinungFillSetting;
 
     window.setHakfaDisplayScript = setHakfaDisplayScript;
     window.applyHakfaDisplayScript = applyHakfaDisplayScript;
@@ -9633,6 +9747,8 @@ if (typeof module !== 'undefined' && module.exports) {
     getVariantAudioTitle,
     renderVocabWithVariants,
     createVariantBlock,
+    getSubDialectFillKey,
+    getSubDialectFill,
     getRomanizerModeInfo,
     resolveReadingForMode,
     splitRubyByBaseBreakpoints,

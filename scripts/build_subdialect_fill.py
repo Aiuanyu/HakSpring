@@ -35,7 +35,7 @@ TONE_MARKS = '̀́̂̄̌'
 VELAR_ZERO = ('g', 'k', 'h', 'ng', '')
 INITIALS = ['zh', 'ch', 'sh', 'rh', 'ng', 'bb', 'b', 'p', 'm', 'f', 'v', 'd', 't', 'n', 'l',
             'g', 'k', 'h', 'z', 'c', 's', 'j', 'q', 'x']
-TABLE_MIN_COUNT = 2
+TABLE_MIN_COUNT = 1   # 20261021 由 2 降做 1：交叉驗證字級對照 96.5%→96.3%，整條全對 78.0%→78.8%
 TABLE_MIN_SHARE = 0.8
 
 
@@ -155,7 +155,7 @@ def derive(e, table, gip):
     """回傳（南四縣標音、整條方法、逐音節方法）。"""
     south, how, methods = derive_syllables(e, table)
     # 音節數摎北四縣無共樣个教典讀音毋用（多半係合音抑係無共樣个詞形，例：幾下 giá／gì há）
-    n_north = len(syllables(e['north']))
+    n_north = syllable_slots(e['north'])[2]
     candidates = [c for c in gip['南'].get(e['word'], []) if len(syllables(c)) == n_north]
     if candidates:
         # 教典南四縣可能有同形異義（例：擔 dám／dam），揀摎逐音節推導最近个該隻
@@ -172,17 +172,29 @@ def derive(e, table, gip):
     return south, how, methods
 
 
+def syllable_slots(phonetic):
+    """音節 → 字位置。斜線連等个音節（同詞多音，例：hím/hiún）共一隻字位置。"""
+    matches = list(SYLLABLE.finditer(phonetic))
+    slots, slot, prev_end = [], -1, None
+    for m in matches:
+        if prev_end is None or phonetic[prev_end:m.start()] != '/':
+            slot += 1
+        slots.append(slot)
+        prev_end = m.end()
+    return matches, slots, slot + 1
+
+
 def derive_syllables(e, table):
     word, north = e['word'], e['north']
-    al = aligned(word, north)
-    chars = al[0] if al else None
+    matches, slots, n_slots = syllable_slots(north)
+    han = HAN.findall(word)
+    chars = han if han and len(han) == n_slots else None
     out, methods = [], []
-    matches = list(SYLLABLE.finditer(north))
     for i, m in enumerate(matches):
         syl = nfc(m.group())
-        ch = chars[i] if chars else None
+        ch = chars[slots[i]] if chars else None
         new, how = None, None
-        if ch == '仔' and i == len(matches) - 1:
+        if ch == '仔' and slots[i] == n_slots - 1:
             z = zai_by_pos(e['pos'])
             if z:
                 new, how = z, 'zai'
@@ -254,8 +266,11 @@ def entry_layer(how, sm):
 
 
 def write_rows(base, rows, extra=None):
+    # 一筆一行：檔案較細，git diff 也看得清楚
+    head = json.dumps(extra or {}, ensure_ascii=False)[:-1]
+    head = head + (', ' if extra else '') + '"entries": [\n'
     with open(base + '.json', 'w', encoding='utf-8') as f:
-        json.dump({**(extra or {}), 'entries': rows}, f, ensure_ascii=False, indent=1)
+        f.write(head + ',\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n]}\n')
     buf = io.StringIO(newline='')
     w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()), lineterminator='\n')
     w.writeheader()
@@ -337,6 +352,41 @@ def build_meinung(cert, south_rows):
     return rows, skipped
 
 
+def build_meinung_gip(gip, table):
+    """教典美濃：以教典南四縣个讀音做底推。鍵用「腔＋詞目」（教典 idx 會位移）。
+
+    回傳附表列（一隻讀音一列）摎網站用个 {'教典|詞': 美濃讀音（ / 隔開）}，
+    網站淨收摎南四縣無共樣个；教典四縣、南四縣共用一隻鍵（教典四縣个詞用共樣詞目對到教典南四縣）。
+    """
+    rows, web = [], {}
+    for word, souths in gip['南'].items():
+        meinungs, lexical = [], False
+        for south in souths:
+            meinung, used_table = derive_meinung(word, south, table)
+            lexical = lexical or used_table
+            rows.append({
+                '來源檔': '教典南',
+                '編號': '',
+                '詞目': word,
+                '北四縣': gip['四'][word][0] if gip['四'].get(word) else '',
+                '讀音': meinung,
+                '變體': ['美濃'],
+                '推導層': '系統規則',
+                '待確認': False,
+                '同南四縣': syllables(meinung) == syllables(south),
+                '南四縣來源': '教典南四縣',
+                '用著字級對照': used_table,
+                '讀音詞目': '',
+            })
+            if meinung not in meinungs:
+                meinungs.append(meinung)
+        # 網站淨收「詞彙性差異」（字級對照改過聲母韻母，例：冷 láng→nāng）：
+        # 純 24→33 个由網站用 ruby 直接標，毋使存
+        if lexical:
+            web[f'教典|{word}'] = ' / '.join(meinungs)
+    return rows, web
+
+
 def main():
     cert, gip = load_entries()
     if '--eval' in sys.argv:
@@ -376,14 +426,20 @@ def main():
     m_rows, m_skipped = build_meinung(cert, rows)
     for r in m_rows:
         r.setdefault('讀音詞目', '')
+    n_cert_rows = len(m_rows)
+    g_rows, g_web = build_meinung_gip(gip, meinung_table(cert))
+    m_rows += g_rows
     write_rows(os.path.join(OUT_DIR, '美濃'), m_rows, {**meta, 'base': '南四縣（認證原標＋南四縣附表）'})
-    m_web = {f"{r['來源檔'].lstrip('0123456789')}|{r['編號']}": [r['讀音'], r['推導層']]
-             for r in m_rows if not r['同南四縣']}
+    # 網站版淨存讀音，而且淨收詞彙性差異（用著字級對照）个：24→33 个聲調部分由網站 ruby 直接標
+    m_web = {f"{r['來源檔'].lstrip('0123456789')}|{r['編號']}": r['讀音']
+             for r in m_rows[:n_cert_rows] if r['用著字級對照']}
+    m_web.update(g_web)
     with open(os.path.join(OUT_DIR, '美濃.web.json'), 'w', encoding='utf-8') as f:
         json.dump(m_web, f, ensure_ascii=False, separators=(',', ':'))
     m_diff = sum(1 for r in m_rows if not r['同南四縣'])
-    print(f'--- 次方言補音（美濃）---\n  附表 {len(m_rows)} 條（摎南四縣無共樣 {m_diff} 條；'
-          f'用著字級對照 {sum(r["用著字級對照"] for r in m_rows)} 條）；南四縣推毋出致使跳過 {m_skipped} 條')
+    print(f'--- 次方言補音（美濃）---\n  附表 {len(m_rows)} 條（認證 {n_cert_rows}、教典 {len(g_rows)}；'
+          f'摎南四縣無共樣 {m_diff} 條；用著字級對照 {sum(r["用著字級對照"] for r in m_rows)} 條）；'
+          f'認證南四縣推毋出致使跳過 {m_skipped} 條；網站精簡版 {len(m_web)} 鍵（教典 {len(g_web)}）')
 
     c = Counter(r['推導層'] for r in rows)
     diff = sum(1 for r in rows if not r['同北四縣'])
