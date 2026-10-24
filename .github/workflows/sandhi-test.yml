@@ -18,6 +18,8 @@ on:
       - 'tests/gip_borrow_test.js'
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
+      - 'tests/pfs_to_hpp_test.js'
+      - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
       - '.github/workflows/sandhi-test.yml'
@@ -38,6 +40,8 @@ on:
       - 'tests/gip_borrow_test.js'
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
+      - 'tests/pfs_to_hpp_test.js'
+      - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
       - '.github/workflows/sandhi-test.yml'
@@ -66,5 +70,7 @@ jobs:
         run: node tests/gip_borrow_test.js
       - name: Run Romaine join tests
         run: node tests/romaine_join_test.js
+      - name: PFS → HPP / GIP tests
+        run: node tests/pfs_to_hpp_test.js
       - name: Run GIP superscript tests
         run: node tests/gip_superscript_test.js
