@@ -8545,13 +8545,28 @@ function initializeAppUI() {
           // 無痕視窗等存毋著，淨這擺有效
         }
         trackEvent('toggle', 'MeinungFill', event.target.checked ? 'enabled' : 'disabled');
-        if (event.target.checked) {
-          loadSubDialectFill('美').then(rerenderCurrentVocabDisplay);
-        } else {
-          rerenderCurrentVocabDisplay();
+        applyMeinungFillSetting(event.target.checked);
+        // 觸發雲端同步偏好更新
+        if (typeof window.triggerCloudSync === 'function') {
+          window.triggerCloudSync();
         }
       });
     }
+
+    /**
+     * 把美濃腔套用到畫面（開關、已算繪个標音）。不寫 localStorage、不觸發同步，
+     * 所以雲端拉下別台裝置个偏好時也做得直接呼叫。
+     */
+    function applyMeinungFillSetting(enabled) {
+      const toggle = document.getElementById('meinungFillToggle');
+      if (toggle) toggle.checked = !!enabled;
+      if (enabled) {
+        loadSubDialectFill('美').then(rerenderCurrentVocabDisplay);
+      } else {
+        rerenderCurrentVocabDisplay();
+      }
+    }
+    window.applyMeinungFillSetting = applyMeinungFillSetting;
 
     window.setHakfaDisplayScript = setHakfaDisplayScript;
     window.applyHakfaDisplayScript = applyHakfaDisplayScript;

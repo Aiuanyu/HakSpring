@@ -206,6 +206,7 @@ async function syncFromCloud() {
         hakfaDisplayScript: normalizeDisplayScript(
           localStorage.getItem('hakfaDisplayScript'),
         ),
+        showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
         gameLastDataVarName:
           localStorage.getItem('hakkaGameLastDataVarName') || '',
         userName: localStorage.getItem('hakkaUserName') || '',
@@ -299,6 +300,20 @@ async function syncFromCloud() {
         window.applyHakfaDisplayScript(finalHakfaDisplayScript);
       }
 
+      // 美濃腔（LWW）：另一台裝置改過，本機值被雲端覆寫以後，愛讓開關摎已經算繪个標音一齊更新
+      const finalShowMeinungFill = mergeBoolPref(
+        localPrefs.showMeinungFill,
+        syncedPrefs.showMeinungFill,
+        cloudPrefs.showMeinungFill,
+      );
+      localStorage.setItem('showMeinungFill', String(finalShowMeinungFill));
+      if (
+        finalShowMeinungFill !== localPrefs.showMeinungFill &&
+        typeof window.applyMeinungFillSetting === 'function'
+      ) {
+        window.applyMeinungFillSetting(finalShowMeinungFill);
+      }
+
       // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
       let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
       if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
@@ -333,6 +348,7 @@ async function syncFromCloud() {
       const prefsChanged =
         finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
         finalHakfaDisplayScript !== normalizeDisplayScript(cloudPrefs.hakfaDisplayScript) ||
+        finalShowMeinungFill !== (cloudPrefs.showMeinungFill === true) ||
         finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
         finalUserName !== (cloudPrefs.userName || '') ||
         finalUserLocation !== (cloudPrefs.userLocation || '');
@@ -359,6 +375,7 @@ async function syncFromCloud() {
         JSON.stringify({
           romanizerJoiningMode: finalRomanizerJoiningMode,
           hakfaDisplayScript: finalHakfaDisplayScript,
+          showMeinungFill: finalShowMeinungFill,
           gameLastDataVarName: finalGameLastDataVarName,
           userName: finalUserName,
           userLocation: finalUserLocation,
@@ -382,6 +399,7 @@ async function syncFromCloud() {
         JSON.stringify({
           romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
           hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
+          showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
           gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
           userName: localStorage.getItem('hakkaUserName') || '',
           userLocation: localStorage.getItem('hakkaUserLocation') || '',
@@ -429,6 +447,7 @@ async function syncToCloud() {
       hakfaDisplayScript: normalizeDisplayScript(
         localStorage.getItem('hakfaDisplayScript'),
       ),
+      showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
       gameLastDataVarName:
         localStorage.getItem('hakkaGameLastDataVarName') || '',
       userName: localStorage.getItem('hakkaUserName') || '',
@@ -485,6 +504,19 @@ async function syncToCloud() {
  * 2. 同表格不同類別：只保留 timestamp 最新的那個類別
  * 3. 依 timestamp 排序，保留最新的 BOOKMARK_LIMIT 筆
  */
+/**
+ * 布林偏好（LWW，如美濃腔 showMeinungFill）个合併：
+ * 本地相對「已同步基準快照」無變 → 套用雲端值（雲端有值正套）；本地有變 → 保留本地，留給 Smart Push 推上去。
+ * 值可能係 boolean 抑係 'true'／'false' 字串；未設定視為 false。
+ */
+function mergeBoolPref(local, synced, cloud) {
+  const toBool = (v) => v === true || v === 'true';
+  if (toBool(local) === toBool(synced) && cloud !== undefined && cloud !== null) {
+    return toBool(cloud);
+  }
+  return toBool(local);
+}
+
 function mergeBookmarks(localBookmarks, cloudBookmarks) {
   // 輸入驗證：確保參數是陣列
   const local = Array.isArray(localBookmarks) ? localBookmarks : [];

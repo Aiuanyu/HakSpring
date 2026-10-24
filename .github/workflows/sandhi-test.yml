@@ -20,6 +20,8 @@ on:
       - 'tests/romaine_join_test.js'
       - 'tests/pfs_to_hpp_test.js'
       - 'tests/meinung_tone_test.js'
+      - 'tests/cloud_sync_meinung_test.js'
+      - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'scripts/build_subdialect_fill.py'
       - 'data/sub-dialects-fill/**'
@@ -46,6 +48,8 @@ on:
       - 'tests/romaine_join_test.js'
       - 'tests/pfs_to_hpp_test.js'
       - 'tests/meinung_tone_test.js'
+      - 'tests/cloud_sync_meinung_test.js'
+      - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'scripts/build_subdialect_fill.py'
       - 'data/sub-dialects-fill/**'
@@ -82,6 +86,8 @@ jobs:
         run: node tests/pfs_to_hpp_test.js
       - name: Meinung tone tests
         run: node tests/meinung_tone_test.js
+      - name: Meinung cloud-sync tests
+        run: node tests/cloud_sync_meinung_test.js
       - name: Sub-dialect fill build tests
         run: python3 tests/build_subdialect_fill_test.py
       - name: Run GIP superscript tests
