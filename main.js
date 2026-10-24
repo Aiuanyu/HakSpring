@@ -5181,6 +5181,38 @@ function initializeAppUI() {
     }
 
     if (
+      (event.key === '/' || event.code === 'Slash') &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
+      const isTextInputFocused =
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.tagName === 'SELECT' ||
+          activeElement.isContentEditable);
+
+      if (!isTextInputFocused) {
+        const hasOpenModal = Array.from(
+          document.querySelectorAll('.modal-overlay, #dailyWordModal'),
+        ).some(
+          (el) =>
+            el.classList.contains('is-visible') ||
+            (el.style.display && el.style.display !== 'none'),
+        );
+
+        if (!hasOpenModal && searchInput) {
+          event.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+          console.log('Global hotkey: / pressed, focused search input.');
+          return;
+        }
+      }
+    }
+
+    if (
       !activeSelectionPopup &&
       (event.key === ' ' || event.code === 'Space')
     ) {
