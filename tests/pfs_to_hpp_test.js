@@ -94,8 +94,6 @@ function parseCsv(text) {
 }
 
 const certDir = path.join(__dirname, '..', 'data', 'cert');
-// 認證資料裡有兩隻音節少打空格（tiéngúng），不是音節，排除；資料要另外修
-const NOT_A_SYLLABLE = new Set(['tiéngúng', 'tiengúng']);
 const syllables = new Set();
 for (const f of fs.readdirSync(certDir).filter((n) => /^113四.*\.json$/.test(n))) {
   const { content } = JSON.parse(fs.readFileSync(path.join(certDir, f), 'utf8'));
@@ -105,7 +103,7 @@ for (const f of fs.readdirSync(certDir).filter((n) => /^113四.*\.json$/.test(n)
   for (const r of rows.slice(1)) {
     for (const s of (r[col] || '').split(/[\s【】/、]+/)) {
       // 只收純音節：拉丁字母＋調符，不含其他符號或漢字
-      if (!NOT_A_SYLLABLE.has(s) && /^[A-Za-zÀ-ɏḀ-ỿ̀-ͯ]+$/.test(s) && /[aeiouimn]/i.test(s)) {
+      if (/^[A-Za-zÀ-ɏḀ-ỿ̀-ͯ]+$/.test(s) && /[aeiouimn]/i.test(s)) {
         syllables.add(s.normalize('NFC'));
       }
     }
