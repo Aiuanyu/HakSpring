@@ -360,9 +360,10 @@ def build_meinung_gip(gip, table):
     """
     rows, web = [], {}
     for word, souths in gip['南'].items():
-        meinungs = []
+        meinungs, lexical = [], False
         for south in souths:
             meinung, used_table = derive_meinung(word, south, table)
+            lexical = lexical or used_table
             rows.append({
                 '來源檔': '教典南',
                 '編號': '',
@@ -379,7 +380,9 @@ def build_meinung_gip(gip, table):
             })
             if meinung not in meinungs:
                 meinungs.append(meinung)
-        if any(syllables(m) != syllables(sx) for m, sx in zip(meinungs, souths)):
+        # 網站淨收「詞彙性差異」（字級對照改過聲母韻母，例：冷 láng→nāng）：
+        # 純 24→33 个由網站用 ruby 直接標，毋使存
+        if lexical:
             web[f'教典|{word}'] = ' / '.join(meinungs)
     return rows, web
 
@@ -427,9 +430,9 @@ def main():
     g_rows, g_web = build_meinung_gip(gip, meinung_table(cert))
     m_rows += g_rows
     write_rows(os.path.join(OUT_DIR, '美濃'), m_rows, {**meta, 'base': '南四縣（認證原標＋南四縣附表）'})
-    # 美濃全部係系統規則，網站版淨存讀音
+    # 網站版淨存讀音，而且淨收詞彙性差異（用著字級對照）个：24→33 个聲調部分由網站 ruby 直接標
     m_web = {f"{r['來源檔'].lstrip('0123456789')}|{r['編號']}": r['讀音']
-             for r in m_rows[:n_cert_rows] if not r['同南四縣']}
+             for r in m_rows[:n_cert_rows] if r['用著字級對照']}
     m_web.update(g_web)
     with open(os.path.join(OUT_DIR, '美濃.web.json'), 'w', encoding='utf-8') as f:
         json.dump(m_web, f, ensure_ascii=False, separators=(',', ':'))

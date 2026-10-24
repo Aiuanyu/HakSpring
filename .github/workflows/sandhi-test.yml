@@ -19,6 +19,7 @@ on:
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
       - 'tests/pfs_to_hpp_test.js'
+      - 'tests/meinung_tone_test.js'
       - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
@@ -41,6 +42,7 @@ on:
       - 'js/romaine-join.js'
       - 'tests/romaine_join_test.js'
       - 'tests/pfs_to_hpp_test.js'
+      - 'tests/meinung_tone_test.js'
       - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
@@ -72,5 +74,7 @@ jobs:
         run: node tests/romaine_join_test.js
       - name: PFS → HPP / GIP tests
         run: node tests/pfs_to_hpp_test.js
+      - name: Meinung tone tests
+        run: node tests/meinung_tone_test.js
       - name: Run GIP superscript tests
         run: node tests/gip_superscript_test.js

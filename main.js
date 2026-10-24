@@ -1406,7 +1406,7 @@ const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
 const SUB_DIALECT_FILL_LOADING = {};
 const MEINUNG_FILL_STORAGE_KEY = 'showMeinungFill';
 
-/** 設定「顯示美濃推導音」有開無（預設關）。 */
+/** 設定「美濃腔」有開無（預設關）。開等：四縣／南四縣个 24 調註 ruby 33，加詞彙性差異个美濃音一列。 */
 function isMeinungFillEnabled() {
   try {
     return localStorage.getItem(MEINUNG_FILL_STORAGE_KEY) === 'true';
@@ -1907,10 +1907,16 @@ function getSandhiHtml(htmlContent, dialectCode) {
   let modifiedTokens = [];
   let hasActualModification = false;
 
+  // 美濃模式（設定「美濃腔」開等，四縣／南四縣）：美濃个 24 調攏講 33，
+  // 所以四縣唯一一條變調規則（24 觸發）無機會；24 調个音節改註 ruby 33，毋做變調。
+  const meinungMode = dialectCode === 'si' && isMeinungFillEnabled();
+
   const applySandhiRule = (variant, next) => {
     let newTone = null;
 
-    if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
+    if (meinungMode) {
+      newTone = classifyTone(variant, dialectCode) === '24' ? '33' : null;
+    } else if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
       const frontTone = classifyTone(variant, dialectCode);
       const rule = window.sandhiRulesData[dialectCode][frontTone];
       if (rule) {
@@ -1986,7 +1992,8 @@ function getSandhiHtml(htmlContent, dialectCode) {
       break;
     }
 
-    if (currentToken.length === 0 || !nextWordToken) {
+    // 美濃模式毋使看後一隻音節（單音節、詞尾个 24 調乜愛註 ruby 33）
+    if (currentToken.length === 0 || (!meinungMode && !nextWordToken)) {
       modifiedTokens.push(currentToken);
       continue;
     }
