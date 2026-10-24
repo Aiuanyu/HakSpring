@@ -5246,6 +5246,38 @@ function initializeAppUI() {
     }
 
     if (
+      (event.key === '/' || event.code === 'Slash') &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
+      const isTextInputFocused =
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.tagName === 'SELECT' ||
+          activeElement.isContentEditable);
+
+      if (!isTextInputFocused) {
+        const hasOpenModal = Array.from(
+          document.querySelectorAll('.modal-overlay, #dailyWordModal'),
+        ).some(
+          (el) =>
+            el.classList.contains('is-visible') ||
+            (el.style.display && el.style.display !== 'none'),
+        );
+
+        if (!hasOpenModal && searchInput) {
+          event.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+          console.log('Global hotkey: / pressed, focused search input.');
+          return;
+        }
+      }
+    }
+
+    if (
       !activeSelectionPopup &&
       (event.key === ' ' || event.code === 'Space')
     ) {
@@ -6151,6 +6183,8 @@ function initializeAppUI() {
 
         // --- 正在播放的那一行被消掉：無縫由下一行馬上遞補播放 ---
         // 1. 作廢舊行的所有非同步播放回呼（重複播放、句音檔排程等）
+        audioAbortController.abort();
+        audioAbortController = new AbortController();
         playbackSessionId = Date.now();
         const currentSession = playbackSessionId;
 

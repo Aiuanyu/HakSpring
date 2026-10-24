@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.56" />
+    <link rel="stylesheet" href="style.css?v=4.7.57" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -44,17 +44,23 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/pfs-converter.js?v=1.0.6"
+      src="js/pfs-converter.js?v=1.0.7"
       defer
     ></script>
     <script
       type="text/javascript"
-      src="js/gip-converter.js?v=1.0.1"
+      src="js/gip-converter.js?v=1.0.2"
       defer
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.68" defer></script>
-    <script type="text/javascript" src="js/romanizer.js?v=1.0.2" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.69" defer></script>
+    <script
+      type="text/javascript"
+      src="js/gip-superscript.js?v=1.0.1"
+      defer
+    ></script>
+    <script type="text/javascript" src="js/romaine-join.js?v=1.0.0" defer></script>
+    <script type="text/javascript" src="js/romanizer.js?v=1.0.8" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
       type="text/javascript"
@@ -169,7 +175,12 @@
         <span id="progressDetails"></span>
         <!-- <--- 在這裡加入這個 span -->
         <div id="search-container">
-          <input type="text" id="search-input" placeholder="查語詞" />
+          <input
+            type="text"
+            id="search-input"
+            placeholder="查語詞（撳 / 跳過來）"
+            title="尋詞（鍵盤撳 / 快速聚焦）"
+          />
           <div id="search-popup">
             <div id="dialect-selection">
               <p>請擇腔調：</p>

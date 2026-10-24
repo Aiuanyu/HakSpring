@@ -31,6 +31,18 @@
     '̄': '+', // ASCII 加號（˖ U+02D6 太細，毋採用）
   };
 
+  /** 全部官方調符字元（ˊ ˋ ˇ ˆ +）；別个模組愛判斷「音節係毋係以調符結尾」就用這個，毋好各自寫一份 */
+  const TONE_SYMBOL_CHARS = Object.keys(TONE_SYMBOLS).map((k) => TONE_SYMBOLS[k]);
+
+  /**
+   * 文字係毋係以官方調符結尾（GIP 顯示个音節有調符）
+   * @param {string} text
+   * @returns {boolean}
+   */
+  function endsWithToneSymbol(text) {
+    return !!text && TONE_SYMBOL_CHARS.indexOf(text.charAt(text.length - 1)) !== -1;
+  }
+
   const TONE_MARK_REGEX = /[́̀̌̂̄]/;
   const TONE_MARK_REGEX_GLOBAL = /[́̀̌̂̄]/g;
 
@@ -81,6 +93,8 @@
 
   return {
     TONE_SYMBOLS,
+    TONE_SYMBOL_CHARS,
+    endsWithToneSymbol,
     convertSyllableToGIP,
     toGIP,
   };
