@@ -8,12 +8,26 @@
 
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require('./romaine-join.js'), require('./gip-converter.js'));
   } else {
-    root.pfsConverter = factory();
+    // 瀏覽器：romaine-join.js、gip-converter.js 可能比這支晚載入，等用著正去拿
+    root.pfsConverter = factory(null, null, root);
   }
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (joinModule, gipModule, root) {
   'use strict';
+
+  /** 撇號規則唯一來源：js/romaine-join.js（摎企盤 engine hpp_boundary 共一套） */
+  function getJoin() {
+    const join = joinModule || (root && root.romaineJoin);
+    if (!join) throw new Error('pfs-converter：需要先載入 js/romaine-join.js');
+    return join;
+  }
+
+  function getGip() {
+    const gip = gipModule || (root && root.gipConverter);
+    if (!gip) throw new Error('pfs-converter：需要先載入 js/gip-converter.js');
+    return gip;
+  }
 
   /**
    * 聲母長度優先對照表（避免如 n 搶在 ng 前比對）
@@ -587,36 +601,26 @@
     return result;
   }
 
-  /**
-   * Romaine 撇號隔音節判斷基底字母
-   */
-  function apostropheBaseLetter(ch) {
-    if (!ch) return '';
-    const base = ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-    return /^[a-z]$/.test(base) ? base : '';
+  /** 兩隻相鄰音節中間愛毋愛撇號：直接用 romaine-join.js 个規則 */
+  function needsApostrophe(prev, next) {
+    return getJoin().needsApostrophe(prev, next);
   }
 
   /**
-   * Romaine 兩隻音節中間个撇號規則（嚴謹八條規則）
-   * 摎客源翠企盤 engine/phonetics/src/hpp.rs hpp_boundary 共一套規則。
+   * 整串文字切成「原樣保留」摎「愛轉換个詞」兩種：
+   * HTML 標籤、空白、漢字、全半形標點、數字原樣；其他（白話字詞）交給 convertWord。
    */
-  function needsApostrophe(prev, next) {
-    const prevChars = Array.from(prev.normalize('NFD').replace(/\p{M}/gu, ''));
-    const nextChars = Array.from(next.normalize('NFD').replace(/\p{M}/gu, ''));
-    const p = apostropheBaseLetter(prevChars[prevChars.length - 1]);
-    const n0 = apostropheBaseLetter(nextChars[0]);
-    const n1 = apostropheBaseLetter(nextChars[1]);
-    if (!p || !n0) return false;
-    const isVowel = (c) => 'aeiou'.includes(c);
-    if ('bdgmn'.includes(p) && isVowel(n0)) return true; // 1. 子音韻尾＋母音
-    if (p === 'a' && 'iu'.includes(n0)) return true; // 2. a＋i／u
-    if (p === 'e' && n0 === 'u') return true; // 3. e＋u
-    if (p === 'i' && isVowel(n0)) return true; // 4. i＋母音
-    if (p === 'o' && n0 === 'i') return true; // 5. o＋i
-    if (p === 'u' && 'aei'.includes(n0)) return true; // 6. u＋a／e／i
-    if (isVowel(p) && n0 === 'n' && n1 === 'g') return true; // 7. 母音＋ng
-    if (p === 'n' && n0 === 'g') return true; // 8. n＋g
-    return false;
+  const PFS_TOKEN_SPLIT =
+    /(<[^>]+>|\s+|[\u3400-\u9fff]+|[,.;:!?"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)/g;
+  const PFS_TOKEN_KEEP =
+    /^(?:<[^>]+>|\s+|[,.;:!?"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)$/;
+
+  function mapPfsWords(text, convertWord) {
+    if (!text || typeof text !== 'string') return text || '';
+    return text
+      .split(PFS_TOKEN_SPLIT)
+      .map((token) => (!token || PFS_TOKEN_KEEP.test(token) ? token || '' : convertWord(token)))
+      .join('');
   }
 
   /**
@@ -627,14 +631,11 @@
    */
   function convertWordPfsToHpp(word) {
     if (!word) return '';
-    const syllables = word.split('-');
-    const converted = syllables.map((s) => convertSyllableToHPP(s));
-    let result = converted[0] || '';
-    for (let i = 1; i < converted.length; i++) {
-      if (needsApostrophe(converted[i - 1], converted[i])) {
-        result += "'";
-      }
-      result += converted[i];
+    const syllables = word.split('-').map((s) => convertSyllableToHPP(s));
+    let result = syllables[0] || '';
+    for (let i = 1; i < syllables.length; i++) {
+      if (needsApostrophe(syllables[i - 1], syllables[i])) result += "'";
+      result += syllables[i];
     }
     return result;
   }
@@ -646,54 +647,26 @@
    * @returns {string}
    */
   function toHPP(text) {
-    if (!text || typeof text !== 'string') return text || '';
-    // 嚴密隔離：HTML 標籤、空白、漢字、全半形標點符號、數字
-    const tokens = text.split(
-      /(<[^>]+>|\s+|[\u3400-\u9fff]+|[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)/g
-    );
-    return tokens
-      .map((token) => {
-        if (!token) return '';
-        if (
-          token.startsWith('<') && token.endsWith('>') ||
-          /^\s+$/.test(token) ||
-          /^[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+$/.test(token) ||
-          /^[0-9.]+$/.test(token)
-        ) {
-          return token;
-        }
-        return convertWordPfsToHpp(token);
-      })
-      .join('');
+    return mapPfsWords(text, convertWordPfsToHpp);
   }
 
   /**
    * 單一白話字詞轉教育部客家語拼音方案（GIP）
    * GIP 一律不保留 hyphen；有調符用調符，沒調符加空格。
    * @param {string} word
-   * @param {object} gipConverterObj
+   * @param {object} [gipConverterObj] - 省略就用 gip-converter.js
    * @returns {string}
    */
   function convertWordPfsToGip(word, gipConverterObj) {
     if (!word) return '';
-    const syllables = word.split('-');
-    const gipSyls = syllables.map((s) => {
-      const hpp = convertSyllableToHPP(s);
-      return gipConverterObj && gipConverterObj.convertSyllableToGIP
-        ? gipConverterObj.convertSyllableToGIP(hpp)
-        : hpp;
-    });
-
-    const TONE_SYMBOLS = ['ˊ', 'ˇ', 'ˋ', 'ˆ', '+'];
-    let result = gipSyls[0] || '';
-    for (let i = 1; i < gipSyls.length; i++) {
-      const prev = gipSyls[i - 1];
-      const prevLastChar = prev.slice(-1);
-      const hasTone = TONE_SYMBOLS.includes(prevLastChar);
-      if (!hasTone) {
-        result += ' '; // 沒調符加空格
-      }
-      result += gipSyls[i]; // 有調符直接相連
+    const gip = gipConverterObj || getGip();
+    const syllables = word
+      .split('-')
+      .map((s) => gip.convertSyllableToGIP(convertSyllableToHPP(s)));
+    let result = syllables[0] || '';
+    for (let i = 1; i < syllables.length; i++) {
+      if (!gip.endsWithToneSymbol(syllables[i - 1])) result += ' '; // 沒調符加空格
+      result += syllables[i]; // 有調符直接相連
     }
     return result;
   }
@@ -701,36 +674,11 @@
   /**
    * 整串 臺灣客語白話字（PFS）直接轉為 GIP
    * @param {string} text
-   * @param {object} [gipConverterObj]
+   * @param {object} [gipConverterObj] - 省略就用 gip-converter.js
    * @returns {string}
    */
   function toGIPFromPFS(text, gipConverterObj) {
-    if (!text || typeof text !== 'string') return text || '';
-    const gipObj =
-      gipConverterObj ||
-      (typeof gipConverter !== 'undefined'
-        ? gipConverter
-        : typeof window !== 'undefined'
-        ? window.gipConverter
-        : null);
-
-    const tokens = text.split(
-      /(<[^>]+>|\s+|[\u3400-\u9fff]+|[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+|[0-9.]+)/g
-    );
-    return tokens
-      .map((token) => {
-        if (!token) return '';
-        if (
-          token.startsWith('<') && token.endsWith('>') ||
-          /^\s+$/.test(token) ||
-          /^[,.;:!?\"'()\[\]{}—…【】（）「」『』，。、；：！？~～/／]+$/.test(token) ||
-          /^[0-9.]+$/.test(token)
-        ) {
-          return token;
-        }
-        return convertWordPfsToGip(token, gipObj);
-      })
-      .join('');
+    return mapPfsWords(text, (word) => convertWordPfsToGip(word, gipConverterObj));
   }
 
   return {
