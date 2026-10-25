@@ -352,7 +352,7 @@ def build_meinung(cert, south_rows):
     return rows, skipped
 
 
-def build_meinung_gip(gip, table):
+def build_meinung_gip(gip, table, south_table=None):
     """教典美濃：以教典南四縣个讀音做底推。鍵用「腔＋詞目」（教典 idx 會位移）。
 
     回傳附表列（一隻讀音一列）摎網站用个 {'教典|詞': 美濃讀音（ / 隔開）}，
@@ -382,6 +382,36 @@ def build_meinung_gip(gip, table):
                 meinungs.append(meinung)
         # 網站淨收「詞彙性差異」（字級對照改過聲母韻母，例：冷 láng→nāng）：
         # 純 24→33 个由網站用 ruby 直接標，毋使存
+        if lexical:
+            web[f'教典|{word}'] = ' / '.join(meinungs)
+    # 教典南四縣無收、淨教典四縣有个詞（例：芋卵，南四縣教典淨收芋卵仔）：
+    # 先用逐音節規則由北四縣推南四縣音，再推美濃，毋就恁漏掉
+    for word, norths in (gip['四'].items() if south_table is not None else []):
+        if word in gip['南']:
+            continue
+        meinungs, lexical = [], False
+        for north in norths:
+            south, how, sm = derive_syllables({'word': word, 'north': north, 'pos': None}, south_table)
+            if not entry_layer(how, sm):
+                continue        # 有音節無證據，推毋出就毋寫
+            meinung, used_table = derive_meinung(word, south, table)
+            lexical = lexical or used_table
+            rows.append({
+                '來源檔': '教典四',
+                '編號': '',
+                '詞目': word,
+                '北四縣': north,
+                '讀音': meinung,
+                '變體': ['美濃'],
+                '推導層': '系統規則',
+                '待確認': False,
+                '同南四縣': syllables(meinung) == syllables(south),
+                '南四縣來源': '教典四縣推導',
+                '用著字級對照': used_table,
+                '讀音詞目': '',
+            })
+            if meinung not in meinungs:
+                meinungs.append(meinung)
         if lexical:
             web[f'教典|{word}'] = ' / '.join(meinungs)
     return rows, web
@@ -427,7 +457,7 @@ def main():
     for r in m_rows:
         r.setdefault('讀音詞目', '')
     n_cert_rows = len(m_rows)
-    g_rows, g_web = build_meinung_gip(gip, meinung_table(cert))
+    g_rows, g_web = build_meinung_gip(gip, meinung_table(cert), table)
     m_rows += g_rows
     write_rows(os.path.join(OUT_DIR, '美濃'), m_rows, {**meta, 'base': '南四縣（認證原標＋南四縣附表）'})
     # 網站版淨存讀音，而且淨收詞彙性差異（用著字級對照）个：24→33 个聲調部分由網站 ruby 直接標
