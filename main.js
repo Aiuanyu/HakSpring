@@ -5252,12 +5252,11 @@ function initializeAppUI() {
       return;
     }
 
-    if (
-      (event.key === '/' || event.code === 'Slash') &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.altKey
-    ) {
+    const isSlashKey = event.key === '/' || event.code === 'Slash';
+    const isPlainSlash = isSlashKey && !event.ctrlKey && !event.metaKey && !event.altKey;
+    const isCtrlOrCmdSlash = isSlashKey && (event.ctrlKey || event.metaKey) && !event.altKey;
+
+    if (isPlainSlash || isCtrlOrCmdSlash) {
       const isTextInputFocused =
         activeElement &&
         (activeElement.tagName === 'INPUT' ||
@@ -5265,7 +5264,7 @@ function initializeAppUI() {
           activeElement.tagName === 'SELECT' ||
           activeElement.isContentEditable);
 
-      if (!isTextInputFocused) {
+      if (isCtrlOrCmdSlash || !isTextInputFocused) {
         const hasOpenModal = Array.from(
           document.querySelectorAll('.modal-overlay, #dailyWordModal'),
         ).some(
@@ -5278,7 +5277,7 @@ function initializeAppUI() {
           event.preventDefault();
           searchInput.focus();
           searchInput.select();
-          console.log('Global hotkey: / pressed, focused search input.');
+          console.log('Global hotkey: / or Ctrl/Cmd+/ pressed, focused search input.');
           return;
         }
       }
