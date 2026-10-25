@@ -11,7 +11,7 @@
 | 代號 | 使用端 | 程式 |
 |---|---|---|
 | 網站 | 客源翠網站的顯示、查詞 | `main.js`（`formatPhoneticForDisplay`、`renderPhoneticNoteLabels`、`formatSentenceVariants`）、`js/variant-parser.js`、`process_all_data.py`（產 JSON、查詢欄） |
-| 補字 | 補字典、多音字補音、次方言補音（逐字對齊） | `scripts/build_supp_dict.py`（`split_readings`、`load_gip_readings`、`expand_parens`、`align`）、`scripts/build_subdialect_fill.py` |
+| 補字 | 補字典、多音字補音、次方言補音（逐字對齊）、jf7000 擬音 | `scripts/build_jf_nisim.py`、`scripts/build_supp_dict.py`（`split_readings`、`load_gip_readings`、`expand_parens`、`align`）、`scripts/build_subdialect_fill.py` |
 | 企盤 | 客源翠企盤詞庫建置 | Kipan `dictionary/sources/official/hakspring/extract_and_build.js`（`getLineVariants`、`splitReadingVariants`、`expandParens`）。**目前只建四縣**。 |
 
 ✅ 已處理　⚠️ 部分處理或有副作用　❌ 未處理　－ 不適用

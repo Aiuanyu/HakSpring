@@ -714,4 +714,8 @@ if __name__ == '__main__':
     import build_subdialect_fill
     build_subdialect_fill.main()
 
+    # 審音佇列（review-readings.html 讀），見 data/sub-dialects-fill/README.md
+    import build_review_queue
+    build_review_queue.main()
+
     

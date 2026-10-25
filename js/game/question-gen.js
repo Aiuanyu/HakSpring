@@ -600,7 +600,7 @@ function buildOptionsForType(target, type, allWords) {
     options = [cleanTarget, ...distractors];
   } else if (type === 'l') {
     // 聽力題：傳回整個 word 物件，且干擾項要是音節相同、拼音最相似的字
-    // 20260724 蒂兒：改用「客家語」（漢字）計算音節數，避開拼音欄位中
+    // 20260724：改用「客家語」（漢字）計算音節數，避開拼音欄位中
     // 「又讀」「俗音」「小稱變調讀」等資料陷阱。客語一字一音節。
     const countSyllables = (word) => {
       return getChineseCharCount(word.客家語);
