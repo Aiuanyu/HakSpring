@@ -239,8 +239,8 @@ it('模式 5：美濃音 + 南四縣雙變體（四基 8-26 卵）', () => {
   assert.strictEqual(res.main.phonetic, 'lòn');
 
   assert.strictEqual(res.variants.length, 2);
-  assert.strictEqual(res.variants[0].label, '南');
-  assert.strictEqual(res.variants[0].title, '南四縣');
+  assert.strictEqual(res.variants[0].label, '美');
+  assert.strictEqual(res.variants[0].title, '美濃');
   assert.strictEqual(res.variants[0].word, '');
   assert.strictEqual(res.variants[0].phonetic, 'nòn');
   assert.strictEqual(res.variants[0].phoneticOnly, true);
