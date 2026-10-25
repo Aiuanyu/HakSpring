@@ -31,6 +31,10 @@ assert.strictEqual(convertSyllableToHPP('siên'), 'xién'); // s＋細音 → x
 assert.strictEqual(convertSyllableToHPP('phiùng'), 'piǔng'); // ph → p
 assert.strictEqual(convertSyllableToHPP('kiet'), 'gièd'); // k → g、t 入聲 → d
 assert.strictEqual(convertSyllableToHPP('yi'), 'i'); // 零聲母 y 去掉
+assert.strictEqual(convertSyllableToHPP('koa'), 'gua'); // 經典合口呼 oa → ua
+assert.strictEqual(convertSyllableToHPP('khoan'), 'kuan'); // khoan → kuan
+assert.strictEqual(convertSyllableToHPP('khoai'), 'kuai'); // khoai → kuai
+assert.strictEqual(pfs.toPFS('guá'), 'koâ'); // HPP ua → PFS oa (四縣)
 console.log('  ✅ 2. 聲母 PASS');
 
 // 3. 空韻 ṳ → ii、成音節 ng̀／m̀、大小寫還原

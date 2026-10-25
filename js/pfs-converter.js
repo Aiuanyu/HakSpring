@@ -263,6 +263,11 @@
       rhyme = rhyme.replace(/ue/g, 'oe');
     }
 
+    // ua 轉為 oa（PFS 經典拼寫：guá -> koâ, kuán -> khoán, kuai -> khoai）
+    if (rhyme.includes('ua')) {
+      rhyme = rhyme.replace(/ua/g, 'oa');
+    }
+
     // 入聲韻尾轉換：-b -> -p, -d -> -t, -g -> -k
     if (rhyme.endsWith('b')) {
       rhyme = rhyme.slice(0, -1) + 'p';
@@ -550,6 +555,11 @@
     // oe -> ue
     if (rhyme.includes('oe')) {
       rhyme = rhyme.replace(/oe/g, 'ue');
+    }
+
+    // oa -> ua（PFS 經典合口呼轉客拼標準：koa -> gua, khoan -> kuan, khoai -> kuai）
+    if (rhyme.includes('oa')) {
+      rhyme = rhyme.replace(/oa/g, 'ua');
     }
 
     let stem = hppInit + rhyme;
