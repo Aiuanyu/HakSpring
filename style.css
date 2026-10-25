@@ -5981,8 +5981,9 @@ mark {
   border: 1px dashed currentColor;
   opacity: 0.85;
 }
-.variant-label-南.variant-derived { color: #d97706; }
-.variant-label-美.variant-derived { color: #db2777; }
+/* 淺色主題：文字色對白底（#fff）摎表格綠底（#b7c4a5）都愛 ≥ 4.5:1（WCAG AA），故用深色 */
+.variant-label-南.variant-derived { color: #7c2d12; }
+.variant-label-美.variant-derived { color: #831843; }
 
 /* 饒平系 Badge 色彩 */
 .variant-label-竹 { background: #06b6d4; color: white; }

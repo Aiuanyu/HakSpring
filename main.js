@@ -1405,18 +1405,36 @@ const SUB_DIALECT_FILL_FILES = { 南: '南四縣', 美: '美濃' };
 const SUB_DIALECT_FILL_LOADING = {};
 const MEINUNG_FILL_STORAGE_KEY = 'showMeinungFill';
 
+/**
+ * 網址 ?mn=1 个「本次瀏覽」覆蓋：只讀一擺、毋寫 localStorage，
+ * 避免分享連結改著收件人（會經雲端同步）个偏好。使用者自家撥開關，或雲端拉下新值，就解除覆蓋。
+ */
+let meinungSessionOverride = null;
+try {
+  if (new URLSearchParams(window.location.search).get('mn') === '1') meinungSessionOverride = true;
+} catch (e) {
+  // 無 location（測試環境）就當無覆蓋
+}
+
 /** 設定「美濃腔」有開無（預設關）。開等：四縣／南四縣个 24 調註 ruby 33，加詞彙性差異个美濃音一列。 */
 function isMeinungFillEnabled() {
+  if (meinungSessionOverride !== null) return meinungSessionOverride;
   try {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('mn') === '1') {
-      localStorage.setItem(MEINUNG_FILL_STORAGE_KEY, 'true');
-      return true;
-    }
     return localStorage.getItem(MEINUNG_FILL_STORAGE_KEY) === 'true';
   } catch (e) {
     return false;
   }
+}
+
+/**
+ * 美濃腔開等時，四縣／南四縣个顯示名前背加「美濃」（摘要、頁面標題用）。
+ * @param {string} dialectName - 腔名（四縣、南四縣…）
+ * @param {string} baseName - 原本愛顯示个名（腔名，抑係 fullLvlName）
+ */
+function getMeinungDisplayName(dialectName, baseName) {
+  return isMeinungFillEnabled() && (dialectName === '四縣' || dialectName === '南四縣')
+    ? '美濃' + baseName
+    : baseName;
 }
 
 /**
@@ -3774,11 +3792,14 @@ function initializeAppUI() {
       if (isCopying) return;
       isCopying = true;
       let currentUrl = window.location.href;
+      // 美濃腔開等就帶 mn=1，無開就摒掉，毋會留著舊 mn
+      const urlObj = new URL(currentUrl);
       if (isMeinungFillEnabled()) {
-        const urlObj = new URL(currentUrl);
         urlObj.searchParams.set('mn', '1');
-        currentUrl = urlObj.toString();
+      } else {
+        urlObj.searchParams.delete('mn');
       }
+      currentUrl = urlObj.toString();
       // 複製个內容：摘要文字換行後再擺網址。
       // 來源用 dataset.shareText —— 佢係專門為著分享做个版本，
       // 腔調名前背有加站名（例：（客源翠四縣）），畫面頂高个摘要毋使恁長。
@@ -4490,10 +4511,7 @@ function initializeAppUI() {
     const paginatedResults = results.slice(startIndex, endIndex);
 
     const searchModeText = searchMode === '客話' ? '客文' : '華文';
-    let displayDialect = selectedDialect;
-    if (isMeinungFillEnabled() && (selectedDialect === '四縣' || selectedDialect === '南四縣')) {
-      displayDialect = '美濃' + selectedDialect;
-    }
+    const displayDialect = getMeinungDisplayName(selectedDialect, selectedDialect);
     updatePageTitle([
       `${displayDialect}尋「${keyword}」（${searchModeText}）`,
     ]);
@@ -6367,10 +6385,7 @@ function initializeAppUI() {
       renderFilteredEmptyState();
 
       const summaryTextContent = document.getElementById('summary-text-content');
-      let displayLvlName = dialectInfo.fullLvlName;
-      if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
-        displayLvlName = '美濃' + displayLvlName;
-      }
+      const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
       if (summaryTextContent) {
         const fullCategoryName = getFullOfficialCategoryName(category, rawCategoryData);
         const formattedCategory = formatCategoryLabel(fullCategoryName);
@@ -6448,10 +6463,7 @@ function initializeAppUI() {
       vocabularyArray,
     );
     const formattedCategory = formatCategoryLabel(fullCategoryName);
-    let displayLvlName = dialectInfo.fullLvlName;
-    if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
-      displayLvlName = '美濃' + displayLvlName;
-    }
+    const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
     updatePageTitle([displayLvlName, formattedCategory]);
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
     updateResultsSummaryVisibility();
@@ -6647,10 +6659,7 @@ function initializeAppUI() {
         );
         const formattedCategory = formatCategoryLabel(fullCategoryName);
 
-        let displayLvlName = dialectInfo.fullLvlName;
-        if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
-          displayLvlName = '美濃' + displayLvlName;
-        }
+        const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
 
         let summaryText = `${displayLvlName}：${formattedCategory}`;
         if (totalResults > 0) {
@@ -8526,34 +8535,33 @@ function initializeAppUI() {
     }
 
     /**
+     * 美濃腔開關變了，只換分類摘要／頁面標題前背个「美濃」字頭。
+     * 筆數照原本摘要（originalText）裡个，毋重算，避免摎篩選、分頁个總數無共樣。
+     */
+    function refreshCategorySummaryMeinungPrefix() {
+      const summaryTextContent = document.getElementById('summary-text-content');
+      if (!summaryTextContent || !g_currentDialectInfo) return;
+      const displayLvlName = getMeinungDisplayName(
+        g_currentDialectInfo.腔名,
+        g_currentDialectInfo.fullLvlName,
+      );
+      const fullCategoryName = getFullOfficialCategoryName(g_currentCategory, activeCategoryData || []);
+      const formattedCategory = formatCategoryLabel(fullCategoryName);
+      const countMatch = (summaryTextContent.dataset.originalText || '').match(/ \(\d+\)$/);
+      const summaryText = `${displayLvlName}：${formattedCategory}${countMatch ? countMatch[0] : ''}`;
+      summaryTextContent.textContent = `${summaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
+      summaryTextContent.dataset.originalText = summaryText;
+      summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
+      updatePageTitle([displayLvlName, formattedCategory]);
+    }
+
+    /**
      * 標音顯示方式變了（顯示模式、美濃推導音），重畫當前畫面个詞彙標音：
      * 表格就地更新、查詞結果重查一擺。
      */
     function rerenderCurrentVocabDisplay() {
       // 記住當前捲動高度，避免重新算繪時畫面跳動回頂端
       const savedScrollY = window.scrollY;
-
-      // Update the summary text and share text for Meinung mode if applicable
-      const summaryTextContent = document.getElementById('summary-text-content');
-      if (summaryTextContent && g_currentDialectInfo) {
-        let displayLvlName = g_currentDialectInfo.fullLvlName;
-        if (isMeinungFillEnabled() && (g_currentDialectInfo.腔名 === '四縣' || g_currentDialectInfo.腔名 === '南四縣')) {
-          displayLvlName = '美濃' + displayLvlName;
-        }
-        const fullCategoryName = getFullOfficialCategoryName(g_currentCategory, activeCategoryData || []);
-        const formattedCategory = formatCategoryLabel(fullCategoryName);
-        let newSummaryText = `${displayLvlName}：${formattedCategory}`;
-        const totalRows = (activeCategoryData && activeCategoryData.length) || 0;
-        if (totalRows > 0) {
-           newSummaryText += ` (${totalRows})`;
-        } else {
-           newSummaryText += ` (0)`;
-        }
-        summaryTextContent.textContent = `${newSummaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
-        summaryTextContent.dataset.originalText = newSummaryText;
-        summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${newSummaryText}`;
-        updatePageTitle([displayLvlName, formattedCategory]);
-      }
 
       // 1. 若當前畫面正在顯示主分類／認證／教典表格（#category-table 存在）
       const categoryTable = document.getElementById('category-table');
@@ -8567,6 +8575,7 @@ function initializeAppUI() {
         // 就地更新詞彙格个標音，毋重畫整張表：重畫會換掉 <audio> 摎正在播放个列，
         // 自動播放會中斷，播放控制个 UI 也會摎新畫面脫鉤。
         refreshCategoryPhoneticsInPlace();
+        refreshCategorySummaryMeinungPrefix();
       }
       // 2. 若當前畫面正在顯示搜尋結果（URL 含 ca 參數，且無 category-table）
       else {
@@ -8606,6 +8615,8 @@ function initializeAppUI() {
      * 所以雲端拉下別台裝置个偏好時也做得直接呼叫。
      */
     function applyMeinungFillSetting(enabled) {
+      // 使用者撥開關抑係雲端拉下新值，就以這為準，解除網址 mn=1 个本次覆蓋
+      meinungSessionOverride = null;
       const toggle = document.getElementById('meinungFillToggle');
       if (toggle) toggle.checked = !!enabled;
       if (enabled) {
