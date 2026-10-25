@@ -4303,7 +4303,12 @@ function initializeAppUI() {
     }
 
     searchPopup.style.display = 'none';
-    searchInput.blur();
+    searchPopup.classList.remove('active');
+    searchContainer.classList.remove('active');
+    if (searchInput) {
+      searchInput.setAttribute('aria-expanded', 'false');
+      searchInput.blur();
+    }
 
     const learningPanel = document.getElementById('learningSelectionPanel');
     if (learningPanel) {
@@ -8881,40 +8886,204 @@ function initializeAppUI() {
   }
 
   if (searchInput) {
+    const openSearchPopup = () => {
+      searchPopup.style.display = 'block';
+      searchPopup.classList.add('active');
+      searchContainer.classList.add('active');
+      searchInput.setAttribute('aria-expanded', 'true');
+    };
+
+    const closeSearchPopup = () => {
+      searchPopup.style.display = 'none';
+      searchPopup.classList.remove('active');
+      searchContainer.classList.remove('active');
+      searchInput.setAttribute('aria-expanded', 'false');
+    };
+
     searchInput.addEventListener('click', (event) => {
       event.stopPropagation();
-      searchPopup.style.display = 'block';
+      openSearchPopup();
     });
+
     document.addEventListener('click', (event) => {
       if (!searchContainer.contains(event.target)) {
-        searchPopup.style.display = 'none';
+        closeSearchPopup();
       }
     });
-    const triggerSearchOnChange = () => {
-      localStorage.setItem(
-        'lastSearchDialect',
-        document.querySelector('#search-popup input[name="dialect"]:checked')
-          .value,
+
+    const saveSearchSettings = (shouldSearch = false) => {
+      const checkedDialect = document.querySelector(
+        '#search-popup input[name="dialect"]:checked',
       );
-      localStorage.setItem(
-        'lastSearchMode',
-        document.querySelector(
-          '#search-popup input[name="search-mode"]:checked',
-        ).value,
+      if (checkedDialect) {
+        localStorage.setItem('lastSearchDialect', checkedDialect.value);
+      }
+      const checkedMode = document.querySelector(
+        '#search-popup input[name="search-mode"]:checked',
       );
-      if (searchInput.value.trim()) {
+      if (checkedMode) {
+        localStorage.setItem('lastSearchMode', checkedMode.value);
+      }
+      if (shouldSearch && searchInput.value.trim()) {
         performSearch();
       }
     };
 
     searchDialectRadios.forEach((radio) =>
-      radio.addEventListener('change', triggerSearchOnChange),
+      radio.addEventListener('change', () => saveSearchSettings(true)),
     );
     searchModeRadios.forEach((radio) =>
-      radio.addEventListener('change', triggerSearchOnChange),
+      radio.addEventListener('change', () => saveSearchSettings(true)),
     );
+
+    const getNavigableItems = () => {
+      return Array.from(
+        searchPopup.querySelectorAll(
+          'input[name="dialect"], input[name="search-mode"], #showcase-btn',
+        ),
+      ).filter((el) => !el.disabled && el.offsetParent !== null);
+    };
+
     searchInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') performSearch();
+      if (event.key === 'Enter') {
+        closeSearchPopup();
+        performSearch();
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        openSearchPopup();
+        const targetRadio =
+          searchPopup.querySelector('input[name="dialect"]:checked') ||
+          searchDialectRadios[0];
+        if (targetRadio) {
+          targetRadio.focus();
+        }
+      } else if (event.key === 'Escape') {
+        if (searchPopup.style.display === 'block') {
+          event.preventDefault();
+          closeSearchPopup();
+        }
+      }
+    });
+
+    searchPopup.addEventListener('keydown', (event) => {
+      // 數字鍵導覽：1～5 四海大平安、6 南四縣、9 尋客詞、0 尋 Chinese
+      const numberShortcutMap = {
+        '1': { name: 'dialect', value: '四縣' },
+        '2': { name: 'dialect', value: '海陸' },
+        '3': { name: 'dialect', value: '大埔' },
+        '4': { name: 'dialect', value: '饒平' },
+        '5': { name: 'dialect', value: '詔安' },
+        '6': { name: 'dialect', value: '南四縣' },
+        '9': { name: 'search-mode', value: '客話' },
+        '0': { name: 'search-mode', value: '華語' },
+      };
+
+      if (
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        event.key in numberShortcutMap
+      ) {
+        event.preventDefault();
+        const targetConfig = numberShortcutMap[event.key];
+        const targetRadio = searchPopup.querySelector(
+          `input[name="${targetConfig.name}"][value="${targetConfig.value}"]`,
+        );
+        if (targetRadio) {
+          targetRadio.checked = true;
+          targetRadio.focus();
+          saveSearchSettings(false); // 保持面板開啟，更新設定
+        }
+        return;
+      }
+
+      const items = getNavigableItems();
+      const currentIndex = items.indexOf(document.activeElement);
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        const nextItem = items[nextIndex];
+        if (nextItem) {
+          nextItem.focus();
+          if (nextItem.type === 'radio') {
+            nextItem.checked = true;
+            saveSearchSettings(false); // 保持面板開啟繼續導覽，不關閉、不提前觸發搜尋
+          }
+        }
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        let prevIndex = currentIndex - 1;
+        if (prevIndex < 0) {
+          prevIndex = items.length - 1; // 頂端循環至末尾，持續在面板內部導覽
+        }
+        const prevItem = items[prevIndex];
+        if (prevItem) {
+          prevItem.focus();
+          if (prevItem.type === 'radio') {
+            prevItem.checked = true;
+            saveSearchSettings(false); // 保持面板開啟繼續導覽
+          }
+        }
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        const nextItem = items[nextIndex];
+        if (nextItem) {
+          nextItem.focus();
+          if (nextItem.type === 'radio') {
+            nextItem.checked = true;
+            saveSearchSettings(false);
+          }
+        }
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        let prevIndex = currentIndex - 1;
+        if (prevIndex < 0) {
+          prevIndex = items.length - 1;
+        }
+        const prevItem = items[prevIndex];
+        if (prevItem) {
+          prevItem.focus();
+          if (prevItem.type === 'radio') {
+            prevItem.checked = true;
+            saveSearchSettings(false);
+          }
+        }
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        closeSearchPopup();
+        searchInput.focus();
+      } else if (event.key === 'Enter') {
+        if (
+          document.activeElement &&
+          document.activeElement.id === 'showcase-btn'
+        ) {
+          return;
+        }
+        if (document.activeElement && document.activeElement.type === 'radio') {
+          event.preventDefault();
+          document.activeElement.checked = true;
+          saveSearchSettings(false);
+          closeSearchPopup();
+          searchInput.focus();
+          if (searchInput.value.trim()) {
+            performSearch();
+          }
+        }
+      } else if (event.key === 'Tab') {
+        if (event.shiftKey) {
+          if (currentIndex <= 0) {
+            event.preventDefault();
+            items[items.length - 1]?.focus();
+          }
+        } else {
+          if (currentIndex === items.length - 1) {
+            event.preventDefault();
+            items[0]?.focus();
+          }
+        }
+      }
     });
   }
 

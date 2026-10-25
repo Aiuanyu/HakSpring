@@ -3593,7 +3593,51 @@ tr.ios-autoplay-instruction td::before {
 #search-mode-selection label {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+#dialect-selection label:hover,
+#search-mode-selection label:hover,
+#dialect-selection label:has(input:focus-visible),
+#search-mode-selection label:has(input:focus-visible) {
+  background-color: rgba(59, 130, 246, 0.12);
+}
+
+#search-popup input[type="radio"]:focus-visible {
+  outline: 2px solid var(--focus-glow-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* 查詢面板快捷鍵數字細標籤（桌面瀏覽器專用：極簡精巧微型標籤） */
+.popup-shortcut {
+  display: none;
+}
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .popup-shortcut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62em;
+    font-family: var(--roman-font) !important;
+    font-weight: 500;
+    line-height: 1;
+    min-width: 12px;
+    height: 12px;
+    padding: 0 2px;
+    margin: 0 2px 0 1px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    color: #737373;
+    box-shadow: none;
+    vertical-align: middle;
+    opacity: 0.8;
+  }
 }
 
 /* --- 查詢結果相關樣式 (Search Results) --- */
@@ -3631,6 +3675,21 @@ mark {
   #search-popup {
     background-color: var(--dark-surface-color, #2c2c2c);
     border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  #dialect-selection label:hover,
+  #search-mode-selection label:hover,
+  #dialect-selection label:has(input:focus-visible),
+  #search-mode-selection label:has(input:focus-visible) {
+    background-color: rgba(96, 165, 250, 0.18);
+  }
+
+  .popup-shortcut {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #9e9e9e;
+    box-shadow: none;
+    opacity: 0.85;
   }
 
   /* 彈出面板內部分隔線 */

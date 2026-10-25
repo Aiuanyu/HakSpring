@@ -179,43 +179,49 @@
             type="text"
             id="search-input"
             placeholder="查語詞（撳 / 或 Ctrl+/ 跳過來）"
-            title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦）"
+            title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦，撳 ↓ 打開選項）"
+            aria-haspopup="true"
+            aria-expanded="false"
           />
-          <div id="search-popup">
+          <div id="search-popup" role="region" aria-label="查詢設定">
             <div id="dialect-selection">
               <p>請擇腔調：</p>
               <div class="dialect-row">
                 <label
                   ><input type="radio" name="dialect" value="四縣" checked />
-                  四縣</label
+                  <kbd class="popup-shortcut">1</kbd>四縣</label
                 >
                 <label
                   ><input type="radio" name="dialect" value="南四縣" />
-                  南四縣</label
+                  <kbd class="popup-shortcut">6</kbd>南四縣</label
                 >
               </div>
               <label
-                ><input type="radio" name="dialect" value="海陸" /> 海陸</label
+                ><input type="radio" name="dialect" value="海陸" />
+                <kbd class="popup-shortcut">2</kbd>海陸</label
               >
               <label
-                ><input type="radio" name="dialect" value="大埔" /> 大埔</label
+                ><input type="radio" name="dialect" value="大埔" />
+                <kbd class="popup-shortcut">3</kbd>大埔</label
               >
               <label
-                ><input type="radio" name="dialect" value="饒平" /> 饒平</label
+                ><input type="radio" name="dialect" value="饒平" />
+                <kbd class="popup-shortcut">4</kbd>饒平</label
               >
               <label
-                ><input type="radio" name="dialect" value="詔安" /> 詔安</label
+                ><input type="radio" name="dialect" value="詔安" />
+                <kbd class="popup-shortcut">5</kbd>詔安</label
               >
             </div>
             <div id="search-mode-selection">
               <p>請擇查詢模式：</p>
               <label
                 ><input type="radio" name="search-mode" value="客話" checked />
-                尋客詞（做得打漢字／拼音）</label
+                <kbd class="popup-shortcut">9</kbd>尋客詞（做得打漢字／拼音）</label
               >
               <label
                 ><input type="radio" name="search-mode" value="華語" />
-                尋華語詞義還係例句翻譯</label
+                <kbd class="popup-shortcut">0</kbd>尋 Chinese（華語詞義／例句翻譯）</label
               >
             </div>
             <button
