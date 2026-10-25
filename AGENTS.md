@@ -105,6 +105,15 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 - **JavaScript 邏輯**：顯示／隱藏 modal 个邏輯愛寫在 `main.js` 个 `initializeAppUI` 函式裡肚。用 `style.display = 'flex'` 來顯示 modal，用 `style.display = 'none'` 來隱藏。
 - **全螢幕型 Modal 例外**：若新 modal 是全螢幕沉浸式體驗（如 `#dailyWordModal`），可使用獨立的 `xxx-fullscreen-modal` 結構與專屬 class，不強制套用上述共用的對話方塊規範。
 
+### 色彩對比檢查（WCAG）
+
+- **【鐵則】改著顏色、背景、badge、標籤等視覺樣式，愛用「網頁色彩識別度標準」(WCAG 2.x 對比度) 實算檢查，毋好淨靠目視**：
+    - 一般文字（含小字 badge）對比度愛 **≥ 4.5:1**（AA）；大字（≥ 24px，抑係 ≥ 18.66px 粗體）愛 **≥ 3:1**。
+    - **淺色摎暗色主題兩邊都愛驗**；而且愛對**實際會遇著个全部背景色**驗，毋單淨對白底。例如表格奇偶列个綠底（`#b7c4a5`）、暗色底（`#1c1d1f`、`#232426`）。
+    - 用戶若提供 Chrome 截圖，愛從截圖取實際色（或對照 `style.css`），照截圖个畫面逐個元件檢查，毋好直接當做看過。
+    - 驗證方法：用相對亮度公式（Python／JS 十幾行就做得）算前景摎背景个對比度；抑係 Chrome DevTools 个 Contrast ratio 顯示。算出來毋達標，就調整顏色（淺色主題用較深字色、暗色主題用較淺字色）再算過，**結果（色碼＋比值）寫入 PR／commit 說明抑係 Obsidian 筆記**。
+    - 相對亮度公式：`c' = c/12.92`（`c ≤ 0.03928`），否則 `((c+0.055)/1.055)^2.4`；`L = 0.2126R + 0.7152G + 0.0722B`；對比度 `(L亮+0.05)/(L暗+0.05)`。
+
 ### 頁首按鈕
 
 - **樣式**：加到主要頁首（`<h3>` id=`header`）个按鈕，樣式愛一致。愛將新按鈕个 ID 加到 `style.css` 裡肚个群組選擇器（`#infoButton, #showRomanizerBtn, ...`），來套用正確个基本摎懸停樣式。

@@ -5975,17 +5975,15 @@ mark {
 /* 四縣系 Badge 色彩 */
 .variant-label-北 { background: #3b82f6; color: white; }
 .variant-label-南 { background: #f59e0b; color: white; }
-.variant-derived {
-  display: inline-block;
-  margin-left: 2px;
-  padding: 0 4px;
-  border: 1px dashed currentColor;
-  border-radius: 4px;
-  font-size: 0.7em;
-  opacity: 0.75;
-  vertical-align: middle;
-}
 .variant-label-美 { background: #ec4899; color: white; }
+.variant-label.variant-derived {
+  background: transparent !important;
+  border: 1px dashed currentColor;
+  opacity: 0.85;
+}
+/* 淺色主題：文字色對白底（#fff）摎表格綠底（#b7c4a5）都愛 ≥ 4.5:1（WCAG AA），故用深色 */
+.variant-label-南.variant-derived { color: #7c2d12; }
+.variant-label-美.variant-derived { color: #831843; }
 
 /* 饒平系 Badge 色彩 */
 .variant-label-竹 { background: #06b6d4; color: white; }
@@ -6024,6 +6022,8 @@ mark {
   .variant-label-北 { background: #2563eb; }
   .variant-label-南 { background: #d97706; }
   .variant-label-美 { background: #db2777; }
+  .variant-label-南.variant-derived { color: #f59e0b; }
+  .variant-label-美.variant-derived { color: #f472b6; }
   .variant-label-竹 { background: #0891b2; }
   .variant-label-卓 { background: #7c3aed; }
   .variant-label-桃 { background: #059669; }

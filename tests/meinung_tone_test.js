@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 global.window = {
+  location: { search: "" },
   reverseToneMappingData: JSON.parse(fs.readFileSync(path.join(__dirname, '../reverse_tone_mapping.json'), 'utf8')),
   sandhiRulesData: JSON.parse(fs.readFileSync(path.join(__dirname, '../sandhi_rules.json'), 'utf8')),
 };
