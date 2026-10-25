@@ -1332,7 +1332,8 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     const badge = document.createElement('span');
     badge.className = `variant-label variant-label-${entry.label}`;
     if (entry.derived && (entry.label === '南' || entry.label === '美')) {
-      badge.textContent = entry.label + '擬';
+      badge.textContent = '擬' + entry.label;
+      badge.className += ' variant-derived';
       badge.title = '認證無標這隻音，客源翠程式推導（見 data/sub-dialects-fill/README.md）';
     } else {
       badge.textContent = entry.label;
