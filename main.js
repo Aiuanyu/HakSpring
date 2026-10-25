@@ -1331,16 +1331,14 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   if (entry.label) {
     const badge = document.createElement('span');
     badge.className = `variant-label variant-label-${entry.label}`;
-    badge.textContent = entry.label;
-    if (entry.title) badge.title = entry.title;
-    block.appendChild(badge);
-    if (entry.derived) {
-      const derived = document.createElement('span');
-      derived.className = 'variant-derived';
-      derived.textContent = '推導';
-      derived.title = '認證無標這隻音，客源翠程式推導（見 data/sub-dialects-fill/README.md）';
-      block.appendChild(derived);
+    if (entry.derived && (entry.label === '南' || entry.label === '美')) {
+      badge.textContent = entry.label + '擬';
+      badge.title = '認證無標這隻音，客源翠程式推導（見 data/sub-dialects-fill/README.md）';
+    } else {
+      badge.textContent = entry.label;
+      if (entry.title) badge.title = entry.title;
     }
+    block.appendChild(badge);
   }
 
   // 2. 標音處理（格式化 + sandhi 變調）
@@ -1409,6 +1407,11 @@ const MEINUNG_FILL_STORAGE_KEY = 'showMeinungFill';
 /** 設定「美濃腔」有開無（預設關）。開等：四縣／南四縣个 24 調註 ruby 33，加詞彙性差異个美濃音一列。 */
 function isMeinungFillEnabled() {
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mn') === '1') {
+      localStorage.setItem(MEINUNG_FILL_STORAGE_KEY, 'true');
+      return true;
+    }
     return localStorage.getItem(MEINUNG_FILL_STORAGE_KEY) === 'true';
   } catch (e) {
     return false;
@@ -3769,7 +3772,12 @@ function initializeAppUI() {
     copyUrlBtn.addEventListener('click', () => {
       if (isCopying) return;
       isCopying = true;
-      const currentUrl = window.location.href;
+      let currentUrl = window.location.href;
+      if (isMeinungFillEnabled()) {
+        const urlObj = new URL(currentUrl);
+        urlObj.searchParams.set('mn', '1');
+        currentUrl = urlObj.toString();
+      }
       // 複製个內容：摘要文字換行後再擺網址。
       // 來源用 dataset.shareText —— 佢係專門為著分享做个版本，
       // 腔調名前背有加站名（例：（客源翠四縣）），畫面頂高个摘要毋使恁長。
@@ -4481,26 +4489,30 @@ function initializeAppUI() {
     const paginatedResults = results.slice(startIndex, endIndex);
 
     const searchModeText = searchMode === '客話' ? '客文' : '華文';
+    let displayDialect = selectedDialect;
+    if (isMeinungFillEnabled() && (selectedDialect === '四縣' || selectedDialect === '南四縣')) {
+      displayDialect = '美濃' + selectedDialect;
+    }
     updatePageTitle([
-      `${selectedDialect}尋「${keyword}」（${searchModeText}）`,
+      `${displayDialect}尋「${keyword}」（${searchModeText}）`,
     ]);
 
     if (totalResults === 0) {
       summaryTextContent.textContent =
-        summaryText + `尋著 0 筆結果（${selectedDialect}）`;
+        summaryText + `尋著 0 筆結果（${displayDialect}）`;
       summaryTextContent.dataset.originalText = summaryTextContent.textContent;
       summaryTextContent.dataset.shareText =
-        summaryText + `尋著 0 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
+        summaryText + `尋著 0 筆結果（${SHARE_SITE_NAME}${displayDialect}）`;
       updateResultsSummaryVisibility();
       return;
     }
 
     summaryTextContent.textContent =
-      summaryText + `尋著 ${totalResults} 筆結果（${selectedDialect}）`;
+      summaryText + `尋著 ${totalResults} 筆結果（${displayDialect}）`;
     summaryTextContent.dataset.originalText = summaryTextContent.textContent;
     summaryTextContent.dataset.shareText =
       summaryText +
-      `尋著 ${totalResults} 筆結果（${SHARE_SITE_NAME}${selectedDialect}）`;
+      `尋著 ${totalResults} 筆結果（${SHARE_SITE_NAME}${displayDialect}）`;
 
     const highlightRegex = new RegExp(
       `(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
@@ -6354,10 +6366,14 @@ function initializeAppUI() {
       renderFilteredEmptyState();
 
       const summaryTextContent = document.getElementById('summary-text-content');
+      let displayLvlName = dialectInfo.fullLvlName;
+      if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
+        displayLvlName = '美濃' + displayLvlName;
+      }
       if (summaryTextContent) {
         const fullCategoryName = getFullOfficialCategoryName(category, rawCategoryData);
         const formattedCategory = formatCategoryLabel(fullCategoryName);
-        const summaryText = `${dialectInfo.fullLvlName}：${formattedCategory} (0)`;
+        const summaryText = `${displayLvlName}：${formattedCategory} (0)`;
         summaryTextContent.textContent = `${summaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
         summaryTextContent.dataset.originalText = summaryText;
         summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${summaryText}`;
@@ -6365,7 +6381,7 @@ function initializeAppUI() {
 
       const fullCategoryName = getFullOfficialCategoryName(category, rawCategoryData);
       const formattedCategory = formatCategoryLabel(fullCategoryName);
-      updatePageTitle([dialectInfo.fullLvlName, formattedCategory]);
+      updatePageTitle([displayLvlName, formattedCategory]);
       setTimeout(adjustHeaderFontSizeOnOverflow, 0);
       updateResultsSummaryVisibility();
       return;
@@ -6431,7 +6447,11 @@ function initializeAppUI() {
       vocabularyArray,
     );
     const formattedCategory = formatCategoryLabel(fullCategoryName);
-    updatePageTitle([dialectInfo.fullLvlName, formattedCategory]);
+    let displayLvlName = dialectInfo.fullLvlName;
+    if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
+      displayLvlName = '美濃' + displayLvlName;
+    }
+    updatePageTitle([displayLvlName, formattedCategory]);
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
     updateResultsSummaryVisibility();
     if (!autoPlayTargetRowId && !isCrossCategoryPlaying) {
@@ -6626,7 +6646,12 @@ function initializeAppUI() {
         );
         const formattedCategory = formatCategoryLabel(fullCategoryName);
 
-        let summaryText = `${dialectInfo.fullLvlName}：${formattedCategory}`;
+        let displayLvlName = dialectInfo.fullLvlName;
+        if (isMeinungFillEnabled() && (dialectInfo.腔名 === '四縣' || dialectInfo.腔名 === '南四縣')) {
+          displayLvlName = '美濃' + displayLvlName;
+        }
+
+        let summaryText = `${displayLvlName}：${formattedCategory}`;
         if (totalResults > 0) {
           summaryText += ` (${totalResults})`;
         }
@@ -8506,6 +8531,28 @@ function initializeAppUI() {
     function rerenderCurrentVocabDisplay() {
       // 記住當前捲動高度，避免重新算繪時畫面跳動回頂端
       const savedScrollY = window.scrollY;
+
+      // Update the summary text and share text for Meinung mode if applicable
+      const summaryTextContent = document.getElementById('summary-text-content');
+      if (summaryTextContent && g_currentDialectInfo) {
+        let displayLvlName = g_currentDialectInfo.fullLvlName;
+        if (isMeinungFillEnabled() && (g_currentDialectInfo.腔名 === '四縣' || g_currentDialectInfo.腔名 === '南四縣')) {
+          displayLvlName = '美濃' + displayLvlName;
+        }
+        const fullCategoryName = getFullOfficialCategoryName(g_currentCategory, activeCategoryData || []);
+        const formattedCategory = formatCategoryLabel(fullCategoryName);
+        let newSummaryText = `${displayLvlName}：${formattedCategory}`;
+        const totalRows = (activeCategoryData && activeCategoryData.length) || 0;
+        if (totalRows > 0) {
+           newSummaryText += ` (${totalRows})`;
+        } else {
+           newSummaryText += ` (0)`;
+        }
+        summaryTextContent.textContent = `${newSummaryText}${getFilterSuffix(currentFamiliarityFilter)}`;
+        summaryTextContent.dataset.originalText = newSummaryText;
+        summaryTextContent.dataset.shareText = `${SHARE_SITE_NAME}${newSummaryText}`;
+        updatePageTitle([displayLvlName, formattedCategory]);
+      }
 
       // 1. 若當前畫面正在顯示主分類／認證／教典表格（#category-table 存在）
       const categoryTable = document.getElementById('category-table');
