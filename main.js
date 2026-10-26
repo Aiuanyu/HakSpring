@@ -7317,8 +7317,6 @@ function initializeAppUI() {
       currentAudio = wordAudio;
       applyPlaybackSpeedAndPitch(currentAudio);
 
-      const targetRepeats = getGlobalRepeatCount();
-
       let wordPlayCount = 0;
 
       // 非高級詞：次數係「詞 → 句」成對重複（詞 → 句 → 詞 → 句）；高級詞維持詞重複 N 擺再接例句
@@ -7326,6 +7324,7 @@ function initializeAppUI() {
 
       const onWordEnded = () => {
         wordPlayCount++;
+        const targetRepeats = getGlobalRepeatCount();
         if (pairMode) {
           playSentence(() => {
             if (
