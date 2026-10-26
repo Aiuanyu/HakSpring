@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客源翠企盤・雙行文字轉換器</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    :root {
+      --primary: #4a2b66;
+      --primary-hover: #5d3680;
+      --accent: #2e7d32;
+      --bg: #f7f6f9;
+      --card-bg: #ffffff;
+      --border: #e0dbe6;
+      --text: #2d2633;
+      --text-muted: #6b6375;
+      --code-bg: #efeaf4;
+      --radius: 12px;
+      --shadow: 0 4px 16px rgba(74, 43, 102, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #9b72cf;
+        --primary-hover: #b08ee0;
+        --accent: #66bb6a;
+        --bg: #18151c;
+        --card-bg: #24202b;
+        --border: #3d3548;
+        --text: #e8e4ee;
+        --text-muted: #a39bb0;
+        --code-bg: #2e2838;
+        --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: var(--code-bg);
+      border-color: var(--primary);
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    button.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      align-items: center;
+    }
+
+    .options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .output-box {
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 14px 16px;
+      position: relative;
+    }
+
+    .output-header {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .output-text {
+      font-size: 1.15rem;
+      font-weight: 500;
+      word-break: break-word;
+      white-space: pre-wrap;
+      user-select: all;
+    }
+
+    .output-text.romance {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    .copy-btn {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    details {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    details p {
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>客源翠企盤・雙行文字轉換器</h1>
+      <p class="subtitle">同企盤打出个「字詞 (拼音)」混排文字，自動轉換做整齊乾淨个兩行</p>
+    </header>
+
+    <div class="card">
+      <div class="card-title">
+        <span>輸入企盤文字</span>
+        <div class="button-group">
+          <button type="button" id="loadSampleBtn">載入範例</button>
+          <button type="button" id="clearBtn">清空</button>
+        </div>
+      </div>
+
+      <textarea id="inputText" placeholder="請貼上或輸入企盤文字，例如：
+𠊎 (Ngǎi) 無 (mǒ) 幾愛 (gì oi) 客委會 (Hàg-Ví-Fi) 認 (ngin) 證辭彙 (ziin cǐifi)裡肚 (dídù)有兜仔 (iúdéu'è)个 (ge)例 (li) 句 (gi)會 (voi)講 (gòng)體 (tì) 罰 (fad)、權 (kiǎn) 威 (ví)教育 (gau'iùg)个 (ge)感覺 (gàmgòg)"></textarea>
+
+      <div class="toolbar">
+        <div class="options">
+          <label title="根據第一隻字自動判斷誰在頂高">
+            <input type="radio" name="orderMode" value="auto" checked> 自動判斷頂層
+          </label>
+          <label title="強制諸夏字（漢字）在第一行">
+            <input type="radio" name="orderMode" value="han-top"> 諸夏字在頂
+          </label>
+          <label title="強制羅馬字在第一行">
+            <input type="radio" name="orderMode" value="rom-top"> 羅馬字在頂
+          </label>
+        </div>
+
+        <div class="options">
+          <label title="自動在羅馬字詞與詞之間保持單一空格分詞">
+            <input type="checkbox" id="autoSpaceCheck" checked> 詞間自動補空格
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card result-section">
+      <div class="card-title">
+        <span>轉換結果</span>
+        <div class="button-group">
+          <button type="button" class="primary" id="copyAllBtn">複製兩行全文</button>
+        </div>
+      </div>
+
+      <!-- 第一行 -->
+      <div class="output-box">
+        <div class="output-header">
+          <span id="topLabel">第 1 行（頂高）</span>
+          <button type="button" class="copy-btn" id="copyTopBtn">複製這行</button>
+        </div>
+        <div class="output-text" id="topOutput"></div>
+      </div>
+
+      <!-- 第二行 -->
+      <div class="output-box">
+        <div class="output-header">
+          <span id="bottomLabel">第 2 行（底行）</span>
+          <button type="button" class="copy-btn" id="copyBottomBtn">複製這行</button>
+        </div>
+        <div class="output-text romance" id="bottomOutput"></div>
+      </div>
+    </div>
+
+    <details>
+      <summary>轉換規則說明</summary>
+      <p>1. <strong>自動頂層判斷</strong>：若輸入文字第一隻有效詞為諸夏字（漢字），則第 1 行為諸夏字、第 2 行為羅馬字；若第一隻字為羅馬字，則自動反轉。</p>
+      <p>2. <strong>羅馬字規則</strong>：完整保留詞內部的連字號（hyphen，如 <code>Hàg-Ví-Fi</code>）、內部空格（如 <code>gì oi</code>）、緊湊連寫（如 <code>dídù</code>）及縮音隔音撇號（如 <code>iúdéu'è</code>）。</p>
+      <p>3. <strong>標點與括號雙向對照</strong>：諸夏字行使用全形中文標點與括號（如「」、【】、（）），羅馬字行使用半形西方標點與括號（如 ""、[]、()）。特別是頓號「、」自動轉換為羅馬字「, 」，句號「。」轉「. 」，反向輸入時半形標點與括號亦會自動轉為全形中文標點。</p>
+    </details>
+  </div>
+
+  <div class="toast" id="toast">已複製到剪貼簿！</div>
+
+  <script src="js/kipan-converter.js"></script>
+  <script>
+    const sampleText = "𠊎 (Ngǎi) 無 (mǒ) 幾愛 (gì oi) 客委會 (Hàg-Ví-Fi) 認 (ngin) 證辭彙 (ziin cǐifi)裡肚 (dídù)有兜仔 (iúdéu'è)个 (ge)例 (li) 句 (gi)會 (voi)講 (gòng)體 (tì) 罰 (fad)、權 (kiǎn) 威 (ví)教育 (gau'iùg)个 (ge)感覺 (gàmgòg)";
+
+    const inputEl = document.getElementById('inputText');
+    const topOutputEl = document.getElementById('topOutput');
+    const bottomOutputEl = document.getElementById('bottomOutput');
+    const topLabelEl = document.getElementById('topLabel');
+    const bottomLabelEl = document.getElementById('bottomLabel');
+    const autoSpaceCheck = document.getElementById('autoSpaceCheck');
+    const toastEl = document.getElementById('toast');
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2000);
+    }
+
+    function doConvert() {
+      const text = inputEl.value;
+      const orderRadio = document.querySelector('input[name="orderMode"]:checked');
+      const forceOrder = orderRadio ? orderRadio.value : 'auto';
+      const autoSpaceRomance = autoSpaceCheck.checked;
+
+      const result = KipanConverter.convertKipanText(text, {
+        forceOrder,
+        autoSpaceRomance,
+      });
+
+      topOutputEl.textContent = result.topText;
+      bottomOutputEl.textContent = result.bottomText;
+
+      if (result.detectedOrder === 'han-top') {
+        topLabelEl.textContent = '第 1 行（諸夏字）';
+        bottomLabelEl.textContent = '第 2 行（羅馬字）';
+        topOutputEl.classList.remove('romance');
+        bottomOutputEl.classList.add('romance');
+      } else {
+        topLabelEl.textContent = '第 1 行（羅馬字）';
+        bottomLabelEl.textContent = '第 2 行（諸夏字）';
+        topOutputEl.classList.add('romance');
+        bottomOutputEl.classList.remove('romance');
+      }
+    }
+
+    // 事件綁定
+    inputEl.addEventListener('input', doConvert);
+    autoSpaceCheck.addEventListener('change', doConvert);
+    document.querySelectorAll('input[name="orderMode"]').forEach(radio => {
+      radio.addEventListener('change', doConvert);
+    });
+
+    document.getElementById('loadSampleBtn').addEventListener('click', () => {
+      inputEl.value = sampleText;
+      doConvert();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      inputEl.value = '';
+      doConvert();
+    });
+
+    function copyToClipboard(text, msg) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(msg || '已複製到剪貼簿！');
+      }).catch(err => {
+        console.error('複製失敗', err);
+      });
+    }
+
+    document.getElementById('copyTopBtn').addEventListener('click', () => {
+      copyToClipboard(topOutputEl.textContent, '已複製第 1 行！');
+    });
+
+    document.getElementById('copyBottomBtn').addEventListener('click', () => {
+      copyToClipboard(bottomOutputEl.textContent, '已複製第 2 行！');
+    });
+
+    document.getElementById('copyAllBtn').addEventListener('click', () => {
+      const all = topOutputEl.textContent + '\n' + bottomOutputEl.textContent;
+      copyToClipboard(all, '已複製兩行全文！');
+    });
+
+    // 初始預設載入範例
+    inputEl.value = sampleText;
+    doConvert();
+  </script>
+</body>
+</html>
