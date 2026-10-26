@@ -68,6 +68,14 @@
 - **【鐵律】有做事就要寫 Obsidian**：只要做了事（改程式、改文件、改設定、做研究、下決定），都愛在對應个筆記裡肚留下紀錄，寫清楚做了甚麼、為甚麼、動著哪兜檔案、哪兜驗證過吔、哪兜還無驗證。沿用該筆記既有个分段慣例（R／G／C 系列 h3），毋好淨在對話裡肚講煞。Commit message 係例外（見下背）。
 - **【Obsidian 渲染避坑】反引號後背毋好緊接點號**：凡係反引號開頭、後背緊接 dot（例如單獨表示副檔名），兩者中間愛插 1 個全形空格，寫做 `　.md`、`　.json`。完整檔名或路徑（如 `pages/pfs.md`）毋受影響。這條適用全部軟體專案，包含文件、筆記、commit message 摎程式碼註解。
 
+## Development board (Obsidian vault)
+
+Work status for HakSpring (website) and Kipan lives on a kanban in the Obsidian vault, not in this repo: one note per card under `創作/程式/HakSpring/看板/` in the vault (`~/NAS/Obsidian/Main`), with frontmatter `project` / `status` (想做, 排定, 進行中, 等平哥, 完成) / `size`.
+- Before starting a substantial task, read its card; if none exists, ask the coordinating session (蒂兒) or create one following `AGENTS.md` in the vault.
+- When you start, finish, or get blocked, update the card's `status`. Do not edit `kanban_order`. The user's own drag-and-drop on the board wins over any other file.
+- Run `python3 <vault>/創作/程式/HakSpring/看板/check.py` (read-only) before wrapping up.
+- If you cannot reach the vault (e.g. a cloud session), say so in your report instead of skipping silently, so the coordinator can update the card.
+
 ## 提交慣例 (Submission Conventions)
 - **【鐵則】Commit Message 必須使用客語（Hakka）撰寫**：
     - 專案的所有 Git commit message 內文與說明，**必須**使用臺灣客家語（四縣／海陸等共通詞彙，如「个」、「摎」、「在」、「肚底／裡肚」、「單淨」、「無共樣」、「毋使」等）撰寫。
