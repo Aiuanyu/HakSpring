@@ -616,6 +616,15 @@
     return getJoin().needsApostrophe(prev, next);
   }
 
+  /** 音節首字係毋係大寫（委派 romaine-join.js，空值或無字母為 false） */
+  function isFirstCharUpper(str) {
+    try {
+      return getJoin().isFirstCharUpper(str);
+    } catch (e) {
+      return !!str && str.charAt(0) !== str.charAt(0).toLowerCase();
+    }
+  }
+
   /**
    * 整串文字切成「原樣保留」摎「愛轉換个詞」兩種：
    * HTML 標籤、空白、漢字、全半形標點、數字原樣；其他（白話字詞）交給 convertWord。
@@ -635,7 +644,8 @@
 
   /**
    * 單一白話字詞（包含 hyphen 複合詞）轉 HagPinPlus（HPP）
-   * HPP 一律不保留連字號（hyphen），依照 Romaine 連寫加撇號規則緊密結合。
+   * HPP 依照 Romaine 連寫加撇號規則緊密結合。
+   * 鐵律：HagPinPlus 嚴禁 CamelCase！兩隻相鄰音節都首字大寫時，必須以連字號（hyphen）相接（如 Sṳn-Lìn → Siin-Lǐn）。
    * @param {string} word
    * @returns {string}
    */
@@ -644,8 +654,14 @@
     const syllables = word.split('-').map((s) => convertSyllableToHPP(s));
     let result = syllables[0] || '';
     for (let i = 1; i < syllables.length; i++) {
-      if (needsApostrophe(syllables[i - 1], syllables[i])) result += "'";
-      result += syllables[i];
+      const prev = syllables[i - 1];
+      const curr = syllables[i];
+      if (isFirstCharUpper(prev) && isFirstCharUpper(curr)) {
+        result += '-';
+      } else if (needsApostrophe(prev, curr)) {
+        result += "'";
+      }
+      result += curr;
     }
     return result;
   }
@@ -700,6 +716,7 @@
     convertWordPfsToGip,
     toGIPFromPFS,
     needsApostrophe,
+    isFirstCharUpper,
     isSiXianDialect,
     isPfsDisplayActive,
     normalizeDisplayScript,

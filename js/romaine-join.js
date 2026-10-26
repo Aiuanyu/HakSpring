@@ -58,7 +58,12 @@
       const syllables = spaceSeparatedSyllables.split(/\s+/).filter(Boolean);
       let text = syllables[0] || '';
       for (let i = 1; i < syllables.length; i++) {
-        if (needsApostrophe(syllables[i - 1], syllables[i])) text += "'";
+        // HPP 嚴禁 CamelCase：兩隻相鄰音節都首字大寫時，必須用連字號 - 相接
+        if (isFirstCharUpper(syllables[i - 1]) && isFirstCharUpper(syllables[i])) {
+          text += '-';
+        } else if (needsApostrophe(syllables[i - 1], syllables[i])) {
+          text += "'";
+        }
         text += syllables[i];
       }
       return text;
@@ -87,7 +92,11 @@
           const gip = getGip();
           return gip && gip.endsWithToneSymbol(s1Display) ? '' : ' ';
         }
-        return applyApostropheRules(`${s1Hpp} ${s2Hpp}`).includes("'") ? "'" : '';
+        // HPP 嚴禁 CamelCase：兩隻相鄰音節都首字大寫時，必須用連字號 - 相接
+        if (isFirstCharUpper(s1Hpp) && isFirstCharUpper(s2Hpp)) {
+          return '-';
+        }
+        return needsApostrophe(s1Hpp, s2Hpp) ? "'" : '';
       }
       default:
         return '';

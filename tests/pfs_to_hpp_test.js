@@ -53,6 +53,9 @@ assert.strictEqual(convertWordPfsToHpp('hak-ka'), 'hàgga');
 assert.strictEqual(convertWordPfsToHpp('pên-yú'), "bén'iù"); // n＋母音 → 撇號
 assert.strictEqual(convertWordPfsToHpp('tâi-ngìn'), "dái'ngǐn"); // 母音＋ng → 撇號
 assert.strictEqual(convertWordPfsToHpp('sân-sân'), 'sánsán');
+assert.strictEqual(convertWordPfsToHpp('Sṳn-Lìn'), 'Siin-Lǐn'); // 嚴禁 CamelCase：兩個大寫音節相接加連字號 -
+assert.strictEqual(convertWordPfsToHpp('Sṳn-lìn'), 'Siinlǐn');   // 僅首字大寫時維持連寫
+assert.strictEqual(toHPP('Sṳn-Lìn'), 'Siin-Lǐn');
 assert.strictEqual(convertWordPfsToHpp(''), '');
 assert.strictEqual(convertWordPfsToGip('hak-ka', gip), 'hagˋga'); // hagˋ 有調符，直連
 assert.strictEqual(convertWordPfsToGip('pên-yú', gip), 'benˊiuˋ');

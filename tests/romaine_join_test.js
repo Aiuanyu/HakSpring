@@ -35,11 +35,15 @@ assert.strictEqual(getJoiningSeparator('hyphen', true, 'hagˋ', 'hàg', 'gá'), 
 assert.strictEqual(getJoiningSeparator('其他', false, 'a', 'a', 'b'), '');
 console.log('  ✅ 3. 連字號與空格模式 PASS');
 
-// 4. 連寫（none）、HPP：愛撇號就插撇號，無就連起來
+// 4. 連寫（none）、HPP：愛撇號就插撇號，無就連起來；兩隻音節都大寫時必須以連字號 - 相接（嚴禁 CamelCase）
 assert.strictEqual(getJoiningSeparator('none', false, 'pěn', 'pěn', 'iú'), "'");
 assert.strictEqual(getJoiningSeparator('none', false, 'tai', 'tai', 'ngǐn'), "'");
 assert.strictEqual(getJoiningSeparator('none', false, 'siid', 'siid', 'fan'), '');
-console.log('  ✅ 4. 連寫（HPP）PASS');
+assert.strictEqual(getJoiningSeparator('none', false, 'Siin', 'Siin', 'Lǐn'), '-'); // 嚴禁 CamelCase
+assert.strictEqual(applyApostropheRules('Siin Lǐn'), 'Siin-Lǐn'); // 聖靈
+assert.strictEqual(applyApostropheRules('Mí Tǒi'), 'Mí-Tǒi');     // 美臺
+assert.strictEqual(applyApostropheRules('Siin lǐn'), 'Siinlǐn');   // 僅首字大寫時正常連寫
+console.log('  ✅ 4. 連寫（HPP，含嚴禁 CamelCase 連字號）PASS');
 
 // 5. 連寫（none）、GIP：有調符直接連，無調符一律空格；毋再用撇號
 assert.strictEqual(getJoiningSeparator('none', true, 'penˇ', 'pěn', 'iú'), ''); // ˇ
