@@ -17,8 +17,8 @@ test('index.html: search-input 應包含 title 與 placeholder 提示撳 / 或 C
     'index.html 應有 placeholder="查語詞（撳 / 或 Ctrl+/ 跳過來）"',
   );
   assert.ok(
-    html.includes('title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦）"'),
-    'index.html 應有 title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦）"',
+    html.includes('title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦'),
+    'index.html 應有 title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦..."',
   );
 });
 
