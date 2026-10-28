@@ -1,10 +1,10 @@
 name: Data fresh check
 
-# 補字典（data/supp）、愛灣語加詞（data/curated）、次方言補音（data/sub-dialects-fill）、審音佇列（review/）
-# 是 process_all_data.py --only-supp 對來源推出來个產出。來源抑腳本一改、產出無跟等重生，
+# 認證／教典 JSON（data/cert、data/gip，由 CSV 轉）、補字典（data/supp）、愛灣語加詞（data/curated）、
+# 次方言補音（data/sub-dialects-fill）、審音佇列（review/）都係 process_all_data.py 對來源推出來个產出。
+# 來源抑腳本一改、產出無跟等重生，
 # main 就會長透放過時个資料（20261025 个 variant-parser 修正就係恁樣漏忒，美濃音字級對照被污染）。
-# 這个檢查：重跑一擺，產出同 commit 个愛一樣；毋共樣就失敗，愛本機跑 `python3 process_all_data.py --only-supp` 後一齊 commit。
-# 範圍淨到 --only-supp 管个檔案（毋含 data/cert、data/gip 个 JSON）。
+# 這个檢查：重跑一擺，產出同 commit 个愛一樣；毋共樣就失敗，愛本機跑 `python3 process_all_data.py` 後一齊 commit。
 
 on:
   push:
@@ -40,8 +40,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: 重新產生補字典、加詞、次方言補音、審音佇列
-        run: python3 process_all_data.py --only-supp
+      - name: 重新產生全部產出（cert／gip JSON、補字典、加詞、次方言補音、審音佇列）
+        run: python3 process_all_data.py
       - name: 檢查產出摎 commit 个一樣
         run: |
           # review/queue.json 个 generated 係時間戳，每擺都無共樣，比對時擺一邊
@@ -56,12 +56,12 @@ jobs:
               sys.exit(1)
           PY
           git checkout -- review/queue.json
-          if ! git diff --exit-code --stat -- data/supp data/sub-dialects-fill data/curated; then
-            echo "::error::產出檔過時：來源抑腳本改了，無重跑 python3 process_all_data.py --only-supp。愛本機重跑一擺，連產出一齊 commit。"
+          if ! git diff --exit-code --stat -- data/cert data/gip data/supp data/sub-dialects-fill data/curated; then
+            echo "::error::產出檔過時：來源抑腳本改了，無重跑 process_all_data.py。愛本機重跑 python3 process_all_data.py，連產出一齊 commit。"
             exit 1
           fi
-          if [ -n "$(git status --porcelain -- data/supp data/sub-dialects-fill data/curated review)" ]; then
+          if [ -n "$(git status --porcelain -- data/cert data/gip data/supp data/sub-dialects-fill data/curated review)" ]; then
             echo "::error::重新產生出新个檔案，愛 commit 入來"
-            git status --short -- data/supp data/sub-dialects-fill data/curated review
+            git status --short -- data/cert data/gip data/supp data/sub-dialects-fill data/curated review
             exit 1
           fi
