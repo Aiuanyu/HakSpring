@@ -13,6 +13,7 @@
    收第一候選（分類「擬音」）。這下淨四縣有。
 7. 沿襲：data/supp/人工沿襲.csv 人工指定「妳 沿襲 你」這種，該腔無單字條目个字，
    全部讀音照抄來源字（分類「沿襲」，六腔都做）。優先過補字典、擬音。
+8. 人工加詞：data/curated/加詞.csv 同腔同字已有，就毋輸出該字个「擬音」列（人工優先過擬音，見 data/curated/README.md）。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -208,7 +209,17 @@ def load_nisim(d):
         return [r for r in csv.DictReader(f) if r['讀音']]
 
 
+def load_curated_chars():
+    """data/curated/加詞.csv → 腔 → 有人工加詞个字集合（人工優先過擬音）。"""
+    from build_curated import load_curated
+    chars = {d: set() for d in DIALECTS}
+    for r in load_curated():
+        chars[r['腔']].add(r['字'])
+    return chars
+
+
 def main():
+    curated_chars = load_curated_chars()
     with open(os.path.join(ROOT, 'reverse_tone_mapping.json'), encoding='utf-8') as f:
         reverse = json.load(f)
     vowel_map = reverse['vowel_map']
@@ -284,7 +295,7 @@ def main():
                     '單字條目已有 ' + '、'.join(sorted(single_readings[d][ch])) + '；')
                    for ch, rs in poly]
         nisim = [r for r in load_nisim(d) if r['字'] not in singles[d] and r['字'] not in readings[d]
-                 and r['字'] not in inherited]
+                 and r['字'] not in inherited and r['字'] not in curated_chars[d]]
         for ch, rs, category, definition, prefix in groups:
             for syl, rec in sorted(rs.items(), key=lambda x: -x[1]['count']):
                 examples = '、'.join(f'{w}（{p}，{s}）' for w, p, s in rec['examples'])
