@@ -7324,13 +7324,12 @@ function initializeAppUI() {
 
       const onWordEnded = () => {
         wordPlayCount++;
-        const targetRepeats = getGlobalRepeatCount();
         if (pairMode) {
           playSentence(() => {
             if (
               shouldRepeatWord(
                 wordPlayCount,
-                targetRepeats,
+                getGlobalRepeatCount(),
                 isPlaying,
                 isPaused,
                 sessionId,
@@ -7357,7 +7356,7 @@ function initializeAppUI() {
         if (
           shouldRepeatWord(
             wordPlayCount,
-            targetRepeats,
+            getGlobalRepeatCount(),
             isPlaying,
             isPaused,
             sessionId,
