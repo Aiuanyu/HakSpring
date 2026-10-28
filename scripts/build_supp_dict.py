@@ -172,6 +172,28 @@ def load_gip_readings(d):
     return out
 
 
+INITIAL_FINAL = re.compile(r'^([^aeiou]*)(.*)$')
+
+
+def _plain(syl):
+    """音節轉小寫、無調符、無附加符號（ṳ → u）。"""
+    return ''.join(c for c in unicodedata.normalize('NFD', syl.lower()) if unicodedata.category(c) != 'Mn')
+
+
+def syllables_far(x, y):
+    """兩隻音節（不計調）聲母摎韻母攏無共樣：毋係音變，係講法（詞彙）無共樣，例：額 ngiàg／bòd。
+    冷 láng／nāng 聲母無共樣、韻母共樣，毋算。補字典摎美濃字級對照（build_subdialect_fill）共用。"""
+    ix, fx = INITIAL_FINAL.match(_plain(x)).groups()
+    iy, fy = INITIAL_FINAL.match(_plain(y)).groups()
+    return ix != iy and fx != fy
+
+
+def lexically_different(word, base, variant):
+    """變體讀音摎底音，字數摎音節數對得齊，卻有任何一隻音節 syllables_far：講法無共樣，毋可逐字對照。"""
+    a, b = align(word, base), align(word, variant)
+    return bool(a and b and any(syllables_far(x[1], y[1]) for x, y in zip(a, b)))
+
+
 def load_records():
     """認證：經 variant-parser 展開【】變體；教典：無【】，直接讀原始 CSV（保留讀音邊界）。"""
     for o in load_variants():
@@ -235,10 +257,18 @@ def main():
         lambda: {'count': 0, 'examples': [], 'labels': set()})))
     stats = defaultdict(lambda: {'pairs': 0, 'aligned': 0})
 
-    for o in load_records():
+    records = list(load_records())
+    # 四縣認證詞條个底音（標「北」抑無標）：美濃、南四縣變體摎佢講法無共樣，就毋逐字對照（好額 hò ngiàg ↔ iú bòd）
+    base_phonetic = {(o['file'], o['id']): o['phonetic'] for o in records
+                     if o.get('file') and o['sourceName'].startswith('四縣') and o['label'] in ('', '北')}
+    for o in records:
         d = target_dialect(o['sourceName'], o['label'])
         if not d:
             continue
+        if o['label'] in ('美', '南') and (o.get('file'), o.get('id')) in base_phonetic:
+            base = split_readings(base_phonetic[(o['file'], o['id'])])
+            if base and any(lexically_different(o['word'], base[0], ph) for ph in split_readings(o['phonetic'])):
+                continue
         for ph in split_readings(o['phonetic']):
             for word, phon in expand_parens(o['word'], ph):
                 if not word or not phon:

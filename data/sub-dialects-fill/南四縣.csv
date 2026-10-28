@@ -89,6 +89,7 @@
 113四中,2-21,回想,fǐ  xiòng,fǐ xiòng,南,教典南四縣,False,True,
 113四中,2-22,服,fug,fug,南,教典南四縣,False,True,
 113四中,2-23,合味,gàg mi,gàg mi,南,教典南四縣,False,True,
+113四中,2-24,合意（納意）,gàg i (nab i),gàg i (nab i),南,字級對照,False,True,manual table table table
 113四中,2-25,感心,gàm  xím,gàm xím,南,教典南四縣,False,True,
 113四中,2-28,驚怕,giáng pa,giáng pa,南,教典南四縣,False,True,
 113四中,2-29,激動,gìd tung,gìd tung,南,字級對照,False,True,table table
@@ -309,15 +310,15 @@
 113四中,5-20,聲,sáng,sáng,南,教典南四縣,False,True,
 113四中,5-22,龍,liǔng,liǔng,南,教典南四縣,False,True,
 113四中,5-23,駱駝,log tǒ,log tǒ,南,教典南四縣,False,True,
-113四中,5-24,象仔,xiong è,xiong è,南,系統規則,False,True,table zai
+113四中,5-24,象仔,xiong è,xiong è,南,字級對照,False,True,table manual
 113四中,5-25,獅仔,síi è,síi è,南,教典南四縣,False,True,
 113四中,5-26,頭牲,těu sáng,těu sáng,南,字級對照,False,True,table table
 113四中,5-27,啼,tǎi,tǎi,南,教典南四縣,False,True,
-113四中,5-31,鵝仔,ngǒ è,ngǒ è,南,系統規則,False,True,table zai
+113四中,5-31,鵝仔,ngǒ è,ngǒ è,南,字級對照,False,True,table manual
 113四中,5-32,孵卵,pu lòn,pu lòn,南,教典南四縣,False,True,
 113四中,5-33,生命,sén  miang,sén miang,南,教典南四縣,False,True,
 113四中,5-34,叼,diáu,diáu,南,教典南四縣,False,True,
-113四中,5-35,蠶仔,cǎm è,cǎm è,南,系統規則,False,True,table zai
+113四中,5-35,蠶仔,cǎm è,cǎm è,南,字級對照,False,True,table manual
 113四中,6-1,崩崗,bén góng,bén góng,南,教典南四縣,False,True,
 113四中,6-2,必縫,bìd pung,bìd pung,南,教典南四縣,False,True,
 113四中,6-3,塵灰,cǐin fói,cǐin fói,南,教典南四縣,False,True,
@@ -334,6 +335,7 @@
 113四中,6-15,滾,gùn,gùn,南,字級對照,False,True,table
 113四中,6-16,氣象,hi xiong,hi xiong,南,教典南四縣,False,True,
 113四中,6-17,海洋,hòi iǒng,hòi iǒng,南,字級對照,False,True,table table
+113四中,6-19,臨天光仔（天曚光）,lǐm tién góng è (tién mǔng góng),lǐm tién góng è (tién mǔng góng),南,字級對照,False,True,table table table manual table table table
 113四中,6-20,落霜,log sóng,log sóng,南,教典南四縣,False,True,
 113四中,6-21,落雪,log xièd,log xièd,南,教典南四縣,False,True,
 113四中,6-22,泥,nǎi,nǎi,南,教典南四縣,False,True,
@@ -389,9 +391,10 @@
 113四中,7-35,煞,sod,sod,南,教典南四縣,False,True,
 113四中,7-36,達到,tad do,tad do,南,教典南四縣,False,True,
 113四中,7-37,提高,tǐ gó,tǐ gó,南,教典南四縣,False,True,
-113四中,8-1,包袱（包袱仔）,báu  fug (báu  fug è),báu  fug (báu  fug è),南,系統規則,False,True,table table table table zai
+113四中,8-1,包袱（包袱仔）,báu  fug (báu  fug è),báu  fug (báu  fug è),南,字級對照,False,True,table table table table manual
 113四中,8-2,背包,boi báu,bǎ báu,南,教典南四縣,False,False,
 113四中,8-3,睡毋得,soi m̌ dèd,soi m̌ dèd,南,教典南四縣,False,True,
+113四中,8-4,捽來火（番仔火、捽仔火）,cud lǒi fò (fán è fò 、cud è fò),cud lǒi fò (fán è fò 、cud è fò),南,字級對照,False,True,table table table table manual table table manual table
 113四中,8-5,刀嫲,dó mǎ,dó mǎ,南,教典南四縣,False,True,
 113四中,8-7,伐草,pàd cò,pàd cò,南,教典南四縣,False,True,
 113四中,8-8,補,bù,bù,南,字級對照,False,True,table
@@ -407,7 +410,7 @@
 113四中,8-24,衫櫥,sám cǔ,sám cǔ,南,教典南四縣,False,True,
 113四中,8-25,褲腳,fu giòg,fu giòg,南,教典南四縣,False,True,
 113四中,8-26,服裝,fug  zóng,fug zóng,南,教典南四縣,False,True,
-113四中,8-27,花衫仔,fá sám è,fá sám è,南,系統規則,False,True,table table zai
+113四中,8-27,花衫仔,fá sám è,fá sám è,南,字級對照,False,True,table table manual
 113四中,8-29,頸圍仔,giàng vǐ è,giàng vǐ è,南,教典南四縣,False,True,
 113四中,8-31,衫尾,sám mí,sám mí,南,教典南四縣,False,True,
 113四中,8-33,扇仔,san è,san è,南,教典南四縣,False,True,
@@ -418,7 +421,7 @@
 113四中,8-39,歇,hed,hed,南,教典南四縣,False,True,
 113四中,8-41,眠帳,mǐn zong,mǐn zong,南,教典南四縣,False,True,
 113四中,8-42,網,miòng,miòng,南,教典南四縣,False,True,
-113四中,8-45,紙條仔,zìi tiǎu è,zìi tiǎu è,南,系統規則,False,True,table table zai
+113四中,8-45,紙條仔,zìi tiǎu è,zìi tiǎu è,南,字級對照,False,True,table table manual
 113四中,8-47,牙膏,ngǎ gáu,ngǎ gáu,南,教典南四縣,False,True,
 113四中,8-48,洗嘴（搓牙齒）,sè zoi (co ngǎ cìi),sè zoi (co ngǎ cìi),南,字級對照,False,True,table table table table table
 113四中,8-49,湯嘴,tóng zoi,tóng zoi,南,教典南四縣,False,True,
@@ -429,12 +432,12 @@
 113四中,8-54,歕火,pǔn fò,pǔn fò,南,教典南四縣,False,True,
 113四中,8-55,日記,ngìd gi,ngìd gi,南,教典南四縣,False,True,
 113四中,8-56,日誌,ngìd zii,ngìd zii,南,教典南四縣,False,True,
-113四中,8-57,時鐘仔,sǐi  zúng  è,sǐi  zúng  è,南,系統規則,False,True,table table zai
+113四中,8-57,時鐘仔,sǐi  zúng  è,sǐi  zúng  è,南,字級對照,False,True,table table manual
 113四中,8-58,煠,sab,sab,南,教典南四縣,False,True,
 113四中,8-59,杓嫲,sog mǎ,sog mǎ,南,教典南四縣,False,True,
-113四中,8-62,手電筒（手電仔）,sù tien tǔng (sù tien è),sù tien tǔng (sù tien è),南,系統規則,False,True,table table table table table zai
+113四中,8-62,手電筒（手電仔）,sù tien tǔng (sù tien è),sù tien tǔng (sù tien è),南,字級對照,False,True,table table table table table manual
 113四中,8-63,手袖仔,sù qiu è,sù qiu è,南,教典南四縣,False,True,
-113四中,8-64,書架仔,sú ga è,sú ga è,南,系統規則,False,True,table table zai
+113四中,8-64,書架仔,sú ga è,sú ga è,南,字級對照,False,True,table table manual
 113四中,8-65,收揫（撿揫）,sú qiú (giàm qiú),sú qiú (giàm qiú),南,字級對照,False,True,table table table table
 113四中,8-66,水道水（自來水）,sùi to sùi (cii lǒi sùi),sùi to sùi (cii lǒi sùi),南,字級對照,False,True,table table table table table table
 113四中,8-67,水槽,sùi cǒ,sùi cǒ,南,教典南四縣,False,True,
@@ -460,7 +463,7 @@
 113四中,8-91,冷水,láng sùi,láng sùi,南,教典南四縣,False,True,
 113四中,8-93,菜單,coi dán,coi dán,南,教典南四縣,False,True,
 113四中,8-94,飯𤊶,fan làd,fan làd,南,教典南四縣,False,True,
-113四中,8-95,飯包（飯篼仔）,fan báu (fan déu è),fan báu (fan déu è),南,系統規則,False,True,table table table table zai
+113四中,8-95,飯包（飯篼仔）,fan báu (fan déu è),fan báu (fan déu è),南,字級對照,False,True,table table table table manual
 113四中,8-96,飯甑,fan zen,fan zen,南,教典南四縣,False,True,
 113四中,8-98,紅茶,fǔng cǎ,fǔng cǎ,南,教典南四縣,False,True,
 113四中,8-99,炙茶,zàg cǎ,zàg cǎ,南,教典南四縣,False,True,
@@ -474,7 +477,7 @@
 113四中,8-111,麥酒,mag jiù,mag jiù,南,教典南四縣,False,True,
 113四中,8-114,粢粑仔,qǐ bá è,qǐ bá è,南,教典南四縣,False,True,
 113四中,8-116,豬利（豬利頭）,zú li (zú li těu),zú li (zú li těu),南,字級對照,False,True,table table table table table
-113四中,8-117,豬紅（豬旺仔）,zú fǔng (zú vong è),zú fǔng (zú vong è),南,系統規則,False,True,table table table table zai
+113四中,8-117,豬紅（豬旺仔）,zú fǔng (zú vong è),zú fǔng (zú vong è),南,字級對照,False,True,table table table table manual
 113四中,8-118,豬腰仔,zú iéu è,zú iéu è,南,教典南四縣,False,True,
 113四中,8-119,脢條肉,mǒi tiǎu ngiùg,mǒi tiǎu ngiùg,南,教典南四縣,False,True,
 113四中,8-122,燜,mún,mún,南,教典南四縣,False,True,
@@ -684,7 +687,7 @@
 113四中,9-245,準準,zùn zùn,zùn zùn,南,教典南四縣,False,True,
 113四中,10-1,兵仔,bín è,bín è,南,教典南四縣,False,True,
 113四中,10-2,治安,cii ón,cii ón,南,教典南四縣,False,True,
-113四中,10-4,銃仔,cung è,cung è,南,系統規則,False,True,table zai
+113四中,10-4,銃仔,cung è,cung è,南,字級對照,False,True,table manual
 113四中,10-5,銃子,cung zìi,cung zìi,南,教典南四縣,False,True,
 113四中,10-6,打官司,dà gón síi,dà gón síi,南,教典南四縣,False,True,
 113四中,10-7,黨派,dòng pai,dòng pai,南,教典南四縣,False,True,
@@ -726,6 +729,7 @@
 113四中,10-50,執政,zìib ziin,zìib ziin,南,教典南四縣,False,True,
 113四中,10-51,徵收,zíin sú,zíin sú,南,教典南四縣,False,True,
 113四中,10-52,政策,ziin cèd,ziin cèd,南,教典南四縣,False,True,
+113四中,10-53,做兵（做兵仔）,zo bín (zo bín è),zo bín (zo bín è),南,字級對照,False,True,table table table table manual
 113四中,10-54,主席,zù xid,zù xid,南,教典南四縣,False,True,
 113四中,10-55,總統,zùng tùng,zùng tùng,南,教典南四縣,False,True,
 113四中,11-1,詏,au,au,南,教典南四縣,False,True,
@@ -831,6 +835,7 @@
 113四中,11-120,請教,qiàng gau,qiàng gau,南,教典南四縣,False,True,
 113四中,11-121,親家,qín gá,qín gá,南,教典南四縣,False,True,
 113四中,11-122,煞手,sàd sù,sàd sù,南,教典南四縣,False,True,
+113四中,11-123,細妹條仔（細妹卵仔）,se moi tiǎu è (se moi lòn ě),se moi tiǎu è (se moi lòn è),南,系統規則,False,False,table table table manual table table table zai
 113四中,11-124,歲數,se sii,se sii,南,教典南四縣,False,True,
 113四中,11-126,使上使下,sìi sóng sìi há,sìi sóng sìi há,南,教典南四縣,False,True,
 113四中,11-127,實話,siid fa,siid fa,南,字級對照,False,True,table table
@@ -898,7 +903,7 @@
 113四中,12-38,趕早,gòn zò,gòn zò,南,教典南四縣,False,True,
 113四中,12-39,歸下（總下）,gúi ha (zùng ha),gúi ha (zùng ha),南,字級對照,False,True,table table table table
 113四中,12-40,歸下晝,gúi há zu,gúi há zu,南,字級對照,False,True,table table table
-113四中,12-42,下後（後下、後下仔）,ha heu (heu ha、heu ha è),ha heu (heu ha、heu ha é),南,系統規則,False,False,table table table table table table zai
+113四中,12-42,下後（後下、後下仔）,ha heu (heu ha、heu ha è),ha heu (heu ha、heu ha è),南,字級對照,False,True,table table table table table table manual
 113四中,12-43,做盡,zo qin,zo qin,南,字級對照,False,True,table table
 113四中,12-44,閒時閒節,hǎn sǐi hǎn jièd,hǎn sǐi hǎn jièd,南,教典南四縣,False,True,
 113四中,12-46,海外,hòi ngoi,hòi ngoi,南,字級對照,False,True,table table
@@ -1026,6 +1031,7 @@
 113四中,14-47,速度,sùg tu,sùg tu,南,教典南四縣,False,True,
 113四中,14-48,信仔,xin è,xin è,南,教典南四縣,False,True,
 113四中,14-49,修整,xiú zàng,xiú zàng,南,教典南四縣,False,True,
+113四中,14-50,走廊（廊仔下、巷路）,zèu lǒng (lǒng è há、hong lu),zèu lǒng (lǒng è há、hong lu),南,字級對照,False,True,table table table manual table table table
 113四中,14-52,城市,sǎng sii,sǎng sii,南,教典南四縣,False,True,
 113四中,15-3,包禮,báu lí,báu lí,南,教典南四縣,False,True,
 113四中,15-4,庇佑,bi iu,bi iu,南,教典南四縣,False,True,
@@ -1033,6 +1039,7 @@
 113四中,15-7,出山（還山）,cùd sán (vǎn sán),cùd sán (vǎn sán),南,字級對照,False,True,table table table table
 113四中,15-8,戴孝,dai hau,dai hau,南,教典南四縣,False,True,
 113四中,15-9,跌無筊,dièd mǒ gau,dièd mǒ gau,南,教典南四縣,False,True,
+113四中,15-10,跌聖筊（跌筊仔）,dièd siin gau (dièd gau è),dièd siin gau (dièd gau è),南,字級對照,False,True,table table table table table manual
 113四中,15-11,對歲,dui se,dui se,南,教典南四縣,False,True,
 113四中,15-12,佛教,fud gau,fud gau,南,教典南四縣,False,True,
 113四中,15-13,婚姻,fún ím,fún ím,南,教典南四縣,False,True,
@@ -1163,6 +1170,7 @@
 113四中,17-37,基金,gí gím,gí gím,南,字級對照,False,True,table table
 113四中,17-38,撿錢,giàm qiěn,giàm qiěn,南,教典南四縣,False,True,
 113四中,17-43,金仔店,gím è diam,gím è diam,南,教典南四縣,False,True,
+113四中,17-44,倒樹仔,dò su è,dò su è,南,字級對照,False,True,table table manual
 113四中,17-45,警衛,gìn vi,gìn vi,南,教典南四縣,False,True,
 113四中,17-46,經費,gín fi,gín fi,南,教典南四縣,False,True,
 113四中,17-47,經濟,gín ji,gín ji,南,教典南四縣,False,True,
@@ -1220,6 +1228,7 @@
 113四中,17-113,收成,sú sǐin,sú sǐin,南,教典南四縣,False,True,
 113四中,17-114,收入,sú ngib,sú ngib,南,教典南四縣,False,True,
 113四中,17-115,水準,sùi zùn,sùi zùn,南,教典南四縣,False,True,
+113四中,17-117,送信仔个,sung xin è ge,sung xin è ge,南,字級對照,False,True,table table manual table
 113四中,17-118,鬆（鬆容）,súng (súng iǔng),súng (súng iǔng),南,字級對照,False,True,table table table
 113四中,17-119,大出,tai cùd,tai cùd,南,字級對照,False,True,table table
 113四中,17-120,投資,těu  zíi,těu zíi,南,教典南四縣,False,True,
@@ -1229,6 +1238,7 @@
 113四中,17-125,退休,tui hiú,tui hiú,南,教典南四縣,False,True,
 113四中,17-126,推銷,túi séu,túi séu,南,教典南四縣,False,True,
 113四中,17-128,同事,tǔng sii,tǔng sii,南,教典南四縣,False,True,
+113四中,17-129,委秧仔,ve ióng è,ve ióng è,南,字級對照,False,True,table table manual
 113四中,17-131,屋主,vùg zù,vùg zù,南,教典南四縣,False,True,
 113四中,17-132,屋稅,vùg soi,vùg soi,南,教典南四縣,False,True,
 113四中,17-134,信用,xin iung,xin iung,南,教典南四縣,False,True,
@@ -1241,7 +1251,7 @@
 113四中,17-143,做戲个,zo hi ge,zo hi ge,南,字級對照,False,True,table table table
 113四中,17-144,主管,zù gòn,zù gòn,南,教典南四縣,False,True,
 113四中,17-145,租,zú,zú,南,教典南四縣,False,True,
-113四中,17-146,豬販仔,zú fan è,zú fan è,南,系統規則,False,True,table table zai
+113四中,17-146,豬販仔,zú fan è,zú fan è,南,字級對照,False,True,table table manual
 113四中,17-149,值,dad/ciid,dad,南,教典南四縣,True,False,
 113四中,17-150,值得,dad/ciid  dèd,dad dèd,南,教典南四縣,False,False,
 113四中,17-151,物價,vud ga,vud ga,南,教典南四縣,False,True,
@@ -1276,7 +1286,7 @@
 113四中,18-32,教育局,gau iùg kiug,gau iùg kiug,南,字級對照,False,True,table table table
 113四中,18-33,教授,gau su,gau su,南,教典南四縣,False,True,
 113四中,18-34,教練,gau lien,gau lien,南,教典南四縣,False,True,
-113四中,18-36,句仔,gi è,gi è,南,系統規則,False,True,table zai
+113四中,18-36,句仔,gi è,gi è,南,字級對照,False,True,table manual
 113四中,18-38,歌曲,gó kiùg,gó kiùg,南,教典南四縣,False,True,
 113四中,18-39,作文,zòg vǔn,zòg vǔn,南,教典南四縣,False,True,
 113四中,18-40,冠軍,gon giún,gon giún,南,教典南四縣,False,True,
@@ -1382,6 +1392,7 @@
 113四中高,1-10,泌尿科,bi ngiau kó,bi ngiau kó,南,教典南四縣,False,True,
 113四中高,1-11,噼腦筋,biag nò gín,biag nò gín,南,教典南四縣,False,True,
 113四中高,1-12,發蛾仔,bòd ngǒ è,bòd ngǒ è,南,教典南四縣,False,True,
+113四中高,1-13,發瘤仔,bòd liǔ è,bòd liǔ è,南,字級對照,False,True,table table manual
 113四中高,1-16,背囊骨（龍骨）,boi nǒng gùd (liǔng gùd),boi nǒng gùd (liǔng gùd),南,字級對照,False,True,table table table table table
 113四中高,1-18,踣著,bòi dò,bòi dò,南,教典南四縣,False,True,
 113四中高,1-20,撐腿,cang tùi,cang tùi,南,教典南四縣,False,True,
@@ -1461,7 +1472,7 @@
 113四中高,1-126,鼻龍峎,pi liǔng gien,pi liǔng gien,南,字級對照,False,True,table table table
 113四中高,1-127,鼻塞塞,pi sèd sèd,pi sèd sèd,南,字級對照,False,True,table table table
 113四中高,1-128,鼻水,pi sùi,pi sùi,南,教典南四縣,False,True,
-113四中高,1-130,病丁仔,piang dén è,piang dén è,南,系統規則,False,True,table table zai
+113四中高,1-130,病丁仔,piang dén è,piang dén è,南,字級對照,False,True,table table manual
 113四中高,1-131,病症,piang ziin,piang ziin,南,字級對照,False,True,table table
 113四中高,1-132,偏著,pién dò,pién dò,南,教典南四縣,False,True,
 113四中高,1-133,破病,po piang,po piang,南,教典南四縣,False,True,
@@ -1487,6 +1498,7 @@
 113四中高,1-158,聽毋真,táng m̌ zíin,táng m̌ zíin,南,字級對照,False,True,table table table
 113四中高,1-159,拖命,tó miang,tó miang,南,教典南四縣,False,True,
 113四中高,1-160,退紅,tui fǔng,tui fǔng,南,教典南四縣,False,True,
+113四中高,1-161,推推啊,túi túi à,túi túi à,南,字級對照,False,True,table table manual
 113四中高,1-163,胃糟糟,vi zó zó,vi zó zó,南,字級對照,False,True,table table table
 113四中高,1-165,烏蠅屎,vú ǐn sìi,vú ǐn sìi,南,字級對照,False,True,table table table
 113四中高,1-166,烏青,vú qiáng,vú qiáng,南,教典南四縣,False,True,
@@ -1615,6 +1627,7 @@
 113四中高,4-72,咈（㘔）,fud (sái),fud (sái),南,字級對照,False,True,table table
 113四中高,4-73,架腳,ga giòg,ga giòg,南,字級對照,False,True,table table
 113四中高,4-75,呷,gab,gab,南,教典南四縣,False,True,
+113四中高,4-76,合分佢,gàg bún gǐ,gàg bún ǐ,南,字級對照,False,False,manual table table
 113四中高,4-78,哽著,gàng dò,gàng dò,南,教典南四縣,False,True,
 113四中高,4-79,絞,gàu,gàu,南,教典南四縣,False,True,
 113四中高,4-80,攪,gàu,gàu,南,教典南四縣,False,True,
@@ -1647,9 +1660,12 @@
 113四中高,4-119,開聲,kói sáng,kói sáng,南,教典南四縣,False,True,
 113四中高,4-120,看真真,kon zíin zíin,kon zíin zíin,南,字級對照,False,True,table table table
 113四中高,4-121,寬容笑面（開容笑面）,kón iǔng seu mien (kói iǔng seu mien),kón iǔng seu mien (kói iǔng seu mien),南,字級對照,False,True,table table table table table table table table
+113四中高,4-122,擐皮包仔,kuan pǐ báu è,kuan pǐ báu è,南,字級對照,False,True,table table table manual
 113四中高,4-123,環毋過,kuán m̌ go,kuǎn m̌ go,南,字級對照,False,False,table table table
+113四中高,4-124,罅罅啊,la la à,la la à,南,字級對照,False,True,table table manual
 113四中高,4-126,濫著（漯著）,lam dò (làb dò),lam dò (làb dò),南,字級對照,False,True,table table table table
 113四中高,4-127,攔毋核,lǎn m̌ hed,lǎn m̌ hed,南,字級對照,False,True,table table table
+113四中高,4-128,撈袋仔,lěu toi è,lěu toi è,南,字級對照,False,True,table table manual
 113四中高,4-130,捋牛乳,lod ngiǔ nen,lod ngiǔ nen,南,字級對照,False,True,table table table
 113四中高,4-131,摝勻,lùg iǔn,lùg iǔn,南,字級對照,False,True,table table
 113四中高,4-132,擂,lǔi,lǔi,南,教典南四縣,False,True,
@@ -1674,6 +1690,9 @@
 113四中高,4-160,扭腳髀,ngiù giòg bì,ngiù giòg bì,南,字級對照,False,True,table table table
 113四中高,4-162,弄等來,nung dèn lǒi,nung dèn lǒi,南,教典南四縣,False,True,
 113四中高,4-164,噥,nǔng,nǔng,南,教典南四縣,False,True,
+113四中高,4-166,撥塵灰,pad cǐin fói,pàd cǐin fói,南,字級對照,False,False,manual table table
+113四中高,4-167,撥蚊仔,pad mún è,pàd mún è,南,字級對照,False,False,manual table manual
+113四中高,4-168,撥淨來,pad qiang lǒi,pàd qiang lǒi,南,字級對照,False,False,manual table table
 113四中高,4-169,撥火,pàd fò,pàd fò,南,教典南四縣,False,True,
 113四中高,4-170,撥涼,pàd liǒng,pàd liǒng,南,教典南四縣,False,True,
 113四中高,4-171,拌,pán,pán,南,教典南四縣,False,True,
@@ -1686,6 +1705,7 @@
 113四中高,4-182,伏等,pug dèn,pug dèn,南,教典南四縣,False,True,
 113四中高,4-184,𠠃,qiám,qiám,南,教典南四縣,False,True,
 113四中高,4-185,撨,qiǎu,qiǎu,南,教典南四縣,False,True,
+113四中高,4-186,撨位仔,qiǎu vi è,qiǎu vi è,南,字級對照,False,True,table table manual
 113四中高,4-188,彳彳亍亍,qìd qìd còg còg,qìd qìd còg còg,南,字級對照,False,True,table table table table
 113四中高,4-189,尋無,qǐm mǒ,qǐm mǒ,南,字級對照,False,True,table table
 113四中高,4-190,尋食,qǐm siid,qǐm siid,南,教典南四縣,False,True,
@@ -1700,6 +1720,7 @@
 113四中高,4-199,三擇四擇,sám tog xi tog,sám tog xi tog,南,教典南四縣,False,True,
 113四中高,4-200,三叮嚀四吩咐（三叮嚀四囑咐）,sám dén něn xi fún fu (sám dén něn xi zùg fu),sám dén něn xi fún fu (sám dén něn xi zùg fu),南,字級對照,False,True,table table table table table table table table table table table table
 113四中高,4-203,山歌溜天,sán gó liù tién,sán gó liù tién,南,教典南四縣,False,True,
+113四中高,4-205,使筷仔（擎筷仔）,sìi kuai è (kiǎ kuai è),sìi kuai è (kiǎ kuai è),南,字級對照,False,True,table table manual manual table manual
 113四中高,4-206,食毋得,siid m̌ dèd,siid m̌ dèd,南,教典南四縣,False,True,
 113四中高,4-207,食毋去,siid m̌ hi,siid m̌ hi,南,字級對照,False,True,table table table
 113四中高,4-208,失聲,sìid sáng,sìid sáng,南,教典南四縣,False,True,
@@ -1767,6 +1788,7 @@
 113四中高,5-12,荷蘭豆,hǒ lǎn teu,hǒ lǎn teu,南,教典南四縣,False,True,
 113四中高,5-14,𧊅絲,guài xí,guài xí,南,教典南四縣,False,True,
 113四中高,5-16,艾菜,ngie coi,ngie coi,南,教典南四縣,False,True,
+113四中高,5-17,桑仔子（鹽酸仔）,són è zìi (iǎm són è),sóng è zìi (iǎm són è),南,字級對照,False,False,table manual table table table manual
 113四中高,5-18,芙蓉,pǔ iǔng,pǔ iǔng,南,教典南四縣,False,True,
 113四中高,5-20,蝦公夾,hǎ gúng giab,hǎ gúng giab,南,教典南四縣,False,True,
 113四中高,5-21,蕹菜,vung coi,vung coi,南,教典南四縣,False,True,
@@ -1782,7 +1804,8 @@
 113四中高,5-34,胞衣,báu í,báu í,南,教典南四縣,False,True,
 113四中高,5-35,腹內（下水）,bùg nui (ha sùi),bùg nui (ha sùi),南,字級對照,False,True,table table table table
 113四中高,5-36,胗肝,kín gón,kín gón,南,教典南四縣,False,True,
-113四中高,5-38,雞核仔,gié hag è,gié hag è,南,系統規則,False,True,table table zai
+113四中高,5-37,雞旺仔（雞紅）,gié vong è (gié fǔng),gié vong è (gié fǔng),南,字級對照,False,True,table table manual table table
+113四中高,5-38,雞核仔,gié hag è,gié hag è,南,字級對照,False,True,table table manual
 113四中高,5-39,雞胗,gié kín,gié kín,南,教典南四縣,False,True,
 113四中高,5-40,雞公,gié gúng,gié gúng,南,教典南四縣,False,True,
 113四中高,5-41,雄雞仔,hiǔng gié è,hiǔng gié è,南,教典南四縣,False,True,
@@ -1813,7 +1836,7 @@
 113四中高,5-71,揚尾仔,iǒng mí è,iǒng mí è,南,教典南四縣,False,True,
 113四中高,5-72,水揚尾,sùi iǒng mí,sùi iǒng mí,南,字級對照,False,True,table table table
 113四中高,5-73,竹筍蛄,zùg sùn gú,zùg sùn gú,南,字級對照,False,True,table table table
-113四中高,5-74,金蛄仔,gím gú è,gím gú è,南,系統規則,False,True,table table zai
+113四中高,5-74,金蛄仔,gím gú è,gím gú è,南,字級對照,False,True,table table manual
 113四中高,5-76,大頭狗,tai těu gièu,tai těu gièu,南,字級對照,False,True,table table table
 113四中高,5-77,𧊅𬠖仔,guài ngiam è,guài ngiam è,南,教典南四縣,False,True,
 113四中高,5-80,養,ióng,ióng,南,教典南四縣,False,True,
@@ -1828,6 +1851,7 @@
 113四中高,6-6,草埔,cò pú,cò pú,南,字級對照,False,True,table table
 113四中高,6-7,著火,cog fò,cog fò,南,教典南四縣,False,True,
 113四中高,6-8,臭青,cu qiang,cu qiang,南,教典南四縣,False,True,
+113四中高,6-9,落雨毛仔（打雨毛冇、打雨毛屑）,log ì mó è (dà ì mó pang、dà ì mó sèb),log ì mó è (dà ì mó pang、dà ì mó sèb),南,字級對照,False,True,table table table manual table table table table table table table table
 113四中高,6-10,打露,dà lu,dà lu,南,教典南四縣,False,True,
 113四中高,6-11,當日,dóng ngìd,dóng ngìd,南,教典南四縣,False,True,
 113四中高,6-12,翡翠,fì cui,fì cui,南,教典南四縣,False,True,
@@ -1838,6 +1862,7 @@
 113四中高,6-18,風吹日炙,fúng cói ngìd zàg,fúng cói ngìd zàg,南,教典南四縣,False,True,
 113四中高,6-19,風馳雨,fúng cǐi ì,fúng cǐi ì,南,字級對照,False,True,table table table
 113四中高,6-20,風沙（風飛沙）,fúng sá (fúng bí sá),fúng sá (fúng bí sá),南,字級對照,False,True,table table table table table
+113四中高,6-21,風合雨（風合水）,fúng gàg ì (fúng gàg sùi),fúng gàg ì (fúng gàg sùi),南,字級對照,False,True,table manual table table manual table
 113四中高,6-22,合縫,gàb pung,gàb pung,南,字級對照,False,True,table table
 113四中高,6-25,起風,hì fúng,hì fúng,南,教典南四縣,False,True,
 113四中高,6-26,嗋石,hiab sag,hiab sag,南,教典南四縣,False,True,
@@ -1851,7 +1876,7 @@
 113四中高,6-35,崁下,kam há,kam há,南,教典南四縣,False,True,
 113四中高,6-38,環保,kuǎn/fǎn bò,fǎn bò,南,教典南四縣,False,False,
 113四中高,6-39,濫濫,lam lam,lam lam,南,字級對照,False,True,table table
-113四中高,6-40,濫仔,lam è,lam è,南,系統規則,False,True,table zai
+113四中高,6-40,濫仔,lam è,lam è,南,字級對照,False,True,table manual
 113四中高,6-41,落雹,log pog,log pog,南,教典南四縣,False,True,
 113四中高,6-43,木浪樹,mùg long su,mùg long su,南,教典南四縣,False,True,
 113四中高,6-44,泥漿,nǎi jióng,nǎi jióng,南,教典南四縣,False,True,
@@ -1865,6 +1890,7 @@
 113四中高,6-54,石炭,sag tan,sag tan,南,教典南四縣,False,True,
 113四中高,6-55,山坳,sán áu,sán áu,南,字級對照,False,True,table table
 113四中高,6-57,山窩,sán vó,sán vó,南,教典南四縣,False,True,
+113四中高,6-58,生蟲仔,sáng cǔng è,sáng cǔng è,南,字級對照,False,True,table table manual
 113四中高,6-59,生菇,sáng gú,sáng gú,南,教典南四縣,False,True,
 113四中高,6-61,上埔,song pú,song pú,南,字級對照,False,True,table table
 113四中高,6-62,上崎,sóng gia,sóng gia,南,教典南四縣,False,True,
@@ -1910,7 +1936,7 @@
 113四中高,7-41,輾著,zan dò,zan dò,南,教典南四縣,False,True,
 113四中高,7-42,轉色,zòn sèd,zòn sèd,南,教典南四縣,False,True,
 113四中高,7-43,椊等（塞等）,zud dèn (sèd dèn),zud dèn (sèd dèn),南,字級對照,False,True,table table table table
-113四中高,8-1,醃瓜仔,ám guá è,ám guá è,南,系統規則,False,True,table table zai
+113四中高,8-1,醃瓜仔,ám guá è,ám guá è,南,字級對照,False,True,table table manual
 113四中高,8-2,半肥腈,ban pǐ jiáng,ban pǐ jiáng,南,教典南四縣,False,True,
 113四中高,8-3,腈豬肉,jiáng zú ngiùg,jiáng zú ngiùg,南,教典南四縣,False,True,
 113四中高,8-6,肥湯,pǐ tóng,pǐ tóng,南,教典南四縣,False,True,
@@ -1927,6 +1953,7 @@
 113四中高,8-30,賁肉,pún ngiùg,pún ngiùg,南,字級對照,False,True,table table
 113四中高,8-32,刣豬皮,tài zú pǐ,tài zú pǐ,南,字級對照,False,True,table table table
 113四中高,8-33,剁雞盤,dog gié pǎn,dog gié pǎn,南,字級對照,False,True,table table table
+113四中高,8-34,斷粢粑仔,dòn qǐ bá è,dòn qǐ bá è,南,字級對照,False,True,table table table manual
 113四中高,8-35,片豬肉,pièn zú ngiùg,pièn zú ngiùg,南,字級對照,False,True,table table table
 113四中高,8-36,㓾雞捋鴨,cǐi gié lod àb,cǐi gié lod àb,南,教典南四縣,False,True,
 113四中高,8-37,揤覆菜,jìd pùg coi,jìd pùg coi,南,字級對照,False,True,table table table
@@ -1936,12 +1963,14 @@
 113四中高,8-42,浸酒,jim jiù,jim jiù,南,教典南四縣,False,True,
 113四中高,8-43,攞味,ló mi,ló mi,南,字級對照,False,True,table table
 113四中高,8-45,打淨食,dà qiang siid,dà qiang siid,南,教典南四縣,False,True,
+113四中高,8-46,嗒看啊,dab kon à,dab kon à,南,字級對照,False,True,table table manual
 113四中高,8-47,正餐,ziin cón,ziin cón,南,教典南四縣,False,True,
 113四中高,8-48,準飯食,zùn fan siid,zùn fan siid,南,教典南四縣,False,True,
 113四中高,8-49,耐食,nai siid,nai siid,南,字級對照,False,True,table table
 113四中高,8-51,菜頭菜尾,coi těu coi mí,coi těu coi mí,南,字級對照,False,True,table table table table
 113四中高,8-52,冷飯,láng fan,láng fan,南,教典南四縣,False,True,
 113四中高,8-55,汁,zìib,zìib,南,教典南四縣,False,True,
+113四中高,8-56,泌菜味,bi coi mi,bi coi mi,南,字級對照,False,True,manual table table
 113四中高,8-57,變食,bien siid,bien siid,南,教典南四縣,False,True,
 113四中高,8-58,知食,dí siid,dí siid,南,教典南四縣,False,True,
 113四中高,8-59,落鑊,log vog,log vog,南,教典南四縣,False,True,
@@ -1951,7 +1980,7 @@
 113四中高,8-65,撿碗筷,giàm vòn kuai,giàm vòn kuai,南,教典南四縣,False,True,
 113四中高,8-66,飯盆頭,fan pǔn těu,fan pǔn těu,南,字級對照,False,True,table table table
 113四中高,8-67,落碗公,làb vòn gúng,làb vòn gúng,南,字級對照,False,True,table table table
-113四中高,8-68,撈仔,lěu è,lěu è,南,系統規則,False,True,table zai
+113四中高,8-68,撈仔,lěu è,lěu è,南,字級對照,False,True,table manual
 113四中高,8-69,缶仔,fǐ è,fǐ è,南,教典南四縣,False,True,
 113四中高,8-71,擂缽,lǔi bàd,lǔi bàd,南,教典南四縣,False,True,
 113四中高,8-73,醃缸,ám góng,ám góng,南,教典南四縣,False,True,
@@ -1971,7 +2000,7 @@
 113四中高,8-92,鐵釘仔,tièd dáng è,tièd dáng è,南,教典南四縣,False,True,
 113四中高,8-94,斧頭,bù těu,bù těu,南,教典南四縣,False,True,
 113四中高,8-97,茶壽,cǎ su,cǎ su,南,教典南四縣,False,True,
-113四中高,8-99,茶罐（茶罐仔）,cǎ gon (cǎ gon è),cǎ gon (cǎ gon è),南,系統規則,False,True,table table table table zai
+113四中高,8-99,茶罐（茶罐仔）,cǎ gon (cǎ gon è),cǎ gon (cǎ gon è),南,字級對照,False,True,table table table table manual
 113四中高,8-101,𥯥箕,càb gí,càb gí,南,教典南四縣,False,True,
 113四中高,8-102,壁角（壁壢角）,biàg gòg (biàg làg gòg),biàg gòg (biàg làg gòg),南,字級對照,False,True,table table table table table
 113四中高,8-103,草蓆,cò qiag,cò qiag,南,教典南四縣,False,True,
@@ -1981,7 +2010,8 @@
 113四中高,8-111,凳頭,den těu,den těu,南,教典南四縣,False,True,
 113四中高,8-113,油漆,iǔ qìd,iǔ qìd,南,教典南四縣,False,True,
 113四中高,8-114,熨斗,iun dèu,iun dèu,南,教典南四縣,False,True,
-113四中高,8-115,鉗仔,kiǎm è,kiǎm è,南,系統規則,False,True,table zai
+113四中高,8-115,鉗仔,kiǎm è,kiǎm è,南,字級對照,False,True,table manual
+113四中高,8-117,乳珠仔（玻璃珠）,nen zú è (bó lǐ zú),nen zú è (bó lǐ zú),南,字級對照,False,True,table table manual table table table
 113四中高,8-118,牙确仔,ngǎ gog è,ngǎ gog è,南,教典南四縣,False,True,
 113四中高,8-120,壞銅壞鐵,fài tǔng fài tièd,fài tǔng fài tièd,南,教典南四縣,False,True,
 113四中高,8-121,生鹵,sáng lú,sáng lú,南,教典南四縣,False,True,
@@ -1992,13 +2022,14 @@
 113四中高,8-129,褲帶仔,fu dai è,fu dai è,南,教典南四縣,False,True,
 113四中高,8-130,褲頭,fu těu,fu těu,南,教典南四縣,False,True,
 113四中高,8-131,肚褡褲,dù dàb fu,dù dàb fu,南,教典南四縣,False,True,
+113四中高,8-133,嘴揞仔（封嘴仔）,zoi ém è (fúng zoi è),zoi ém è (fúng zoi è),南,字級對照,False,True,table table manual table table manual
 113四中高,8-134,綢仔,cǔ è,cǔ è,南,教典南四縣,False,True,
 113四中高,8-135,綢緞,cǔ ton,cǔ ton,南,教典南四縣,False,True,
 113四中高,8-136,底衫仔,dài sám è,dài sám è,南,教典南四縣,False,True,
 113四中高,8-137,面衫,mien sám,mien sám,南,教典南四縣,False,True,
 113四中高,8-138,衫腳,sám giòg,sám giòg,南,字級對照,False,True,table table
 113四中高,8-140,熨衫褲,iun sám fu,iun sám fu,南,字級對照,False,True,table table table
-113四中高,8-145,䯋鍊（金鍊仔）,pad lien (gím lien è),pad lien (gím lien è),南,系統規則,False,True,table table table table zai
+113四中高,8-145,䯋鍊（金鍊仔）,pad lien (gím lien è),pad lien (gím lien è),南,字級對照,False,True,table table table table manual
 113四中高,8-146,羅帕,lǒ pa,lǒ pa,南,字級對照,False,True,table table
 113四中高,8-148,屐仔,kiag è,kiag è,南,教典南四縣,False,True,
 113四中高,8-149,印色,in sèd,in sèd,南,教典南四縣,False,True,
@@ -2017,9 +2048,9 @@
 113四中高,8-168,閂門,cón mǔn,cón mǔn,南,教典南四縣,False,True,
 113四中高,8-170,籬笆,lǐ bá,lǐ bá,南,教典南四縣,False,True,
 113四中高,8-171,絡索,log sòg,log sòg,南,教典南四縣,False,True,
-113四中高,8-172,籮仔,lǒ è,lǒ è,南,系統規則,False,True,table zai
+113四中高,8-172,籮仔,lǒ è,lǒ è,南,字級對照,False,True,table manual
 113四中高,8-173,米籮,mì lǒ,mì lǒ,南,教典南四縣,False,True,
-113四中高,8-175,撐堵仔,cang dǔ è,cang dǔ è,南,系統規則,False,True,table table zai
+113四中高,8-175,撐堵仔,cang dǔ è,cang dǔ è,南,字級對照,False,True,table table manual
 113四中高,8-176,躁火,cau fò,cau fò,南,字級對照,False,True,table table
 113四中高,8-177,遰火燒,ce fò séu,ce fò séu,南,字級對照,False,True,table table table
 113四中高,8-180,呵燒來,ho séu lǒi,ho séu lǒi,南,字級對照,False,True,table table table
@@ -2032,6 +2063,7 @@
 113四中高,8-189,入門,ngib mǔn,ngib mǔn,南,教典南四縣,False,True,
 113四中高,8-190,入被,ngib　pí,ngib pí,南,教典南四縣,False,True,
 113四中高,8-193,噩夜,ngog ia,ngog ia,南,教典南四縣,False,True,
+113四中高,8-194,弄孫仔,nung sún è,nung sún è,南,字級對照,False,True,table table manual
 113四中高,8-195,盤水,pǎn sùi,pǎn sùi,南,教典南四縣,False,True,
 113四中高,8-196,瓠杓,pǔ sog,pǔ sog,南,教典南四縣,False,True,
 113四中高,8-198,沙沙,sá sá,sá sá,南,字級對照,False,True,table table
@@ -2070,6 +2102,7 @@
 113四中高,9-18,冰冰,bén bén,bén bén,南,字級對照,False,True,table table
 113四中高,9-20,褒獎,bó jiòng,bó jiòng,南,教典南四縣,False,True,
 113四中高,9-22,不褡不膝,bùd dàb bùd qìd,bùd dàb bùd qìd,南,教典南四縣,False,True,
+113四中高,9-23,齊腰仔,cě iéu è,cě iéu è,南,字級對照,False,True,table table manual
 113四中高,9-24,齊膝頭,cě qìd těu,cě qìd těu,南,字級對照,False,True,table table table
 113四中高,9-25,層層疊疊,cěn cěn tiab tiab,cěn cěn tiab tiab,南,字級對照,False,True,table table table table
 113四中高,9-27,瘦身,ceu síin,ceu síin,南,字級對照,False,True,table table
@@ -2256,7 +2289,7 @@
 113四中高,10-4,火藥,fò iog,fò iog,南,教典南四縣,False,True,
 113四中高,10-7,退伍,tui ǹg,tui ǹg,南,教典南四縣,False,True,
 113四中高,11-1,啞狗,à gièu,à gièu,南,教典南四縣,False,True,
-113四中高,11-2,阿姨仔,á ǐ è,á ǐ è,南,系統規則,False,True,table table zai
+113四中高,11-2,阿姨仔,á ǐ è,á ǐ è,南,字級對照,False,True,table table manual
 113四中高,11-3,恁久無看著,àn giù mǒ kon dò,àn giù mǒ kon dò,南,字級對照,False,True,table table table table table
 113四中高,11-4,恁久好無,àn giù hò mǒ,àn giù hò mǒ,南,字級對照,False,True,table table table table
 113四中高,11-5,恁毋係款,àn m̌ he kuàn,àn m̌ he kuàn,南,字級對照,False,True,table table table table
@@ -2334,6 +2367,7 @@
 113四中高,11-102,緊看緊靚,gìn kon gìn jiáng,gìn kon gìn jiáng,南,字級對照,False,True,table table table table
 113四中高,11-103,腳士,giòg sii,giòg sii,南,教典南四縣,False,True,
 113四中高,11-104,挶屎,giug sìi,giug sìi,南,教典南四縣,False,True,
+113四中高,11-105,逐細妹仔,giùg se moi è,giùg se moi è,南,字級對照,False,True,table table table manual
 113四中高,11-106,過家尞,go gá liau,go gá liau,南,字級對照,False,True,table table table
 113四中高,11-107,過門,go mǔn,go mǔn,南,教典南四縣,False,True,
 113四中高,11-108,孤盲絕代（孤盲絕）,gó mó qied toi (gó mó qied),gó mó qied toi (gó mó qied),南,字級對照,False,True,table table table table table table table
@@ -2343,10 +2377,13 @@
 113四中高,11-112,講東講西,gòng dúng gòng xí,gòng dúng gòng xí,南,字級對照,False,True,table table table table
 113四中高,11-113,講靚話,gòng jiáng fa,gòng jiáng fa,南,字級對照,False,True,table table table
 113四中高,11-114,呱牯（呱嫲）,guǎ gù (guǎ mǎ),guǎ gù (guǎ mǎ),南,字級對照,False,True,table table table table
+113四中高,11-115,拐細人仔,guài se ngǐn è,guài se ngǐn è,南,字級對照,False,True,table table table manual
 113四中高,11-116,鬼精仔,gùi jín è,gùi jín è,南,教典南四縣,False,True,
 113四中高,11-117,公太,gúng tai,gúng tai,南,教典南四縣,False,True,
 113四中高,11-118,公當人（公親）,gúng dong ngǐn (gúng qín),gúng dong ngǐn (gúng qín),南,字級對照,False,True,table table table table table
 113四中高,11-120,下屋人,há vùg ngǐn,há vùg ngǐn,南,字級對照,False,True,table table table
+113四中高,11-121,鹹合澀（鹹澀）,hǎm gàg sèb (hǎm sèb),hǎm gàg sèb (hǎm sèb),南,字級對照,False,True,table manual table table table
+113四中高,11-122,行灶下樣仔,hǎng zo há iong è,hǎng zo há iong è,南,字級對照,False,True,table table table table manual
 113四中高,11-123,好展,hau dièn,hau dièn,南,教典南四縣,False,True,
 113四中高,11-124,喊兼來,hém giám lǒi,hém giám lǒi,南,字級對照,False,True,table table table
 113四中高,11-125,喊燒,hém séu,hém séu,南,字級對照,False,True,table table
@@ -2354,11 +2391,12 @@
 113四中高,11-129,嫌到臭屎,hiǎm do cu sìi,hiǎm do cu sìi,南,教典南四縣,False,True,
 113四中高,11-130,嫌毋得,hiǎm m̌ dèd,hiǎm m̌ dèd,南,字級對照,False,True,table table table
 113四中高,11-131,梟雄,hiéu hiǔng,hiéu hiǔng,南,教典南四縣,False,True,
-113四中高,11-134,兄弟仔,hiúng ti è,hiúng ti é,南,系統規則,False,False,table table zai
+113四中高,11-132,畜蚊仔,hiùg mún è,hiùg mún è,南,字級對照,False,True,table table manual
+113四中高,11-134,兄弟仔,hiúng ti è,hiúng ti ě,南,字級對照,False,False,table table manual
 113四中高,11-136,學精,hog jín,hog jín,南,教典南四縣,False,True,
 113四中高,11-137,行頭,hǒng těu,hǒng těu,南,字級對照,False,True,table table
 113四中高,11-138,降服,hǒng fug,hǒng fug,南,教典南四縣,False,True,
-113四中高,11-140,姨丈仔,ǐ cóng è,ǐ cóng è,南,系統規則,False,True,table table zai
+113四中高,11-140,姨丈仔,ǐ cóng è,ǐ cóng è,南,字級對照,False,True,table table manual
 113四中高,11-143,一莊一俗（一方一俗）,ìd zóng ìd xiug (ìd fóng ìd xiug),ìd zóng ìd xiug (ìd fóng ìd xiug),南,字級對照,False,True,table table table table table table table table
 113四中高,11-144,一還一，二還二,ìd vǎn ìd，ngi vǎn ngi,ìd vǎn ìd ngi vǎn ngi,南,教典南四縣,False,True,
 113四中高,11-150,應酬,in cǔ,in cǔ,南,教典南四縣,False,True,
@@ -2369,7 +2407,7 @@
 113四中高,11-155,油條,iǔ tiǎu,iǔ tiǎu,南,教典南四縣,False,True,
 113四中高,11-156,接嘴,jiàb zoi,jiàb zoi,南,教典南四縣,False,True,
 113四中高,11-157,井肚蛤蟆,jiàng dù hǎ mǎ,jiàng dù hǎ mǎ,南,字級對照,False,True,table table table table
-113四中高,11-158,皺毛仔,jiu mó è,jiu mó è,南,系統規則,False,True,table table zai
+113四中高,11-158,皺毛仔,jiu mó è,jiu mó è,南,字級對照,False,True,table table manual
 113四中高,11-162,契哥,kie gó,kie gó,南,教典南四縣,False,True,
 113四中高,11-166,禽獸畜生,kǐm cu cùg sáng,kǐm cu cùg sáng,南,字級對照,False,True,table table table table
 113四中高,11-169,共家人,kiung gá ngǐn,kiung gá ngǐn,南,字級對照,False,True,table table table
@@ -2445,7 +2483,7 @@
 113四中高,11-254,三條坑水洗毋淨,sám tiǎu háng sùi sè m̌ qiang,sám tiǎu háng sùi sè m̌ qiang,南,字級對照,False,True,table table table table table table table
 113四中高,11-257,笑連連,seu liěn liěn,seu liěn liěn,南,教典南四縣,False,True,
 113四中高,11-258,笑頭笑面,seu těu seu mien,seu těu seu mien,南,教典南四縣,False,True,
-113四中高,11-259,小郎叔（小郎仔）,sèu lǒng sùg (sèu lǒng è),sèu lǒng sùg (sèu lǒng è),南,系統規則,False,True,table table table table table zai
+113四中高,11-259,小郎叔（小郎仔）,sèu lǒng sùg (sèu lǒng è),sèu lǒng sùg (sèu lǒng è),南,字級對照,False,True,table table table table table manual
 113四中高,11-264,食百二,siid bàg ngi,siid bàg ngi,南,教典南四縣,False,True,
 113四中高,11-266,食蛇食𧊅,siid sǎ siid guài,siid sǎ siid guài,南,教典南四縣,False,True,
 113四中高,11-267,失人禮,sìid ngǐn lí,sìid ngǐn lí,南,教典南四縣,False,True,
@@ -2463,10 +2501,11 @@
 113四中高,11-281,大開大使,tai kói tai sìi,tai kói tai sìi,南,教典南四縣,False,True,
 113四中高,11-282,大目新娘,tai mùg xín ngiǒng,tai mùg xín ngiǒng,南,字級對照,False,True,table table table table
 113四中高,11-283,大娘姊,tai ngiǒng jì,tai ngiǒng jì,南,教典南四縣,False,True,
-113四中高,11-284,大戇牯（戇仔）,tai ngong gù (ngong è),tai ngong gù (ngong è),南,系統規則,False,True,table table table table zai
+113四中高,11-284,大戇牯（戇仔）,tai ngong gù (ngong è),tai ngong gù (ngong è),南,字級對照,False,True,table table table table manual
 113四中高,11-285,大細目,tai se mùg,tai se mùg,南,教典南四縣,False,True,
 113四中高,11-286,大大細細,tai tai se se,tai tai se se,南,教典南四縣,False,True,
 113四中高,11-287,大主大意,tai zù tai i,tai zù tai i,南,教典南四縣,False,True,
+113四中高,11-288,探看啊,tàm kon à,tàm kon à,南,字級對照,False,True,table table manual
 113四中高,11-289,貪㘔,tám sái,tám sái,南,字級對照,False,True,table table
 113四中高,11-290,聽毋入耳,táng m̌ ngib ngì,táng m̌ ngib ngì,南,教典南四縣,False,True,
 113四中高,11-292,頭仔,těu è,těu è,南,教典南四縣,False,True,
@@ -2489,6 +2528,7 @@
 113四中高,11-313,相打泌背,xióng dà bi boi,xióng dà bi boi,南,教典南四縣,False,True,
 113四中高,11-314,相堵頭,xióng dǔ těu,xióng dǔ těu,南,教典南四縣,False,True,
 113四中高,11-315,相行,xióng hǎng,xióng hǎng,南,字級對照,False,True,table table
+113四中高,11-316,相尖泌背,xióng jiám bi boi,xióng jiám bi boi,南,字級對照,False,True,table table manual table
 113四中高,11-317,相罵,xióng ma,xióng ma,南,教典南四縣,False,True,
 113四中高,11-318,相搶泌背,xióng qiòng bi boi,xióng qiòng bi boi,南,教典南四縣,False,True,
 113四中高,11-319,相惜,xióng xiàg,xióng xiàg,南,教典南四縣,False,True,
@@ -2514,6 +2554,7 @@
 113四中高,11-339,主事人,zù sii ngǐn,zù sii ngǐn,南,字級對照,False,True,table table table
 113四中高,11-340,總包（總貌）,zùng báu (zùng mau),zùng báu (zùng mau),南,字級對照,False,True,table table table table
 113四中高,11-343,出頭,cùd těu,cùd těu,南,教典南四縣,False,True,
+113四中高,11-344,命團仔（命袋仔）,miang tǒn è (miang toi è),miang tǒn è (miang toi è),南,字級對照,False,True,table table manual table table manual
 113四中高,11-345,出面,cùd mien,cùd mien,南,教典南四縣,False,True,
 113四中高,11-346,有講,iú gòng,iú gòng,南,字級對照,False,True,table table
 113四中高,11-347,花舌,fá sad,fá sad,南,教典南四縣,False,True,
@@ -2557,22 +2598,22 @@
 113四中高,12-65,無提無防,mǒ tǐ mǒ fǒng,mǒ tǐ mǒ fǒng,南,字級對照,False,True,table table table table
 113四中高,12-67,罔…,mòng...,mòng...,南,字級對照,False,True,table
 113四中高,12-68,罔食,mòng siid,mòng siid,南,教典南四縣,False,True,
-113四中高,12-69,哪下（哪下仔）,nai ha (nai ha è),nai ha (nai ha é),南,系統規則,False,False,table table table table zai
+113四中高,12-69,哪下（哪下仔）,nai ha (nai ha è),nai ha (nai ha è),南,字級對照,False,True,table table table table manual
 113四中高,12-70,哪向,nai hiong,nai hiong,南,字級對照,False,True,table table
 113四中高,12-72,另日,nang ngìd,nang ngìd,南,教典南四縣,False,True,
 113四中高,12-73,另擺,nang bài,nang bài,南,教典南四縣,False,True,
 113四中高,12-75,日日,ngìd ngìd,ngìd ngìd,南,教典南四縣,False,True,
-113四中高,12-83,…外仔,...ngoi è,...ngoi é,南,系統規則,False,False,table zai
+113四中高,12-83,…外仔,...ngoi è,...ngoi è,南,字級對照,False,True,table manual
 113四中高,12-84,內肚,nui dù,nui dù,南,教典南四縣,False,True,
 113四中高,12-86,怕毋會,pa m̌ voi,pa m̌ voi,南,字級對照,False,True,table table table
 113四中高,12-87,棚頂,pǎng dàng,pǎng dàng,南,教典南四縣,False,True,
-113四中高,12-88,甫甫仔,pù pù è,pù pù é,南,系統規則,False,False,table table zai
+113四中高,12-88,甫甫仔,pù pù è,pù pù è,南,字級對照,False,True,table table manual
 113四中高,12-89,七暗八暗（七暗八摸）,qìd am bàd am (qìd am bàd mó),qìd am bàd am (qìd am bàd mó),南,字級對照,False,True,table table table table table table table table
 113四中高,12-90,七早八早,qìd zò bàd zò,qìd zò bàd zò,南,教典南四縣,False,True,
 113四中高,12-91,七晝八晝,qìd zu bàd zu,qìd zu bàd zu,南,教典南四縣,False,True,
 113四中高,12-96,從頭到尾,qiǔng těu do mí,qiǔng těu do mí,南,教典南四縣,False,True,
 113四中高,12-97,聲聲句句,sáng sáng gi gi,sáng sáng gi gi,南,教典南四縣,False,True,
-113四中高,12-102,成時（成時仔）,sǎng sǐi (sǎng sǐi è),sǎng sǐi (sǎng sǐi é),南,系統規則,False,False,table table table table zai
+113四中高,12-102,成時（成時仔）,sǎng sǐi (sǎng sǐi è),sǎng sǐi (sǎng sǐi è),南,字級對照,False,True,table table table table manual
 113四中高,12-105,上早,song zò,song zò,南,教典南四縣,False,True,
 113四中高,12-106,樹頭下,su těu há,su těu há,南,字級對照,False,True,table table table
 113四中高,12-110,透日透夜,teu ngìd teu ia,teu ngìd teu ia,南,字級對照,False,True,table table table table
@@ -2616,7 +2657,7 @@
 113四中高,13-45,準堵好,zùn dù hò,zùn dù hò,南,字級對照,False,True,table table table
 113四中高,14-1,飆車,béu cá,béu cá,南,字級對照,False,True,table table
 113四中高,14-2,䃗崁,bòg kam,bòg kam,南,教典南四縣,False,True,
-113四中高,14-3,鏨仔,cam è,cam è,南,系統規則,False,True,table zai
+113四中高,14-3,鏨仔,cam è,cam è,南,字級對照,False,True,table manual
 113四中高,14-5,鏨字,cam sii,cam sii,南,字級對照,False,True,table table
 113四中高,14-6,打井,dà jiàng,dà jiàng,南,教典南四縣,False,True,
 113四中高,14-7,鬥緪來,deu hěn lǒi,deu hěn lǒi,南,字級對照,False,True,table table table
@@ -2661,6 +2702,7 @@
 113四中高,15-36,媒人,mǒi ngǐn,mǒi ngǐn,南,教典南四縣,False,True,
 113四中高,15-38,母親節（阿姆節）,mú qín jièd (á mé jièd),mú qín jièd (á mé jièd),南,字級對照,False,True,table table table table table table
 113四中高,15-39,拈籤卜卦,ngiám qiám bùg gua,ngiám qiám bùg gua,南,教典南四縣,False,True,
+113四中高,15-40,拈籤仔,ngiám qiám è,ngiám qiám è,南,字級對照,False,True,table table manual
 113四中高,15-44,安胎,ón tói,ón tói,南,教典南四縣,False,True,
 113四中高,15-45,划龍船,pǎ liǔng sǒn,pǎ liǔng sǒn,南,教典南四縣,False,True,
 113四中高,15-46,避邪,pìd xiǎ,pìd xiǎ,南,教典南四縣,False,True,
@@ -2704,11 +2746,11 @@
 113四中高,16-24,㼓,liam,liam,南,教典南四縣,False,True,
 113四中高,16-26,葩,pá,pá,南,教典南四縣,False,True,
 113四中高,16-27,扇,san,san,南,教典南四縣,False,True,
-113四中高,16-28,成百個仔,sǎng bàg ge è,sǎng bàg ge è,南,系統規則,False,True,table table table zai
+113四中高,16-28,成百個仔,sǎng bàg ge è,sǎng bàg ge è,南,字級對照,False,True,table table table manual
 113四中高,16-31,胎,tói,tói,南,教典南四縣,False,True,
 113四中高,16-32,廂,xióng,xióng,南,教典南四縣,False,True,
 113四中高,16-34,燭,zùg,zùg,南,教典南四縣,False,True,
-113四中高,17-2,半做半尞（半做尞仔）,ban zo ban liau (ban zo liau è),ban zo ban liau (ban zo liau é),南,系統規則,False,False,table table table table table table table zai
+113四中高,17-2,半做半尞（半做尞仔）,ban zo ban liau (ban zo liau è),ban zo ban liau (ban zo liau ě),南,字級對照,False,False,table table table table table table table manual
 113四中高,17-3,包分人做,báu bún ngǐn zo,báu bún ngǐn zo,南,字級對照,False,True,table table table table
 113四中高,17-4,標會仔,béu fi è,béu fi è,南,教典南四縣,False,True,
 113四中高,17-5,枋模,bióng mǔ,bióng mǔ,南,教典南四縣,False,True,
@@ -2801,6 +2843,7 @@
 113四中高,18-9,打麻雀,dà mǎ jiòg,dà mǎ jiòg,南,教典南四縣,False,True,
 113四中高,18-10,輟學,dòd hog,dòd hog,南,教典南四縣,False,True,
 113四中高,18-11,和山歌,fǒ sán gó,fǒ sán gó,南,教典南四縣,False,True,
+113四中高,18-12,份家啦飯仔（搞家啦飯仔）,fun gá lá fan è (gàu gá lá fan è),fun gá lá fan è (gàu gá lá fan è),南,字級對照,False,True,table table table table manual table table table table manual
 113四中高,18-14,劍,giam,giam,南,教典南四縣,False,True,
 113四中高,18-16,鬼畫符,gùi fa pǔ,gùi fa pǔ,南,教典南四縣,False,True,
 113四中高,18-20,腔頭,kióng těu,kióng těu,南,教典南四縣,False,True,
@@ -2815,6 +2858,7 @@
 113四中高,18-33,揇腰跤,nàm iéu gáu,nàm iéu gáu,南,字級對照,False,True,table table table
 113四中高,18-34,師傅話,síi fu fa,síi fu fa,南,教典南四縣,False,True,
 113四中高,18-36,跈人毋著,těn ngǐn m̌ dò,těn ngǐn m̌ dò,南,字級對照,False,True,table table table table
+113四中高,18-37,作棋仔（行棋仔）,zòg kǐ è (hǎng kǐ è),zòg kǐ è (hǎng kǐ è),南,字級對照,False,True,table table manual table table manual
 113四初,1-2,著著,cog dò,cog dò,南,教典南四縣,False,True,
 113四初,1-3,著傷,cog sóng,cog sóng,南,教典南四縣,False,True,
 113四初,1-4,嗽,cug,cug,南,教典南四縣,False,True,
@@ -2834,7 +2878,7 @@
 113四初,1-24,膝頭（腳膝頭）,qìd těu (giòg qìd těu),qìd těu (giòg qìd těu),南,字級對照,False,True,table table table table table
 113四初,1-26,腳趾,giòg zìi,giòg zìi,南,教典南四縣,False,True,
 113四初,1-27,心肝,xím gón,xím gón,南,教典南四縣,False,True,
-113四初,1-28,腸仔,cǒng è,cǒng è,南,系統規則,False,True,table zai
+113四初,1-28,腸仔,cǒng è,cǒng è,南,字級對照,False,True,table manual
 113四初,2-2,發夢,bòd mung,bòd mung,南,教典南四縣,False,True,
 113四初,2-3,插,càb,càb,南,教典南四縣,False,True,
 113四初,2-5,著驚,cog giáng,cog giáng,南,教典南四縣,False,True,
@@ -2984,7 +3028,7 @@
 113四初,5-21,乖,guái,guái,南,教典南四縣,False,True,
 113四初,5-22,狹,hab,hab,南,教典南四縣,False,True,
 113四初,5-23,緪,hěn,hěn,南,教典南四縣,False,True,
-113四初,5-24,形仔,hǐn è,hǐn è,南,系統規則,False,True,table zai
+113四初,5-24,形仔,hǐn è,hǐn è,南,字級對照,False,True,table manual
 113四初,5-25,好勢,hò se,hò se,南,教典南四縣,False,True,
 113四初,5-28,幼,iu,iu,南,教典南四縣,False,True,
 113四初,5-29,有影,iú iàng,iú iàng,南,教典南四縣,False,True,
@@ -3061,6 +3105,7 @@
 113四初,6-16,拜託,bai tòg,bai tòg,南,教典南四縣,False,True,
 113四初,6-18,保護,bò fu,bò fu,南,教典南四縣,False,True,
 113四初,6-19,參加,cám gá,cám gá,南,教典南四縣,False,True,
+113四初,6-20,賊仔（賊牯）,ced è (ced gù),ced è (ced gù),南,字級對照,False,True,table manual table table
 113四初,6-21,打嘴鼓,dà zoi gù,dà zoi gù,南,教典南四縣,False,True,
 113四初,6-22,搭,dàb,dàb,南,教典南四縣,False,True,
 113四初,6-23,搭,dàb,dàb,南,教典南四縣,False,True,
@@ -3120,7 +3165,7 @@
 113四初,7-2,搬,bán,bán,南,教典南四縣,False,True,
 113四初,7-3,包,báu,báu,南,字級對照,False,True,table
 113四初,7-4,壁,biàg,biàg,南,教典南四縣,False,True,
-113四初,7-6,布（布仔）,bu (bu è),bu (bu è),南,系統規則,False,True,table table zai
+113四初,7-6,布（布仔）,bu (bu è),bu (bu è),南,字級對照,False,True,table table manual
 113四初,7-7,炒,càu,càu,南,教典南四縣,False,True,
 113四初,7-8,㓾,cǐi,cǐi,南,教典南四縣,False,True,
 113四初,7-9,餐廳,cón táng,cón táng,南,教典南四縣,False,True,
@@ -3133,6 +3178,8 @@
 113四初,7-17,禁指,gim zìi,gim zìi,南,教典南四縣,False,True,
 113四初,7-18,故鄉,gu hióng,gu hióng,南,教典南四縣,False,True,
 113四初,7-19,滾水,gùn sùi,gùn sùi,南,教典南四縣,False,True,
+113四初,7-20,靴仔（皮鞋）,hió è (pǐ hǎi),hió è (pǐ hǎi),南,字級對照,False,True,table manual table table
+113四初,7-21,水靴仔（水鞋）,sùi hió è (sùi hǎi),sùi hió è (sùi hǎi),南,字級對照,False,True,table table manual table table
 113四初,7-22,䟘床,hong cǒng,hong cǒng,南,教典南四縣,False,True,
 113四初,7-25,油,iǔ,iǔ,南,字級對照,False,True,table
 113四初,7-26,酒,jiù,jiù,南,教典南四縣,False,True,
@@ -3143,7 +3190,7 @@
 113四初,7-32,面帕,mien pa,mien pa,南,字級對照,False,True,table table
 113四初,7-33,眠床,mǐn cǒng,mǐn cǒng,南,教典南四縣,False,True,
 113四初,7-35,門口,mǔn hèu,mǔn hèu,南,教典南四縣,False,True,
-113四初,7-36,鬧鐘（鬧鐘仔）,nau zúng (nau zúng è),nau zúng (nau zúng è),南,系統規則,False,True,table table table table zai
+113四初,7-36,鬧鐘（鬧鐘仔）,nau zúng (nau zúng è),nau zúng (nau zúng è),南,字級對照,False,True,table table table table manual
 113四初,7-38,日誌,ngìd zii,ngìd zii,南,教典南四縣,False,True,
 113四初,7-40,艾粄,ngie bàn,ngie bàn,南,教典南四縣,False,True,
 113四初,7-41,牛乳,ngiǔ nen,ngiǔ nen,南,教典南四縣,False,True,
@@ -3175,10 +3222,11 @@
 113四初,7-69,地圾（垃圾）,ti sèb (lèb sèb),ti sèb (lèb sèb),南,字級對照,False,True,table table table table
 113四初,7-70,添飯,tiám fan,tiám fan,南,教典南四縣,False,True,
 113四初,7-72,電火,tien fò,tien fò,南,教典南四縣,False,True,
+113四初,7-73,拖箱仔（拖仔）,tó xióng è (tó è),tó xióng è (tó è),南,字級對照,False,True,table table manual table manual
 113四初,7-74,袋仔,toi è,toi è,南,教典南四縣,False,True,
 113四初,7-75,梯排,tói pǎi,tói pǎi,南,教典南四縣,False,True,
 113四初,7-76,糖,tǒng,tǒng,南,教典南四縣,False,True,
-113四初,7-77,位仔,vi è,vi è,南,系統規則,False,True,table zai
+113四初,7-77,位仔,vi è,vi è,南,字級對照,False,True,table manual
 113四初,7-78,禾埕,vǒ tǎng,vǒ tǎng,南,教典南四縣,False,True,
 113四初,7-79,碗公,vòn gúng,vòn gúng,南,教典南四縣,False,True,
 113四初,7-80,搵,vun,vun,南,教典南四縣,False,True,
@@ -3191,7 +3239,7 @@
 113四初,8-4,蚊仔,mún è,mún è,南,教典南四縣,False,True,
 113四初,8-5,蟻公,ngie gúng,ngie gúng,南,教典南四縣,False,True,
 113四初,8-6,虐毛蟲（弄毛蟲）,ngiòg mó cǔng (nung mó cǔng),ngiòg mó cǔng (nung mó cǔng),南,字級對照,False,True,table table table table table table
-113四初,8-7,水蟻仔,sùi ngie è,sùi ngie è,南,系統規則,False,True,table table zai
+113四初,8-7,水蟻仔,sùi ngie è,sùi ngie è,南,字級對照,False,True,table table manual
 113四初,8-9,黃蚻,vǒng cad,vǒng cad,南,教典南四縣,False,True,
 113四初,8-10,烏蠅,vú ǐn,vú ǐn,南,教典南四縣,False,True,
 113四初,8-11,角,gòg,gòg,南,字級對照,False,True,table
@@ -3260,7 +3308,7 @@
 113四初,12-1,賺,con,con,南,教典南四縣,False,True,
 113四初,12-2,賺錢,con qiěn,con qiěn,南,教典南四縣,False,True,
 113四初,12-3,伸,cún,cún,南,教典南四縣,False,True,
-113四初,12-4,店仔,diam è,diam è,南,系統規則,False,True,table zai
+113四初,12-4,店仔,diam è,diam è,南,字級對照,False,True,table manual
 113四初,12-5,花錢,fá qiěn,fá qiěn,南,教典南四縣,False,True,
 113四初,12-6,飯店,fan diam,fan diam,南,教典南四縣,False,True,
 113四初,12-7,耕田（耕種）,gáng tiěn (gáng zung),gáng tiěn (gáng zung),南,字級對照,False,True,table table table table
@@ -3287,6 +3335,7 @@
 113四初,12-29,上班,sóng bán,sóng bán,南,教典南四縣,False,True,
 113四初,12-30,頭家,těu gá,těu gá,南,教典南四縣,False,True,
 113四初,12-31,頭路,těu lu,těu lu,南,教典南四縣,False,True,
+113四初,12-32,信袋仔（信皮、信封、信絡仔）,xin toi è (xin pǐ、xin fúng、xin log è),xin toi è (xin pǐ、xin fúng、xin log è),南,字級對照,False,True,table table manual table table table table table table manual
 113四初,12-33,做事,zo se,zo se,南,教典南四縣,False,True,
 113四初,13-2,畢業,bìd ngiab,bìd ngiab,南,教典南四縣,False,True,
 113四初,13-3,放尞,biong liau,biong liau,南,教典南四縣,False,True,
@@ -3299,6 +3348,7 @@
 113四初,13-11,打第一（打頭名）,dà ti ìd (dà těu miǎng),dà ti ìd (dà těu miǎng),南,字級對照,False,True,table table table table table table
 113四初,13-12,活動,fad tung,fad tung,南,教典南四縣,False,True,
 113四初,13-13,發表,fàd bèu,fàd bèu,南,教典南四縣,False,True,
+113四初,13-14,粉捽仔（粉牌捽仔）,fùn cud è (fùn pǎi cud è),fùn cud è (fùn pǎi cud è),南,字級對照,False,True,table table manual table table table manual
 113四初,13-15,粉牌,fùn pǎi,fùn pǎi,南,教典南四縣,False,True,
 113四初,13-16,教育,gau iùg,gau iùg,南,教典南四縣,False,True,
 113四初,13-17,搞,gàu,gàu,南,教典南四縣,False,True,
@@ -3325,6 +3375,7 @@
 113四初,13-41,籃球,lǎm kiǔ,lǎm kiǔ,南,教典南四縣,False,True,
 113四初,13-43,練習,lien xib,lien xib,南,教典南四縣,False,True,
 113四初,13-45,人公仔,ngǐn gúng è,ngǐn gúng è,南,教典南四縣,False,True,
+113四初,13-47,洗身仔（泅水）,sè síin è (qiǔ sùi),sè síin è (qiǔ sùi),南,字級對照,False,True,table table manual table table
 113四初,13-48,小學,sèu hog,sèu hog,南,教典南四縣,False,True,
 113四初,13-49,成績,sǐin jìd,sǐin jìd,南,教典南四縣,False,True,
 113四初,13-50,上課,song/sóng ko,song ko,南,教典南四縣,False,False,
@@ -3474,8 +3525,10 @@
 113四初,18-54,將來,jióng lǒi,jióng lǒi,南,教典南四縣,False,True,
 113四初,18-55,其實,kǐ siid,kǐ siid,南,教典南四縣,False,True,
 113四初,18-57,共下,kiung ha,kiung ha,南,教典南四縣,False,True,
+113四初,18-58,臨暗仔（臨暗頭）,lǐm am è (lǐm am těu),lǐm am è (lǐm am těu),南,字級對照,False,True,table table manual table table table
 113四初,18-59,老古時代,lò gù sǐi toi,lò gù sǐi toi,南,教典南四縣,False,True,
 113四初,18-60,面頂（面項、頂項）,mien dàng (mien hong、dàng hong),mien dàng (mien hong、dàng hong),南,字級對照,False,True,table table table table table table
+113四初,18-61,哪仔（滿哪仔、一哪仔）,nai è (mán nai è、ìd nai è),nai è (mán nai è、ìd nai è),南,字級對照,False,True,table manual table table manual table table manual
 113四初,18-63,另外,nang ngoi,nang ngoi,南,教典南四縣,False,True,
 113四初,18-66,日期,ngìd kǐ,ngìd kǐ,南,教典南四縣,False,True,
 113四初,18-67,平常,pǐn sǒng,pǐn sǒng,南,教典南四縣,False,True,
@@ -3510,7 +3563,7 @@
 113四初,18-101,準時,zùn sǐi,zùn sǐi,南,教典南四縣,False,True,
 113四基,1-1,發燒,fàd séu,fàd séu,南,教典南四縣,False,True,
 113四基,1-2,護理師,fu lí síi,fu lí síi,南,字級對照,False,True,table table table
-113四基,1-4,藥仔,iog è,iog è,南,系統規則,False,True,table zai
+113四基,1-4,藥仔,iog è,iog è,南,字級對照,False,True,table manual
 113四基,1-5,看病,kon piang,kon piang,南,教典南四縣,False,True,
 113四基,1-6,鬆爽,súng sòng,súng sòng,南,教典南四縣,False,True,
 113四基,1-7,屙尿,ó ngiau,ó ngiau,南,字級對照,False,True,table table
@@ -3627,6 +3680,7 @@
 113四基,5-17,苦,fù,fù,南,教典南四縣,False,True,
 113四基,5-18,紅,fǔng,fǔng,南,字級對照,False,True,table
 113四基,5-19,假,gà,gà,南,教典南四縣,False,True,
+113四基,5-20,柑仔色,gám è sèd,gám è sèd,南,字級對照,False,True,table manual table
 113四基,5-22,高,gó,gó,南,教典南四縣,False,True,
 113四基,5-23,鹹,hǎm,hǎm,南,字級對照,False,True,table
 113四基,5-24,閒,hǎn,hǎn,南,教典南四縣,False,True,
@@ -3686,7 +3740,7 @@
 113四基,6-20,老人家,lò ngǐn gá,lò ngǐn gá,南,教典南四縣,False,True,
 113四基,6-21,男仔人,nǎm è ngǐn,nǎm è ngǐn,南,教典南四縣,False,True,
 113四基,6-22,細阿妹仔,se á moi è,se á moi è,南,教典南四縣,False,True,
-113四基,6-24,細阿哥仔,se á gó è,se á gó è,南,系統規則,False,True,table table table zai
+113四基,6-24,細阿哥仔,se á gó è,se á gó è,南,字級對照,False,True,table table table manual
 113四基,6-25,細倈仔,se lai è,se lai è,南,教典南四縣,False,True,
 113四基,6-26,細妹仔,se moi è,se moi è,南,教典南四縣,False,True,
 113四基,6-27,細人仔,se ngǐn è,se ngǐn è,南,教典南四縣,False,True,
@@ -3694,7 +3748,7 @@
 113四基,6-29,朋友,pěn iú,pěn iú,南,教典南四縣,False,True,
 113四基,6-30,變,bien,bien,南,教典南四縣,False,True,
 113四基,6-32,感謝,gàm qia,gàm qia,南,教典南四縣,False,True,
-113四基,6-33,名（名仔）,miǎng (miǎng è),miǎng (miǎng è),南,系統規則,False,True,table table zai
+113四基,6-33,名（名仔）,miǎng (miǎng è),miǎng (miǎng è),南,字級對照,False,True,table table manual
 113四基,6-34,問,mun,mun,南,教典南四縣,False,True,
 113四基,6-35,安到,ón do,ón do,南,教典南四縣,False,True,
 113四基,7-1,包仔,báu è,báu è,南,教典南四縣,False,True,
@@ -3706,12 +3760,12 @@
 113四基,7-8,菜,coi,coi,南,教典南四縣,False,True,
 113四基,7-9,凳仔,den è,den è,南,教典南四縣,False,True,
 113四基,7-10,點心,diàm xím,diàm xím,南,教典南四縣,False,True,
-113四基,7-11,刀仔,dó è,dó è,南,系統規則,False,True,table zai
+113四基,7-11,刀仔,dó è,dó è,南,字級對照,False,True,table manual
 113四基,7-12,東西,dúng xí,dúng xí,南,教典南四縣,False,True,
 113四基,7-14,飯,fan,fan,南,教典南四縣,False,True,
 113四基,7-15,褲,fu,fu,南,教典南四縣,False,True,
 113四基,7-16,咖啡,gá bí,gá bí,南,教典南四縣,False,True,
-113四基,7-17,罐仔,gon è,gon è,南,系統規則,False,True,table zai
+113四基,7-17,罐仔,gon è,gon è,南,字級對照,False,True,table manual
 113四基,7-18,鞋,hǎi,hǎi,南,教典南四縣,False,True,
 113四基,7-19,汽水,hi sùi,hi sùi,南,教典南四縣,False,True,
 113四基,7-20,鹽,iǎm,iǎm,南,教典南四縣,False,True,
@@ -3738,7 +3792,7 @@
 113四基,7-43,電視,tien sii,tien sii,南,教典南四縣,False,True,
 113四基,7-44,梯仔,tói è,tói è,南,教典南四縣,False,True,
 113四基,7-45,湯,tóng,tóng,南,教典南四縣,False,True,
-113四基,7-46,糖仔,tǒng è,tǒng è,南,系統規則,False,True,table zai
+113四基,7-46,糖仔,tǒng è,tǒng è,南,字級對照,False,True,table manual
 113四基,7-49,線,xien,xien,南,教典南四縣,False,True,
 113四基,7-50,遮仔,zá è,zá è,南,教典南四縣,False,True,
 113四基,7-51,紙,zìi,zìi,南,教典南四縣,False,True,
@@ -3746,17 +3800,17 @@
 113四基,7-53,桌仔,zòg è,zòg è,南,教典南四縣,False,True,
 113四基,7-54,豬肉,zú ngiùg,zú ngiùg,南,教典南四縣,False,True,
 113四基,7-55,粥,zùg,zùg,南,教典南四縣,False,True,
-113四基,8-2,牛仔,ngiǔ è,ngiǔ è,南,系統規則,False,True,table zai
+113四基,8-2,牛仔,ngiǔ è,ngiǔ è,南,字級對照,False,True,table manual
 113四基,8-4,兔仔,tu è,tu è,南,教典南四縣,False,True,
 113四基,8-5,蛇哥,sǎ gó,sǎ gó,南,教典南四縣,False,True,
-113四基,8-6,馬仔,má è,má è,南,系統規則,False,True,table zai
+113四基,8-6,馬仔,má è,má è,南,字級對照,False,True,table manual
 113四基,8-7,羊仔,iǒng è,iǒng è,南,教典南四縣,False,True,
-113四基,8-8,雞仔,gié è,gié è,南,系統規則,False,True,table zai
+113四基,8-8,雞仔,gié è,gié è,南,字級對照,False,True,table manual
 113四基,8-10,豬仔,zú è,zú è,南,教典南四縣,False,True,
 113四基,8-12,鳥仔,diáu è,diáu è,南,教典南四縣,False,True,
 113四基,8-13,貓仔,meu è,meu è,南,教典南四縣,False,True,
 113四基,8-14,魚仔,ňg è,ňg è,南,教典南四縣,False,True,
-113四基,8-15,蟲仔,cǔng è,cǔng è,南,系統規則,False,True,table zai
+113四基,8-15,蟲仔,cǔng è,cǔng è,南,字級對照,False,True,table manual
 113四基,8-16,葉仔,iab è,iab è,南,教典南四縣,False,True,
 113四基,8-17,樹仔,su è,su è,南,教典南四縣,False,True,
 113四基,8-18,花,fá,fá,南,字級對照,False,True,table
@@ -3766,6 +3820,7 @@
 113四基,8-22,弓蕉,giúng zéu,giúng zéu,南,教典南四縣,False,True,
 113四基,8-24,西瓜,xí guá,xí guá,南,教典南四縣,False,True,
 113四基,8-25,果子（水果）,gò zìi (sùi gò),gò zìi (sùi gò),南,字級對照,False,True,table table table table
+113四基,8-26,卵,lòn,lòn,南,教典南四縣,False,True,
 113四基,9-1,暗,am,am,南,教典南四縣,False,True,
 113四基,9-2,吹,cói,cói,南,教典南四縣,False,True,
 113四基,9-3,火,fò,fò,南,教典南四縣,False,True,
@@ -3796,17 +3851,17 @@
 113四基,12-7,先生,xín sáng,xín sáng,南,教典南四縣,False,True,
 113四基,13-1,比賽,bì soi,bì soi,南,教典南四縣,False,True,
 113四基,13-3,唱,cong,cong,南,教典南四縣,False,True,
-113四基,13-4,捽仔,cud è,cud è,南,系統規則,False,True,table zai
+113四基,13-4,捽仔,cud è,cud è,南,字級對照,False,True,table manual
 113四基,13-5,畫,fa/vag,fa,南,教典南四縣,True,False,
 113四基,13-6,教室,gau sìid,gau sìid,南,教典南四縣,False,True,
 113四基,13-7,校長,gàu zòng,gàu zòng,南,教典南四縣,False,True,
-113四基,13-8,歌（歌仔）,gó (gó è),gó (gó è),南,系統規則,False,True,table table zai
+113四基,13-8,歌（歌仔）,gó (gó è),gó (gó è),南,字級對照,False,True,table table manual
 113四基,13-9,故事,gu sii,gu sii,南,教典南四縣,False,True,
 113四基,13-10,功課,gúng ko,gúng ko,南,教典南四縣,False,True,
 113四基,13-11,客話,hàg fa,hàg fa,南,教典南四縣,False,True,
 113四基,13-12,學校,hog gàu,hog gàu,南,教典南四縣,False,True,
 113四基,13-13,學生仔,hog sáng è,hog sáng è,南,教典南四縣,False,True,
-113四基,13-15,球仔,kiǔ è,kiǔ è,南,系統規則,False,True,table zai
+113四基,13-15,球仔,kiǔ è,kiǔ è,南,字級對照,False,True,table manual
 113四基,13-16,開學,kói hog,kói hog,南,教典南四縣,False,True,
 113四基,13-17,尞,liau,liau,南,教典南四縣,False,True,
 113四基,13-18,溜滑梯,liu vad tói,liu vad tói,南,字級對照,False,True,table table table
@@ -3920,7 +3975,7 @@
 113四高,1-3,暗病,am piang,am piang,南,教典南四縣,False,True,
 113四高,1-5,疤疤,bá bá,bá bá,南,字級對照,False,True,table table
 113四高,1-6,百年歸壽,bàg ngiěn gúi su,bàg ngiǎn gúi su,南,教典南四縣,False,False,
-113四高,1-7,跛啊跛仔,bái a bái è,bái a bái é,南,系統規則,False,False,table table table zai
+113四高,1-7,跛啊跛仔,bái a bái è,bái a bái ě,南,字級對照,False,False,table table table manual
 113四高,1-8,半陰陽（半公嫲）,ban ím iǒng (ban gúng mǎ),ban ím iǒng (ban gúng mǎ),南,字級對照,False,True,table table table table table table
 113四高,1-10,挷皮扯瘌,báng pǐ cà làd,báng pǐ cà làd,南,字級對照,False,True,table table table table
 113四高,1-11,挷想,báng xiòng,báng xiòng,南,教典南四縣,False,True,
@@ -3934,6 +3989,7 @@
 113四高,1-20,發癲,bòd dién,bòd dién,南,教典南四縣,False,True,
 113四高,1-21,發媱,bòd hiěu,bòd hiěu,南,教典南四縣,False,True,
 113四高,1-23,發冷仔,bòd láng è,bòd láng è,南,教典南四縣,False,True,
+113四高,1-24,發癧仔,bòd lid è,bòd lid è,南,字級對照,False,True,table table manual
 113四高,1-25,發溜爪,bòd liu zàu,bòd liu zàu,南,字級對照,False,True,table table table
 113四高,1-26,發鹵,bòd lú,bòd lú,南,教典南四縣,False,True,
 113四高,1-27,發眼烏,bòd ngièn vú,bòd ngiàn vú,南,字級對照,False,False,table table table
@@ -3946,7 +4002,7 @@
 113四高,1-35,發豬頭皮,bòd zú těu pǐ,bòd zú těu pǐ,南,教典南四縣,False,True,
 113四高,1-36,哱哱跳（哱哱飆）,bog bog tiǎu (bog bog béu),bog bog tiǎu (bog bog béu),南,字級對照,False,True,table table table table table table
 113四高,1-37,博氣毋轉,bòg hi m̌ zòn,bòg hi m̌ zòn,南,字級對照,False,True,table table table table
-113四高,1-39,背寒寒仔,boi hǒn hǒn è,boi hǒn hǒn é,南,系統規則,False,False,table table table zai
+113四高,1-39,背寒寒仔,boi hǒn hǒn è,boi hǒn hǒn ě,南,字級對照,False,False,table table table manual
 113四高,1-40,背拑拑仔,boi kiǎm kiǎm è,boi kiǎm kiǎm é,南,教典南四縣,False,False,
 113四高,1-42,背駝駝,boi tǒ tǒ,boi tǒ tǒ,南,教典南四縣,False,True,
 113四高,1-43,拆藥仔,càg iog è,càg iog è,南,教典南四縣,False,True,
@@ -3955,6 +4011,7 @@
 113四高,1-47,著天吊,cog tién diau,cog tién diau,南,字級對照,False,True,table table table
 113四高,1-50,打飯銃,dà fan cung,dà fan cung,南,教典南四縣,False,True,
 113四高,1-51,打脈,dà màg,dà màg,南,教典南四縣,False,True,
+113四高,1-52,打忸,dà nug,dà nug,南,字級對照,False,True,table manual
 113四高,1-54,打胎,dà tói,dà tói,南,教典南四縣,False,True,
 113四高,1-55,搭爪毋核,dàb zàu m̌ hed,dàb zàu m̌ hed,南,字級對照,False,True,table table table table
 113四高,1-58,跌下𪘒（落下𪘒）,dièd há ngám (lau há ngám),dièd há ngám (lau há ngám),南,字級對照,False,True,table table table table table table
@@ -3962,7 +4019,7 @@
 113四高,1-61,肚想,dù xiòng,dù xiòng,南,教典南四縣,False,True,
 113四高,1-63,肚臍絆,dù qǐ pan,dù qǐ pan,南,教典南四縣,False,True,
 113四高,1-64,犯節氣,fam jièd hi,fam jièd hi,南,字級對照,False,True,table table table
-113四高,1-65,飯豚仔,fan tǔn è,fan tǔn è,南,系統規則,False,True,table table zai
+113四高,1-65,飯豚仔,fan tǔn è,fan tǔn è,南,字級對照,False,True,table table manual
 113四高,1-66,返魂,fàn fǔn,fàn fǔn,南,教典南四縣,False,True,
 113四高,1-67,返陽,fàn iǒng,fàn iǒng,南,字級對照,False,True,table table
 113四高,1-68,反症,fàn ziin,fàn ziin,南,教典南四縣,False,True,
@@ -3973,7 +4030,7 @@
 113四高,1-75,筋頭,gín těu,gín těu,南,教典南四縣,False,True,
 113四高,1-76,腳氣,giòg hi,giòg hi,南,教典南四縣,False,True,
 113四高,1-78,過目關,go mùg guán,go mùg guán,南,字級對照,False,True,table table table
-113四高,1-79,光目仔,góng mùg è,góng mùg è,南,系統規則,False,True,table table zai
+113四高,1-79,光目仔,góng mùg è,góng mùg è,南,字級對照,False,True,table table manual
 113四高,1-81,貢膿,gung nǔng,gung nǔng,南,教典南四縣,False,True,
 113四高,1-83,下膈,há gàg,há gàg,南,教典南四縣,False,True,
 113四高,1-87,行血,hǎng hièd,hǎng hiàd,南,教典南四縣,False,False,
@@ -3990,12 +4047,13 @@
 113四高,1-103,扡胲,ià gói,ià gói,南,教典南四縣,False,True,
 113四高,1-104,扡扡,ià ià,ià ià,南,字級對照,False,True,table table
 113四高,1-105,腰拑背吊,iéu kiǎm boi diau,iéu kiǎm boi diau,南,教典南四縣,False,True,
-113四高,1-106,腰拑拑仔,iéu kiǎm kiǎm è,iéu kiǎm kiǎm é,南,系統規則,False,False,table table table zai
+113四高,1-106,腰拑拑仔,iéu kiǎm kiǎm è,iéu kiǎm kiǎm ě,南,字級對照,False,False,table table table manual
 113四高,1-107,哊乳,iòg nen,iòg nen,南,字級對照,False,True,table table
 113四高,1-110,空心肚,kúng xím dù,kúng xím dù,南,教典南四縣,False,True,
 113四高,1-112,老蛤蟆,lò hǎ mǎ,lò hǎ mǎ,南,教典南四縣,False,True,
 113四高,1-113,落肉,log ngiùg,log ngiùg,南,教典南四縣,False,True,
 113四高,1-114,落月死,log ngied xì,log ngiad xì,南,字級對照,False,False,table table table
+113四高,1-115,擂藥仔,lǔi iog è,lǔi iog è,南,字級對照,False,True,table table manual
 113四高,1-116,毋知人,m̌ dí ngǐn,m̌ dí ngǐn,南,字級對照,False,True,table table table
 113四高,1-117,賣鴨卵,mai àb lòn,mai àb lòn,南,字級對照,False,True,table table table
 113四高,1-118,面兜兜,mien déu déu,mien déu déu,南,教典南四縣,False,True,
@@ -4003,8 +4061,9 @@
 113四高,1-120,面靠靠,mien ko ko,mien ko ko,南,字級對照,False,True,table table table
 113四高,1-121,面壢青,mien làg qiáng,mien lag qiáng,南,教典南四縣,False,False,
 113四高,1-122,面劣劣,mien lòd lòd,mien lòd lòd,南,教典南四縣,False,True,
+113四高,1-123,面藕藕,mien ngiáu ngiáu,mien ngiáu ngiáu,南,字級對照,False,True,table manual manual
 113四高,1-124,毛腳仔,mó giòg ě,mó giòg è,南,系統規則,False,False,table table zai
-113四高,1-125,脢盎仔,mǒi áng è,mǒi áng è,南,系統規則,False,True,table table zai
+113四高,1-125,脢盎仔,mǒi áng è,mǒi áng è,南,字級對照,False,True,table table manual
 113四高,1-126,目睡鳥,mùg soi diáu,mùg soi diáu,南,教典南四縣,False,True,
 113四高,1-127,目絲絲仔,mùg xí xí è,mùg xí xí é,南,教典南四縣,False,False,
 113四高,1-128,目瞨,mùg pù,mùg pù,南,教典南四縣,False,True,
@@ -4014,29 +4073,30 @@
 113四高,1-135,硬胲,ngang gói,ngang gói,南,字級對照,False,True,table table
 113四高,1-136,耳聾頂碓,ngì lúng dàng doi,ngì lúng dàng doi,南,教典南四縣,False,True,
 113四高,1-138,攝楔,ngiàb xiàb,ngiàb xiàb,南,字級對照,False,True,table table
-113四高,1-140,尿汀汀仔,ngiau din din è,ngiau din din é,南,系統規則,False,False,table table table zai
+113四高,1-140,尿汀汀仔,ngiau din din è,ngiau din din ě,南,字級對照,False,False,table table table manual
+113四高,1-142,藕面仔,ngiáu mien è,ngiáu mien è,南,字級對照,False,True,manual table manual
 113四高,1-143,殗弱,ngiem ngiog,ngiem ngiog,南,字級對照,False,True,table table
 113四高,1-144,眼茫鼻花,ngièn mǒng pi fá,ngiàn mǒng pi fá,南,教典南四縣,False,False,
 113四高,1-145,人老,ngǐn lò,ngǐn lò,南,字級對照,False,True,table table
-113四高,1-146,人豚仔,ngǐn tǔn è,ngǐn tǔn é,南,系統規則,False,False,table table zai
+113四高,1-146,人豚仔,ngǐn tǔn è,ngǐn tǔn ě,南,字級對照,False,False,table table manual
 113四高,1-148,腦囟,nò xin,nò xin,南,教典南四縣,False,True,
 113四高,1-149,膿頭,nǔng těu,nǔng těu,南,教典南四縣,False,True,
 113四高,1-151,嗀嗀滾,og og gùn,og og gùn,南,字級對照,False,True,table table table
 113四高,1-154,潑血,pad hièd,pad hiàd,南,教典南四縣,False,False,
 113四高,1-155,潑汗,pad hon,pad hon,南,教典南四縣,False,True,
 113四高,1-156,敗腎,pai siin,pai siin,南,教典南四縣,False,True,
-113四高,1-158,鼻槽槽仔,pi cǒ cǒ è,pi cǒ cǒ é,南,系統規則,False,False,table table table zai
+113四高,1-158,鼻槽槽仔,pi cǒ cǒ è,pi cǒ cǒ ě,南,字級對照,False,False,table table table manual
 113四高,1-159,濞流濞串,pi liǔ pi con,pi liǔ pi con,南,字級對照,False,True,table table table table
 113四高,1-160,鼻臊,pi só,pi só,南,教典南四縣,False,True,
-113四高,1-162,病膩膩仔,piang ne ne è,piang ne ne é,南,系統規則,False,False,table table table zai
+113四高,1-162,病膩膩仔,piang ne ne è,piang ne ne ě,南,字級對照,False,False,table table table manual
 113四高,1-163,破病破病,po piang po piang,po piang po piang,南,字級對照,False,True,table table table table
 113四高,1-166,撨筋接骨,qiǎu gín jiàb gùd,qiǎu gín jiàb gùd,南,字級對照,False,True,table table table table
 113四高,1-167,石女,sag ǹg,sag ǹg,南,教典南四縣,False,True,
 113四高,1-168,析著,sàg dò,sàg dò,南,字級對照,False,True,table table
 113四高,1-171,聲失失,sáng sìid sìid,sáng sìid sìid,南,字級對照,False,True,table table table
 113四高,1-172,細骼,se gàg,se gàg,南,字級對照,False,True,table table
-113四高,1-174,屎哱哱仔,sìi bud bud è,sìi bud bud é,南,教典南四縣,False,False,
-113四高,1-175,屎洩洩仔,sìi xied xied è,sìi xied xied é,南,系統規則,False,False,table table table zai
+113四高,1-174,屎哱哱仔,sìi bud bud è,sìi bud bud ě,南,教典南四縣,False,False,
+113四高,1-175,屎洩洩仔,sìi xied xied è,sìi xied xied ě,南,字級對照,False,False,table table table manual
 113四高,1-176,失魂,sìid fǔn,sìid fǔn,南,字級對照,False,True,table table
 113四高,1-177,失氣,sìid hi,sìid hi,南,字級對照,False,True,table table
 113四高,1-178,身胚,síin pói,síin pói,南,教典南四縣,False,True,
@@ -4066,10 +4126,11 @@
 113四高,1-209,搵啊下去,vun a há hi,vun a há hi,南,字級對照,False,True,table table table table
 113四高,1-211,溫溫溫溫,vún vún vun vun,vǔn vǔn vun vun,南,教典南四縣,False,False,
 113四高,1-213,鬚赤赤,xí càg càg,xí càg càg,南,字級對照,False,True,table table table
-113四高,1-214,鬚矛矛仔,xí mǎu mǎu è,xí mǎu mǎu é,南,教典南四縣,False,False,
+113四高,1-214,鬚矛矛仔,xí mǎu mǎu è,xí mǎu mǎu ě,南,教典南四縣,False,False,
 113四高,1-215,鬚惹惹,xí ngia ngia,xí ngia ngia,南,教典南四縣,False,True,
 113四高,1-217,相屌,xióng diàu,xióng diàu,南,教典南四縣,False,True,
 113四高,1-218,燥瘌,záu làd,záu làd,南,字級對照,False,True,table table
+113四高,1-219,撮藥仔,zèb iog è,zèb iog è,南,字級對照,False,True,table table manual
 113四高,1-221,子癖,zìi piàg,zìi piàg,南,教典南四縣,False,True,
 113四高,1-222,左𥯟犁,zò bái lǎi,zò bái lǎi,南,教典南四縣,False,True,
 113四高,1-223,糟腸扡肚,zó cǒng ià dù,zó cǒng ià dù,南,教典南四縣,False,True,
@@ -4097,6 +4158,7 @@
 113四高,2-10,踩踩踏踏,cǎi cǎi tab tab,cǎi cǎi tab tab,南,教典南四縣,False,True,
 113四高,2-11,逞強逞惡,cìin kiǒng cìin òg,cìin kiǒng cìin òg,南,字級對照,False,True,table table table table
 113四高,2-12,澄心,cǐin xím,cǐin xím,南,字級對照,False,True,table table
+113四高,2-13,腸仔毋直,cǒng è m̌ ciid,cǒng è m̌ ciid,南,字級對照,False,True,table manual table table
 113四高,2-14,出水,cùd sùi,cùd sùi,南,教典南四縣,False,True,
 113四高,2-15,打潑賴,dà pàd lai,dà pàd lai,南,教典南四縣,False,True,
 113四高,2-16,膽在在,dàm cai cai,dàm cai cai,南,字級對照,False,True,table table table
@@ -4112,20 +4174,22 @@
 113四高,2-29,苦丟丟仔,fù diú diú è,fù diú diú é,南,教典南四縣,False,False,
 113四高,2-30,苦篤篤仔,fù dùg dùg è,fù dùg dùg é,南,教典南四縣,False,False,
 113四高,2-31,苦篤苦篤,fù dùg fù dùg,fù dùg fù dùg,南,教典南四縣,False,True,
-113四高,2-32,苦甘苦甘仔,fù gám fù gám è,fù gám fù gám é,南,系統規則,False,False,table table table table zai
+113四高,2-32,苦甘苦甘仔,fù gám fù gám è,fù gám fù gám ě,南,字級對照,False,False,table table table table manual
 113四高,2-36,鹻鹻,giam giam,giam giam,南,教典南四縣,False,True,
 113四高,2-38,驚山,giáng sán,giáng sán,南,字級對照,False,True,table table
 113四高,2-39,驚心,giáng xím,giáng xím,南,字級對照,False,True,table table
+113四高,2-41,驚忸忸仔,giáng nug nug è,giáng nug nug ě,南,字級對照,False,False,table manual manual manual
 113四高,2-42,激著,gìd dò,gìd dò,南,字級對照,False,True,table table
-113四高,2-45,緊躁躁仔,gìn cau cau è,gìn cau cau é,南,系統規則,False,False,table table table zai
+113四高,2-44,噭豺豺仔（噭垂垂仔）,gieu sǎi sǎi è(gieu sǔi sǔi è),gieu sǎi sǎi ě(gieu sǔi sǔi ě),南,字級對照,False,False,table table table manual table table table manual
+113四高,2-45,緊躁躁仔,gìn cau cau è,gìn cau cau ě,南,字級對照,False,False,table table table manual
 113四高,2-48,跔跔羞羞,giú giú xiú xiú,giú giú xiú xiú,南,字級對照,False,True,table table table table
 113四高,2-49,挶外外,giug ngoi ngoi,giug ngoi ngoi,南,教典南四縣,False,True,
 113四高,2-51,挶心事,giug xím sii,giùg xím sii,南,教典南四縣,False,False,
 113四高,2-52,合合上,hab hab sóng,hab hab sóng,南,教典南四縣,False,True,
-113四高,2-54,好蹀蹀仔,hau dia dia è,hau dia dia é,南,系統規則,False,False,table table table zai
+113四高,2-54,好蹀蹀仔,hau dia dia è,hau dia dia ě,南,字級對照,False,False,table table table manual
 113四高,2-55,黑天,hèd tién,hèd tién,南,字級對照,False,True,table table
 113四高,2-58,氣命,hi miang,hi miang,南,教典南四縣,False,True,
-113四高,2-59,氣噴噴仔,hi pun pun è,hi pun pun é,南,系統規則,False,False,table table table zai
+113四高,2-59,氣噴噴仔,hi pun pun è,hi pun pun ě,南,字級對照,False,False,table table table manual
 113四高,2-60,棄嫌,hi hiǎm,hi hiǎm,南,教典南四縣,False,True,
 113四高,2-61,氣凹凹仔,hi ngiàb ngiàb ě,hi ngiàb ngiàb é,南,教典南四縣,False,False,
 113四高,2-62,氣嗙氣鼓,hi pǎng hi gù,hi páng hi gù,南,教典南四縣,False,False,
@@ -4136,26 +4200,28 @@
 113四高,2-68,渴渴,hòd hòd,hòd hòd,南,字級對照,False,True,table table
 113四高,2-69,異興,i him,i him,南,字級對照,False,True,table table
 113四高,2-71,一條線,ìd tiǎu xien,ìd tiǎu xien,南,字級對照,False,True,table table table
+113四高,2-72,蝓著,iě dò,iě dò,南,字級對照,False,True,manual table
 113四高,2-73,蝓漦,iě xiǎu,iě xiǎu,南,教典南四縣,False,True,
+113四高,2-75,刻耐仔,kàd ngai è,kàd ngai ě,南,字級對照,False,False,manual table manual
 113四高,2-76,欺藐,kí mèu,kí mèu,南,字級對照,False,True,table table
 113四高,2-77,譴到胲滿肚飽,kièn do gói mán dù bàu,kièn do gói mán dù bàu,南,字級對照,False,True,table table table table table table
 113四高,2-79,凝神,kiěn sǐin,kiǎn sǐin,南,系統規則,False,False,rule-ien table
 113四高,2-80,欽服,kím fug,kím fug,南,教典南四縣,False,True,
 113四高,2-81,罅無頭䌈,la mǒ těu tàg,la mǒ těu tàg,南,字級對照,False,True,table table table table
-113四高,2-83,辣啾啾仔,lad jiú jiú è,lad jiú jiú é,南,系統規則,False,False,table table table zai
+113四高,2-83,辣啾啾仔,lad jiú jiú è,lad jiú jiú ě,南,字級對照,False,False,table table table manual
 113四高,2-85,膦火著,lìn fò cog,lìn fò cog,南,教典南四縣,False,True,
 113四高,2-86,靈靈,lǐn lǐn,lǐn lǐn,南,字級對照,False,True,table table
 113四高,2-88,落力,log lid,log lid,南,字級對照,False,True,table table
 113四高,2-90,貓挨癢（貓爪癢）,meu ái ióng (meu zàu ióng),meu ái ióng (meu zàu ióng),南,字級對照,False,True,table table table table table table
 113四高,2-92,迷迷痴痴,mǐ mǐ cíi cíi,mǐ mǐ cíi cíi,南,教典南四縣,False,True,
-113四高,2-93,面挷挷仔,mien báng báng è,mien báng báng é,南,系統規則,False,False,table table table zai
-113四高,2-94,面惹惹仔,mien ngiá ngiá è,mien ngiá ngiá é,南,系統規則,False,False,table table table zai
-113四高,2-95,面舐舐仔,mien sé sé è,mien sé sé é,南,系統規則,False,False,table table table zai
+113四高,2-93,面挷挷仔,mien báng báng è,mien báng báng ě,南,字級對照,False,False,table table table manual
+113四高,2-94,面惹惹仔,mien ngiá ngiá è,mien ngiá ngiá ě,南,字級對照,False,False,table table table manual
+113四高,2-95,面舐舐仔,mien sé sé è,mien sé sé ě,南,字級對照,False,False,table table table manual
 113四高,2-96,面爪爪仔,mien zàu zàu ě,mien zàu zàu é,南,系統規則,False,False,table table table zai
 113四高,2-99,無安無樂,mǒ ón mǒ log,mǒ ón mǒ log,南,字級對照,False,True,table table table table
 113四高,2-100,無聲無氣,mǒ sáng mǒ hi,mǒ sáng mǒ hi,南,教典南四縣,False,True,
 113四高,2-101,無頭無䌈,mǒ těu mǒ tàg,mǒ těu mǒ tàg,南,教典南四縣,False,True,
-113四高,2-103,目凝凝仔,mùg kiěn kiěn è,mùg kiǎn kiǎn é,南,系統規則,False,False,table rule-ien rule-ien zai
+113四高,2-103,目凝凝仔,mùg kiěn kiěn è,mùg kiǎn kiǎn ě,南,系統規則,False,False,table rule-ien rule-ien manual
 113四高,2-104,目𥍉鼻動,mùg ngiàb pi túng,mùg ngiàb pi dog,南,教典南四縣,False,False,
 113四高,2-105,目澀澀仔,mùg sèb sèb ě,mùg sèb sèb é,南,教典南四縣,False,False,
 113四高,2-106,膩胲,ne gói,ne gói,南,教典南四縣,False,True,
@@ -4166,17 +4232,18 @@
 113四高,2-111,額結結仔,ngiàg gièd gièd ě,ngiàg giàd giàd é,南,教典南四縣,False,False,
 113四高,2-112,入文,ngib vǔn,ngib vǔn,南,字級對照,False,True,table table
 113四高,2-113,熱嘴,ngied zoi,ngiad zoi,南,字級對照,False,False,table table
-113四高,2-114,眼綻綻仔,ngièn can can è,ngiàn can can é,南,系統規則,False,False,table table table zai
-113四高,2-115,眼佛佛仔,ngièn fud fud è,ngiàn fud fud é,南,系統規則,False,False,table table table zai
-113四高,2-119,眼確確仔,ngièn kòg kòg è,ngiàn kòg kòg é,南,系統規則,False,False,table table table zai
-113四高,2-120,眼睚睚仔,ngièn ngǎi ngǎi è,ngiàn ngǎi ngǎi é,南,教典南四縣,False,False,
-113四高,2-121,眼豺豺仔,ngièn sǎi sǎi è,ngiàn sǎi sǎi é,南,系統規則,False,False,table table table zai
+113四高,2-114,眼綻綻仔,ngièn can can è,ngiàn can can ě,南,字級對照,False,False,table table table manual
+113四高,2-115,眼佛佛仔,ngièn fud fud è,ngiàn fud fud ě,南,字級對照,False,False,table table table manual
+113四高,2-118,眼擎擎仔,ngièn kiǎ kiǎ è,ngiàn kiǎ kiǎ ě,南,字級對照,False,False,table manual manual manual
+113四高,2-119,眼確確仔,ngièn kòg kòg è,ngiàn kòg kòg ě,南,字級對照,False,False,table table table manual
+113四高,2-120,眼睚睚仔,ngièn ngǎi ngǎi è,ngiàn ngǎi ngǎi ě,南,教典南四縣,False,False,
+113四高,2-121,眼豺豺仔,ngièn sǎi sǎi è,ngiàn sǎi sǎi ě,南,字級對照,False,False,table table table manual
 113四高,2-122,臥臥到到,ngo ngo do do,ngo ngo do do,南,字級對照,False,True,table table table table
 113四高,2-123,呆呆,ngǒi ngǒi,ngǒi ngǒi,南,教典南四縣,False,True,
 113四高,2-124,戇神戇神,ngong sǐin ngong sǐin,ngong sǐin ngong sǐin,南,字級對照,False,True,table table table table
 113四高,2-125,昂昂,ngǒng ngǒng,ngǒng ngǒng,南,字級對照,False,True,table table
 113四高,2-127,妄想,nong xiòng,nong xiòng,南,教典南四縣,False,True,
-113四高,2-128,惡桀桀仔,òg kied kied è,òg kiad kiad é,南,系統規則,False,False,table rule-ien rule-ien zai
+113四高,2-128,惡桀桀仔,òg kied kied è,òg kiad kiad ě,南,系統規則,False,False,table rule-ien rule-ien manual
 113四高,2-129,哀腸哀肚,ói cǒng ói dù,ói cǒng ói dù,南,字級對照,False,True,table table table table
 113四高,2-130,疲爬極蹶,pǐ pǎ kid kied,pǐ pǎ kid kiad,南,教典南四縣,False,False,
 113四高,2-131,胚著,pói dò,pói dò,南,字級對照,False,True,table table
@@ -4185,13 +4252,14 @@
 113四高,2-134,七上八落,qìd sóng bàd log,qìd sóng bàd log,南,教典南四縣,False,True,
 113四高,2-135,膝頭出目汁,qìd těu cùd mùg zìib,qìd těu cùd mùg zìib,南,教典南四縣,False,True,
 113四高,2-136,澀澀,sèb sèb,sèb sèb,南,字級對照,False,True,table table
-113四高,2-138,笑弛弛仔,seu ié ié è,seu ié ié é,南,系統規則,False,False,table table table zai
+113四高,2-138,笑弛弛仔,seu ié ié è,seu ié ié ě,南,字級對照,False,False,table table table manual
 113四高,2-139,小膽薄心,sèu dàm pog xím,sèu dàm pog xím,南,字級對照,False,True,table table table table
 113四高,2-140,燒氣發冷氣,séu hi bòd láng hi,séu hi bòd láng hi,南,字級對照,False,True,table table table table table
 113四高,2-141,愁勞博激,sěu lǒ bòg gìd,sěu lǒ bòg gìd,南,教典南四縣,False,True,
 113四高,2-144,恃夠夠（恃定定）,sii gieu gieu (sii tin tin),sii gieu gieu (sii tin tin),南,字級對照,False,True,table table table table table table
-113四高,2-145,神堵堵仔,sǐin dǔ dǔ è,sǐin dǔ dǔ é,南,系統規則,False,False,table table table zai
+113四高,2-145,神堵堵仔,sǐin dǔ dǔ è,sǐin dǔ dǔ ě,南,字級對照,False,False,table table table manual
 113四高,2-146,心焦馬亂,xím zéu má lon,xím zéu má lon,南,字級對照,False,True,table table table table
+113四高,2-148,酸藕,són ngiáu,són ngiáu,南,字級對照,False,True,table manual
 113四高,2-149,酸心,són xím,són xím,南,字級對照,False,True,table table
 113四高,2-150,熟行,sug hǒng,sug hǒng,南,字級對照,False,True,table table
 113四高,2-151,熟熟,sug sug,sug sug,南,字級對照,False,True,table table
@@ -4201,15 +4269,17 @@
 113四高,2-156,頭望望仔,těu mong mong è,těu mong mong é,南,教典南四縣,False,False,
 113四高,2-157,頭那打尖,těu nǎ dà jiám,těu nǎ dà jiám,南,字級對照,False,True,table table table table
 113四高,2-159,悿悿,tiàm tiàm,tiàm tiàm,南,字級對照,False,True,table table
+113四高,2-160,悿漬漬仔,tiàm jid jid è,tiàm jid jid ě,南,字級對照,False,False,table manual manual manual
+113四高,2-161,甜漬漬仔,tiǎm jid jid è,tiǎm jid jid ě,南,字級對照,False,False,table manual manual manual
 113四高,2-162,天轉笠嫲花,tién zòn lìb mǎ fá,tién zòn lìb mǎ fá,南,教典南四縣,False,True,
-113四高,2-163,暢蹀蹀仔,tiong dia dia è,tiong dia dia é,南,系統規則,False,False,table table table zai
+113四高,2-163,暢蹀蹀仔,tiong dia dia è,tiong dia dia ě,南,字級對照,False,False,table table table manual
 113四高,2-164,道嘆,to tan,to tan,南,教典南四縣,False,True,
 113四高,2-165,痛腸,tung cǒng,tung cǒng,南,教典南四縣,False,True,
 113四高,2-168,痛切,tung qièd,tung qièd,南,字級對照,False,True,table table
 113四高,2-170,萬望,van mong,van mong,南,字級對照,False,True,table table
 113四高,2-172,畏畏,vi vi,vi vi,南,字級對照,False,True,table table
 113四高,2-173,慍慍悴悴,vùd vùd zùd zùd,vùd vùd zùd zùd,南,字級對照,False,True,table table table table
-113四高,2-174,死犁犁仔,xì lǎi lǎi è,xì lǎi lǎi é,南,系統規則,False,False,table table table zai
+113四高,2-174,死犁犁仔,xì lǎi lǎi è,xì lǎi lǎi ě,南,字級對照,False,False,table table table manual
 113四高,2-175,惜花連盆,xiàg fá liěn pǔn,xiàg fá liěn pǔn,南,字級對照,False,True,table table table table
 113四高,2-176,醒睡,xiàng soi,xiàng soi,南,教典南四縣,False,True,
 113四高,2-178,醒醒,xiàng xiàng,xiàng xiàng,南,字級對照,False,True,table table
@@ -4290,7 +4360,7 @@
 113四高,3-82,毆,èu,èu,南,教典南四縣,False,True,
 113四高,3-83,翻身轉側,fán síin zòn zèd,fán síin zòn zèd,南,字級對照,False,True,table table table table
 113四高,3-87,咈淨淨,fud qiang qiang,fud qiang qiang,南,字級對照,False,True,table table table
-113四高,3-91,頸鋸鋸仔,giàng gi gi è,giàng gi gi é,南,系統規則,False,False,table table table zai
+113四高,3-91,頸鋸鋸仔,giàng gi gi è,giàng gi gi ě,南,字級對照,False,False,table table table manual
 113四高,3-92,𠗻冰,gien bén,gien bén,南,字級對照,False,True,table table
 113四高,3-93,𠗻冷水,gien láng sùi,gien láng sùi,南,字級對照,False,True,table table table
 113四高,3-94,𠗻人,gien ngǐn,gien ngǐn,南,教典南四縣,False,True,
@@ -4323,6 +4393,7 @@
 113四高,3-136,跼起來,kiug hì lǒi,kiug hì lǒi,南,教典南四縣,False,True,
 113四高,3-137,跼等,kiug dèn,kiug dèn,南,字級對照,False,True,table table
 113四高,3-139,環環轉,kuán kuán zòn,kuǎn kuǎn zòn,南,教典南四縣,False,False,
+113四高,3-141,罅啊罅仔,la a la è,la a la è,南,字級對照,False,True,table table table manual
 113四高,3-144,犁頭剷,lǎi těu càn,lǎi těu càn,南,字級對照,False,True,table table table
 113四高,3-145,㐁舌,lě sad,lě sad,南,教典南四縣,False,True,
 113四高,3-151,哯出來,lièn cùd lǒi,lièn cùd lǒi,南,字級對照,False,True,table table table
@@ -4341,9 +4412,10 @@
 113四高,3-168,蒙揫揫,miáng qiú qiú,máng qiú qiú,南,字級對照,False,False,table table table
 113四高,3-169,蒙塞塞,miáng sèd sèd,máng sèd sèd,南,字級對照,False,False,table table table
 113四高,3-170,糜,mòi,mòi,南,教典南四縣,False,True,
+113四高,3-171,望啊望仔,mong a mong è,mong a mong è,南,字級對照,False,True,table table table manual
 113四高,3-172,目聚聚仔,mùg qi qi è,mùg qi qi é,南,教典南四縣,False,False,
 113四高,3-173,目眨眨仔,mùg sàb sàb ě,mùg sàb sàb é,南,教典南四縣,False,False,
-113四高,3-174,目摸摸仔,mùg miá miá è,mùg miá miá é,南,系統規則,False,False,table table table zai
+113四高,3-174,目摸摸仔,mùg miá miá è,mùg miá miá ě,南,字級對照,False,False,table table table manual
 113四高,3-175,揇肚屎,nàm dù sìi,nàm dù sìi,南,字級對照,False,True,table table table
 113四高,3-176,另命,nang miang,nang miang,南,教典南四縣,False,True,
 113四高,3-178,磕著,ngab dò,ngab dò,南,教典南四縣,False,True,
@@ -4360,6 +4432,7 @@
 113四高,3-192,遏等,òd dèn,òd dèn,南,字級對照,False,True,table table
 113四高,3-193,爬山蹶壁,pǎ sán kied biàg,pǎ sán kiad biàg,南,教典南四縣,False,False,
 113四高,3-194,攀,pǎn,pán,南,教典南四縣,True,False,
+113四高,3-198,拋拋啊,páu páu à,páu páu à,南,字級對照,False,True,table table manual
 113四高,3-199,翍開來,piá kói lǒi,piá kói lǒi,南,字級對照,False,True,table table table
 113四高,3-200,翍翍,piá piá,piá piá,南,字級對照,False,True,table table
 113四高,3-201,破,po,po,南,教典南四縣,False,True,
@@ -4392,6 +4465,7 @@
 113四高,3-246,瀉走,xia zèu,xia zèu,南,字級對照,False,True,table table
 113四高,3-247,潛入,xiǎm ngib,xiǎm ngib,南,字級對照,False,True,table table
 113四高,3-248,潛走,xiǎm zèu,xiǎm zèu,南,字級對照,False,True,table table
+113四高,3-249,抋啊抋仔,xim a xim è,xim a xim è,南,字級對照,False,True,table table table manual
 113四高,3-254,矺,zàg,zàg,南,教典南四縣,False,True,
 113四高,3-255,掙力,zang lid,zang lid,南,字級對照,False,True,table table
 113四高,3-258,轉肩,zòn gién,zòn gián,南,系統規則,False,False,table rule-ien
@@ -4429,7 +4503,9 @@
 113四高,4-43,㸐角仔,nàd gòg ě,nàd gòg è,南,系統規則,False,False,table table zai
 113四高,4-47,齬齬齖齖,ngi ngi ngia ngia,ngi ngi ngia ngia,南,教典南四縣,False,True,
 113四高,4-48,惹惹,ngia ngia,ngia ngia,南,字級對照,False,True,table table
+113四高,4-50,藕絲,ngiáu xí,ngiáu xí,南,字級對照,False,True,manual table
 113四高,4-51,牛牸仔,ngiǔ cii è,ngiǔ cii è,南,教典南四縣,False,True,
+113四高,4-55,撥翼,pad id,pàd id,南,字級對照,False,False,manual table
 113四高,4-56,冇笐,pang gǒng,pang gǒng,南,字級對照,False,True,table table
 113四高,4-58,青瞑狗,qiáng miáng gièu,qiáng miáng gièu,南,教典南四縣,False,True,
 113四高,4-59,絕氣,qied hi,qied hi,南,字級對照,False,True,table table
@@ -4458,7 +4534,7 @@
 113四高,4-82,轉青,zòn qiáng,zòn qiáng,南,字級對照,False,True,table table
 113四高,5-1,恁落雨,àn log ì,àn log ì,南,字級對照,False,True,table table table
 113四高,5-2,半山排,ban sán pǎi,ban sán pǎi,南,教典南四縣,False,True,
-113四高,5-3,半崎仔,ban gia è,ban gia è,南,系統規則,False,True,table table zai
+113四高,5-3,半崎仔,ban gia è,ban gia è,南,字級對照,False,True,table table manual
 113四高,5-5,發風落雨,bòd fúng log ì,bòd fúng log ì,南,教典南四縣,False,True,
 113四高,5-6,陣光陣暗,ciin góng ciin am,ciin góng ciin am,南,教典南四縣,False,True,
 113四高,5-7,陣寒陣熱,ciin hǒn ciin ngied,ciin hǒn ciin ngiad,南,教典南四縣,False,False,
@@ -4479,6 +4555,7 @@
 113四高,5-30,翕翕,him him,hìb hìb,南,教典南四縣,False,False,
 113四高,5-31,炣日,hó ngìd,hó ngìd,南,教典南四縣,False,True,
 113四高,5-32,河壩壢,hǒ ba làg,hǒ ba làg,南,字級對照,False,True,table table table
+113四高,5-33,熇蝦公樣仔,hòg hǎ gúng iong è,hòg hǎ gúng iong è,南,字級對照,False,True,table table table table manual
 113四高,5-34,旱坑,hón háng,hón háng,南,教典南四縣,False,True,
 113四高,5-36,夭泥,iéu nǎi,iéu nǎi,南,教典南四縣,False,True,
 113四高,5-37,應聲,in sáng,in sáng,南,教典南四縣,False,True,
@@ -4489,8 +4566,8 @@
 113四高,5-43,冷沁冷沁,láng xim láng xim,láng xim láng xim,南,字級對照,False,True,table table table table
 113四高,5-45,溓溓,liàm liàm,liàm liàm,南,字級對照,False,True,table table
 113四高,5-46,溓淨淨,liàm qiang qiang,liàm qiang qiang,南,字級對照,False,True,table table table
-113四高,5-49,涼習習仔,liǒng xib xib è,liǒng xib xib é,南,系統規則,False,False,table table table zai
-113四高,5-50,涼沁沁仔,liǒng xim xim è,liǒng xim xim é,南,系統規則,False,False,table table table zai
+113四高,5-49,涼習習仔,liǒng xib xib è,liǒng xib xib ě,南,字級對照,False,False,table table table manual
+113四高,5-50,涼沁沁仔,liǒng xim xim è,liǒng xim xim ě,南,字級對照,False,False,table table table manual
 113四高,5-51,老樹開花,lò su kói fá,lò su kói fá,南,教典南四縣,False,True,
 113四高,5-53,落毋成雨,log m̌ sǎng ì,log m̌ sǎng ì,南,字級對照,False,True,table table table table
 113四高,5-54,落雨浙濟,log ì zab ze,log ì zab ze,南,字級對照,False,True,table table table table
@@ -4499,6 +4576,7 @@
 113四高,5-59,日朔,ngìd sòg,ngìd sòg,南,教典南四縣,False,True,
 113四高,5-60,日枷晴夜枷雨,ngìd gá qiǎng ia gá ì,ngìd gá qiǎng ia gá ì,南,字級對照,False,True,table table table table table table
 113四高,5-62,熱𤐰𤐰仔,ngied fag fag è,ngiad fag fag é,南,教典南四縣,False,False,
+113四高,5-63,熱漬漬仔,ngied jid jid è,ngiad jid jid ě,南,字級對照,False,False,table manual manual manual
 113四高,5-64,屙山,ó sán,ó sán,南,字級對照,False,True,table table
 113四高,5-65,潑雨,pàd ì,pàd ì,南,字級對照,False,True,table table
 113四高,5-66,拋花作浪,páu fá zòg long,páu fá zòg long,南,字級對照,False,True,table table table table
@@ -4509,7 +4587,7 @@
 113四高,5-72,山林壁角,sán nǎ biàg gòg,sán nǎ biàg gòg,南,教典南四縣,False,True,
 113四高,5-73,山排,sán pǎi,sán pǎi,南,教典南四縣,False,True,
 113四高,5-74,生溜苔,sáng liú tǒi,sáng liú tǒi,南,教典南四縣,False,True,
-113四高,5-75,塞哱哱仔,sèd bog bog è,sèd bog bog é,南,系統規則,False,False,table table table zai
+113四高,5-75,塞哱哱仔,sèd bog bog è,sèd bog bog ě,南,字級對照,False,False,table table table manual
 113四高,5-76,星仔瀉屎,sén è xia sìi,sén è xia sìi,南,教典南四縣,False,True,
 113四高,5-78,水竇肚,sùi deu dù,sùi deu dù,南,字級對照,False,True,table table table
 113四高,5-79,水汶汶,sùi vǔn vǔn,sùi vǔn vǔn,南,字級對照,False,True,table table table
@@ -4564,7 +4642,7 @@
 113四高,6-49,換向,von hiong,von hiong,南,字級對照,False,True,table table
 113四高,6-50,瀉下來,xia há lǒi,xia há lǒi,南,字級對照,False,True,table table table
 113四高,6-51,展前,zàn qiěn,zàn qiěn,南,字級對照,False,True,table table
-113四高,6-52,燥胗胗仔,záu kín kín è,záu kín kín é,南,系統規則,False,False,table table table zai
+113四高,6-52,燥胗胗仔,záu kín kín è,záu kín kín ě,南,字級對照,False,False,table table table manual
 113四高,6-53,燥水,záu sùi,záu sùi,南,教典南四縣,False,True,
 113四高,6-54,側側仔,zèd zèd ě,zèd zèd é,南,系統規則,False,False,table table zai
 113四高,6-55,側走,zèd zèu,zèd zèu,南,字級對照,False,True,table table
@@ -4575,11 +4653,12 @@
 113四高,6-61,無爭,mǒ záng,mǒ záng,南,字級對照,False,True,table table
 113四高,6-62,走盞,zèu zàn,zèu zàn,南,字級對照,False,True,table table
 113四高,7-2,鴨嫲嘴罔吮,àb mǎ zoi mòng qiòn,àb mǎ zoi mòng qión,南,教典南四縣,False,False,
-113四高,7-3,暗間仔,am gién è,am gián è,南,系統規則,False,False,table table zai
+113四高,7-3,暗間仔,am gién è,am gián è,南,字級對照,False,False,table table manual
 113四高,7-5,粄印,bàn in,bàn in,南,教典南四縣,False,True,
 113四高,7-8,粄袋,bàn toi,bàn toi,南,字級對照,False,True,table table
 113四高,7-10,篦仔,bi è,bi è,南,教典南四縣,False,True,
 113四高,7-11,放竳,biong dén,biong dén,南,字級對照,False,True,table table
+113四高,7-12,幫刀仔,bóng dó è,bóng dó è,南,字級對照,False,True,table table manual
 113四高,7-13,幫衫褲,bóng sám fu,bóng sám fu,南,字級對照,False,True,table table table
 113四高,7-14,布截仔,bu jièd ě,bu jièd è,南,系統規則,False,False,table table zai
 113四高,7-15,布碎仔,bu sui è,bu sui è,南,教典南四縣,False,True,
@@ -4603,7 +4682,10 @@
 113四高,7-36,得入毋得出,dèd ngib m̌ dèd cùd,dèd ngib m̌ dèd cùd,南,字級對照,False,True,table table table table table
 113四高,7-37,跌落飯甑下,dièd log fan zen há,dièd log fan zen há,南,字級對照,False,True,table table table table table
 113四高,7-38,跌馬,dièd má,dièd má,南,字級對照,False,True,table table
+113四高,7-40,跌齾,dièd ngàd,dièd ngàd,南,字級對照,False,True,table manual
+113四高,7-41,改番薯菇仔,gòi fán sǔ gú è,gòi fán sǔ gú è,南,字級對照,False,True,table table table table manual
 113四高,7-42,頓水,dùn sùi,dùn sùi,南,教典南四縣,False,True,
+113四高,7-46,揞細人仔,ém se ngǐn è,ém se ngǐn è,南,字級對照,False,True,table table table manual
 113四高,7-47,熰火爐堆,eu fò lǔ dói,eu fò lǔ dói,南,字級對照,False,True,table table table table
 113四高,7-48,漚淨淨,eu qiang qiang,eu qiang qiang,南,字級對照,False,True,table table table
 113四高,7-50,熰火爐,eu fò lǔ,eu fò lǔ,南,字級對照,False,True,table table table
@@ -4611,6 +4693,7 @@
 113四高,7-52,飯糝,fan sàm,fan sàm,南,教典南四縣,False,True,
 113四高,7-53,火囪,fò cúng,fò cúng,南,教典南四縣,False,True,
 113四高,7-54,戽水,fu sùi,fu sùi,南,字級對照,False,True,table table
+113四高,7-55,戽魚仔,fu ňg è,fu ňg è,南,字級對照,False,True,table table manual
 113四高,7-56,福神漬,fùg sǐin jìd,fùg sǐin jìd,南,字級對照,False,True,table table table
 113四高,7-57,合共下,gàb kiung ha,gàb kiung ha,南,字級對照,False,True,table table table
 113四高,7-58,撿水腳,giàm sùi giòg,giàm sùi giòg,南,字級對照,False,True,table table table
@@ -4660,15 +4743,16 @@
 113四高,7-109,問仙,mun xién,mun xién,南,教典南四縣,False,True,
 113四高,7-110,門樓,mǔn lěu,mǔn lěu,南,教典南四縣,False,True,
 113四高,7-111,㸐鑊,nàd vog,nàd vog,南,字級對照,False,True,table table
-113四高,7-112,泥棍棍仔,nǎi gun gun è,nǎi gun gun é,南,系統規則,False,False,table table table zai
+113四高,7-112,泥棍棍仔,nǎi gun gun è,nǎi gun gun ě,南,字級對照,False,False,table table table manual
 113四高,7-113,扭臊,nèu só,nèu só,南,字級對照,False,True,table table
 113四高,7-114,魚魚肉肉,ňg ňg ngiùg ngiùg,ňg ňg ngiùg ngiùg,南,教典南四縣,False,True,
 113四高,7-115,熬更守夜,ngǎu gáng sù ia　,ngǎu gáng sù ia,南,教典南四縣,False,True,
 113四高,7-116,拈甜,ngiám tiǎm,ngiám tiǎm,南,教典南四縣,False,True,
 113四高,7-117,熱氣,ngied hi,ngiad hi,南,教典南四縣,False,False,
-113四高,7-118,韌鋸鋸仔,ngiun gi gi è,ngiun gi gi é,南,教典南四縣,False,False,
+113四高,7-118,韌鋸鋸仔,ngiun gi gi è,ngiun gi gi ě,南,教典南四縣,False,False,
+113四高,7-119,餓晝仔,ngo zu è,ngo zu è,南,字級對照,False,True,table table manual
 113四高,7-120,拋鹽,páu iǎm,páu iǎm,南,教典南四縣,False,True,
-113四高,7-121,浮皮面仔,pěu pǐ mien è,fěu pǐ mien è,南,系統規則,False,False,table table table zai
+113四高,7-121,浮皮面仔,pěu pǐ mien è,fěu pǐ mien è,南,字級對照,False,False,table table table manual
 113四高,7-124,浮冇仔,pǒ pang è,pěu pàng è,南,教典南四縣,False,False,
 113四高,7-127,浡出來,pud cùd lǒi,pud cùd lǒi,南,字級對照,False,True,table table table
 113四高,7-128,盆頭缽仔,pǔn těu bàd ě,pǔn těu bàd è,南,教典南四縣,False,False,
@@ -4696,7 +4780,7 @@
 113四高,7-153,天井,tién jiàng,tién jiàng,南,教典南四縣,False,True,
 113四高,7-154,奪地氣,tod ti hi,tod ti hi,南,教典南四縣,False,True,
 113四高,7-155,屯泥,tǔn nǎi,tǔn nǎi,南,教典南四縣,False,True,
-113四高,7-156,銅笐仔,tǔng gǒng è,tǔng gǒng è,南,系統規則,False,True,table table zai
+113四高,7-156,銅笐仔,tǔng gǒng è,tǔng gǒng è,南,字級對照,False,True,table table manual
 113四高,7-157,四門透底,xi mǔn teu dài,xi mǔn teu dài,南,教典南四縣,False,True,
 113四高,7-158,絲芋荷,xí vu hǒ,xí vu hǒ,南,字級對照,False,True,table table table
 113四高,7-159,楔,xiàb,xiàb,南,教典南四縣,False,True,
@@ -4720,7 +4804,7 @@
 113四高,7-180,張槽,zóng cǒ,zóng cǒ,南,字級對照,False,True,table table
 113四高,8-1,矮㑁㑁,ài dùd dùd,ài dùd dùd,南,字級對照,False,True,table table table
 113四高,8-2,矮頓頓,ài dùn dùn,ài dùn dùn,南,教典南四縣,False,True,
-113四高,8-3,矮墩墩仔,ài dún dún è,ài dún dún é,南,系統規則,False,False,table table table zai
+113四高,8-3,矮墩墩仔,ài dún dún è,ài dún dún ě,南,字級對照,False,False,table table table manual
 113四高,8-4,暗摸摸仔,am mó mó è,am mó mó é,南,教典南四縣,False,False,
 113四高,8-5,暗摸胥疏,am mó xí só/sǒ,am mó xí só,南,教典南四縣,False,False,
 113四高,8-8,恁猴,àn hěu,àn hěu,南,字級對照,False,True,table table
@@ -4743,7 +4827,7 @@
 113四高,8-30,並並絆絆,bin bin ban ban,bin bin ban ban,南,教典南四縣,False,True,
 113四高,8-31,兵挷齒扯,bín báng cìi cà,bín báng cìi cà,南,教典南四縣,False,True,
 113四高,8-35,畚箕𢯭𣛮,bun gí ten cang,bun gí ten cang,南,字級對照,False,True,table table table table
-113四高,8-36,赤哎哎仔,càg ngai ngai è,càg ngai ngai é,南,系統規則,False,False,table table table zai
+113四高,8-36,赤哎哎仔,càg ngai ngai è,càg ngai ngai ě,南,字級對照,False,False,table table table manual
 113四高,8-37,赤赤,càg càg,càg càg,南,教典南四縣,False,True,
 113四高,8-38,燦光,can góng,can góng,南,字級對照,False,True,table table
 113四高,8-39,操持,cáu cǐi,cáu cǐi,南,字級對照,False,True,table table
@@ -4757,9 +4841,9 @@
 113四高,8-49,賺著來愁,con dò lǒi sěu,con dò lǒi sěu,南,字級對照,False,True,table table table table
 113四高,8-50,賺暢,con tiong,con tiong,南,字級對照,False,True,table table
 113四高,8-51,長膏膏,cǒng gǒ gǒ,cǒng gǒ gǒ,南,字級對照,False,True,table table table
-113四高,8-54,長噦噦仔,cǒng vě vě è,cǒng vě vě é,南,系統規則,False,False,table table table zai
+113四高,8-54,長噦噦仔,cǒng vě vě è,cǒng vě vě ě,南,字級對照,False,False,table table table manual
 113四高,8-56,粗殘,cú cǎn,cú cǎn,南,字級對照,False,True,table table
-113四高,8-57,粗番番仔,cú fán fán è,cú fán fán é,南,系統規則,False,False,table table table zai
+113四高,8-57,粗番番仔,cú fán fán è,cú fán fán ě,南,字級對照,False,False,table table table manual
 113四高,8-58,粗蠻,cú mǎn,cú mǎn,南,教典南四縣,False,True,
 113四高,8-59,粗皮瘌礙,cú pǐ làd ngai,cú pǐ làd ngai,南,字級對照,False,True,table table table table
 113四高,8-60,齣數,cùd sii,cùd sii,南,字級對照,False,True,table table
@@ -4774,7 +4858,7 @@
 113四高,8-71,恬風息氣,diám fúng xìd hi,diám fúng xìd hi,南,教典南四縣,False,True,
 113四高,8-72,著著,diǎu diǎu,diǎu diǎu,南,教典南四縣,False,True,
 113四高,8-73,癲癲倲倲,dién dién dúng dúng,dién dién dúng dúng,南,字級對照,False,True,table table table table
-113四高,8-74,中中仔,zúng zúng è,zúng zúng é,南,系統規則,False,False,table table zai
+113四高,8-74,中中仔,zúng zúng è,zúng zúng ě,南,字級對照,False,False,table table manual
 113四高,8-75,癲癲痴痴,dién dién cíi cíi,dién dién cíi cíi,南,字級對照,False,True,table table table table
 113四高,8-77,丟籬橫壁,diú lǐ vang biàg,diú lǐ vang biàg,南,教典南四縣,False,True,
 113四高,8-78,到家,do gá,do gá,南,教典南四縣,False,True,
@@ -4790,14 +4874,14 @@
 113四高,8-91,花喇必駁,fá lá bìd bòg,fá lá bid bog,南,教典南四縣,False,False,
 113四高,8-92,花蓼,fá liáu,fá liáu,南,教典南四縣,False,True,
 113四高,8-93,定板,tin bàn,tin bàn,南,教典南四縣,False,True,
-113四高,8-94,闊野野仔,fàd iá iá è,fàd iá iá é,南,系統規則,False,False,table table table zai
+113四高,8-94,闊野野仔,fàd iá iá è,fàd iá iá ě,南,字級對照,False,False,table table table manual
 113四高,8-95,壞風性,fài fúng xin,fài fúng xin,南,字級對照,False,True,table table table
 113四高,8-97,竵竵,fè fè,fè fè,南,字級對照,False,True,table table
 113四高,8-98,和和仔,fǒ fǒ è,fǒ fǒ é,南,教典南四縣,False,False,
 113四高,8-99,和挼,fǒ nǒ,fǒ nǒ,南,教典南四縣,False,True,
-113四高,8-100,緩緩仔,fon fon è,fon fon é,南,系統規則,False,False,table table zai
+113四高,8-100,緩緩仔,fon fon è,fon fon ě,南,字級對照,False,False,table table manual
 113四高,8-101,方可仔,fóng kò ě,fóng kò é,南,系統規則,False,False,table table zai
-113四高,8-102,富罅罅仔,fu la la è,fu la la é,南,系統規則,False,False,table table table zai
+113四高,8-102,富罅罅仔,fu la la è,fu la la ě,南,字級對照,False,False,table table table manual
 113四高,8-103,戽水上天,fu sùi sóng tién,fu sùi sóng tién,南,教典南四縣,False,True,
 113四高,8-104,腐腐,fú fú,fú fú,南,字級對照,False,True,table table
 113四高,8-105,鬍鬚馬加,fǔ xí má gá,fǔ xí má gá,南,字級對照,False,True,table table table table
@@ -4807,22 +4891,24 @@
 113四高,8-109,紅啾啾仔,fǔng jiú jiú è,fǔng jiú jiú é,南,教典南四縣,False,False,
 113四高,8-110,紅羅花色,fǔng lǒ fá sèd,fǔng lǒ fá sèd,南,字級對照,False,True,table table table table
 113四高,8-112,合合,gàb gàb,gàb gàb,南,字級對照,False,True,table table
+113四高,8-113,合个（搭秤頭个）,gàg ge (dàb ciin těu ge),gàg ge (dàb ciin těu ge),南,字級對照,False,True,manual table table table table table
 113四高,8-114,交運,gáu iun,gáu iun,南,教典南四縣,False,True,
 113四高,8-115,嘰嘰嘎嘎,gi gi ga ga,gǐ gǐ gǎ gǎ,南,教典南四縣,False,False,
 113四高,8-116,飢色,gí sèd,gí sèd,南,字級對照,False,True,table table
 113四高,8-117,浹浹,giàb giàb,giàb giàb,南,字級對照,False,True,table table
-113四高,8-118,兼兼仔,giám giám è,giám giám é,南,系統規則,False,False,table table zai
+113四高,8-118,兼兼仔,giám giám è,giám giám è,南,字級對照,False,True,table table manual
 113四高,8-119,雞無啼狗無吠,gié mǒ tǎi gièu mǒ poi,gié mǒ tǎi gièu mǒ poi,南,字級對照,False,True,table table table table table table
 113四高,8-120,激來激去,gieb lǒi gieb hi,gieb lǒi gieb hi,南,字級對照,False,True,table table table table
 113四高,8-121,結結,gièd gièd,giàd giàd,南,字級對照,False,False,table table
 113四高,8-122,堅耐,gién ngai,gián ngai,南,教典南四縣,False,False,
 113四高,8-126,緊拚拚仔,gìn biang biang è,gìn bia bia é,南,教典南四縣,False,False,
-113四高,8-127,緊搐搐仔,gìn cug cug è,gìn cug cug é,南,系統規則,False,False,table table table zai
+113四高,8-127,緊搐搐仔,gìn cug cug è,gìn cug cug ě,南,字級對照,False,False,table table table manual
 113四高,8-129,薑根,gióng gín,gióng gín,南,字級對照,False,True,table table
-113四高,8-134,高天天仔,gó tién tién è,gó tién tién é,南,系統規則,False,False,table table table zai
+113四高,8-131,高低齾,gó dái ngàd,gó dái ngàd,南,字級對照,False,True,table table manual
+113四高,8-134,高天天仔,gó tién tién è,gó tién tién ě,南,字級對照,False,False,table table table manual
 113四高,8-135,膏膏,gǒ gǒ,gǒ gǒ,南,教典南四縣,False,True,
 113四高,8-136,胲哊哊仔,gói iòg iòg ě,gói iòg iòg é,南,系統規則,False,False,table table table zai
-113四高,8-137,胲嗙嗙仔,gói páng páng è,gói páng páng é,南,系統規則,False,False,table table table zai
+113四高,8-137,胲嗙嗙仔,gói páng páng è,gói páng páng ě,南,字級對照,False,False,table table table manual
 113四高,8-138,晃晃激激,gǒng gǒng gieb gieb,gǒng gǒng gieb gieb,南,字級對照,False,True,table table table table
 113四高,8-139,古琢,gù dòg,gù dòg,南,教典南四縣,False,True,
 113四高,8-140,掛屎掛尿,gua sìi gua ngiau,gua sìi gua ngiau,南,字級對照,False,True,table table table table
@@ -4836,30 +4922,33 @@
 113四高,8-149,轂,gùg,gùg,南,教典南四縣,False,True,
 113四高,8-150,貢貢滾,gung gung gùn,gung gung gùn,南,字級對照,False,True,table table table
 113四高,8-151,狹極極仔,hab kid kid è,hab kid kid é,南,教典南四縣,False,False,
-113四高,8-152,狹狹仔,hab hab è,hab hab é,南,系統規則,False,False,table table zai
-113四高,8-154,緪繃繃仔,hěn bang bang è,hěn bang bang é,南,系統規則,False,False,table table table zai
-113四高,8-156,順順仔,sun sun è,sun sun é,南,系統規則,False,False,table table zai
+113四高,8-152,狹狹仔,hab hab è,hab hab ě,南,字級對照,False,False,table table manual
+113四高,8-154,緪繃繃仔,hěn bang bang è,hěn bang bang ě,南,字級對照,False,False,table table table manual
+113四高,8-156,順順仔,sun sun è,sun sun ě,南,字級對照,False,False,table table manual
 113四高,8-157,虛虛,hí hí,hí hí,南,字級對照,False,True,table table
-113四高,8-158,顯當當仔,hièn dóng dóng è,hiàn dóng dóng é,南,系統規則,False,False,table table table zai
+113四高,8-158,顯當當仔,hièn dóng dóng è,hiàn dóng dóng ě,南,字級對照,False,False,table table table manual
 113四高,8-159,顯顯,hièn hièn,hiàn hiàn,南,字級對照,False,False,table table
 113四高,8-161,靴背爪癢,hió boi zàu ióng,hió boi zàu ióng,南,教典南四縣,False,True,
 113四高,8-162,卻卻,hiòg hiòg,hiòg hiòg,南,字級對照,False,True,table table
 113四高,8-163,兇豺,hiúng sǎi,hiúng sǎi,南,字級對照,False,True,table table
-113四高,8-164,好洩洩仔,hò xied xied è,hò xied xied é,南,系統規則,False,False,table table table zai
+113四高,8-164,好洩洩仔,hò xied xied è,hò xied xied è,南,字級對照,False,True,table table table manual
 113四高,8-165,好死毋死,hò xì m̌ xì,hò xì m̌ xì,南,教典南四縣,False,True,
 113四高,8-167,一一二二,ìd ìd ngi ngi,ìd ìd ngi ngi,南,字級對照,False,True,table table table table
 113四高,8-169,一隔一跳,ìd gàg ìd tiau,ìd gàg ìd tiau,南,教典南四縣,False,True,
 113四高,8-170,一頭一面,ìd těu ìd mien,ìd těu ìd mien,南,教典南四縣,False,True,
 113四高,8-171,掖麻掖米,ie mǎ ie mì,ie mǎ ie mì,南,教典南四縣,False,True,
 113四高,8-172,弛,ié,ié,南,教典南四縣,False,True,
+113四高,8-173,蝓膏,iě gó,iě gó,南,字級對照,False,True,manual table
 113四高,8-174,弛崗打陣,iě góng dà ciin,ié góng dà ciin,南,教典南四縣,False,False,
+113四高,8-175,蝓蝓,iě iě,iě iě,南,人工,False,True,manual manual
+113四高,8-176,蝓蝓溚溚,iě iě dab dab,iě iě dab dab,南,字級對照,False,True,manual manual table table
 113四高,8-181,因由,ín iǔ,ín iǔ,南,教典南四縣,False,True,
 113四高,8-183,浴浴,iog iog,iog iog,南,字級對照,False,True,table table
-113四高,8-184,洋洋仔,iǒng iǒng è,iǒng iǒng é,南,系統規則,False,False,table table zai
+113四高,8-184,洋洋仔,iǒng iǒng è,iǒng iǒng ě,南,字級對照,False,False,table table manual
 113四高,8-185,幼骨,iu gùd,iu gùd,南,教典南四縣,False,True,
-113四高,8-188,柔柔仔,iǔ iǔ è,iǔ iǔ é,南,系統規則,False,False,table table zai
-113四高,8-189,油臘臘仔,iǔ lab lab è,iǔ lab lab é,南,教典南四縣,False,False,
-113四高,8-190,油㕸㕸仔,iǔ leb leb è,iǔ leb leb é,南,系統規則,False,False,table table table zai
+113四高,8-188,柔柔仔,iǔ iǔ è,iǔ iǔ ě,南,字級對照,False,False,table table manual
+113四高,8-189,油臘臘仔,iǔ lab lab è,iǔ lab lab ě,南,教典南四縣,False,False,
+113四高,8-190,油㕸㕸仔,iǔ leb leb è,iǔ leb leb ě,南,字級對照,False,False,table table table manual
 113四高,8-191,油膩膩仔,iǔ ni ni è,iǔ ne ne é,南,教典南四縣,False,False,
 113四高,8-192,勻大勻細,iǔn tai iǔn se,iǔn tai iǔn se,南,教典南四縣,False,True,
 113四高,8-194,嗟嗟,jiǎ jiǎ,jiǎ jiǎ,南,字級對照,False,True,table table
@@ -4880,15 +4969,17 @@
 113四高,8-213,極極,kid kid,kid kid,南,字級對照,False,True,table table
 113四高,8-214,極手極腳,kid sù kid giòg,kid sù kid giòg,南,教典南四縣,False,True,
 113四高,8-215,缺缺,kièd kièd,kiàd kiàd,南,教典南四縣,False,False,
+113四高,8-216,缺齾,kièd ngàd,kiàd ngàd,南,字級對照,False,False,table manual
 113四高,8-217,健操,kien cau,kian cau,南,字級對照,False,False,table table
 113四高,8-221,虬虬,kiǔ kiǔ,kiǔ kiǔ,南,教典南四縣,False,True,
 113四高,8-222,靠靠,ko ko,ko ko,南,字級對照,False,True,table table
-113四高,8-224,苦煎煎仔,kù jién jién è,kù jién jién é,南,系統規則,False,False,table table table zai
+113四高,8-224,苦煎煎仔,kù jién jién è,kù jién jién ě,南,字級對照,False,False,table table table manual
 113四高,8-225,孔孔,kùng kùng,kùng kùng,南,字級對照,False,True,table table
 113四高,8-228,罅力,la lid,la lid,南,字級對照,False,True,table table
 113四高,8-229,裸裸倒貶,là là do bièn,là là do bièn,南,字級對照,False,True,table table table table
 113四高,8-231,邋邋磕磕,lab lab kab kab,lab lab kab kab,南,字級對照,False,True,table table table table
 113四高,8-232,落熟,làb sug,làb sug,南,字級對照,False,True,table table
+113四高,8-233,瘌瘌刻刻,làd làd kàd kàd,làd làd kàd kàd,南,字級對照,False,True,table table manual manual
 113四高,8-235,犁犁,lǎi lǎi,lǎi lǎi,南,字級對照,False,True,table table
 113四高,8-236,爛瓠勺,lan pǔ sog,lan pǔ sog,南,字級對照,False,True,table table table
 113四高,8-237,爛扇多風,lan san dó fúng,lan san dó fúng,南,字級對照,False,True,table table table table
@@ -4899,7 +4990,12 @@
 113四高,8-246,粒粒精,liab liab jín,liab liab jín,南,字級對照,False,True,table table table
 113四高,8-247,稴稴斜,liam liam qia,liam liam qia,南,字級對照,False,True,table table table
 113四高,8-248,裂裂,lied lied,lied lied,南,字級對照,False,True,table table
-113四高,8-249,涼涼仔,liǒng liǒng è,liǒng liǒng é,南,系統規則,False,False,table table zai
+113四高,8-249,涼涼仔,liǒng liǒng è,liǒng liǒng ě,南,字級對照,False,False,table table manual
+113四高,8-250,摞,lo,lo,南,人工,False,True,manual
+113四高,8-251,摞摞仔,lo lo è,lo lo ě,南,人工,False,False,manual manual manual
+113四高,8-252,摞花摞花,lo fá lo fá,lo fá lo fá,南,字級對照,False,True,manual table manual table
+113四高,8-253,摞行摞行,lo hǒng lo hǒng,lo hǒng lo hǒng,南,字級對照,False,True,manual table manual table
+113四高,8-254,摞粒摞粒,lo liab lo liab,lo liab lo liab,南,字級對照,False,True,manual table manual table
 113四高,8-256,老齧齧,lò ngàd ngàd,lò ngàd ngàd,南,字級對照,False,True,table table table
 113四高,8-257,勞碌,lǒ lùg,lǒ lùg,南,教典南四縣,False,True,
 113四高,8-258,落著,log cog,log cog,南,字級對照,False,True,table table
@@ -4933,7 +5029,7 @@
 113四高,8-299,無時閒,mǒ sǐi hǎn,mǒ sǐi hǎn,南,教典南四縣,False,True,
 113四高,8-300,罔靚,mòng jiáng,mòng jiáng,南,字級對照,False,True,table table
 113四高,8-301,罔罔仔,mòng mòng ě,mòng mòng é,南,教典南四縣,False,False,
-113四高,8-303,眼白白仔,ngièn pag pag è,ngiàn pag pag é,南,系統規則,False,False,table table table zai
+113四高,8-303,眼白白仔,ngièn pag pag è,ngiàn pag pag ě,南,字級對照,False,False,table table table manual
 113四高,8-304,目𥉌𥉌仔,mùg dàb dàb ě,mùg dàb dàb é,南,教典南四縣,False,False,
 113四高,8-306,邋邋涉涉,lab lab sab sab,lab lab sab sab,南,字級對照,False,True,table table table table
 113四高,8-307,目屎浙濟,mùg sìi zab ze,mùg sìi zab ze,南,字級對照,False,True,table table table table
@@ -4943,9 +5039,11 @@
 113四高,8-314,腍腍,něm něm,něm něm,南,教典南四縣,False,True,
 113四高,8-315,淰盆淰缽,ném pǔn ném bàd,ném pǔn ném bàd,南,字級對照,False,True,table table table table
 113四高,8-316,淰淰浡浡,ném ném pud pud,ném ném pud pud,南,字級對照,False,True,table table table table
+113四高,8-318,醹合汔,něu gàg kied,něu gàg kiad,南,系統規則,False,False,table manual rule-ien
 113四高,8-320,牙裡牙射,ngǎ lí ngǎ sa,ngǎ lí ngǎ sa,南,字級對照,False,True,table table table table
 113四高,8-321,牙研目皺,ngǎ ngiěn mùg jiu,ngǎ ngián mùg jiu,南,教典南四縣,False,False,
 113四高,8-322,牙絲絲仔,ngǎ xí xí è,ngǎ xí xí é,南,教典南四縣,False,False,
+113四高,8-323,齾調,ngàd tiau,ngàd tiau,南,字級對照,False,True,manual table
 113四高,8-325,硬拚拚仔,ngang biang biang è,ngang biǎng biǎng é,南,教典南四縣,False,False,
 113四高,8-326,硬程,ngang cǎng,ngang cǎng,南,教典南四縣,False,True,
 113四高,8-328,硬結結仔,ngang gièd gièd ě,ngang giàd giàd é,南,系統規則,False,False,table table table zai
@@ -4954,23 +5052,27 @@
 113四高,8-332,惹惹杈杈,ngia ngia ca ca,ngia ngia ca ca,南,教典南四縣,False,True,
 113四高,8-333,惹眼,ngiá ngièn,ngiá ngiàn,南,字級對照,False,False,table table
 113四高,8-334,凹凹,ngiàb ngiàb,ngiàb ngiàb,南,教典南四縣,False,True,
+113四高,8-335,黏核核,ngiǎm hed hed,ngiǎm hed hed,南,字級對照,False,True,manual table table
+113四高,8-336,黏黏吊吊,ngiǎm ngiǎm diau diau,ngiǎm ngiǎm diau diau,南,字級對照,False,True,manual manual table table
+113四高,8-337,黏黏浹浹,ngiǎm ngiǎm giàb giàb,ngiǎm ngiǎm giàb giàb,南,字級對照,False,True,manual manual table table
 113四高,8-338,嚴條,ngiǎm tiǎu,ngiǎm tiǎu,南,字級對照,False,True,table table
 113四高,8-339,入軟丟韌,ngib ngión diú ngiun,ngib ngión diú ngiun,南,字級對照,False,True,table table table table
 113四高,8-340,入骨,ngib gùd,ngib gùd,南,教典南四縣,False,True,
 113四高,8-341,入軟,ngib ngión,ngib ngión,南,教典南四縣,False,True,
 113四高,8-343,眼剷剷仔,ngièn càn càn è,ngiàn càn càn é,南,教典南四縣,False,False,
-113四高,8-344,眼契契仔,ngièn kie kie è,ngiàn kie kie é,南,系統規則,False,False,table table table zai
+113四高,8-344,眼契契仔,ngièn kie kie è,ngiàn kie kie ě,南,字級對照,False,False,table table table manual
 113四高,8-345,眼呆呆,ngièn ngǒi ngǒi,ngiàn ngǒi ngǒi,南,字級對照,False,False,table table table
 113四高,8-346,人暈氣散,ngǐn fǔn hi san,ngǐn fǔn hi san,南,教典南四縣,False,True,
 113四高,8-347,人困馬渴,ngǐn kun má hòd,ngǐn kun má hòd,南,字級對照,False,True,table table table table
+113四高,8-348,弱漬漬仔,ngiog jid jid ě,ngiog jid jid é,南,系統規則,False,False,table manual manual zai
 113四高,8-349,軟斗,ngión dèu,ngión dèu,南,字級對照,False,True,table table
 113四高,8-350,軟怠怠仔,ngión tài tài ě,ngión tài tài é,南,教典南四縣,False,False,
 113四高,8-352,軟粢搭碓,ngión qǐ dàb doi,ngión qǐ dàb doi,南,教典南四縣,False,True,
 113四高,8-353,軟頭扁摺,ngión těu bièn zàb,ngión těu bièn zàb,南,字級對照,False,True,table table table table
 113四高,8-354,牛拖車載,ngiǔ tó cá zoi,ngiǔ tó cá zoi,南,字級對照,False,True,table table table table
-113四高,8-355,肉凸凸仔,ngiùg tied tied è,ngiùg tied tied é,南,系統規則,False,False,table table table zai
+113四高,8-355,肉凸凸仔,ngiùg tied tied è,ngiùg tied tied ě,南,字級對照,False,False,table table table manual
 113四高,8-358,烏肉,vú ngiùg,vú ngiùg,南,字級對照,False,True,table table
-113四高,8-359,韌習習仔,ngiun xìb xìb è,ngiun xìb xìb é,南,系統規則,False,False,table table table zai
+113四高,8-359,韌習習仔,ngiun xìb xìb è,ngiun xìb xìb ě,南,字級對照,False,False,table table table manual
 113四高,8-360,忍嘴,ngiún zoi,ngiún zoi,南,字級對照,False,True,table table
 113四高,8-361,冗冗,ngiung ngiung,ngiung ngiung,南,教典南四縣,False,True,
 113四高,8-362,冗線,ngiung xien,ngiung xien,南,字級對照,False,True,table table
@@ -4982,7 +5084,7 @@
 113四高,8-374,鬞頭絞髻,nǔng těu gàu gi,nǔng těu gàu gi,南,教典南四縣,False,True,
 113四高,8-376,屙糟齋,ó zó zái,ó zó zái,南,字級對照,False,True,table table table
 113四高,8-377,鬧棚,nau pǎng,nau pǎng,南,字級對照,False,True,table table
-113四高,8-378,白琢琢仔,pag dog dog è,pag dog dog é,南,系統規則,False,False,table table table zai
+113四高,8-378,白琢琢仔,pag dog dog è,pag dog dog ě,南,字級對照,False,False,table table table manual
 113四高,8-379,排排,pǎi pǎi,pǎi pǎi,南,字級對照,False,True,table table
 113四高,8-380,拋拋滾,páu páu gùn,páu páu gùn,南,教典南四縣,False,True,
 113四高,8-383,屁卵貢天,pi lòn gung tién,pi lòn gung tién,南,字級對照,False,True,table table table table
@@ -5032,7 +5134,7 @@
 113四高,8-444,輸到貼貼,sú do dàb dàb,sú do dàb dàb,南,字級對照,False,True,table table table table
 113四高,8-445,輸到悿悿,sú do tiàm tiàm,sú do tiàm tiàm,南,字級對照,False,True,table table table table
 113四高,8-448,水漣漣,sùi liěn liěn,sùi liěn liěn,南,字級對照,False,True,table table table
-113四高,8-449,水涉涉仔,sùi zeb zeb è,sùi zeb zeb é,南,系統規則,False,False,table table table zai
+113四高,8-449,水涉涉仔,sùi zeb zeb è,sùi zeb zeb ě,南,字級對照,False,False,table table table manual
 113四高,8-451,鬆容,súng iǔng,súng iǔng,南,字級對照,False,True,table table
 113四高,8-452,雙燭透尾,súng zùg teu mí,súng zùg teu mí,南,字級對照,False,True,table table table table
 113四高,8-453,大傲,tai ngau,tai ngau,南,字級對照,False,True,table table
@@ -5056,29 +5158,29 @@
 113四高,8-475,橫橫,vang vang,vang vang,南,字級對照,False,True,table table
 113四高,8-476,橫架直架,vǎng ga ciid ga,vǎng ga ciid ga,南,字級對照,False,True,table table table table
 113四高,8-478,黃炣黃炣,vǒng hó vǒng hó,vǒng hó vǒng hó,南,字級對照,False,True,table table table table
-113四高,8-479,黃貢貢仔,vǒng gung gung è,vǒng gung gung é,南,系統規則,False,False,table table table zai
-113四高,8-481,黃蠟蠟仔,vǒng lab lab è,vǒng lab lab é,南,系統規則,False,False,table table table zai
-113四高,8-482,黃淰淰仔,vǒng ném ném è,vǒng ném ném é,南,系統規則,False,False,table table table zai
+113四高,8-479,黃貢貢仔,vǒng gung gung è,vǒng gung gung ě,南,字級對照,False,False,table table table manual
+113四高,8-481,黃蠟蠟仔,vǒng lab lab è,vǒng lab lab ě,南,字級對照,False,False,table table table manual
+113四高,8-482,黃淰淰仔,vǒng ném ném è,vǒng ném ném ě,南,字級對照,False,False,table table table manual
 113四高,8-484,武頓（武頓車槌）,vù dùn (vù dùn cá cǔi),vù dùn (vù dùn cá cǔi),南,字級對照,False,True,table table table table table table
 113四高,8-485,烏𪐞紅,vú du fǔng,vú du fǔng,南,教典南四縣,False,True,
-113四高,8-486,烏𪐞𪐞仔,vú du du è,vú du du é,南,系統規則,False,False,table table table zai
+113四高,8-486,烏𪐞𪐞仔,vú du du è,vú du du ě,南,字級對照,False,False,table table table manual
 113四高,8-487,烏𪐞色,vú du sèd,vú du sèd,南,字級對照,False,True,table table table
 113四高,8-488,烏蠅拑烏蠅啄,vú ǐn kiǎm vú ǐn dùg,vú ǐn kiǎm vú ǐn dùg,南,教典南四縣,False,True,
 113四高,8-489,烏刻刻仔,vú kad kad è,vú kad kad é,南,教典南四縣,False,False,
-113四高,8-490,烏胗胗仔,vú kín kín è,vú kín kín é,南,系統規則,False,False,table table table zai
+113四高,8-490,烏胗胗仔,vú kín kín è,vú kín kín ě,南,字級對照,False,False,table table table manual
 113四高,8-491,烏疏滴溚,vú sǒ did dab,vú sǒ did dab,南,教典南四縣,False,True,
 113四高,8-492,烏膣癩乾,vú zíi lai gón,vú zíi lai gón,南,教典南四縣,False,True,
-113四高,8-494,烏律律仔,vú lud lud è,vú lud lud è,南,系統規則,False,True,table table table zai
+113四高,8-494,烏律律仔,vú lud lud è,vú lud lud è,南,字級對照,False,True,table table table manual
 113四高,8-496,四方闊面,xi fóng fàd mien,xi fóng fàd mien,南,字級對照,False,True,table table table table
 113四高,8-497,四兩命,xi lióng miang,xi lióng miang,南,字級對照,False,True,table table table
 113四高,8-498,四𢯭,xi ten,xi ten,南,字級對照,False,True,table table
 113四高,8-499,四四散散,xi xi san san,xi xi san san,南,教典南四縣,False,True,
 113四高,8-500,四髀兩爪,xì bì liòng zàu,xi bì liòng zàu,南,教典南四縣,False,False,
 113四高,8-502,相傪,xióng cam,xióng cam,南,字級對照,False,True,table table
-113四高,8-504,俗拔拔仔,xiug bad bad è,xiug bad bad é,南,系統規則,False,False,table table table zai
+113四高,8-504,俗拔拔仔,xiug bad bad è,xiug bad bad ě,南,字級對照,False,False,table table table manual
 113四高,8-505,拶腹,zad bùg,zad bùg,南,教典南四縣,False,True,
 113四高,8-507,拶拶,zad zad,zad zad,南,字級對照,False,True,table table
-113四高,8-508,齋囉囉仔,zái ló ló è,zái ló ló é,南,系統規則,False,False,table table table zai
+113四高,8-508,齋囉囉仔,zái ló ló è,zái ló ló ě,南,字級對照,False,False,table table table manual
 113四高,8-509,湛斗,zam dèu,zam dèu,南,字級對照,False,True,table table
 113四高,8-511,燥毋過骨,záu m̌ go gùd,záu m̌ go gùd,南,字級對照,False,True,table table table table
 113四高,8-512,燥爽,záu sòng,záu sòng,南,字級對照,False,True,table table
@@ -5098,6 +5200,8 @@
 113四高,9-10,眾人眾事,zung ngǐn zung sii,zung ngǐn zung sii,南,字級對照,False,True,table table table table
 113四高,10-1,阿婆官,á pǒ gón,á pǒ gón,南,教典南四縣,False,True,
 113四高,10-3,阿鵲教烏鷯,á xiàg gáu vú liau,á xiàg gáu vú liau,南,字級對照,False,True,table table table table table
+113四高,10-4,鴨嫲絡食毋知坑仔窮,àb mǎ lòg siid m̌ dí háng è kiǔng,àb mǎ lòg siid m̌ dí háng è kiǔng,南,字級對照,False,True,table table table table table table table manual table
+113四高,10-5,矮凳仔徑橫人,ài den è gang vang ngǐn,ài den è gang vang ngǐn,南,字級對照,False,True,table table manual table table table
 113四高,10-6,生毛面,sáng mó mien,sáng mó mien,南,教典南四縣,False,True,
 113四高,10-7,恁豺,àn sǎi,àn sǎi,南,字級對照,False,True,table table
 113四高,10-9,詏到贏,au do iǎng,au do iǎng,南,字級對照,False,True,table table table
@@ -5126,6 +5230,8 @@
 113四高,10-38,斧頭削自家个柄毋著,bù těu xiòg cii gá ge biang m̌ dò,bù těu xiòg qid gá ge biang m̌ dò,南,教典南四縣,False,False,
 113四高,10-39,畚箕承尿,bun gí sǐin ngiau,bun gí sǐin ngiau,南,字級對照,False,True,table table table table
 113四高,10-42,扯人面皮,cà ngǐn mien pǐ,cà ngǐn mien pǐ,南,字級對照,False,True,table table table table
+113四高,10-44,插花仔,càb fá è,càb fá è,南,字級對照,False,True,table table manual
+113四高,10-45,裁位仔,cǎi vi è,cǎi vi è,南,字級對照,False,True,table table manual
 113四高,10-46,綻剁頭,can dog těu,can dog těu,南,字級對照,False,True,table table table
 113四高,10-47,剷人,càn ngǐn,càn ngǐn,南,字級對照,False,True,table table
 113四高,10-48,躁光狗,cau góng gièu,cau góng gièu,南,字級對照,False,True,table table table
@@ -5151,6 +5257,7 @@
 113四高,10-73,杖仔顛倒怙,còng ě dién do ku,còng è dién do ku,南,教典南四縣,False,False,
 113四高,10-74,長病無孝子,cǒng piang mǒ hau zìi,cǒng piang mǒ hau zìi,南,教典南四縣,False,True,
 113四高,10-75,長山賣鴨卵,cǒng sán mai àb lòn,cǒng sán mai àb lòn,南,教典南四縣,False,True,
+113四高,10-76,長山目鏡各人合眼,cǒng sán mùg giang gòg ngǐn gàg ngièn,cǒng sán mùg giang gòg ngǐn gàg ngiàn,南,字級對照,False,False,table table table table table table manual table
 113四高,10-77,長屎胐,cǒng sii vùd,cǒng sii fùd,南,教典南四縣,False,False,
 113四高,10-78,抽猴筋,cú hěu gín,cú hěu gín,南,教典南四縣,False,True,
 113四高,10-79,出差世,cùd cá se,cùd cá se,南,教典南四縣,False,True,
@@ -5165,12 +5272,13 @@
 113四高,10-89,打白行,dà pag hǎng,dà pag hǎng,南,教典南四縣,False,True,
 113四高,10-91,打蛇對七寸,dà sǎ dui qìd cun,dà sǎ dui qìd cun,南,字級對照,False,True,table table table table table
 113四高,10-92,打宕窿,dà tong lǔng,dà tong lǔng,南,字級對照,False,True,table table table
+113四高,10-93,打賬仔,dà zong è,dà zong è,南,字級對照,False,True,table table manual
 113四高,10-95,打冇嘴,dà pang zoi,dà pang zoi,南,教典南四縣,False,True,
 113四高,10-96,打屁安狗心,dà pi ón gièu xím,dà pi ón gièu xím,南,教典南四縣,False,True,
 113四高,10-98,答識人,dàb sìid ngǐn,dàb sìid ngǐn,南,字級對照,False,True,table table table
 113四高,10-99,答識人禮,dàb sìid ngǐn lí,dàb sìid ngǐn lí,南,字級對照,False,True,table table table table
 113四高,10-100,帶壞帶樣,dai fai dai iong,dai fai dai iong,南,教典南四縣,False,True,
-113四高,10-101,帶監帶監仔,dai gám dai gám è,dai gám dai gám é,南,系統規則,False,False,table table table table zai
+113四高,10-101,帶監帶監仔,dai gám dai gám è,dai gám dai gám è,南,字級對照,False,True,table table table table manual
 113四高,10-102,帶毋落窟,dai m̌ log fùd,dai m̌ log fùd,南,字級對照,False,True,table table table table
 113四高,10-104,膽膽大,dàm dàm tai,dàm dàm tai,南,教典南四縣,False,True,
 113四高,10-106,單頭話,dán těu fa,dán těu fa,南,教典南四縣,False,True,
@@ -5189,6 +5297,7 @@
 113四高,10-122,張人,dióng ngǐn,dióng ngǐn,南,字級對照,False,True,table table
 113四高,10-124,倒去倒轉,do hi do zòn,do hi do zòn,南,教典南四縣,False,True,
 113四高,10-125,倒頭嫲,do těu mǎ,do těu mǎ,南,教典南四縣,False,True,
+113四高,10-126,倒樹仔摘牛眼,dò su è zàg ngiǔ ngièn,dò su è zàg ngiǔ ngiàn,南,字級對照,False,False,table table manual table table table
 113四高,10-127,多子多衍牽,dó zìi dó ién kién,dó zìi dó ián kián,南,系統規則,False,False,table table table rule-ien table
 113四高,10-128,多子餓死爺,dó zìi ngo xì iǎ,dó zìi ngo xì iǎ,南,教典南四縣,False,True,
 113四高,10-129,當樑,dong liǒng,dong liǒng,南,字級對照,False,True,table table
@@ -5209,6 +5318,7 @@
 113四高,10-146,花囤女,fá dùn ǹg,fá dùn ǹg,南,教典南四縣,False,True,
 113四高,10-148,掝掝跳,fàg fàg tiǎu,fàg fàg tiǎu,南,字級對照,False,True,table table table
 113四高,10-149,飯匙堵貓,fan cǐi dǔ meu,fan cǐi dǔ meu,南,字級對照,False,True,table table table table
+113四高,10-150,番仔撿著錫,fán è giàm dò xiàg,fán è giàm dò xiàg,南,字級對照,False,True,table manual table table table
 113四高,10-152,翻牙倒齒,fán ngǎ do cìi,fán ngǎ do cìi,南,字級對照,False,True,table table table table
 113四高,10-153,揈人,fén ngǐn,fè ngǐn,南,字級對照,False,False,table table
 113四高,10-154,會人毋直,fi ngǐn m̌ ciid,fi ngǐn m̌ ciid,南,字級對照,False,True,table table table table
@@ -5241,7 +5351,9 @@
 113四高,10-185,唊嘴,giab zoi,giab zoi,南,教典南四縣,False,True,
 113四高,10-186,遽板（緊板）,giàg bàn (gìn bàn),giàg bàn (gìn bàn),南,字級對照,False,True,table table table table
 113四高,10-187,撿人食,giàm ngǐn siid,giàm ngǐn siid,南,字級對照,False,True,table table table
+113四高,10-188,頸偏偏仔（頸橫橫仔）,giàng pién pién è (giàng vǎng vǎng è),giàng pién pién ě (giàng vǎng vǎng ě),南,字級對照,False,False,table table table manual table table table manual
 113四高,10-189,驚燒怕冷,giáng séu pa láng,giáng séu pa láng,南,字級對照,False,True,table table table table
+113四高,10-191,驚驚忸忸,giáng giáng nug nug,giáng giáng nug nug,南,字級對照,False,True,table table manual manual
 113四高,10-192,雞胲仙,gié gói xién,gié gói xién,南,教典南四縣,False,True,
 113四高,10-193,雞塒下絡食,gié ji há lòg siid,gié ji há lòg siid,南,字級對照,False,True,table table table table table
 113四高,10-194,決截,gièd jièd,giàd jièd,南,教典南四縣,False,False,
@@ -5255,8 +5367,8 @@
 113四高,10-202,狗打屁,gièu dà pi,gièu dà pi,南,字級對照,False,True,table table table
 113四高,10-203,嬌尸撥撥,giéu síi bad bad,giéu síi bad bad,南,字級對照,False,True,table table table table
 113四高,10-204,腳底打脈,giòg dài dà màg,giòg dài dà màg,南,字級對照,False,True,table table table table
-113四高,10-205,腳撐撐仔,giòg cang cang è,giòg cang cang é,南,系統規則,False,False,table table table zai
-113四高,10-206,腳縮縮仔,giòg sùg sùg è,giòg sùg sùg é,南,教典南四縣,False,False,
+113四高,10-205,腳撐撐仔,giòg cang cang è,giòg cang cang ě,南,字級對照,False,False,table table table manual
+113四高,10-206,腳縮縮仔,giòg sùg sùg è,giòg sùg sùg ě,南,教典南四縣,False,False,
 113四高,10-208,挶屎轟天,giug sìi pang tién ,giug sìi pang tién,南,教典南四縣,False,True,
 113四高,10-210,過房,go fǒng,go fǒng,南,教典南四縣,False,True,
 113四高,10-211,過手,go sù,go sù,南,字級對照,False,True,table table
@@ -5295,15 +5407,15 @@
 113四高,10-250,好做王,hau zo vǒng,hau zo vǒng,南,字級對照,False,True,table table table
 113四高,10-251,耗漦,háu xiǎu,háu xiǎu,南,教典南四縣,False,True,
 113四高,10-252,後來嫲,heu lǒi mǎ,heu lǒi mǎ,南,教典南四縣,False,True,
-113四高,10-253,後生條仔,heu sáng tiǎu è,heu sáng tiǎu è,南,系統規則,False,True,table table table zai
-113四高,10-254,猴哥仔,hěu gó è,hěu gó è,南,系統規則,False,True,table table zai
+113四高,10-253,後生條仔,heu sáng tiǎu è,heu sáng tiǎu è,南,字級對照,False,True,table table table manual
+113四高,10-254,猴哥仔,hěu gó è,hěu gó è,南,字級對照,False,True,table table manual
 113四高,10-255,性暴暴仔,xin pau pau è,xin pau pau é,南,教典南四縣,False,False,
 113四高,10-256,喜客,hì hàg,hì hàg,南,字級對照,False,True,table table
 113四高,10-257,起魯夫,hì lú fú,hì lú fú,南,字級對照,False,True,table table table
 113四高,10-258,挾錢,hiàb qiěn,hiàb qiěn,南,教典南四縣,False,True,
 113四高,10-259,媱嫲頭,hiěu mǎ těu,hiěu mǎ těu,南,字級對照,False,True,table table table
 113四高,10-261,座爽,co sòng,co sòng,南,字級對照,False,True,table table
-113四高,10-262,形投仔,hǐn dǎu è,hǐn dǎu è,南,系統規則,False,True,table table zai
+113四高,10-262,形投仔,hǐn dǎu è,hǐn dǎu è,南,字級對照,False,True,table table manual
 113四高,10-264,好肚屎,hò dù sìi,hò dù sìi,南,字級對照,False,True,table table table
 113四高,10-265,好毋知足,hò m̌ dí jiùg,hò m̌ dí jiùg,南,字級對照,False,True,table table table table
 113四高,10-266,何麼死苦,hǒ mà xì kù,hǒ mà xì kù,南,字級對照,False,True,table table table table
@@ -5339,9 +5451,14 @@
 113四高,10-305,精腳,jín giòg,jín giòg,南,教典南四縣,False,True,
 113四高,10-306,酒癖,jiù piàg,jiù piàg,南,教典南四縣,False,True,
 113四高,10-307,足相,jiùg xiong,jiùg xiong,南,教典南四縣,False,True,
+113四高,10-308,刻臭頭,kàd cu těu,kàd cu těu,南,字級對照,False,True,manual table table
+113四高,10-309,刻定,kàd tin,kàd tin,南,字級對照,False,True,manual table
 113四高,10-311,勘勘裁裁,kám kám cǎi cǎi,kám kám cǎi cǎi,南,字級對照,False,True,table table table table
 113四高,10-312,挳字眼,kang sii ngièn,kang sii ngiàn,南,教典南四縣,False,False,
 113四高,10-313,訄洗,káu sè,káu sè,南,教典南四縣,False,True,
+113四高,10-314,擎頭擎腦（擎頭帶腦）,kiǎ těu kiǎ nò (kiǎ těu dai nò),kiǎ těu kiǎ nò (kiǎ těu dai nò),南,字級對照,False,True,manual table manual table manual table table table
+113四高,10-316,擎頭旗,kiǎ těu kǐ,kiǎ těu kǐ,南,字級對照,False,True,manual table table
+113四高,10-317,擎頭毋起,kiǎ těu m̌ hì,kiǎ těu m̌ hì,南,字級對照,False,True,manual table table table
 113四高,10-318,儆等,kiang dèn,kiang dèn,南,字級對照,False,True,table table
 113四高,10-319,慶頭,kiang těu,kiang těu,南,字級對照,False,True,table table
 113四高,10-320,儆嘴,kiang zoi,kiang zoi,南,字級對照,False,True,table table
@@ -5451,6 +5568,7 @@
 113四高,10-448,莫𢯭佢,mog ten gǐ,mog ten ǐ,南,字級對照,False,False,table table table
 113四高,10-449,莫拘禮,mog gí lí,mog gí lí,南,字級對照,False,True,table table table
 113四高,10-450,莫聲佢,mog sáng gǐ,mog sáng ǐ,南,字級對照,False,False,table table table
+113四高,10-451,妹仔賊,moi è ced,moi è ced,南,字級對照,False,True,table manual table
 113四高,10-452,暮固狗,mu gu gièu,mu gu gièu,南,教典南四縣,False,True,
 113四高,10-453,沒沒術術,mud mud sud sud,mud mud sud sud,南,教典南四縣,False,True,
 113四高,10-454,沒頭沒髻（沒頭絞髻）,mud těu mud gi (mud těu gàu gi),mud těu mud gi (mud těu gàu gi),南,字級對照,False,True,table table table table table table table table
@@ -5462,7 +5580,7 @@
 113四高,10-463,惱絕渣,náu qied zá,náu qied zá,南,字級對照,False,True,table table table
 113四高,10-464,膩膩細細,ne ne se se,ne ne se se,南,字級對照,False,True,table table table table
 113四高,10-467,𤘅奓,nga da,nga da,南,教典南四縣,False,True,
-113四高,10-468,牙綻綻仔,ngǎ can can è,ngǎ can can é,南,系統規則,False,False,table table table zai
+113四高,10-468,牙綻綻仔,ngǎ can can è,ngǎ can can ě,南,字級對照,False,False,table table table manual
 113四高,10-471,硬斗,ngang dèu,ngang dèu,南,教典南四縣,False,True,
 113四高,10-473,耳靴靴,ngì hio hio,ngì hio hio,南,教典南四縣,False,True,
 113四高,10-475,你你𠊎𠊎,ngǐ ngǐ ngǎi ngǎi,ngí ngí ngǎi ngǎi,南,教典南四縣,False,False,
@@ -5470,10 +5588,11 @@
 113四高,10-477,拈雞屎食,ngiám gié sìi siid,ngiám gié sìi siid,南,教典南四縣,False,True,
 113四高,10-478,拈蛇打𧊅,ngiám sǎ dà guài,ngiám sǎ dà guài,南,字級對照,False,True,table table table table
 113四高,10-479,拈燒怕冷,ngiám séu pa láng,ngiám séu pa láng,南,教典南四縣,False,True,
+113四高,10-480,黏牙帶齒,ngiǎm ngǎ dai cìi,ngiǎm ngǎ dai cìi,南,字級對照,False,True,manual table table table
 113四高,10-483,撚等來用,ngièn dèn lǒi iung,ngiàn dèn lǒi iung,南,字級對照,False,False,table table table table
 113四高,10-484,眼水（目水、目色）,ngièn sùi (mùg sùi、mùg sèd),ngiàn sùi (mùg sùi、mùg sèd),南,字級對照,False,False,table table table table table table
 113四高,10-485,眼箭摝天,ngièn jien lùg tién,ngiàn jien lùg tién,南,字級對照,False,False,table table table table
-113四高,10-486,眼鑽鑽仔,ngièn zon zon è,ngiàn zon zon é,南,系統規則,False,False,table table table zai
+113四高,10-486,眼鑽鑽仔,ngièn zon zon è,ngiàn zon zon ě,南,字級對照,False,False,table table table manual
 113四高,10-487,饒赦,ngiěu sa,ngiěu sa,南,教典南四縣,False,True,
 113四高,10-488,人家女,ngǐn gá ǹg,ngǐn gá ǹg,南,教典南四縣,False,True,
 113四高,10-489,人手（人腳）,ngǐn sù (ngǐn giòg),ngǐn sù (ngǐn giòg),南,字級對照,False,True,table table table table
@@ -5492,6 +5611,7 @@
 113四高,10-507,爬床扡蓆（攀床扡蓆）,pǎ cǒng ià qiag (pán cǒng ià qiag),pǎ cǒng ià qiag (pán cǒng ià qiag),南,字級對照,False,True,table table table table table table table table
 113四高,10-508,白咈,pag fud,pag fud,南,教典南四縣,False,True,
 113四高,10-509,盤擎,pǎn kiǎ,pǎn kiǎ,南,教典南四縣,False,True,
+113四高,10-510,刨合削,pǎu gàg xiòg,pǎu gàg xiòg,南,字級對照,False,True,table manual table
 113四高,10-511,鼻臭臭仔,pi cu cu e ˋ,pi cu cu é,南,教典南四縣,False,False,
 113四高,10-512,鼻𪖐𪖐仔,pi ngiu ngiu è,pi ngiu ngiu é,南,教典南四縣,False,False,
 113四高,10-513,批人,pí ngǐn,pí ngǐn,南,教典南四縣,False,True,
@@ -5513,7 +5633,7 @@
 113四高,10-531,七七八八,qìd qìd bàd bàd,qìd qìd bàd bàd,南,字級對照,False,True,table table table table
 113四高,10-532,絕代,qied toi,qied toi,南,教典南四縣,False,True,
 113四高,10-533,錢鬼仔,qiěn gùi ě,qiěn gùi è,南,系統規則,False,False,table table zai
-113四高,10-534,錢絭仔,qiěn kien è,qiěn kian è,南,系統規則,False,False,table table zai
+113四高,10-534,錢絭仔,qiěn kien è,qiěn kian è,南,字級對照,False,False,table table manual
 113四高,10-535,前人子,qiěn ngǐn zìi,qiěn ngǐn zìi,南,教典南四縣,False,True,
 113四高,10-536,尋人出水,qǐm ngǐn cùd sùi,qǐm ngǐn cùd sùi,南,字級對照,False,True,table table table table
 113四高,10-537,外才,ngoi cǒi,ngoi cǒi,南,字級對照,False,True,table table
@@ -5522,8 +5642,8 @@
 113四高,10-540,射眼箭（打眼箭）,sa ngièn jien (dà ngièn jien),sa ngiàn jien (dà ngiàn jien),南,字級對照,False,False,table table table table table table
 113四高,10-541,沙人,sá ngǐn,sá ngǐn,南,教典南四縣,False,True,
 113四高,10-542,沙鼻狗,sá pi gièu,sá pi gièu,南,字級對照,False,True,table table table
-113四高,10-543,沙鼻碌碌仔,sá pi lùg lùg è,sá pi lùg lùg é,南,系統規則,False,False,table table table table zai
-113四高,10-544,沙鼻弄弄仔,sá pi nung nung è,sá pi nung nung é,南,系統規則,False,False,table table table table zai
+113四高,10-543,沙鼻碌碌仔,sá pi lùg lùg è,sá pi lùg lùg ě,南,字級對照,False,False,table table table table manual
+113四高,10-544,沙鼻弄弄仔,sá pi nung nung è,sá pi nung nung ě,南,字級對照,False,False,table table table table manual
 113四高,10-545,蛇過尋棍,sǎ go qǐm gun,sǎ go qǐm gun,南,字級對照,False,True,table table table table
 113四高,10-546,蛇窿透𧊅窟,sǎ lǔng teu guài fùd,sǎ lǔng teu guài fùd,南,教典南四縣,False,True,
 113四高,10-547,石灰掞路,sag fói iam lu,sag fói iam lu,南,字級對照,False,True,table table table table
@@ -5534,13 +5654,13 @@
 113四高,10-552,三分親,sám fún qín,sám fún qín,南,字級對照,False,True,table table table
 113四高,10-553,三十暗晡个飯甑,sám siib am bú ge fan zen,sám siib am bú ge fan zen,南,字級對照,False,True,table table table table table table table
 113四高,10-555,三見面,sám gien mien,sám gian mien,南,字級對照,False,False,table table table
-113四高,10-558,覡投投仔,sang dǎu dǎu è,sang dǎu dǎu é,南,系統規則,False,False,table table table zai
+113四高,10-558,覡投投仔,sang dǎu dǎu è,sang dǎu dǎu ě,南,字級對照,False,False,table table table manual
 113四高,10-559,覡上覡下,sang sóng sang há,sang sóng sang há,南,字級對照,False,True,table table table table
 113四高,10-560,覡頭（覡投）,sang těu (sang dǎu),sang těu (sang dǎu),南,字級對照,False,True,table table table table
 113四高,10-562,生角,sáng gòg,sáng gòg,南,字級對照,False,True,table table
 113四高,10-563,生翼,sáng id,sáng id,南,字級對照,False,True,table table
 113四高,10-564,勢頭,se těu,sii těu,南,教典南四縣,False,False,
-113四高,10-565,細心臼仔,se xím kiú è,se xím kiú è,南,系統規則,False,True,table table table zai
+113四高,10-565,細心臼仔,se xím kiú è,se xím kiú è,南,字級對照,False,True,table table table manual
 113四高,10-567,燒壞話,séu fài fa,séu fài fa,南,字級對照,False,True,table table table
 113四高,10-568,誚㸐,séu nàd,séu nàd,南,教典南四縣,False,True,
 113四高,10-569,誚誚㸐㸐,séu séu nàd nàd,séu séu nàd nàd,南,字級對照,False,True,table table table table
@@ -5555,6 +5675,7 @@
 113四高,10-579,使嘴,sìi zoi,sìi zoi,南,教典南四縣,False,True,
 113四高,10-581,食毋燥,siid m̌ záu,siid m̌ záu,南,字級對照,False,True,table table table
 113四高,10-582,食人夠夠,siid ngǐn gieu gieu,siid ngǐn gieu gieu,南,教典南四縣,False,True,
+113四高,10-583,食人戇仔（㘔人戇仔）,siid ngǐn ngong è (sái ngǐn ngong è),siid ngǐn ngong è (sái ngǐn ngong è),南,字級對照,False,True,table table table manual table table table manual
 113四高,10-584,食漦,siid xiǎu,siid xiǎu,南,教典南四縣,False,True,
 113四高,10-585,識識,sìid sìid,sìid sìid,南,字級對照,False,True,table table
 113四高,10-586,聖旨嘴,siin zìi zoi,siin zìi zoi,南,字級對照,False,True,table table table
@@ -5572,7 +5693,7 @@
 113四高,10-599,收馬毋轉,sú má m̌ zòn,sú má m̌ zòn,南,字級對照,False,True,table table table table
 113四高,10-600,收承（承受）,sú sǐin (sǐin su),sú sǐin (sǐin su),南,字級對照,False,True,table table table table
 113四高,10-602,馴馴,sǔn sǔn,sǔn sǔn,南,教典南四縣,False,True,
-113四高,10-603,雙生仔,súng sáng è,súng sáng è,南,系統規則,False,True,table table zai
+113四高,10-603,雙生仔,súng sáng è,súng sáng è,南,字級對照,False,True,table table manual
 113四高,10-604,雙頭蛇,súng těu sǎ,súng těu sǎ,南,字級對照,False,True,table table table
 113四高,10-605,䌈手䌈腳,tàg sù tàg giòg,tàg sù tàg giòg,南,教典南四縣,False,True,
 113四高,10-608,大肚籃,tai dù lám,tai dù lǎm,南,教典南四縣,False,False,
@@ -5584,6 +5705,7 @@
 113四高,10-616,跈人走,těn ngǐn zèu,těn ngǐn zèu,南,教典南四縣,False,True,
 113四高,10-617,跈嘴尾,těn zoi mí,těn zoi mí,南,教典南四縣,False,True,
 113四高,10-618,投吾膝頭,těu ngá qìd těu,těu ngá qìd těu,南,字級對照,False,True,table table table table
+113四高,10-619,頭牲仔（畜生）,těu sáng è (cùg sáng),těu sáng è (cùg sáng),南,字級對照,False,True,table table manual table table
 113四高,10-620,挑工,tiáu gúng,tiáu gúng,南,教典南四縣,False,True,
 113四高,10-621,條直,tiǎu ciid,tiǎu ciid,南,教典南四縣,False,True,
 113四高,10-622,天天,tién tién,tién tién,南,教典南四縣,False,True,
@@ -5643,11 +5765,11 @@
 113四高,10-684,早死早贏,zò xì zò iǎng,zò xì zò iǎng,南,字級對照,False,True,table table table table
 113四高,10-685,捉猴入山,zòg hěu ngib sán,zòg hěu ngib sán,南,字級對照,False,True,table table table table
 113四高,10-686,盤牙風,pǎn ngǎ fúng,pǎn ngǎ fúng,南,字級對照,False,True,table table table
-113四高,10-687,嘴長長仔,zoi cǒng cǒng è,zoi cǒng cǒng é,南,系統規則,False,False,table table table zai
-113四高,10-688,嘴屈屈仔,zoi kud kud è,zoi kud kud é,南,教典南四縣,False,False,
+113四高,10-687,嘴長長仔,zoi cǒng cǒng è,zoi cǒng cǒng ě,南,字級對照,False,False,table table table manual
+113四高,10-688,嘴屈屈仔,zoi kud kud è,zoi kud kud ě,南,教典南四縣,False,False,
 113四高,10-689,嘴碼,zoi má,zoi má,南,教典南四縣,False,True,
 113四高,10-690,嘴硬屎胐冇,zoi ngang sii vùd pang,zoi ngang sii fùd pang,南,字級對照,False,False,table table table table table
-113四高,10-691,嘴勺勺仔,zoi sog sog è,zoi sog sog é,南,系統規則,False,False,table table table zai
+113四高,10-691,嘴勺勺仔,zoi sog sog è,zoi sog sog ě,南,字級對照,False,False,table table table manual
 113四高,10-692,脧面脧面（脧頭脧面）,zói mien zói mien (zói těu zói mien),zói mien zói mien (zói těu zói mien),南,字級對照,False,True,table table table table table table table table
 113四高,10-693,脧面（脧脧、脧槌）,zói mien (zói zói、zói cǔi),zói mien (zói zói、zói cǔi),南,字級對照,False,True,table table table table table table
 113四高,10-694,脧子,zói zìi,zói zìi,南,字級對照,False,True,table table
@@ -5687,7 +5809,7 @@
 113四高,11-6,眼時間,ngièn sǐi gién,ngiàn sǐi gián,南,字級對照,False,False,table table table
 113四高,11-7,當過,dong go,dong go,南,教典南四縣,False,True,
 113四高,11-8,棟頂項,dung dàng hong,dung dàng hong,南,字級對照,False,True,table table table
-113四高,11-9,或或仔,fed fed è,fed fed é,南,系統規則,False,False,table table zai
+113四高,11-9,或或仔,fed fed è,fed fed è,南,字級對照,False,True,table table manual
 113四高,11-11,隔遠,gàg ièn,gàg iàn,南,字級對照,False,False,table table
 113四高,11-12,徑背,gang boi,gang boi,南,教典南四縣,False,True,
 113四高,11-13,過晝缽𤊶,go zu bàd làd,go zu bàd làd,南,字級對照,False,True,table table table table
@@ -5696,7 +5818,7 @@
 113四高,11-17,寅時卯時,ǐ  sǐi  máu  sǐi,ǐ sǐi máu sǐi,南,教典南四縣,False,True,
 113四高,11-18,一齣火,ìd cùd fò,ìd cùd fò,南,字級對照,False,True,table table table
 113四高,11-19,一對時,ìd dui sǐi,ìd dui sǐi,南,字級對照,False,True,table table table
-113四高,11-20,一睏仔,ìd kun è,ìd kun é,南,系統規則,False,False,table table zai
+113四高,11-20,一睏仔,ìd kun è,ìd kun ě,南,字級對照,False,False,table table manual
 113四高,11-21,一抹煞,ìd màd sàd,ìd màd sàd,南,教典南四縣,False,True,
 113四高,11-22,一晝邊,ìd zu bién,ìd zu bién,南,教典南四縣,False,True,
 113四高,11-23,一時八刻,ìd sǐi bàd kièd,ìd sǐi bàd kièd,南,字級對照,False,True,table table table table
@@ -5723,7 +5845,7 @@
 113四高,11-47,三分十秒,sám fún siib mèu,sám fún siib mèu,南,字級對照,False,True,table table table table
 113四高,11-48,屎背尾,sii boi mí,sii boi mí,南,教典南四縣,False,True,
 113四高,11-49,十頭八日,siib těu bàd ngìd,siib těu bàd ngìd,南,字級對照,False,True,table table table table
-113四高,11-50,順掖仔,sun ie è,sun ie é,南,系統規則,False,False,table table zai
+113四高,11-50,順掖仔,sun ie è,sun ie è,南,字級對照,False,True,table table manual
 113四高,11-52,頭項,těu hong,těu hong,南,字級對照,False,True,table table
 113四高,11-53,天腳,tién giòg,tién giòg,南,字級對照,False,True,table table
 113四高,11-55,斷點錢,tón diàm qiěn,tón diàm qiěn,南,字級對照,False,True,table table table
@@ -5745,6 +5867,7 @@
 113四高,12-12,縱定,jiùng tin,jiùng tin,南,字級對照,False,True,table table
 113四高,12-13,毋敢話,m̌ gàm va,m̌ gàm va,南,字級對照,False,True,table table table
 113四高,12-15,吂好食,mǎng hò siid,mǎng hò siid,南,字級對照,False,True,table table table
+113四高,12-16,問支柄來擎,mun gí biang lǒi kiǎ,mun gí biang lǒi kiǎ,南,字級對照,False,True,table table table table manual
 113四高,12-17,仰得時,ngiong dèd sǐi,ngiong dèd sǐi,南,字級對照,False,True,table table table
 113四高,12-19,愛嫌罔嫌,oi hiǎm mòng hiǎm,oi hiǎm mòng hiǎm,南,字級對照,False,True,table table table table
 113四高,12-20,全全,qiǒn qiǒn,qiǒn qiǒn,南,教典南四縣,False,True,
@@ -5754,6 +5877,7 @@
 113四高,12-24,做你走（做你去）,zo ňg zèu (zo ňg hi),zo ňg zèu (zo ňg hi),南,字級對照,False,True,table table table table table table
 113四高,12-25,晝晝暗暗,zu zu am am,zu zu am am,南,教典南四縣,False,True,
 113四高,13-2,結石䃗,gièd sag bòg,giàd sag bòg,南,字級對照,False,False,table table table
+113四高,13-3,結磚仔,gièd zón è,giàd zón è,南,字級對照,False,False,table table manual
 113四高,13-4,揚瓦,iǒng ngà,iǒng ngà,南,字級對照,False,True,table table
 113四高,13-6,壢溝,làg giéu,làg giéu,南,字級對照,False,True,table table
 113四高,13-7,陋陋肖肖,leu leu seu seu,leu leu seu seu,南,字級對照,False,True,table table table table
@@ -5842,6 +5966,7 @@
 113四高,14-81,日腳,ngìd giòg,ngìd giòg,南,教典南四縣,False,True,
 113四高,14-83,泡神茶,pau sǐin cǎ,pau sǐin cǎ,南,字級對照,False,True,table table table
 113四高,14-84,披麻戴孝,pí mǎ dai hau,pí mǎ dai hau,南,字級對照,False,True,table table table table
+113四高,14-85,憑筊仔,pǐn gau è,pǐn gau è,南,字級對照,False,True,table table manual
 113四高,14-87,且郎,qiá lǒng,qiá lǒng,南,教典南四縣,False,True,
 113四高,14-88,七七,qìd qìd,qìd qìd,南,字級對照,False,True,table table
 113四高,14-89,七娘生,qìd ngiǒng sáng,qìd ngiǒng sáng,南,教典南四縣,False,True,
@@ -5870,7 +5995,7 @@
 113四高,14-117,矺底,zàg dài,zàg dài,南,教典南四縣,False,True,
 113四高,14-118,矺雞髀,zàg gié bì,zàg gié bì,南,字級對照,False,True,table table table
 113四高,14-119,矺聘金,zàg pìn gím,zàg pìn gím,南,字級對照,False,True,table table table
-113四高,14-120,齋公仔,zái gúng è,zái gúng è,南,系統規則,False,True,table table zai
+113四高,14-120,齋公仔,zái gúng è,zái gúng è,南,字級對照,False,True,table table manual
 113四高,14-121,斬雞頭,zàm gié těu,zàm gié těu,南,字級對照,False,True,table table table
 113四高,14-122,做𣛮,zo cang,zo cang,南,字級對照,False,True,table table
 113四高,14-123,做對歲,zo dui se,zo dui se,南,教典南四縣,False,True,
@@ -5895,6 +6020,7 @@
 113四高,15-6,一開間,ìd kói gién,ìd kói gián,南,字級對照,False,False,table table table
 113四高,15-8,掖,ie,ie,南,教典南四縣,False,True,
 113四高,15-9,綹,jiu,liu,南,教典南四縣,True,False,
+113四高,15-10,齾,ngàd,ngàd,南,人工,False,True,manual
 113四高,15-13,筍,sùn,sùn,南,教典南四縣,False,True,
 113四高,15-14,頭陣火,těu ciin fò,těu ciin fò,南,字級對照,False,True,table table table
 113四高,15-15,定額,tin ngiàg,tin ngiàg,南,教典南四縣,False,True,
@@ -5905,7 +6031,7 @@
 113四高,16-5,掰禾頭,bái vǒ těu,bái vǒ těu,南,字級對照,False,True,table table table
 113四高,16-7,本錢落番薯湯,bùn qiěn log fán sǔ tóng,bùn qiěn log fán sǔ tóng,南,字級對照,False,True,table table table table table table
 113四高,16-8,茶䉂仔,cǎ lùi ě,cǎ lùi è,南,系統規則,False,False,table table zai
-113四高,16-9,茶店仔,cǎ diam è,cǎ diam è,南,系統規則,False,True,table table zai
+113四高,16-9,茶店仔,cǎ diam è,cǎ diam è,南,字級對照,False,True,table table manual
 113四高,16-10,拆數,càg sii,càg sii,南,教典南四縣,False,True,
 113四高,16-11,拆債,càg zai,càg zai,南,教典南四縣,False,True,
 113四高,16-12,差仔,cái è,cái è,南,教典南四縣,False,True,
@@ -5915,18 +6041,19 @@
 113四高,16-16,賺食,con siid,con siid,南,教典南四縣,False,True,
 113四高,16-17,賺食嫲,con siid mǎ,con siid mǎ,南,教典南四縣,False,True,
 113四高,16-18,丈田,cong tiěn,cong tiěn,南,字級對照,False,True,table table
-113四高,16-19,長年仔,cǒng ngiěn è,cǒng ngiǎn è,南,系統規則,False,False,table table zai
+113四高,16-19,長年仔,cǒng ngiěn è,cǒng ngiǎn è,南,字級對照,False,False,table table manual
 113四高,16-20,打稅,dà soi,dà soi,南,字級對照,False,True,table table
 113四高,16-21,打租,dà zú,dà zú,南,字級對照,False,True,table table
 113四高,16-22,打秧,dà ióng,dà ióng,南,字級對照,False,True,table table
 113四高,16-23,打石,dà sag,dà sag,南,教典南四縣,False,True,
 113四高,16-24,打磚,dà zón,dà zón,南,字級對照,False,True,table table
-113四高,16-25,搭垤仔,dab de è,dàb de è,南,系統規則,False,False,table table zai
+113四高,16-25,搭垤仔,dab de è,dàb de è,南,字級對照,False,False,table table manual
 113四高,16-26,貼秤頭,dàb ciin těu,dàb ciin těu,南,字級對照,False,True,table table table
 113四高,16-27,貼钁頭,dàb giòg těu,dàb giòg těu,南,字級對照,False,True,table table table
+113四高,16-28,沾秧仔,dém ióng è,dém ióng è,南,字級對照,False,True,table table manual
 113四高,16-31,兜飯碗,déu fan vòn,déu fan vòn,南,字級對照,False,True,table table table
 113四高,16-32,點仁,diam ǐn,diam ǐn,南,字級對照,False,True,table table
-113四高,16-33,店堵仔,diam dǔ è,diam dǔ è,南,系統規則,False,True,table table zai
+113四高,16-33,店堵仔,diam dǔ è,diam dǔ è,南,字級對照,False,True,table table manual
 113四高,16-34,倒墊,do tiàb,do tiàb,南,字級對照,False,True,table table
 113四高,16-35,貨底,fo dài,fo dài,南,字級對照,False,True,table table
 113四高,16-37,堆稈棚,dói gòn pǎng,dói gòn pǎng,南,字級對照,False,True,table table table
@@ -5934,6 +6061,7 @@
 113四高,16-41,火脈先生,fò màg xín sáng,fò màg xín sáng,南,字級對照,False,True,table table table table
 113四高,16-43,奉工,fung gúng,fung gúng,南,教典南四縣,False,True,
 113四高,16-44,加水加豆腐,gá sùi gá teu fu,gá sùi gá teu fu,南,字級對照,False,True,table table table table table
+113四高,16-45,合貨,gàg fo,gàg fo,南,字級對照,False,True,manual table
 113四高,16-46,交關,gáu gón,gáu gón,南,教典南四縣,False,True,
 113四高,16-48,撿兜尞,giàm déu liau,giàm déu liau,南,字級對照,False,True,table table table
 113四高,16-49,撿兜做,giàm déu zo,giàm déu zo,南,字級對照,False,True,table table table
@@ -5950,7 +6078,7 @@
 113四高,16-60,孤行獨市,gú hǒng tug sii,gú hǒng tug sii,南,教典南四縣,False,True,
 113四高,16-61,起榼,hì kuàg,hì kuàg,南,教典南四縣,False,True,
 113四高,16-62,號頭,ho těu,ho těu,南,教典南四縣,False,True,
-113四高,16-63,一掖禾仔,ìd ie vǒ è,ìd ie vǒ è,南,系統規則,False,True,table table table zai
+113四高,16-63,一掖禾仔,ìd ie vǒ è,ìd ie vǒ è,南,字級對照,False,True,table table table manual
 113四高,16-64,移撥轉借,ǐ bàd zòn jia,ǐ bàd zòn jia,南,字級對照,False,True,table table table table
 113四高,16-65,贏徼,iǎng gièu,iǎng gièu,南,字級對照,False,True,table table
 113四高,16-66,一包捎,ìd báu sáu,ìd báu sáu,南,字級對照,False,True,table table table
@@ -5984,7 +6112,7 @@
 113四高,16-95,冇數,pang sii,pang sii,南,字級對照,False,True,table table
 113四高,16-96,標頭,péu těu,péu těu,南,教典南四縣,False,True,
 113四高,16-97,便宜貴賤,piěn ngǐ gui qien,piěn ngǐ gui qien,南,字級對照,False,True,table table table table
-113四高,16-98,便宜煎煎仔,piěn ngǐ jién jién è,piěn ngǐ jién jién é,南,系統規則,False,False,table table table table zai
+113四高,16-98,便宜煎煎仔,piěn ngǐ jién jién è,piěn ngǐ jién jién ě,南,字級對照,False,False,table table table table manual
 113四高,16-99,便宜過狗屎,piěn ngǐ go gièu sìi,piěn ngǐ go gièu sìi,南,字級對照,False,True,table table table table table
 113四高,16-100,掣市,càd sii,càd sii,南,字級對照,False,True,table table
 113四高,16-101,錢水,qiěn sùi,qiěn sùi,南,字級對照,False,True,table table
@@ -5999,7 +6127,7 @@
 113四高,16-111,爽本,sòng bùn,sòng bùn,南,教典南四縣,False,True,
 113四高,16-112,爽㘔,sòng sái,sòng sái,南,字級對照,False,True,table table
 113四高,16-113,糴米,tag mì,tag mì,南,教典南四縣,False,True,
-113四高,16-114,探偵仔,tàm zíin è,tàm zíin è,南,系統規則,False,True,table table zai
+113四高,16-114,探偵仔,tàm zíin è,tàm zíin è,南,字級對照,False,True,table table manual
 113四高,16-115,題錢,tǐ qiěn,tǐ qiěn,南,教典南四縣,False,True,
 113四高,16-116,田頭家,tiěn těu gá,tiěn těu gá,南,教典南四縣,False,True,
 113四高,16-117,田頭園尾,tiěn těu iěn mí,tiěn těu iǎn mí,南,字級對照,False,False,table table table table
@@ -6021,7 +6149,9 @@
 113四高,16-138,大量,tai liong,tai liong,南,教典南四縣,False,True,
 113四高,16-139,點豬菜,diam zú coi,diam zú coi,南,字級對照,False,True,table table table
 113四高,16-140,合本,gàb bùn,gàb bùn,南,字級對照,False,True,table table
+113四高,16-141,洗鋸仔,sè gi è,sè gi è,南,字級對照,False,True,table table manual
 113四高,16-142,款調,kuàn tiau,kuàn tiau,南,字級對照,False,True,table table
+113四高,16-143,跈會仔,těn fi è,těn fi è,南,字級對照,False,True,table table manual
 113四高,16-144,擐酒,kuan jiù,kuan jiù,南,字級對照,False,True,table table
 113四高,16-145,做毋出水,zo m̌ cùd sùi,zo m̌ cùd sùi,南,字級對照,False,True,table table table table
 113四高,17-1,剝皮撐礱糠,bòg pǐ cang lǔng hóng,bòg pǐ cang lǔng hóng,南,字級對照,False,True,table table table table table

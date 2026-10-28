@@ -23,6 +23,9 @@ on:
       - 'tests/cloud_sync_meinung_test.js'
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
+      - 'tests/curated_test.js'
+      - 'data/curated/**'
+      - 'data/supp/**'
       - 'scripts/build_subdialect_fill.py'
       - 'data/sub-dialects-fill/**'
       - 'data/cert/113四*.json'
@@ -51,6 +54,9 @@ on:
       - 'tests/cloud_sync_meinung_test.js'
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
+      - 'tests/curated_test.js'
+      - 'data/curated/**'
+      - 'data/supp/**'
       - 'scripts/build_subdialect_fill.py'
       - 'data/sub-dialects-fill/**'
       - 'data/cert/113四*.json'
@@ -92,3 +98,5 @@ jobs:
         run: python3 tests/build_subdialect_fill_test.py
       - name: Run GIP superscript tests
         run: node tests/gip_superscript_test.js
+      - name: Curated (愛灣語加詞) tests
+        run: node tests/curated_test.js
