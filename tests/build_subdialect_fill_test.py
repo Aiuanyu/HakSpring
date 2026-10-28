@@ -63,6 +63,14 @@ assert ('好', 'hò') not in table
 assert table[('額', 'ngiàg')] == {'ngiàg': 1}, table[('額', 'ngiàg')]
 assert ('撿', 'giàm') not in table
 
+# 3d. 補字典：lexically_different 淨判斷「同詞目、讀音講法無共樣」（好額 hò ngiàg ↔ iú bòd）；
+#     字數摎音節數對毋齊毋判（交畀 align／meinung_table 處理）
+import build_supp_dict as sd  # noqa: E402
+assert sd.lexically_different('好額', 'hò ngiàg', 'iú bòd')
+assert not sd.lexically_different('好額', 'hò ngiàg', 'hó ngiàg')   # 淨調無共樣
+assert not sd.lexically_different('冷水', 'láng sùi', 'nāng sùi')   # 音變
+assert not sd.lexically_different('好額', 'hò ngiàg', 'iú')          # 音節數對毋齊
+
 # 4. 輸出个附表檔：全部愛讀得返來（防 write_rows 手工拼 JSON 壞去）
 fill = os.path.join(ROOT, 'data', 'sub-dialects-fill')
 for name in ('南四縣.json', '美濃.json', '待審-南四縣.json'):

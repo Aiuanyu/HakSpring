@@ -258,17 +258,21 @@ def main():
     stats = defaultdict(lambda: {'pairs': 0, 'aligned': 0})
 
     records = list(load_records())
-    # 四縣認證詞條个底音（標「北」抑無標）：美濃、南四縣變體摎佢講法無共樣，就毋逐字對照（好額 hò ngiàg ↔ iú bòd）
-    base_phonetic = {(o['file'], o['id']): o['phonetic'] for o in records
-                     if o.get('file') and o['sourceName'].startswith('四縣') and o['label'] in ('', '北')}
+    # 四縣認證詞條个底音（標「北」抑無標）：美濃、南四縣變體个詞目摎底音共樣、讀音卻講法無共樣，
+    # 就毋逐字對照（好額 hò ngiàg ↔ iú bòd）。變體有自家詞目（例：阿婆 á pǒ ↔ 阿嬤 á ma）毋算，照收。
+    base_of = {(o['file'], o['id']): (o['word'], o['phonetic']) for o in records
+               if o.get('file') and o['sourceName'].startswith('四縣') and o['label'] in ('', '北')}
     for o in records:
         d = target_dialect(o['sourceName'], o['label'])
         if not d:
             continue
-        if o['label'] in ('美', '南') and (o.get('file'), o.get('id')) in base_phonetic:
-            base = split_readings(base_phonetic[(o['file'], o['id'])])
-            if base and any(lexically_different(o['word'], base[0], ph) for ph in split_readings(o['phonetic'])):
-                continue
+        # 講法無共樣个變體，淨毋做逐字對齊；單字條目登記（singles）照舊，毋受影響
+        no_align = False
+        if o['label'] in ('美', '南') and (o.get('file'), o.get('id')) in base_of:
+            base_word, base_phon = base_of[(o['file'], o['id'])]
+            base = split_readings(base_phon)
+            no_align = bool(o['word'] == base_word and base
+                            and any(lexically_different(o['word'], base[0], ph) for ph in split_readings(o['phonetic'])))
         for ph in split_readings(o['phonetic']):
             for word, phon in expand_parens(o['word'], ph):
                 if not word or not phon:
@@ -278,6 +282,8 @@ def main():
                     singles[d].add(word.strip())
                     for syl in SYLLABLE.findall(phon):
                         single_readings[d][word.strip()].add(unicodedata.normalize('NFC', syl))
+                if no_align:
+                    continue
                 pairs = align(word, phon)
                 if not pairs:
                     continue
