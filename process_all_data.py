@@ -705,8 +705,12 @@ if __name__ == '__main__':
 
         print("\n--- 全部 CSV 處理完成 ---")
 
-    # 補字典係對認證、教典 JSON 推出來个，認證、教典一更新就愛重建（見 data/supp/README.md）
+    # 愛灣語加詞（人工維護个 data/curated/加詞.csv），補字典會讀佢，人工加詞優先過擬音（見 data/curated/README.md）
     sys.path.insert(0, os.path.join(script_dir, 'scripts'))
+    import build_curated
+    build_curated.main()
+
+    # 補字典係對認證、教典 JSON 推出來个，認證、教典一更新就愛重建（見 data/supp/README.md）
     import build_supp_dict
     build_supp_dict.main()
 

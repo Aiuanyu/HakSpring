@@ -294,7 +294,11 @@ def tone_24_to_33(phonetic):
 
 
 def meinung_table(cert):
-    """認證已標美濃音个詞：（字、南四縣音節）→ 美濃音節。南四縣無標就用北四縣做底。"""
+    """認證已標美濃音个詞：（字、南四縣音節）→ 美濃音節。南四縣無標就用北四縣做底。
+
+    美濃音愛摎同一隻詞目對應：variant-parser 已經將「同義異形詞」（好額【有口（有發）】）摎
+    「美濃音屬南四縣詞」（佢兜人【佢等】 ǐ dén (ǐ nén)）分清楚，這下 meinung_word == word 个才係同詞異讀。
+    """
     pairs = []
     for e in cert.values():
         if not e['meinung'] or e['meinung_word'] != e['word']:
@@ -333,6 +337,10 @@ def build_meinung(cert, south_rows):
             continue
         key = (fname.replace('.json', ''), eid)
         if e['south']:
+            if '（' in e['south_word'] or '(' in e['south_word']:
+                # 南四縣詞括號內係同義詞（好額【有口（有發）】）：詞形摎北四縣無共樣，推美濃容易錯，毋推
+                skipped += 1
+                continue
             south, south_word, south_layer = e['south'], e['south_word'], '認證原標'
         elif key in derived_south:
             r = derived_south[key]

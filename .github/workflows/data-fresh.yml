@@ -1,0 +1,67 @@
+name: Data fresh check
+
+# 認證／教典 JSON（data/cert、data/gip，由 CSV 轉）、補字典（data/supp）、愛灣語加詞（data/curated）、
+# 次方言補音（data/sub-dialects-fill）、審音佇列（review/）都係 process_all_data.py 對來源推出來个產出。
+# 來源抑腳本一改、產出無跟等重生，
+# main 就會長透放過時个資料（20261025 个 variant-parser 修正就係恁樣漏忒，美濃音字級對照被污染）。
+# 這个檢查：重跑一擺，產出同 commit 个愛一樣；毋共樣就失敗，愛本機跑 `python3 process_all_data.py` 後一齊 commit。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - 'scripts/**'
+      - 'js/variant-parser.js'
+      - 'process_all_data.py'
+      - 'reverse_tone_mapping.json'
+      - 'tone_mapping.json'
+      - 'review/**'
+      - '.github/workflows/data-fresh.yml'
+  pull_request:
+    paths:
+      - 'data/**'
+      - 'scripts/**'
+      - 'js/variant-parser.js'
+      - 'process_all_data.py'
+      - 'reverse_tone_mapping.json'
+      - 'tone_mapping.json'
+      - 'review/**'
+      - '.github/workflows/data-fresh.yml'
+
+jobs:
+  fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 重新產生全部產出（cert／gip JSON、補字典、加詞、次方言補音、審音佇列）
+        run: python3 process_all_data.py
+      - name: 檢查產出摎 commit 个一樣
+        run: |
+          # review/queue.json 个 generated 係時間戳，每擺都無共樣，比對時擺一邊
+          python3 - <<'PY'
+          import json, subprocess, sys
+          old = json.loads(subprocess.check_output(['git', 'show', 'HEAD:review/queue.json']).decode('utf-8'))
+          new = json.load(open('review/queue.json', encoding='utf-8'))
+          old.pop('generated', None)
+          new.pop('generated', None)
+          if old != new:
+              print('::error file=review/queue.json::review/queue.json 摎重新產生个結果無共樣')
+              sys.exit(1)
+          PY
+          git checkout -- review/queue.json
+          if ! git diff --exit-code --stat -- data/cert data/gip data/supp data/sub-dialects-fill data/curated; then
+            echo "::error::產出檔過時：來源抑腳本改了，無重跑 process_all_data.py。愛本機重跑 python3 process_all_data.py，連產出一齊 commit。"
+            exit 1
+          fi
+          if [ -n "$(git status --porcelain -- data/cert data/gip data/supp data/sub-dialects-fill data/curated review)" ]; then
+            echo "::error::重新產生出新个檔案，愛 commit 入來"
+            git status --short -- data/cert data/gip data/supp data/sub-dialects-fill data/curated review
+            exit 1
+          fi

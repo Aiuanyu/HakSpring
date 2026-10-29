@@ -547,6 +547,13 @@ const DATA_FILES_TO_CACHE = [
   'data/supp/補字典-大.json',
   'data/supp/補字典-平.json',
   'data/supp/補字典-安.json',
+  // 愛灣語加詞（教典、認證未收、人工加个字詞，見 data/curated/README.md）
+  'data/curated/加詞-四.json',
+  'data/curated/加詞-南.json',
+  'data/curated/加詞-海.json',
+  'data/curated/加詞-大.json',
+  'data/curated/加詞-平.json',
+  'data/curated/加詞-安.json',
   // 其他資料
   'tone_mapping.json',
   'reverse_tone_mapping.json',
@@ -1109,6 +1116,8 @@ function constructWordAudioUrl(lineData, fullSourceName) {
   if (!fullSourceName) return null;
   // 補字典係程式自動補个音，無音檔
   if (fullSourceName.startsWith('supp') || fullSourceName.includes('補字典')) return null;
+  // 愛灣語加詞係人工加个字詞，嗄無音檔
+  if (fullSourceName.startsWith('curated') || fullSourceName.includes('愛灣語加詞')) return null;
   const isGip = fullSourceName.startsWith('gip') || fullSourceName.includes('教典');
   const isCert = fullSourceName.startsWith('cert') || (!isGip && typeof getDialectInfo === 'function'); // Fallback
 
@@ -2801,6 +2810,11 @@ function getKeyNameFromPath(filePath) {
     return fileName.replace('-', '');
   }
 
+  if (filePath.includes('/curated/')) {
+    // 愛灣語加詞檔：'加詞-四' → '愛灣語加詞四'（同 JSON 內个 sourceName 共樣）
+    return '愛灣語' + fileName.replace('-', '');
+  }
+
   // 3. 處理其餘的特殊檔案
   const otherMap = {
     tone_mapping: 'toneMappingData',
@@ -2814,6 +2828,10 @@ function getKeyNameFromPath(filePath) {
 
 function getFullLevelName(varName) {
   if (!varName) return '未知級別';
+  if (varName.startsWith('愛灣語加詞')) {
+    const accent = ACCENT_INFO[varName.substring(5)];
+    return accent ? `${accent.腔名}愛灣語加詞` : varName;
+  }
   if (varName.startsWith('補字典')) {
     const accent = ACCENT_INFO[varName.substring(3)];
     return accent ? `${accent.腔名}補字典` : varName;
@@ -3960,6 +3978,16 @@ function initializeAppUI() {
     南四縣: window['補字典南'],
   };
 
+  // --- 愛灣語加詞（人工加个字詞，教典、認證未收） ---
+  const curatedData = {
+    四縣: window['愛灣語加詞四'],
+    海陸: window['愛灣語加詞海'],
+    大埔: window['愛灣語加詞大'],
+    饒平: window['愛灣語加詞平'],
+    詔安: window['愛灣語加詞安'],
+    南四縣: window['愛灣語加詞南'],
+  };
+
   function updateProgressDropdown() {
     const progressDropdown = document.getElementById('progressDropdown');
     const progressDetailsSpan = document.getElementById('progressDetails');
@@ -4362,6 +4390,22 @@ function initializeAppUI() {
       combinedData = combinedData.concat(suppParsedData);
     }
 
+    // 愛灣語加詞有一句固定个說明，同補字典共樣淨用客文查詞
+    const curatedDialectData = curatedData[selectedDialect];
+    if (
+      searchMode === '客話' &&
+      curatedDialectData &&
+      curatedDialectData.content &&
+      Array.isArray(curatedDialectData.content)
+    ) {
+      const curatedParsedData = curatedDialectData.content;
+      curatedParsedData.forEach((item) => {
+        item.sourceName = curatedDialectData.name;
+        item.sourceType = 'curated';
+      });
+      combinedData = combinedData.concat(curatedParsedData);
+    }
+
     let results;
     if (searchMode === '客話') {
       const lowerCaseKeyword = keyword.toLowerCase();
@@ -4574,12 +4618,15 @@ function initializeAppUI() {
       let 級 = '';
       let originalDialectInfo = {};
       const isGip = line.sourceType === 'gip' || line.sourceName.startsWith('教典');
-      const isSupp = line.sourceType === 'supp';
+      const isCurated = line.sourceType === 'curated';
+      // 補字典、愛灣語加詞都無跨腔對照、無音檔、毋做收藏，共用 isSupp 个處理
+      const isSupp = line.sourceType === 'supp' || isCurated;
 
       if (isSupp) {
-         腔 = line.sourceName.replace('補字典', '');
+         const suppLabel = isCurated ? '愛灣語加詞' : '補字典';
+         腔 = line.sourceName.replace(suppLabel, '');
          const accentObj = ACCENT_INFO[腔] || { 腔名: '' };
-         originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + '補字典' };
+         originalDialectInfo = { 腔: 腔, 腔名: accentObj.腔名, 級: '', fullLvlName: accentObj.腔名 + suppLabel };
       } else if (isGip) {
          腔 = line.sourceName.replace('教典', '');
          const accentObj = ACCENT_INFO[腔] || { 腔名: '' };

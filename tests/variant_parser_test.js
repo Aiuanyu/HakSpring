@@ -275,6 +275,83 @@ it('模式 5：美濃音複合於南四縣標音（四中 8-28 裌仔）', () =>
   assert.strictEqual(res.variants[1].phoneticOnly, false);
 });
 
+it('模式 5：詞括號內含（）同義詞，括號內毋係美濃（四中 17-60 好額、四中高 4-83 寄雨）', () => {
+  // 好額【有口（有發）】 ↔ iú hèu (iú bòd)：有口、有發都係南四縣个講法
+  const res = parseVariants('好額【有口（有發）】', 'hò ngiàg【iú hèu (iú bòd)】', '四縣');
+  assert.strictEqual(res.hasVariants, true);
+  assert.strictEqual(res.main.word, '好額');
+  assert.strictEqual(res.variants.length, 1);
+  assert.strictEqual(res.variants[0].label, '南');
+  assert.strictEqual(res.variants[0].word, '有口（有發）');
+  assert.strictEqual(res.variants[0].phonetic, 'iú hèu (iú bòd)');
+  assert.ok(!res.variants.some((v) => v.label === '美'), '同義詞毋該標做美濃');
+
+  const res2 = parseVariants('寄雨【庰雨（救雨）】', 'gi ì【biang ì (giu ì)】', '四縣');
+  assert.strictEqual(res2.variants.length, 1);
+  assert.strictEqual(res2.variants[0].label, '南');
+  assert.strictEqual(res2.variants[0].phonetic, 'biang ì (giu ì)');
+});
+
+it('模式 5：美濃音屬南四縣詞，詞摎南四縣詞共樣（四中 3-4 佢兜人【佢等】、四基 18-40 盡【最】）', () => {
+  const res = parseVariants('佢兜人（佢兜儕）【佢等】', 'gǐ déu ngǐn (gǐ déu sǎ)【ǐ dén (ǐ nén)】', '四縣');
+  assert.strictEqual(res.variants.length, 2);
+  assert.strictEqual(res.variants[0].label, '南');
+  assert.strictEqual(res.variants[0].word, '佢等');
+  assert.strictEqual(res.variants[0].phonetic, 'ǐ dén');
+  assert.strictEqual(res.variants[1].label, '美');
+  assert.strictEqual(res.variants[1].word, '佢等');       // 毋係北四縣个「佢兜人」
+  assert.strictEqual(res.variants[1].phonetic, 'ǐ nén');
+  assert.strictEqual(res.variants[1].phoneticOnly, false);
+
+  const res2 = parseVariants('盡【最】', 'qin【zùi (zui)】', '四縣');
+  assert.strictEqual(res2.variants[0].label, '南');
+  assert.strictEqual(res2.variants[0].word, '最');
+  assert.strictEqual(res2.variants[1].label, '美');
+  assert.strictEqual(res2.variants[1].word, '最');
+  assert.strictEqual(res2.variants[1].phonetic, 'zui');
+});
+
+it('模式 5：無詞括號个複合標音，南四縣摎美濃都係原主詞个純音變體（四中 4-1 掩等）', () => {
+  const res = parseVariants('掩等', 'àm dèn【ám dèn (ám nèn)】', '四縣');
+  assert.strictEqual(res.variants.length, 2);
+  assert.strictEqual(res.variants[0].label, '南');
+  assert.strictEqual(res.variants[0].phoneticOnly, true);
+  assert.strictEqual(res.variants[1].label, '美');
+  assert.strictEqual(res.variants[1].phoneticOnly, true);
+  assert.strictEqual(res.variants[1].phonetic, 'ám nèn');
+});
+
+it('模式 5：畸形括號（缺右括號、全半形混用、巢狀、空括號）毋會 throw，詞括號複合時整串留佇南四縣', () => {
+  const cases = [
+    ['好額【有口（有發】', 'hò ngiàg【iú hèu (iú bòd】'],
+    ['好額【有口（有發）', 'hò ngiàg【iú hèu (iú bòd)'],
+    ['好額【有口(有發)】', 'hò ngiàg【iú hèu （iú bòd）】'],
+    ['好額【有口（有（發））】', 'hò ngiàg【iú hèu (iú (bòd))】'],
+    ['佢兜人【佢等】', 'gǐ déu ngǐn【ǐ dén (】'],
+    ['', ''],
+  ];
+  for (const [w, p] of cases) {
+    const res = parseVariants(w, p, '四縣');
+    assert.ok(Array.isArray(res.variants), `${w} | ${p}`);
+    assert.ok(!res.variants.some((v) => v.label === '美'), `畸形括號毋該生出美濃：${w} | ${p}`);
+  }
+});
+
+it('模式 5：多塊【】混合（四中高 12-23 個零月）：南四縣整串、美濃純音，行為同修正前', () => {
+  const res = parseVariants(
+    '個零月（個過月、隻過月）',
+    'ge lǎng ngied (ge go ngied、zàg go ngied)【ge lǎng ngiad (ge nǎng ngiad)】【ge go ngiad、zàg go ngiad】',
+    '四縣'
+  );
+  assert.deepStrictEqual(
+    res.variants.map((v) => [v.label, v.word, v.phonetic, v.phoneticOnly]),
+    [
+      ['南', '', 'ge lǎng ngiad (ge go ngiad、zàg go ngiad)', true],
+      ['美', '', 'ge nǎng ngiad', true],
+    ]
+  );
+});
+
 it('模式 6：饒平【／】內含（）同義詞（平高 14-13 丙運）', () => {
   const res = parseVariants(
     '丙運【歪運（落運）】',
@@ -319,6 +396,25 @@ it('全量資料庫四縣變體條數符合盤查結果 (1264 條)', () => {
     }
   }
   assert.strictEqual(sixianCount, 1264);
+});
+
+it('全量資料庫：無詞條同時有「同義詞詞括號」摎兩塊以上複合標音括號（hasSynonymWordBracket 个盲點）', () => {
+  const isCompound = (b) => /[（(]/.test(b) && !/^[（(].*[）)]$/.test(b.trim());
+  const brackets = (t) => [...t.matchAll(/【([^】]*)】/g)].map((m) => m[1]);
+  const files = ['113四基.json', '113四初.json', '113四中.json', '113四中高.json', '113四高.json'];
+  for (const f of files) {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/cert', f), 'utf8'));
+    const lines = data.content.split('\n').filter(Boolean);
+    const header = lines[0].split(',');
+    const wIdx = header.indexOf('客家語');
+    const pIdx = header.indexOf('客語標音_顯示');
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      const synonymWord = brackets(cols[wIdx] || '').some(isCompound);
+      const compoundPhonetics = brackets(cols[pIdx] || '').filter(isCompound).length;
+      assert.ok(!(synonymWord && compoundPhonetics >= 2), `${f} ${cols[0]} 撞著 hasSynonymWordBracket 盲點，愛改解析器`);
+    }
+  }
 });
 
 it('全量資料庫饒平變體條數符合盤查結果 (4889 條)', () => {
