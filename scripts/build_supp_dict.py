@@ -14,7 +14,7 @@
 7. 沿襲：data/supp/人工沿襲.csv 人工指定「妳 沿襲 你」這種，該腔無單字條目个字，
    全部讀音照抄來源字（分類「沿襲」，六腔都做）。優先過補字典、擬音。
 8. 人工加詞：data/curated/加詞.csv 同腔同字已有，就毋輸出該字个「擬音」列（人工優先過擬音，見 data/curated/README.md）。
-9. 教典个詞級讀音註記「俗音」「又俗音」毋拆做單字音（WORD_LEVEL_NOTES；例：夭壽 俗音 iáu xiǔ，xiǔ 淨在這詞肚，毋係單字「壽」个音）。
+9. 教典个詞級讀音註記毋拆做單字音：「俗音」「又俗音」（WORD_LEVEL_NOTES，例：夭壽 俗音 iáu xiǔ，xiǔ 淨在這詞肚，毋係單字「壽」个音）；「又讀」「特」「特殊音」：單字詞目个係字級另讀，照收；多字詞目个，同一隻字音出現佇 2 組以上互無相干个詞（lexeme_families）正當字級另讀收，淨一組詞就係詞級，毋收。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -70,6 +70,11 @@ READING_SPLIT = re.compile('(?:' + '|'.join(_NOTES) + r')\s*\d*\s*\.?')
 # 詞級讀音註記：俗音係「這隻詞」个另一種唸法，毋係組成字个單字音（例：夭壽 iau24 xiu11 俗音，
 # xiǔ 淨在這詞肚，毋係單字「壽」个音）。補字典个單字音對齊毋拆這幾種（詞音本身由詞庫提供）。
 WORD_LEVEL_NOTES = ('俗音', '又俗音')
+# 又讀、特、特殊音：詞目有兩隻字以上，無法分「這詞个特殊唸法」（詞級）摎「字个另讀」（字級）；單字詞目个係字級，照收。
+# 多字詞目个，同一隻字音出現佇 CHAR_LEVEL_MIN_FAMILIES 組以上互無相干个詞（lexeme_families），正當做字級另讀收；
+# 淨佇同一組詞（例：夭壽、夭壽子、死夭壽）、抑淨一隻詞，就係詞級，毋收。
+WORD_LEVEL_NOTES_MULTI_CHAR = ('又讀', '特', '特殊音')
+CHAR_LEVEL_MIN_FAMILIES = 2
 
 
 def split_readings(phonetic, drop_notes=()):
@@ -151,31 +156,79 @@ def load_gip_numeric():
     return result
 
 
-def load_gip_readings(d, drop_notes=()):
-    """教典原始 CSV 个音讀 → 詞目 → [讀音…]（調符、音節一隻空白隔開）。
-
-    愛讀原始 CSV：處理過个「客語標音_顯示」會共全形空白壓做半形，讀音中間个邊界就無忒。
-    音讀欄：全形空白隔開幾隻讀音（有時無註記，第二隻係變調形式，例：kong31 ngiu<u>24</u>），
-    再拆「又讀／特…」註記，丟忒「合音」「（後字變調）」等。
-    """
+def _gip_segments(d):
+    """教典原始 CSV 个每一格讀音（全形空白隔開个一段）→ (詞目, 讀音段, 聲調表)。"""
     with open(os.path.join(ROOT, 'tone_mapping.json'), encoding='utf-8') as f:
         tm = json.load(f)
     tone_map = {'vowel_priority': tm.get('vowel_priority', []),
                 'tones': {**tm.get('default_tones', {}), **tm.get('dialect_maps', {}).get(d, {})}}
     gip_dir = os.path.join(ROOT, 'data', 'gip')
     fname = next(f for f in os.listdir(gip_dir) if f.endswith(f'-{d}.csv'))
-    out = defaultdict(list)
     with open(os.path.join(gip_dir, fname), encoding='utf-8-sig') as f:
         for row in csv.DictReader(f):
             raw = re.sub(r'</?u>', '', row['音讀'])
             raw = re.sub(r'（[^）]*）', '', raw)
             for seg in raw.split('\u3000'):
-                for reading in split_readings(seg, drop_notes):
-                    sylls = SYLLABLE.findall(convert_phonetic_string(reading, tone_map))
-                    r = ' '.join(unicodedata.normalize('NFC', x) for x in sylls)
-                    if r and r not in out[row['詞目']]:
-                        out[row['詞目']].append(r)
+                yield row['詞目'], seg, tone_map
+
+
+def load_gip_readings(d, drop_notes=(), multi_char_drop_notes=()):
+    """教典原始 CSV 个音讀 → 詞目 → [讀音…]（調符、音節一隻空白隔開）。
+
+    愛讀原始 CSV：處理過个「客語標音_顯示」會共全形空白壓做半形，讀音中間个邊界就無忒。
+    音讀欄：全形空白隔開幾隻讀音（有時無註記，第二隻係變調形式，例：kong31 ngiu<u>24</u>），
+    再拆「又讀／特…」註記，丟忒「合音」「（後字變調）」等。
+    drop_notes：連註記帶讀音丟忒个註記；multi_char_drop_notes：淨詞目有兩隻字以上正丟忒个註記。
+    """
+    out = defaultdict(list)
+    for word, seg, tone_map in _gip_segments(d):
+        notes = drop_notes + multi_char_drop_notes if len(HAN.findall(word)) >= 2 else drop_notes
+        for reading in split_readings(seg, notes):
+            sylls = SYLLABLE.findall(convert_phonetic_string(reading, tone_map))
+            r = ' '.join(unicodedata.normalize('NFC', x) for x in sylls)
+            if r and r not in out[word]:
+                out[word].append(r)
     return out
+
+
+def load_gip_noted_pairs(d, notes):
+    """教典多字詞目个 notes 註記讀音，字數摎音節數對得齊个：(字, 音節) → {詞目: 該註記讀音}。"""
+    pairs = defaultdict(dict)
+    for word, seg, tone_map in _gip_segments(d):
+        han = HAN.findall(word)
+        if len(han) < 2:
+            continue
+        parts = NOTE_SPLIT.split(seg)
+        for note, sub in zip(parts[1::2], parts[2::2]):
+            if note not in notes:
+                continue
+            sylls = [unicodedata.normalize('NFC', x)
+                     for x in SYLLABLE.findall(convert_phonetic_string(sub.strip(), tone_map))]
+            if len(sylls) == len(han):
+                for ch, syl in zip(han, sylls):
+                    pairs[(ch, syl)].setdefault(word, ' '.join(sylls))
+    return pairs
+
+
+def lexeme_families(words, ch):
+    """含 ch 个詞，兩隻詞共有一段含 ch 个兩字以上子串，就算同一組（夭壽、夭壽子、死夭壽）；回傳組數。"""
+    ws = sorted(words)
+    parent = {w: w for w in ws}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def related(a, b):
+        return any(ch in a[i:i + 2] and a[i:i + 2] in b for i in range(len(a) - 1))
+
+    for i, a in enumerate(ws):
+        for b in ws[i + 1:]:
+            if related(a, b):
+                parent[find(a)] = find(b)
+    return len({find(w) for w in ws})
 
 
 def load_records():
@@ -184,8 +237,8 @@ def load_records():
         if not o['sourceName'].startswith('教典'):
             yield o
     for d in DIALECTS:
-        # 單字音對齊淨用教典个正式讀音，詞級俗音（WORD_LEVEL_NOTES）毋拆
-        for word, readings in load_gip_readings(d, WORD_LEVEL_NOTES).items():
+        # 單字音對齊淨用教典个正式讀音，詞級讀音註記（WORD_LEVEL_NOTES、多字詞目个 WORD_LEVEL_NOTES_MULTI_CHAR）毋拆
+        for word, readings in load_gip_readings(d, WORD_LEVEL_NOTES, WORD_LEVEL_NOTES_MULTI_CHAR).items():
             for r in readings:
                 yield {'sourceName': f'教典{d}', 'label': '', 'word': word, 'phonetic': r}
 
@@ -267,6 +320,18 @@ def main():
                         rec['labels'].add(lab or MAIN_LABEL.get(d, ''))
                     if len(rec['examples']) < MAX_EXAMPLES and (word, phon) not in [(w, p) for w, p, _ in rec['examples']]:
                         rec['examples'].append((word, phon, o['sourceName']))
+
+    # 又讀、特、特殊音（多字詞目）：同一隻字音出現佇多組互無相干个詞，當字級另讀收；淨一組詞，就係詞級，毋收
+    for d in DIALECTS:
+        for (ch, syl), words in load_gip_noted_pairs(d, WORD_LEVEL_NOTES_MULTI_CHAR).items():
+            if lexeme_families(words, ch) < CHAR_LEVEL_MIN_FAMILIES:
+                continue
+            rec = readings[d][ch][syl]
+            rec['count'] += len(words)
+            rec['labels'].add(MAIN_LABEL.get(d, ''))
+            for word, phon in words.items():
+                if len(rec['examples']) < MAX_EXAMPLES and (word, phon) not in [(w, p) for w, p, _ in rec['examples']]:
+                    rec['examples'].append((word, phon, f'教典{d}'))
 
     out_dir = os.path.join(ROOT, 'data', 'supp')
     os.makedirs(out_dir, exist_ok=True)

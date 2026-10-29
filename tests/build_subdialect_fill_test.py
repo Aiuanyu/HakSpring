@@ -98,10 +98,23 @@ for synonym_entry in [('113四中', '13-34'), ('113四中', '17-60'), ('113四�
 assert by_cert[('113四中', '1-50')] == 'ngiàg těu'             # 額頭，毋係 bòd těu
 assert by_cert[('113四中', '2-37')] == 'guān xīm'              # 關心，毋係 cō xīm
 
+import build_supp_dict as sd  # noqa: E402
+
 # 3e. 教典「俗音」「又俗音」係詞級讀音，毋拆做單字音（例：夭壽 俗音 iáu xiǔ → 毋生單字「壽 xiǔ」；今年 俗音 gin24 → 毋生單字「今 gín」）
 assert ('壽', 'xiǔ') not in _supp('南')
 assert ('今', 'gín') not in _supp('四')
 assert ('公', 'gung') not in _supp('四')
+# 又讀、特、特殊音（多字詞目）：淨出現佇一組詞（勉強、檸檬）係詞級，毋拆；出現佇多組互無相干个詞（預先、預定、預料…）係字級另讀，收
+assert ('強', 'giòng') not in _supp('四')
+assert ('檬', 'mòng') not in _supp('四')
+assert ('預', 'rhǐ') in _supp('海')
+assert ('子', 'zîi') in _supp('安')
+
+# 3f. lexeme_families：夭壽、夭壽子、死夭壽係同一組詞；預先、預定、預料係三組（淨共有「預」一隻字）
+assert sd.lexeme_families(['夭壽', '夭壽子', '死夭壽', '夭壽短命'], '壽') == 1
+assert sd.lexeme_families(['預先', '預定', '預料'], '預') == 3
+assert sd.lexeme_families(['家譜', '族譜'], '譜') == 2
+assert sd.lexeme_families(['勉強'], '強') == 1
 
 # 4. 輸出个附表檔：全部愛讀得返來（防 write_rows 手工拼 JSON 壞去）
 fill = os.path.join(ROOT, 'data', 'sub-dialects-fill')
