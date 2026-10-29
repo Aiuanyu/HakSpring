@@ -809,23 +809,6 @@ button#loopCategoryBtn.active i {
   padding: 0.5em;
 }
 
-.copy-word-link-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0 3px;
-  vertical-align: middle;
-}
-
-.copy-word-link-btn i {
-  cursor: pointer;
-  background: #8a2be2;
-  color: wheat;
-  box-shadow: 2px 2px #9932cc;
-  border-radius: 0.3em;
-  padding: 0.5em;
-}
-
 tr.focus-row-flash {
   animation: pulse-pink-effect 1s 3 ease-in-out;
 }
@@ -1962,11 +1945,6 @@ input:checked+.slider:before {
   button#loopCategoryBtn.active i {
     background-color: #e67e22;
     /* 較亮的橘色 */
-  }
-
-  .copy-word-link-btn i {
-    background: #9b59b6;
-    box-shadow: 2px 2px #8e44ad;
   }
 
   .loop-one-btn i {

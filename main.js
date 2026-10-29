@@ -6815,7 +6815,7 @@ function initializeAppUI() {
 
       // 複製此詞專屬連結（載入前後 20 行，但毋自動播放）
       const copyWordLinkBtn = document.createElement('button');
-      copyWordLinkBtn.className = 'copy-word-link-btn';
+      copyWordLinkBtn.className = 'copy-word-link-btn copy-url-btn'; // 鈕樣式共 result-summary 个複製網址鈕
       copyWordLinkBtn.dataset.rowId = originalRowId;
       copyWordLinkBtn.title = '複製此詞連結';
       copyWordLinkBtn.innerHTML = '<i class="fas fa-link"></i>';
@@ -7858,7 +7858,7 @@ function initializeAppUI() {
     }
   }
 
-  // 複製單詞專屬連結：文字格式摎 copyUrlBtn 共樣（摘要行 + 換行 + 網址），摘要後背加詞目
+  // 複製單詞專屬連結：文字格式「客源翠腔級：編號 詞目」換行後接網址
   function copyWordLink(btn, dialectInfo, category) {
     if (btn.disabled) return;
     const rowId = btn.dataset.rowId;
@@ -7877,12 +7877,8 @@ function initializeAppUI() {
     url.searchParams.set('focus', rowId);
     if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
     else url.searchParams.delete('mn');
-    // 摘要行直接用目前个腔級摎類別組，毋靠畫面上 #summary-text-content（佢有時吂更新著）
     const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
-    const formattedCategory = formatCategoryLabel(
-      getFullOfficialCategoryName(category, activeCategoryData),
-    );
-    const text = `${SHARE_SITE_NAME}${displayLvlName}：${formattedCategory} ${item.編號} ${item.客家語}\n${url.toString()}`;
+    const text = `${SHARE_SITE_NAME}${displayLvlName}：${item.編號} ${item.客家語}\n${url.toString()}`;
     const done = () => {
       const orig = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-check"></i>';
