@@ -1,6 +1,8 @@
 // service-worker.js
 
-const CACHE_NAME = 'audio-cache-v1';
+// v2：舊 v1 caches 會存著當時抓失敗个錯誤回應（403／404／500 抑係錯 Content-Type），
+// 換 SW 毋會自家清掉，所以升版名並在 activate 時刪舊 cache，用戶正會重新抓著正確音檔。
+const CACHE_NAME = 'audio-cache-v2';
 
 // --- Service Worker Lifecycle ---
 
@@ -14,7 +16,18 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('Service Worker: Activating...');
   // Clean up old caches if necessary.
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((n) => n.startsWith('audio-cache-') && n !== CACHE_NAME)
+            .map((n) => caches.delete(n)),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  );
 });
 
 // --- Fetch Event for Caching ---
@@ -33,8 +46,9 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(
         caches.open(CACHE_NAME).then((cache) =>
           cache.match(event.request, { ignoreVary: true }).then(async (cached) => {
+            // 只處理單段 Range（多段、opaque 快取、bytes=- 都透傳網路）
             const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
-            if (!cached || !m || cached.status !== 200) {
+            if (!cached || !m || (m[1] === '' && m[2] === '') || cached.status !== 200) {
               return fetch(event.request);
             }
             const buf = await cached.arrayBuffer();
@@ -61,6 +75,11 @@ self.addEventListener('fetch', (event) => {
                 'Content-Range': `bytes ${start}-${end}/${total}`,
                 'Content-Length': String(end - start + 1),
                 'Accept-Ranges': 'bytes',
+                // 合成个 206 愛帶 CORS／CORP，毋然 crossorigin 載入會被擋
+                'Access-Control-Allow-Origin':
+                  cached.headers.get('Access-Control-Allow-Origin') || '*',
+                'Cross-Origin-Resource-Policy':
+                  cached.headers.get('Cross-Origin-Resource-Policy') || 'cross-origin',
               },
             });
           }),
@@ -83,7 +102,8 @@ self.addEventListener('fetch', (event) => {
             console.log('SW: Caching new audio file:', event.request.url);
             // We need to clone the response because a response can only be consumed once.
             // 只快取完整 200 回應（206 / 錯誤回應毋好存）
-            if (networkResponse.status === 200) {
+            // 跨來源直連 .mp3 係 opaque（status 0），也愛存，毋然離線優先會失效
+            if (networkResponse.status === 200 || networkResponse.type === 'opaque') {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;

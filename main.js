@@ -7896,8 +7896,9 @@ function initializeAppUI() {
       document.body.appendChild(ta);
       ta.select();
       try {
-        document.execCommand('copy');
-        done();
+        // execCommand 失敗會回 false 毋係丟例外，愛檢查，毋然會假打勾
+        if (document.execCommand('copy')) done();
+        else console.error('複製失敗：execCommand 回傳 false');
       } catch (err) {
         console.error('複製失敗:', err);
       } finally {

@@ -32,10 +32,18 @@ export async function onRequest(context) {
 
     // 上游 Content-Type 毋係 audio/*（例如 application/octet-stream）時，Firefox 會拒播（Chrome 會自家偵測），共佢校正做 audio/mpeg
     const ctype = newResponse.headers.get('Content-Type') || '';
-    if (response.ok && targetUrl.endsWith('.mp3') && !/^audio\//i.test(ctype)) {
+    // 用 pathname 判斷，網址帶 query 抑係 .MP3 大寫都會中
+    let isMp3 = false;
+    try {
+      isMp3 = new URL(targetUrl).pathname.toLowerCase().endsWith('.mp3');
+    } catch (e) {
+      /* 網址無效就毋校正 */
+    }
+    if (response.ok && isMp3 && !/^audio\//i.test(ctype)) {
       newResponse.headers.set('Content-Type', 'audio/mpeg');
     }
-    if (!newResponse.headers.has('Accept-Ranges')) {
+    // 上游回 206 先確定佢支援 Range，毋會對回 200 个上游謊報
+    if (response.status === 206 && !newResponse.headers.has('Accept-Ranges')) {
       newResponse.headers.set('Accept-Ranges', 'bytes');
     }
     newResponse.headers.set(
