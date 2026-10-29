@@ -7877,12 +7877,12 @@ function initializeAppUI() {
     url.searchParams.set('focus', rowId);
     if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
     else url.searchParams.delete('mn');
-    const summaryEl = document.getElementById('summary-text-content');
-    const base = summaryEl
-      ? (summaryEl.dataset.shareText || summaryEl.dataset.originalText || '').trim()
-      : '';
-    const wordLine = `${item.編號} ${item.客家語}`;
-    const text = `${base ? base + ' ' : ''}${wordLine}\n${url.toString()}`;
+    // 摘要行直接用目前个腔級摎類別組，毋靠畫面上 #summary-text-content（佢有時吂更新著）
+    const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
+    const formattedCategory = formatCategoryLabel(
+      getFullOfficialCategoryName(category, activeCategoryData),
+    );
+    const text = `${SHARE_SITE_NAME}${displayLvlName}：${formattedCategory} ${item.編號} ${item.客家語}\n${url.toString()}`;
     const done = () => {
       const orig = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-check"></i>';
