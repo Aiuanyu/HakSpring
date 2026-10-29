@@ -27,7 +27,7 @@ from collections import Counter, defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 from build_supp_dict import (  # noqa: E402
-    HAN, SYLLABLE, load_gip_readings, load_variants, syllables_far,
+    HAN, SYLLABLE, load_gip_readings, load_variants,
 )
 
 OUT_DIR = os.path.join(ROOT, 'data', 'sub-dialects-fill')
@@ -296,9 +296,8 @@ def tone_24_to_33(phonetic):
 def meinung_table(cert):
     """認證已標美濃音个詞：（字、南四縣音節）→ 美濃音節。南四縣無標就用北四縣做底。
 
-    字數摎音節數對毋齊个詞（aligned 回傳 None）毋入表。
-    詞中有任何一隻音節摎底音聲母韻母攏無共樣（syllables_far）个詞，成條毋入表：
-    這種多半係美濃講法無共樣（例：好額 hò ngiàg → 有發 iú bòd），逐字對照會污染別个詞（額頭 → bòd těu）。
+    美濃音愛摎同一隻詞目對應：variant-parser 已經將「同義異形詞」（好額【有口（有發）】）摎
+    「美濃音屬南四縣詞」（佢兜人【佢等】 ǐ dén (ǐ nén)）分清楚，這下 meinung_word == word 个才係同詞異讀。
     """
     pairs = []
     for e in cert.values():
@@ -307,8 +306,6 @@ def meinung_table(cert):
         base = e['south'] if e['south'] and e['south_word'] == e['word'] else e['north']
         a, b = aligned(e['word'], base or ''), aligned(e['word'], e['meinung'])
         if a and b:
-            if any(syllables_far(x, y) for x, y in zip(a[1], b[1])):
-                continue
             pairs += [(ch, x, y) for ch, x, y in zip(a[0], a[1], b[1])]
     return learn_table(pairs)
 

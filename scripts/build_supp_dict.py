@@ -14,6 +14,7 @@
 7. 沿襲：data/supp/人工沿襲.csv 人工指定「妳 沿襲 你」這種，該腔無單字條目个字，
    全部讀音照抄來源字（分類「沿襲」，六腔都做）。優先過補字典、擬音。
 8. 人工加詞：data/curated/加詞.csv 同腔同字已有，就毋輸出該字个「擬音」列（人工優先過擬音，見 data/curated/README.md）。
+9. 人工排除：data/supp/人工排除.csv 指定个（腔、字、音）毋收（例：壽 xiǔ 淨在「夭壽」一詞肚，毋係單字音）。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -172,28 +173,6 @@ def load_gip_readings(d):
     return out
 
 
-INITIAL_FINAL = re.compile(r'^([^aeiou]*)(.*)$')
-
-
-def _plain(syl):
-    """音節轉小寫、無調符、無附加符號（ṳ → u）。"""
-    return ''.join(c for c in unicodedata.normalize('NFD', syl.lower()) if unicodedata.category(c) != 'Mn')
-
-
-def syllables_far(x, y):
-    """兩隻音節（不計調）聲母摎韻母攏無共樣：毋係音變，係講法（詞彙）無共樣，例：額 ngiàg／bòd。
-    冷 láng／nāng 聲母無共樣、韻母共樣，毋算。補字典摎美濃字級對照（build_subdialect_fill）共用。"""
-    ix, fx = INITIAL_FINAL.match(_plain(x)).groups()
-    iy, fy = INITIAL_FINAL.match(_plain(y)).groups()
-    return ix != iy and fx != fy
-
-
-def lexically_different(word, base, variant):
-    """變體讀音摎底音，字數摎音節數對得齊，卻有任何一隻音節 syllables_far：講法無共樣，毋可逐字對照。"""
-    a, b = align(word, base), align(word, variant)
-    return bool(a and b and any(syllables_far(x[1], y[1]) for x, y in zip(a, b)))
-
-
 def load_records():
     """認證：經 variant-parser 展開【】變體；教典：無【】，直接讀原始 CSV（保留讀音邊界）。"""
     for o in load_variants():
@@ -211,6 +190,15 @@ def load_variants():
     for line in res.stdout.splitlines():
         if line.strip():
             yield json.loads(line)
+
+
+def load_excluded():
+    """data/supp/人工排除.csv → {(腔, 字, 音節)}：這幾个單字音毋收（例：壽 xiǔ 淨在「夭壽」一詞肚）。"""
+    path = os.path.join(ROOT, 'data', 'supp', '人工排除.csv')
+    if not os.path.exists(path):
+        return set()
+    with open(path, encoding='utf-8-sig') as f:
+        return {(r['腔'], r['字'], unicodedata.normalize('NFC', r['音'])) for r in csv.DictReader(f) if r['字'] and r['音']}
 
 
 def load_inherit():
@@ -258,21 +246,10 @@ def main():
     stats = defaultdict(lambda: {'pairs': 0, 'aligned': 0})
 
     records = list(load_records())
-    # 四縣認證詞條个底音（標「北」抑無標）：美濃、南四縣變體个詞目摎底音共樣、讀音卻講法無共樣，
-    # 就毋逐字對照（好額 hò ngiàg ↔ iú bòd）。變體有自家詞目（例：阿婆 á pǒ ↔ 阿嬤 á ma）毋算，照收。
-    base_of = {(o['file'], o['id']): (o['word'], o['phonetic']) for o in records
-               if o.get('file') and o['sourceName'].startswith('四縣') and o['label'] in ('', '北')}
-    for o in records:
+    for o in load_records():
         d = target_dialect(o['sourceName'], o['label'])
         if not d:
             continue
-        # 講法無共樣个變體，淨毋做逐字對齊；單字條目登記（singles）照舊，毋受影響
-        no_align = False
-        if o['label'] in ('美', '南') and (o.get('file'), o.get('id')) in base_of:
-            base_word, base_phon = base_of[(o['file'], o['id'])]
-            base = split_readings(base_phon)
-            no_align = bool(o['word'] == base_word and base
-                            and any(lexically_different(o['word'], base[0], ph) for ph in split_readings(o['phonetic'])))
         for ph in split_readings(o['phonetic']):
             for word, phon in expand_parens(o['word'], ph):
                 if not word or not phon:
@@ -282,8 +259,6 @@ def main():
                     singles[d].add(word.strip())
                     for syl in SYLLABLE.findall(phon):
                         single_readings[d][word.strip()].add(unicodedata.normalize('NFC', syl))
-                if no_align:
-                    continue
                 pairs = align(word, phon)
                 if not pairs:
                     continue
@@ -295,6 +270,12 @@ def main():
                         rec['labels'].add(lab or MAIN_LABEL.get(d, ''))
                     if len(rec['examples']) < MAX_EXAMPLES and (word, phon) not in [(w, p) for w, p, _ in rec['examples']]:
                         rec['examples'].append((word, phon, o['sourceName']))
+
+    # 人工排除：指定个（腔、字、音）毋收
+    for d, ch, syl in load_excluded():
+        readings[d][ch].pop(syl, None)
+        if ch in readings[d] and not readings[d][ch]:
+            del readings[d][ch]
 
     out_dir = os.path.join(ROOT, 'data', 'supp')
     os.makedirs(out_dir, exist_ok=True)
