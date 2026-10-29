@@ -16,14 +16,40 @@ export async function onRequest(context) {
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': request.headers.get('User-Agent') || 'HakSpring-Proxy',
-      },
-    });
+    const upstreamHeaders = {
+      'User-Agent': request.headers.get('User-Agent') || 'HakSpring-Proxy',
+    };
+    // Firefox（特別是安卓）播音檔會用 Range 請求，愛轉給上游，毋然就收無 206 / Content-Range
+    const range = request.headers.get('Range');
+    if (range) upstreamHeaders['Range'] = range;
+    const ifRange = request.headers.get('If-Range');
+    if (ifRange) upstreamHeaders['If-Range'] = ifRange;
+
+    const response = await fetch(targetUrl, { headers: upstreamHeaders });
 
     // Create a new response to modify headers
     const newResponse = new Response(response.body, response);
+
+    // 上游 Content-Type 毋係 audio/*（例如 application/octet-stream）時，Firefox 會拒播（Chrome 會自家偵測），共佢校正做 audio/mpeg
+    const ctype = newResponse.headers.get('Content-Type') || '';
+    // 用 pathname 判斷，網址帶 query 抑係 .MP3 大寫都會中
+    let isMp3 = false;
+    try {
+      isMp3 = new URL(targetUrl).pathname.toLowerCase().endsWith('.mp3');
+    } catch (e) {
+      /* 網址無效就毋校正 */
+    }
+    if (response.ok && isMp3 && !/^audio\//i.test(ctype)) {
+      newResponse.headers.set('Content-Type', 'audio/mpeg');
+    }
+    // 上游回 206 先確定佢支援 Range，毋會對回 200 个上游謊報
+    if (response.status === 206 && !newResponse.headers.has('Accept-Ranges')) {
+      newResponse.headers.set('Accept-Ranges', 'bytes');
+    }
+    newResponse.headers.set(
+      'Access-Control-Expose-Headers',
+      'Content-Length, Content-Range, Accept-Ranges',
+    );
 
     // Set permissive CORS and CORP headers
     newResponse.headers.set('Access-Control-Allow-Origin', '*');

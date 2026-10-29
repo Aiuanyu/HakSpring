@@ -5838,6 +5838,7 @@ function initializeAppUI() {
 
       // 拿忒所有其他無相關个參數，確保 URL 淨俐
       newUrl.searchParams.delete('row');
+      newUrl.searchParams.delete('focus');
       newUrl.searchParams.delete('musiid');
       newUrl.searchParams.delete('ca');
       newUrl.searchParams.delete('bidsu');
@@ -5927,7 +5928,7 @@ function initializeAppUI() {
   }
 
   // --- generate() 函式從這裡開始 ---
-  function generate(content, initialCategory = null, targetRowId = null) {
+  function generate(content, initialCategory = null, targetRowId = null, focusRowId = null) {
     console.log('Generate called for:', content.name);
     lastCenteredRow = null; // Reset centered row on new data generation to prevent stale scrolling
     currentDataVarName = content.name; // Keep track of the active file var name
@@ -6065,6 +6066,7 @@ function initializeAppUI() {
           g_currentLevelData,
           dialectInfo,
           targetRowId,
+          focusRowId,
         );
       } else {
         console.warn('找不到要自動選擇的類別按鈕:', initialCategory);
@@ -6357,6 +6359,7 @@ function initializeAppUI() {
     vocabularyArray,
     dialectInfo,
     autoPlayTargetRowId = null,
+    focusRowId = null, // 專屬連結：載入該行前後 20 行並捲到該行，但毋播放
   ) {
     const contentContainer = document.getElementById('generated');
 
@@ -6465,8 +6468,20 @@ function initializeAppUI() {
         start = Math.floor(targetIndex / ITEMS_PER_LOAD) * ITEMS_PER_LOAD;
       }
     }
+    let end = Math.min(start + ITEMS_PER_LOAD, totalResults);
+    let focusIndex = -1;
+    if (!autoPlayTargetRowId && focusRowId) {
+      const normalizedFocusId = normalizeRowId(focusRowId);
+      focusIndex = activeCategoryData.findIndex(
+        (item) => item.編號.split('-')[1] === normalizedFocusId,
+      );
+      if (focusIndex !== -1) {
+        start = Math.max(0, focusIndex - ITEMS_PER_LOAD);
+        end = Math.min(focusIndex + ITEMS_PER_LOAD + 1, totalResults);
+      }
+    }
     firstLoadedIndex = start;
-    lastLoadedIndex = Math.min(start + ITEMS_PER_LOAD, totalResults);
+    lastLoadedIndex = end;
     const initialItems = activeCategoryData.slice(
       firstLoadedIndex,
       lastLoadedIndex,
@@ -6501,6 +6516,20 @@ function initializeAppUI() {
     if (autoPlayTargetRowId) {
       handleAutoPlay(autoPlayTargetRowId, dialectInfo, category);
     }
+    // 專屬連結（focus）：只捲到該行並閃一下，毋播放
+    else if (focusIndex !== -1) {
+      const focusAnchor = document.querySelector(
+        `a[name="${activeCategoryData[focusIndex].編號.split('-')[1]}"]`,
+      );
+      const focusTr = focusAnchor && focusAnchor.closest('tr');
+      if (focusTr) {
+        setTimeout(() => {
+          focusTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          focusTr.classList.add('focus-row-flash');
+          setTimeout(() => focusTr.classList.remove('focus-row-flash'), 3000);
+        }, 300);
+      }
+    }
     // --- 在此處新增 else if 區塊 ---
     else if (isCrossCategoryPlaying) {
       // 如果是跨類別播放，自動從新類別的第一筆開始
@@ -6518,7 +6547,7 @@ function initializeAppUI() {
     updatePageTitle([displayLvlName, formattedCategory]);
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
     updateResultsSummaryVisibility();
-    if (!autoPlayTargetRowId && !isCrossCategoryPlaying) {
+    if (!autoPlayTargetRowId && !focusRowId && !isCrossCategoryPlaying) {
       syncProgressWithCurrentMode();
     }
     isCrossCategoryPlaying = false; // 這隻旗標應該愛放在這位，做毋得放在函式最頭前
@@ -6830,6 +6859,14 @@ function initializeAppUI() {
       loopOneBtn.title = '循環播放此行';
       loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
       td1.appendChild(loopOneBtn);
+
+      // 複製此詞專屬連結（載入前後 20 行，但毋自動播放）
+      const copyWordLinkBtn = document.createElement('button');
+      copyWordLinkBtn.className = 'copy-word-link-btn copy-url-btn'; // 鈕樣式共 result-summary 个複製網址鈕
+      copyWordLinkBtn.dataset.rowId = originalRowId;
+      copyWordLinkBtn.title = '複製此詞連結';
+      copyWordLinkBtn.innerHTML = '<i class="fas fa-link"></i>';
+      td1.appendChild(copyWordLinkBtn);
 
       // --- 收藏 + 熟悉度標記按鈕（接在 td1 現有按鈕後） ---
       const famBr = document.createElement('br');
@@ -7868,6 +7905,60 @@ function initializeAppUI() {
     }
   }
 
+  // 複製單詞專屬連結：文字格式「客源翠腔級：編號 詞目」換行後接網址
+  function copyWordLink(btn, dialectInfo, category) {
+    if (btn.disabled) return;
+    const rowId = btn.dataset.rowId;
+    const item = activeCategoryData.find(
+      (it) => it.編號.split('-')[1] === rowId,
+    );
+    const codes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+    if (!item || !codes) return;
+    const url = getBaseUrlWithoutIndex();
+    ['row', 'musiid', 'ca', 'bidsu', 'iab', 'kiong', 'filter'].forEach((k) =>
+      url.searchParams.delete(k),
+    );
+    url.searchParams.set('dialect', codes.dialect);
+    url.searchParams.set('level', codes.level);
+    url.searchParams.set('category', category);
+    url.searchParams.set('focus', rowId);
+    if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
+    else url.searchParams.delete('mn');
+    const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
+    const text = `${SHARE_SITE_NAME}${displayLvlName}：${item.編號} ${item.客家語}\n${url.toString()}`;
+    const done = () => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i>';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+      }, 1500);
+    };
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        // execCommand 失敗會回 false 毋係丟例外，愛檢查，毋然會假打勾
+        if (document.execCommand('copy')) done();
+        else console.error('複製失敗：execCommand 回傳 false');
+      } catch (err) {
+        console.error('複製失敗:', err);
+      } finally {
+        document.body.removeChild(ta);
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
   function setupDynamicEventListeners(dialectInfo, category) {
     const contentContainer = document.getElementById('generated');
     if (!contentContainer) return;
@@ -7877,6 +7968,12 @@ function initializeAppUI() {
       const playButton = target.closest('.playFromThisRow');
       const bookmarkButton = target.closest('.bookmarkBtn');
       const loopOneButton = target.closest('.loop-one-btn');
+      const copyWordLinkButton = target.closest('.copy-word-link-btn');
+
+      if (copyWordLinkButton) {
+        copyWordLink(copyWordLinkButton, dialectInfo, category);
+        return;
+      }
 
       if (loopOneButton) {
         const row = loopOneButton.closest('tr');
@@ -8096,6 +8193,7 @@ function initializeAppUI() {
     const levelParam = urlParams.get('level');
     const categoryParam = urlParams.get('category');
     const rowParam = urlParams.get('row');
+    const focusParam = urlParams.get('focus');
     const romParam = urlParams.get('rom');
     const filterParam = urlParams.get('filter');
     successfullyLoadedFromUrl = false;
@@ -8246,7 +8344,7 @@ function initializeAppUI() {
             } else {
               // **情境：無 row 參數，僅顯示類別列表**
               console.log('[handleUrlChange] 偵測到無 row 參數，僅載入類別。');
-              generate(dataObject, decodedCategory, null); // rowId 傳 null
+              generate(dataObject, decodedCategory, null, focusParam); // rowId 傳 null；focus 只載入定位毋播放
               successfullyLoadedFromUrl = true;
             }
           } else {
