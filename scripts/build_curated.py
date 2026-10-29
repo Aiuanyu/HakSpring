@@ -34,6 +34,12 @@ def load_curated():
                 raise ValueError(f'{path} 第 {i} 列欄位「{key}」係空个')
         if r['腔'] not in DIALECTS:
             raise ValueError(f'{path} 第 {i} 列腔「{r["腔"]}」毋在 {DIALECTS}')
+    seen = {}
+    for i, r in enumerate(rows, start=2):
+        key = (r['腔'], r['字'], r['客語標音_顯示'])
+        if key in seen:
+            raise ValueError(f'{path} 第 {i} 列摎第 {seen[key]} 列重複：{key}')
+        seen[key] = i
     return rows
 
 

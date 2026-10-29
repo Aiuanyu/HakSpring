@@ -337,6 +337,21 @@ it('模式 5：畸形括號（缺右括號、全半形混用、巢狀、空括�
   }
 });
 
+it('模式 5：多塊【】混合（四中高 12-23 個零月）：南四縣整串、美濃純音，行為同修正前', () => {
+  const res = parseVariants(
+    '個零月（個過月、隻過月）',
+    'ge lǎng ngied (ge go ngied、zàg go ngied)【ge lǎng ngiad (ge nǎng ngiad)】【ge go ngiad、zàg go ngiad】',
+    '四縣'
+  );
+  assert.deepStrictEqual(
+    res.variants.map((v) => [v.label, v.word, v.phonetic, v.phoneticOnly]),
+    [
+      ['南', '', 'ge lǎng ngiad (ge go ngiad、zàg go ngiad)', true],
+      ['美', '', 'ge nǎng ngiad', true],
+    ]
+  );
+});
+
 it('模式 6：饒平【／】內含（）同義詞（平高 14-13 丙運）', () => {
   const res = parseVariants(
     '丙運【歪運（落運）】',
@@ -381,6 +396,25 @@ it('全量資料庫四縣變體條數符合盤查結果 (1264 條)', () => {
     }
   }
   assert.strictEqual(sixianCount, 1264);
+});
+
+it('全量資料庫：無詞條同時有「同義詞詞括號」摎兩塊以上複合標音括號（hasSynonymWordBracket 个盲點）', () => {
+  const isCompound = (b) => /[（(]/.test(b) && !/^[（(].*[）)]$/.test(b.trim());
+  const brackets = (t) => [...t.matchAll(/【([^】]*)】/g)].map((m) => m[1]);
+  const files = ['113四基.json', '113四初.json', '113四中.json', '113四中高.json', '113四高.json'];
+  for (const f of files) {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/cert', f), 'utf8'));
+    const lines = data.content.split('\n').filter(Boolean);
+    const header = lines[0].split(',');
+    const wIdx = header.indexOf('客家語');
+    const pIdx = header.indexOf('客語標音_顯示');
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      const synonymWord = brackets(cols[wIdx] || '').some(isCompound);
+      const compoundPhonetics = brackets(cols[pIdx] || '').filter(isCompound).length;
+      assert.ok(!(synonymWord && compoundPhonetics >= 2), `${f} ${cols[0]} 撞著 hasSynonymWordBracket 盲點，愛改解析器`);
+    }
+  }
 });
 
 it('全量資料庫饒平變體條數符合盤查結果 (4889 條)', () => {
