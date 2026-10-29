@@ -809,6 +809,27 @@ button#loopCategoryBtn.active i {
   padding: 0.5em;
 }
 
+.copy-word-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 3px;
+  vertical-align: middle;
+}
+
+.copy-word-link-btn i {
+  cursor: pointer;
+  background: #8a2be2;
+  color: wheat;
+  box-shadow: 2px 2px #9932cc;
+  border-radius: 0.3em;
+  padding: 0.5em;
+}
+
+tr.focus-row-flash {
+  animation: pulse-pink-effect 1s 3 ease-in-out;
+}
+
 .loop-one-btn.looping i {
   background-color: #ff4500;
   /* 橘紅色表示 looping */
@@ -1943,6 +1964,11 @@ input:checked+.slider:before {
     /* 較亮的橘色 */
   }
 
+  .copy-word-link-btn i {
+    background: #9b59b6;
+    box-shadow: 2px 2px #8e44ad;
+  }
+
   .loop-one-btn i {
     background: #9b59b6;
     /* 較亮的紫色 */
@@ -1956,6 +1982,10 @@ input:checked+.slider:before {
 
   tr.looping-row {
     animation: pulse-dark-pink-effect 2s infinite ease-in-out;
+  }
+
+  tr.focus-row-flash {
+    animation: pulse-dark-pink-effect 1s 3 ease-in-out;
   }
 
   @keyframes pulse-dark-pink-effect {
