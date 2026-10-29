@@ -14,7 +14,7 @@
 7. 沿襲：data/supp/人工沿襲.csv 人工指定「妳 沿襲 你」這種，該腔無單字條目个字，
    全部讀音照抄來源字（分類「沿襲」，六腔都做）。優先過補字典、擬音。
 8. 人工加詞：data/curated/加詞.csv 同腔同字已有，就毋輸出該字个「擬音」列（人工優先過擬音，見 data/curated/README.md）。
-9. 人工排除：data/supp/人工排除.csv 指定个（腔、字、音）毋收（例：壽 xiǔ 淨在「夭壽」一詞肚，毋係單字音）。
+9. 教典个詞級讀音註記「俗音」「又俗音」毋拆做單字音（WORD_LEVEL_NOTES；例：夭壽 俗音 iáu xiǔ，xiǔ 淨在這詞肚，毋係單字「壽」个音）。
 
 輸出：data/supp/補字典-{腔}.csv 摎 .json（JSON 格式同 cert／gip 共樣，content 係統一 schema 个 CSV）。
 由 process_all_data.py 最尾呼叫；也做得單獨跑：python3 scripts/build_supp_dict.py
@@ -67,12 +67,17 @@ NOTE_SPLIT = re.compile('(' + '|'.join(_NOTES) + r')\s*\d*\s*\.?')
 READING_SPLIT = re.compile('(?:' + '|'.join(_NOTES) + r')\s*\d*\s*\.?')
 
 
-def split_readings(phonetic):
-    """讀音欄拆做幾隻正式讀音；合音、變調後个讀法丟忒。"""
+# 詞級讀音註記：俗音係「這隻詞」个另一種唸法，毋係組成字个單字音（例：夭壽 iau24 xiu11 俗音，
+# xiǔ 淨在這詞肚，毋係單字「壽」个音）。補字典个單字音對齊毋拆這幾種（詞音本身由詞庫提供）。
+WORD_LEVEL_NOTES = ('俗音', '又俗音')
+
+
+def split_readings(phonetic, drop_notes=()):
+    """讀音欄拆做幾隻正式讀音；合音、變調後个讀法丟忒。drop_notes：另外愛丟忒个註記。"""
     parts = NOTE_SPLIT.split(phonetic)
     readings = [parts[0]]
     for note, seg in zip(parts[1::2], parts[2::2]):
-        if note not in DROP_NOTES:
+        if note not in DROP_NOTES and note not in drop_notes:
             readings.append(seg)
     return [r.strip() for r in readings if r.strip()]
 
@@ -146,7 +151,7 @@ def load_gip_numeric():
     return result
 
 
-def load_gip_readings(d):
+def load_gip_readings(d, drop_notes=()):
     """教典原始 CSV 个音讀 → 詞目 → [讀音…]（調符、音節一隻空白隔開）。
 
     愛讀原始 CSV：處理過个「客語標音_顯示」會共全形空白壓做半形，讀音中間个邊界就無忒。
@@ -165,7 +170,7 @@ def load_gip_readings(d):
             raw = re.sub(r'</?u>', '', row['音讀'])
             raw = re.sub(r'（[^）]*）', '', raw)
             for seg in raw.split('\u3000'):
-                for reading in split_readings(seg):
+                for reading in split_readings(seg, drop_notes):
                     sylls = SYLLABLE.findall(convert_phonetic_string(reading, tone_map))
                     r = ' '.join(unicodedata.normalize('NFC', x) for x in sylls)
                     if r and r not in out[row['詞目']]:
@@ -179,7 +184,8 @@ def load_records():
         if not o['sourceName'].startswith('教典'):
             yield o
     for d in DIALECTS:
-        for word, readings in load_gip_readings(d).items():
+        # 單字音對齊淨用教典个正式讀音，詞級俗音（WORD_LEVEL_NOTES）毋拆
+        for word, readings in load_gip_readings(d, WORD_LEVEL_NOTES).items():
             for r in readings:
                 yield {'sourceName': f'教典{d}', 'label': '', 'word': word, 'phonetic': r}
 
@@ -190,15 +196,6 @@ def load_variants():
     for line in res.stdout.splitlines():
         if line.strip():
             yield json.loads(line)
-
-
-def load_excluded():
-    """data/supp/人工排除.csv → {(腔, 字, 音節)}：這幾个單字音毋收（例：壽 xiǔ 淨在「夭壽」一詞肚）。"""
-    path = os.path.join(ROOT, 'data', 'supp', '人工排除.csv')
-    if not os.path.exists(path):
-        return set()
-    with open(path, encoding='utf-8-sig') as f:
-        return {(r['腔'], r['字'], unicodedata.normalize('NFC', r['音'])) for r in csv.DictReader(f) if r['字'] and r['音']}
 
 
 def load_inherit():
@@ -270,12 +267,6 @@ def main():
                         rec['labels'].add(lab or MAIN_LABEL.get(d, ''))
                     if len(rec['examples']) < MAX_EXAMPLES and (word, phon) not in [(w, p) for w, p, _ in rec['examples']]:
                         rec['examples'].append((word, phon, o['sourceName']))
-
-    # 人工排除：指定个（腔、字、音）毋收
-    for d, ch, syl in load_excluded():
-        readings[d][ch].pop(syl, None)
-        if ch in readings[d] and not readings[d][ch]:
-            del readings[d][ch]
 
     out_dir = os.path.join(ROOT, 'data', 'supp')
     os.makedirs(out_dir, exist_ok=True)

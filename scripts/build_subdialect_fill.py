@@ -337,6 +337,10 @@ def build_meinung(cert, south_rows):
             continue
         key = (fname.replace('.json', ''), eid)
         if e['south']:
+            if '（' in e['south_word'] or '(' in e['south_word']:
+                # 南四縣詞括號內係同義詞（好額【有口（有發）】）：詞形摎北四縣無共樣，推美濃容易錯，毋推
+                skipped += 1
+                continue
             south, south_word, south_layer = e['south'], e['south_word'], '認證原標'
         elif key in derived_south:
             r = derived_south[key]

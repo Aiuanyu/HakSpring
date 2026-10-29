@@ -24,7 +24,6 @@
 113四中,1-23,口涎渣,hèu lán zá,hèu nān zā,美濃,系統規則,False,False,字級對照,True,
 113四中,1-24,喉嗹,hěu liěn,hèu liěn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,1-25,翕著,hìb dò,hìb dò,美濃,系統規則,False,True,教典南四縣,False,
-113四中,1-26,血管（血筋）,hièd gòn (hièd gín),hiàd gòn (hiàd gīn),美濃,系統規則,False,False,認證原標,False,
 113四中,1-27,寒毛,hǒn mó,hǒn mō,美濃,系統規則,False,False,教典南四縣,False,
 113四中,1-28,醫學,í hog,ī hog,美濃,系統規則,False,False,教典南四縣,False,
 113四中,1-29,中風,zung fúng,zung fūng,美濃,系統規則,False,False,教典南四縣,False,
@@ -62,7 +61,6 @@
 113四中,1-63,腫,zùng,zùng,美濃,系統規則,False,True,教典南四縣,False,
 113四中,1-64,身高,síin gó,sīin gō,美濃,系統規則,False,False,教典南四縣,False,
 113四中,1-65,手骨,sù gùd,sù gùd,美濃,系統規則,False,True,教典南四縣,False,
-113四中,1-66,手術（開刀）,sù sud (kói dó),sù siid,美濃,系統規則,False,True,認證原標,False,
 113四中,1-67,手腕,sù vòn,sù vòn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,1-68,大腸,tai cǒng,tai cǒng,美濃,系統規則,False,True,教典南四縣,False,
 113四中,1-69,痰,tǎm,tǎm,美濃,系統規則,False,True,教典南四縣,False,
@@ -411,7 +409,6 @@
 113四中,6-40,熟,xiùg,xiùg,美濃,系統規則,False,True,教典南四縣,False,
 113四中,6-41,做大水（發大水）,zo tai sùi (bòd tai sùi),zo tai sùi (bòd tai sùi),美濃,系統規則,False,True,字級對照,False,
 113四中,6-42,鑽石,zon sag,zon sag,美濃,系統規則,False,True,字級對照,False,
-113四中,6-43,打（結）,dà (gièd),giàd,美濃,系統規則,False,True,認證原標,False,
 113四中,7-1,包括,báu guàd,bāu guàd,美濃,系統規則,False,False,教典南四縣,False,
 113四中,7-2,超過,céu go,cēu go,美濃,系統規則,False,False,教典南四縣,False,
 113四中,7-3,撞走,cong zèu,cong zèu,美濃,系統規則,False,True,教典南四縣,False,
@@ -489,7 +486,6 @@
 113四中,8-41,眠帳,mǐn zong,mǐn zong,美濃,系統規則,False,True,教典南四縣,False,
 113四中,8-42,網,miòng,miòng,美濃,系統規則,False,True,教典南四縣,False,
 113四中,8-43,門對仔,mǔn dui è,mǔn liǎn,美濃,系統規則,False,True,認證原標,False,門聯
-113四中,8-44,門檻（戶檻）,mǔn kiám (fǔ kiám),fǔ kiǎm,美濃,系統規則,False,True,認證原標,False,
 113四中,8-45,紙條仔,zìi tiǎu è,zìi tiǎu è,美濃,系統規則,False,True,字級對照,False,
 113四中,8-46,鈕仔,nèu ě,kieu è,美濃,系統規則,False,True,認證原標,False,扣仔
 113四中,8-47,牙膏,ngǎ gáu,ngǎ gāu,美濃,系統規則,False,False,教典南四縣,False,
@@ -520,7 +516,6 @@
 113四中,8-72,電線,tien xien,tien xien,美濃,系統規則,False,True,教典南四縣,False,
 113四中,8-73,電鑊仔,tien vog è,tien bō è,美濃,系統規則,False,False,認證原標,False,電煲仔
 113四中,8-74,天窗（光窗）,tién cúng (góng cúng),tiēn cūng (gōng cūng),美濃,系統規則,False,False,字級對照,False,
-113四中,8-75,圖牆（圍牆）,tǔ qiǒng (vǐ qiǒng),tǔ xiǒng (vǐ xiǒng),美濃,系統規則,False,True,認證原標,False,
 113四中,8-76,桶,tùng,tùng è,美濃,系統規則,False,True,認證原標,False,桶仔
 113四中,8-77,燒水,séu sùi,sēu sùi,美濃,系統規則,False,False,教典南四縣,False,
 113四中,8-78,熟,sug,sug,美濃,系統規則,False,True,教典南四縣,False,
@@ -667,7 +662,6 @@
 113四中,9-92,友誼,iú ngǐ,iū ngǐ,美濃,系統規則,False,False,教典南四縣,False,
 113四中,9-93,運命,iun miang,miang iun,美濃,系統規則,False,True,認證原標,False,命運
 113四中,9-94,運數（運氣）,iun sii (iun hi),iun sii (iun hi),美濃,系統規則,False,True,字級對照,False,
-113四中,9-95,永久（永遠）,iùn giù (iùn ièn),iùn iàn,美濃,系統規則,False,True,認證原標,False,
 113四中,9-96,勻,iǔn,iǔn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-97,用法,iung fàb,iung fàb,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-98,勇敢,iùng gàm,iùng gàm,美濃,系統規則,False,True,字級對照,False,
@@ -695,7 +689,6 @@
 113四中,9-126,綿,miěn,miěn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-127,綿綿,miěn miěn,miěn miěn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-128,明顯,mǐn  hièn,mǐn  hiàn,美濃,系統規則,False,True,認證原標,False,
-113四中,9-129,無半息（無半點）,mǒ ban xid (mǒ ban diàm),mǒ ban xìd,美濃,系統規則,False,True,認證原標,False,
 113四中,9-130,才調,cǒi tiau,cǒi tiau,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-131,無搭碓,mǒ dàb  doi,mǒ dàb doi,美濃,系統規則,False,True,教典南四縣,False,
 113四中,9-132,無輸無贏,mǒ sú mǒ iǎng,mǒ sū mǒ iǎng,美濃,系統規則,False,False,教典南四縣,False,
@@ -884,7 +877,6 @@
 113四中,11-19,丈人哀,cóng mín ói,cōng ngǐn ōi,美濃,系統規則,False,False,認證原標,False,
 113四中,11-20,丈人老,cóng mín lò,cōng ngǐn lò,美濃,系統規則,False,False,認證原標,False,
 113四中,11-21,處罰,cù fad,cù fad,美濃,系統規則,False,True,教典南四縣,False,
-113四中,11-22,抽間（抽牽）,cú gién (cú kién),cū giān,美濃,系統規則,False,False,認證原標,False,
 113四中,11-23,出息,cùd xìd,cùd xìd,美濃,系統規則,False,True,教典南四縣,False,
 113四中,11-24,族譜,cug pù,cug pū,美濃,系統規則,False,False,認證原標,False,
 113四中,11-25,打鬥四,dà deu xi,dà deu xi,美濃,系統規則,False,True,教典南四縣,False,
@@ -1003,7 +995,6 @@
 113四中,11-138,大嫂,tai sò,tai ā sò,美濃,系統規則,False,False,認證原標,False,大阿嫂
 113四中,11-139,談話,tǎm fa,tǎm fa,美濃,系統規則,False,True,字級對照,False,
 113四中,11-140,提供,tǐ giúng,tǐ giūng,美濃,系統規則,False,False,教典南四縣,False,
-113四中,11-141,帖（帖仔）,tiàb (tiàb ě),tiàb è,美濃,系統規則,False,True,認證原標,False,
 113四中,11-142,調查,tiǎu cǎ,tiǎu cǎ,美濃,系統規則,False,True,教典南四縣,False,
 113四中,11-143,敵人,tid ngǐn,tid ngǐn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,11-144,賺皮痛,con pǐ tung,con tung,美濃,系統規則,False,True,認證原標,False,賺痛
@@ -1049,7 +1040,6 @@
 113四中,12-15,恬恬仔,diám diám è,diām diām ē,美濃,系統規則,False,False,認證原標,False,
 113四中,12-16,顛倒,dién do,diēn do,美濃,系統規則,False,False,教典南四縣,False,
 113四中,12-17,當晝心,dóng zu xím,teu dōng nò zu,美濃,系統規則,False,False,認證原標,False,透當腦晝
-113四中,12-18,當場（現場）,dóng cǒng (hien cǒng),hian cǒng,美濃,系統規則,False,True,認證原標,False,
 113四中,12-19,當面,dóng mien,dōng mien,美濃,系統規則,False,False,教典南四縣,False,
 113四中,12-20,當年,dóng ngiěn,dōng ngiǎn,美濃,系統規則,False,False,認證原標,False,
 113四中,12-21,東片,dúng pièn,dūng pièn,美濃,系統規則,False,False,教典南四縣,False,
@@ -1066,7 +1056,6 @@
 113四中,12-32,該跡位仔（該搭位仔、該項）,ge jiàg vi è (ge dab vi è、ge hong),ge xìd ē,美濃,系統規則,False,False,認證原標,False,該息仔
 113四中,12-33,隔日,gàg ngìd,gàg ngìd,美濃,系統規則,False,True,教典南四縣,False,
 113四中,12-34,見人就…,gien ngǐn qiu...,gian ngǐn lu...,美濃,系統規則,False,True,認證原標,False,
-113四中,12-35,間肚（間肚項、間肚仔、間項）,gién dù (gién dù hong、gién dù ě、gién hong),giān dù (giān dù hong、giān dù ē、giān hong),美濃,系統規則,False,False,認證原標,False,
 113四中,12-36,緊緊（趕緊）,gìn gìn (gòn gìn),gìn gìn (gòn gìn),美濃,系統規則,False,True,字級對照,False,
 113四中,12-37,角項,gòg hong,gòg hong,美濃,系統規則,False,True,教典南四縣,False,
 113四中,12-38,趕早,gòn zò,gòn zò,美濃,系統規則,False,True,教典南四縣,False,
@@ -1088,12 +1077,10 @@
 113四中,12-54,一生人,ìd sén ngǐn,ìd sēn ngǐn,美濃,系統規則,False,False,教典南四縣,False,
 113四中,12-55,越來越…,ied lǒi ied...,iad lǒi iad...,美濃,系統規則,False,True,認證原標,False,
 113四中,12-56,勻勻仔,iǔn iǔn è,iǔn iǔn ē,美濃,系統規則,False,False,認證原標,False,
-113四中,12-57,輒常（常常）,jiab sǒng (sǒng sǒng),diab sǒng,美濃,系統規則,False,True,認證原標,False,
 113四中,12-58,進一步,jin ìd pu,jin ìd pu,美濃,系統規則,False,True,字級對照,False,
 113四中,12-59,其中,kǐ zúng,kǐ zūng,美濃,系統規則,False,False,教典南四縣,False,
 113四中,12-60,強強（硬硬、偏偏）,kiǒng kiǒng (ngiang ngiang、pién pién),xì gù,美濃,系統規則,False,True,認證原標,False,死牯
 113四中,12-61,空間,kúng gién,kūng giān,美濃,系統規則,False,False,認證原標,False,
-113四中,12-62,落尾（尾下）,làb mí (mí ha),làd mī,美濃,系統規則,False,False,認證原標,False,
 113四中,12-63,臨臨仔,lím lím è,līm līm ē,美濃,系統規則,False,False,認證原標,False,
 113四中,12-64,臨晝仔（臨晝邊、臨晝頭）,lǐm zu è (lǐm zu bién、lǐm zu těu),dōng zu biēn,美濃,系統規則,False,False,認證原標,False,當晝邊
 113四中,12-65,略略仔,liog liog è,liog liog ē,美濃,系統規則,False,False,認證原標,False,
@@ -1118,7 +1105,6 @@
 113四中,12-85,前,qiěn,qiěn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,12-86,盡好,qin hò,zui/zùi hò,美濃,系統規則,False,True,認證原標,False,最好
 113四中,12-87,親身,qín síin,qīn sīin,美濃,系統規則,False,False,教典南四縣,False,
-113四中,12-88,親眼（親目）,qín ngièn (qín mùg),qīn ngiàn,美濃,系統規則,False,False,認證原標,False,
 113四中,12-89,煞煞仔,sàd sàd ě,sàd sàd ē,美濃,系統規則,False,False,認證原標,False,
 113四中,12-90,星光半夜,sáng góng ban ia,sām gōng ban ia,美濃,系統規則,False,False,認證原標,False,三更半夜
 113四中,12-91,小可仔,sèu kò ě,sèu kò ē,美濃,系統規則,False,False,認證原標,False,
@@ -1190,7 +1176,6 @@
 113四中,13-31,之間,zíi gién,zīi giān,美濃,系統規則,False,False,認證原標,False,
 113四中,13-32,總講（總講一句）,zùng  gòng (zùng  gòng ìd gi),zùng  gòng (zùng  gòng ìd gi),美濃,系統規則,False,True,字級對照,False,
 113四中,13-33,但係,tan he,tan he,美濃,系統規則,False,True,教典南四縣,False,
-113四中,13-34,撿採,giàm cài,he zùn gòng (zùn gòng),美濃,系統規則,False,True,認證原標,False,係準講（準講）
 113四中,14-1,班機,bán gí,bān gī,美濃,系統規則,False,False,字級對照,False,
 113四中,14-2,噪音,so ím,zāu īm,美濃,系統規則,False,False,認證原標,False,
 113四中,14-3,自動化,cii tung fa,cii tung fa,美濃,系統規則,False,True,教典南四縣,False,
@@ -1217,7 +1202,6 @@
 113四中,14-24,音響,ím hiòng,īm hiòng,美濃,系統規則,False,False,教典南四縣,False,
 113四中,14-25,郵局,iǔ kiug,iǔ kiug,美濃,系統規則,False,True,教典南四縣,False,
 113四中,14-26,郵票,iǔ  péu,iǔ peu,美濃,系統規則,False,True,認證原標,False,
-113四中,14-27,轎車（矮嫲仔）,kieu cá (ài mǎ è),gēu cā,美濃,系統規則,False,False,認證原標,False,
 113四中,14-28,科技,kó gí,kō gī,美濃,系統規則,False,False,教典南四縣,False,
 113四中,14-29,錄音,liug ím,liug īm,美濃,系統規則,False,False,教典南四縣,False,
 113四中,14-30,路口,lu hèu/kièu,lu hèu/kièu,美濃,系統規則,False,True,字級對照,False,
@@ -1247,7 +1231,6 @@
 113四中,15-2,拜天公,bai tién gúng,gin tiēn gūng,美濃,系統規則,False,False,認證原標,False,敬天公
 113四中,15-3,包禮,báu lí,bāu lī,美濃,系統規則,False,False,教典南四縣,False,
 113四中,15-4,庇佑,bi iu,bi iu,美濃,系統規則,False,True,教典南四縣,False,
-113四中,15-5,傳香火（傳香煙）,cǒn hióng fò (cǒn hióng ién),cǒn hiōng iān,美濃,系統規則,False,False,認證原標,False,
 113四中,15-6,長山（唐山）,cǒng sán (tǒng sán),cǒng sān (tǒng sān),美濃,系統規則,False,False,字級對照,False,
 113四中,15-7,出山（還山）,cùd sán (vǎn sán),cùd sān (vǎn sān),美濃,系統規則,False,False,字級對照,False,
 113四中,15-8,戴孝,dai hau,dai hau,美濃,系統規則,False,True,教典南四縣,False,
@@ -1293,7 +1276,6 @@
 113四中,15-48,信仰,xin ngiòng,xin ngiòng,美濃,系統規則,False,True,教典南四縣,False,
 113四中,15-49,新曆,xín lag,xīn lag,美濃,系統規則,False,False,教典南四縣,False,
 113四中,15-50,新娘公,xín ngiǒng gúng,xīn ngiǒng gūng,美濃,系統規則,False,False,教典南四縣,False,
-113四中,15-51,新娘間（新房、洞房）,xín ngiǒng gién (xín fǒng、tung fǒng),xīn ngiǒng giān,美濃,系統規則,False,False,認證原標,False,
 113四中,15-52,繡香包,xiu hióng báu,xiu hiōng bāu,美濃,系統規則,False,False,字級對照,False,
 113四中,15-53,招婿郎,zéu se lǒng,zēu se lǒng,美濃,系統規則,False,False,教典南四縣,False,
 113四中,15-54,做百日,zo bàg ngìd,zo bàg ngìd,美濃,系統規則,False,True,教典南四縣,False,
@@ -1426,7 +1408,6 @@
 113四中,17-57,起工（開工）,hì gúng (kói gúng),hì gūng (kōi gūng),美濃,系統規則,False,False,字級對照,False,
 113四中,17-58,現金,hien gím,hian gīm,美濃,系統規則,False,False,認證原標,False,
 113四中,17-59,號碼,ho  má,ho mā,美濃,系統規則,False,False,教典南四縣,False,
-113四中,17-60,好額,hò ngiàg,iū hèu (iū bòd),美濃,系統規則,False,False,認證原標,False,有口（有發）
 113四中,17-61,遊客,iǔ hàg,iǔ hàg,美濃,系統規則,False,True,字級對照,False,
 113四中,17-62,運轉手（司機）,iun zòn sù (síi gí),iun zòn sù (sīi gī),美濃,系統規則,False,False,字級對照,False,
 113四中,17-63,進口,jin kièu,jin kièu,美濃,系統規則,False,True,教典南四縣,False,
@@ -1551,12 +1532,10 @@
 113四中,18-34,教練,gau lien,gau lien,美濃,系統規則,False,True,教典南四縣,False,
 113四中,18-35,校園,gàu iěn,gàu iǎn,美濃,系統規則,False,True,認證原標,False,
 113四中,18-36,句仔,gi è,gi è,美濃,系統規則,False,True,字級對照,False,
-113四中,18-37,鋸弦仔（挨弦仔）,gi hiěn è (ái hiěn è),gi hiǎn è (āi hiǎn è),美濃,系統規則,False,False,認證原標,False,
 113四中,18-38,歌曲,gó kiùg,gō kiùg,美濃,系統規則,False,False,教典南四縣,False,
 113四中,18-39,作文,zòg vǔn,zòg vǔn,美濃,系統規則,False,True,教典南四縣,False,
 113四中,18-40,冠軍,gon giún,gon giūn,美濃,系統規則,False,False,教典南四縣,False,
 113四中,18-41,觀眾,gón zung,gōn zung,美濃,系統規則,False,False,教典南四縣,False,
-113四中,18-42,鋼筆（萬年筆）,gong bìd (van ngiěn bìd),van ngiǎn bìd,美濃,系統規則,False,True,認證原標,False,
 113四中,18-43,鋼琴,gong kǐm,gong kǐm,美濃,系統規則,False,True,教典南四縣,False,
 113四中,18-44,註冊,zu càg,zu càg,美濃,系統規則,False,True,教典南四縣,False,
 113四中,18-45,廣播,gòng bó,gòng bō,美濃,系統規則,False,False,教典南四縣,False,
@@ -1654,7 +1633,6 @@
 113四中,18-141,選手,xièn sù,xièn sù,美濃,系統規則,False,True,教典南四縣,False,
 113四中,18-142,新生,xín sén,xīn sēn,美濃,系統規則,False,False,字級對照,False,
 113四中,18-143,相聲,xiong sáng,xiong sāng,美濃,系統規則,False,False,字級對照,False,
-113四中,18-144,幼稚園（幼兒園）,iu zíi iěn (iu ǐ iěn),iu zīi iǎn (iu ǐ iǎn),美濃,系統規則,False,False,認證原標,False,
 113四中,18-145,知識,zíi sìid,zīi sìid,美濃,系統規則,False,False,教典南四縣,False,
 113四中,18-146,資料,zíi liau,zīi liau,美濃,系統規則,False,False,教典南四縣,False,
 113四中,18-147,證書,ziin sú,ziin sū,美濃,系統規則,False,False,教典南四縣,False,
@@ -1680,7 +1658,6 @@
 113四中高,1-16,背囊骨（龍骨）,boi nǒng gùd (liǔng gùd),boi nǒng gùd (liǔng gùd),美濃,系統規則,False,True,字級對照,False,
 113四中高,1-17,背拱拱仔,boi giùng giùng ě,boi giùng giùng ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,1-18,踣著,bòi dò,bòi dò,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,1-19,磅血壓（量血壓）,bǒng hièd àb (liǒng hièd àb),bǒng hiàd àb (liǒng hiàd àb),美濃,系統規則,False,True,認證原標,False,
 113四中高,1-20,撐腿,cang tùi,cang tùi,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,1-21,食涼,siid liǒng,siid liǒng,美濃,系統規則,False,True,字級對照,False,
 113四中高,1-22,撐壞,cang fai,cang fai,美濃,系統規則,False,True,字級對照,False,
@@ -1757,7 +1734,6 @@
 113四中高,1-96,膦棍,lìn gun,lìn gun,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,1-97,溜皮,liu pǐ,liu pǐ,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,1-98,老症頭,lò ziin těu,lò ziin těu,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,1-99,落院（戴院、歇院）,log ien (dai ien、hed ien),hed ian,美濃,系統規則,False,True,認證原標,False,
 113四中高,1-100,鑪溜皮,lu liu pǐ,lu liu pǐ,美濃,系統規則,False,True,字級對照,False,
 113四中高,1-101,㪐皮,lùd pǐ,lòd pǐ,美濃,系統規則,False,True,認證原標,False,
 113四中高,1-102,毛辮仔,mó bién è,mō biēn è,美濃,系統規則,False,False,教典南四縣,False,
@@ -1769,7 +1745,6 @@
 113四中高,1-108,乳臊,nen só,nen sō,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,1-109,魚鱗痣,ňg lín zii,ňg līn zii,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,1-110,牙暴暴仔,ngǎ bau bau è,ngǎ bau bau ē,美濃,系統規則,False,False,認證原標,False,
-113四中高,1-111,牙齦肉（牙床肉、牙倉肉）,ngǎ ngién ngiùg (ngǎ cǒng ngiùg、ngǎ cóng ngiùg),ngǎ ngiān ngiùg,美濃,系統規則,False,False,認證原標,False,
 113四中高,1-112,牙腳,ngǎ giòg,ngǎ giòg,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,1-114,癌症,ngǎm ziin,ngǎm ziin,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,1-115,耳砣,ngì tǒ,ngì tǒ,美濃,系統規則,False,True,教典南四縣,False,
@@ -1782,7 +1757,6 @@
 113四中高,1-122,人毋好,ngǐn m̌ hò,ngǐn m̌ hò,美濃,系統規則,False,True,字級對照,False,
 113四中高,1-123,屙硬屎,ó ngang sìi,ō ngang sìi,美濃,系統規則,False,False,字級對照,False,
 113四中高,1-124,嗀出來,og cùd lǒi,og cùd lǒi,美濃,系統規則,False,True,字級對照,False,
-113四中高,1-125,呸血（嘔血、翻血）,pi hièd (èu hièd、pón hièd),pōn hiàd,美濃,系統規則,False,False,認證原標,False,
 113四中高,1-126,鼻龍峎,pi liǔng gien,pi liǔng gien,美濃,系統規則,False,True,字級對照,False,
 113四中高,1-127,鼻塞塞,pi sèd sèd,pi sèd sèd,美濃,系統規則,False,True,字級對照,False,
 113四中高,1-128,鼻水,pi sùi,pi sùi,美濃,系統規則,False,True,教典南四縣,False,
@@ -1866,7 +1840,6 @@
 113四中高,2-25,好擳擳仔,hau jied jied è,hau qied qied ē,美濃,系統規則,False,False,認證原標,False,好絕絕仔
 113四中高,2-26,起牛面,hì ngiǔ mien,hì ngiǔ mien,美濃,系統規則,False,True,字級對照,False,
 113四中高,2-27,起戇面,hì ngong mien,hì fān mien,美濃,系統規則,False,False,認證原標,False,起番面
-113四中高,2-28,翕翕（翕熱）,hìb hìb (hìb ngied),hìb ngiad,美濃,系統規則,False,True,認證原標,False,
 113四中高,2-29,梟心,hiéu xím,hiēu xīm,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,2-30,堪毋得（毋堪）,kám m̌ dèd (m̌ kám),kām m̌ dèd (m̌ kām),美濃,系統規則,False,False,字級對照,False,
 113四中高,2-31,企坐毋核,kí có m̌ hed,kī cō m̌ hed,美濃,系統規則,False,False,教典南四縣,False,
@@ -1881,9 +1854,7 @@
 113四中高,2-40,摝死人,lùg xì ngǐn,lùg xì ngǐn,美濃,系統規則,False,True,字級對照,False,
 113四中高,2-41,毋知天合地,m̌ dí tién gàg ti,m̌ dī tiēn gàg ti,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,2-42,愐心事,mèn xím sii,mèn xīm sii,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,2-43,面臭臭仔（面臭臭）,mien cu cu è (mien cu cu),mien cu cu ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-45,無相無干,mǒ xióng mǒ gón,mǒ xiōng mǒ gōn,美濃,系統規則,False,False,字級對照,False,
-113四中高,2-46,目勾勾仔（目望望仔）,mùg giéu giéu è (mùg mong mong è),mùg mong mong ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-47,奈毋何,nai m̌ hǒ,nai m̌ hǒ,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,2-48,耐毋得,nai m̌ dèd,m̌ dèd gàd sàd,美濃,系統規則,False,True,認證原標,False,毋得結煞
 113四中高,2-49,懶骨,nán/lán gùd,lān/lān gùd,美濃,系統規則,False,False,字級對照,False,
@@ -1901,7 +1872,6 @@
 113四中高,2-62,受當毋起,su dóng m̌ hì,su dōng m̌ hì,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,2-63,偷暢,téu tiong,tēu tiong,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,2-64,天長命短,tién cǒng miang dòn,tiēn cǒng miang dòn,美濃,系統規則,False,False,字級對照,False,
-113四中高,2-65,暢靂靂仔（暢若若仔）,tiong lag lag è (tiong na na è),tiong lag lag ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-66,暢摸摸仔,tiong miá miá è,tiong miā miā ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-67,暢暢仔,tiong tiong è,tiong tiong ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-68,毒心,tug xím,tug xīm,美濃,系統規則,False,False,教典南四縣,False,
@@ -1911,7 +1881,6 @@
 113四中高,2-72,心焦,xím zéu,xīm zēu,美濃,系統規則,False,False,字級對照,False,
 113四中高,2-73,心神毋定,xím sǐin m̌ tin,xīm sǐin m̌ tin,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,2-74,想去想轉（想來想去）,xiòng hi xiòng zòn (xiòng lǒi xiòng hi),xiòng hi xiòng zòn (xiòng lǒi xiòng hi),美濃,系統規則,False,True,字級對照,False,
-113四中高,2-75,想空想缺（想空想榫）,xiòng kúng xiòng kièd (xiòng kúng xiòng sùn),xiòng kūng xiòng kiàd,美濃,系統規則,False,False,認證原標,False,
 113四中高,2-76,朝思夜想,zéu síi ia xiòng,zēu sīi ia xiòng,美濃,系統規則,False,False,字級對照,False,
 113四中高,2-77,半條命,ban tiǎu miang,ban tiǎu miang,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,3-1,小項下,sèu hong ha,sèu hong ha,美濃,系統規則,False,True,字級對照,False,
@@ -1995,7 +1964,6 @@
 113四中高,4-79,絞,gàu,gàu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,4-80,攪,gàu,gàu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,4-81,鋸,gi,gi,美濃,系統規則,False,True,字級對照,False,
-113四中高,4-83,寄雨,gi ì,biang ì (giu ì),美濃,系統規則,False,True,認證原標,False,庰雨（救雨）
 113四中高,4-84,挾去挾轉,giàb hi giàb zòn,giàb hi giàb zòn,美濃,系統規則,False,True,字級對照,False,
 113四中高,4-85,兼身,giám síin,giām sīin,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,4-86,結,gièd,giàd,美濃,系統規則,False,True,認證原標,False,
@@ -2025,7 +1993,6 @@
 113四中高,4-111,箭,jien,jien,美濃,系統規則,False,True,字級對照,False,
 113四中高,4-112,揢等,kag dèn,kag nèn,美濃,系統規則,False,False,教典南四縣,True,
 113四中高,4-113,喫,kie,ngāu,美濃,系統規則,False,False,認證原標,False,咬
-113四中高,4-114,蹶崎（跋崎）,kied gia (bàg gia),kiad gia,美濃,系統規則,False,True,認證原標,False,
 113四中高,4-115,桊耳,kien ngì,kian ngì,美濃,系統規則,False,True,認證原標,False,
 113四中高,4-116,箍圓圈仔,kiéu iěn kién è,kiēu iǎn kiān è,美濃,系統規則,False,False,認證原標,False,
 113四中高,4-117,靠著,ko dò,ko dò,美濃,系統規則,False,True,字級對照,False,
@@ -2185,7 +2152,6 @@
 113四中高,5-8,甘杞（枸杞）,gám gì (gièu gì),gām gì (gièu gì),美濃,系統規則,False,False,字級對照,False,
 113四中高,5-9,茭筍,gáu sùn,bāu sùn,美濃,系統規則,False,False,認證原標,False,包筍
 113四中高,5-10,芥蓮菜,gie liěn coi,gie liěn coi,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,5-11,枸薑（月桃）,gièu gióng (ngied tǒ),ngiad tǒ,美濃,系統規則,False,True,認證原標,False,
 113四中高,5-12,荷蘭豆,hǒ lǎn teu,hǒ lǎn teu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,5-13,田豆,tiěn teu,kōi fā teu,美濃,系統規則,False,False,認證原標,False,開花豆
 113四中高,5-14,𧊅絲,guài xí,guài xī,美濃,系統規則,False,False,教典南四縣,False,
@@ -2203,7 +2169,6 @@
 113四中高,5-26,樹頭,su těu,su těu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,5-27,竹笐,zùg gǒng,zùg tǔng,美濃,系統規則,False,True,認證原標,False,竹筒
 113四中高,5-28,縐核仔,jiu fud è,jiu fud è,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,5-29,禾串（穀串）,vǒ con (gùg con),gùg can,美濃,系統規則,False,True,認證原標,False,
 113四中高,5-30,冇穀,pang gùg,pang gùg,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,5-31,冇冇,pang pang,pang pang,美濃,系統規則,False,True,字級對照,False,
 113四中高,5-32,递藤,tái těn,tāi těn,美濃,系統規則,False,False,教典南四縣,False,
@@ -2429,7 +2394,6 @@
 113四中高,8-67,落碗公,làb vòn gúng,làb vòn gūng,美濃,系統規則,False,False,字級對照,False,
 113四中高,8-68,撈仔,lěu è,lěu è,美濃,系統規則,False,True,字級對照,False,
 113四中高,8-69,缶仔,fǐ è,fǐ è,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,8-70,缽仔（缽頭）,bàd ě (bàd těu),bàd è,美濃,系統規則,False,True,認證原標,False,
 113四中高,8-71,擂缽,lǔi bàd,lǔi bàd,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-72,泥缽仔,nǎi bàd ě,nǎi bàd è,美濃,系統規則,False,True,認證原標,False,
 113四中高,8-73,醃缸,ám góng,ām gōng,美濃,系統規則,False,False,教典南四縣,False,
@@ -2465,14 +2429,12 @@
 113四中高,8-106,刀石,dó sag,nǒ sag,美濃,系統規則,False,True,認證原標,False,挼石
 113四中高,8-107,臭風,cu fúng,cu fūng,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,8-108,臭油垢,cu iǔ gièu,cu iǔ gièu,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,8-109,臭肨肨仔（臭肨肨）,cu páng páng è (cu páng páng),cu pāng pāng ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,8-110,打烏蠅,dà vú ǐn,bied vū ǐn,美濃,系統規則,False,False,認證原標,False,撆烏蠅
 113四中高,8-111,凳頭,den těu,den těu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-112,鉛線仔,iěn xien è,iǎn xien,美濃,系統規則,False,True,認證原標,False,鉛線
 113四中高,8-113,油漆,iǔ qìd,iǔ qìd,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-114,熨斗,iun dèu,iun dèu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-115,鉗仔,kiǎm è,kiǎm è,美濃,系統規則,False,True,字級對照,False,
-113四中高,8-116,尿裙仔（尿墊仔）,ngiau kiǔn è (ngiau tiàb ě),ngiau bu è (ngiau pièn),美濃,系統規則,False,True,認證原標,False,尿布仔（尿片）
 113四中高,8-117,乳珠仔（玻璃珠）,nen zú è (bó lǐ zú),nen zū è (bō lǐ zū),美濃,系統規則,False,False,字級對照,False,
 113四中高,8-118,牙确仔,ngǎ gog è,ngǎ gog è,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-120,壞銅壞鐵,fài tǔng fài tièd,fài tǔng fài tièd,美濃,系統規則,False,True,教典南四縣,False,
@@ -2481,13 +2443,11 @@
 113四中高,8-123,背帶,bi dai,bi dai,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-124,火爐堆,fò lǔ dói,fò lǔ dōi,美濃,系統規則,False,False,字級對照,False,
 113四中高,8-125,火炭,fò tan,fò tan,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,8-126,桊針（桊針線）,kien zíim (kien zíim xien),kian zīim (kian zīim xien),美濃,系統規則,False,False,認證原標,False,
 113四中高,8-127,針線空,zíim xien kúng,zīim xien kāng,美濃,系統規則,False,False,認證原標,False,
 113四中高,8-128,褲襠底,fu nong/long dài,fu nong dài,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-129,褲帶仔,fu dai è,fu dai è,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-130,褲頭,fu těu,fu těu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-131,肚褡褲,dù dàb fu,dù dàb fu,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,8-132,拉鏈（夾股）,lái lien (giag gù),la lien (jiag gù),美濃,系統規則,False,True,認證原標,False,
 113四中高,8-133,嘴揞仔（封嘴仔）,zoi ém è (fúng zoi è),zoi ēm è (fūng zoi è),美濃,系統規則,False,False,字級對照,False,
 113四中高,8-134,綢仔,cǔ è,cǔ è,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,8-135,綢緞,cǔ ton,cǔ ton,美濃,系統規則,False,True,教典南四縣,False,
@@ -2508,7 +2468,6 @@
 113四中高,8-151,落忒,lau tèd,lau hèd、liu hèd,美濃,系統規則,False,True,認證原標,False,落核、溜核
 113四中高,8-152,落褲頭,lau fu těu,lau fu těu,美濃,系統規則,False,True,字級對照,False,
 113四中高,8-153,安鈕仔,ón nèu ě,ōn kieu è,美濃,系統規則,False,False,認證原標,False,安扣仔
-113四中高,8-154,鍬布脣（車布脣）,qió bu sǔn (cá bu sǔn),qiō bu sǐin (cā bu sǐin),美濃,系統規則,False,False,認證原標,False,
 113四中高,8-155,打被骨,dà pí gùd,dà pī gùd,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,8-157,整衫褲,zàng sám fu,zàng sām fu,美濃,系統規則,False,False,字級對照,False,
 113四中高,8-158,針頭線尾,zíim těu xien mí,zīim těu xien mī,美濃,系統規則,False,False,字級對照,False,
@@ -2612,10 +2571,8 @@
 113四中高,9-32,長胲長胲,cǒng gói cǒng gói,cǒng gōi cǒng gōi,美濃,系統規則,False,False,字級對照,False,
 113四中高,9-33,長纜纜仔,cǒng lǎm lǎm e/cǒng nǎm nǎm è,cǒng nǎm nǎm ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-34,長槓長槓（直條直條）,cǒng gong cǒng gong (ciid tiǎu ciid tiǎu),cǒng gong cǒng gong (ciid tiǎu ciid tiǎu),美濃,系統規則,False,True,字級對照,False,
-113四中高,9-35,粗刊刊仔（粗鱗鱗仔）,cú kán kán è (cú lín lín è),cū kān kān ē (cū lǐn lǐn ē),美濃,系統規則,False,False,認證原標,False,
 113四中高,9-36,出出入入,cùd cùd ngib ngib,cùd cùd ngib ngib,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-37,墜墜,cui cui,cui cui,美濃,系統規則,False,True,字級對照,False,
-113四中高,9-38,重跕跕仔（重鈂鈂仔）,cúng deb deb è (cúng děm děm è),cūng děm děm ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-39,衝突,cúng tud,cūng tud,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,9-40,溚潦（溚溼）,dab lǎu (dab sìib),dab lǎu (dab sìib),美濃,系統規則,False,True,字級對照,False,
 113四中高,9-41,低言細語,dái ngiěn se ngí,dāi ngiǎn se ngī,美濃,系統規則,False,False,認證原標,False,
@@ -2659,7 +2616,6 @@
 113四中高,9-80,該食,gói siid,giàn dān,美濃,系統規則,False,False,認證原標,False,簡單
 113四中高,9-81,趕遽,gòn giàg,gòn giàg,美濃,系統規則,False,True,字級對照,False,
 113四中高,9-82,趕後生,gòn heu sáng,gòn heu sāng,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,9-83,趕燒趕熱（趕燒）,gòn séu gòn ngied (gòn séu),gòn sēu gòn ngiad,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-84,江湖,góng fǔ,gōng fǔ,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,9-85,光光,góng góng,gōng gōng,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,9-86,光頭落杓（光頭息杓）,góng těu log sog (góng těu xid sog),gōng těu log sog (gōng těu xìd sog),美濃,系統規則,False,False,字級對照,False,
@@ -2719,7 +2675,6 @@
 113四中高,9-144,虬虬,kiǔ kiǔ,kiǔ kiǔ,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-145,共樣共樣,kiung iong kiung iong,kiung iong kiung iong,美濃,系統規則,False,True,字級對照,False,
 113四中高,9-146,孔竅,kùng kieu,kùng kieu,美濃,系統規則,False,True,字級對照,False,
-113四中高,9-147,空空缺缺（一空一缺）,kúng kúng kièd kièd (ìd kúng ìd kièd),kāng kāng kiàd kiàd (ìd kāng ìd kiàd),美濃,系統規則,False,False,認證原標,False,
 113四中高,9-148,拉拉雜雜,lab lab cab cab,lab lab cab cab,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-149,爛擐,lan kuan,lan kuan,美濃,系統規則,False,True,字級對照,False,
 113四中高,9-150,亮亮,lang lang,gīm gīm,美濃,系統規則,False,False,認證原標,False,金金
@@ -2786,7 +2741,6 @@
 113四中高,9-214,人山人海（人千人萬）,ngǐn sán ngǐn hòi (ngǐn qién ngǐn van),ngǐn sān ngǐn hòi (ngǐn qiēn ngǐn van),美濃,系統規則,False,False,字級對照,False,
 113四中高,9-215,弱弱,ngiog ngiog,ngiog ngiog,美濃,系統規則,False,True,字級對照,False,
 113四中高,9-216,軟濟濟仔,ngión jǐ jǐ è,ngiōn ji ji ē,美濃,系統規則,False,False,認證原標,False,
-113四中高,9-217,軟入入仔（軟習習仔）,ngión ngib ngib è (ngión xìb xìb ě),ngiōn ngib ngib ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-218,軟聲軟斗,ngión sáng ngión dèu,ngiōn sāng ngiōn dèu,美濃,系統規則,False,False,字級對照,False,
 113四中高,9-219,戇面,ngong mien,ngong mien,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-220,嫩相,nun xiong,nun xiong,美濃,系統規則,False,True,教典南四縣,False,
@@ -2809,7 +2763,6 @@
 113四中高,9-237,蓬白,pung pag,pung pag,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-238,萋萋,qí qí,qī qī,美濃,系統規則,False,False,字級對照,False,
 113四中高,9-239,萋頭,qí těu,qī těu,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,9-240,青溜溜仔（青油油仔）,qiáng liù liù ě (qiáng iǔ iǔ è),qiāng liù liù ē (qiāng iǔ iǔ ē),美濃,系統規則,False,False,認證原標,False,
 113四中高,9-241,千難萬難,qién nǎn van nǎn,qiēn nǎn van nǎn,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,9-242,豺牯（豺嫲）,sǎi gù (sǎi mǎ),sǎi gù (sǎi mǎ),美濃,系統規則,False,True,字級對照,False,
 113四中高,9-243,三長兩短,sám cǒng liòng dòn,sām cǒng liòng dòn,美濃,系統規則,False,False,教典南四縣,False,
@@ -2869,7 +2822,6 @@
 113四中高,9-300,老鋸鋸仔,lò gi gi è,lò gi gi ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-301,古古怪怪,gù gù guai guai,gù gù guai guai,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,9-302,入軟,ngib ngión,ngib ngiōn,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,9-303,額結結仔（面結結仔）,ngiàg gièd gièd ě (mien gièd gièd è),ngiàg giàd giàd ē (mien giàd giàd ē),美濃,系統規則,False,False,認證原標,False,
 113四中高,9-304,高溜高溜仔,gó liú gó liú è,gō liū gō liū ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,9-305,落毋著,làb m̌ dò,làb gau m̌ dò,美濃,系統規則,False,True,認證原標,False,落窖毋著
 113四中高,9-306,頸跔跔仔,giàng giú giú è,giàng sùg sùg ē,美濃,系統規則,False,False,認證原標,False,頸縮縮仔
@@ -2879,7 +2831,6 @@
 113四中高,10-3,調兵,diau bín,diau bīn,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,10-4,火藥,fò iog,fò iog,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,10-5,交官結府,gáu gón gièd fù,gāu gōn giàd fù,美濃,系統規則,False,False,認證原標,False,
-113四中高,10-6,關囹仔,guán lóng è,cō gām (cō lug cǔ),美濃,系統規則,False,False,認證原標,False,坐監（坐鹿櫥）
 113四中高,10-7,退伍,tui ǹg,tui ǹg,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-1,啞狗,à gièu,à gièu,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-2,阿姨仔,á ǐ è,ā ǐ è,美濃,系統規則,False,False,字級對照,False,
@@ -2894,14 +2845,12 @@
 113四中高,11-11,八隻手,bàd zàg sù,bàd zàg sù,美濃,系統規則,False,True,字級對照,False,
 113四中高,11-13,挷工,báng gúng,bāng gūng,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-14,輩分,bi fun,pi fun,美濃,系統規則,False,True,認證原標,False,
-113四中高,11-15,拚命（拚死拚命）,biang miang (biang xì biang miang),bia miang (bia xì bia miang),美濃,系統規則,False,True,認證原標,False,
 113四中高,11-16,變鬼變怪,bien gùi bien guai,bien gù bien guai,美濃,系統規則,False,True,認證原標,False,變古變怪
 113四中高,11-17,編,bién,biēn,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-18,發脹狗,bòd zong gièu,bòd zong gièu,美濃,系統規則,False,True,字級對照,False,
 113四中高,11-19,博人惱,bòg ngǐn náu,bòg ngǐn nāu,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-20,分家,bún gá,būn gā,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-21,分人招,bún ngǐn zéu,būn ngǐn zēu,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,11-22,插事牯,càb sii gù,iab sab hěu (iab sab gù),美濃,系統規則,False,True,認證原標,False,葉煠猴（葉煠牯）
 113四中高,11-23,掣等走,càd dèn zèu,càd nèn zèu,美濃,系統規則,False,False,字級對照,True,
 113四中高,11-24,參詳（誚詳）,cám xiǒng (séu xiǒng),cām xiǒng (sēu xiǒng),美濃,系統規則,False,False,字級對照,False,
 113四中高,11-25,吵耳吵鼻,cǎu ngì cǎu pi,cǎu ngì cǎu pi,美濃,系統規則,False,True,字級對照,False,
@@ -2924,7 +2873,6 @@
 113四中高,11-42,打禁指,dà gim zìi,dà gim zìi,美濃,系統規則,False,True,字級對照,False,
 113四中高,11-43,打合,dà hab,dà hab,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-44,打逆面,dà ngiag mien,dà ngiag mien,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,11-45,打眼拐（使眼拐）,dà ngièn guài (sìi ngièn guài),dà ngiàn guài (sìi ngiàn guài),美濃,系統規則,False,True,認證原標,False,
 113四中高,11-46,打蛇跈棍上,dà sǎ těn gun sóng,dà sǎ těn gun sōng,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-47,搭信,dàb xin,dàb xin,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-48,單丁子,dán dén zìi,dān dēn zìi,美濃,系統規則,False,False,教典南四縣,False,
@@ -2943,7 +2891,6 @@
 113四中高,11-61,癲癲,dién dién,diēn diēn,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-62,癲牯,dién gù,diēn gù,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-63,頂分人,dìn bún ngǐn,dàng būn ngǐn,美濃,系統規則,False,False,認證原標,False,
-113四中高,11-64,頂香火（頂香煙）,dìn hióng fò (dìn hióng ién),dàng hiōng fò (dàng hiōng iān),美濃,系統規則,False,False,認證原標,False,
 113四中高,11-65,短命（短命子）,dòn miang (dòn miang zìi),dòn miang (dòn miang zìi),美濃,系統規則,False,True,字級對照,False,
 113四中高,11-66,當天咒誓,dóng tién zu sii,dōng tiēn zu sii,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-67,堵來堵去,dú lǒi dú hi,dǔ lǒi dǔ hi,美濃,系統規則,False,True,教典南四縣,False,
@@ -3084,7 +3031,6 @@
 113四中高,11-205,摸彩,mó cài,mō cài,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-206,無打無算（無打算）,mǒ dà mǒ son (mǒ dà son),mǒ dà mǒ son (mǒ dà son),美濃,系統規則,False,True,字級對照,False,
 113四中高,11-207,無規矩,mǒ gúi gì,mǒ gūi gì,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,11-208,無愛聲佢（無愛插佢）,mǒ oi sáng gǐ (mǒ oi càb gǐ),mǒ oi sāng ǐ (mǒ oi càb ǐ),美濃,系統規則,False,False,認證原標,False,
 113四中高,11-209,無成,mǒ sǎng,mǒ sǎng,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-210,無大無細（無老無大）,mǒ tai mǒ se (mǒ lò mǒ tai),mǒ tai mǒ se (mǒ lò mǒ tai),美濃,系統規則,False,True,字級對照,False,
 113四中高,11-211,無面無目,mǒ mien mǒ mùg,mǒ mien mǒ pǐ,美濃,系統規則,False,True,認證原標,False,無面無皮
@@ -3130,7 +3076,6 @@
 113四中高,11-253,三兩重就毋動,sám lióng cúng qiu m̌ túng,sām liōng cūng lu/lū m̌ tūng,美濃,系統規則,False,False,認證原標,False,
 113四中高,11-254,三條坑水洗毋淨,sám tiǎu háng sùi sè m̌ qiang,sām tiǎu hāng sùi sè m̌ qiang,美濃,系統規則,False,False,字級對照,False,
 113四中高,11-255,省省仔,sàng sàng ě,sàng sàng ē,美濃,系統規則,False,False,認證原標,False,
-113四中高,11-256,笑絲絲仔（笑咪咪仔）,seu xí xí è (seu mí mí è),seu mī mī ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,11-257,笑連連,seu liěn liěn,seu liěn liěn,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-258,笑頭笑面,seu těu seu mien,seu těu seu mien,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,11-259,小郎叔（小郎仔）,sèu lǒng sùg (sèu lǒng è),sèu lǒng sùg (sèu lǒng è),美濃,系統規則,False,True,字級對照,False,
@@ -3166,7 +3111,6 @@
 113四中高,11-290,聽毋入耳,táng m̌ ngib ngì,tāng m̌ ngib ngì,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-291,𢯭鬧熱,ten nau ngied,ten nau ngiad,美濃,系統規則,False,True,認證原標,False,
 113四中高,11-292,頭仔,těu è,těu è,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,11-293,調和（調解）,tiǎu fǒ (tiǎu giè),tiǎu giài,美濃,系統規則,False,True,認證原標,False,
 113四中高,11-294,討功勞,tò gúng lǒ,tò gūng lǒ,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,11-295,脫陣,tòd ciin,tòd ciin,美濃,系統規則,False,True,字級對照,False,
 113四中高,11-296,托核（托核卵）,tòg hag (tòg hag lòn),pǔ hag nòn,美濃,系統規則,False,False,認證原標,True,扶核卵
@@ -3260,7 +3204,6 @@
 113四中高,12-36,一半擺仔,ìd ban bài è,ìd liòng bài ě,美濃,系統規則,False,True,認證原標,False,一兩擺仔
 113四中高,12-37,一站仔,ìd cam è,ìd cam ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-38,一搭,ìd dab,ìd jiàg,美濃,系統規則,False,True,認證原標,False,一跡
-113四中高,12-39,一下半下（擺把仔）,ìd ha ban ha (bài bà ě),bài bà ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-40,一路里來（一溜里來）,ìd lu lí lǒi (ìd liu lí lǒi),ìd lu lī lǒi (ìd liu lī lǒi),美濃,系統規則,False,False,字級對照,False,
 113四中高,12-41,一日到暗,ìd ngìd do am,ìd ngìd do am,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,12-42,一等,ìd dèn,ìd nèn,美濃,系統規則,False,False,教典南四縣,True,
@@ -3298,9 +3241,7 @@
 113四中高,12-74,日把仔,ngìd bà ě,ngìd bà ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-75,日日,ngìd ngìd,ngìd ngìd,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,12-76,月半邊仔,ngied ban bién è,ngiad ban biēn ē,美濃,系統規則,False,False,認證原標,False,
-113四中高,12-77,月尾（月底）,ngied mí (ngied dài),ngiad mī (ngiad dài),美濃,系統規則,False,False,認證原標,False,
 113四中高,12-78,月頭,ngied těu,ngiad těu,美濃,系統規則,False,True,認證原標,False,
-113四中高,12-79,原底（原旦）,ngiěn dài (ngiěn dàn),ngiǎn dài (ngiǎn dàn),美濃,系統規則,False,True,認證原標,False,
 113四中高,12-80,年下仔,ngiěn há è,ngiǎn hā ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-81,年尾人,ngiěn mí ngǐn,ngiǎn mī ngǐn,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-82,年頷下仔,ngiěn ngàb há è,ngiǎn ngàb hā ē,美濃,系統規則,False,False,認證原標,False,
@@ -3328,7 +3269,6 @@
 113四中高,12-104,上站仔,song cam è,song zam ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-105,上早,song zò,song zò,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,12-106,樹頭下,su těu há,su těu hā,美濃,系統規則,False,False,字級對照,False,
-113四中高,12-107,現之時（現時）,hien zíi sǐi (hien sǐi),hian zīi sǐi (hian sǐi),美濃,系統規則,False,False,認證原標,False,
 113四中高,12-108,透長年,teu cǒng ngiěn,teu cǒng ngiǎn,美濃,系統規則,False,True,認證原標,False,
 113四中高,12-109,透日仔,teu ngìd ě,teu ngìd ē,美濃,系統規則,False,False,認證原標,False,
 113四中高,12-110,透日透夜,teu ngìd teu ia,teu ngìd teu ia,美濃,系統規則,False,True,字級對照,False,
@@ -3378,7 +3318,6 @@
 113四中高,13-35,十二月甘蔗,siib ngi ngied gám za,siib ngi ngiad gām za,美濃,系統規則,False,False,認證原標,False,
 113四中高,13-36,十做九無成,siib zo giù mǒ sǎng,siib zo giù mǒ sǎng,美濃,系統規則,False,True,字級對照,False,
 113四中高,13-37,算來,son lǒi,son lǒi,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,13-38,隨在你（由在你）,sǔi cai ň (iǔ cai ň),sǔi cai ňg (iǔ cai ňg),美濃,系統規則,False,True,認證原標,False,
 113四中高,13-39,動啊著,túng a dò,tūng a dò,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,13-40,會知,voi dí,voi dèd dī,美濃,系統規則,False,False,認證原標,False,會得知
 113四中高,13-41,…正得,...zang dèd,...nang dèd,美濃,系統規則,False,True,認證原標,False,
@@ -3389,7 +3328,6 @@
 113四中高,14-1,飆車,béu cá,bēu cā,美濃,系統規則,False,False,字級對照,False,
 113四中高,14-2,䃗崁,bòg kam,bòg kam,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,14-3,鏨仔,cam è,cam è,美濃,系統規則,False,True,字級對照,False,
-113四中高,14-4,鏨空（鏨空仔）,cam kúng (cam kúng è),cam kāng (cam kāng è),美濃,系統規則,False,False,認證原標,False,
 113四中高,14-5,鏨字,cam sii,cam sii,美濃,系統規則,False,True,字級對照,False,
 113四中高,14-6,打井,dà jiàng,dà jiàng,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,14-7,鬥緪來,deu hěn lǒi,deu hěn lǒi,美濃,系統規則,False,True,字級對照,False,
@@ -3406,7 +3344,6 @@
 113四中高,14-20,塞車（堵車）,sèd cá (dǔ cá),sèd cā (dǔ cā),美濃,系統規則,False,False,字級對照,False,
 113四中高,14-21,食油,siid iǔ,siid iǔ,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,14-22,食電,siid tien,siid tien,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,14-23,電火楯（電線楯）,tien fò dùn (tien xien dùn),tien xin cū (tien fò cū),美濃,系統規則,False,False,認證原標,False,電信柱（電火柱）
 113四中高,14-24,相閃,xióng sàm,xiōng sàm,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,14-25,相撞仔,xióng cong è,xiōng zūng,美濃,系統規則,False,False,認證原標,False,相舂
 113四中高,14-26,圳溝,zun giéu,zun giēu,美濃,系統規則,False,False,教典南四縣,False,
@@ -3521,7 +3458,6 @@
 113四中高,17-13,抽頭,cú těu,cū těu,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-14,出張,cùd zóng,cùd zōng,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-15,打出本,dà cùd bùn,dà cùd bùn,美濃,系統規則,False,True,教典南四縣,False,
-113四中高,17-16,打單（買票）,dà dán (mái péu),māi peu,美濃,系統規則,False,False,認證原標,False,
 113四中高,17-17,打毋過,dà m̌ go,dà m̌ go,美濃,系統規則,False,True,字級對照,False,
 113四中高,17-18,打馬膠,dà má gáu,dà dam è gāu,美濃,系統規則,False,False,認證原標,False,打擔仔膠
 113四中高,17-19,打田,dà tiěn,dà tiěn,美濃,系統規則,False,True,教典南四縣,False,
@@ -3536,7 +3472,6 @@
 113四中高,17-30,兌換,dui von,dui von,美濃,系統規則,False,True,教典南四縣,False,
 113四中高,17-31,話玲琅,fa lǐn lóng,fa lǐn lōng,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-32,販仔屋,fan è vùg,fan vùg,美濃,系統規則,False,True,認證原標,False,販屋
-113四中高,17-33,貨腳仔（貨尾、貨底）,fo giòg ě (fo mí、fo dài),fo giòg è,美濃,系統規則,False,True,認證原標,False,
 113四中高,17-34,伙頭軍,fò těu giún,fò těu giūn,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-35,耕園耕埔,gáng iěn gáng pú,gāng iǎn gāng pū,美濃,系統規則,False,False,認證原標,False,
 113四中高,17-36,交關主顧,gáu gón zù gu,gāu gōn zù gu,美濃,系統規則,False,False,教典南四縣,False,
@@ -3579,7 +3514,6 @@
 113四中高,17-76,千賒毋當八百現,qién cá m̌ dong bàd bàg hien,qiēn cā m̌ dong bàd bàg hian,美濃,系統規則,False,False,認證原標,False,
 113四中高,17-77,砂耙,sá pǎ,sā pǎ,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-78,生理腳,sén lí giòg,sēn lī giòg,美濃,系統規則,False,False,教典南四縣,False,
-113四中高,17-79,小使仔（工友）,sèu sìi ě (gúng iú),sèu sìi è,美濃,系統規則,False,True,認證原標,False,
 113四中高,17-80,銷頭,séu těu,sēu těu,美濃,系統規則,False,False,教典南四縣,False,
 113四中高,17-81,銷路闊,séu lu fàd,sēu lu fàd,美濃,系統規則,False,False,字級對照,False,
 113四中高,17-82,蒔田,sii tiěn,sii tiěn,美濃,系統規則,False,True,教典南四縣,False,
@@ -3667,7 +3601,6 @@
 113四初,1-8,血,hièd,hiàd,美濃,系統規則,False,True,認證原標,False,
 113四初,1-9,寒著,hǒn dò,dung dò,美濃,系統規則,False,True,認證原標,False,凍著
 113四初,1-10,醫,í,ī,美濃,系統規則,False,False,字級對照,False,
-113四初,1-11,康健（健康）,kóng kien (kien kóng),kōng kian (kian kōng),美濃,系統規則,False,False,認證原標,False,
 113四初,1-12,拉尿,lǎi ngiau,lǎi ngiau,美濃,系統規則,False,True,教典南四縣,False,
 113四初,1-13,熱著,ngied dò,ngiad dò,美濃,系統規則,False,True,認證原標,False,
 113四初,1-15,消化,séu fa,sēu fa,美濃,系統規則,False,False,教典南四縣,False,
@@ -3934,7 +3867,6 @@
 113四初,6-8,伯姆,bàg mé,bàg mē,美濃,系統規則,False,False,教典南四縣,False,
 113四初,6-9,叔公,sùg gúng,sùg gūng,美濃,系統規則,False,False,教典南四縣,False,
 113四初,6-10,叔婆,sùg pǒ,sùg pǒ,美濃,系統規則,False,True,教典南四縣,False,
-113四初,6-11,叔姆,sùg mé,mē mē (mī ngiā),美濃,系統規則,False,False,認證原標,False,姆姆（嬭若）
 113四初,6-12,老公,lò gúng,lò gūng,美濃,系統規則,False,False,教典南四縣,False,
 113四初,6-13,餔娘,bú ngiǒng,jià è,美濃,系統規則,False,True,認證原標,False,姐仔
 113四初,6-14,孫仔,sún è,sūn è,美濃,系統規則,False,False,教典南四縣,False,
@@ -4019,7 +3951,6 @@
 113四初,7-12,戴,dai,dai,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-13,鬥,deu,deu,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-14,紅粄,fǔng bàn,fǔng bàn,美濃,系統規則,False,True,教典南四縣,False,
-113四初,7-16,間房（房間）,gién fǒng (fǒng gién),giān fǒng (fǒng giān),美濃,系統規則,False,False,認證原標,False,
 113四初,7-17,禁指,gim zìi,gim zìi,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-18,故鄉,gu hióng,gu hiōng,美濃,系統規則,False,False,教典南四縣,False,
 113四初,7-19,滾水,gùn sùi,gùn sùi,美濃,系統規則,False,True,教典南四縣,False,
@@ -4027,7 +3958,6 @@
 113四初,7-21,水靴仔（水鞋）,sùi hió è (sùi hǎi),sùi hiō è (sùi hǎi),美濃,系統規則,False,False,字級對照,False,
 113四初,7-22,䟘床,hong cǒng,hong cǒng,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-23,菸,ién,iān,美濃,系統規則,False,False,認證原標,False,
-113四初,7-24,浴堂（洗身間）,iog tǒng (sè síin gién),sè sīin giān,美濃,系統規則,False,False,認證原標,False,
 113四初,7-25,油,iǔ,iǔ,美濃,系統規則,False,True,字級對照,False,
 113四初,7-26,酒,jiù,jiù,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-27,弇,kiěm,kiěm,美濃,系統規則,False,True,教典南四縣,False,
@@ -4074,7 +4004,6 @@
 113四初,7-68,地泥,ti nǎi,ti nǎi,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-69,地圾（垃圾）,ti sèb (lèb sèb),ti sèb (lèb sèb),美濃,系統規則,False,True,字級對照,False,
 113四初,7-70,添飯,tiám fan,tiām fan,美濃,系統規則,False,False,教典南四縣,False,
-113四初,7-71,調羹仔（湯匙）,tiǎu gáng è (tóng cǐi),tiǎu/těu gāng è,美濃,系統規則,False,False,認證原標,False,
 113四初,7-72,電火,tien fò,tien fò,美濃,系統規則,False,True,教典南四縣,False,
 113四初,7-73,拖箱仔（拖仔）,tó xióng è (tó è),tō xiōng è (tō è),美濃,系統規則,False,False,字級對照,False,
 113四初,7-74,袋仔,toi è,toi è,美濃,系統規則,False,True,教典南四縣,False,
@@ -4184,7 +4113,6 @@
 113四初,12-16,下班,há bán,hā bān,美濃,系統規則,False,False,教典南四縣,False,
 113四初,12-17,借,jia,jia,美濃,系統規則,False,True,教典南四縣,False,
 113四初,12-18,欠,kiam,kiam,美濃,系統規則,False,True,教典南四縣,False,
-113四初,12-19,旅館（旅社）,lí gòn (lí sà),lì gòn (lì sa),美濃,系統規則,False,True,認證原標,False,
 113四初,12-20,銀行,ngiǔn hǒng,ngiǔn hǒng,美濃,系統規則,False,True,教典南四縣,False,
 113四初,12-21,辦公室,pan gúng sìid,pan gūng sìid,美濃,系統規則,False,False,教典南四縣,False,
 113四初,12-22,便宜,piěn ngǐ,piěn ngǐ,美濃,系統規則,False,True,教典南四縣,False,
@@ -4221,7 +4149,6 @@
 113四初,13-19,教書,gáu sú,gāu sū,美濃,系統規則,False,False,教典南四縣,False,
 113四初,13-20,高中,gó zúng,gō zūng,美濃,系統規則,False,False,教典南四縣,False,
 113四初,13-21,講古,gòng gù,gòng gù,美濃,系統規則,False,True,教典南四縣,False,
-113四初,13-22,講演（演講）,gòng ién (ién gòng),iān gòng,美濃,系統規則,False,False,認證原標,False,
 113四初,13-24,翕相,hìb xiong,hìb xiong,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-25,學,hog,hog,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-26,一年生,ìd ngiěn sén,ìd ngiǎn sēn,美濃,系統規則,False,False,認證原標,False,
@@ -4230,7 +4157,6 @@
 113四初,13-29,運動會,iun tung fi,iun tung fi,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-30,運動坪,iun tung piǎng,iun tung piǎng,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-31,節目,jièd mug,jièd mùg,美濃,系統規則,False,True,教典南四縣,False,
-113四初,13-32,足球（腳球）,jiùg kiǔ (giòg kiǔ),zùg kiǔ,美濃,系統規則,False,True,認證原標,False,
 113四初,13-33,考,kàu,kàu,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-34,考試,kàu sii,kàu sii,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-35,球場,kiǔ cǒng,kiǔ cǒng,美濃,系統規則,False,True,字級對照,False,
@@ -4243,7 +4169,6 @@
 113四初,13-43,練習,lien xib,lien xib,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-44,研究,ngiěn/ngǎn giu,ngiǎn giu,美濃,系統規則,False,True,認證原標,False,
 113四初,13-45,人公仔,ngǐn gúng è,ngǐn gūng è,美濃,系統規則,False,False,教典南四縣,False,
-113四初,13-46,避暑（尞暑假）,pìd cù (liau cù gà),liau sù gà,美濃,系統規則,False,True,認證原標,False,
 113四初,13-47,洗身仔（泅水）,sè síin è (qiǔ sùi),sè sīin è (qiǔ sùi),美濃,系統規則,False,False,字級對照,False,
 113四初,13-48,小學,sèu hog,sèu hog,美濃,系統規則,False,True,教典南四縣,False,
 113四初,13-49,成績,sǐin jìd,sǐin jìd,美濃,系統規則,False,True,教典南四縣,False,
@@ -4288,12 +4213,10 @@
 113四初,14-22,五月節,ǹg ngied jièd,ǹg ngiad jièd,美濃,系統規則,False,True,認證原標,False,
 113四初,14-23,䌈粽仔,tàg zung è,gò zung è,美濃,系統規則,False,True,認證原標,False,裹粽仔
 113四初,14-24,冬節（冬至）,dúng jièd (dúng zii),dūng jièd (dūng zii),美濃,系統規則,False,False,字級對照,False,
-113四初,15-1,恁樣（恁仔）,àn ngiǒng (àn ě),àn ē,美濃,系統規則,False,False,認證原標,False,
 113四初,15-5,個人,ge ngǐn,gòg ngǐn,美濃,系統規則,False,True,認證原標,False,
 113四初,15-6,幾,gì,ìd,美濃,系統規則,False,True,認證原標,False,
 113四初,15-7,其他,kǐ tá,kǐ tā,美濃,系統規則,False,False,教典南四縣,False,
 113四初,15-8,麼个,mà ge,mà ge,美濃,系統規則,False,True,教典南四縣,False,
-113四初,15-9,麼人（麼儕）,mà ngǐn (mà sǎ),màn ngǐn,美濃,系統規則,False,True,認證原標,False,
 113四初,15-10,哪,nai,nai,美濃,系統規則,False,True,教典南四縣,False,
 113四初,15-11,別儕人（別人）,ped sǎ ngǐn (ped ngǐn),ped sǎ ngǐn (ped ngǐn),美濃,系統規則,False,True,字級對照,False,
 113四初,16-1,把,bà,bà,美濃,系統規則,False,True,字級對照,False,
@@ -4347,7 +4270,6 @@
 113四初,16-51,組,zú,zū,美濃,系統規則,False,False,教典南四縣,False,
 113四初,17-1,比,bì,bì,美濃,系統規則,False,True,教典南四縣,False,
 113四初,17-2,本本,bùn bùn,bùn bùn,美濃,系統規則,False,True,教典南四縣,False,
-113四初,17-3,本來（原本、原來）,bùn lǒi (ngiěn bùn、ngiěn lǒi),ngiǎn bùn、ngiǎn lǒi,美濃,系統規則,False,True,認證原標,False,
 113四初,17-4,分,bún,būn,美濃,系統規則,False,False,教典南四縣,False,
 113四初,17-5,…著,...dò,...dò,美濃,系統規則,False,True,字級對照,False,
 113四初,17-6,除忒（除了）,cǔ tèd (cǔ liàu),cǔ hèd,美濃,系統規則,False,True,認證原標,False,除核
@@ -4367,7 +4289,6 @@
 113四初,17-23,若係（係講）,na he (he gòng),na he (he gòng),美濃,系統規則,False,True,字級對照,False,
 113四初,17-24,原來,ngiěn lǒi,ngiǎn lǒi,美濃,系統規則,False,True,認證原標,False,
 113四初,17-25,仰,ngiòng,ngiòng,美濃,系統規則,False,True,教典南四縣,False,
-113四初,17-26,仰般（仰仔）,ngiòng bán (ngiòng ě),ngiòng ē,美濃,系統規則,False,False,認證原標,False,
 113四初,17-27,仰結煞,ngiong gàd sàd,ngiong gàd sàd,美濃,系統規則,False,True,教典南四縣,False,
 113四初,17-28,怕,pa,pa,美濃,系統規則,False,True,教典南四縣,False,
 113四初,17-29,盡量,qin liong,qin liong,美濃,系統規則,False,True,教典南四縣,False,
@@ -4437,12 +4358,10 @@
 113四初,18-62,哪央時,nai ióng sǐi,nai sǐi jied,美濃,系統規則,False,True,認證原標,False,哪時節
 113四初,18-63,另外,nang ngoi,nang ngoi,美濃,系統規則,False,True,教典南四縣,False,
 113四初,18-64,淰,ném,mān,美濃,系統規則,False,False,認證原標,False,滿
-113四初,18-65,黏時（黏皮）,ngiǎm sǐi (ngiǎm pǐ),liǎm sǐi (liǎm pǐ),美濃,系統規則,False,True,認證原標,False,
 113四初,18-66,日期,ngìd kǐ,ngìd kǐ,美濃,系統規則,False,True,教典南四縣,False,
 113四初,18-67,平常,pǐn sǒng,pǐn sǒng,美濃,系統規則,False,True,教典南四縣,False,
 113四初,18-68,淨,qiang,qiang,美濃,系統規則,False,True,教典南四縣,False,
 113四初,18-69,前日,qiěn ngìd,qiěn ngìd,美濃,系統規則,False,True,教典南四縣,False,
-113四初,18-70,盡尾（第一尾、最尾）,qin mí (tid mí、zui mí),zùi mī,美濃,系統規則,False,False,認證原標,False,
 113四初,18-71,從來,qiǔng lǒi,qiǔng lǒi,美濃,系統規則,False,True,教典南四縣,False,
 113四初,18-72,重新,qiǔng xín,qiǔng xīn,美濃,系統規則,False,False,教典南四縣,False,
 113四初,18-73,時間,sǐi gién,sǐi giān,美濃,系統規則,False,False,認證原標,False,
@@ -4658,7 +4577,6 @@
 113四基,6-9,阿公,á gúng,ā gūng,美濃,系統規則,False,False,教典南四縣,False,
 113四基,6-10,阿婆,á pǒ,ā ma,美濃,系統規則,False,False,認證原標,False,阿嬤
 113四基,6-11,姐公,jià gúng,ngoi ā gūng,美濃,系統規則,False,False,認證原標,False,外阿公
-113四基,6-12,姐婆,jià pǒ,ngoi ā pǒ (ā pǒ),美濃,系統規則,False,False,認證原標,False,外阿婆（阿婆）
 113四基,6-13,姊妹,jì moi,jì moi,美濃,系統規則,False,True,教典南四縣,False,
 113四基,6-14,兄弟,hiúng ti,hiūng ti,美濃,系統規則,False,False,教典南四縣,False,
 113四基,6-15,爺哀,iǎ ói,iǎ ōi,美濃,系統規則,False,False,教典南四縣,False,
@@ -4724,14 +4642,12 @@
 113四基,7-38,食飯,siid fan,siid fan,美濃,系統規則,False,True,教典南四縣,False,
 113四基,7-39,睡,soi,soi,美濃,系統規則,False,True,教典南四縣,False,
 113四基,7-40,睡目,soi mùg,soi mùg,美濃,系統規則,False,True,教典南四縣,False,
-113四基,7-41,手錶仔（時錶仔）,sù bèu ě (sǐi bèu ě),sù bēu è,美濃,系統規則,False,False,認證原標,False,
 113四基,7-42,豆腐,teu fu,teu fu,美濃,系統規則,False,True,教典南四縣,False,
 113四基,7-43,電視,tien sii,tien sii,美濃,系統規則,False,True,教典南四縣,False,
 113四基,7-44,梯仔,tói è,tōi è,美濃,系統規則,False,False,教典南四縣,False,
 113四基,7-45,湯,tóng,tōng,美濃,系統規則,False,False,教典南四縣,False,
 113四基,7-46,糖仔,tǒng è,tǒng è,美濃,系統規則,False,True,字級對照,False,
 113四基,7-47,屋仔,vùg ě,vùg è,美濃,系統規則,False,True,認證原標,False,
-113四基,7-48,屋下（屋家）,vùg ká,lùg kā,美濃,系統規則,False,False,認證原標,False,
 113四基,7-49,線,xien,xien,美濃,系統規則,False,True,教典南四縣,False,
 113四基,7-50,遮仔,zá è,zā è,美濃,系統規則,False,False,教典南四縣,False,
 113四基,7-51,紙,zìi,zìi,美濃,系統規則,False,True,教典南四縣,False,
@@ -4890,7 +4806,6 @@
 113四基,17-13,乜,me,me,美濃,系統規則,False,True,教典南四縣,False,
 113四基,17-14,無,mǒ,mǒ,美濃,系統規則,False,True,教典南四縣,False,
 113四基,17-15,哪久,nai giù,nai giù,美濃,系統規則,False,True,教典南四縣,False,
-113四基,17-16,就（斯）,qiu (sǐi),lu,美濃,系統規則,False,True,認證原標,False,
 113四基,17-17,第,ti,ti,美濃,系統規則,False,True,教典南四縣,False,
 113四基,17-18,會,voi,voi,美濃,系統規則,False,True,教典南四縣,False,
 113四基,17-19,仰會,ngiòng voi,ngiòng voi,美濃,系統規則,False,True,教典南四縣,False,
@@ -5020,7 +4935,6 @@
 113四高,1-85,脝乳,hang nen,pǐ pong,美濃,系統規則,False,True,認證原標,False,皮肨
 113四高,1-86,脝水,hang sùi,mien hǎm hǎm,美濃,系統規則,False,True,認證原標,False,面涵涵
 113四高,1-87,行血,hǎng hièd,hǎng hiàd,美濃,系統規則,False,True,教典南四縣,False,
-113四高,1-88,行月仔（來洗）,hǎng ngied è (lǒi sè),hǎng ngiad è,美濃,系統規則,False,True,認證原標,False,
 113四高,1-89,行通,hǎng túng,hǎng tūng,美濃,系統規則,False,False,教典南四縣,False,
 113四高,1-90,耗耗,háu háu,hòg hòg,美濃,系統規則,False,True,認證原標,False,熇熇
 113四高,1-92,起膘,hì peu,hì peu,美濃,系統規則,False,True,教典南四縣,False,
@@ -5169,7 +5083,6 @@
 113四高,2-18,知知,dí dí,dī dī,美濃,系統規則,False,False,教典南四縣,False,
 113四高,2-19,知頭知尾,dí těu dí mí,dī těu dī mī,美濃,系統規則,False,False,教典南四縣,False,
 113四高,2-20,知總,dí zùng,dī zùng,美濃,系統規則,False,False,教典南四縣,False,
-113四高,2-21,頂願（適願）,dìn ngien (dìd ngien),dìn ngian (dìd ngian),美濃,系統規則,False,True,認證原標,False,
 113四高,2-22,當興,dóng him,dōng him,美濃,系統規則,False,False,字級對照,False,
 113四高,2-24,壞癖,fài piàg,fài piàg,美濃,系統規則,False,True,字級對照,False,
 113四高,2-25,反想,fàn xiòng,fàn xiòng,美濃,系統規則,False,True,字級對照,False,
@@ -7042,7 +6955,6 @@
 113四高,12-23,大體頭,tai tì těu,tai tì těu,美濃,系統規則,False,True,字級對照,False,
 113四高,12-24,做你走（做你去）,zo ňg zèu (zo ňg hi),zo ňg zèu (zo ňg hi),美濃,系統規則,False,True,字級對照,False,
 113四高,12-25,晝晝暗暗,zu zu am am,zu zu am am,美濃,系統規則,False,True,教典南四縣,False,
-113四高,13-1,磅輪（爆輪）,bong lin (bau lin),bong lien (bau lien),美濃,系統規則,False,True,認證原標,False,
 113四高,13-2,結石䃗,gièd sag bòg,giàd sag bòg,美濃,系統規則,False,True,字級對照,False,
 113四高,13-3,結磚仔,gièd zón è,giàd zōn è,美濃,系統規則,False,False,字級對照,False,
 113四高,13-4,揚瓦,iǒng ngà,iǒng ngà,美濃,系統規則,False,True,字級對照,False,
@@ -7240,7 +7152,6 @@
 113四高,16-44,加水加豆腐,gá sùi gá teu fu,gā sùi gā teu fu,美濃,系統規則,False,False,字級對照,False,
 113四高,16-45,合貨,gàg fo,gàg fo,美濃,系統規則,False,True,字級對照,False,
 113四高,16-46,交關,gáu gón,gāu gōn,美濃,系統規則,False,False,教典南四縣,False,
-113四高,16-47,換工（交工）,von gúng (gáu gúng),gau gūng,美濃,系統規則,False,False,認證原標,False,
 113四高,16-48,撿兜尞,giàm déu liau,giàm dēu liau,美濃,系統規則,False,False,字級對照,False,
 113四高,16-49,撿兜做,giàm déu zo,giàm dēu zo,美濃,系統規則,False,False,字級對照,False,
 113四高,16-50,撿工錢,giàm gúng qiěn,giàm gūng qiěn,美濃,系統規則,False,False,教典南四縣,False,

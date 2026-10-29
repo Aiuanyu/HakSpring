@@ -90,8 +90,18 @@ by_word = {r['詞目']: r['讀音'] for r in meinung_rows if r['來源檔'] == '
 assert by_word['寄雨'] == 'gi ì', by_word['寄雨']             # 毋係 giu ì（救雨个美濃音）
 assert by_word['寄'] == 'gi', by_word['寄']
 by_cert = {(r['來源檔'], r['編號']): r['讀音'] for r in meinung_rows if r['來源檔'].startswith('113')}
+# 南四縣詞括號內係同義詞（A 類）：詞形摎北四縣無共樣，美濃毋推（平哥 20261029）
+for synonym_entry in [('113四中', '13-34'), ('113四中', '17-60'), ('113四中高', '4-83'), ('113四初', '6-11'),
+                      ('113四基', '6-12'), ('113四基', '18-40'), ('113四中高', '10-6'), ('113四中高', '11-22'),
+                      ('113四中高', '8-116')]:
+    assert synonym_entry not in by_cert, synonym_entry
 assert by_cert[('113四中', '1-50')] == 'ngiàg těu'             # 額頭，毋係 bòd těu
 assert by_cert[('113四中', '2-37')] == 'guān xīm'              # 關心，毋係 cō xīm
+
+# 3e. 教典「俗音」「又俗音」係詞級讀音，毋拆做單字音（例：夭壽 俗音 iáu xiǔ → 毋生單字「壽 xiǔ」；今年 俗音 gin24 → 毋生單字「今 gín」）
+assert ('壽', 'xiǔ') not in _supp('南')
+assert ('今', 'gín') not in _supp('四')
+assert ('公', 'gung') not in _supp('四')
 
 # 4. 輸出个附表檔：全部愛讀得返來（防 write_rows 手工拼 JSON 壞去）
 fill = os.path.join(ROOT, 'data', 'sub-dialects-fill')
