@@ -12,3 +12,7 @@ test-results/
 
 # jf7000 擬音下載个來源資料（scripts/build_jf_nisim.py）
 .cache/
+
+# Python 編譯產物（process_all_data.py 等腳本一跑就生）
+__pycache__/
+*.pyc

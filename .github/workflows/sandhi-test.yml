@@ -24,6 +24,8 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
+      - 'tests/variant_parser_test.js'
+      - 'js/variant-parser.js'
       - 'data/curated/**'
       - 'data/supp/**'
       - 'scripts/build_subdialect_fill.py'
@@ -55,6 +57,8 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
+      - 'tests/variant_parser_test.js'
+      - 'js/variant-parser.js'
       - 'data/curated/**'
       - 'data/supp/**'
       - 'scripts/build_subdialect_fill.py'
@@ -100,3 +104,5 @@ jobs:
         run: node tests/gip_superscript_test.js
       - name: Curated (愛灣語加詞) tests
         run: node tests/curated_test.js
+      - name: Variant parser tests
+        run: node tests/variant_parser_test.js

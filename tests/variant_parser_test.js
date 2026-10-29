@@ -321,6 +321,22 @@ it('模式 5：無詞括號个複合標音，南四縣摎美濃都係原主詞�
   assert.strictEqual(res.variants[1].phonetic, 'ám nèn');
 });
 
+it('模式 5：畸形括號（缺右括號、全半形混用、巢狀、空括號）毋會 throw，詞括號複合時整串留佇南四縣', () => {
+  const cases = [
+    ['好額【有口（有發】', 'hò ngiàg【iú hèu (iú bòd】'],
+    ['好額【有口（有發）', 'hò ngiàg【iú hèu (iú bòd)'],
+    ['好額【有口(有發)】', 'hò ngiàg【iú hèu （iú bòd）】'],
+    ['好額【有口（有（發））】', 'hò ngiàg【iú hèu (iú (bòd))】'],
+    ['佢兜人【佢等】', 'gǐ déu ngǐn【ǐ dén (】'],
+    ['', ''],
+  ];
+  for (const [w, p] of cases) {
+    const res = parseVariants(w, p, '四縣');
+    assert.ok(Array.isArray(res.variants), `${w} | ${p}`);
+    assert.ok(!res.variants.some((v) => v.label === '美'), `畸形括號毋該生出美濃：${w} | ${p}`);
+  }
+});
+
 it('模式 6：饒平【／】內含（）同義詞（平高 14-13 丙運）', () => {
   const res = parseVariants(
     '丙運【歪運（落運）】',
