@@ -1,7 +1,7 @@
 // tests/audio_breaker_test.js
 // 音檔失敗斷路器：連續失敗達上限就停、成功就歸零；冷卻斷路器開路期間擋請求、冷卻後放行。
 const assert = require('assert');
-const { createFailureBreaker, createCooldownBreaker } = require('../js/audio-breaker.js');
+const { createFailureBreaker, createCooldownBreaker, isOutageStatus } = require('../js/audio-breaker.js');
 
 // 連續失敗：前兩擺毋停，第三擺停
 {
@@ -59,5 +59,12 @@ const { createFailureBreaker, createCooldownBreaker } = require('../js/audio-bre
   b.fail();
   assert.strictEqual(b.isOpen(), false, '成功後計數歸零');
 }
+
+// 狀態判斷：5xx 算上游出問題；404／200／206 毋算
+assert.strictEqual(isOutageStatus(530), true);
+assert.strictEqual(isOutageStatus(503), true);
+assert.strictEqual(isOutageStatus(404), false);
+assert.strictEqual(isOutageStatus(200), false);
+assert.strictEqual(isOutageStatus(206), false);
 
 console.log('audio_breaker_test: all passed');

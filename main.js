@@ -7269,6 +7269,37 @@ function initializeAppUI() {
     return true;
   }
 
+  // 按個別音檔（原生 <audio controls> 个播放鈕）放毋出來：毋經過 play()，淨有 `error` 事件。
+  // 音檔元素 error 不冒泡，用 capture 接。只探認證詞句个轉送網址；用 Range 0-0 个小請求問一擺上游个
+  // 狀態：5xx（530 等）就浮同樣个說明，404（單隻檔案無）抑係放得出來就毋吵。無網路也毋浮（毋係上游問題）。
+  let audioOutageProbing = false;
+  async function probeAudioOutage(src) {
+    if (audioOutageProbing || document.getElementById('audioOutageNotice')) return;
+    if (navigator.onLine === false) return;
+    audioOutageProbing = true;
+    try {
+      const response = await fetch(src, { headers: { Range: 'bytes=0-0' }, cache: 'no-store' });
+      const isOutage = window.AudioBreaker
+        ? window.AudioBreaker.isOutageStatus(response.status)
+        : response.status >= 500;
+      if (isOutage) showAudioOutageNotice();
+    } catch (e) {
+      showAudioOutageNotice(); // 連請求都送毋出（DNS／連線失敗）
+    } finally {
+      audioOutageProbing = false;
+    }
+  }
+  document.addEventListener(
+    'error',
+    (event) => {
+      const element = event.target;
+      if (!(element instanceof HTMLAudioElement)) return;
+      const src = element.currentSrc || element.src;
+      if (src && src.includes('/audio-proxy?url=')) probeAudioOutage(src);
+    },
+    true,
+  );
+
   /** 音檔連續放毋出來：頁面下方浮一則可關掉个說明（講原因、已報告、等回覆）。 */
   function showAudioOutageNotice() {
     if (document.getElementById('audioOutageNotice')) return;
