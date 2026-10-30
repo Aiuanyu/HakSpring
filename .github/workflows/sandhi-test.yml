@@ -37,6 +37,8 @@ on:
       - 'tests/audio_breaker_test.js'
       - 'scripts/check_audio_health.py'
       - 'tests/audio_health_test.py'
+      - 'js/feedback.js'
+      - 'tests/feedback_test.js'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -74,6 +76,8 @@ on:
       - 'tests/audio_breaker_test.js'
       - 'scripts/check_audio_health.py'
       - 'tests/audio_health_test.py'
+      - 'js/feedback.js'
+      - 'tests/feedback_test.js'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -118,3 +122,5 @@ jobs:
         run: node tests/audio_breaker_test.js
       - name: Audio health check logic tests
         run: python3 tests/audio_health_test.py
+      - name: Feedback form logic tests
+        run: node tests/feedback_test.js
