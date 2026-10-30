@@ -1,0 +1,60 @@
+name: Audio health check
+
+# 認證詞彙音檔來源（哈客學院網站 elearning.hakka.gov.tw）出問題，要在用戶回報之前就知。
+# 每 15 分鐘經 /audio-proxy 取音檔一個位元組，並問 Cloudflare DoH 上游網域有影無 DNSSEC 驗證失敗。
+# 毋通（連續兩擺）：開（或沿用）一則 issue，GitHub 寄信分 repo 維護者（愛 Watch → Issues）；
+# 恢復：在 issue 留言並關掉。已經有開著个 issue 就毋重複開／毋重複吵。
+# 注意：schedule 淨在預設分支（main）執行；repo 60 日無活動，GitHub 會自動停掉排程，愛手動 Run workflow 重啟。
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: audio-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check audio proxy and upstream DNS
+        id: probe
+        run: python3 scripts/check_audio_health.py
+      - name: Open or reuse an outage issue
+        if: steps.probe.outputs.ok == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROXY_STATUS: ${{ steps.probe.outputs.proxy_status }}
+          DNS_STATUS: ${{ steps.probe.outputs.dns_status }}
+        run: |
+          gh label create audio-outage --color B60205 --description "認證詞彙音檔來源異常（自動）" --force
+          existing=$(gh issue list --label audio-outage --state open --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh issue create --label audio-outage \
+              --title "【自動】認證詞彙音檔來源異常 ($(date -u +%Y-%m-%d\ %H:%M) UTC)" \
+              --body "定時健康檢查連續兩擺失敗：
+
+          - \`/audio-proxy\` 回應狀態：\`${PROXY_STATUS}\`（0 = 連毋著；5xx = 上游或轉送出問題）
+          - Cloudflare DoH 對 \`elearning.hakka.gov.tw\` 个 Status：\`${DNS_STATUS}\`（0 正常；2 = SERVFAIL／DNSSEC 驗證失敗）
+
+          這係上游（哈客學院網站）問題个機會較大。頁面已有失敗說明同斷路器（#282、#283），毋使動程式；
+          愛通知用戶就改 \`whatsnew.md\`。恢復時這隻 issue 會自動留言並關掉。"
+          fi
+      - name: Close the outage issue when it recovers
+        if: steps.probe.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROXY_STATUS: ${{ steps.probe.outputs.proxy_status }}
+          DNS_STATUS: ${{ steps.probe.outputs.dns_status }}
+        run: |
+          for number in $(gh issue list --label audio-outage --state open --json number --jq '.[].number'); do
+            gh issue comment "$number" --body "音檔恢復：\`/audio-proxy\` 回 \`${PROXY_STATUS}\`、DoH Status \`${DNS_STATUS}\` ($(date -u +%Y-%m-%d\ %H:%M) UTC)。"
+            gh issue close "$number" --reason completed
+          done
