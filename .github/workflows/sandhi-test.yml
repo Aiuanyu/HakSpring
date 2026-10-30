@@ -24,8 +24,6 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
-      - 'functions/audio-proxy.js'
-      - 'tests/audio_proxy_test.js'
       - 'tests/variant_parser_test.js'
       - 'js/variant-parser.js'
       - 'data/curated/**'
@@ -59,8 +57,6 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
-      - 'functions/audio-proxy.js'
-      - 'tests/audio_proxy_test.js'
       - 'tests/variant_parser_test.js'
       - 'js/variant-parser.js'
       - 'data/curated/**'
@@ -110,5 +106,3 @@ jobs:
         run: node tests/curated_test.js
       - name: Variant parser tests
         run: node tests/variant_parser_test.js
-      - name: Audio proxy tests
-        run: node tests/audio_proxy_test.js
