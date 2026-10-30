@@ -7280,10 +7280,11 @@ function initializeAppUI() {
       'padding:12px 40px 12px 14px;border-radius:8px;background:#fff8e1;color:#4e342e;' +
       'border:1px solid #ffb300;box-shadow:0 2px 10px rgba(0,0,0,.25);font-size:15px;line-height:1.6;';
     notice.innerHTML =
-      '<strong>音檔暫時放毋出來，已經停止自動放送。</strong><br>' +
+      '<strong>認證詞彙音檔暫時放毋出來，既經同自動放送頓恬。（查教典詞彙無受影響）</strong><br>' +
       '認證詞彙个音檔來源係哈客學院網站（網域 <code>elearning.hakka.gov.tw</code>），目前連毋著；' +
-      '毋係你个裝置，乜毋係客源翠壞忒。我等已經向哈客學院網站報告，等候回覆，修好就會恢復。' +
-      '造成不便，萬分抱歉。';
+      '毋係你个裝置，乜毋係客源翠壞忒。𠊎等既經對哈客學院網站報告，等候回應，修好就會恢復。' +
+      '造成不便，還失禮。<br>' +
+      '（查詞結果、日日一詞个教育部「教典」詞句音檔目前播放正常，請放心使用）';
     const close = document.createElement('button');
     close.type = 'button';
     close.setAttribute('aria-label', '關忒');
