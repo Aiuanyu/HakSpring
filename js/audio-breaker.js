@@ -52,7 +52,12 @@
     };
   }
 
-  const api = { createFailureBreaker, createCooldownBreaker };
+  /** 音檔請求个 HTTP 狀態算「上游出問題」：5xx（530 DNS、502/503…）。404 係單隻檔案無，毋算。 */
+  function isOutageStatus(status) {
+    return status >= 500;
+  }
+
+  const api = { createFailureBreaker, createCooldownBreaker, isOutageStatus };
   root.AudioBreaker = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);
