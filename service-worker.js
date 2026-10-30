@@ -4,6 +4,44 @@
 // 換 SW 毋會自家清掉，所以升版名並在 activate 時刪舊 cache，用戶正會重新抓著正確音檔。
 const CACHE_NAME = 'audio-cache-v2';
 
+// 音檔上游（哈客學院網站）連不上時毋好一直衝：連續 3 擺 5xx／網路失敗，60 秒內直接回 503，
+// 毋再打上游（已快取个音檔照常放）。冷卻過了放一擺試探，成功就恢復。importScripts 失敗就無斷路器，
+// 行為同以前（毋讓 SW 安裝失敗）。
+try {
+  importScripts('js/audio-breaker.js');
+} catch (e) {
+  console.warn('SW: audio-breaker.js not loaded; no circuit breaker', e);
+}
+const upstreamBreaker = self.AudioBreaker
+  ? self.AudioBreaker.createCooldownBreaker({ limit: 3, cooldownMs: 60000 })
+  : null;
+
+// 音檔請求走網路个唯一入口：斷路器開路就擋掉，否則照 fetch 並記成敗。
+async function fetchAudio(request) {
+  if (upstreamBreaker && upstreamBreaker.isOpen()) {
+    return new Response('', {
+      status: 503,
+      statusText: 'Audio upstream unavailable (circuit open)',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+        'Retry-After': '60',
+      },
+    });
+  }
+  try {
+    const response = await fetch(request);
+    if (upstreamBreaker) {
+      if (response.status >= 500) upstreamBreaker.fail();
+      else upstreamBreaker.succeed();
+    }
+    return response;
+  } catch (error) {
+    if (upstreamBreaker) upstreamBreaker.fail();
+    throw error;
+  }
+}
+
 // --- Service Worker Lifecycle ---
 
 self.addEventListener('install', (event) => {
@@ -49,7 +87,7 @@ self.addEventListener('fetch', (event) => {
             // 只處理單段 Range（多段、opaque 快取、bytes=- 都透傳網路）
             const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
             if (!cached || !m || (m[1] === '' && m[2] === '') || cached.status !== 200) {
-              return fetch(event.request);
+              return fetchAudio(event.request);
             }
             const buf = await cached.arrayBuffer();
             const total = buf.byteLength;
@@ -98,7 +136,7 @@ self.addEventListener('fetch', (event) => {
           }
 
           // If not in cache, fetch from the network, cache it, and then return it.
-          return fetch(event.request).then((networkResponse) => {
+          return fetchAudio(event.request).then((networkResponse) => {
             console.log('SW: Caching new audio file:', event.request.url);
             // We need to clone the response because a response can only be consumed once.
             // 只快取完整 200 回應（206 / 錯誤回應毋好存）
