@@ -2953,6 +2953,7 @@ input:checked+.slider:before {
   /* 避免 iframe 載入前內容溢出 */
 }
 
+#infoModal .modal-header,
 #feedbackModal .modal-header,
 #whatsNewModal .modal-header,
 #settingsModal .modal-header,
@@ -3059,7 +3060,7 @@ input:checked+.slider:before {
 @media (prefers-color-scheme: dark) {
 
   #infoButton,
-#feedbackBtn,
+  #feedbackBtn,
   #settingsBtn,
   #showRomanizerBtn,
   #dataManagementBtn,
@@ -3068,7 +3069,7 @@ input:checked+.slider:before {
   }
 
   #infoButton:hover i,
-#feedbackBtn:hover i,
+  #feedbackBtn:hover i,
   #settingsBtn:hover i,
   #showRomanizerBtn:hover i,
   #dataManagementBtn:hover i,
@@ -3081,7 +3082,7 @@ input:checked+.slider:before {
   }
 
   #infoModal .modal-dialog,
-#feedbackModal .modal-dialog,
+  #feedbackModal .modal-dialog,
   #whatsNewModal .modal-dialog,
   #romanizerContainer .modal-dialog,
   #settingsModal .modal-dialog,
@@ -3090,6 +3091,7 @@ input:checked+.slider:before {
     background-color: var(--dark-surface-color, #2c2c2c);
   }
 
+  #infoModal .modal-header,
   #feedbackModal .modal-header,
   #whatsNewModal .modal-header,
   #dataManagementModal .modal-header,
@@ -3099,8 +3101,8 @@ input:checked+.slider:before {
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
+  #infoModal .modal-close-btn,
   #feedbackModal .modal-close-btn,
-#infoModal .modal-close-btn,
   #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
   #dataManagementModal .modal-close-btn,
@@ -3124,10 +3126,10 @@ input:checked+.slider:before {
     border-top-color: #444;
   }
 
-  #feedbackModal .modal-close-btn:hover,
-#feedbackModal .modal-close-btn:focus-visible,
-#infoModal .modal-close-btn:hover,
+  #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
+  #feedbackModal .modal-close-btn:hover,
+  #feedbackModal .modal-close-btn:focus-visible,
   #whatsNewModal .modal-close-btn:hover,
   #whatsNewModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
@@ -3227,8 +3229,7 @@ input:checked+.slider:before {
   margin-top: 10px;
 }
 
-#dataManagementModal button,
-#feedbackSubmitBtn {
+#dataManagementModal button {
   background-color: #007bff;
   color: white;
   border: none;
@@ -3238,9 +3239,24 @@ input:checked+.slider:before {
   transition: background-color 0.2s;
 }
 
-#dataManagementModal button:hover,
-#feedbackSubmitBtn:hover {
+#dataManagementModal button:hover {
   background-color: #0056b3;
+}
+
+/* 意見回饋送出鈕：沿用資料管理按鈕樣式，但底色加深到白字對比 ≥ 4.5:1
+   （#007bff 白字 3.98:1 不達 AA；#0062cc 5.80:1、hover #004a99 8.61:1）。暗色主題見下方 @media。 */
+#feedbackSubmitBtn {
+  background-color: #0062cc;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#feedbackSubmitBtn:hover {
+  background-color: #004a99;
 }
 
 #importDataFile {
@@ -3260,13 +3276,13 @@ input:checked+.slider:before {
   }
 
   #dataManagementModal button,
-#feedbackSubmitBtn {
+  #feedbackSubmitBtn {
     background-color: var(--dark-link-color);
     color: var(--dark-button-text-color, #1f1f1f);
   }
 
   #dataManagementModal button:hover,
-#feedbackSubmitBtn:hover {
+  #feedbackSubmitBtn:hover {
     background-color: #a9d6fc;
   }
 }

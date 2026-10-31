@@ -88,7 +88,7 @@
     overlay.innerHTML = `
       <div class="modal-dialog">
         <div class="modal-header">
-          <h4 class="modal-title" style="margin: 0; padding: 0;">意見回饋</h4>
+          <h4 class="modal-title">意見回饋</h4>
           <button type="button" id="feedbackCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
         </div>
         <div class="modal-body">
