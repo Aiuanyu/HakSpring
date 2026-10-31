@@ -44,9 +44,9 @@
       const isVowel = c => 'aeiou'.includes(c);
       if ('bdgmn'.includes(p) && isVowel(n0)) return true;     // 1. 子音韻尾＋母音
       if (p === 'a' && 'iu'.includes(n0)) return true;         // 2. a＋i／u
-      if (p === 'e' && n0 === 'u') return true;                // 3. e＋u
+      if (p === 'e' && 'eu'.includes(n0)) return true;         // 3. e＋e／u（詔安有 ee 韻母）
       if (p === 'i' && isVowel(n0)) return true;               // 4. i＋母音
-      if (p === 'o' && n0 === 'i') return true;                // 5. o＋i
+      if (p === 'o' && 'io'.includes(n0)) return true;         // 5. o＋i／o（詔安有 oo 韻母）
       if (p === 'u' && 'aei'.includes(n0)) return true;        // 6. u＋a／e／i
       if (isVowel(p) && n0 === 'n' && n1 === 'g') return true; // 7. 母音＋ng
       if (p === 'n' && n0 === 'g') return true;                // 8. n＋g
