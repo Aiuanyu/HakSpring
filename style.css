@@ -2521,6 +2521,7 @@ input:checked+.slider:before {
 
 /* Info Button in Header */
 #infoButton,
+#feedbackBtn,
 #settingsBtn,
 #showRomanizerBtn,
 #dataManagementBtn,
@@ -2540,6 +2541,7 @@ input:checked+.slider:before {
 }
 
 #infoButton i,
+#feedbackBtn i,
 #settingsBtn i,
 #showRomanizerBtn i,
 #dataManagementBtn i,
@@ -2549,6 +2551,7 @@ input:checked+.slider:before {
 
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
+#feedbackBtn:hover i,
 #settingsBtn:hover i,
 #showRomanizerBtn:hover i,
 #dataManagementBtn:hover i,
@@ -2931,6 +2934,7 @@ input:checked+.slider:before {
 
 /* Modal Dialog Specific Styles */
 #infoModal .modal-dialog,
+#feedbackModal .modal-dialog,
 #whatsNewModal .modal-dialog,
 #settingsModal .modal-dialog,
 #statsModal .modal-dialog,
@@ -2950,6 +2954,7 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-header,
+#feedbackModal .modal-header,
 #whatsNewModal .modal-header,
 #settingsModal .modal-header,
 #statsModal .modal-header,
@@ -2968,6 +2973,7 @@ input:checked+.slider:before {
   gap: 15px;
 }
 
+#feedbackModal .modal-title,
 #infoModal .modal-title,
 #whatsNewModal .modal-title,
 #settingsModal .modal-title,
@@ -2980,6 +2986,7 @@ input:checked+.slider:before {
   color: inherit;
 }
 
+#feedbackModal .modal-close-btn,
 #infoModal .modal-close-btn,
 #whatsNewModal .modal-close-btn,
 #romanizerContainer .modal-close-btn,
@@ -2996,6 +3003,8 @@ input:checked+.slider:before {
   line-height: 1;
 }
 
+#feedbackModal .modal-close-btn:hover,
+#feedbackModal .modal-close-btn:focus-visible,
 #infoModal .modal-close-btn:hover,
 #infoModal .modal-close-btn:focus-visible,
 #whatsNewModal .modal-close-btn:hover,
@@ -3012,6 +3021,7 @@ input:checked+.slider:before {
 }
 
 #infoModal .modal-body,
+#feedbackModal .modal-body,
 #whatsNewModal .modal-body,
 #settingsModal .modal-body,
 #statsModal .modal-body,
@@ -3050,6 +3060,7 @@ input:checked+.slider:before {
 @media (prefers-color-scheme: dark) {
 
   #infoButton,
+  #feedbackBtn,
   #settingsBtn,
   #showRomanizerBtn,
   #dataManagementBtn,
@@ -3058,6 +3069,7 @@ input:checked+.slider:before {
   }
 
   #infoButton:hover i,
+  #feedbackBtn:hover i,
   #settingsBtn:hover i,
   #showRomanizerBtn:hover i,
   #dataManagementBtn:hover i,
@@ -3070,6 +3082,7 @@ input:checked+.slider:before {
   }
 
   #infoModal .modal-dialog,
+  #feedbackModal .modal-dialog,
   #whatsNewModal .modal-dialog,
   #romanizerContainer .modal-dialog,
   #settingsModal .modal-dialog,
@@ -3079,6 +3092,7 @@ input:checked+.slider:before {
   }
 
   #infoModal .modal-header,
+  #feedbackModal .modal-header,
   #whatsNewModal .modal-header,
   #dataManagementModal .modal-header,
   #settingsModal .modal-header,
@@ -3088,6 +3102,7 @@ input:checked+.slider:before {
   }
 
   #infoModal .modal-close-btn,
+  #feedbackModal .modal-close-btn,
   #whatsNewModal .modal-close-btn,
   #romanizerContainer .modal-close-btn,
   #dataManagementModal .modal-close-btn,
@@ -3113,6 +3128,8 @@ input:checked+.slider:before {
 
   #infoModal .modal-close-btn:hover,
   #infoModal .modal-close-btn:focus-visible,
+  #feedbackModal .modal-close-btn:hover,
+  #feedbackModal .modal-close-btn:focus-visible,
   #whatsNewModal .modal-close-btn:hover,
   #whatsNewModal .modal-close-btn:focus-visible,
   #romanizerContainer .modal-close-btn:hover,
@@ -3226,6 +3243,22 @@ input:checked+.slider:before {
   background-color: #0056b3;
 }
 
+/* 意見回饋送出鈕：沿用資料管理按鈕樣式，但底色加深到白字對比 ≥ 4.5:1
+   （#007bff 白字 3.98:1 不達 AA；#0062cc 5.80:1、hover #004a99 8.61:1）。暗色主題見下方 @media。 */
+#feedbackSubmitBtn {
+  background-color: #0062cc;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#feedbackSubmitBtn:hover {
+  background-color: #004a99;
+}
+
 #importDataFile {
   display: block;
   margin-bottom: 10px;
@@ -3242,12 +3275,14 @@ input:checked+.slider:before {
     color: var(--main-text-color);
   }
 
-  #dataManagementModal button {
+  #dataManagementModal button,
+  #feedbackSubmitBtn {
     background-color: var(--dark-link-color);
     color: var(--dark-button-text-color, #1f1f1f);
   }
 
-  #dataManagementModal button:hover {
+  #dataManagementModal button:hover,
+  #feedbackSubmitBtn:hover {
     background-color: #a9d6fc;
   }
 }

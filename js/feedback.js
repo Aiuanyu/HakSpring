@@ -89,9 +89,7 @@
       <div class="modal-dialog">
         <div class="modal-header">
           <h4 class="modal-title">意見回饋</h4>
-          <div class="modal-header-buttons">
-            <button type="button" id="feedbackCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
-          </div>
+          <button type="button" id="feedbackCloseBtn" class="modal-close-btn" aria-label="關忒">&times;</button>
         </div>
         <div class="modal-body">
           <p style="margin-top:0">匿名填寫，毋收姓名、聯絡方式；淨用來改進客源翠。全部選填，填一題就做得送出。</p>
