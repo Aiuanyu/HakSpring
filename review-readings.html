@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>客源翠審音工具</title>
+<!--
+  審音工具（開發用，毋係網站功能）。
+  資料：review/queue.json（scripts/build_review_queue.py 產生）。
+  結果：存在瀏覽器（localStorage），匯出兩个檔：
+    data/sub-dialects-fill/人工-南四縣.csv（個別詞條）、人工字音-南四縣.csv（依字歸組）。
+  build_subdialect_fill.py 會讀轉去。說明見 data/sub-dialects-fill/README.md。
+-->
+<style>
+  :root {
+    --bg: #f7f7f4; --card: #fff; --ink: #222; --muted: #6b6b6b; --line: #ddd;
+    --accent: #0f766e; --accent-soft: #ccfbf1; --warn: #b45309; --warn-soft: #fef3c7;
+    --done: #15803d; --done-soft: #dcfce7; --unsure: #7c3aed; --unsure-soft: #ede9fe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161616; --card: #202020; --ink: #e8e8e8; --muted: #9a9a9a; --line: #3a3a3a;
+      --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #fbbf24; --warn-soft: #422006;
+      --done: #4ade80; --done-soft: #14532d; --unsure: #c4b5fd; --unsure-soft: #2e1065;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Noto Sans TC", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line);
+    padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  header h1 { font-size: 18px; margin: 0; }
+  .tabs button, .filters button, .tool { border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 14px; }
+  .tabs button.on, .filters button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .progress { font-size: 14px; color: var(--muted); }
+  input[type=search] { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); font: inherit; font-size: 14px; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  .help { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font-size: 12px; }
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .item.current { outline: 3px solid var(--accent); }
+  .item.done { border-left: 6px solid var(--done); }
+  .item.unsure { border-left: 6px solid var(--unsure); }
+  .head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .word { font-size: 22px; font-weight: 700; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .badge { font-size: 12px; border-radius: 4px; padding: 0 6px; }
+  .badge.done { background: var(--done-soft); color: var(--done); }
+  .badge.unsure { background: var(--unsure-soft); color: var(--unsure); }
+  .gloss { font-size: 14px; color: var(--muted); margin: 2px 0 6px; }
+  .north { font-size: 15px; }
+  .sylls { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .syl { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 64px; }
+  .syl.pending { border-color: var(--warn); background: var(--warn-soft); }
+  .syl .ch { font-size: 18px; font-weight: 600; }
+  .syl .n { font-size: 13px; color: var(--muted); }
+  .syl .d { font-size: 15px; }
+  .syl .how { font-size: 11px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .chip { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 999px;
+    padding: 0 8px; cursor: pointer; font: inherit; font-size: 14px; }
+  .chip.picked { background: var(--accent); color: #fff; }
+  .chip small { opacity: 0.75; margin-left: 2px; }
+  details { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  details ul { margin: 2px 0 0; padding-left: 18px; }
+  .answer { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+  .answer input[type=text] { flex: 1 1 260px; font: inherit; font-size: 17px; padding: 4px 8px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); }
+  .answer input.note { flex: 1 1 160px; font-size: 14px; }
+  .btn { border: 0; border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 14px; color: #fff; }
+  .btn.ok { background: var(--done); } .btn.unsure { background: var(--unsure); } .btn.clear { background: var(--muted); }
+  .gip { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+  .gip button { text-align: left; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  .badge.group { background: var(--accent-soft); color: var(--accent); }
+  .item.group { border-left: 6px solid var(--accent); }
+  .entries { font-size: 14px; margin: 6px 0; }
+  .entries li { margin: 1px 0; }
+  .syl .grp { font-size: 12px; color: var(--accent); }
+  @media (max-width: 600px) { header { position: static; } .word { font-size: 20px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>客源翠審音工具</h1>
+  <div class="tabs" id="tabs"></div>
+  <div class="filters" id="filters">
+    <button data-f="todo" class="on">未審</button><button data-f="unsure">不確定</button><button data-f="done">已審</button><button data-f="all">全部</button>
+  </div>
+  <input type="search" id="q" placeholder="搜尋詞目、編號、讀音" />
+  <span class="progress" id="progress"></span>
+  <span style="flex:1"></span>
+  <button class="tool" id="exportBtn">匯出 CSV</button>
+  <label class="tool">匯入 CSV<input type="file" id="importFile" accept=".csv" hidden multiple /></label>
+</header>
+<main>
+  <p class="help">
+    <kbd>j</kbd>／<kbd>k</kbd> 下一條／上一條　<kbd>1</kbd>–<kbd>9</kbd> 選第一個待定音節的候選（選過換下一個）
+    <kbd>Enter</kbd> 採用　<kbd>s</kbd> 不確定　<kbd>e</kbd> 改讀音欄　<kbd>Esc</kbd> 離開輸入框。
+    「依字歸組」定一個字音，就套到組裡全部詞條；例外的詞條到「南四縣待審」單獨改。
+    進度存在這個瀏覽器；審完按「匯出 CSV」，會下載兩個檔，都放進 <code>data/sub-dialects-fill/</code>。
+  </p>
+  <div id="list"></div>
+</main>
+<script>
+'use strict';
+const STORE_KEY = 'hakspring-review-v1';
+const PAGE = 40;
+let queues = {};
+let generated = '';
+let decisions = {};      // id → { 讀音, 判定: '採用'|'不確定', 備註, 時間, queue }
+let tab = '南四縣待審';
+let filter = 'todo';
+let query = '';
+let currentId = null;
+const picks = {};        // id → { 音節 index → 選定音 }
+
+function loadDecisions() {
+  try { decisions = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) { decisions = {}; }
+}
+function saveDecisions() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(decisions)); } catch (e) { /* 無痕視窗等存毋著 */ }
+}
+
+function groupId(ch, north, pos) {
+  return `G|${ch}|${north}|${ch === '仔' ? pos || '' : ''}`;
+}
+/** 這隻待定音節有無「依字歸組」採用个南音。 */
+function groupReading(item, syl) {
+  const d = decisions[groupId(syl.字, syl.北, item.詞性)];
+  return d && d.判定 === '採用' ? d.讀音 : null;
+}
+function pendingIndexes(item) {
+  return (item.音節 || []).map((s, i) => (s.方法 === 'same' ? i : -1)).filter((i) => i >= 0);
+}
+
+function stateOf(item) {
+  const d = decisions[item.id];
+  if (!d) {
+    // 南四縣待審：全部待定音節都由字組定好
+    if (item.queue === '南四縣待審') {
+      const idx = pendingIndexes(item);
+      if (idx.length && idx.every((i) => item.音節[i].字 && groupReading(item, item.音節[i]))) return 'group';
+    }
+    return 'todo';
+  }
+  return d.判定 === '不確定' ? 'unsure' : 'done';
+}
+
+function visibleItems() {
+  const q = query.trim();
+  return (queues[tab] || []).filter((it) => {
+    const st = stateOf(it) === 'group' ? 'done' : stateOf(it);
+    if (filter !== 'all' && st !== filter) return false;
+    if (!q) return true;
+    const words = it.詞條 ? it.詞條.map((e) => e.詞目).join(' ') : '';
+    return [it.詞目, it.字, it.北音, it.id, it.北四縣, it.推導, words].some((v) => (v || '').includes(q));
+  });
+}
+
+/** 南四縣待審：照選定个候選組讀音（未選个待定音節照推導，也就係北音）。 */
+function composeReading(item) {
+  const chosen = picks[item.id] || {};
+  let out = item.北四縣;
+  // 照北四縣標音逐隻音節換，保留括號、頓號等原樣
+  const re = /[a-zA-ZÀ-ɏḀ-ỿ̀-ͯ']+/g;
+  let i = 0;
+  out = out.normalize('NFC').replace(re, (m) => {
+    const s = item.音節[i];
+    const g = s && s.方法 === 'same' && s.字 ? groupReading(item, s) : null;
+    const v = chosen[i] !== undefined ? chosen[i] : (g || (s ? s.推導 : m));
+    i += 1;
+    return v;
+  });
+  return out;
+}
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null) e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k !== null && k !== undefined) e.append(k);
+  return e;
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  for (const name of Object.keys(queues)) {
+    const total = queues[name].length;
+    const done = queues[name].filter((it) => stateOf(it) !== 'todo').length;
+    tabs.append(el('button', { class: name === tab ? 'on' : '', onclick: () => { tab = name; currentId = null; render(); } },
+      `${name}（${done}／${total}）`));
+  }
+}
+
+function renderProgress() {
+  const all = Object.values(queues).flat();
+  const done = all.filter((it) => stateOf(it) === 'done').length;
+  const byGroup = all.filter((it) => stateOf(it) === 'group').length;
+  const unsure = all.filter((it) => stateOf(it) === 'unsure').length;
+  document.getElementById('progress').textContent =
+    `已審 ${done}、字組已定 ${byGroup}、不確定 ${unsure}、共 ${all.length}　佇列產生於 ${generated.replace('T', ' ').slice(0, 16)}`;
+}
+
+function examplesList(rec) {
+  return el('details', {}, el('summary', {}, '出處'),
+    el('ul', {}, rec.出處.map(([w, r, src]) => el('li', {}, `${w}　${r}（${src}）`))));
+}
+
+function renderPending(item, card, readingInput) {
+  const sylls = el('div', { class: 'sylls' });
+  item.音節.forEach((s, i) => {
+    const box = el('div', { class: 'syl' + (s.方法 === 'same' ? ' pending' : '') },
+      el('div', { class: 'ch' }, s.字 || '？'),
+      el('div', { class: 'n' }, `北 ${s.北}`));
+    if (s.方法 === 'same') {
+      const chips = el('div', { class: 'chips' });
+      const chosen = (picks[item.id] || {})[i];
+      const options = (s.候選 || []).slice();
+      if (!options.some((c) => c.音 === s.北)) options.push({ 音: s.北, 次數: 0, 出處: [], 照北: true });
+      options.forEach((c, ci) => {
+        chips.append(el('button', {
+          class: 'chip' + (chosen === c.音 ? ' picked' : ''),
+          title: c.照北 ? '照北四縣（沒有南四縣證據）' : `出現 ${c.次數} 次`,
+          onclick: () => { pick(item, i, c.音); },
+        }, `${ci + 1} ${c.音}`, c.照北 ? el('small', {}, '照北') : el('small', {}, `×${c.次數}`)));
+      });
+      const g = s.字 ? groupReading(item, s) : null;
+      box.append(el('div', { class: 'd' }, '待定'), g ? el('div', { class: 'grp' }, `字組：${g}`) : null, chips);
+      (s.候選 || []).filter((c) => c.出處.length).forEach((c) => box.append(
+        el('details', {}, el('summary', {}, `${c.音} 出處`),
+          el('ul', {}, c.出處.map(([w, r, src]) => el('li', {}, `${w}　${r}（${src}）`))))));
+    } else {
+      box.append(el('div', { class: 'd' }, s.推導), el('div', { class: 'how' }, s.方法));
+    }
+    sylls.append(box);
+  });
+  card.append(sylls);
+  if (!item.對得齊) card.append(el('div', { class: 'meta' }, '字數和音節數對不齊，候選無法對到字，請直接改讀音欄。'));
+}
+
+function candidateOptions(item) {
+  const options = (item.候選 || []).map((c) => ({ 音: c.音, 次數: c.次數, 出處: c.出處 }));
+  if (!options.some((c) => c.音 === item.北音)) options.push({ 音: item.北音, 次數: 0, 出處: [], 照北: true });
+  return options;
+}
+
+function renderGroup(item, card, readingInput) {
+  const chips = el('div', { class: 'chips' });
+  candidateOptions(item).forEach((c, ci) => {
+    chips.append(el('button', { class: 'chip', title: c.照北 ? '照北四縣（沒有南四縣證據）' : `出現 ${c.次數} 次`,
+      onclick: (ev) => { ev.stopPropagation(); readingInput.value = c.音; } },
+      `${ci + 1} ${c.音}`, el('small', {}, c.照北 ? '照北' : `×${c.次數}`)));
+  });
+  card.append(chips);
+  (item.候選 || []).filter((c) => c.出處.length).forEach((c) => card.append(
+    el('details', {}, el('summary', {}, `${c.音} 出處`),
+      el('ul', {}, c.出處.map(([w, r, src]) => el('li', {}, `${w}　${r}（${src}）`))))));
+  card.append(el('details', { open: item.條數 <= 6 ? '' : null }, el('summary', {}, `組裡的 ${item.條數} 條詞`),
+    el('ul', { class: 'entries' }, item.詞條.map((e) => {
+      const d = decisions[e.id];
+      return el('li', {}, `${e.詞目}　${e.北四縣}　${e.詞性 || ''}　${e.華語詞義 || ''}`,
+        d ? el('span', { class: 'badge done' }, ` 個別：${d.讀音}`) : null);
+    }))));
+}
+
+function renderGipCheck(item, card, readingInput) {
+  const box = el('div', { class: 'gip' });
+  item.教典南四縣.forEach(([r, gloss], i) => {
+    box.append(el('button', { class: 'tool', onclick: () => { readingInput.value = r; } },
+      `${i + 1}　教典南四縣 ${r}　— ${gloss}`));
+  });
+  box.append(el('button', { class: 'tool', onclick: () => { readingInput.value = item.逐音節推導; } },
+    `${item.教典南四縣.length + 1}　逐音節推導 ${item.逐音節推導}`));
+  card.append(box);
+}
+
+function renderItem(item) {
+  const st = stateOf(item);
+  const d = decisions[item.id];
+  const card = el('div', { class: `item ${st === 'todo' ? '' : st}${item.id === currentId ? ' current' : ''}`, 'data-id': item.id,
+    onclick: (ev) => { if (currentId !== item.id) { currentId = item.id; highlight(); } } });
+  const isGroup = item.queue === '依字歸組';
+  card.append(el('div', { class: 'head' },
+    el('span', { class: 'word' }, isGroup ? item.字 : item.詞目),
+    el('span', { class: 'meta' }, isGroup
+      ? `北 ${item.北音}${item.詞性 ? '　' + item.詞性 : ''}　${item.條數} 條詞`
+      : `${item.詞性 || ''}　${item.來源檔} ${item.編號}`),
+    st === 'done' ? el('span', { class: 'badge done' }, `已審：${d.讀音}`) : null,
+    st === 'group' ? el('span', { class: 'badge group' }, `字組已定：${composeReading(item)}`) : null,
+    st === 'unsure' ? el('span', { class: 'badge unsure' }, '不確定') : null));
+  if (!isGroup) {
+    if (item.華語詞義 || item.例句) card.append(el('div', { class: 'gloss' }, [item.華語詞義, item.例句].filter(Boolean).join('　｜　')));
+    card.append(el('div', { class: 'north' }, `北四縣：${item.北四縣}`));
+  }
+
+  const readingInput = el('input', { type: 'text', 'aria-label': '南四縣讀音' });
+  readingInput.value = d ? d.讀音 : (item.queue === '南四縣待審' ? composeReading(item) : isGroup ? '' : item.推導);
+  const noteInput = el('input', { type: 'text', class: 'note', placeholder: '備註（可空白）', 'aria-label': '備註' });
+  noteInput.value = d ? d.備註 || '' : '';
+
+  if (item.queue === '南四縣待審') renderPending(item, card, readingInput);
+  else if (isGroup) renderGroup(item, card, readingInput);
+  else renderGipCheck(item, card, readingInput);
+
+  card.append(el('div', { class: 'answer' },
+    el('span', { class: 'meta' }, isGroup ? '南音：' : '南四縣：'), readingInput, noteInput,
+    el('button', { class: 'btn ok', onclick: (ev) => { ev.stopPropagation(); decide(item, '採用', readingInput.value, noteInput.value); } }, '採用'),
+    el('button', { class: 'btn unsure', onclick: (ev) => { ev.stopPropagation(); decide(item, '不確定', readingInput.value, noteInput.value); } }, '不確定'),
+    d ? el('button', { class: 'btn clear', onclick: (ev) => { ev.stopPropagation(); delete decisions[item.id]; saveDecisions(); render(); } }, '清除') : null));
+  return card;
+}
+
+function render() {
+  renderTabs();
+  renderProgress();
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  const items = visibleItems();
+  if (!items.length) { list.append(el('p', { class: 'empty' }, '這裡沒有條目。')); return; }
+  if (!currentId || !items.some((it) => it.id === currentId)) currentId = items[0].id;
+  const start = Math.max(0, items.findIndex((it) => it.id === currentId) - 5);
+  items.slice(start, start + PAGE).forEach((it) => list.append(renderItem(it)));
+  if (items.length > PAGE) list.append(el('p', { class: 'meta' }, `顯示 ${start + 1}–${Math.min(start + PAGE, items.length)}／${items.length} 條，用 j／k 往下會自動接續。`));
+  highlight(false);
+}
+
+function highlight(scroll = true) {
+  document.querySelectorAll('.item').forEach((c) => c.classList.toggle('current', c.dataset.id === currentId));
+  const cur = document.querySelector(`.item[data-id="${CSS.escape(currentId)}"]`);
+  if (cur && scroll) cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function currentItem() { return (queues[tab] || []).find((it) => it.id === currentId); }
+
+function move(step) {
+  const items = visibleItems();
+  const i = items.findIndex((it) => it.id === currentId);
+  const next = items[Math.min(items.length - 1, Math.max(0, i + step))];
+  if (!next) return;
+  currentId = next.id;
+  if (!document.querySelector(`.item[data-id="${CSS.escape(currentId)}"]`)) render();
+  highlight();
+}
+
+function pick(item, sylIndex, value) {
+  picks[item.id] = { ...(picks[item.id] || {}), [sylIndex]: value };
+  currentId = item.id;
+  const card = document.querySelector(`.item[data-id="${CSS.escape(item.id)}"]`);
+  const fresh = renderItem(item);
+  fresh.querySelector('.answer input[type=text]').value = composeReading(item);
+  card.replaceWith(fresh);
+  highlight(false);
+}
+
+function decide(item, verdict, reading, note) {
+  if (!reading.trim()) { alert('讀音是空的'); return; }
+  // 先記下一條：存了以後，「未審」篩選會共這條拿掉，就尋毋著位置
+  const before = visibleItems();
+  const at = before.findIndex((it) => it.id === item.id);
+  const nextBefore = before[at + 1] || before[at - 1];
+  const tz = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 19) + '+08:00';
+  decisions[item.id] = item.queue === '依字歸組'
+    ? { 讀音: reading.trim(), 判定: verdict, 備註: note.trim(), 時間: tz, queue: item.queue,
+        字: item.字, 北音: item.北音, 詞性: item.詞性 }
+    : { 讀音: reading.trim(), 判定: verdict, 備註: note.trim(), 時間: tz, queue: item.queue,
+        來源檔: item.來源檔, 編號: item.編號, 詞目: item.詞目 };
+  saveDecisions();
+  currentId = nextBefore ? nextBefore.id : null;
+  render();
+}
+
+// --- 鍵盤 ---
+document.addEventListener('keydown', (ev) => {
+  const inInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+  if (ev.key === 'Escape' && inInput) { document.activeElement.blur(); return; }
+  const item = currentItem();
+  if (ev.key === 'Enter' && item) {
+    const card = document.querySelector(`.item[data-id="${CSS.escape(item.id)}"]`);
+    const [reading, note] = card.querySelectorAll('.answer input');
+    ev.preventDefault();
+    decide(item, '採用', reading.value, note.value);
+    return;
+  }
+  if (inInput) return;
+  if (ev.key === 'j') move(1);
+  else if (ev.key === 'k') move(-1);
+  else if (ev.key === 'e' && item) { ev.preventDefault(); document.querySelector(`.item[data-id="${CSS.escape(item.id)}"] .answer input`).focus(); }
+  else if (ev.key === 's' && item) {
+    const card = document.querySelector(`.item[data-id="${CSS.escape(item.id)}"]`);
+    const [reading, note] = card.querySelectorAll('.answer input');
+    decide(item, '不確定', reading.value, note.value);
+  } else if (/^[1-9]$/.test(ev.key) && item) {
+    const n = Number(ev.key) - 1;
+    if (item.queue === '依字歸組') {
+      const options = candidateOptions(item);
+      if (options[n]) document.querySelector(`.item[data-id="${CSS.escape(item.id)}"] .answer input`).value = options[n].音;
+      return;
+    }
+    if (item.queue === '教典待確認') {
+      const options = [...item.教典南四縣.map((x) => x[0]), item.逐音節推導];
+      if (options[n]) document.querySelector(`.item[data-id="${CSS.escape(item.id)}"] .answer input`).value = options[n];
+      return;
+    }
+    // 第一個還沒選過的待定音節；全部選過就從頭改
+    const pendingIdx = item.音節.map((s, i) => (s.方法 === 'same' ? i : -1)).filter((i) => i >= 0);
+    const chosen = picks[item.id] || {};
+    const target = pendingIdx.find((i) => chosen[i] === undefined) ?? pendingIdx[0];
+    if (target === undefined) return;
+    const s = item.音節[target];
+    const options = (s.候選 || []).map((c) => c.音);
+    if (!options.includes(s.北)) options.push(s.北);
+    if (options[n]) pick(item, target, options[n]);
+  }
+});
+
+// --- 篩選、搜尋 ---
+document.getElementById('filters').addEventListener('click', (ev) => {
+  const f = ev.target.dataset.f;
+  if (!f) return;
+  filter = f;
+  document.querySelectorAll('#filters button').forEach((b) => b.classList.toggle('on', b.dataset.f === f));
+  currentId = null;
+  render();
+});
+document.getElementById('q').addEventListener('input', (ev) => { query = ev.target.value; currentId = null; render(); });
+
+// --- 匯出、匯入 CSV ---
+const CSV_FIELDS = ['來源檔', '編號', '詞目', '讀音', '判定', '備註', '時間', 'queue'];
+const CHAR_CSV_FIELDS = ['字', '北音', '詞性', '南音', '判定', '備註', '時間'];
+function csvCell(v) { v = String(v ?? ''); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; }
+function download(name, fields, rows) {
+  const text = '\ufeff' + [fields.join(','), ...rows.map((r) => fields.map((f) => csvCell(r[f])).join(','))].join('\n') + '\n';
+  const a = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/csv' })), download: name });
+  document.body.append(a); a.click(); a.remove();
+}
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const all = Object.values(decisions);
+  const items = all.filter((r) => r.queue !== '依字歸組')
+    .sort((a, b) => (a.來源檔 + a.編號).localeCompare(b.來源檔 + b.編號, 'zh-Hant'));
+  const chars = all.filter((r) => r.queue === '依字歸組').map((r) => ({ ...r, 南音: r.讀音 }))
+    .sort((a, b) => (a.字 + a.北音 + a.詞性).localeCompare(b.字 + b.北音 + b.詞性, 'zh-Hant'));
+  download('人工-南四縣.csv', CSV_FIELDS, items);
+  setTimeout(() => download('人工字音-南四縣.csv', CHAR_CSV_FIELDS, chars), 300);
+});
+function parseCsv(text) {
+  const rows = []; let row = [], field = '', q = false;
+  text = text.replace(/^\ufeff/, '');
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+function importCsv(text, { overwrite }) {
+  const [head, ...rows] = parseCsv(text);
+  if (!head) return 0;
+  let n = 0;
+  for (const r of rows) {
+    const o = Object.fromEntries(head.map((h, i) => [h, r[i] ?? '']));
+    if (head.includes('字')) {
+      // 人工字音-南四縣.csv（依字歸組）
+      if (!o.字 || !o.北音 || !o.南音) continue;
+      const gid = groupId(o.字, o.北音, o.詞性);
+      if (!overwrite && decisions[gid]) continue;
+      decisions[gid] = { 讀音: o.南音, 判定: o.判定 || '採用', 備註: o.備註, 時間: o.時間, queue: '依字歸組', 字: o.字, 北音: o.北音, 詞性: o.詞性 };
+      n++;
+      continue;
+    }
+    if (!o.來源檔 || !o.編號 || !o.讀音) continue;
+    const id = `${o.來源檔}|${o.編號}`;
+    if (!overwrite && decisions[id]) continue;
+    decisions[id] = { 讀音: o.讀音, 判定: o.判定 || '採用', 備註: o.備註, 時間: o.時間, queue: o.queue, 來源檔: o.來源檔, 編號: o.編號, 詞目: o.詞目 };
+    n++;
+  }
+  saveDecisions();
+  return n;
+}
+document.getElementById('importFile').addEventListener('change', async (ev) => {
+  if (!ev.target.files.length) return;
+  let n = 0;
+  for (const file of ev.target.files) n += importCsv(await file.text(), { overwrite: true });
+  alert(`匯入 ${n} 條`);
+  ev.target.value = '';
+  render();
+});
+
+// --- 載入 ---
+(async function init() {
+  loadDecisions();
+  try {
+    const res = await fetch('review/queue.json', { cache: 'no-cache' });
+    const data = await res.json();
+    queues = data.queues; generated = data.generated;
+  } catch (e) {
+    document.getElementById('list').append(el('p', { class: 'empty' }, '讀不到 review/queue.json，請先跑 python3 scripts/build_review_queue.py，並用本機伺服器開這頁。'));
+    return;
+  }
+  // repo 裡已經有个人工結果（別台電腦、上一輪審个）：瀏覽器無記錄个正補進來
+  for (const name of ['人工-南四縣.csv', '人工字音-南四縣.csv']) {
+    try {
+      const res = await fetch(`data/sub-dialects-fill/${name}`, { cache: 'no-cache' });
+      if (res.ok) importCsv(await res.text(), { overwrite: false });
+    } catch (e) { /* 還無這个檔 */ }
+  }
+  tab = Object.keys(queues)[0];
+  render();
+})();
+</script>
+</body>
+</html>

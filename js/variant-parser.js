@@ -86,34 +86,45 @@ function buildSixianVariants(wordMain, wordBrackets, phoneticMain, phoneticBrack
   const variants = [];
 
   // 1. 識別美濃音 (Meinong)
-  // 美濃在四縣有 7 筆，特徵為 word 或 phonetic 的 bracket 由括號包圍，或複合在 bracket 尾端
-  let meinongWord = null;
-  let meinongPhonetic = null;
+  // 美濃在四縣認證特徵為 word 或 phonetic 的 bracket 由圓括號包圍，或複合在 bracket 尾端（例如【南 (美)】）
+  const meinongWords = [];
+  const meinongPhonetics = [];
 
   const remWordBrackets = [];
   for (const wb of wordBrackets) {
     if (isParensWrapped(wb)) {
-      meinongWord = stripOuterParens(wb);
+      meinongWords.push(stripOuterParens(wb));
     } else {
       remWordBrackets.push(wb);
     }
   }
 
+  // 詞括號本身係複合（W1（W2），例：好額【有口（有發）】）：括號內係同義詞，毋係美濃
+  const hasSynonymWordBracket = remWordBrackets.some((wb) => wb.includes('(') || wb.includes('（'));
+  // 美濃音屬南四縣詞个（例：佢兜人【佢等】 ǐ dén (ǐ nén) 个 ǐ nén 係「佢等」个美濃音，毋係「佢兜人」）
+  const southMeinongPhonetics = [];
+
   const remPhoneticBrackets = [];
   for (const pb of phoneticBrackets) {
     if (isParensWrapped(pb)) {
-      // 四基 8-26 的 (nòn) 係南四縣「卵」音，其他括號為美濃音
-      if (pb === '(nòn)' || pb === '（nòn）') {
-        remPhoneticBrackets.push(stripOuterParens(pb));
-      } else {
-        meinongPhonetic = stripOuterParens(pb);
-      }
+      meinongPhonetics.push(stripOuterParens(pb));
     } else if (pb.includes('(') || pb.includes('（')) {
-      // 複合標音，例如 gàb è (gua gàb è) 或 liǔng giàn fúng (jiu bó lǒ fúng)
+      // 複合標音，例如 gàb è (gua gàb è) 或 lú lòn (lú nòn) 或 ǐ dén (ǐ nén)
       const m = pb.match(/^(.*?)\s*[（\(](.*?)[）\)]\s*$/);
-      if (m && meinongWord) {
-        remPhoneticBrackets.push(m[1].trim());
-        meinongPhonetic = m[2].trim();
+      if (m && hasSynonymWordBracket) {
+        // 同義詞：標音摎詞括號个同義詞一對一，成串留佇南四縣（例：iú hèu (iú bòd) ↔ 有口（有發））
+        remPhoneticBrackets.push(pb);
+      } else if (m) {
+        if (m[1].trim()) {
+          remPhoneticBrackets.push(m[1].trim());
+        }
+        if (m[2].trim()) {
+          if (remWordBrackets.length > 0 && m[1].trim()) {
+            southMeinongPhonetics.push({ index: remPhoneticBrackets.length - 1, phonetic: m[2].trim() });
+          } else {
+            meinongPhonetics.push(m[2].trim());
+          }
+        }
       } else {
         remPhoneticBrackets.push(pb);
       }
@@ -206,15 +217,75 @@ function buildSixianVariants(wordMain, wordBrackets, phoneticMain, phoneticBrack
     }
   }
 
-  // 3. 美濃音變體
-  if (meinongWord || meinongPhonetic) {
+  // 2b. 美濃音屬南四縣詞：詞摎南四縣詞括號對應（佢等 ǐ dén → ǐ nén）
+  for (const sm of southMeinongPhonetics) {
+    // 標音括號比詞括號多一塊時，第一塊係原主詞个南四縣讀音（見上背模式 2、3）
+    const offset = remPhoneticBrackets.length === remWordBrackets.length + 1 ? 1 : 0;
+    const word = remWordBrackets[sm.index - offset] || remWordBrackets[0] || '';
     variants.push({
       label: '美',
       title: '美濃',
-      word: meinongWord || '',
-      phonetic: meinongPhonetic || '',
-      phoneticOnly: !meinongWord
+      word,
+      phonetic: sm.phonetic,
+      phoneticOnly: !word
     });
+  }
+
+  // 3. 美濃音變體
+  if (meinongPhonetics.length > 0 || meinongWords.length > 0) {
+    if (meinongWords.length === 0) {
+      for (const ph of meinongPhonetics) {
+        variants.push({
+          label: '美',
+          title: '美濃',
+          word: '',
+          phonetic: ph,
+          phoneticOnly: true
+        });
+      }
+    } else if (meinongWords.length === meinongPhonetics.length) {
+      for (let i = 0; i < meinongWords.length; i++) {
+        variants.push({
+          label: '美',
+          title: '美濃',
+          word: meinongWords[i],
+          phonetic: meinongPhonetics[i],
+          phoneticOnly: false
+        });
+      }
+    } else if (meinongWords.length < meinongPhonetics.length) {
+      // 例：卵【（春）】 || lòn【(nòn)】【(cún)】
+      // 前面多出的標音屬於 wordMain 的純音變體
+      const extraCount = meinongPhonetics.length - meinongWords.length;
+      for (let i = 0; i < extraCount; i++) {
+        variants.push({
+          label: '美',
+          title: '美濃',
+          word: '',
+          phonetic: meinongPhonetics[i],
+          phoneticOnly: true
+        });
+      }
+      for (let i = 0; i < meinongWords.length; i++) {
+        variants.push({
+          label: '美',
+          title: '美濃',
+          word: meinongWords[i],
+          phonetic: meinongPhonetics[extraCount + i],
+          phoneticOnly: false
+        });
+      }
+    } else {
+      for (let i = 0; i < meinongWords.length; i++) {
+        variants.push({
+          label: '美',
+          title: '美濃',
+          word: meinongWords[i],
+          phonetic: meinongPhonetics[i] || '',
+          phoneticOnly: false
+        });
+      }
+    }
   }
 
   return {

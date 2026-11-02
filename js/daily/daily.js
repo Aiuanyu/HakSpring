@@ -530,9 +530,12 @@ const DailyWord = (function () {
     
     // First, format and clean the base pinyin
     if (item.type === 'cert') {
-        pinyinHTML = cleanPinyin.split('或')[0].trim();
+        const baseCertPhonetic = cleanPinyin.split('或')[0].trim();
+        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function'
+            ? window.formatPhoneticForDisplay(baseCertPhonetic, false, dialect)
+            : baseCertPhonetic;
     } else {
-        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true) : rawPinyin;
+        pinyinHTML = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawPinyin, true, dialect) : rawPinyin;
     }
     
     // Apply sandhi
@@ -566,15 +569,6 @@ const DailyWord = (function () {
       metaStr = `${sourceName}第 ${formattedIndex} 條`;
     }
     
-    const meaning = row['華語詞義'] || '';
-    let sentenceRaw = row['例句'] ? String(row['例句']).replace(/"/g, '') : '';
-    sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, ''); // Ensure newlines are <br>
-    
-    // Also split by " 例：" (space + 例：)
-    sentenceRaw = sentenceRaw.replace(/\s+(例|例如)\s*[：:]\s*/g, '<br>');
-    
-    const sentenceParts = sentenceRaw.split('<br>').map(s => s.trim()).filter(s => s !== '');
-
     let isGip = item.type !== 'cert';
     let originalDialectInfo = {};
     if (isGip) {
@@ -583,6 +577,28 @@ const DailyWord = (function () {
        originalDialectInfo = typeof getDialectInfo === 'function' ? getDialectInfo(dialect, level) : {腔: dialect, 級: level};
     }
     
+
+    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
+
+    let meaning = row['華語詞義'] || '';
+    let sentenceRaw = row['例句'] ? String(row['例句']).replace(/"/g, '') : '';
+
+    // 教典條目釋義摎例句都空時，借用別腔同詞目（共用 main.js 个 borrowMissingGipFields）
+    if (isGip && typeof window.borrowMissingGipFields === 'function') {
+      const borrowed = window.borrowMissingGipFields(row, dialect, crossDialectResults);
+      if (borrowed) {
+        if (borrowed.meaning) meaning = borrowed.meaning;
+        if (borrowed.sentence) sentenceRaw = borrowed.sentence.replace(/"/g, '');
+        metaStr += borrowed.note;
+      }
+    }
+    sentenceRaw = sentenceRaw.replace(/\n/g, '<br>').replace(/\r/g, ''); // Ensure newlines are <br>
+    
+    // Also split by " 例：" (space + 例：)
+    sentenceRaw = sentenceRaw.replace(/\s+(例|例如)\s*[：:]\s*/g, '<br>');
+    
+    const sentenceParts = sentenceRaw.split('<br>').map(s => s.trim()).filter(s => s !== '');
+
     let lineForAudio = Object.assign({}, row, {
       sourceType: isGip ? 'gip' : 'cert',
       sourceName: isGip ? '教典' + dialect : dialect + level
@@ -624,7 +640,6 @@ const DailyWord = (function () {
       </div>`;
     }
 
-    const crossDialectResults = typeof findCrossDialectRows === 'function' ? findCrossDialectRows(row, originalDialectInfo, isGip) : [];
     
     const crossBtnHTML = crossDialectResults.length > 0 ? 
       `<button id="dailyCrossBtn" class="crossDialectBtn" style="font-size: 0.8em; padding: 2px; margin-left: 2px; vertical-align: middle;"><i class="fas fa-plus-circle"></i></button>` : '';
@@ -651,6 +666,12 @@ const DailyWord = (function () {
     const audioTitle = typeof getVariantAudioTitle === 'function'
       ? getVariantAudioTitle(item.type === 'cert' ? dialectFullName : '')
       : '播放發音';
+    const scriptLabels = { hpp: 'HPP', pfs: '四 PFS', gip: 'GIP' };
+    const currentScript = typeof window.getHakfaDisplayScript === 'function'
+      ? window.getHakfaDisplayScript()
+      : (window.pfsConverter
+        ? window.pfsConverter.normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'))
+        : 'hpp');
 
     dailyModalBody.innerHTML = `
       <div class="daily-card-container">
@@ -663,7 +684,16 @@ const DailyWord = (function () {
                 <div>${weekdayStr}</div>
               </div>
             </div>
-            <div class="daily-mode-badge">${modeText}</div>
+            <div class="daily-header-badges">
+              <button
+                id="dailyScriptModeToggleBtn"
+                class="daily-mode-badge daily-script-btn ${currentScript === 'pfs' ? 'is-pfs' : ''} ${currentScript === 'gip' ? 'is-gip' : ''}"
+                title="切換拼音顯示模式（HPP → 四 PFS → GIP）。PFS 淨影響四縣／南四縣"
+              >
+                ${scriptLabels[currentScript]}
+              </button>
+              <div class="daily-mode-badge">${modeText}</div>
+            </div>
           </div>
           
           <div class="daily-tear-line"></div>
@@ -714,6 +744,29 @@ const DailyWord = (function () {
     const btnRandom = dailyModalBody.querySelector('#dailyBtnRandom');
     const btnFavToggle = dailyModalBody.querySelector('.daily-fav-btn');
     const btnFavList = dailyModalBody.querySelector('#dailyBtnFavList');
+    const dailyScriptBtn = dailyModalBody.querySelector('#dailyScriptModeToggleBtn');
+
+    if (dailyScriptBtn) {
+      dailyScriptBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const converter = window.pfsConverter;
+        if (!converter) return;
+        const current = typeof window.getHakfaDisplayScript === 'function'
+          ? window.getHakfaDisplayScript()
+          : converter.normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript'));
+        const next = converter.nextDisplayScript(current);
+        if (typeof window.setHakfaDisplayScript === 'function') {
+          window.setHakfaDisplayScript(next);
+        } else {
+          localStorage.setItem('hakfaDisplayScript', next);
+          window.dispatchEvent(
+            new CustomEvent('hakfaDisplayScriptChanged', {
+              detail: { script: next },
+            }),
+          );
+        }
+      });
+    }
     
     if (btnToday) {
       btnToday.addEventListener('click', () => {
@@ -803,7 +856,8 @@ const DailyWord = (function () {
                      }
                    }
                  } else {
-                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawCrossPinyin, true) : rawCrossPinyin;
+                   const crossDialectName = itemDialectInfo.腔名 || itemDialectInfo.腔;
+                   crossPinyin = typeof window.formatPhoneticForDisplay === 'function' ? window.formatPhoneticForDisplay(rawCrossPinyin, true, crossDialectName) : rawCrossPinyin;
                    if (typeof window.getSandhiPronunciation === 'function') {
                      const fullDialectName = typeof getDialectFullName === 'function' ? getDialectFullName(itemDialectInfo.腔) : itemDialectInfo.腔名;
                      const sandhiResult = window.getSandhiPronunciation(crossPinyin, fullDialectName);
@@ -1059,6 +1113,14 @@ const DailyWord = (function () {
       }
     }
   }
+
+  // 切換 PFS／HPP 顯示時，若日日一詞視窗開著，就用目前个字重新算繪卡片
+  window.addEventListener('hakfaDisplayScriptChanged', () => {
+    const dailyModal = document.getElementById('dailyWordModal');
+    if (dailyModal && dailyModal.style.display !== 'none' && currentDailyWordIdx !== null) {
+      renderDailyWord('current');
+    }
+  });
 
   return {
     init,

@@ -51,6 +51,8 @@
 
 ## 字詞代號與用語規範
 - `Romaine` = `Romanizer`、「蘿蔓生菜」= 羅馬字轉換工具模組
+- **【族名與語名規範】一律使用 `hakfa`（Hakfa）／嚴禁使用 `hakka`**：
+    專案全體（包含程式碼命名、變數、檔名、路徑、文件與 UI），若涉及客語羅馬化代號或族語命名，**嚴禁使用 ❌ `hakka`，一律使用 ⭕ `hakfa`（有大寫時就大寫，如 `Hakfa`）**。原因：臺灣客人大體喊自家 Hagngin、喊族語 Hakfa。
 - **【絕對原則】「復習」正字規範**：專案全體（包含 UI 介面、文案、說明文件、程式碼註解、Commit 訊息、對話筆記）統一使用正字 **「復習」**，**嚴禁**誤用「複習」（「復」為反覆溫習之意；「複」為複數、繁雜，兩字字義不同，切勿混淆）。
 
 
@@ -61,13 +63,42 @@
 - **確認檔案存在**: 在執行任何建立新檔案的指令（例如 `create_file`）之前，必須先用 `ls` 指令確認該檔案是否已存在。
 - **理解使用者意圖**: 若目標檔案已存在，應先用 `read_file` 讀取其內容。必須理解使用者的意圖很可能是要「修改」或「新增內容」到現有檔案，而不是完全「覆寫」。除非使用者明確指示要覆寫，否則應優先考慮使用 `replace_with_git_merge_diff` 或其他非破壞性的方式進行修改。
 
+## 與 Obsidian 筆記庫个關係 (Obsidian Vault Rules)
+- 開發筆記放在 Obsidian vault：`/Users/gjrobert/NAS/Obsidian/Main/創作/程式/HakSpring/`（總覽 `HakSpring.md`，各功能一篇，如 `PFS.md`）。
+- **【鐵律】有做事就要寫 Obsidian**：只要做了事（改程式、改文件、改設定、做研究、下決定），都愛在對應个筆記裡肚留下紀錄，寫清楚做了甚麼、為甚麼、動著哪兜檔案、哪兜驗證過吔、哪兜還無驗證。沿用該筆記既有个分段慣例（R／G／C 系列 h3），毋好淨在對話裡肚講煞。Commit message 係例外（見下背）。
+- **【Obsidian 渲染避坑】反引號後背毋好緊接點號**：凡係反引號開頭、後背緊接 dot（例如單獨表示副檔名），兩者中間愛插 1 個全形空格，寫做 `　.md`、`　.json`。完整檔名或路徑（如 `pages/pfs.md`）毋受影響。這條適用全部軟體專案，包含文件、筆記、commit message 摎程式碼註解。
+
+## Development board (Obsidian vault)
+
+Work status for HakSpring (website) and Kipan lives on a kanban in the Obsidian vault, not in this repo: one note per card under `創作/程式/HakSpring/看板/` in the vault (`~/NAS/Obsidian/Main`), with frontmatter `project` / `status` (想做, 排定, 進行中, 等平哥, 完成) / `size`.
+- Before starting a substantial task, read its card; if none exists, ask the coordinating session (蒂兒) or create one following `AGENTS.md` in the vault.
+- When you start, finish, or get blocked, update the card's `status`. Do not edit `kanban_order`. The user's own drag-and-drop on the board wins over any other file.
+- Run `python3 <vault>/創作/程式/HakSpring/看板/check.py` (read-only) before wrapping up.
+- If you cannot reach the vault (e.g. a cloud session), say so in your report instead of skipping silently, so the coordinator can update the card.
+
 ## 提交慣例 (Submission Conventions)
 - **【鐵則】Commit Message 必須使用客語（Hakka）撰寫**：
     - 專案的所有 Git commit message 內文與說明，**必須**使用臺灣客家語（四縣／海陸等共通詞彙，如「个」、「摎」、「在」、「肚底／裡肚」、「單淨」、「無共樣」、「毋使」等）撰寫。
     - **嚴禁**誤用臺灣話／閩南語詞彙（如「干焦」、「無仝」、「佮」、「佇」、「親像」等）或純華語長篇文言。保持客源翠專案作為客語母語數位典藏工具的文化自覺與語言一致性。
-- **Commit Message 審核與筆記維護原則**：
-    - Commit message **毋使寫來 Obsidian 筆記裡肚**（避免筆記內容過度冗長繁雜、重複堆疊已存在於 git log 或專案檔案的內容）。
-    - 需給平哥審核時，一律直接寫入專案根目錄的 `commit_msg.txt`，在筆記或對話中只要簡要提示該檔案路徑即可。待平哥審核完成並 commit 後，立即清理暫存的 `commit_msg.txt`。
+- **Commit Message 審核與提交流程**：
+    1. 先分析專案 Git 目前 staged 的 diff，歸納此次更新內容。
+    2. 依對話記憶提及不同 AI 模型，分別列出每個 AI 模型的分工及貢獻。
+    3. 先寫在專案根目錄的臨時 `commit_msg.txt` 中，供平哥審閱、直接編輯。
+    4. Commit message **毋使寫來 Obsidian 筆記裡肚**（避免筆記內容過度冗長繁雜、重複堆疊已存在於 git log 或專案檔案的內容）。
+    5. 平哥審核完成告知定稿後，再根據 `commit_msg.txt` 執行 commit。
+        - 絕對要小心避免那種會卡住終端機狀態的指令。
+        - 愛細膩莫 commit 著 `commit_msg.txt`；commit 煞後，暫存檔案愛提掉（清理）。
+- **貢獻者樣板 (Co-authors Template)**：commit 最尾照下背寫。
+    - 只列**實際改著這個 commit 內容**个 AI，一隻一行；淨參與討論、審查个毋列（做得寫在本文）。
+    - 模型名照該 session 實際用个模型；毋確定就寫工具名，毋好照抄別隻 commit 个名單。
+    - 信箱照工具：Claude Code（本機、雲端）用 `noreply@anthropic.com`；Antigravity 裡肚个模型用 `<model-id>@Antigravity`；其他工具照佢自家个預設。
+    - 簽名一律用 GitHub noreply 信箱，**毋好放真實 email**（repo 係公開个）。寫 commit message 个 AI 若無改著內容，做得寫在 `Signed-off-by` 後背括號 `(Commit Helper: …)`。
+```
+Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
+Co-authored-by: Gemini 3.8 Flash <Gemini-3-8-Flash@Antigravity>
+Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
+```
+    （例：兩隻 AI 都改著个時節。淨一隻改著就淨寫一行 `Co-authored-by`。）
 - **語意化 PR 標題**: 在建立 Pull Request (PR) 時，標題應清楚、簡潔地總結該次修改的核心內容，再加上要解決的 issue 編號。一個好的標題能讓團隊成員快速理解變更的目的。例如，使用 `feat: 新增用戶認證功能（整 #79）` 或 `fix: 修正頁首跑版問題（整 #116）`，而不是模糊的 `更新檔案` 或完全看不出意圖的 `Pull request for issue #79`。
 
 ## UI 元件慣例
@@ -81,6 +112,15 @@
 - **CSS 樣式**：為著確保樣式一致，愛將新 modal 个 ID 加到 `style.css` 裡肚既有个群組選擇器。這包含基本樣式、暗色主題樣式，還有其他共享屬性。
 - **JavaScript 邏輯**：顯示／隱藏 modal 个邏輯愛寫在 `main.js` 个 `initializeAppUI` 函式裡肚。用 `style.display = 'flex'` 來顯示 modal，用 `style.display = 'none'` 來隱藏。
 - **全螢幕型 Modal 例外**：若新 modal 是全螢幕沉浸式體驗（如 `#dailyWordModal`），可使用獨立的 `xxx-fullscreen-modal` 結構與專屬 class，不強制套用上述共用的對話方塊規範。
+
+### 色彩對比檢查（WCAG）
+
+- **【鐵則】改著顏色、背景、badge、標籤等視覺樣式，愛用「網頁色彩識別度標準」(WCAG 2.x 對比度) 實算檢查，毋好淨靠目視**：
+    - 一般文字（含小字 badge）對比度愛 **≥ 4.5:1**（AA）；大字（≥ 24px，抑係 ≥ 18.66px 粗體）愛 **≥ 3:1**。
+    - **淺色摎暗色主題兩邊都愛驗**；而且愛對**實際會遇著个全部背景色**驗，毋單淨對白底。例如表格奇偶列个綠底（`#b7c4a5`）、暗色底（`#1c1d1f`、`#232426`）。
+    - 用戶若提供 Chrome 截圖，愛從截圖取實際色（或對照 `style.css`），照截圖个畫面逐個元件檢查，毋好直接當做看過。
+    - 驗證方法：用相對亮度公式（Python／JS 十幾行就做得）算前景摎背景个對比度；抑係 Chrome DevTools 个 Contrast ratio 顯示。算出來毋達標，就調整顏色（淺色主題用較深字色、暗色主題用較淺字色）再算過，**結果（色碼＋比值）寫入 PR／commit 說明抑係 Obsidian 筆記**。
+    - 相對亮度公式：`c' = c/12.92`（`c ≤ 0.03928`），否則 `((c+0.055)/1.055)^2.4`；`L = 0.2126R + 0.7152G + 0.0722B`；對比度 `(L亮+0.05)/(L暗+0.05)`。
 
 ### 頁首按鈕
 
@@ -173,6 +213,7 @@
 | 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
 | 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
 | 遊戲上次腔調/級別 | `hakkaGameLastDataVarName` | `preferences` | ✅ | LWW（空字串視為未設定，不覆蓋本地） |
+| 標音顯示模式（HPP／PFS） | `hakfaDisplayScript` | `preferences` | ✅ | LWW（值為 `hpp`／`pfs`／`gip`；舊值 `hagpin` 讀取時視為 `hpp`；雲端拉下新值時會即時更新畫面） |
 | 學習進度 | `hakkaLearningProgress` | `learning_progress` | ✅ | 逐項單調不回退 |
 | 每日統計 | `hakkaDailyStats` | `daily_stats` | ✅ | 逐項相加（delta 基準） |
 | 每日各腔級統計 | `hakkaDailyStatsByLevel` | `daily_stats_by_level` | ✅ | 逐項相加（delta 基準） |
@@ -180,6 +221,7 @@
 | 熟悉度 | `hakkaFamiliarity` | `familiarity` | ✅ | LWW per-key |
 | 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
+| 美濃腔 | `showMeinungFill` | `preferences` | ✅ | LWW（`mergeBoolPref`；值為布林，未設定視為 `false`；雲端拉下新值時會即時更新開關摎畫面） |
 | 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
 | 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
@@ -233,13 +275,17 @@ If you need to create a new branch for your work (e.g., to recover from an error
      ```
      讓使用者點一次「同步」即可同時更新主線與平行分支，零摩擦測試！
   2. **專屬獨立設定檔**：在該 worktree 根目錄建立獨立的 `HakSpring-<feature-name> → localhost.ffs_gui`，僅包含該分支之單一 `<Pair>`，方便單獨作業。
-- **生命週期結束清理**：
-  當分支 merge 完畢後，執行：
-  ```bash
-  git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
-  git branch -d <branch-name>
-  ```
-  並同步復原 `HakSpring → localhost.ffs_gui` 的第二對 `<Pair>`。
+- **生命週期結束清理（由 AI agent 負責執行，毋使等使用者開口）**：
+  當分支 merge 完畢（或使用者明講毋愛該 worktree 吔），AI agent 愛**自家**做完下列清理，毋可以淨留 worktree 就算：
+  1. 刪掉主目錄 `HakSpring → localhost.ffs_gui` 內該分支个第二對 `<Pair>`（左邊係 `/Users/gjrobert/NAS/projects/HakSpring-<feature-name>` 該對）。
+  2. 刪掉 worktree 根目錄个專屬設定檔 `HakSpring-<feature-name> → localhost.ffs_gui`。
+  3. 移除 worktree 摎分支：
+     ```bash
+     git worktree remove /Users/gjrobert/NAS/projects/HakSpring-<feature-name>
+     git branch -d <branch-name>
+     ```
+  4. `/Users/gjrobert/web/plain/HakSpring-<feature-name>` 這個網站鏡像目錄係刪除動作，愛先問過使用者正做。
+  改設定檔前先備份，改完用 diff 確認淨有該對 `<Pair>` 無去；注意保留原檔个行尾（CRLF），毋好改成 LF。
 
 ## 快取更新慣例 (Cache Busting Conventions)
 - **更新靜態資源版本**: 當修改了專案的 `.css` 或 `.js` 檔案（特別是在頻繁測試的開發階段或發布新功能時），**必須**同步至 `index.html` 更新對應檔案載入標籤的查詢字串（Query String，如 `?v=4.2.1` 改為 `?v=4.2.2`）。這可以確保使用者的瀏覽器不會因為快取 (Cache) 而載入舊版的樣式或腳本，避免產生「程式碼已修改但畫面未生效」的誤判。

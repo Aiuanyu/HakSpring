@@ -8,6 +8,35 @@ on:
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
       - 'tests/cert_advanced_repeat_test.js'
+      - 'js/pfs-converter.js'
+      - 'js/gip-converter.js'
+      - 'pages/pfs.md'
+      - 'tests/pfs_converter_test.js'
+      - 'tests/pfs_sandhi_test.js'
+      - 'tests/gip_converter_test.js'
+      - 'tests/gip_sandhi_test.js'
+      - 'tests/gip_borrow_test.js'
+      - 'js/romaine-join.js'
+      - 'tests/romaine_join_test.js'
+      - 'tests/pfs_to_hpp_test.js'
+      - 'tests/meinung_tone_test.js'
+      - 'tests/cloud_sync_meinung_test.js'
+      - 'js/cloud-sync.js'
+      - 'tests/build_subdialect_fill_test.py'
+      - 'tests/curated_test.js'
+      - 'tests/variant_parser_test.js'
+      - 'js/variant-parser.js'
+      - 'data/curated/**'
+      - 'data/supp/**'
+      - 'scripts/build_subdialect_fill.py'
+      - 'data/sub-dialects-fill/**'
+      - 'data/cert/113四*.json'
+      - 'js/gip-superscript.js'
+      - 'tests/gip_superscript_test.js'
+      - 'js/audio-breaker.js'
+      - 'tests/audio_breaker_test.js'
+      - 'scripts/check_audio_health.py'
+      - 'tests/audio_health_test.py'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -16,6 +45,35 @@ on:
       - 'reverse_tone_mapping.json'
       - 'tests/sandhi_fixture_test.js'
       - 'tests/cert_advanced_repeat_test.js'
+      - 'js/pfs-converter.js'
+      - 'js/gip-converter.js'
+      - 'pages/pfs.md'
+      - 'tests/pfs_converter_test.js'
+      - 'tests/pfs_sandhi_test.js'
+      - 'tests/gip_converter_test.js'
+      - 'tests/gip_sandhi_test.js'
+      - 'tests/gip_borrow_test.js'
+      - 'js/romaine-join.js'
+      - 'tests/romaine_join_test.js'
+      - 'tests/pfs_to_hpp_test.js'
+      - 'tests/meinung_tone_test.js'
+      - 'tests/cloud_sync_meinung_test.js'
+      - 'js/cloud-sync.js'
+      - 'tests/build_subdialect_fill_test.py'
+      - 'tests/curated_test.js'
+      - 'tests/variant_parser_test.js'
+      - 'js/variant-parser.js'
+      - 'data/curated/**'
+      - 'data/supp/**'
+      - 'scripts/build_subdialect_fill.py'
+      - 'data/sub-dialects-fill/**'
+      - 'data/cert/113四*.json'
+      - 'js/gip-superscript.js'
+      - 'tests/gip_superscript_test.js'
+      - 'js/audio-breaker.js'
+      - 'tests/audio_breaker_test.js'
+      - 'scripts/check_audio_health.py'
+      - 'tests/audio_health_test.py'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -30,3 +88,33 @@ jobs:
         run: node tests/sandhi_fixture_test.js
       - name: Run CERT Advanced repeat tests
         run: node tests/cert_advanced_repeat_test.js
+      - name: Run PFS converter tests
+        run: node tests/pfs_converter_test.js
+      - name: Run PFS sandhi tests
+        run: node tests/pfs_sandhi_test.js
+      - name: Run GIP converter tests
+        run: node tests/gip_converter_test.js
+      - name: Run GIP sandhi tests
+        run: node tests/gip_sandhi_test.js
+      - name: Run GIP borrow tests
+        run: node tests/gip_borrow_test.js
+      - name: Run Romaine join tests
+        run: node tests/romaine_join_test.js
+      - name: PFS → HPP / GIP tests
+        run: node tests/pfs_to_hpp_test.js
+      - name: Meinung tone tests
+        run: node tests/meinung_tone_test.js
+      - name: Meinung cloud-sync tests
+        run: node tests/cloud_sync_meinung_test.js
+      - name: Sub-dialect fill build tests
+        run: python3 tests/build_subdialect_fill_test.py
+      - name: Run GIP superscript tests
+        run: node tests/gip_superscript_test.js
+      - name: Curated (愛灣語加詞) tests
+        run: node tests/curated_test.js
+      - name: Variant parser tests
+        run: node tests/variant_parser_test.js
+      - name: Audio failure breaker tests
+        run: node tests/audio_breaker_test.js
+      - name: Audio health check logic tests
+        run: python3 tests/audio_health_test.py

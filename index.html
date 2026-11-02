@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.47" />
+    <link rel="stylesheet" href="style.css?v=4.7.60" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -39,11 +39,29 @@
     <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
     <script
       type="text/javascript"
-      src="js/variant-parser.js?v=1.0.6"
+      src="js/variant-parser.js?v=1.0.7"
       defer
     ></script>
-    <script type="text/javascript" src="main.js?v=4.5.54" defer></script>
-    <script type="text/javascript" src="js/romanizer.js?v=1.0.1" defer></script>
+    <script
+      type="text/javascript"
+      src="js/pfs-converter.js?v=1.0.7"
+      defer
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/gip-converter.js?v=1.0.2"
+      defer
+    ></script>
+    <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
+    <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.82" defer></script>
+    <script
+      type="text/javascript"
+      src="js/gip-superscript.js?v=1.0.1"
+      defer
+    ></script>
+    <script type="text/javascript" src="js/romaine-join.js?v=1.0.0" defer></script>
+    <script type="text/javascript" src="js/romanizer.js?v=1.0.8" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
       type="text/javascript"
@@ -73,17 +91,17 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/game/game-ui.js?v=4.10.17"
+      src="js/game/game-ui.js?v=4.10.18"
       defer
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.6.8"
+      src="js/cloud-sync.js?v=4.6.12"
       defer
     ></script>
     <script
       type="text/javascript"
-      src="js/daily/daily.js?v=2.1.22"
+      src="js/daily/daily.js?v=2.1.29"
       defer
     ></script>
 
@@ -158,42 +176,53 @@
         <span id="progressDetails"></span>
         <!-- <--- 在這裡加入這個 span -->
         <div id="search-container">
-          <input type="text" id="search-input" placeholder="查語詞" />
-          <div id="search-popup">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="查語詞（撳 / 或 Ctrl+/ 跳過來）"
+            title="尋詞（鍵盤撳 / 或 Ctrl+/ 快速聚焦，撳 ↓ 打開選項）"
+            aria-haspopup="true"
+            aria-expanded="false"
+          />
+          <div id="search-popup" role="region" aria-label="查詢設定">
             <div id="dialect-selection">
               <p>請擇腔調：</p>
               <div class="dialect-row">
                 <label
                   ><input type="radio" name="dialect" value="四縣" checked />
-                  四縣</label
+                  <kbd class="popup-shortcut">1</kbd>四縣</label
                 >
                 <label
                   ><input type="radio" name="dialect" value="南四縣" />
-                  南四縣</label
+                  <kbd class="popup-shortcut">6</kbd>南四縣</label
                 >
               </div>
               <label
-                ><input type="radio" name="dialect" value="海陸" /> 海陸</label
+                ><input type="radio" name="dialect" value="海陸" />
+                <kbd class="popup-shortcut">2</kbd>海陸</label
               >
               <label
-                ><input type="radio" name="dialect" value="大埔" /> 大埔</label
+                ><input type="radio" name="dialect" value="大埔" />
+                <kbd class="popup-shortcut">3</kbd>大埔</label
               >
               <label
-                ><input type="radio" name="dialect" value="饒平" /> 饒平</label
+                ><input type="radio" name="dialect" value="饒平" />
+                <kbd class="popup-shortcut">4</kbd>饒平</label
               >
               <label
-                ><input type="radio" name="dialect" value="詔安" /> 詔安</label
+                ><input type="radio" name="dialect" value="詔安" />
+                <kbd class="popup-shortcut">5</kbd>詔安</label
               >
             </div>
             <div id="search-mode-selection">
               <p>請擇查詢模式：</p>
               <label
                 ><input type="radio" name="search-mode" value="客話" checked />
-                尋客詞（做得打漢字／拼音）</label
+                <kbd class="popup-shortcut">9</kbd>尋客詞（做得打漢字／拼音）</label
               >
               <label
                 ><input type="radio" name="search-mode" value="華語" />
-                尋華語詞義還係例句翻譯</label
+                <kbd class="popup-shortcut">0</kbd>尋 Chinese（華語詞義／例句翻譯）</label
               >
             </div>
             <button
@@ -1153,6 +1182,13 @@
           >
             <i class="fas fa-link"></i>
           </button>
+          <button
+            id="scriptModeToggleBtn"
+            class="script-mode-badge"
+            title="切換拼音顯示模式（四 PFS／HPP）"
+          >
+            <span id="scriptModeBadgeText">HPP</span>
+          </button>
         </span>
       </div>
 
@@ -1391,6 +1427,44 @@
                 border: 1px solid #ccc;
               "
             />
+          </div>
+          <!-- 標音顯示方式（HPP／四 PFS／GIP） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="displayScriptSelect">標音顯示方式</label>
+              <span class="setting-description"
+                >HPP 係 HagPinPlus（預設）；四 PFS 係用客語白話字顯示四縣與南四縣標音；GIP 係教育部客拼（五腔都有）
+                <a
+                  href="page.html?p=pfs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="
+                    color: var(--primary-color, #2d6a4f);
+                    text-decoration: underline;
+                    margin-left: 4px;
+                  "
+                  >查看 PFS 對照表 ↗</a
+                ></span
+              >
+            </div>
+            <select id="displayScriptSelect" class="form-select">
+              <option value="hpp">HPP</option>
+              <option value="pfs">四 PFS</option>
+              <option value="gip">GIP</option>
+            </select>
+          </div>
+          <!-- 次方言補音：美濃腔（24 調註 33；詞彙性差異讀 data/sub-dialects-fill/美濃.web.json，開了正下載） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="meinungFillToggle">美濃腔</label>
+              <span class="setting-description"
+                >四縣、南四縣个陰平 24 調（ˊ）美濃都講 33。客源翠處理方式：24 調个音節上背註 33，毋再顯示 24 觸發个變調；美濃腔聲母韻母也無共樣个詞（例：冷 láng → nāng）另外多一列「美〔推導〕」</span
+              >
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="meinungFillToggle" />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">
