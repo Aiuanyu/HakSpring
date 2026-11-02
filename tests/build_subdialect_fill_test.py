@@ -89,14 +89,14 @@ with open(os.path.join(ROOT, 'data', 'sub-dialects-fill', '美濃.csv'), encodin
 by_word = {r['詞目']: r['讀音'] for r in meinung_rows if r['來源檔'] == '教典南'}
 assert by_word['寄雨'] == 'gi ì', by_word['寄雨']             # 毋係 giu ì（救雨个美濃音）
 assert by_word['寄'] == 'gi', by_word['寄']
-by_cert = {(r['來源檔'], r['編號']): r['讀音'] for r in meinung_rows if r['來源檔'].startswith('113')}
+by_cert = {(r['來源檔'], r['編號']): r['讀音'] for r in meinung_rows if r['來源檔'].startswith('115')}
 # 南四縣詞括號內係同義詞（A 類）：詞形摎北四縣無共樣，美濃毋推（平哥 20261029）
-for synonym_entry in [('113四中', '13-34'), ('113四中', '17-60'), ('113四中高', '4-83'), ('113四初', '6-11'),
-                      ('113四基', '6-12'), ('113四基', '18-40'), ('113四中高', '10-6'), ('113四中高', '11-22'),
-                      ('113四中高', '8-116')]:
+for synonym_entry in [('115四中', '13-34'), ('115四中', '17-60'), ('115四中高', '4-83'), ('115四初', '6-11'),
+                      ('115四基', '6-12'), ('115四基', '18-40'), ('115四中高', '10-6'), ('115四中高', '11-22'),
+                      ('115四中高', '8-116')]:
     assert synonym_entry not in by_cert, synonym_entry
-assert by_cert[('113四中', '1-50')] == 'ngiàg těu'             # 額頭，毋係 bòd těu
-assert by_cert[('113四中', '2-37')] == 'guān xīm'              # 關心，毋係 cō xīm
+assert by_cert[('115四中', '1-50')] == 'ngiàg těu'             # 額頭，毋係 bòd těu
+assert by_cert[('115四中', '2-37')] == 'guān xīm'              # 關心，毋係 cō xīm
 
 import build_supp_dict as sd  # noqa: E402
 

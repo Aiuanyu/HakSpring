@@ -253,6 +253,15 @@ def load_variants():
             yield json.loads(line)
 
 
+def load_excluded():
+    """data/supp/人工排除.csv → {(腔, 字, 音節)}：這幾个單字音毋收（例：壽 xiǔ 淨在「夭壽」一組詞肚）。"""
+    path = os.path.join(ROOT, 'data', 'supp', '人工排除.csv')
+    if not os.path.exists(path):
+        return set()
+    with open(path, encoding='utf-8-sig') as f:
+        return {(r['腔'], r['字'], unicodedata.normalize('NFC', r['音'])) for r in csv.DictReader(f) if r['字'] and r['音']}
+
+
 def load_inherit():
     """data/supp/人工沿襲.csv → 字 → (來源字, 備註)。"""
     path = os.path.join(ROOT, 'data', 'supp', '人工沿襲.csv')
@@ -334,6 +343,12 @@ def main():
             for word, phon in words.items():
                 if len(rec['examples']) < MAX_EXAMPLES and (word, phon) not in [(w, p) for w, p, _ in rec['examples']]:
                     rec['examples'].append((word, phon, f'教典{d}'))
+
+    # 人工排除：指定个（腔、字、音）毋收
+    for d, ch, syl in load_excluded():
+        readings[d][ch].pop(syl, None)
+        if ch in readings[d] and not readings[d][ch]:
+            del readings[d][ch]
 
     out_dir = os.path.join(ROOT, 'data', 'supp')
     os.makedirs(out_dir, exist_ok=True)

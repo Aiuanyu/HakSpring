@@ -80,13 +80,18 @@ console.log('  ✅ 6. 三態分流與循環 PASS');
 {
   const candidates = [
     process.env.HAKSPRING_CERT_RAW,
+    path.join(__dirname, '../data/cert_115'),
+    path.join(__dirname, '../../HakSpring/data/cert_115'),
     path.join(__dirname, '../data/cert_113'),
     path.join(__dirname, '../../HakSpring/data/cert_113'),
   ].filter(Boolean);
-  const rawDir = candidates.find((d) => fs.existsSync(d));
   const procDir = path.join(__dirname, '../data/cert');
+  const rawDir = candidates.find((d) => {
+    if (!fs.existsSync(d)) return false;
+    return fs.readdirSync(d).some((n) => /^(115|113).*\.csv$/.test(n) && fs.existsSync(path.join(procDir, n)));
+  });
   if (!rawDir) {
-    console.log('  ⏭️  7. 找無教育部原始認證檔（data/cert_113），略過標準答案比對');
+    console.log('  ⏭️  7. 找無教育部原始認證檔（data/cert_115），略過標準答案比對');
   } else {
     const parseCsv = (t) => {
       const rows = []; let f = [], c = '', q = false;
@@ -106,11 +111,11 @@ console.log('  ✅ 6. 三態分流與循環 PASS');
     const norm = (s) => (s || '').replace(/\^/g, 'ˆ').normalize('NFC');
     const toks = (s) => s.replace(/[【】（）()／/,，]/g, ' ').split(/\s+/).filter(Boolean);
     let aligned = 0, tokens = 0, bad = 0;
-    for (const name of fs.readdirSync(rawDir).filter((n) => /^113.*\.csv$/.test(n))) {
+    for (const name of fs.readdirSync(rawDir).filter((n) => /^(115|113).*\.csv$/.test(n))) {
       if (!fs.existsSync(path.join(procDir, name))) continue;
       const raw = parseCsv(fs.readFileSync(path.join(rawDir, name), 'utf8'));
       const proc = parseCsv(fs.readFileSync(path.join(procDir, name), 'utf8'));
-      const cr = raw[0].findIndex((h) => h && h.endsWith('客語標音'));
+      const cr = raw[0].findIndex((h) => h && (h.endsWith('客語標音') || h.endsWith('客語音標')));
       const cp = proc[0].findIndex((h) => h && h.endsWith('客語標音'));
       const byNo = new Map(proc.slice(1).map((r) => [r[0], r]));
       for (const r of raw.slice(1)) {

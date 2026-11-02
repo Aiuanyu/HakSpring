@@ -102,7 +102,7 @@ function parseCsv(text) {
 
 const certDir = path.join(__dirname, '..', 'data', 'cert');
 const syllables = new Set();
-for (const f of fs.readdirSync(certDir).filter((n) => /^113四.*\.json$/.test(n))) {
+for (const f of fs.readdirSync(certDir).filter((n) => /^115四.*\.json$/.test(n))) {
   const { content } = JSON.parse(fs.readFileSync(path.join(certDir, f), 'utf8'));
   const rows = parseCsv(content);
   const col = rows[0].indexOf('客語標音_顯示');

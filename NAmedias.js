@@ -15,7 +15,13 @@ missingAudioData = {
 };
 */
 
+/*
+20261103 115 年度認證詞彙音檔實測：
+下背 112 年度已知缺失个音檔（含海陸中高級 4-261 詞彙摎句仔音檔、詔安中級 17-119、詔安初級 18-92、海陸／大埔／詔安高級等 15 筆），
+在上游 115 年度音檔目錄下已經 100% 補齊（HTTP 200 OK），故將現役 missingAudioData 清空，舊紀錄轉做註解留存備查。
+*/
 const missingAudioData = {
+/*
   "海陸中高級": {
     "外在活動與動作": {
       "4-261": { word: true, sentence: false, note: "有詞彙音檔，無句仔音檔" }
@@ -70,6 +76,7 @@ const missingAudioData = {
       "7-130": { word: false, sentence: 'na', note: "高級無句仔音檔，詞彙音檔乜無" }
     }
   }
+*/
 };
 
 /**

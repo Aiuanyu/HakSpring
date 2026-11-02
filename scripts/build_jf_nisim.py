@@ -224,12 +224,14 @@ def char_counts(d):
     zh, ex = collections.Counter(), collections.Counter()
     if d != '南':
         dname = supp.DIALECT_NAMES[d]
-        for fn in glob.glob(os.path.join(ROOT, 'data', 'cert', f'113{d}*.csv')):
+        for fn in glob.glob(os.path.join(ROOT, 'data', 'cert', f'115{d}*.csv')):
             with open(fn, encoding='utf-8-sig') as f:
                 for r in csv.DictReader(f):
                     zh.update(HAN.findall(r.get(f'{dname}華語詞義', '') + r.get(f'{dname}翻譯', '')))
                     ex.update(HAN.findall(r.get(f'{dname}例句', '')))
-    with open(os.path.join(ROOT, 'data', 'gip', f'20250630-{d}.csv'), encoding='utf-8-sig') as f:
+    gip_dir = os.path.join(ROOT, 'data', 'gip')
+    gip_fn = next(f for f in os.listdir(gip_dir) if f.endswith(f'-{d}.csv'))
+    with open(os.path.join(gip_dir, gip_fn), encoding='utf-8-sig') as f:
         for r in csv.DictReader(f):
             # 例句「客語。(華語)」：括號前係客語
             hak, _, trans = r['例句'].partition('(')

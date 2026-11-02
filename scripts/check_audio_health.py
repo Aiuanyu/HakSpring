@@ -21,7 +21,7 @@ import urllib.request
 
 PROXY = "https://hakspring.pages.dev/audio-proxy"
 UPSTREAM = (
-    "https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/112/5/si/si-01-001.mp3"
+    "https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/115/5/si/si-01-001.mp3"
 )
 DOH = "https://cloudflare-dns.com/dns-query?name=elearning.hakka.gov.tw&type=A"
 TIMEOUT = 20

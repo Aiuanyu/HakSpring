@@ -508,38 +508,38 @@ function adjustAllRubyFontSizes(containerElement) {
 }
 const DATA_FILES_TO_CACHE = [
   // 認證詞彙
-  'data/cert/113四基.json',
-  'data/cert/113四初.json',
-  'data/cert/113四中.json',
-  'data/cert/113四中高.json',
-  'data/cert/113四高.json',
-  'data/cert/113海基.json',
-  'data/cert/113海初.json',
-  'data/cert/113海中.json',
-  'data/cert/113海中高.json',
-  'data/cert/113海高.json',
-  'data/cert/113大基.json',
-  'data/cert/113大初.json',
-  'data/cert/113大中.json',
-  'data/cert/113大中高.json',
-  'data/cert/113大高.json',
-  'data/cert/113平基.json',
-  'data/cert/113平初.json',
-  'data/cert/113平中.json',
-  'data/cert/113平中高.json',
-  'data/cert/113平高.json',
-  'data/cert/113安基.json',
-  'data/cert/113安初.json',
-  'data/cert/113安中.json',
-  'data/cert/113安中高.json',
-  'data/cert/113安高.json',
+  'data/cert/115四基.json',
+  'data/cert/115四初.json',
+  'data/cert/115四中.json',
+  'data/cert/115四中高.json',
+  'data/cert/115四高.json',
+  'data/cert/115海基.json',
+  'data/cert/115海初.json',
+  'data/cert/115海中.json',
+  'data/cert/115海中高.json',
+  'data/cert/115海高.json',
+  'data/cert/115大基.json',
+  'data/cert/115大初.json',
+  'data/cert/115大中.json',
+  'data/cert/115大中高.json',
+  'data/cert/115大高.json',
+  'data/cert/115平基.json',
+  'data/cert/115平初.json',
+  'data/cert/115平中.json',
+  'data/cert/115平中高.json',
+  'data/cert/115平高.json',
+  'data/cert/115安基.json',
+  'data/cert/115安初.json',
+  'data/cert/115安中.json',
+  'data/cert/115安中高.json',
+  'data/cert/115安高.json',
   // 教典資料
-  'data/gip/20250630-四.json',
-  'data/gip/20250630-南.json',
-  'data/gip/20250630-海.json',
-  'data/gip/20250630-大.json',
-  'data/gip/20250630-平.json',
-  'data/gip/20250630-安.json',
+  'data/gip/20261020-四.json',
+  'data/gip/20261020-南.json',
+  'data/gip/20261020-海.json',
+  'data/gip/20261020-大.json',
+  'data/gip/20261020-平.json',
+  'data/gip/20261020-安.json',
   // 客源翠補字典（教典無獨立建字个單字音，見 data/supp/README.md）
   'data/supp/補字典-四.json',
   'data/supp/補字典-南.json',
@@ -706,7 +706,7 @@ function getDialectInfo(腔, 級) {
     級,
     例外音檔: selected例外音檔,
     fullLvlName: 腔名 + 級名,
-    generalMediaYr: '112',
+    generalMediaYr: '115',
     目錄級,
     目錄另級,
     檔腔,
@@ -1149,7 +1149,7 @@ function constructWordAudioUrl(lineData, fullSourceName) {
 
     if (wordAudioActuallyMissing) return null;
 
-    let mediaYr = '112',
+    let mediaYr = '115',
       pre112Insertion詞 = '',
       詞目錄級 = dialectInfo.目錄級,
       mediaNo = '';
@@ -1159,7 +1159,6 @@ function constructWordAudioUrl(lineData, fullSourceName) {
     
     let no_0 = no[0];
     if (no_0.length === 1 && !isNaN(parseInt(no_0))) no_0 = '0' + no_0;
-    if (級 === '初') no_0 = '0' + no_0;
     
     let mediaNo_raw = no[1];
     if (mediaNo_raw.length < 2 && !isNaN(parseInt(mediaNo_raw)))
@@ -1183,14 +1182,6 @@ function constructWordAudioUrl(lineData, fullSourceName) {
     
     const 詞目錄 = `${詞目錄級}/${dialectInfo.檔腔}/${pre112Insertion詞}${dialectInfo.檔級}${dialectInfo.檔腔}`;
     let audioSrc = `https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no_0}-${mediaNo}.mp3`;
-    
-    if (
-      dialectInfo.fullLvlName === '海陸中高級' &&
-      lineData.編號 === '4-261'
-    ) {
-      audioSrc =
-        'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3';
-    }
     return audioSrc; // Do not apply proxy here, caller handles it
   }
   return null;
@@ -1220,7 +1211,7 @@ function constructSentenceAudioUrl(lineData, fullSourceName) {
   
   if (sentenceAudioActuallyMissing) return null;
 
-  let mediaYr = '112',
+  let mediaYr = '115',
     pre112Insertion句 = '',
     句目錄級 = dialectInfo.目錄級,
     mediaNo = '';
@@ -1230,7 +1221,6 @@ function constructSentenceAudioUrl(lineData, fullSourceName) {
 
   let no_0 = no[0];
   if (no_0 <= 9) no_0 = '0' + no_0;
-  if (級 === '初') no_0 = '0' + no_0;
   
   let no_1 = no[1];
   if (no_1 <= 9) no_1 = '0' + no_1;
@@ -6798,7 +6788,6 @@ function initializeAppUI() {
       let mediaNo = '';
       var no = line.編號.split('-');
       if (no[0] <= 9) no[0] = '0' + no[0];
-      if (dialectInfo.級 === '初') no[0] = '0' + no[0];
       if (no[1] <= 9) no[1] = '0' + no[1];
       if (no[1] <= 99) no[1] = '0' + no[1];
       mediaNo = no[1];
@@ -6934,11 +6923,6 @@ function initializeAppUI() {
         audio1.controls = true;
         audio1.preload = 'none';
         let wordAudioSrc = applyAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${詞目錄}-${no[0]}-${mediaNo}.mp3`);
-        if (dialectInfo.fullLvlName === '海陸中高級' && line.編號 === '4-261') {
-          wordAudioSrc = applyAudioProxy(
-            'https://elearning.hakka.gov.tw/hakka/files/dictionaries/3/hk0000014571/hk0000014571-1-2.mp3',
-          );
-        }
         audio1.src = wordAudioSrc;
 
         // --- Auto Bookmark Mode: Add play event listener with proper cleanup ---

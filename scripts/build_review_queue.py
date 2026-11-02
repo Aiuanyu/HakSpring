@@ -37,7 +37,7 @@ def cert_details():
     out = {}
     cert_dir = os.path.join(ROOT, 'data', 'cert')
     for fn in os.listdir(cert_dir):
-        if not (fn.startswith('113四') and fn.endswith('.json')):
+        if not (fn.startswith('115四') and fn.endswith('.json')):
             continue
         with open(os.path.join(cert_dir, fn), encoding='utf-8') as f:
             for r in csv.DictReader(io.StringIO(json.load(f)['content'])):
@@ -48,7 +48,9 @@ def cert_details():
 def gip_meanings(d):
     """教典詞目 → [釋義…]（一隻讀音一條，照原始順序）。"""
     out = defaultdict(list)
-    with open(os.path.join(ROOT, 'data', 'gip', f'20250630-{d}.json'), encoding='utf-8') as f:
+    gip_dir = os.path.join(ROOT, 'data', 'gip')
+    fname = next(f for f in os.listdir(gip_dir) if f.endswith(f'-{d}.json'))
+    with open(os.path.join(gip_dir, fname), encoding='utf-8') as f:
         for r in csv.DictReader(io.StringIO(json.load(f)['content'])):
             out[r['客家語']].append(r['華語詞義'].replace('<br>', ' ')[:60])
     return out

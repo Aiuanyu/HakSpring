@@ -40,7 +40,7 @@ function listJson(dir, re) {
 }
 
 const files = [
-  ...listJson(path.join(DATA, 'cert'), /^113.*\.json$/),
+  ...listJson(path.join(DATA, 'cert'), /^115.*\.json$/),
   ...listJson(path.join(DATA, 'gip'), /^\d+-.\.json$/),
 ];
 

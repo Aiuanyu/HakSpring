@@ -373,9 +373,9 @@ it('模式 6：饒平【／】內含（）同義詞（平高 14-13 丙運）', (
 // ==========================================
 console.log('\n--- 3. Full Cert Dataset Verification ---');
 
-it('全量資料庫四縣變體條數符合盤查結果 (1264 條)', () => {
+it('全量資料庫四縣變體條數符合盤查結果 (1246 條)', () => {
   let sixianCount = 0;
-  const files = ['113四基.json', '113四初.json', '113四中.json', '113四中高.json', '113四高.json'];
+  const files = ['115四基.json', '115四初.json', '115四中.json', '115四中高.json', '115四高.json'];
   for (const f of files) {
     const p = path.join(__dirname, '../data/cert', f);
     const data = JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -395,13 +395,13 @@ it('全量資料庫四縣變體條數符合盤查結果 (1264 條)', () => {
       }
     }
   }
-  assert.strictEqual(sixianCount, 1264);
+  assert.strictEqual(sixianCount, 1246);
 });
 
 it('全量資料庫：無詞條同時有「同義詞詞括號」摎兩塊以上複合標音括號（hasSynonymWordBracket 个盲點）', () => {
   const isCompound = (b) => /[（(]/.test(b) && !/^[（(].*[）)]$/.test(b.trim());
   const brackets = (t) => [...t.matchAll(/【([^】]*)】/g)].map((m) => m[1]);
-  const files = ['113四基.json', '113四初.json', '113四中.json', '113四中高.json', '113四高.json'];
+  const files = ['115四基.json', '115四初.json', '115四中.json', '115四中高.json', '115四高.json'];
   for (const f of files) {
     const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/cert', f), 'utf8'));
     const lines = data.content.split('\n').filter(Boolean);
@@ -417,9 +417,9 @@ it('全量資料庫：無詞條同時有「同義詞詞括號」摎兩塊以上�
   }
 });
 
-it('全量資料庫饒平變體條數符合盤查結果 (4889 條)', () => {
+it('全量資料庫饒平變體條數符合盤查結果 (4896 條)', () => {
   let raopingCount = 0;
-  const files = ['113平基.json', '113平初.json', '113平中.json', '113平中高.json', '113平高.json'];
+  const files = ['115平基.json', '115平初.json', '115平中.json', '115平中高.json', '115平高.json'];
   for (const f of files) {
     const p = path.join(__dirname, '../data/cert', f);
     const data = JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -439,7 +439,7 @@ it('全量資料庫饒平變體條數符合盤查結果 (4889 條)', () => {
       }
     }
   }
-  assert.strictEqual(raopingCount, 4889);
+  assert.strictEqual(raopingCount, 4896);
 });
 
 // ==========================================
