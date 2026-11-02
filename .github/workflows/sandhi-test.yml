@@ -33,6 +33,10 @@ on:
       - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
+      - 'js/audio-breaker.js'
+      - 'tests/audio_breaker_test.js'
+      - 'scripts/check_audio_health.py'
+      - 'tests/audio_health_test.py'
       - '.github/workflows/sandhi-test.yml'
   pull_request:
     paths:
@@ -66,6 +70,10 @@ on:
       - 'data/cert/113四*.json'
       - 'js/gip-superscript.js'
       - 'tests/gip_superscript_test.js'
+      - 'js/audio-breaker.js'
+      - 'tests/audio_breaker_test.js'
+      - 'scripts/check_audio_health.py'
+      - 'tests/audio_health_test.py'
       - '.github/workflows/sandhi-test.yml'
 
 jobs:
@@ -106,3 +114,7 @@ jobs:
         run: node tests/curated_test.js
       - name: Variant parser tests
         run: node tests/variant_parser_test.js
+      - name: Audio failure breaker tests
+        run: node tests/audio_breaker_test.js
+      - name: Audio health check logic tests
+        run: python3 tests/audio_health_test.py

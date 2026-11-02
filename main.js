@@ -7202,6 +7202,7 @@ function initializeAppUI() {
     currentAudioIndex = itemIndex;
     isPlaying = true;
     isPaused = false;
+    audioFailureBreaker.reset(); // 重新按播放：失敗計數歸零
 
     updateNewAudioControlsVisibility();
     // 更新 UI 控制按鈕
@@ -7241,6 +7242,91 @@ function initializeAppUI() {
    * 播放指定資料索引的音檔。這是新的播放核心。
    * @param {number} itemIndex - 在 activeCategoryData 中的索引。
    */
+  // --- 音檔失敗斷路器（音檔來源連毋著時，毋好一直衝下去）---
+  // 連續 3 擺播放失敗（中間無任何一擺成功）就停下自動放送／單詞循環，共使用者講一聲，
+  // 毋再每筆都試一擺。使用者重新按播放會歸零。js/audio-breaker.js；Service Worker 另有一層。
+  const audioFailureBreaker = (
+    window.AudioBreaker || {
+      createFailureBreaker: () => ({ fail: () => false, succeed() {}, reset() {} }),
+    }
+  ).createFailureBreaker({ limit: 3 });
+
+  // 任何音檔真正開始放，就代表來源活著：失敗計數歸零。
+  document.addEventListener(
+    'playing',
+    (event) => {
+      if (event.target instanceof HTMLAudioElement) audioFailureBreaker.succeed();
+    },
+    true,
+  );
+
+  /** 記一擺播放失敗；已達上限就停止放送並提示，回傳 true（呼叫个人愛 return，毋好再前進）。 */
+  function noteAudioFailure() {
+    if (!audioFailureBreaker.fail()) return false;
+    if (isSingleWordLooping) stopSingleWordLoop();
+    if (isPlaying) stopPlayback();
+    showAudioOutageNotice();
+    return true;
+  }
+
+  // 按個別音檔（原生 <audio controls> 个播放鈕）放毋出來：毋經過 play()，淨有 `error` 事件。
+  // 音檔元素 error 不冒泡，用 capture 接。只探認證詞句个轉送網址；用 Range 0-0 个小請求問一擺上游个
+  // 狀態：5xx（530 等）就浮同樣个說明，404（單隻檔案無）抑係放得出來就毋吵。無網路也毋浮（毋係上游問題）。
+  let audioOutageProbing = false;
+  async function probeAudioOutage(src) {
+    if (audioOutageProbing || document.getElementById('audioOutageNotice')) return;
+    if (navigator.onLine === false) return;
+    audioOutageProbing = true;
+    try {
+      const response = await fetch(src, { headers: { Range: 'bytes=0-0' }, cache: 'no-store' });
+      const isOutage = window.AudioBreaker
+        ? window.AudioBreaker.isOutageStatus(response.status)
+        : response.status >= 500;
+      if (isOutage) showAudioOutageNotice();
+    } catch (e) {
+      showAudioOutageNotice(); // 連請求都送毋出（DNS／連線失敗）
+    } finally {
+      audioOutageProbing = false;
+    }
+  }
+  document.addEventListener(
+    'error',
+    (event) => {
+      const element = event.target;
+      if (!(element instanceof HTMLAudioElement)) return;
+      const src = element.currentSrc || element.src;
+      if (src && src.includes('/audio-proxy?url=')) probeAudioOutage(src);
+    },
+    true,
+  );
+
+  /** 音檔連續放毋出來：頁面下方浮一則可關掉个說明（講原因、已報告、等回覆）。 */
+  function showAudioOutageNotice() {
+    if (document.getElementById('audioOutageNotice')) return;
+    const notice = document.createElement('div');
+    notice.id = 'audioOutageNotice';
+    notice.setAttribute('role', 'alert');
+    notice.style.cssText =
+      'position:fixed;left:12px;right:12px;bottom:12px;z-index:100000;max-width:640px;margin:0 auto;' +
+      'padding:12px 40px 12px 14px;border-radius:8px;background:#fff8e1;color:#4e342e;' +
+      'border:1px solid #ffb300;box-shadow:0 2px 10px rgba(0,0,0,.25);font-size:15px;line-height:1.6;';
+    notice.innerHTML =
+      '<strong>認證詞彙音檔暫時放毋出來，既經同自動放送頓恬。（查教典詞彙無受影響）</strong><br>' +
+      '認證詞彙个音檔來源係哈客學院網站（網域 <code>elearning.hakka.gov.tw</code>），目前連毋著；' +
+      '毋係你个裝置，乜毋係客源翠壞忒。𠊎等既經對哈客學院網站報告，等候回應，修好就會恢復。' +
+      '造成不便，還失禮。<br>' +
+      '（查詞結果、日日一詞个教育部「教典」詞句音檔目前播放正常，請放心使用）';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', '關忒');
+    close.textContent = '×';
+    close.style.cssText =
+      'position:absolute;top:4px;right:8px;border:0;background:transparent;font-size:22px;cursor:pointer;color:inherit;';
+    close.addEventListener('click', () => notice.remove());
+    notice.appendChild(close);
+    document.body.appendChild(notice);
+  }
+
   function playAudio(itemIndex, sessionId) {
     // 【新增此區塊】在函式最開頭驗證對談 ID
     if (sessionId !== playbackSessionId) {
@@ -7385,6 +7471,7 @@ function initializeAppUI() {
         applyPlaybackSpeedAndPitch(currentAudio);
         currentAudio.play().catch((e) => {
           console.error('播放例句音檔失敗', e);
+          if (noteAudioFailure()) return;
           next();
         });
         currentAudio.addEventListener('ended', next, {
@@ -7428,6 +7515,7 @@ function initializeAppUI() {
               wordAudio.play().catch((e) => {
                 console.error('重播詞彙音檔失敗', e);
                 wordAudio.removeEventListener('ended', onWordEnded);
+                if (noteAudioFailure()) return;
                 playNextItem();
               });
             } else {
@@ -7454,6 +7542,7 @@ function initializeAppUI() {
           wordAudio.play().catch((e) => {
             console.error('重播詞彙音檔失敗', e);
             wordAudio.removeEventListener('ended', onWordEnded);
+            if (noteAudioFailure()) return;
             playSentence();
           });
         } else {
@@ -7468,6 +7557,7 @@ function initializeAppUI() {
       wordAudio.play().catch((e) => {
         console.error('播放詞彙音檔失敗', e);
         wordAudio.removeEventListener('ended', onWordEnded);
+        if (noteAudioFailure()) return;
         playSentence();
       });
     } else {
@@ -7724,6 +7814,7 @@ function initializeAppUI() {
     // --- End of Auto Bookmark Mode ---
 
     isSingleWordLooping = true;
+    audioFailureBreaker.reset(); // 重新啟動單詞循環：失敗計數歸零
     singleLoopingAudio = {
       word: wordAudio,
       sentence: sentenceAudio,
@@ -7753,6 +7844,7 @@ function initializeAppUI() {
         applyPlaybackSpeedAndPitch(sentenceAudio);
         sentenceAudio.play().catch((e) => {
           console.error('單詞循環播放例句失敗:', e);
+          if (noteAudioFailure()) return;
           setTimeout(playWord, LOOP_DELAY_BETWEEN_AUDIO);
         });
         sentenceAudio.addEventListener(
@@ -7772,6 +7864,7 @@ function initializeAppUI() {
         applyPlaybackSpeedAndPitch(wordAudio);
         wordAudio.play().catch((e) => {
           console.error('單詞循環播放詞彙失敗:', e);
+          if (noteAudioFailure()) return;
           playSentence();
         });
         wordAudio.addEventListener('ended', playSentence, {
