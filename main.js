@@ -1828,19 +1828,22 @@ function classifyTone(syllable, dialectCode) {
   }
   // 順帶檢查 vowel_map 存在：本函式已改走 NFD 拆調號、不再直接用 vowel_map，
   // 但它與 dialect_reverse_map 同在 reverse_tone_mapping.json，故拿它當「反查表資料已載入」的存在性檢查。
-  if (!window.reverseToneMappingData || !window.reverseToneMappingData.dialect_reverse_map || !window.reverseToneMappingData.vowel_map) {
+  const rtm = (typeof window !== 'undefined' && window.reverseToneMappingData)
+    ? window.reverseToneMappingData
+    : (typeof global !== 'undefined' && global.reverseToneMappingData ? global.reverseToneMappingData : null);
+  if (!rtm || !rtm.dialect_reverse_map || !rtm.vowel_map) {
     return null;
   }
   // GIP（教育部客拼）个調號係貼在音節字母後面个符號（bodˋ），先拆出來，後面个入聲判斷摎調號判斷才正確。
-  // ^、+ 係教育部原檔用个 ASCII 寫法；ˆ（U+02C6）、˖（U+02D6）係客委會表格个修飾字母寫法。
+  // ^、+ 係教育部原檔用个 ASCII 寫法；ˆ（U+02C6）、˖（U+02D6）係客委會表格个修飾字母寫法；相容 ASCII 反引號 `。
   let gipSymbol = null;
-  const gipMatch = syllable.match(/^(.+?)([\u02CA\u02C7\u02CB\u02C6\u02D6^+])$/);
+  const gipMatch = syllable.match(/^(.+?)([\u02CA\u02C7\u02CB\u02C6\u02D6^+`])$/);
   if (gipMatch) {
     syllable = gipMatch[1];
     gipSymbol = gipMatch[2];
   }
-  // -b/-d 結尾是入聲；-g 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
-  const hasStop = /b$|d$/.test(syllable) || (/g$/.test(syllable) && !syllable.endsWith('ng'));
+  // -b/-d 或 -p/-t 結尾是入聲；-g 或 -k 結尾但前面是 n（即 -ng）是鼻音韻尾，不是入聲
+  const hasStop = /[bdpt]$/i.test(syllable) || (/[gk]$/i.test(syllable) && !syllable.toLowerCase().endsWith('ng'));
   // 捨棄逐字元 vowel_map 比對，改用 NFD 拆解提取調號
   // 支援預先組合字元（如 á）以及獨立注音符號（如 ˊ）
   // 註：下面 .replace 非全域、只換第一個調號——呼叫端一律傳「單一音節」，每音節至多一個調號故安全；
@@ -1848,6 +1851,7 @@ function classifyTone(syllable, dialectCode) {
   let nfdSyllable = syllable.normalize('NFD')
     .replace('ˊ', '\u0301')
     .replace('ˋ', '\u0300')
+    .replace('`', '\u0300')
     .replace('ˇ', '\u030C')
     .replace('ˆ', '\u0302')
     .replace(/¯|⁺|\+/, '\u0304');
@@ -1861,6 +1865,7 @@ function classifyTone(syllable, dialectCode) {
       '\u02CA': '\u0301',
       '\u02C7': '\u030C',
       '\u02CB': '\u0300',
+      '`': '\u0300',
       '\u02C6': '\u0302',
       '^': '\u0302',
       '\u02D6': '\u0304',
@@ -1872,7 +1877,7 @@ function classifyTone(syllable, dialectCode) {
   }
 
   let key = aForm + (hasStop ? 'd' : '');
-  const map = window.reverseToneMappingData.dialect_reverse_map[dialectCode];
+  const map = rtm.dialect_reverse_map[dialectCode];
   if (!map) return null;
   return map[key] || null;
 }
@@ -2523,6 +2528,7 @@ function normalizePhonetics(text) {
     .replace(/[óòŏôōǒ]/g, 'o')
     .replace(/[úùŭûūǔ]/g, 'u')
     .replace(/[ńňǹ]/g, 'n')
+    .replace(/[ˊˋˇˆ^+\u02CA\u02CB\u02C7\u02C6\u02D6`]/g, '')
     .replace(/\d+/g, '');
 }
 
@@ -2531,7 +2537,7 @@ function isRomanizedHakka(text) {
   if (hasChinese) {
     return false;
   }
-  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\']+$/.test(
+  const isRoman = /^[a-zA-Z0-9áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹ\s\-\'ˊˋˇˆ^+\u02CA\u02CB\u02C7\u02C6\u02D6`]+$/.test(
     text,
   );
   if (!isRoman) {
@@ -2542,6 +2548,102 @@ function isRomanizedHakka(text) {
     return false;
   }
   return true;
+}
+
+/**
+ * 將使用者在查詞框輸入的 GIP 調符（或 HPP 帶調字母）轉為客源翠資料庫查詢專用的數字調字串
+ * 例如：
+ * 四縣：'sabˋ' -> 'sab2', 'bodˋ ziiˋ' -> 'bod2 zii31', 'piangˇ' -> 'piang11', 'báu' -> 'bau24'
+ * 海陸：'sabˋ' -> 'sab53', 'sed+' -> 'sed5', 'hói' -> 'hoi24'
+ * 
+ * @param {string} queryText - 使用者輸入關鍵字
+ * @param {string} dialect - 腔調名稱或代碼
+ * @returns {{ numericQuery: string, hasTone: boolean, baseQuery: string, originalQuery: string }}
+ */
+function convertPinyinQueryToNumeric(queryText, dialect) {
+  if (!queryText || typeof queryText !== 'string') {
+    return { numericQuery: '', hasTone: false, baseQuery: '', originalQuery: queryText || '' };
+  }
+  const dialectCode = getDialectCode(dialect) || 'si';
+
+  // 正規化反引號 ` 為 ˋ
+  let cleanInput = queryText.replace(/`/g, '\u02CB');
+
+  // 切割 tokens：依空白或連字號分隔
+  const tokens = cleanInput.split(/(\s+|-+)/);
+  let hasTone = false;
+  const numericTokens = [];
+  const baseTokens = [];
+
+  for (const token of tokens) {
+    if (/^(\s+|-+)$/.test(token)) {
+      numericTokens.push(token);
+      baseTokens.push(token);
+      continue;
+    }
+
+    // 若已經是數字調結尾（如 "sab2"、"piang11"）
+    if (/^[a-zA-Z]+[0-9]+$/i.test(token)) {
+      hasTone = true;
+      numericTokens.push(token.toLowerCase());
+      baseTokens.push(token.replace(/[0-9]+/g, '').toLowerCase());
+      continue;
+    }
+
+    // 檢查是否有 GIP 調符結尾或 HPP 帶調母音
+    const hasGipSymbol = /[\u02CA\u02C7\u02CB\u02C6\u02D6^+`]/.test(token);
+    const hasHppDiacritic = /[áàǎâāéèěêēíìǐîīóòŏôōúùǔûūńňǹḿm̌m̀m̂m̄]/i.test(token) || /[\u0300\u0301\u0302\u0304\u030C]/.test(token.normalize('NFD'));
+
+    if (hasGipSymbol || hasHppDiacritic) {
+      hasTone = true;
+      let cleanSyl = token.replace(/[\u02CA\u02C7\u02CB\u02C6\u02D6^+`]/g, '');
+      let baseSyl = normalizePhonetics(cleanSyl).toLowerCase();
+
+      // 促音尾相容：p, t, k 轉為 b, d, g（資料庫主要使用 b, d, g）
+      if (/p$/i.test(baseSyl)) baseSyl = baseSyl.replace(/p$/i, 'b');
+      else if (/t$/i.test(baseSyl)) baseSyl = baseSyl.replace(/t$/i, 'd');
+      else if (/k$/i.test(baseSyl)) baseSyl = baseSyl.replace(/k$/i, 'g');
+
+      let toneVal = classifyTone(token, dialectCode);
+      if (!toneVal) {
+        // 若以 p/t/k 結尾導致入聲未命中，轉成 b/d/g 測試
+        let adjustedToken = token;
+        if (/p([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i.test(token)) {
+          adjustedToken = token.replace(/p([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i, 'b$1');
+        } else if (/t([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i.test(token)) {
+          adjustedToken = token.replace(/t([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i, 'd$1');
+        } else if (/k([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i.test(token)) {
+          adjustedToken = token.replace(/k([\u02CA\u02C7\u02CB\u02C6\u02D6^+`]?)$/i, 'g$1');
+        }
+        toneVal = classifyTone(adjustedToken, dialectCode);
+      }
+
+      if (toneVal) {
+        numericTokens.push(baseSyl + toneVal);
+      } else {
+        // 使用者帶有調符但無法匹配該腔調之合法調值（如四縣入聲配陽平 sabˇ）
+        // 保留原 token 避免退化為無調字母誤將精確比對視為命中，促發後續 Fallback 流程
+        numericTokens.push(token);
+      }
+      baseTokens.push(baseSyl);
+    } else {
+      // 無調音節
+      let baseSyl = normalizePhonetics(token).toLowerCase();
+      if (/p$/i.test(baseSyl)) baseSyl = baseSyl.replace(/p$/i, 'b');
+      else if (/t$/i.test(baseSyl)) baseSyl = baseSyl.replace(/t$/i, 'd');
+      else if (/k$/i.test(baseSyl)) baseSyl = baseSyl.replace(/k$/i, 'g');
+
+      numericTokens.push(baseSyl);
+      baseTokens.push(baseSyl);
+    }
+  }
+
+  return {
+    numericQuery: numericTokens.join(''),
+    hasTone: hasTone,
+    baseQuery: baseTokens.join(''),
+    originalQuery: queryText,
+  };
 }
 
 function debounce(func, wait, immediate) {
@@ -4397,16 +4499,67 @@ function initializeAppUI() {
     }
 
     let results;
+    let isToneFallback = false;
     if (searchMode === '客話') {
       const lowerCaseKeyword = keyword.toLowerCase();
+      const parsedPinyin = convertPinyinQueryToNumeric(lowerCaseKeyword, selectedDialect);
       const precisePhoneticRegex = /^([a-z]+[0-9]+(\s+|$))+$/i;
+      const targetNumericQuery = parsedPinyin.hasTone
+        ? parsedPinyin.numericQuery.replace(/-/g, ' ').replace(/\s+/g, ' ').trim()
+        : lowerCaseKeyword;
 
-      if (precisePhoneticRegex.test(lowerCaseKeyword)) {
+      if (parsedPinyin.hasTone) {
+        if (precisePhoneticRegex.test(targetNumericQuery)) {
+          results = combinedData
+            .filter(
+              (item) =>
+                item['客語標音_查詢'] &&
+                item['客語標音_查詢'].toLowerCase().includes(targetNumericQuery),
+            )
+            .map((item) => ({
+              ...item,
+              _match: { inPhonetics: true, isExact: true },
+            }));
+        } else {
+          // 輸入帶調但無法對應任何合法數字調（如四縣入聲帶陽平調符）
+          results = [];
+        }
+
+        // Fallback 機制：若帶調精確搜尋查無結果，自動降級為無調模糊搜尋，兼顧容錯
+        if (results.length === 0 && parsedPinyin.baseQuery) {
+          const fallbackBase = parsedPinyin.baseQuery.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+          results = combinedData
+            .map((item) => {
+              const inWord =
+                item['客家語'] &&
+                item['客家語'].toLowerCase().includes(lowerCaseKeyword);
+              const normalizedPhonetics = normalizePhonetics(
+                item['客語標音_查詢'] || '',
+              );
+              const inPhonetics = normalizedPhonetics.includes(fallbackBase);
+              const inSentence =
+                item['例句'] &&
+                item['例句'].toLowerCase().includes(lowerCaseKeyword);
+
+              if (inWord || inPhonetics || inSentence) {
+                return {
+                  ...item,
+                  _match: { inWord, inPhonetics, inSentence, isExact: false, isToneFallback: true },
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+          if (results.length > 0) {
+            isToneFallback = true;
+          }
+        }
+      } else if (precisePhoneticRegex.test(targetNumericQuery)) {
         results = combinedData
           .filter(
             (item) =>
               item['客語標音_查詢'] &&
-              item['客語標音_查詢'].toLowerCase().includes(lowerCaseKeyword),
+              item['客語標音_查詢'].toLowerCase().includes(targetNumericQuery),
           )
           .map((item) => ({
             ...item,
@@ -4504,6 +4657,9 @@ function initializeAppUI() {
     });
 
     let summaryText = `在${searchMode === '客話' ? '客文' : '華文'}部分尋「${keyword}」，`;
+    if (isToneFallback) {
+      summaryText = `在客文部分尋「${keyword}」（無特定聲調結果，顯示同音詞），`;
+    }
 
     const newUrl = getBaseUrlWithoutIndex();
     newUrl.searchParams.set('musiid', searchMode === '客話' ? 'hak' : 'zh');
@@ -10200,6 +10356,9 @@ if (typeof module !== 'undefined' && module.exports) {
     resolveReadingForMode,
     splitRubyByBaseBreakpoints,
     adjustRubyFontSize,
-    adjustAllRubyFontSizes
+    adjustAllRubyFontSizes,
+    convertPinyinQueryToNumeric,
+    isRomanizedHakka,
+    normalizePhonetics
   };
 }
