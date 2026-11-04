@@ -3030,6 +3030,17 @@ input:checked+.slider:before {
   line-height: 1.7;
 }
 
+.whatsnew-highlight {
+  background: rgba(255, 193, 7, 0.18);
+  border-left: 4px solid #ffc107;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: block;
+  margin: 6px 0;
+  line-height: 1.6;
+  color: inherit;
+}
+
 .settings-input {
   width: 100px;
   padding: 4px 8px;
@@ -3119,6 +3130,11 @@ input:checked+.slider:before {
 
   .settings-divider {
     border-top-color: #444;
+  }
+
+  .whatsnew-highlight {
+    background: rgba(255, 193, 7, 0.15);
+    border-left-color: #ffd54f;
   }
 
   #infoModal .modal-close-btn:hover,

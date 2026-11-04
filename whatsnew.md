@@ -1,10 +1,10 @@
-<!-- version: 202611050605 -->
+<!-- version: 202611050625 -->
 [**<<< 回資訊主頁**](#show-info)
 
 # 「客源翠 HakSpring」新消息
-20261105 06:05
+20261105 06:25
 
-- 2026/11/05 [公告] 失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>）。
+- 2026/11/05 [公告] <mark class="whatsnew-highlight" style="background: rgba(255, 193, 7, 0.18); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px; display: block; margin: 6px 0; line-height: 1.6; color: inherit;">失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>；共步圖示亦囥佇「網站說明 ℹ️」視窗頂高）。</mark>
 
 - 2026/11/03 [新] 查詞框支援教育部客拼調符（比將講大埔腔打 lu+ fu+ 黏時尋得著「魯夫」），毋使過自家轉數字調。[查詞聲調支援說明](page.html?p=gip-search)。
 
