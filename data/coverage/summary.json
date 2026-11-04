@@ -1,0 +1,289 @@
+{
+  "versions": {
+    "cert": "115",
+    "gip": "20261020",
+    "supp_date": "2026-11-04",
+    "unihan": "18.0",
+    "jf7000": "af8f31a1"
+  },
+  "scopes": {
+    "jf7000": {
+      "total": 7772,
+      "packs": {
+        "base": 6373,
+        "taiwan": 810,
+        "naming": 589
+      },
+      "dialects": {
+        "四": {
+          "G": 3293,
+          "C": 92,
+          "S": 666,
+          "Y": 1,
+          "N": 3565,
+          "none": 155,
+          "official": 3385,
+          "carved": 667,
+          "with_carved": 4052,
+          "nisim": 3565,
+          "total_with_sound": 7617,
+          "total": 7772
+        },
+        "南": {
+          "G": 3283,
+          "C": 0,
+          "S": 677,
+          "Y": 1,
+          "N": 3653,
+          "none": 158,
+          "official": 3283,
+          "carved": 678,
+          "with_carved": 3961,
+          "nisim": 3653,
+          "total_with_sound": 7614,
+          "total": 7772
+        },
+        "海": {
+          "G": 3296,
+          "C": 97,
+          "S": 649,
+          "Y": 1,
+          "N": 3578,
+          "none": 151,
+          "official": 3393,
+          "carved": 650,
+          "with_carved": 4043,
+          "nisim": 3578,
+          "total_with_sound": 7621,
+          "total": 7772
+        },
+        "大": {
+          "G": 3292,
+          "C": 109,
+          "S": 648,
+          "Y": 1,
+          "N": 3571,
+          "none": 151,
+          "official": 3401,
+          "carved": 649,
+          "with_carved": 4050,
+          "nisim": 3571,
+          "total_with_sound": 7621,
+          "total": 7772
+        },
+        "平": {
+          "G": 3283,
+          "C": 100,
+          "S": 676,
+          "Y": 1,
+          "N": 3554,
+          "none": 158,
+          "official": 3383,
+          "carved": 677,
+          "with_carved": 4060,
+          "nisim": 3554,
+          "total_with_sound": 7614,
+          "total": 7772
+        },
+        "安": {
+          "G": 3192,
+          "C": 122,
+          "S": 707,
+          "Y": 1,
+          "N": 3574,
+          "none": 176,
+          "official": 3314,
+          "carved": 708,
+          "with_carved": 4022,
+          "nisim": 3574,
+          "total_with_sound": 7596,
+          "total": 7772
+        }
+      }
+    },
+    "t12": {
+      "total": 13064,
+      "dialects": {
+        "四": {
+          "G": 3189,
+          "C": 96,
+          "S": 694,
+          "Y": 2,
+          "N": 3210,
+          "none": 5873,
+          "official": 3285,
+          "carved": 696,
+          "with_carved": 3981,
+          "nisim": 3210,
+          "total_with_sound": 7191,
+          "total": 13064
+        },
+        "南": {
+          "G": 3176,
+          "C": 0,
+          "S": 686,
+          "Y": 2,
+          "N": 3296,
+          "none": 5904,
+          "official": 3176,
+          "carved": 688,
+          "with_carved": 3864,
+          "nisim": 3296,
+          "total_with_sound": 7160,
+          "total": 13064
+        },
+        "海": {
+          "G": 3191,
+          "C": 101,
+          "S": 679,
+          "Y": 2,
+          "N": 3223,
+          "none": 5868,
+          "official": 3292,
+          "carved": 681,
+          "with_carved": 3973,
+          "nisim": 3223,
+          "total_with_sound": 7196,
+          "total": 13064
+        },
+        "大": {
+          "G": 3190,
+          "C": 113,
+          "S": 664,
+          "Y": 2,
+          "N": 3217,
+          "none": 5878,
+          "official": 3303,
+          "carved": 666,
+          "with_carved": 3969,
+          "nisim": 3217,
+          "total_with_sound": 7186,
+          "total": 13064
+        },
+        "平": {
+          "G": 3178,
+          "C": 104,
+          "S": 706,
+          "Y": 2,
+          "N": 3199,
+          "none": 5875,
+          "official": 3282,
+          "carved": 708,
+          "with_carved": 3990,
+          "nisim": 3199,
+          "total_with_sound": 7189,
+          "total": 13064
+        },
+        "安": {
+          "G": 3103,
+          "C": 126,
+          "S": 717,
+          "Y": 2,
+          "N": 3226,
+          "none": 5890,
+          "official": 3229,
+          "carved": 719,
+          "with_carved": 3948,
+          "nisim": 3226,
+          "total_with_sound": 7174,
+          "total": 13064
+        }
+      }
+    },
+    "outside_jf_t12": {
+      "total": 5848,
+      "dialects": {
+        "四": {
+          "G": 9,
+          "C": 6,
+          "S": 55,
+          "Y": 1,
+          "N": 0,
+          "none": 5777,
+          "official": 15,
+          "carved": 56,
+          "with_carved": 71,
+          "nisim": 0,
+          "total_with_sound": 71,
+          "total": 5848
+        },
+        "南": {
+          "G": 8,
+          "C": 0,
+          "S": 28,
+          "Y": 1,
+          "N": 0,
+          "none": 5811,
+          "official": 8,
+          "carved": 29,
+          "with_carved": 37,
+          "nisim": 0,
+          "total_with_sound": 37,
+          "total": 5848
+        },
+        "海": {
+          "G": 9,
+          "C": 7,
+          "S": 57,
+          "Y": 1,
+          "N": 0,
+          "none": 5774,
+          "official": 16,
+          "carved": 58,
+          "with_carved": 74,
+          "nisim": 0,
+          "total_with_sound": 74,
+          "total": 5848
+        },
+        "大": {
+          "G": 10,
+          "C": 8,
+          "S": 45,
+          "Y": 1,
+          "N": 0,
+          "none": 5784,
+          "official": 18,
+          "carved": 46,
+          "with_carved": 64,
+          "nisim": 0,
+          "total_with_sound": 64,
+          "total": 5848
+        },
+        "平": {
+          "G": 9,
+          "C": 7,
+          "S": 55,
+          "Y": 1,
+          "N": 0,
+          "none": 5776,
+          "official": 16,
+          "carved": 56,
+          "with_carved": 72,
+          "nisim": 0,
+          "total_with_sound": 72,
+          "total": 5848
+        },
+        "安": {
+          "G": 8,
+          "C": 8,
+          "S": 49,
+          "Y": 1,
+          "N": 0,
+          "none": 5782,
+          "official": 16,
+          "carved": 50,
+          "with_carved": 66,
+          "nisim": 0,
+          "total_with_sound": 66,
+          "total": 5848
+        }
+      }
+    },
+    "all": {
+      "total": 102527
+    }
+  },
+  "outside_jf_vocab": {
+    "total": 175
+  }
+}

@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="zh-TW" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>字表涵蓋度總表 - 客源翠 HakSpring</title>
+    <meta
+      name="description"
+      content="客源翠對 jf7000、臺灣常用 T1+T2 與 Unihan 漢字字集的客語六腔讀音涵蓋度分層統計與字表。"
+    />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
+    <script
+      src="https://kit.fontawesome.com/6741caa77f.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      :root {
+        --bg-color: #f6f7f9;
+        --card-bg: #ffffff;
+        --text-color: #212529;
+        --sub-text: #59616a;
+        --border-color: #d0d7de;
+        --primary-color: #2d6a4f;
+        --primary-hover: #1b4332;
+        --header-bg: #ffffff;
+        --focus-glow: #52b788;
+
+        /* 四色分層 (WCAG AA 對比標準) */
+        --c-official-text: #1b5e20;
+        --c-official-bg: #e8f5e9;
+        --c-official-bar: #2e7d32;
+
+        --c-carved-text: #0d47a1;
+        --c-carved-bg: #e3f2fd;
+        --c-carved-bar: #1976d2;
+
+        --c-nisim-text: #b23b00;
+        --c-nisim-bg: #fff3e0;
+        --c-nisim-bar: #f57c00;
+
+        --c-none-text: #424242;
+        --c-none-bg: #eeeeee;
+        --c-none-bar: #9e9e9e;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-color: #121316;
+          --card-bg: #1c1e22;
+          --text-color: #e6edf3;
+          --sub-text: #8b949e;
+          --border-color: #30363d;
+          --primary-color: #52b788;
+          --primary-hover: #74c69d;
+          --header-bg: #16181d;
+          --focus-glow: #74c69d;
+
+          --c-official-text: #81c784;
+          --c-official-bg: #1b3a24;
+          --c-official-bar: #388e3c;
+
+          --c-carved-text: #90caf9;
+          --c-carved-bg: #152d4a;
+          --c-carved-bar: #1e88e5;
+
+          --c-nisim-text: #ffb74d;
+          --c-nisim-bg: #42280a;
+          --c-nisim-bar: #fb8c00;
+
+          --c-none-text: #bdbdbd;
+          --c-none-bg: #2d2f34;
+          --c-none-bar: #616161;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, "Noto Sans TC", "微軟正黑體", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        line-height: 1.6;
+        padding-bottom: 60px;
+      }
+
+      /* 頁首 */
+      header.top-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--header-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .header-row {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .header-title-box {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+      }
+
+      .back-btn:hover {
+        background: var(--border-color);
+      }
+
+      h1.main-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-color);
+      }
+
+      .version-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 12px;
+      }
+
+      .v-badge {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--sub-text);
+        padding: 2px 8px;
+        border-radius: 12px;
+      }
+
+      /* 主容器 */
+      main.container {
+        max-width: 1280px;
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+
+      /* 控制面板卡片 */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      }
+
+      .controls-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .control-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--sub-text);
+        margin-right: 4px;
+      }
+
+      .btn-pill-group {
+        display: inline-flex;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--card-bg);
+      }
+
+      .btn-pill {
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border-right: 1px solid var(--border-color);
+      }
+
+      .btn-pill:last-child {
+        border-right: none;
+      }
+
+      .btn-pill:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .btn-pill.active {
+        background: var(--primary-color);
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+        max-width: 320px;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 6px 10px 6px 30px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 14px;
+      }
+
+      .search-box i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sub-text);
+        font-size: 13px;
+      }
+
+      .toggles-group {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .toggle-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-color);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .toggle-label input[type="checkbox"] {
+        accent-color: var(--primary-color);
+        cursor: pointer;
+      }
+
+      /* 堆疊長條總覽卡片 */
+      .summary-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 8px;
+      }
+
+      .summary-title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .legend-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-size: 13px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+
+      .swatch-official { background-color: var(--c-official-bar); }
+      .swatch-carved { background-color: var(--c-carved-bar); }
+      .swatch-nisim { background-color: var(--c-nisim-bar); }
+      .swatch-none { background-color: var(--c-none-bar); }
+
+      /* 長條圖清單 */
+      .bars-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 140px;
+        align-items: center;
+        gap: 12px;
+      }
+
+      @media (max-width: 600px) {
+        .bar-row {
+          grid-template-columns: 60px 1fr 110px;
+          gap: 8px;
+        }
+      }
+
+      .bar-kiong-name {
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .bar-kiong-name:hover {
+        color: var(--primary-color);
+        text-decoration: underline;
+      }
+
+      .stacked-bar {
+        height: 22px;
+        background: var(--c-none-bar);
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        width: 100%;
+        position: relative;
+      }
+
+      .bar-segment {
+        height: 100%;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .seg-official { background: var(--c-official-bar); }
+      .seg-carved { background: var(--c-carved-bar); }
+      .seg-nisim { background: var(--c-nisim-bar); }
+      .seg-none { background: var(--c-none-bar); }
+
+      .bar-meta {
+        font-size: 12px;
+        text-align: right;
+        color: var(--sub-text);
+        white-space: nowrap;
+      }
+
+      .notice-banner {
+        margin-top: 14px;
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: var(--c-nisim-bg);
+        border-left: 4px solid var(--c-nisim-bar);
+        color: var(--c-nisim-text);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .footer-license {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--sub-text);
+        line-height: 1.5;
+      }
+
+      /* 分頁導覽 */
+      .tabs-nav {
+        display: flex;
+        gap: 4px;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 20px;
+        overflow-x: auto;
+      }
+
+      .tab-btn {
+        padding: 10px 18px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--sub-text);
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .tab-btn:hover {
+        color: var(--text-color);
+      }
+
+      .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+      }
+
+      /* 分頁內容 */
+      .tab-pane {
+        display: none;
+      }
+
+      .tab-pane.active {
+        display: block;
+      }
+
+      /* 部首手風琴 / 區塊 */
+      .accordion-group {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+
+      .accordion-head {
+        padding: 12px 16px;
+        background: var(--card-bg);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: background 0.15s ease;
+      }
+
+      .accordion-head:hover {
+        background: rgba(0, 0, 0, 0.02);
+      }
+
+      .acc-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .acc-badge {
+        font-size: 12px;
+        color: var(--sub-text);
+        font-weight: normal;
+      }
+
+      .acc-bar-mini {
+        width: 100px;
+        height: 10px;
+        border-radius: 3px;
+        display: flex;
+        overflow: hidden;
+        background: var(--c-none-bar);
+      }
+
+      .accordion-body {
+        padding: 14px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-color);
+      }
+
+      /* 漢字網格 (Grid) */
+      .char-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+        gap: 6px;
+      }
+
+      .char-grid.with-py {
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      }
+
+      .char-cell {
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s;
+        border: 1px solid transparent;
+        position: relative;
+        user-select: none;
+      }
+
+      .with-py .char-cell {
+        aspect-ratio: auto;
+        padding: 6px 2px;
+      }
+
+      .char-cell:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        z-index: 2;
+      }
+
+      .cell-char {
+        font-size: 19px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+
+      .cell-py {
+        font-size: 10px;
+        line-height: 1.2;
+        margin-top: 2px;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 0 2px;
+      }
+
+      /* 四色單元格 (高對比 AA) */
+      .cell-official {
+        background: var(--c-official-bg);
+        color: var(--c-official-text);
+        border-color: rgba(46, 125, 50, 0.3);
+      }
+
+      .cell-carved {
+        background: var(--c-carved-bg);
+        color: var(--c-carved-text);
+        border-color: rgba(25, 118, 210, 0.3);
+      }
+
+      .cell-nisim {
+        background: var(--c-nisim-bg);
+        color: var(--c-nisim-text);
+        border-color: rgba(245, 124, 0, 0.3);
+      }
+
+      .cell-none {
+        background: var(--c-none-bg);
+        color: var(--c-none-text);
+        border-color: rgba(158, 158, 158, 0.3);
+      }
+
+      /* 色弱友善標記 (Colorblind mode indicators) */
+      .cb-symbol {
+        display: none;
+        font-size: 9px;
+        position: absolute;
+        top: 2px;
+        right: 3px;
+        line-height: 1;
+      }
+
+      .colorblind-friendly .cb-symbol {
+        display: block;
+      }
+
+      /* 客拼分頁樣式 */
+      .phonetic-row {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+      }
+
+      .phonetic-header {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* 175 字清單表格樣式 */
+      .table-responsive {
+        overflow-x: auto;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card-bg);
+        font-size: 14px;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .data-table th, .data-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+      }
+
+      .data-table th {
+        background: rgba(0, 0, 0, 0.03);
+        font-weight: 600;
+      }
+
+      .tag-word {
+        display: inline-block;
+        padding: 2px 6px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+        font-size: 12px;
+        margin: 2px 4px 2px 0;
+      }
+
+      /* 點擊單字彈窗 */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        backdrop-filter: blur(2px);
+      }
+
+      .modal-backdrop.open {
+        display: flex;
+      }
+
+      .modal-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        animation: popIn 0.2s ease-out;
+      }
+
+      @keyframes popIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      .modal-header {
+        padding: 14px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .modal-body {
+        padding: 18px;
+      }
+
+      .modal-close-btn {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--sub-text);
+      }
+
+      .char-hero {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .hero-char {
+        font-size: 52px;
+        font-weight: 700;
+        line-height: 1;
+        width: 76px;
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      .hero-meta {
+        font-size: 14px;
+        color: var(--sub-text);
+        line-height: 1.6;
+      }
+
+      .readings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .reading-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: var(--bg-color);
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .btn-query {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        background: var(--primary-color);
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        margin-top: 18px;
+      }
+
+      .btn-query:hover {
+        background: var(--primary-hover);
+      }
+
+      /* 載入中動畫 */
+      .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 0;
+        gap: 14px;
+        color: var(--sub-text);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 頂部頁首 -->
+    <header class="top-header">
+      <div class="header-row">
+        <div class="header-title-box">
+          <a href="/" class="back-btn" title="回客源翠首頁">
+            <i class="fas fa-arrow-left"></i> 回客源翠
+          </a>
+          <h1 class="main-title">字表涵蓋度總表</h1>
+        </div>
+        <div id="versionBadges" class="version-badges">
+          <!-- 由 JS 填入版本資訊 -->
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- 控制列面板 -->
+      <section class="card controls-card">
+        <div class="controls-grid">
+          <!-- 字集範圍 -->
+          <div class="control-group">
+            <span class="control-label">範圍：</span>
+            <div class="btn-pill-group" id="scopeGroup">
+              <button class="btn-pill active" data-scope="jf7000">jf7000 (7,772)</button>
+              <button class="btn-pill" data-scope="t12">臺灣常用 (13,064)</button>
+              <button class="btn-pill" data-scope="all">全部 Unihan (102,527)</button>
+            </div>
+          </div>
+
+          <!-- 腔調選擇（四南海大平安） -->
+          <div class="control-group">
+            <span class="control-label">腔調：</span>
+            <div class="btn-pill-group" id="kiongGroup">
+              <button class="btn-pill active" data-kiong="si">四縣</button>
+              <button class="btn-pill" data-kiong="nsi">南四縣</button>
+              <button class="btn-pill" data-kiong="ha">海陸</button>
+              <button class="btn-pill" data-kiong="da">大埔</button>
+              <button class="btn-pill" data-kiong="rh">饒平</button>
+              <button class="btn-pill" data-kiong="zh">詔安</button>
+              <button class="btn-pill" data-kiong="all">六腔總覽</button>
+            </div>
+          </div>
+
+          <!-- 搜尋與過濾 -->
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="search" id="searchInput" placeholder="搜尋漢字、拼音或部首..." />
+          </div>
+
+          <!-- 功能開關 -->
+          <div class="toggles-group">
+            <label class="toggle-label" title="在格子下方顯示客拼讀音">
+              <input type="checkbox" id="toggleShowPy" />
+              <span>顯示讀音</span>
+            </label>
+            <label class="toggle-label" title="以高對比符號區分四種狀態">
+              <input type="checkbox" id="toggleColorblind" />
+              <span>色弱友善</span>
+            </label>
+            <label class="toggle-label" title="只顯示沒有音的字（灰色）">
+              <input type="checkbox" id="toggleOnlyMissing" />
+              <span>只看缺音</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 整體涵蓋度總覽長條圖 -->
+      <section class="card summary-card">
+        <div class="summary-header">
+          <div class="summary-title" id="summaryCardTitle">六腔涵蓋度總覽</div>
+          <div class="legend-container">
+            <div class="legend-item" title="教典或認證官方條目單字音">
+              <span class="legend-swatch swatch-official"></span>
+              <span>官方 (教典／認證)</span>
+            </div>
+            <div class="legend-item" title="程式從詞條切出或人工沿襲單字音">
+              <span class="legend-swatch swatch-carved"></span>
+              <span>切出 (補字典／沿襲)</span>
+            </div>
+            <div class="legend-item" title="依廣韻、粵語推測之音節">
+              <span class="legend-swatch swatch-nisim"></span>
+              <span>擬音 (橘)</span>
+            </div>
+            <div class="legend-item" title="尚無客話讀音資料">
+              <span class="legend-swatch swatch-none"></span>
+              <span>無音 (灰)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bars-list" id="stackedBarsContainer">
+          <!-- 由 JS 繪製六腔堆疊長條 -->
+        </div>
+
+        <div class="notice-banner">
+          <i class="fas fa-flask"></i>
+          <div>
+            <strong>擬音聲明：</strong>
+            擬音係程式依《廣韻》音韻地位、粵語讀音等特徵自動推測，歡迎審查與指教。擬音獨立列出，不計入官方有據讀音。
+          </div>
+        </div>
+
+        <div class="footer-license">
+          <strong>字集與資料授權：</strong>
+          字集採用 justfont jf7000（CC BY-SA 4.0）與 Unicode® Character Database Unihan 18.0（Unicode License v3）。
+        </div>
+      </section>
+
+      <!-- 分頁標籤 -->
+      <nav class="tabs-nav" id="tabsNav">
+        <button class="tab-btn active" data-tab="bushou"><i class="fas fa-book"></i> 康熙部首</button>
+        <button class="tab-btn" data-tab="phonetic"><i class="fas fa-sort-alpha-down"></i> 客拼字母</button>
+        <button class="tab-btn" data-tab="unicode"><i class="fas fa-cubes"></i> Unicode 區塊</button>
+        <button class="tab-btn" data-tab="outside"><i class="fas fa-list-ul"></i> 詞目用字 (不在 jf7000，175字)</button>
+      </nav>
+
+      <!-- 內容區 -->
+      <section id="tabContentArea">
+        <!-- 載入中 -->
+        <div id="loadingIndicator" class="loading-spinner">
+          <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+          <span>正在載入字表資料...</span>
+        </div>
+
+        <!-- Tab 1: 部首 -->
+        <div class="tab-pane active" id="pane-bushou"></div>
+
+        <!-- Tab 2: 客拼 -->
+        <div class="tab-pane" id="pane-phonetic"></div>
+
+        <!-- Tab 3: Unicode 區塊 -->
+        <div class="tab-pane" id="pane-unicode"></div>
+
+        <!-- Tab 4: 175 字清單 -->
+        <div class="tab-pane" id="pane-outside"></div>
+      </section>
+    </main>
+
+    <!-- 單字詳細 Modal -->
+    <div class="modal-backdrop" id="charModalBackdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modalTitle">漢字詳情</h3>
+          <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="char-hero">
+            <div class="hero-char cell-official" id="modalHeroChar">字</div>
+            <div class="hero-meta">
+              <div id="modalUnicode">Unicode: U+5B57</div>
+              <div id="modalRadical">部首：子 (39.3)</div>
+              <div id="modalPack">字集：jf7000 基本包</div>
+              <div id="modalBlock">區塊：基本區</div>
+            </div>
+          </div>
+          <h4>六腔讀音與來源</h4>
+          <div class="readings-list" id="modalReadingsList"></div>
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn-query" id="modalQueryBtn">
+            <i class="fas fa-search"></i> 在客源翠字典查詢此字
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 載入核心 JS -->
+    <script src="coverage.js"></script>
+  </body>
+</html>
