@@ -122,17 +122,38 @@
   }
 
   /**
+   * 將 HTML ruby 標註（<ruby>...<rt>...</rt></ruby> 或 ...<rt>...</rt>）正規化為括號標註格式
+   */
+  function normalizeRuby(text) {
+    if (!text || (!text.includes('<rt') && !text.includes('<ruby'))) {
+      return text;
+    }
+    let result = text;
+    // 1. 標準 <ruby> 標籤模式：<ruby>漢<rt>han</rt></ruby> 或含 <rp>、<rb>
+    result = result.replace(
+      /<ruby[^>]*>(?:<rb>)?([^<]+?)(?:<\/rb>)?(?:\s*<rp>[^<]*<\/rp>\s*)?<rt[^>]*>([^<]+?)<\/rt>(?:\s*<rp>[^<]*<\/rp>\s*)?<\/ruby>/gi,
+      '$1 ($2)',
+    );
+    // 2. 簡寫模式：字詞<rt>拼音</rt>
+    result = result.replace(/([^<>\s]+)<rt[^>]*>([^<]+?)<\/rt>/gi, '$1 ($2)');
+    // 3. 清除殘留的 ruby 相關標籤
+    result = result.replace(/<\/?(?:ruby|rb|rt|rp)[^>]*>/gi, '');
+    return result;
+  }
+
+  /**
    * 解析單行企盤格式文字
-   * @param {string} line - 輸入字串
+   * @param {string} rawLine - 輸入字串
    * @param {object} options - 轉換選項
    * @param {boolean} [options.autoSpaceRomance=false] - 羅馬字詞間是否自動補空格（預設依照原文縫隙）
    * @param {string} [options.forceOrder='auto'] - 強制排版順序：'auto' | 'han-top' | 'rom-top'
    */
-  function parseKipanLine(line, options = {}) {
+  function parseKipanLine(rawLine, options = {}) {
+    const line = normalizeRuby(rawLine);
     const autoSpaceRomance = options.autoSpaceRomance ?? false;
 
-    // 1. 找出所有括號區塊 (支援半形與全形括號)
-    const bracketRegex = /[\(（]([^\(\)（）\r\n]+?)[\)）]/g;
+    // 1. 找出所有括號區塊 (支援圓括號 ()、（）、方括號 []、［］ 與花括號 {}、｛｝)
+    const bracketRegex = /[\(（\[［\{｛]([^\(\)（）\[\]［］\{\}｛\}\r\n]+?)[\)）\]］\}｝]/g;
     const matches = [];
     let match;
     while ((match = bracketRegex.exec(line)) !== null) {
@@ -218,12 +239,40 @@
       let hanWord = '';
       let romWord = '';
 
+      // 檢查 core 中是否包含未標註的中立字詞（如英數字、版本號 v0.0.5、ASCII 等）
+      let neutral = '';
+      let effectiveCore = core;
+
       if (isHanOutside) {
-        hanWord = core;
+        // 漢字在括號外：核心詞是漢字（[\p{Script=Han}]+），前面若夾帶英數字/符號（如 v0.0.5、100）則為 neutral
+        const match = core.match(/^([\s\S]*?[^\p{Script=Han}\s])\s*([\p{Script=Han}]+)$/u);
+        if (match && match[1].trim()) {
+          neutral = match[1].trim();
+          effectiveCore = match[2];
+        }
+      } else {
+        // 羅馬字在括號外：只有當開頭為純數字或版本號時才分離 neutral，避免拆散有縫仔拼音（如 gì oi）
+        const match = core.match(/^([0-9\.\-vV]+)\s+([a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s'’\-]+)$/u);
+        if (match && match[1].trim()) {
+          neutral = match[1].trim();
+          effectiveCore = match[2];
+        }
+      }
+
+      // 若有中立字詞（如 v0.0.5），兩行並列保留
+      if (neutral) {
+        if (hanLine && !hanLine.endsWith(' ')) hanLine += ' ';
+        hanLine += neutral + ' ';
+        if (romLine && !romLine.endsWith(' ')) romLine += ' ';
+        romLine += neutral + ' ';
+      }
+
+      if (isHanOutside) {
+        hanWord = effectiveCore;
         romWord = inside;
       } else {
         hanWord = inside;
-        romWord = core;
+        romWord = effectiveCore;
       }
 
       hanLine += hanWord;
@@ -314,7 +363,7 @@
 
     const topText = topLines.join('\n');
     const bottomText = bottomLines.join('\n');
-    const combinedText = `${topText}\n\n${bottomText}`;
+    const combinedText = `${topText}\n${bottomText}`;
 
     return {
       topText,
@@ -333,6 +382,7 @@
     hasLatin,
     convertPunctToRomance,
     convertPunctToHan,
+    normalizeRuby,
     parseKipanLine,
     convertKipanText,
   };

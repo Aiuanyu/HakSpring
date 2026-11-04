@@ -79,12 +79,38 @@ test('反向案例：第一字為羅馬字時，自動判定羅馬字在頂高�
   assert.equal(res.bottomText, '𠊎無幾愛客委會！', '底層諸夏字標點應為全形「！」');
 });
 
-test('相容性：全形括號（...）亦能正確轉換', () => {
-  const input = '客源翠（Hàg-Ngiǎn-Cui） 企盤（Kì-Pǎn）';
+test('相容性：全形括號（...）、方括號 [...]、花括號 {...} 亦能正確轉換', () => {
+  const input = '客源翠（Hàg-Ngiǎn-Cui） 企盤（Kì-Pǎn） [Sixian] {Note}';
   const res = convertKipanText(input);
 
   assert.equal(res.topText, '客源翠企盤');
-  assert.equal(res.bottomText, 'Hàg-Ngiǎn-Cui Kì-Pǎn');
+  assert.equal(res.bottomText, 'Hàg-Ngiǎn-Cui Kì-Pǎn Sixian Note');
+});
+
+test('相容性：方括號雙書寫標註與單換行驗證', () => {
+  const input = '無成功 [mǒ sǐin\'gúng] 無反應 [mǒ fàn\'in]';
+  const res = convertKipanText(input);
+
+  assert.equal(res.topText, '無成功無反應');
+  assert.equal(res.bottomText, 'mǒ sǐin\'gúng mǒ fàn\'in');
+  assert.equal(res.combinedText, '無成功無反應\nmǒ sǐin\'gúng mǒ fàn\'in', '雙行之間僅換一行');
+});
+
+test('相容性：非企盤候選詞的中立英數（如 v0.0.5）兩行並列保留', () => {
+  const input =
+    '這幾下日 (ià giá ngìd) 做到恁仔 (zo do àn\'é)，有想愛 (iú xiòng\'oi) 推到 (túi do) v0.0.5 吔 (ě)';
+  const res = convertKipanText(input);
+
+  assert.equal(
+    res.topText,
+    '這幾下日做到恁仔，有想愛推到 v0.0.5 吔',
+    '頂層諸夏字行應保留 v0.0.5',
+  );
+  assert.equal(
+    res.bottomText,
+    'ià giá ngìd zo do àn\'é, iú xiòng\'oi túi do v0.0.5 ě',
+    '底層羅馬字行也應保留 v0.0.5',
+  );
 });
 
 test('多段落處理：換行符保持段落對稱且標點雙向對應', () => {
