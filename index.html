@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.60" />
+    <link rel="stylesheet" href="style.css?v=4.7.61" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -54,7 +54,7 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.82" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.83" defer></script>
     <script
       type="text/javascript"
       src="js/gip-superscript.js?v=1.0.1"
@@ -96,7 +96,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.6.12"
+      src="js/cloud-sync.js?v=4.6.13"
       defer
     ></script>
     <script
@@ -173,15 +173,6 @@
         <button id="showRomanizerBtn" title="客語羅馬字轉換工具">
           <i class="fas fa-pen-to-square"></i>
         </button>
-        <a
-          id="charCoverageBtn"
-          href="coverage.html"
-          title="字表涵蓋度總表"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <i class="fas fa-chart-pie"></i>
-        </a>
         <span id="progressDetails"></span>
         <!-- <--- 在這裡加入這個 span -->
         <div id="search-container">
@@ -1282,7 +1273,10 @@
               <button id="settingsBtn" title="全域設定">
                 <i class="fas fa-cog"></i>
               </button>
-              <button id="cloudSyncBtn" title="雲端同步（Google 登入）">
+              <button id="manualSyncBtn" title="手動共步（跨裝置無痛轉移）">
+                <i class="fas fa-arrows-rotate"></i>
+              </button>
+              <button id="cloudSyncBtn" title="雲端同步（Google 登入）" style="display: none;">
                 <i class="fas fa-cloud"></i>
               </button>
               <button
@@ -1302,6 +1296,15 @@
               <button id="dataManagementBtn" title="資料管理（備份／還原）">
                 <i class="fas fa-database"></i>
               </button>
+              <a
+                id="charCoverageBtn"
+                href="coverage.html"
+                title="字表涵蓋度總表"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="fas fa-chart-pie"></i>
+              </a>
               <button
                 id="infoModalCloseBtn"
                 class="modal-close-btn"

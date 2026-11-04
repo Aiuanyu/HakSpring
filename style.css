@@ -2522,6 +2522,7 @@ input:checked+.slider:before {
 /* Info Button in Header */
 #infoButton,
 #settingsBtn,
+#manualSyncBtn,
 #showRomanizerBtn,
 #charCoverageBtn,
 #dataManagementBtn,
@@ -2542,6 +2543,7 @@ input:checked+.slider:before {
 
 #infoButton i,
 #settingsBtn i,
+#manualSyncBtn i,
 #showRomanizerBtn i,
 #charCoverageBtn i,
 #dataManagementBtn i,
@@ -2552,6 +2554,7 @@ input:checked+.slider:before {
 /* #infoButton focus-visible 效果會由全域 :focus-visible 處理 */
 #infoButton:hover i,
 #settingsBtn:hover i,
+#manualSyncBtn:hover i,
 #showRomanizerBtn:hover i,
 #charCoverageBtn:hover i,
 #dataManagementBtn:hover i,
@@ -3054,6 +3057,7 @@ input:checked+.slider:before {
 
   #infoButton,
   #settingsBtn,
+  #manualSyncBtn,
   #showRomanizerBtn,
   #charCoverageBtn,
   #dataManagementBtn,
@@ -3063,6 +3067,7 @@ input:checked+.slider:before {
 
   #infoButton:hover i,
   #settingsBtn:hover i,
+  #manualSyncBtn:hover i,
   #showRomanizerBtn:hover i,
   #charCoverageBtn:hover i,
   #dataManagementBtn:hover i,

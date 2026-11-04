@@ -923,14 +923,16 @@ function updateSyncUI(isLoggedIn, user) {
     cloudSyncBtn.title = '已登入雲端同步';
     cloudSyncBtn.classList.add('logged-in');
 
-    if (cloudSyncUserBtn) {
-      const displayName =
-        user.user_metadata?.full_name || user.email || '使用者';
-      cloudSyncUserBtn.dataset.tooltip = displayName;
-      cloudSyncUserBtn.style.display = 'inline-block';
-    }
-    if (cloudSyncLogoutBtn) {
-      cloudSyncLogoutBtn.style.display = 'inline-block';
+    if (cloudSyncBtn.style.display !== 'none') {
+      if (cloudSyncUserBtn) {
+        const displayName =
+          user.user_metadata?.full_name || user.email || '使用者';
+        cloudSyncUserBtn.dataset.tooltip = displayName;
+        cloudSyncUserBtn.style.display = 'inline-block';
+      }
+      if (cloudSyncLogoutBtn) {
+        cloudSyncLogoutBtn.style.display = 'inline-block';
+      }
     }
   } else {
     cloudSyncBtn.innerHTML = '<i class="fas fa-cloud"></i>';
@@ -1211,7 +1213,7 @@ function showSyncRestrictedNotice() {
     document.body.prepend(banner);
   }
   banner.innerHTML =
-    '⚠️ 失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="bannerManualSyncLink" style="color: #533f03; font-weight: bold; text-decoration: underline; cursor: pointer;">請點這位</a>）';
+    '⚠️ 失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="bannerManualSyncLink" style="color: #533f03; font-weight: bold; text-decoration: underline; cursor: pointer;"><i class="fas fa-arrows-rotate"></i> 請點這位</a>）';
 
   const link = document.getElementById('bannerManualSyncLink');
   if (link) {
@@ -1237,7 +1239,7 @@ function showManualSyncModal() {
     modal.innerHTML = `
       <div class="modal-dialog" style="background: var(--bg-card, #fff); color: var(--text-main, #333); padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="margin: 0; font-size: 18px;">📲 客源翠手動共步（跨裝置無痛轉移）</h3>
+          <h3 style="margin: 0; font-size: 18px;"><i class="fas fa-arrows-rotate"></i> 客源翠手動共步（跨裝置無痛轉移）</h3>
           <button id="closeManualSyncModalBtn" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted, #888);">&times;</button>
         </div>
         <div style="font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; background: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px;">
@@ -1288,18 +1290,57 @@ function showManualSyncModal() {
           const exportData = exportCurrentSyncData();
           const base64Url = await compressSyncDataToUrl(exportData);
           const syncUrl = `${window.location.origin}${window.location.pathname}#sync=${base64Url}`;
+
+          let copied = false;
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(syncUrl);
-            alert('✅ 手動共步網址已複製到剪貼簿！\n\n請將網址傳送到您的另一台手機或電腦，打開即可一鍵完成合併同步。');
+            try {
+              await navigator.clipboard.writeText(syncUrl);
+              copied = true;
+            } catch (clipErr) {
+              console.warn('[CloudSync] 剪貼簿寫入受阻:', clipErr);
+            }
+          }
+
+          // 顯示短網址框供複製或查看
+          let urlDisplay = document.getElementById('manualSyncUrlDisplay');
+          if (!urlDisplay) {
+            urlDisplay = document.createElement('div');
+            urlDisplay.id = 'manualSyncUrlDisplay';
+            urlDisplay.style.cssText = 'margin-top: 10px;';
+            urlDisplay.innerHTML = `
+              <div style="font-size: 12px; color: var(--text-muted, #666); margin-bottom: 4px;">手動共步短網址：</div>
+              <input type="text" readonly id="manualSyncUrlInput" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid var(--border-color, #ccc); border-radius: 4px; box-sizing: border-box; background: var(--bg-input, #f9f9f9); color: var(--text-main, #333);" />
+            `;
+            copyBtn.parentNode.appendChild(urlDisplay);
+          }
+          const inputEl = document.getElementById('manualSyncUrlInput');
+          if (inputEl) {
+            inputEl.value = syncUrl;
+            urlDisplay.style.display = 'block';
+            inputEl.focus();
+            inputEl.select();
+          }
+
+          if (copied) {
+            copyBtn.textContent = '✅ 已複製手動共步網址！';
+            copyBtn.style.background = '#1b5e20';
           } else {
             prompt('請複製以下手動共步網址：', syncUrl);
+            copyBtn.textContent = '✅ 已產生短網址！';
           }
+
+          // 產生網址過後，按鈕恢復原始狀態（2.5 秒後恢復為可再次點擊狀態）
+          setTimeout(() => {
+            copyBtn.disabled = false;
+            copyBtn.textContent = '📋 複製手動共步網址';
+            copyBtn.style.background = '#2e7d32';
+          }, 2500);
         } catch (e) {
           console.error('[CloudSync] 產生同步網址失敗:', e);
           alert('產生同步網址失敗：' + e.message);
-        } finally {
           copyBtn.disabled = false;
           copyBtn.textContent = '📋 複製手動共步網址';
+          copyBtn.style.background = '#2e7d32';
         }
       };
     }
@@ -1348,6 +1389,14 @@ function showManualSyncModal() {
     }
   }
 
+  // 每次打開時重置按鈕狀態
+  const copyBtn = document.getElementById('copySyncUrlBtn');
+  if (copyBtn) {
+    copyBtn.disabled = false;
+    copyBtn.textContent = '📋 複製手動共步網址';
+    copyBtn.style.background = '#2e7d32';
+  }
+
   modal.style.display = 'flex';
 }
 
@@ -1360,11 +1409,17 @@ if (typeof window !== 'undefined') {
   window.decompressSyncDataFromUrl = decompressSyncDataFromUrl;
 }
 
-// 全域監聽 manual-sync 連結
+// 全域監聽 manual-sync 連結與按鈕
 if (typeof document !== 'undefined') {
   document.addEventListener('click', (e) => {
-    const target = e.target.closest('a');
-    if (target && (target.getAttribute('href') === '#manual-sync' || target.id === 'manualSyncLink' || target.id === 'bannerManualSyncLink')) {
+    const target = e.target.closest('a, button');
+    if (
+      target &&
+      (target.getAttribute('href') === '#manual-sync' ||
+        target.id === 'manualSyncLink' ||
+        target.id === 'bannerManualSyncLink' ||
+        target.id === 'manualSyncBtn')
+    ) {
       e.preventDefault();
       showManualSyncModal();
     }
