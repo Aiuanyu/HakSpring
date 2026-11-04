@@ -9238,6 +9238,12 @@ function initializeAppUI() {
           event.preventDefault();
           closeWhatsNewModal();
           infoModal.classList.add('is-visible');
+        } else if (target && (target.getAttribute('href') === '#manual-sync' || target.id === 'manualSyncLink')) {
+          event.preventDefault();
+          closeWhatsNewModal();
+          if (typeof window.showManualSyncModal === 'function') {
+            window.showManualSyncModal();
+          }
         }
       });
     }
@@ -10077,6 +10083,12 @@ function initializeCloudSync() {
 
   if (cloudSyncBtn) {
     cloudSyncBtn.addEventListener('click', () => {
+      if (typeof cloudSyncState !== 'undefined' && cloudSyncState.isRestricted) {
+        if (typeof showManualSyncModal === 'function') {
+          showManualSyncModal();
+        }
+        return;
+      }
       if (typeof cloudSyncState !== 'undefined' && cloudSyncState.isLoggedIn) {
         // 已登入，手動觸發同步
         if (typeof syncFromCloud === 'function') {

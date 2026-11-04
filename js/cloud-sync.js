@@ -22,12 +22,16 @@ let cloudSyncState = {
   user: null,
   isSyncing: false,
   lastSyncTime: null,
+  isRestricted: false,
 };
 
 /**
  * 初始化雲端同步模組
  */
 async function initCloudSync() {
+  // 檢查是否從網址帶入手動同步資料 (#sync=...)
+  checkUrlSyncPayload();
+
   const client = getSupabaseClient();
   if (!client) {
     console.error('[CloudSync] Supabase Client 未初始化');
@@ -194,193 +198,7 @@ async function syncFromCloud() {
     }
 
     if (data) {
-      // 1. 準備資料
-      const localBookmarks = JSON.parse(
-        localStorage.getItem('hakkaBookmarks') || '[]',
-      );
-      const cloudBookmarks = data.bookmarks || [];
-
-      const localPrefs = {
-        romanizerJoiningMode:
-          localStorage.getItem('romanizerJoiningMode') || 'none',
-        hakfaDisplayScript: normalizeDisplayScript(
-          localStorage.getItem('hakfaDisplayScript'),
-        ),
-        showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
-        gameLastDataVarName:
-          localStorage.getItem('hakkaGameLastDataVarName') || '',
-        userName: localStorage.getItem('hakkaUserName') || '',
-        userLocation: localStorage.getItem('hakkaUserLocation') || '',
-      };
-      const cloudPrefs = data.preferences || {};
-
-      const localProgress = JSON.parse(
-        localStorage.getItem('hakkaLearningProgress') || '{}'
-      );
-      const cloudProgress = data.learning_progress || {};
-
-      const localStats = JSON.parse(
-        localStorage.getItem('hakkaDailyStats') || '{}'
-      );
-      const cloudStats = data.daily_stats || {};
-      const localStatsByLevel = JSON.parse(
-        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
-      );
-      const cloudStatsByLevel = data.daily_stats_by_level || {};
-      // 已同步基準快照：用來算「本地相對上次同步的新增量」，讓相加合併冪等
-      const syncedStats = JSON.parse(
-        localStorage.getItem('hakkaDailyStatsSynced') || '{}'
-      );
-      const syncedStatsByLevel = JSON.parse(
-        localStorage.getItem('hakkaDailyStatsByLevelSynced') || '{}'
-      );
-      // 偏好設定的已同步快照：本地值 === 快照，才代表本地沒有「尚未推上雲端」的新變更，
-      // 此時才可以放心讓雲端值覆蓋本地；否則就是本地剛改過還沒同步，必須保留本地、留給下面 Smart Push 推上去。
-      // 沒有這層判斷的話，本地剛寫入的新值會被下面「雲端有值就覆寫本地」的邏輯讀成舊資料而遺失。
-      const syncedPrefs = JSON.parse(
-        localStorage.getItem('hakkaPrefsSynced') || '{}'
-      );
-
-      const localFavs = JSON.parse(
-        localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
-      );
-      const cloudFavs = data.daily_favs || { items: [], tomb: {} };
-
-      const localFamiliarity = JSON.parse(
-        localStorage.getItem('hakkaFamiliarity') || '{}'
-      );
-      const cloudFamiliarity = data.familiarity || {};
-
-      // 2. 合併資料
-      const mergedBookmarks = mergeBookmarks(localBookmarks, cloudBookmarks);
-      const mergedProgress = mergeProgress(localProgress, cloudProgress);
-      const mergedStats = mergeDailyStats(localStats, cloudStats, syncedStats);
-      const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, cloudStatsByLevel, syncedStatsByLevel);
-      const mergedFavs = mergeDailyFavs(localFavs, cloudFavs);
-      const mergedFamiliarity = mergeFamiliarity(localFamiliarity, cloudFamiliarity);
-
-      // 一詞一卡制：合併是聯集，雲端殘留的舊題型 key（|p/|l/|c）會在這裡復活，
-      // 折回 |m 詞卡後再落地／比對，讓 Smart Push 順勢把雲端的舊 key 也清掉。
-      if (typeof window.foldTypeKeysIntoWordCards === 'function') {
-        window.foldTypeKeysIntoWordCards(mergedProgress);
-      }
-
-      // 3. 寫入本地 storage
-      localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
-      localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
-      localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
-      localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
-      localStorage.setItem('hakkaDailyFavs', JSON.stringify(mergedFavs));
-      localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
-      // 註：已同步基準快照 hakkaDailyStatsSynced 於「上傳成功後」才更新（見下方），
-      // 避免 push 失敗卻把基準推進，導致該次新增量算成 0、永遠傳不上去。
-
-      // 合併偏好設定：本地相對快照沒變 → 套用雲端值；本地相對快照有變 → 保留本地、留給 Smart Push 推上去
-      // 使用 !== undefined && !== null 確保 falsy 值（如空字串）也能正確處理
-      let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
-      if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
-        if (cloudPrefs.romanizerJoiningMode !== undefined && cloudPrefs.romanizerJoiningMode !== null) {
-          finalRomanizerJoiningMode = cloudPrefs.romanizerJoiningMode;
-        }
-      }
-      localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
-
-      let finalHakfaDisplayScript = localPrefs.hakfaDisplayScript;
-      if (localPrefs.hakfaDisplayScript === normalizeDisplayScript(syncedPrefs.hakfaDisplayScript)) {
-        if (cloudPrefs.hakfaDisplayScript !== undefined && cloudPrefs.hakfaDisplayScript !== null) {
-          finalHakfaDisplayScript = normalizeDisplayScript(cloudPrefs.hakfaDisplayScript);
-        }
-      }
-      localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
-      // 另一台裝置改過顯示模式：本機值被雲端覆寫以後，愛讓開關、膠囊鈕摎已經算繪个標音一齊更新
-      if (
-        finalHakfaDisplayScript !== localPrefs.hakfaDisplayScript &&
-        typeof window.applyHakfaDisplayScript === 'function'
-      ) {
-        window.applyHakfaDisplayScript(finalHakfaDisplayScript);
-      }
-
-      // 美濃腔（LWW）：另一台裝置改過，本機值被雲端覆寫以後，愛讓開關摎已經算繪个標音一齊更新
-      const finalShowMeinungFill = mergeBoolPref(
-        localPrefs.showMeinungFill,
-        syncedPrefs.showMeinungFill,
-        cloudPrefs.showMeinungFill,
-      );
-      localStorage.setItem('showMeinungFill', String(finalShowMeinungFill));
-      if (
-        finalShowMeinungFill !== localPrefs.showMeinungFill &&
-        typeof window.applyMeinungFillSetting === 'function'
-      ) {
-        window.applyMeinungFillSetting(finalShowMeinungFill);
-      }
-
-      // 空字串代表雲端「從未玩過遊戲」，此時不套用（保留本地或快照值）
-      let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
-      if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
-        if (cloudPrefs.gameLastDataVarName) {
-          finalGameLastDataVarName = cloudPrefs.gameLastDataVarName;
-        }
-      }
-      localStorage.setItem('hakkaGameLastDataVarName', finalGameLastDataVarName);
-
-      let finalUserName = localPrefs.userName;
-      if (localPrefs.userName === (syncedPrefs.userName || '')) {
-        if (cloudPrefs.userName !== undefined && cloudPrefs.userName !== null) {
-          finalUserName = cloudPrefs.userName;
-        }
-      }
-      localStorage.setItem('hakkaUserName', finalUserName);
-
-      let finalUserLocation = localPrefs.userLocation;
-      if (localPrefs.userLocation === (syncedPrefs.userLocation || '')) {
-        if (cloudPrefs.userLocation !== undefined && cloudPrefs.userLocation !== null) {
-          finalUserLocation = cloudPrefs.userLocation;
-        }
-      }
-      localStorage.setItem('hakkaUserLocation', finalUserLocation);
-
-      // 4. 智慧上傳 (Smart Push)：只有結果與雲端不一致時才上傳
-      // 比對 merged vs cloud
-      const bookmarksChanged =
-        JSON.stringify(mergedBookmarks) !== JSON.stringify(cloudBookmarks);
-      // 偏好設定比對用「合併後的最終值」而非同步前的 localPrefs，
-      // 否則本地被雲端值覆寫後，仍拿舊的 localPrefs 去比對會誤判成「有變更」，觸發把剛拉下來的舊值原封不動又推回雲端。
-      const prefsChanged =
-        finalRomanizerJoiningMode !== (cloudPrefs.romanizerJoiningMode || 'none') ||
-        finalHakfaDisplayScript !== normalizeDisplayScript(cloudPrefs.hakfaDisplayScript) ||
-        finalShowMeinungFill !== (cloudPrefs.showMeinungFill === true) ||
-        finalGameLastDataVarName !== (cloudPrefs.gameLastDataVarName || '') ||
-        finalUserName !== (cloudPrefs.userName || '') ||
-        finalUserLocation !== (cloudPrefs.userLocation || '');
-      const progressChanged =
-        JSON.stringify(mergedProgress) !== JSON.stringify(cloudProgress);
-      const statsChanged =
-        JSON.stringify(mergedStats) !== JSON.stringify(cloudStats) ||
-        JSON.stringify(mergedStatsByLevel) !== JSON.stringify(cloudStatsByLevel);
-      const favsChanged =
-        JSON.stringify(mergedFavs) !== JSON.stringify(cloudFavs);
-
-      if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged) {
-        console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
-        await syncToCloud();
-      } else {
-        console.log('[CloudSync] 資料一致，跳過上傳');
-      }
-      // 走到這裡＝雲端已與 merged 結果對齊（有變上傳成功、無變本就一致；
-      // syncToCloud 失敗會 throw 到外層 catch、不會到這行）→ 安全推進基準快照。
-      localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
-      localStorage.setItem('hakkaDailyStatsByLevelSynced', JSON.stringify(mergedStatsByLevel));
-      localStorage.setItem(
-        'hakkaPrefsSynced',
-        JSON.stringify({
-          romanizerJoiningMode: finalRomanizerJoiningMode,
-          hakfaDisplayScript: finalHakfaDisplayScript,
-          showMeinungFill: finalShowMeinungFill,
-          gameLastDataVarName: finalGameLastDataVarName,
-          userName: finalUserName,
-          userLocation: finalUserLocation,
-        })
-      );
+      await applyIncomingSyncData(data, false);
     } else {
       // 雲端沒有資料，上傳本地資料
       console.log('[CloudSync] 雲端無資料，執行初始化上傳');
@@ -407,24 +225,25 @@ async function syncFromCloud() {
       );
     }
 
-    // 同步完成後立即更新 UI
-    if (typeof window.updateProgressDropdown === 'function') {
-      window.updateProgressDropdown();
-    }
-    if (window.DailyWord && typeof window.DailyWord.refreshUI === 'function') {
-      window.DailyWord.refreshUI();
-    }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('hakkaFavChanged'));
-    }
-
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');
   } catch (err) {
     console.error('[CloudSync] 同步失敗:', err);
     updateSyncStatusUI('error');
-    // 顯示用戶可見的錯誤通知
-    showSyncError('同步失敗，請稍後再試');
+
+    // 檢查是否為 Supabase egress 超額或專案受限
+    const isRestricted =
+      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
+      String(err).includes('exceed_egress_quota') ||
+      String(err).includes('restricted');
+
+    if (isRestricted) {
+      stopPeriodicSync(); // 停止無謂輪詢
+      updateSyncStatusUI('restricted');
+      showSyncRestrictedNotice();
+    } else {
+      showSyncError('同步失敗，請稍後再試');
+    }
   } finally {
     cloudSyncState.isSyncing = false;
   }
@@ -493,8 +312,280 @@ async function syncToCloud() {
     console.log('[CloudSync] 已上傳到雲端');
   } catch (err) {
     console.error('[CloudSync] 上傳失敗:', err);
-    showSyncError('上傳失敗，請稍後再試');
+    const isRestricted =
+      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
+      String(err).includes('exceed_egress_quota') ||
+      String(err).includes('restricted');
+
+    if (isRestricted) {
+      stopPeriodicSync();
+      updateSyncStatusUI('restricted');
+      showSyncRestrictedNotice();
+    } else {
+      showSyncError('上傳失敗，請稍後再試');
+    }
   }
+}
+
+/**
+ * 核心合併邏輯：雲端拉取 (syncFromCloud) 與手動匯入 (Import) 100% 共用
+ * @param {object} data - 外部傳入之同步資料包
+ * @param {boolean} isFromManual - 是否為手動匯入
+ */
+async function applyIncomingSyncData(data, isFromManual = false) {
+  if (!data) return false;
+
+  // 1. 準備資料
+  const localBookmarks = JSON.parse(
+    localStorage.getItem('hakkaBookmarks') || '[]',
+  );
+  const incomingBookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
+
+  const localPrefs = {
+    romanizerJoiningMode:
+      localStorage.getItem('romanizerJoiningMode') || 'none',
+    hakfaDisplayScript: normalizeDisplayScript(
+      localStorage.getItem('hakfaDisplayScript'),
+    ),
+    showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+    gameLastDataVarName:
+      localStorage.getItem('hakkaGameLastDataVarName') || '',
+    userName: localStorage.getItem('hakkaUserName') || '',
+    userLocation: localStorage.getItem('hakkaUserLocation') || '',
+  };
+  const incomingPrefs = data.preferences || {};
+
+  const localProgress = JSON.parse(
+    localStorage.getItem('hakkaLearningProgress') || '{}'
+  );
+  const incomingProgress = data.learning_progress || {};
+
+  const localStats = JSON.parse(
+    localStorage.getItem('hakkaDailyStats') || '{}'
+  );
+  const incomingStats = data.daily_stats || {};
+  const localStatsByLevel = JSON.parse(
+    localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+  );
+  const incomingStatsByLevel = data.daily_stats_by_level || {};
+  const syncedStats = JSON.parse(
+    localStorage.getItem('hakkaDailyStatsSynced') || '{}'
+  );
+  const syncedStatsByLevel = JSON.parse(
+    localStorage.getItem('hakkaDailyStatsByLevelSynced') || '{}'
+  );
+  const syncedPrefs = JSON.parse(
+    localStorage.getItem('hakkaPrefsSynced') || '{}'
+  );
+
+  const localFavs = JSON.parse(
+    localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
+  );
+  const incomingFavs = data.daily_favs || { items: [], tomb: {} };
+
+  const localFamiliarity = JSON.parse(
+    localStorage.getItem('hakkaFamiliarity') || '{}'
+  );
+  const incomingFamiliarity = data.familiarity || {};
+
+  // 2. 合併資料
+  const mergedBookmarks = mergeBookmarks(localBookmarks, incomingBookmarks);
+  const mergedProgress = mergeProgress(localProgress, incomingProgress);
+  const mergedStats = mergeDailyStats(localStats, incomingStats, syncedStats);
+  const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, incomingStatsByLevel, syncedStatsByLevel);
+  const mergedFavs = mergeDailyFavs(localFavs, incomingFavs);
+  const mergedFamiliarity = mergeFamiliarity(localFamiliarity, incomingFamiliarity);
+
+  if (typeof window.foldTypeKeysIntoWordCards === 'function') {
+    window.foldTypeKeysIntoWordCards(mergedProgress);
+  }
+
+  // 3. 寫入本地 storage
+  localStorage.setItem('hakkaBookmarks', JSON.stringify(mergedBookmarks));
+  localStorage.setItem('hakkaLearningProgress', JSON.stringify(mergedProgress));
+  localStorage.setItem('hakkaDailyStats', JSON.stringify(mergedStats));
+  localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
+  localStorage.setItem('hakkaDailyFavs', JSON.stringify(mergedFavs));
+  localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
+
+  // 合併偏好設定
+  let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
+  if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
+    if (incomingPrefs.romanizerJoiningMode !== undefined && incomingPrefs.romanizerJoiningMode !== null) {
+      finalRomanizerJoiningMode = incomingPrefs.romanizerJoiningMode;
+    }
+  }
+  localStorage.setItem('romanizerJoiningMode', finalRomanizerJoiningMode);
+
+  let finalHakfaDisplayScript = localPrefs.hakfaDisplayScript;
+  if (localPrefs.hakfaDisplayScript === normalizeDisplayScript(syncedPrefs.hakfaDisplayScript)) {
+    if (incomingPrefs.hakfaDisplayScript !== undefined && incomingPrefs.hakfaDisplayScript !== null) {
+      finalHakfaDisplayScript = normalizeDisplayScript(incomingPrefs.hakfaDisplayScript);
+    }
+  }
+  localStorage.setItem('hakfaDisplayScript', finalHakfaDisplayScript);
+  if (
+    finalHakfaDisplayScript !== localPrefs.hakfaDisplayScript &&
+    typeof window.applyHakfaDisplayScript === 'function'
+  ) {
+    window.applyHakfaDisplayScript(finalHakfaDisplayScript);
+  }
+
+  const finalShowMeinungFill = mergeBoolPref(
+    localPrefs.showMeinungFill,
+    syncedPrefs.showMeinungFill,
+    incomingPrefs.showMeinungFill,
+  );
+  localStorage.setItem('showMeinungFill', String(finalShowMeinungFill));
+  if (
+    finalShowMeinungFill !== localPrefs.showMeinungFill &&
+    typeof window.applyMeinungFillSetting === 'function'
+  ) {
+    window.applyMeinungFillSetting(finalShowMeinungFill);
+  }
+
+  let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
+  if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
+    if (incomingPrefs.gameLastDataVarName) {
+      finalGameLastDataVarName = incomingPrefs.gameLastDataVarName;
+    }
+  }
+  localStorage.setItem('hakkaGameLastDataVarName', finalGameLastDataVarName);
+
+  let finalUserName = localPrefs.userName;
+  if (localPrefs.userName === (syncedPrefs.userName || '')) {
+    if (incomingPrefs.userName !== undefined && incomingPrefs.userName !== null) {
+      finalUserName = incomingPrefs.userName;
+    }
+  }
+  localStorage.setItem('hakkaUserName', finalUserName);
+
+  let finalUserLocation = localPrefs.userLocation;
+  if (localPrefs.userLocation === (syncedPrefs.userLocation || '')) {
+    if (incomingPrefs.userLocation !== undefined && incomingPrefs.userLocation !== null) {
+      finalUserLocation = incomingPrefs.userLocation;
+    }
+  }
+  localStorage.setItem('hakkaUserLocation', finalUserLocation);
+
+  // 4. 推進快照（手動匯入直接推進；雲端同步則在 Smart Push 後推進）
+  if (isFromManual) {
+    localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
+    localStorage.setItem('hakkaDailyStatsByLevelSynced', JSON.stringify(mergedStatsByLevel));
+    localStorage.setItem(
+      'hakkaPrefsSynced',
+      JSON.stringify({
+        romanizerJoiningMode: finalRomanizerJoiningMode,
+        hakfaDisplayScript: finalHakfaDisplayScript,
+        showMeinungFill: finalShowMeinungFill,
+        gameLastDataVarName: finalGameLastDataVarName,
+        userName: finalUserName,
+        userLocation: finalUserLocation,
+      })
+    );
+  } else {
+    // 雲端 Smart Push 比對
+    const bookmarksChanged =
+      JSON.stringify(mergedBookmarks) !== JSON.stringify(incomingBookmarks);
+    const prefsChanged =
+      finalRomanizerJoiningMode !== (incomingPrefs.romanizerJoiningMode || 'none') ||
+      finalHakfaDisplayScript !== normalizeDisplayScript(incomingPrefs.hakfaDisplayScript) ||
+      finalShowMeinungFill !== (incomingPrefs.showMeinungFill === true) ||
+      finalGameLastDataVarName !== (incomingPrefs.gameLastDataVarName || '') ||
+      finalUserName !== (incomingPrefs.userName || '') ||
+      finalUserLocation !== (incomingPrefs.userLocation || '');
+    const progressChanged =
+      JSON.stringify(mergedProgress) !== JSON.stringify(incomingProgress);
+    const statsChanged =
+      JSON.stringify(mergedStats) !== JSON.stringify(incomingStats) ||
+      JSON.stringify(mergedStatsByLevel) !== JSON.stringify(incomingStatsByLevel);
+    const favsChanged =
+      JSON.stringify(mergedFavs) !== JSON.stringify(incomingFavs);
+    const familiarityChanged =
+      JSON.stringify(mergedFamiliarity) !== JSON.stringify(incomingFamiliarity);
+
+    if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged) {
+      console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
+      await syncToCloud();
+    } else {
+      console.log('[CloudSync] 資料一致，跳過上傳');
+    }
+    localStorage.setItem('hakkaDailyStatsSynced', JSON.stringify(mergedStats));
+    localStorage.setItem('hakkaDailyStatsByLevelSynced', JSON.stringify(mergedStatsByLevel));
+    localStorage.setItem(
+      'hakkaPrefsSynced',
+      JSON.stringify({
+        romanizerJoiningMode: finalRomanizerJoiningMode,
+        hakfaDisplayScript: finalHakfaDisplayScript,
+        showMeinungFill: finalShowMeinungFill,
+        gameLastDataVarName: finalGameLastDataVarName,
+        userName: finalUserName,
+        userLocation: finalUserLocation,
+      })
+    );
+  }
+
+  // 5. 觸發 UI 更新
+  if (typeof window.updateProgressDropdown === 'function') {
+    window.updateProgressDropdown();
+  }
+  if (window.DailyWord && typeof window.DailyWord.refreshUI === 'function') {
+    window.DailyWord.refreshUI();
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('hakkaFavChanged'));
+    window.dispatchEvent(new CustomEvent('hakkaFamiliarityChanged'));
+  }
+
+  return true;
+}
+
+/**
+ * 匯出本機所有同步資料包（格式與 syncToCloud payload 100% 完全共樣）
+ */
+function exportCurrentSyncData() {
+  const bookmarks = JSON.parse(
+    localStorage.getItem('hakkaBookmarks') || '[]',
+  );
+  const preferences = {
+    romanizerJoiningMode:
+      localStorage.getItem('romanizerJoiningMode') || 'none',
+    hakfaDisplayScript: normalizeDisplayScript(
+      localStorage.getItem('hakfaDisplayScript'),
+    ),
+    showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+    gameLastDataVarName:
+      localStorage.getItem('hakkaGameLastDataVarName') || '',
+    userName: localStorage.getItem('hakkaUserName') || '',
+    userLocation: localStorage.getItem('hakkaUserLocation') || '',
+  };
+  const learningProgress = JSON.parse(
+    localStorage.getItem('hakkaLearningProgress') || '{}'
+  );
+  const dailyStats = JSON.parse(
+    localStorage.getItem('hakkaDailyStats') || '{}'
+  );
+  const dailyStatsByLevel = JSON.parse(
+    localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
+  );
+  const dailyFavs = JSON.parse(
+    localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
+  );
+  const familiarity = JSON.parse(
+    localStorage.getItem('hakkaFamiliarity') || '{}'
+  );
+
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    bookmarks,
+    preferences,
+    learning_progress: learningProgress,
+    daily_stats: dailyStats,
+    daily_stats_by_level: dailyStatsByLevel,
+    daily_favs: dailyFavs,
+    familiarity,
+  };
 }
 
 /**
@@ -892,7 +983,7 @@ function updateSyncStatusUI(status) {
   const cloudSyncBtn = document.getElementById('cloudSyncBtn');
   if (!cloudSyncBtn) return;
 
-  cloudSyncBtn.classList.remove('syncing', 'sync-success', 'sync-error');
+  cloudSyncBtn.classList.remove('syncing', 'sync-success', 'sync-error', 'sync-restricted');
 
   switch (status) {
     case 'syncing':
@@ -905,6 +996,11 @@ function updateSyncStatusUI(status) {
     case 'error':
       cloudSyncBtn.classList.add('sync-error');
       setTimeout(() => cloudSyncBtn.classList.remove('sync-error'), 3000);
+      break;
+    case 'restricted':
+      cloudSyncState.isRestricted = true;
+      cloudSyncBtn.classList.add('sync-restricted');
+      cloudSyncBtn.title = '雲端自動共步受限，點擊開啟手動共步';
       break;
   }
 }
@@ -1013,4 +1109,279 @@ function setupPageUnloadSync() {
       startPeriodicSync(); // 重啟背景排程
     }
   });
+}
+
+/**
+ * 壓縮同步資料至 URL-safe Base64 字串
+ * 優先使用瀏覽器原生 CompressionStream('deflate-raw')
+ */
+async function compressSyncDataToUrl(dataObj) {
+  const jsonStr = JSON.stringify(dataObj);
+  if (typeof CompressionStream !== 'undefined' && typeof Blob !== 'undefined' && typeof Response !== 'undefined') {
+    try {
+      const stream = new Blob([jsonStr]).stream();
+      const compressedStream = stream.pipeThrough(new CompressionStream('deflate-raw'));
+      const buffer = await new Response(compressedStream).arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+    } catch (e) {
+      console.warn('[CloudSync] CompressionStream 失敗，降級為 encodeURIComponent', e);
+    }
+  }
+  return encodeURIComponent(jsonStr);
+}
+
+/**
+ * 從 URL-safe Base64 字串解壓還原同步資料
+ */
+async function decompressSyncDataFromUrl(base64UrlStr) {
+  if (!base64UrlStr) return null;
+  if (base64UrlStr.startsWith('%7B') || base64UrlStr.startsWith('{')) {
+    return JSON.parse(decodeURIComponent(base64UrlStr));
+  }
+
+  if (typeof DecompressionStream !== 'undefined' && typeof Blob !== 'undefined' && typeof Response !== 'undefined') {
+    try {
+      let base64 = base64UrlStr.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) base64 += '=';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const stream = new Blob([bytes]).stream();
+      const decompressedStream = stream.pipeThrough(new DecompressionStream('deflate-raw'));
+      const jsonStr = await new Response(decompressedStream).text();
+      return JSON.parse(jsonStr);
+    } catch (e) {
+      console.error('[CloudSync] 解壓縮失敗:', e);
+      throw e;
+    }
+  }
+  return JSON.parse(decodeURIComponent(base64UrlStr));
+}
+
+/**
+ * 檢查網址 hash 是否帶有手動同步資料 (#sync=...)
+ */
+async function checkUrlSyncPayload() {
+  if (typeof window === 'undefined' || !window.location || !window.location.hash) return;
+  const hash = window.location.hash;
+  const match = hash.match(/[#&]sync=([^&]+)/);
+  if (!match) return;
+
+  const rawPayload = match[1];
+  try {
+    const data = await decompressSyncDataFromUrl(rawPayload);
+    if (!data) return;
+
+    const confirmMsg =
+      '📥 偵測著手動共步資料（包含書籤、偏好摎學習進度），敢愛匯入這隻裝置並進行智慧合併？';
+    if (confirm(confirmMsg)) {
+      await applyIncomingSyncData(data, true);
+      alert('✅ 手動共步成功！資料已完整合併至本機。');
+    }
+    // 清除 hash 中的 sync 參數
+    const cleanUrl = window.location.href.replace(/[#&]sync=[^&]+/, '');
+    history.replaceState(null, '', cleanUrl.endsWith('#') ? cleanUrl.slice(0, -1) : cleanUrl);
+  } catch (err) {
+    console.error('[CloudSync] 處理網址手動同步失敗:', err);
+    alert('手動共步失敗：網址資料可能不完整或損壞。');
+  }
+}
+
+/**
+ * 顯示雲端自動同步受限提示文案
+ */
+function showSyncRestrictedNotice() {
+  const noticeId = 'cloudSyncRestrictedBanner';
+  let banner = document.getElementById(noticeId);
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = noticeId;
+    banner.style.cssText =
+      'background: #fff3cd; color: #856404; border-bottom: 1px solid #ffeeba; padding: 10px 16px; font-size: 14px; line-height: 1.5; text-align: center; position: sticky; top: 0; z-index: 10001; box-shadow: 0 2px 6px rgba(0,0,0,0.08);';
+    document.body.prepend(banner);
+  }
+  banner.innerHTML =
+    '⚠️ 失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="bannerManualSyncLink" style="color: #533f03; font-weight: bold; text-decoration: underline; cursor: pointer;">請點這位</a>）';
+
+  const link = document.getElementById('bannerManualSyncLink');
+  if (link) {
+    link.onclick = (e) => {
+      e.preventDefault();
+      showManualSyncModal();
+    };
+  }
+}
+
+/**
+ * 顯示手動同步對話框（Modal）
+ */
+function showManualSyncModal() {
+  const modalId = 'manualSyncModal';
+  let modal = document.getElementById(modalId);
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-overlay';
+    modal.style.cssText =
+      'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; align-items: center; justify-content: center;';
+    modal.innerHTML = `
+      <div class="modal-dialog" style="background: var(--bg-card, #fff); color: var(--text-main, #333); padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 18px;">📲 客源翠手動共步（跨裝置無痛轉移）</h3>
+          <button id="closeManualSyncModalBtn" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted, #888);">&times;</button>
+        </div>
+        <div style="font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; background: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px;">
+          失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步。
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <h4 style="margin: 0 0 8px 0; font-size: 15px;">方案一：網址一鍵跨裝置共步（最推薦）</h4>
+          <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted, #666);">
+            點擊按鈕複製當前進度短網址（約數百字元），透過 AirDrop、LINE、Email 傳送至另一台裝置打開，即可自動偵測並智慧合併！
+          </p>
+          <button id="copySyncUrlBtn" style="background: #2e7d32; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
+            📋 複製手動共步網址
+          </button>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color, #eee); padding-top: 16px;">
+          <h4 style="margin: 0 0 8px 0; font-size: 15px;">方案二：備份檔案（JSON 匯出／匯入）</h4>
+          <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted, #666);">
+            下載包含書籤、偏好、日日一詞收囥摎學習進度个完整備份檔，隨時匯入還原：
+          </p>
+          <div style="display: flex; gap: 10px;">
+            <button id="downloadSyncJsonBtn" style="flex: 1; background: #1976d2; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+              💾 下載備份 JSON
+            </button>
+            <label style="flex: 1; background: #607d8b; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: center;">
+              📂 讀取備份 JSON
+              <input type="file" id="importSyncJsonInput" accept=".json" style="display: none;" />
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // 綁定關閉
+    const closeBtn = document.getElementById('closeManualSyncModalBtn');
+    if (closeBtn) closeBtn.onclick = () => { modal.style.display = 'none'; };
+    modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+    // 綁定複製網址
+    const copyBtn = document.getElementById('copySyncUrlBtn');
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          copyBtn.disabled = true;
+          copyBtn.textContent = '產生網址中...';
+          const exportData = exportCurrentSyncData();
+          const base64Url = await compressSyncDataToUrl(exportData);
+          const syncUrl = `${window.location.origin}${window.location.pathname}#sync=${base64Url}`;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(syncUrl);
+            alert('✅ 手動共步網址已複製到剪貼簿！\n\n請將網址傳送到您的另一台手機或電腦，打開即可一鍵完成合併同步。');
+          } else {
+            prompt('請複製以下手動共步網址：', syncUrl);
+          }
+        } catch (e) {
+          console.error('[CloudSync] 產生同步網址失敗:', e);
+          alert('產生同步網址失敗：' + e.message);
+        } finally {
+          copyBtn.disabled = false;
+          copyBtn.textContent = '📋 複製手動共步網址';
+        }
+      };
+    }
+
+    // 綁定下載備份
+    const dlBtn = document.getElementById('downloadSyncJsonBtn');
+    if (dlBtn) {
+      dlBtn.onclick = () => {
+        const exportData = exportCurrentSyncData();
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const d = new Date();
+        const dateStr = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+        a.href = url;
+        a.download = `hakspring-sync-${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    // 綁定讀取備份
+    const importInput = document.getElementById('importSyncJsonInput');
+    if (importInput) {
+      importInput.onchange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          if (confirm('📥 確定愛從此備份檔匯入資料並進行智慧合併？')) {
+            await applyIncomingSyncData(parsed, true);
+            alert('✅ 備份檔匯入成功！所有資料已完整合併至本機。');
+            modal.style.display = 'none';
+          }
+        } catch (err) {
+          console.error('[CloudSync] 匯入備份檔失敗:', err);
+          alert('匯入失敗：檔案格式不正確或損壞。');
+        } finally {
+          importInput.value = '';
+        }
+      };
+    }
+  }
+
+  modal.style.display = 'flex';
+}
+
+// 支援全域掛載與測試環境匯出
+if (typeof window !== 'undefined') {
+  window.showManualSyncModal = showManualSyncModal;
+  window.exportCurrentSyncData = exportCurrentSyncData;
+  window.applyIncomingSyncData = applyIncomingSyncData;
+  window.compressSyncDataToUrl = compressSyncDataToUrl;
+  window.decompressSyncDataFromUrl = decompressSyncDataFromUrl;
+}
+
+// 全域監聽 manual-sync 連結
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('a');
+    if (target && (target.getAttribute('href') === '#manual-sync' || target.id === 'manualSyncLink' || target.id === 'bannerManualSyncLink')) {
+      e.preventDefault();
+      showManualSyncModal();
+    }
+  });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    exportCurrentSyncData,
+    applyIncomingSyncData,
+    compressSyncDataToUrl,
+    decompressSyncDataFromUrl,
+    mergeBookmarks,
+    mergeProgress,
+    mergeDailyStats,
+    mergeDailyFavs,
+    mergeFamiliarity,
+    mergeBoolPref
+  };
 }
