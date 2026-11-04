@@ -5615,6 +5615,15 @@ function initializeAppUI() {
           : event.target.closest('button');
       setTimeout(() => button.blur(), 300);
     }
+
+    const anchor = event.target.closest('a');
+    if (anchor) {
+      const href = anchor.getAttribute('href') || '';
+      if (anchor.id === 'charCoverageBtn' || href === 'coverage.html' || href.endsWith('/coverage.html')) {
+        event.preventDefault();
+        window.open('coverage.html', '_blank', 'noopener,noreferrer');
+      }
+    }
   });
 
   // --- 新增：更新網頁標題函式 ---
