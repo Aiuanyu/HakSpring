@@ -1244,6 +1244,9 @@ function showManualSyncModal() {
         </div>
         <div style="font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; background: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px;">
           失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步。
+          <div style="margin-top: 8px;">
+            <a href="#" data-open-sync-survey style="font-weight: bold;">📝 幫忙填 1 分鐘問卷，講你个使用狀況 →</a>
+          </div>
         </div>
 
         <div style="margin-bottom: 20px;">

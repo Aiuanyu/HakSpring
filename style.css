@@ -2523,6 +2523,7 @@ input:checked+.slider:before {
 #infoButton,
 #settingsBtn,
 #manualSyncBtn,
+#syncSurveyBtn,
 #showRomanizerBtn,
 #charCoverageBtn,
 #dataManagementBtn,
@@ -2544,6 +2545,7 @@ input:checked+.slider:before {
 #infoButton i,
 #settingsBtn i,
 #manualSyncBtn i,
+#syncSurveyBtn i,
 #showRomanizerBtn i,
 #charCoverageBtn i,
 #dataManagementBtn i,
@@ -2555,6 +2557,7 @@ input:checked+.slider:before {
 #infoButton:hover i,
 #settingsBtn:hover i,
 #manualSyncBtn:hover i,
+#syncSurveyBtn:hover i,
 #showRomanizerBtn:hover i,
 #charCoverageBtn:hover i,
 #dataManagementBtn:hover i,
@@ -3069,6 +3072,7 @@ input:checked+.slider:before {
   #infoButton,
   #settingsBtn,
   #manualSyncBtn,
+  #syncSurveyBtn,
   #showRomanizerBtn,
   #charCoverageBtn,
   #dataManagementBtn,
@@ -3079,6 +3083,7 @@ input:checked+.slider:before {
   #infoButton:hover i,
   #settingsBtn:hover i,
   #manualSyncBtn:hover i,
+  #syncSurveyBtn:hover i,
   #showRomanizerBtn:hover i,
   #charCoverageBtn:hover i,
   #dataManagementBtn:hover i,
@@ -6738,3 +6743,65 @@ mark {
   }
 }
 
+/* 雲端同步使用狀況問卷（js/sync-survey.js）：Google 表單內嵌彈窗。
+   層級高過手動共步視窗（z-index 10002），因為會從那裡開。 */
+#syncSurveyModal {
+  z-index: 10003;
+}
+
+#syncSurveyModal .sync-survey-dialog {
+  background-color: #fff;
+  color: #333;
+  width: min(680px, 100%);
+  max-height: 100%;
+  border-radius: 10px;
+  padding: 14px 16px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#syncSurveyModal .sync-survey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#syncSurveyModal .sync-survey-header h4 {
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 600;
+  color: #245d48;
+}
+
+#syncSurveyModal .sync-survey-close {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #555;
+}
+
+#syncSurveyModal .sync-survey-note {
+  margin: 8px 0;
+  font-size: 0.9em;
+  line-height: 1.6;
+  color: #444;
+}
+
+#syncSurveyModal .sync-survey-note a {
+  color: #0b57d0;
+}
+
+/* Google 表單本身係白底，毋跟暗色主題，所以彈窗框乜維持淺色，免得一半暗一半白 */
+#syncSurveyModal .sync-survey-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 60vh;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
