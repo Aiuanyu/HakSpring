@@ -6805,3 +6805,19 @@ mark {
   border-radius: 6px;
   background: #fff;
 }
+
+#syncSurveyModal .sync-survey-back {
+  align-self: flex-start;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid #245d48;
+  border-radius: 6px;
+  color: #245d48;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+#syncSurveyModal .sync-survey-back[hidden] {
+  display: none;
+}
