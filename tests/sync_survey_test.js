@@ -18,6 +18,8 @@ assert.ok(!/<iframe[^>]*\ssrc=/.test(html), 'iframe 毋好預先載入，等開�
 assert.ok(/title="[^"]+"/.test(html.match(/<iframe[^>]*>/)[0]), 'iframe 愛有 title（無障礙）');
 assert.ok(new RegExp(`href="${escapeRegExp(OPEN_URL)}"[^>]*target="_blank"[^>]*rel="noopener noreferrer"`).test(html));
 assert.ok(/id="syncSurveyCloseBtn"/.test(html) && /role="dialog"/.test(html));
+assert.ok(/<iframe[^>]*referrerpolicy="no-referrer"/.test(html), 'iframe 毋送 referrer');
+assert.ok(!/frameborder|marginheight|marginwidth/.test(html), '毋用過時屬性，樣式放 CSS');
 assert.ok(/id="syncSurveyBackBtn"[^>]*hidden/.test(html), '「回手動共步」預設收起');
 assert.ok(html.includes('撿採看毋著表單'), '備用連結个說明用字');
 console.log('  ✅ 網址摎彈窗 PASS');
