@@ -33,6 +33,7 @@
 - **搜尋索引 (Search Index)**: 應用程式會在記憶體中建立一個搜尋索引 (`indexedDataCache`) 以加速查詢。
 - **版本控制 (Versioning)**: 應用程式透過 `data/data_version.json` 檔案來追蹤資料版本。開發時可使用 `?force-refresh=true` URL 參數來強制清除快取。
 - **【鐵則】改資料愛 bump `data/data_version.json`**：凡是修改 `data/` 底下个 CSV／JSON（含重跑 `process_all_data.py` 產生个 `.json`），**必須**同步更新 `data/data_version.json` 个 `version`（格式 `YYYYMMDDHH`，例：`2026092913`）。前端係比對版本號來決定愛毋愛重抓資料，版本一樣，已經有 IndexedDB 快取个使用者（尤其手機）就**永遠看無新資料**。`process_all_data.py` 毋會自動 bump，愛人工（抑係 AI）記得改。（2026-09 詔安調符校正就係因為漏 bump，害使用者拖足久正更新著。）
+- **【工作流規範】資料清洗附 Before vs. After 概況報告（Data Cleaning Summary）**（平哥 20261106 指示）：凡涉及批次資料清洗、管線規則調整或詞典大規模修補時，收工回報毋好叫平哥手動逐筆盲測；必須產出「處理前 vs. 處理後的資料概況報告」，內容包含：異動總筆數、各腔分佈、Pattern 分類統計、經典代表 Before / After 抽樣比對，以及自然語言保護詞未受破壞之陰性對照。
 
 ### 音檔 URL 規則 (Audio URL Structure)
 
