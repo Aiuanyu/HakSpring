@@ -4,6 +4,7 @@
 // 為何用 Google 表單：Supabase 流量超額（HTTP 402），意見回饋那套寫進 Supabase 个問卷暫時送毋出去。
 // 表單毋載入 iframe 直到使用者撳開（毋會替每位使用者連去 Google）。
 // 同時間淨有一層視窗：從手動共步視窗開，會先收起手動共步視窗，問卷視窗有「回手動共步」鈕。
+// 依賴：「回手動共步」呼叫 window.showManualSyncModal（js/cloud-sync.js，載入較晚）；淨在點擊時正呼叫，所以載入順序毋會出問題。
 (function (root) {
   const FORM_ID = '1FAIpQLSey0-7bZRvRqHbLs0oguOoqHVMgiyKorTg62yG58WglIGc7ZA';
   const FORM_BASE = `https://docs.google.com/forms/d/e/${FORM_ID}/viewform`;
@@ -25,7 +26,7 @@
         </p>
         <button type="button" id="syncSurveyBackBtn" class="sync-survey-back" hidden>← 回手動共步</button>
         <iframe id="syncSurveyFrame" class="sync-survey-frame" title="雲端同步使用狀況問卷" loading="lazy"
-          frameborder="0" marginheight="0" marginwidth="0"></iframe>
+          referrerpolicy="no-referrer"></iframe>
       </div>`;
   }
 

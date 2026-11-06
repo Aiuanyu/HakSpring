@@ -6796,7 +6796,8 @@ mark {
   color: #0b57d0;
 }
 
-/* Google 表單本身係白底，毋跟暗色主題，所以彈窗框乜維持淺色，免得一半暗一半白 */
+/* 刻意毋跟 prefers-color-scheme: dark：Google 表單內嵌係白底，彈窗框跟等維持淺色，免得一半暗一半白。
+   後來若愛補暗色樣式，愛先確認表單本身有暗色版，毋好淨改外框。色彩比值已實算（白底 ≥ 6.39:1），見 PR #289。 */
 #syncSurveyModal .sync-survey-frame {
   flex: 1 1 auto;
   width: 100%;
