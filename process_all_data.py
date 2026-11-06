@@ -123,6 +123,31 @@ def split_unlabeled_example(text):
     return hakfa, mandarin
 
 
+def clean_translation(text):
+    """清洗例句翻譯文字，剝除多餘外層括號與前綴標記（如 例：、例如：）"""
+    if not text:
+        return ""
+    lines = re.split(r'<br\s*/?>|\n', text, flags=re.IGNORECASE)
+    cleaned_lines = []
+    for line in lines:
+        s = line.strip()
+        if not s:
+            cleaned_lines.append("")
+            continue
+        while (s.startswith('(') and s.endswith(')')) or (s.startswith('（') and s.endswith('）')):
+            s = s[1:-1].strip()
+        if s.startswith('（') or s.startswith('('):
+            s = s[1:].strip()
+        if s.endswith('）') or s.endswith(')'):
+            s = s[:-1].strip()
+        s = re.sub(r'^(?:(?:例如|例句|例|如)[：:\s]*)+', '', s)
+        s = re.sub(r'([。！？；;）\)])\s*(?:(?:例如|例句|例|如)[：:\s]*)+', r'\1', s)
+        while (s.startswith('(') and s.endswith(')')) or (s.startswith('（') and s.endswith('）')):
+            s = s[1:-1].strip()
+        cleaned_lines.append(s)
+    return "<br>".join(cleaned_lines)
+
+
 def parse_example_sentence_field(example_field_text):
     if not example_field_text: return "", ""
     stripped = example_field_text.strip()
@@ -130,10 +155,17 @@ def parse_example_sentence_field(example_field_text):
         split = split_unlabeled_example(stripped)
         if split:
             hakfa, mandarin = split
-            return clean_example_sentence("<br>".join(hakfa)), "<br>".join(mandarin)
+            return clean_example_sentence("<br>".join(hakfa)), clean_translation("<br>".join(mandarin))
     translations = re.findall(r'\((.*?)\)', example_field_text)
-    translation_text = "<br>".join(t.strip() for t in translations)
     cleaned_example = re.sub(r'\s*\([^)]*\)', '', example_field_text).strip()
+
+    # 處理教典手誤之全形整句括號（包句號/問號/驚嘆號且為華語整句），抽取至翻譯中
+    fw_sentences = re.findall(r'（([^（）]*?[。！？][^（）]*?)）', cleaned_example)
+    if fw_sentences:
+        translations.extend(fw_sentences)
+        cleaned_example = re.sub(r'\s*（[^（）]*?[。！？][^（）]*?）', '', cleaned_example).strip()
+
+    translation_text = "<br>".join(t.strip() for t in translations)
     split_parts = re.split(r'([。；])', cleaned_example)
     example_sentences = []
     for i in range(0, len(split_parts) - 1, 2):
@@ -143,7 +175,7 @@ def parse_example_sentence_field(example_field_text):
     if len(split_parts) % 2 == 1 and split_parts[-1].strip():
         example_sentences.append(split_parts[-1].strip())
     raw_example = "<br>".join(s.strip() for s in example_sentences)
-    return clean_example_sentence(raw_example), translation_text
+    return clean_example_sentence(raw_example), clean_translation(translation_text)
 
 def clean_example_sentence(text):
     if not text:
@@ -155,8 +187,15 @@ def clean_example_sentence(text):
         if not s:
             cleaned_lines.append("")
             continue
-        s = re.sub(r'^(?:例如|例句|例|如)[：:\s]+', '', s)
+        # 1. 循環清除開頭所有的 例如/例句/例/如 前綴
+        s = re.sub(r'^(?:(?:例如|例句|例|如)[：:\s]*)+', '', s)
         s = re.sub(r'^例如(?=[\u4e00-\u9fa5])', '', s)
+        # 2. 清除標點符號後接的「例：」或「例如：」等前綴
+        s = re.sub(r'([。！？；;）\)])\s*(?:(?:例如|例句|例|如)[：:\s]*)+', r'\1', s)
+        # 3. 清除詞性或序號後的「例：」（如 "1.動。銜接。例：銜接" -> "1.動。銜接。銜接"）
+        s = re.sub(r'(\d+\s*[。.])\s*(?:(?:例如|例句|例|如)[：:\s]*)+', r'\1', s)
+        s = re.sub(r'([動名形副量嘆代助連介]\s*[。.])\s*(?:(?:例如|例句|例|如)[：:\s]*)+', r'\1', s)
+
         all_quotes = re.findall(r'「([^」]+)」', s)
         stripped = re.sub(r'^(?:例如|例|如)\s*', '', s)
         stripped = re.sub(r'「[^」]+」', '', stripped)
@@ -322,7 +361,7 @@ def parse_cert_csv(file_path, dialect_reverse_map, vowel_map, vowel_priority):
                 '客家語': row.get(f'{dialect_prefix}客家語', ''),
                 '華語詞義': row.get(f'{dialect_prefix}華語詞義', ''),
                 '例句': clean_example_sentence(row.get(f'{dialect_prefix}例句', row.get('例句', ''))),
-                '翻譯': row.get(f'{dialect_prefix}翻譯', row.get('翻譯', '')),
+                '翻譯': clean_translation(row.get(f'{dialect_prefix}翻譯', row.get('翻譯', ''))),
                 '備註': row.get('備註', ''),
                 '分類': row.get('分類', ''),
                 '詞性1': row.get('詞性1', ''),
