@@ -403,7 +403,138 @@ def split_gip_phonetic(original_phonetic, tone_map):
     return ' '.join(display), ' '.join(query)
 
 
-def parse_gip_csv(file_path, tone_map_data, dialect_char):
+# --- 教典原始音讀清洗、補丁表與回饋上游追蹤 ---
+
+GIP_PATCHES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'gip_raw_patches.json')
+_gip_patches_cache = None
+
+def get_gip_raw_patches():
+    global _gip_patches_cache
+    if _gip_patches_cache is None:
+        if os.path.exists(GIP_PATCHES_FILE):
+            try:
+                with open(GIP_PATCHES_FILE, 'r', encoding='utf-8') as f:
+                    _gip_patches_cache = json.load(f)
+            except Exception as e:
+                print(f"  ✗ 警告：載入 gip_raw_patches.json 失敗: {e}")
+                _gip_patches_cache = []
+        else:
+            _gip_patches_cache = []
+    return _gip_patches_cache
+
+GIP_ERRATA_RECORDS = []
+
+def clean_gip_raw_phonetic(original_phonetic, dialect_char, hanji="", gip_id="", tracker=None):
+    """清洗教典原始音讀：包含特異補丁覆蓋、通用規則清洗（序號前綴、音節數字空格等），並記錄回饋清單。"""
+    if not original_phonetic:
+        return ""
+    text = original_phonetic
+    initial_text = text
+    applied_categories = []
+    applied_reasons = []
+
+    # 1. 特異補丁表比對（詞目特定修正）
+    patches = get_gip_raw_patches()
+    for p in patches:
+        if p.get('dialect') == dialect_char:
+            if not p.get('hanji') or p.get('hanji') == hanji:
+                m_raw = p.get('match_raw')
+                r_raw = p.get('replace_raw')
+                if m_raw and m_raw in text:
+                    text = text.replace(m_raw, r_raw)
+                    applied_categories.append(p.get('category', '特定補丁'))
+                    if p.get('reason'):
+                        applied_reasons.append(p.get('reason'))
+
+    # 2. 通用規則清洗（跨腔防禦）
+    # 2a. 清除註記標籤後的殘留序號（如「又讀3.ha53」→「又讀ha53」、「合音2.ti24」→「合音ti24」）
+    seq_pattern = re.compile(r'(又讀|俗音|合音|特|小稱|又俗音)\d+\.')
+    if seq_pattern.search(text):
+        text = seq_pattern.sub(r'\1', text)
+        applied_categories.append("序號標籤殘留")
+        applied_reasons.append("官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。")
+
+    # 2b. 音節與調值數字之間誤夾空格或 NBSP（如「ciam 33」→「ciam33」、「hog5 vien 55」→「hog5 vien55」）
+    split_pattern = re.compile(r'([a-zA-Z]+)[\s\u00a0]+(\d{1,3})')
+    if split_pattern.search(text):
+        text = split_pattern.sub(r'\1\2', text)
+        applied_categories.append("音節調號分離")
+        applied_reasons.append("音節字母與調值數字間誤夾空白或不換行空格（NBSP）。")
+
+    if text != initial_text and tracker is not None:
+        tracker.append({
+            'dialect': dialect_char,
+            'gip_id': gip_id,
+            'hanji': hanji,
+            'original': initial_text,
+            'cleaned': text,
+            'categories': list(dict.fromkeys(applied_categories)),
+            'reasons': list(dict.fromkeys(applied_reasons))
+        })
+
+    return text
+
+
+def generate_upstream_errata_report(tracker, output_path):
+    """產出結構化 Markdown 報告，供回饋教育部客語辭典編審團隊／客委會。"""
+    if not tracker:
+        return
+    lines = [
+        "# 教育部臺灣客語辭典原始資料勘誤與反饋建議表",
+        "",
+        "> 本文件由客源翠（HakSpring）資料前置清洗管線於處理教育部教典原始 CSV 時自動彙整產出。",
+        "> 目的在於提供官方編審小組作為後續更新辭典資料庫之具體勘誤依據。",
+        "",
+        f"- 總計檢核並修正筆數：**{len(tracker)} 筆**",
+        "",
+        "## 一、問題分類統計",
+        ""
+    ]
+    from collections import Counter
+    cat_counter = Counter()
+    dialect_counter = Counter()
+    for item in tracker:
+        dialect_counter[item['dialect']] += 1
+        for c in item['categories']:
+            cat_counter[c] += 1
+
+    lines.append("| 腔別 | 筆數 |")
+    lines.append("| :--- | :---: |")
+    dialect_order = ['四', '南', '海', '大', '平', '安']
+    for d in dialect_order:
+        if d in dialect_counter:
+            lines.append(f"| {DIALECT_MAP.get(d, d)}腔 | {dialect_counter[d]} |")
+    lines.append("")
+
+    lines.append("| 勘誤類型 | 筆數 |")
+    lines.append("| :--- | :---: |")
+    for cat, count in cat_counter.most_common():
+        lines.append(f"| {cat} | {count} |")
+    lines.append("")
+
+    lines.append("## 二、勘誤條目清單")
+    lines.append("")
+    lines.append("| 腔別 | 編號 | 詞目 | 教典原始標音 | 客源翠修正標音 | 問題類型 | 勘誤建議說明 |")
+    lines.append("| :---: | :---: | :--- | :--- | :--- | :--- | :--- |")
+
+    for item in tracker:
+        cats = "、".join(item['categories'])
+        reasons = "；".join(item['reasons']) if item['reasons'] else "－"
+        orig = item['original'].replace('\u3000', ' ').replace('|', '\\|')
+        clean = item['cleaned'].replace('\u3000', ' ').replace('|', '\\|')
+        lines.append(f"| {item['dialect']} | {item['gip_id']} | {item['hanji']} | `{orig}` | `{clean}` | {cats} | {reasons} |")
+
+    lines.append("")
+    lines.append("---")
+    lines.append("*（本報告於每次執行 `python3 process_all_data.py` 時自動同步更新）*")
+    lines.append("")
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+    print(f"  ✓ 成功產出回饋上游清單: {output_path}")
+
+
+def parse_gip_csv(file_path, tone_map_data, dialect_char, tracker=None):
     data = []
     source_name = f"教典{dialect_char}"
     default_tones = tone_map_data.get('default_tones', {})
@@ -415,12 +546,15 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char):
         for idx, row in enumerate(reader):
             standard_item = {h: "" for h in UNIFIED_SCHEMA_HEADERS}
             original_phonetic = row.get('音讀', '')
+            hanji = row.get('詞目', '')
+            gip_id = f"gip-{idx+1}"
+            cleaned_phonetic = clean_gip_raw_phonetic(original_phonetic, dialect_char, hanji, gip_id, tracker)
             example_field = row.get('例句', '')
             cleaned_example, translation = parse_example_sentence_field(example_field)
-            phonetic_display, phonetic_query = split_gip_phonetic(original_phonetic, current_tone_map)
+            phonetic_display, phonetic_query = split_gip_phonetic(cleaned_phonetic, current_tone_map)
             standard_item.update({
-                '編號': f"gip-{idx+1}",
-                '客家語': row.get('詞目', ''),
+                '編號': gip_id,
+                '客家語': hanji,
                 '華語詞義': re.sub(r'(\d+\.)\s*', r'\1 ', row.get('釋義', '').replace('　', '<br>')),
                 '詞目音檔名': row.get('對應音檔名稱', '').strip(),
                 '例句': cleaned_example,
@@ -481,7 +615,7 @@ def process_directory(directory_path, source_type, all_maps):
                     dialect_char = match.group(2)
                     output_path = os.path.splitext(file_path)[0] + '.json'
                     variable_name = f"教典{dialect_char}"
-                    parsed_data = parse_gip_csv(file_path, all_maps['tone_map_data'], dialect_char)
+                    parsed_data = parse_gip_csv(file_path, all_maps['tone_map_data'], dialect_char, GIP_ERRATA_RECORDS)
                 else:
                     print(f"  ✗ 警告：GIP 檔名格式毋著，跳過: {filename}")
                     continue
@@ -743,6 +877,8 @@ if __name__ == '__main__':
             process_directory(source_path, source_type, all_maps)
 
         print("\n--- 全部 CSV 處理完成 ---")
+        upstream_report_path = os.path.join(script_dir, 'data', 'upstream_feedback_gip.md')
+        generate_upstream_errata_report(GIP_ERRATA_RECORDS, upstream_report_path)
 
     # 愛灣語加詞（人工維護个 data/curated/加詞.csv），補字典會讀佢，人工加詞優先過擬音（見 data/curated/README.md）
     sys.path.insert(0, os.path.join(script_dir, 'scripts'))

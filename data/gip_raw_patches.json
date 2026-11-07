@@ -1,0 +1,137 @@
+[
+  {
+    "dialect": "海",
+    "hanji": "還會",
+    "gip_id": "8568",
+    "match_raw": "han1155 voi5533",
+    "replace_raw": "han55 voi33",
+    "category": "調值錯誤（變調值誤作本調）",
+    "reason": "海陸本調應為 han55 voi33，教典原始資料誤填連讀變調值 1155、5533，造成企盤（Kipan）音讀展開異常。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "果醬",
+    "gip_id": "2095",
+    "match_raw": "go24ziong11",
+    "replace_raw": "go24 ziong11",
+    "category": "漏空格黏音",
+    "reason": "雙音節間遺漏空格，導致音讀切分錯誤並衍生出錯誤字音「醬 ziong55」。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "在在",
+    "gip_id": "20800",
+    "match_raw": "cai33cai33",
+    "replace_raw": "cai33 cai33",
+    "category": "漏空格黏音",
+    "reason": "疊字間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "佢兜人",
+    "gip_id": "20831",
+    "match_raw": "deu53ngin55",
+    "replace_raw": "deu53 ngin55",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "頂頂碓碓",
+    "gip_id": "4462",
+    "match_raw": "doi11doi11",
+    "replace_raw": "doi11 doi11",
+    "category": "漏空格黏音",
+    "reason": "疊字間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "晃來晃去",
+    "gip_id": "11579",
+    "match_raw": "loi55gong55",
+    "replace_raw": "loi55 gong55",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "淡濫淡濫",
+    "gip_id": "11641",
+    "match_raw": "lam11tam53",
+    "replace_raw": "lam11 tam53",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "膦綻綻",
+    "gip_id": "11822",
+    "match_raw": "can11can11",
+    "replace_raw": "can11 can11",
+    "category": "漏空格黏音",
+    "reason": "疊字間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "鬥當",
+    "gip_id": "11832",
+    "match_raw": "deu11dong11",
+    "replace_raw": "deu11 dong11",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "雞僆仔",
+    "gip_id": "11894",
+    "match_raw": "lon11er55",
+    "replace_raw": "lon11 er55",
+    "category": "漏空格黏音",
+    "reason": "音節與小稱詞綴 er55 間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "橫笐",
+    "gip_id": "11666",
+    "match_raw": "特vang33gong55",
+    "replace_raw": "特vang33 gong55",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "臭臊吧哺",
+    "gip_id": "11904",
+    "match_raw": "特chiu11so53",
+    "replace_raw": "特chiu11 so53",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "摸摸挲挲",
+    "gip_id": "18318",
+    "match_raw": "mo53mo53",
+    "replace_raw": "mo53 mo53",
+    "category": "漏空格黏音",
+    "reason": "疊字間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "愐去愐轉",
+    "gip_id": "18348",
+    "match_raw": "hi11men24",
+    "replace_raw": "hi11 men24",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "面舐舐",
+    "gip_id": "18482",
+    "match_raw": "mien11she53",
+    "replace_raw": "mien11 she53",
+    "category": "漏空格黏音",
+    "reason": "音節間遺漏空格。"
+  }
+]
