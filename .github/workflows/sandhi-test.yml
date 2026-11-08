@@ -21,6 +21,9 @@ on:
       - 'tests/pfs_to_hpp_test.js'
       - 'tests/meinung_tone_test.js'
       - 'tests/sync_survey_test.js'
+      - 'tests/cloudflare_d1_sync_test.js'
+      - 'functions/api/sync.js'
+      - 'migrations/**'
       - 'js/sync-survey.js'
       - 'tests/cloud_sync_meinung_test.js'
       - 'js/cloud-sync.js'
@@ -63,6 +66,9 @@ on:
       - 'tests/pfs_to_hpp_test.js'
       - 'tests/meinung_tone_test.js'
       - 'tests/sync_survey_test.js'
+      - 'tests/cloudflare_d1_sync_test.js'
+      - 'functions/api/sync.js'
+      - 'migrations/**'
       - 'js/sync-survey.js'
       - 'tests/cloud_sync_meinung_test.js'
       - 'js/cloud-sync.js'
@@ -112,6 +118,8 @@ jobs:
         run: node tests/romaine_join_test.js
       - name: PFS → HPP / GIP tests
         run: node tests/pfs_to_hpp_test.js
+      - name: Cloud sync (D1, sync key) tests
+        run: node tests/cloudflare_d1_sync_test.js
       - name: Sync survey tests
         run: node tests/sync_survey_test.js
       - name: Meinung tone tests

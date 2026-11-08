@@ -1,225 +1,191 @@
 /**
  * Cloudflare Pages Functions - 雲端同步 API (/api/sync)
- * 後端資料庫：Cloudflare D1 (綁定名稱：DB)
+ * 後端資料庫：Cloudflare D1（綁定名稱：DB；資料表見 migrations/0001_init.sql）
+ *
+ * 身分：免登入，用「同步金鑰」（X-Sync-Key）。金鑰由用戶端隨機產生（32 碼 Base32，160 位元），
+ * 伺服器淨存金鑰个 SHA-256 當 user_id，毋存金鑰本身。金鑰毋會出現在網址、log 抑係 Referer。
+ * 同源使用，毋開 CORS。
+ *
+ * 並發：POST 帶 base_updated_at（用戶端上次看著个版本）。伺服器照版本做 compare-and-swap，
+ * 版本對毋著回 409 摎目前个資料，用戶端重新合併再推（合併函式在 js/cloud-sync.js）。
  */
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Sync-Key, X-Client-Version',
-};
+const MAX_BODY_BYTES = 1_500_000; // D1 單列上限約 2 MB，留餘裕
+const KEY_PATTERN = /^[A-Z2-7]{32}$/;
+const HASH_PREFIX = 'hakspring-sync-v1:';
+
+// 同步資料包个欄位白名單（見 js/cloud-sync.js exportCurrentSyncData）；別个欄位會被丟掉
+const ARRAY_FIELDS = ['bookmarks'];
+const OBJECT_FIELDS = [
+  'preferences',
+  'learning_progress',
+  'daily_stats',
+  'daily_stats_by_level',
+  'daily_favs',
+  'familiarity',
+];
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...CORS_HEADERS,
+      'Cache-Control': 'no-store',
     },
   });
 }
 
-/**
- * 自動防禦建表（若尚未建表，自動執行初始化）
- */
-async function ensureTable(db) {
-  await db.prepare(`
-    CREATE TABLE IF NOT EXISTS user_sync (
-      user_id TEXT PRIMARY KEY,
-      data TEXT NOT NULL,
-      client_version INTEGER DEFAULT 1,
-      updated_at INTEGER NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-  `).run();
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * 從請求中解析並驗證使用者身分
- * 支援兩種身分來源：
- * 1. Authorization: Bearer <user_id_or_token> (Google 登入後之 user.id 或 ID Token)
- * 2. X-Sync-Key: <sync_key> (手動專屬同步金鑰)
- */
-function extractUserId(request) {
-  // 1. 優先檢查 X-Sync-Key
-  const syncKey = request.headers.get('X-Sync-Key');
-  if (syncKey && syncKey.trim().length >= 8) {
-    return 'key_' + syncKey.trim();
-  }
+/** 同步金鑰正規化：去掉連字號摎空白、轉大寫。 */
+function normalizeKey(raw) {
+  return String(raw || '').replace(/[\s-]/g, '').toUpperCase();
+}
 
-  // 2. 檢查 Authorization Header
-  const auth = request.headers.get('Authorization');
-  if (auth && auth.startsWith('Bearer ')) {
-    const token = auth.slice(7).trim();
-    if (token) {
-      // 若是 JWT (三個部分以點號相隔)，嘗試解析其中的 sub
-      if (token.includes('.')) {
-        try {
-          const parts = token.split('.');
-          if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            if (payload && payload.sub) {
-              return 'sub_' + payload.sub;
-            }
-          }
-        } catch (_) {}
-      }
-      // 若為一般 UUID 或標識字串
-      return 'user_' + token;
-    }
-  }
+/** 從請求拿同步金鑰，回傳 user_id（金鑰个雜湊）；格式毋對回 null。 */
+async function userIdFromRequest(request) {
+  const key = normalizeKey(request.headers.get('X-Sync-Key'));
+  if (!KEY_PATTERN.test(key)) return null;
+  return sha256Hex(HASH_PREFIX + key);
+}
 
-  // 3. 備用：Query 參數 (?key=...)
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** 只留白名單欄位，型態對毋著就回 null。 */
+function sanitizeData(data) {
+  if (!isPlainObject(data)) return null;
+  const clean = {};
+  for (const field of ARRAY_FIELDS) {
+    if (data[field] === undefined) continue;
+    if (!Array.isArray(data[field])) return null;
+    clean[field] = data[field];
+  }
+  for (const field of OBJECT_FIELDS) {
+    if (data[field] === undefined) continue;
+    if (!isPlainObject(data[field])) return null;
+    clean[field] = data[field];
+  }
+  if (typeof data.updated_at === 'string') clean.updated_at = data.updated_at.slice(0, 40);
+  if (Number.isFinite(data.version)) clean.version = data.version;
+  return clean;
+}
+
+async function currentRow(db, userId) {
+  const row = await db
+    .prepare('SELECT data, updated_at FROM user_sync WHERE user_id = ?')
+    .bind(userId)
+    .first();
+  if (!row) return { exists: false, data: null, updated_at: 0 };
+  try {
+    return { exists: true, data: JSON.parse(row.data), updated_at: row.updated_at };
+  } catch (_) {
+    return null; // 資料毀損
+  }
+}
+
+/** GET /api/sync：拉取雲端資料；?health=1 淨回狀態（毋含內部訊息） */
+export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
-  const qKey = url.searchParams.get('key');
-  if (qKey && qKey.trim().length >= 8) {
-    return 'key_' + qKey.trim();
-  }
-
-  return null;
-}
-
-/**
- * OPTIONS 預檢請求
- */
-export async function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
-    headers: CORS_HEADERS,
-  });
-}
-
-/**
- * GET /api/sync
- * 拉取雲端同步資料
- */
-export async function onRequestGet(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-
-  // 健康檢查端點 (?health=1)
   if (url.searchParams.get('health') === '1') {
-    if (!env || !env.DB) {
-      return jsonResponse({
-        status: 'error',
-        message: 'D1 binding (DB) is not configured in Cloudflare Pages.',
-      }, 500);
-    }
-    try {
-      await ensureTable(env.DB);
-      const test = await env.DB.prepare('SELECT COUNT(*) as count FROM user_sync').first();
-      return jsonResponse({
-        status: 'ok',
-        d1_connected: true,
-        record_count: test?.count || 0,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (e) {
-      return jsonResponse({
-        status: 'error',
-        message: e.message || String(e),
-      }, 500);
-    }
+    return env && env.DB ? jsonResponse({ status: 'ok' }) : jsonResponse({ status: 'error' }, 500);
   }
+  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
 
-  if (!env || !env.DB) {
-    return jsonResponse({ error: 'Database binding (DB) is not configured' }, 500);
-  }
-
-  const userId = extractUserId(request);
-  if (!userId) {
-    return jsonResponse({ error: 'Unauthorized: Missing Authorization or X-Sync-Key' }, 401);
-  }
+  const userId = await userIdFromRequest(request);
+  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
 
   try {
-    await ensureTable(env.DB);
-    const row = await env.DB.prepare(
-      'SELECT data, updated_at, client_version FROM user_sync WHERE user_id = ?'
-    ).bind(userId).first();
-
-    if (!row) {
-      return jsonResponse({
-        exists: false,
-        data: null,
-        updated_at: 0,
-      });
-    }
-
-    let parsedData = null;
-    try {
-      parsedData = JSON.parse(row.data);
-    } catch (parseErr) {
-      console.error('[D1 Sync] JSON 解析失敗:', parseErr);
-      return jsonResponse({ error: 'Corrupted sync data in database' }, 500);
-    }
-
-    return jsonResponse({
-      exists: true,
-      data: parsedData,
-      updated_at: row.updated_at,
-      client_version: row.client_version,
-    });
+    const row = await currentRow(env.DB, userId);
+    if (!row) return jsonResponse({ error: 'corrupted' }, 500);
+    return jsonResponse(row);
   } catch (err) {
-    console.error('[D1 Sync] GET 錯誤:', err);
-    return jsonResponse({ error: err.message || 'Failed to fetch sync data' }, 500);
+    console.error('[sync] GET failed:', err);
+    return jsonResponse({ error: 'server_error' }, 500);
   }
 }
 
-/**
- * POST /api/sync
- * 上傳/智慧保存同步資料
- */
-export async function onRequestPost(context) {
-  const { request, env } = context;
+/** POST /api/sync：body = { data, base_updated_at }；版本對毋著回 409 */
+export async function onRequestPost({ request, env }) {
+  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
 
-  if (!env || !env.DB) {
-    return jsonResponse({ error: 'Database binding (DB) is not configured' }, 500);
+  const userId = await userIdFromRequest(request);
+  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+
+  // 先看 Content-Length，免得讀大 body；之後再用實際位元組數檢查（Content-Length 做得假）
+  const declared = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+    return jsonResponse({ error: 'too_large' }, 413);
+  }
+  let text;
+  try {
+    text = await request.text();
+  } catch (_) {
+    return jsonResponse({ error: 'bad_request' }, 400);
+  }
+  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) {
+    return jsonResponse({ error: 'too_large' }, 413);
   }
 
-  const userId = extractUserId(request);
-  if (!userId) {
-    return jsonResponse({ error: 'Unauthorized: Missing Authorization or X-Sync-Key' }, 401);
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch (_) {
+    return jsonResponse({ error: 'bad_request' }, 400);
+  }
+  if (!isPlainObject(body)) return jsonResponse({ error: 'bad_request' }, 400);
+
+  const data = sanitizeData(body.data);
+  const base = body.base_updated_at === undefined ? 0 : body.base_updated_at;
+  if (!data || !Number.isSafeInteger(base) || base < 0) {
+    return jsonResponse({ error: 'bad_request' }, 400);
+  }
+  const dataString = JSON.stringify(data);
+  if (new TextEncoder().encode(dataString).length > MAX_BODY_BYTES) {
+    return jsonResponse({ error: 'too_large' }, 413);
   }
 
   try {
-    let body;
-    try {
-      body = await request.json();
-    } catch (_) {
-      return jsonResponse({ error: 'Invalid JSON payload' }, 400);
+    const now = Math.max(Date.now(), base + 1);
+    let result;
+    if (base === 0) {
+      // 第一擺：淨在無這列个時節寫入
+      result = await env.DB.prepare(
+        `INSERT INTO user_sync (user_id, data, client_version, updated_at, created_at)
+         VALUES (?, ?, 1, ?, ?) ON CONFLICT(user_id) DO NOTHING`,
+      ).bind(userId, dataString, now, now).run();
+    } else {
+      result = await env.DB.prepare(
+        'UPDATE user_sync SET data = ?, updated_at = ? WHERE user_id = ? AND updated_at = ?',
+      ).bind(dataString, now, userId, base).run();
     }
-
-    const payloadData = body.data || body;
-    if (!payloadData || typeof payloadData !== 'object') {
-      return jsonResponse({ error: 'Missing or invalid data field' }, 400);
+    const changed = result && result.meta ? result.meta.changes : 0;
+    if (changed === 0) {
+      const row = await currentRow(env.DB, userId);
+      return jsonResponse({ error: 'conflict', ...(row || {}) }, 409);
     }
-
-    const clientVersion = Number(body.client_version || payloadData.version || 1);
-    const dataString = JSON.stringify(payloadData);
-
-    // 防護：限制單一使用者備份大小不超過 5 MB
-    if (dataString.length > 5 * 1024 * 1024) {
-      return jsonResponse({ error: 'Payload exceeds 5MB limit' }, 413);
-    }
-
-    const now = Date.now();
-    await ensureTable(env.DB);
-
-    await env.DB.prepare(`
-      INSERT INTO user_sync (user_id, data, client_version, updated_at, created_at)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET
-        data = excluded.data,
-        client_version = excluded.client_version,
-        updated_at = excluded.updated_at;
-    `).bind(userId, dataString, clientVersion, now, now).run();
-
-    return jsonResponse({
-      success: true,
-      updated_at: now,
-    });
+    return jsonResponse({ success: true, updated_at: now });
   } catch (err) {
-    console.error('[D1 Sync] POST 錯誤:', err);
-    return jsonResponse({ error: err.message || 'Failed to save sync data' }, 500);
+    console.error('[sync] POST failed:', err);
+    return jsonResponse({ error: 'server_error' }, 500);
+  }
+}
+
+/** DELETE /api/sync：刪掉這把金鑰个雲端資料 */
+export async function onRequestDelete({ request, env }) {
+  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
+  const userId = await userIdFromRequest(request);
+  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+  try {
+    await env.DB.prepare('DELETE FROM user_sync WHERE user_id = ?').bind(userId).run();
+    return jsonResponse({ success: true });
+  } catch (err) {
+    console.error('[sync] DELETE failed:', err);
+    return jsonResponse({ error: 'server_error' }, 500);
   }
 }

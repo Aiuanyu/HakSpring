@@ -1,10 +1,12 @@
-<!-- version: 202611060726 -->
+<!-- version: 202611081231 -->
 [**<<< 回資訊主頁**](#show-info)
 
 # 「客源翠 HakSpring」新消息
-20261106 07:26
+20261108 12:31
 
 - 2026/11/05 [公告] <mark class="whatsnew-highlight" style="background: rgba(255, 193, 7, 0.18); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px; display: block; margin: 6px 0; line-height: 1.6; color: inherit;">失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>；共步圖示亦囥佇「網站說明 ℹ️」視窗頂高）。</mark>
+
+- 2026/11/08 [新] **雲端同步金鑰**：免登入、自動共步。到「手動共步」視窗撳「開啟雲端同步」，產生一把金鑰，別台裝置輸入同一把，書籤、學習進度就會自動共步。金鑰就係你个帳號，請自家存好。（Google 登入該套照舊暫停。）
 
 - 2026/11/06 [新] **共步使用狀況問卷**：想問你一下雲端共步摎手動共步个使用狀況（匿名、約 1 分鐘、全部選填）。資料說明視窗頂頭个問卷鈕（手動共步鈕邊仔），抑係手動共步視窗裡肚个連結，都做得開。
 
