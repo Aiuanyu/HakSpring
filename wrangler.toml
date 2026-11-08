@@ -1,0 +1,14 @@
+name = "hakspring"
+compatibility_date = "2024-07-22"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hakspring-sync"
+database_id = "96beae90-c012-44b9-a503-cc64b73d0e5d"
+
+[env.preview]
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "hakspring-sync"
+database_id = "96beae90-c012-44b9-a503-cc64b73d0e5d"

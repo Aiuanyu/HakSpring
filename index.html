@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.65" />
+    <link rel="stylesheet" href="style.css?v=4.7.67" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -54,8 +54,8 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.86" defer></script>
-    <script type="text/javascript" src="js/sync-survey.js?v=1.1.0" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.88" defer></script>
+    <script type="text/javascript" src="js/sync-survey.js?v=1.1.1" defer></script>
     <script
       type="text/javascript"
       src="js/gip-superscript.js?v=1.0.1"
@@ -97,7 +97,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.6.15"
+      src="js/cloud-sync.js?v=4.7.4"
       defer
     ></script>
     <script
@@ -112,7 +112,7 @@
       href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-    <script type="text/javascript" src="js/onboarding.js" defer></script>
+    <script type="text/javascript" src="js/onboarding.js?v=1.0.1" defer></script>
 
     <script
       src="https://kit.fontawesome.com/6741caa77f.js"
@@ -1277,11 +1277,8 @@
               <button id="settingsBtn" title="全域設定">
                 <i class="fas fa-cog"></i>
               </button>
-              <button id="manualSyncBtn" title="手動共步（跨裝置無痛轉移）">
+              <button id="manualSyncBtn" title="共步摎備份（跨裝置無痛轉移）">
                 <i class="fas fa-arrows-rotate"></i>
-              </button>
-              <button id="syncSurveyBtn" title="共步使用狀況問卷（1 分鐘，匿名）">
-                <i class="fas fa-clipboard-question"></i>
               </button>
               <button id="cloudSyncBtn" title="雲端同步（Google 登入）" style="display: none;">
                 <i class="fas fa-cloud"></i>
@@ -1299,9 +1296,6 @@
                 title="登出雲端同步"
               >
                 <i class="fas fa-right-from-bracket"></i>
-              </button>
-              <button id="dataManagementBtn" title="資料管理（備份／還原）">
-                <i class="fas fa-database"></i>
               </button>
               <a
                 id="charCoverageBtn"
@@ -1354,48 +1348,6 @@
       </div>
     </div>
     <!-- End of main-content div -->
-
-    <!-- Data Management Modal -->
-    <div id="dataManagementModal" class="modal-overlay">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h4 id="dataManagementModalTitle" class="modal-title">
-            資料管理（備份／還原）
-          </h4>
-          <button
-            id="dataManagementModalCloseBtn"
-            class="modal-close-btn"
-            aria-label="關忒"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body" id="data-management-content">
-          <div class="data-section">
-            <h4><i class="fas fa-upload"></i> 匯出 (備份)</h4>
-            <p>
-              請點下面个按鈕來產生備份資料。做得將內容複製起來，或者下載備份檔。
-            </p>
-            <button id="exportDataBtn">產生並下載備份</button>
-            <textarea
-              id="exportDataTextArea"
-              readonly
-              placeholder="備份資料會顯示在這位..."
-            ></textarea>
-          </div>
-          <div class="data-section">
-            <h4><i class="fas fa-download"></i> 匯入 (還原)</h4>
-            <p>請選擇 .json 備份檔，或者直接將備份資料貼到下面个橫框。</p>
-            <input type="file" id="importDataFile" accept=".json, .txt" />
-            <textarea
-              id="importDataTextArea"
-              placeholder="將備份資料貼在這位..."
-            ></textarea>
-            <button id="importDataBtn">還原資料</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay">

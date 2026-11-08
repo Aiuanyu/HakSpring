@@ -1,6 +1,6 @@
 // js/sync-survey.js
-// 雲端同步使用狀況問卷（Google 表單內嵌）。入口有兩個：資料說明視窗標頭的問卷鈕（#syncSurveyBtn）、
-// 手動共步視窗裡的邀請連結（[data-open-sync-survey]）。
+// 雲端同步使用狀況問卷（Google 表單內嵌）。入口：共步摎備份視窗裡肚个邀請連結（[data-open-sync-survey]）。
+// （原本資訊視窗標頭有一顆問卷鈕，因為無人用，20261108 拿掉，標頭按鈕愛盡量少。）
 // 為何用 Google 表單：Supabase 流量超額（HTTP 402），意見回饋那套寫進 Supabase 个問卷暫時送毋出去。
 // 表單毋載入 iframe 直到使用者撳開（毋會替每位使用者連去 Google）。
 // 同時間淨有一層視窗：從手動共步視窗開，會先收起手動共步視窗，問卷視窗有「回手動共步」鈕。
@@ -130,9 +130,9 @@
   const controller = createController(document, root);
   root.openSyncSurvey = (source) => controller.open(source);
   document.addEventListener('click', (event) => {
-    const target = event.target.closest('#syncSurveyBtn, [data-open-sync-survey]');
+    const target = event.target.closest('[data-open-sync-survey]');
     if (!target) return;
     event.preventDefault();
-    controller.open(target.id === 'syncSurveyBtn' ? 'headerButton' : 'syncModalInvite', target);
+    controller.open('syncModalInvite', target);
   });
 })(typeof self !== 'undefined' ? self : this);

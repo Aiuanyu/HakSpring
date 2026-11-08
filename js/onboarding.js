@@ -7,27 +7,15 @@ function initHakSpringOnboarding() {
   if (!window.driver) return;
   const driver = window.driver.js.driver;
   
-  // 偵測是否已登入
-  const userBtn = document.getElementById('cloudSyncUserBtn');
-  const isLoggedIn = userBtn && window.getComputedStyle(userBtn).display !== 'none';
-  
   if (typeof trackEvent === 'function') {
-    trackEvent('start', 'Onboarding', isLoggedIn ? 'logged_in' : 'guest');
+    trackEvent('start', 'Onboarding', 'guest');
   }
-  
-  const syncStep = isLoggedIn ? {
-    element: '#cloudSyncUserBtn',
+
+  const syncStep = {
+    element: '#manualSyncBtn',
     popover: {
-      title: '登入同步進度',
-      description: '忒好吔！你既經有登入帳號，做得同步進度。請繼續。',
-      side: "bottom",
-      align: 'start'
-    }
-  } : {
-    element: '#cloudSyncBtn',
-    popover: {
-      title: '登入同步進度',
-      description: '先登入帳號，你的遊戲進度與書籤就會自動備份並跨裝置同步到雲端！',
+      title: '共步摎備份',
+      description: '書籤摎學習進度做得共步到別台裝置：開啟「雲端同步金鑰」自動共步，抑係用網址、備份檔手動共步。',
       side: "bottom",
       align: 'start'
     }
