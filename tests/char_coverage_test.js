@@ -138,15 +138,15 @@ it('summary.json 的 jf7000 各腔加總嚴格等於 7,772', () => {
     assert.strictEqual(st.nisim, st.N);
   }
 
-  // 四縣驗收硬指標（C1/C2 規劃書）
+  // 四縣驗收硬指標（教典姓氏沿襲＋六腔擬音補齊後更新）
   const si = jfDialects['四'];
   assert.strictEqual(si.official, 3385, '四縣官方應為 3,385');
   assert.strictEqual(si.G, 3293, '四縣教典單字應為 3,293');
   assert.strictEqual(si.C, 92, '四縣認證單字應為 92');
-  assert.strictEqual(si.S, 666, '四縣切出單字應為 666');
-  assert.strictEqual(si.Y, 1, '四縣沿襲單字應為 1');
-  assert.strictEqual(si.nisim, 3565, '四縣擬音應為 3,565');
-  assert.strictEqual(si.none, 155, '四縣無音應為 155');
+  assert.strictEqual(si.S, 646, '四縣切出單字應為 646');
+  assert.strictEqual(si.Y, 70, '四縣沿襲單字應為 70');
+  assert.strictEqual(si.nisim, 3607, '四縣擬音應為 3,607');
+  assert.strictEqual(si.none, 64, '四縣無音應為 64');
 });
 
 it('summary.json 的 T12 與全範圍數字驗證', () => {

@@ -243,6 +243,12 @@ def load_records():
         for word, readings in load_gip_readings(d, WORD_LEVEL_NOTES, WORD_LEVEL_NOTES_MULTI_CHAR).items():
             for r in readings:
                 yield {'sourceName': f'教典{d}', 'label': '', 'word': word, 'phonetic': r}
+    # 載入教育部教典舊版收錄、新版未收之 74 個姓氏單字條目
+    surnames_path = os.path.join(ROOT, 'data', 'supp', '教典姓氏.csv')
+    if os.path.exists(surnames_path):
+        with open(surnames_path, encoding='utf-8-sig') as f:
+            for r in csv.DictReader(f):
+                yield {'sourceName': f'教典{r["腔"]}', 'label': '', 'word': r['客家語'], 'phonetic': r['客語標音_顯示']}
 
 
 def load_variants():
@@ -269,6 +275,15 @@ def load_inherit():
         return {}
     with open(path, encoding='utf-8-sig') as f:
         return {r['字']: (r['沿襲'], r.get('備註', '')) for r in csv.DictReader(f) if r['字'] and r['沿襲']}
+
+
+def load_gip_surnames(d):
+    """data/supp/教典姓氏.csv 中屬於腔 d 的條目（教育部教典舊版單字姓氏）。"""
+    path = os.path.join(ROOT, 'data', 'supp', '教典姓氏.csv')
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding='utf-8-sig') as f:
+        return [r for r in csv.DictReader(f) if r.get('腔') == d and r.get('客家語')]
 
 
 def load_nisim(d):
@@ -423,6 +438,21 @@ def main():
                     'sourceType': 'supp',
                 })
                 rows.append(item)
+        for r in load_gip_surnames(d):
+            item = {h: '' for h in UNIFIED_SCHEMA_HEADERS}
+            item.update({
+                '編號': f'supp-{len(rows) + 1}',
+                '客家語': r['客家語'],
+                '客語標音_顯示': r['客語標音_顯示'],
+                '客語標音_查詢': r['客語標音_查詢'],
+                '華語詞義': r['華語詞義'],
+                '備註': r['備註'],
+                '分類': '沿襲',
+                'sourceName': f'補字典{d}',
+                'sourceType': 'supp',
+                '詞目音檔名': r.get('詞目音檔名', ''),
+            })
+            rows.append(item)
         for r in nisim:
             note = '擬音'
             if r['其他候選']:
