@@ -1,11 +1,11 @@
 /**
  * 雲端同步模組
- * HakSpring - 使用 Supabase 進行書籤同步
+ * HakSpring - 使用 Cloudflare Pages Functions + D1 進行雲端同步，Supabase Auth 負責身分認證
  */
 
+const SYNC_API_ENDPOINT = '/api/sync';
 const BOOKMARK_LIMIT = 15;
-const SYNC_DEBOUNCE_MS = 30000; // 30 秒
-const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
+const SYNC_DEBOUNCE_MS = 20000; // 20 秒
 const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
 
 // 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'。
@@ -20,10 +20,42 @@ function normalizeDisplayScript(value) {
 let cloudSyncState = {
   isLoggedIn: false,
   user: null,
+  session: null,
   isSyncing: false,
   lastSyncTime: null,
   isRestricted: false,
 };
+
+/**
+ * 取得同步請求身分 Header (Cloudflare D1 /api/sync)
+ */
+async function getSyncAuthHeaders() {
+  const client = getSupabaseClient();
+  let token = null;
+  if (client && client.auth) {
+    try {
+      const { data } = await client.auth.getSession();
+      token = data?.session?.access_token;
+    } catch (_) {}
+  }
+  if (!token && cloudSyncState.session?.access_token) {
+    token = cloudSyncState.session.access_token;
+  }
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  if (cloudSyncState.user?.id) {
+    return { Authorization: `Bearer ${cloudSyncState.user.id}` };
+  }
+  const customKey =
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem('hakkaSyncKey')
+      : null;
+  if (customKey && customKey.trim().length >= 8) {
+    return { 'X-Sync-Key': customKey.trim() };
+  }
+  return null;
+}
 
 /**
  * 初始化雲端同步模組
@@ -48,10 +80,10 @@ async function initCloudSync() {
     if (session?.user) {
       cloudSyncState.isLoggedIn = true;
       cloudSyncState.user = session.user;
+      cloudSyncState.session = session;
       updateSyncUI(true, session.user);
-      startPeriodicSync(); // 啟動背景同步排程
 
-      // 登入後自動從雲端拉取資料
+      // 登入後自動從雲端拉取資料 (純事件驅動，不再使用每分鐘輪詢)
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         console.log(`[CloudSync] 觸發 ${event} 同步`);
         await syncFromCloud();
@@ -59,8 +91,8 @@ async function initCloudSync() {
     } else {
       cloudSyncState.isLoggedIn = false;
       cloudSyncState.user = null;
+      cloudSyncState.session = null;
       updateSyncUI(false, null);
-      stopPeriodicSync(); // 停止背景同步排程
     }
   });
 }
@@ -148,12 +180,11 @@ async function signOut() {
 }
 
 /**
- * 從雲端拉取資料並合併
+ * 從雲端拉取資料並合併 (Cloudflare D1 /api/sync)
  * 實作 Pull-Merge-Push 流程
  */
 async function syncFromCloud() {
-  const client = getSupabaseClient();
-  if (!client || !cloudSyncState.isLoggedIn) return;
+  if (!cloudSyncState.isLoggedIn && !localStorage.getItem('hakkaSyncKey')) return;
 
   // 競合保護：避免同時執行多個同步
   if (cloudSyncState.isSyncing) return;
@@ -169,39 +200,46 @@ async function syncFromCloud() {
   updateSyncStatusUI('syncing');
 
   try {
-    // 加入 timeout 機制
-    const queryPromise = client
-      .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, daily_favs, familiarity, updated_at')
-      .eq('user_id', cloudSyncState.user.id)
-      .maybeSingle();
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('SupabaseTimeout')), SUPABASE_QUERY_TIMEOUT_MS),
-    );
-
-    // 明確捕捉並處理錯誤
-    let data = null;
-    try {
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      if (result.error && result.error.code !== 'PGRST116') {
-        throw result.error;
-      }
-      data = result.data;
-    } catch (err) {
-      if (err.message === 'SupabaseTimeout') {
-        console.warn('[CloudSync] 查詢超時，本次跳過');
-        // 超時不視為嚴重錯誤，僅跳過
-        return;
-      }
-      throw err;
+    const authHeaders = await getSyncAuthHeaders();
+    if (!authHeaders) {
+      console.warn('[CloudSync] 尚未取得有效認證，跳過拉取');
+      updateSyncStatusUI('idle');
+      return;
     }
 
-    if (data) {
-      await applyIncomingSyncData(data, false);
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), SUPABASE_QUERY_TIMEOUT_MS) : null;
+
+    let resp;
+    try {
+      resp = await fetch(SYNC_API_ENDPOINT, {
+        method: 'GET',
+        headers: {
+          ...authHeaders,
+        },
+        signal: controller ? controller.signal : undefined,
+      });
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError') {
+        console.warn('[CloudSync] API 查詢超時，本次跳過');
+        return;
+      }
+      throw fetchErr;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+
+    if (!resp.ok) {
+      throw new Error(`SyncFetchError_${resp.status}`);
+    }
+
+    const result = await resp.json();
+
+    if (result && result.exists && result.data) {
+      await applyIncomingSyncData(result.data, false);
     } else {
       // 雲端沒有資料，上傳本地資料
-      console.log('[CloudSync] 雲端無資料，執行初始化上傳');
+      console.log('[CloudSync] D1 雲端無資料，執行初始化上傳');
       await syncToCloud();
       // 初始上傳成功後，基準＝目前本地統計／偏好設定
       localStorage.setItem(
@@ -231,14 +269,11 @@ async function syncFromCloud() {
     console.error('[CloudSync] 同步失敗:', err);
     updateSyncStatusUI('error');
 
-    // 檢查是否為 Supabase egress 超額或專案受限
     const isRestricted =
-      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
-      String(err).includes('exceed_egress_quota') ||
+      (err && typeof err === 'object' && (err.status === 402 || err.message?.includes('402') || err.message?.includes('restricted'))) ||
       String(err).includes('restricted');
 
     if (isRestricted) {
-      stopPeriodicSync(); // 停止無謂輪詢
       updateSyncStatusUI('restricted');
       showSyncRestrictedNotice();
     } else {
@@ -250,13 +285,15 @@ async function syncFromCloud() {
 }
 
 /**
- * 上傳本地資料到雲端
+ * 上傳本地資料到雲端 (Cloudflare D1 /api/sync)
  */
 async function syncToCloud() {
-  const client = getSupabaseClient();
-  if (!client || !cloudSyncState.isLoggedIn) return;
+  if (!cloudSyncState.isLoggedIn && !localStorage.getItem('hakkaSyncKey')) return;
 
   try {
+    const authHeaders = await getSyncAuthHeaders();
+    if (!authHeaders) return;
+
     const bookmarks = JSON.parse(
       localStorage.getItem('hakkaBookmarks') || '[]',
     );
@@ -288,37 +325,41 @@ async function syncToCloud() {
       localStorage.getItem('hakkaFamiliarity') || '{}'
     );
 
-    const { error } = await client.from('user_sync_data').upsert(
-      {
-        user_id: cloudSyncState.user.id,
-        bookmarks: bookmarks,
-        preferences: preferences,
-        learning_progress: learningProgress,
-        daily_stats: dailyStats,
-        daily_stats_by_level: dailyStatsByLevel,
-        daily_favs: dailyFavs,
-        familiarity: familiarity,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: 'user_id',
-      },
-    );
+    const payloadData = {
+      bookmarks: bookmarks,
+      preferences: preferences,
+      learning_progress: learningProgress,
+      daily_stats: dailyStats,
+      daily_stats_by_level: dailyStatsByLevel,
+      daily_favs: dailyFavs,
+      familiarity: familiarity,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (error) {
-      throw error;
+    const resp = await fetch(SYNC_API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify({
+        data: payloadData,
+        client_version: 1,
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`SyncSaveError_${resp.status}`);
     }
 
-    console.log('[CloudSync] 已上傳到雲端');
+    console.log('[CloudSync] 已儲存至 Cloudflare D1 雲端');
   } catch (err) {
     console.error('[CloudSync] 上傳失敗:', err);
     const isRestricted =
-      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
-      String(err).includes('exceed_egress_quota') ||
+      (err && typeof err === 'object' && (err.status === 402 || err.message?.includes('402') || err.message?.includes('restricted'))) ||
       String(err).includes('restricted');
 
     if (isRestricted) {
-      stopPeriodicSync();
       updateSyncStatusUI('restricted');
       showSyncRestrictedNotice();
     } else {
@@ -1037,35 +1078,11 @@ function triggerCloudSync() {
 window.triggerCloudSync = triggerCloudSync;
 
 /**
- * 週期性背景同步計時器
- */
-let periodicSyncTimer = null;
-
-/**
- * 啟動週期性背景同步
- * 每 PERIODIC_SYNC_INTERVAL_MS 秒執行一次 syncFromCloud
+ * 背景同步相容介面（D1 架構改為純事件驅動，徹底移除每分鐘定時輪詢）
  */
 function startPeriodicSync() {
-  stopPeriodicSync(); // 確保不會重複啟動
-
-  if (!cloudSyncState.isLoggedIn) return;
-
-  console.log('[CloudSync] 啟動背景同步排程');
-
-  periodicSyncTimer = setInterval(() => {
-    // 如果頁面可見，才執行同步
-    // 雖然 syncFromCloud 有競合保護，但判斷 visibility 可以更省資源
-    if (document.visibilityState === 'visible') {
-      // 清除待處理的 debounce timer，避免重複同步
-      if (syncDebounceTimer) {
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = null;
-      }
-      hasPendingSync = false;
-      console.log('[CloudSync] 執行背景自動同步');
-      syncFromCloud();
-    }
-  }, PERIODIC_SYNC_INTERVAL_MS);
+  // D1 雲端架構徹底告別輪詢風暴：改由登入、變更防抖與頁面切換事件驅動
+  stopPeriodicSync();
 }
 
 /**
@@ -1075,40 +1092,34 @@ function stopPeriodicSync() {
   if (periodicSyncTimer) {
     clearInterval(periodicSyncTimer);
     periodicSyncTimer = null;
-    console.log('[CloudSync] 停止背景同步排程');
   }
 }
 
 /**
- * 頁面離開時強制同步（確保資料不遺失）
- * 同時管理背景排程的暫停與恢復
- * 使用 syncFromCloud 以遵循 Pull-Merge-Push 機制，避免覆蓋其他裝置的更新
+ * 頁面離開與恢復時的同步機制（事件驅動）
+ * 1. 頁面隱藏/離開時：若有尚未防抖推送的資料，立即拉取合併並保存
+ * 2. 頁面恢復顯示時：若距離上次同步大於 5 分鐘，自動執行雲端拉取
  */
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') {
-      // 頁面隱藏時
       if (hasPendingSync) {
         if (syncDebounceTimer) {
           clearTimeout(syncDebounceTimer);
           syncDebounceTimer = null;
         }
-        // [修正] 改為 syncFromCloud (Pull-Merge-Push) 以確保安全
-        // 雖然比直接 syncToCloud 慢，但避免覆蓋其他裝置更新
         await syncFromCloud();
         hasPendingSync = false;
       }
-      // 暫停背景排程，省電
-      stopPeriodicSync();
-    } else {
-      // 頁面恢復顯示時
-
-      // [修正 Round 3] 先等待同步完成，再啟動排程，避免 race condition
+    } else if (document.visibilityState === 'visible') {
       if (cloudSyncState.isLoggedIn) {
-        console.log('[CloudSync] 頁面恢復顯示，立即同步');
-        await syncFromCloud();
+        const now = Date.now();
+        const lastTime = cloudSyncState.lastSyncTime ? cloudSyncState.lastSyncTime.getTime() : 0;
+        if (now - lastTime > 5 * 60 * 1000) {
+          console.log('[CloudSync] 頁面切回且距上次同步大於 5 分鐘，自動執行拉取');
+          await syncFromCloud();
+        }
       }
-      startPeriodicSync(); // 重啟背景排程
     }
   });
 }
