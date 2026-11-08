@@ -1185,7 +1185,10 @@ function showManualSyncModal() {
         </div>
 
         <div id="cloudKeySection" style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color, #eee);">
-          <h4 style="margin: 0 0 8px 0; font-size: 15px;">雲端同步金鑰（免登入，自動共步）</h4>
+          <h4 style="margin: 0 0 8px 0; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline;">
+            <span>雲端同步金鑰（免登入，自動共步）</span>
+            <a href="page.html?p=cloud-sync" target="_blank" style="font-size: 12.5px; font-weight: normal; color: #1976d2; text-decoration: underline;">完整說明 ↗</a>
+          </h4>
           <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted, #666);">
             產生一把金鑰，每台裝置輸入同一把，書籤、學習進度就會自動共步。<strong>金鑰就是你个帳號，毋好分別人；弄毋見就拿毋轉雲端資料。</strong>
           </p>
