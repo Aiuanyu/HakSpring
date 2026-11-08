@@ -10077,48 +10077,16 @@ function initializeDataManagement() {
 
 // --- 【新增】雲端同步 UI 初始化 ---
 function initializeCloudSync() {
-  // 初始化 Supabase Client
-  if (typeof initSupabase === 'function') {
-    initSupabase();
-  }
-
-  // 初始化雲端同步模組
+  // 初始化雲端同步模組（同步金鑰；有金鑰會自動拉一擺）
   if (typeof initCloudSync === 'function') {
     initCloudSync();
   }
 
+  // 同步指示鈕：撳落去開手動共步視窗（雲端同步金鑰設定在最頂頭）
   const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-  const cloudSyncLogoutBtn = document.getElementById('cloudSyncLogoutBtn');
-
   if (cloudSyncBtn) {
     cloudSyncBtn.addEventListener('click', () => {
-      if (typeof cloudSyncState !== 'undefined' && cloudSyncState.isRestricted) {
-        if (typeof showManualSyncModal === 'function') {
-          showManualSyncModal();
-        }
-        return;
-      }
-      if (typeof cloudSyncState !== 'undefined' && cloudSyncState.isLoggedIn) {
-        // 已登入，手動觸發同步
-        if (typeof syncFromCloud === 'function') {
-          syncFromCloud();
-        }
-      } else {
-        // 未登入，進行登入
-        if (typeof signInWithGoogle === 'function') {
-          signInWithGoogle();
-        }
-      }
-    });
-  }
-
-  if (cloudSyncLogoutBtn) {
-    cloudSyncLogoutBtn.addEventListener('click', () => {
-      if (confirm('確定愛登出雲端同步無？')) {
-        if (typeof signOut === 'function') {
-          signOut();
-        }
-      }
+      if (typeof showManualSyncModal === 'function') showManualSyncModal();
     });
   }
 }

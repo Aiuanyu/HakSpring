@@ -1,7 +1,7 @@
 /**
  * 雲端同步模組
  * HakSpring - Cloudflare Pages Functions + D1（/api/sync），免登入，用「同步金鑰」認身分。
- * 金鑰由本機隨機產生（32 碼 Base32），伺服器淨存金鑰个 SHA-256。Supabase 流量超額期間毋倚靠任何 Supabase 服務。
+ * 金鑰由本機隨機產生（32 碼 Base32），伺服器淨存金鑰个 SHA-256。無倚靠任何第三方登入服務。
  * 並發：推送帶 base_updated_at，版本對毋著伺服器回 409，用戶端重新合併再推（合併函式在本檔下半部）。
  */
 
@@ -58,6 +58,7 @@ function setSyncKey(raw) {
   if (!isValidSyncKey(raw)) return false;
   localStorage.setItem(SYNC_KEY_STORAGE, normalizeSyncKey(raw));
   localStorage.removeItem(SYNC_REV_STORAGE); // 換金鑰，版本重來
+  if (typeof refreshSyncIndicator === 'function') refreshSyncIndicator();
   return true;
 }
 
@@ -65,6 +66,7 @@ function setSyncKey(raw) {
 function clearSyncKey() {
   localStorage.removeItem(SYNC_KEY_STORAGE);
   localStorage.removeItem(SYNC_REV_STORAGE);
+  if (typeof refreshSyncIndicator === 'function') refreshSyncIndicator();
 }
 
 function getCloudRev() {
@@ -120,13 +122,10 @@ function normalizeDisplayScript(value) {
 
 // 同步狀態
 let cloudSyncState = {
-  isLoggedIn: false,
-  user: null,
-  session: null,
   isSyncing: false,
   lastSyncTime: null,
-  isRestricted: false,
 };
+
 
 /**
  * 初始化雲端同步模組
@@ -142,103 +141,7 @@ async function initCloudSync() {
   if (hasSyncKey()) {
     await syncFromCloud();
   }
-
-  // Supabase 登入（Google）暫時毋倚靠：Supabase 流量超額期間淨更新畫面，毋觸發同步
-  const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
-  if (client && client.auth) {
-    client.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        cloudSyncState.isLoggedIn = true;
-        cloudSyncState.user = session.user;
-        cloudSyncState.session = session;
-        updateSyncUI(true, session.user);
-      } else {
-        cloudSyncState.isLoggedIn = false;
-        cloudSyncState.user = null;
-        cloudSyncState.session = null;
-        updateSyncUI(false, null);
-      }
-    });
-  }
-}
-
-/**
- * Google 登入
- */
-async function signInWithGoogle() {
-  const client = getSupabaseClient();
-  if (!client) return;
-
-  // 先在「使用者點擊」的同步脈絡下開一個空白分頁卡位。
-  // 這樣才不會被彈出視窗封鎖器擋掉——若等到 await 之後才 window.open，就脫離手勢脈絡、多半會被擋。
-  // 用新分頁登入是刻意的：避免主頁被 redirect 跳走，登入回來後 onboarding 才不會中斷。
-  const authWindow = window.open('', '_blank');
-
-  try {
-    // 保留 query parameters，讓用戶登入後能回到原本的狀態（腔調、級別、類別等）
-    const redirectUrl =
-      window.location.origin +
-      window.location.pathname +
-      window.location.search;
-    const { data, error } = await client.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: true,
-      },
-    });
-
-    if (error) {
-      console.error('[CloudSync] 登入失敗:', error);
-      if (authWindow) authWindow.close();
-      alert('登入失敗：' + error.message);
-      return;
-    }
-
-    if (data && data.url) {
-      if (authWindow) {
-        // 卡位分頁還在 → 把授權網址填進去（正常路徑，保住新分頁 + onboarding）
-        authWindow.location.href = data.url;
-      } else {
-        // 連空白分頁都被擋（極端封鎖）→ 退回同分頁導向，至少能完成登入
-        // （此情況該次 redirect 回來會跳過 onboarding，屬可接受的退路）
-        window.location.href = data.url;
-      }
-    } else if (authWindow) {
-      // 沒拿到 url 也別留空白分頁在那
-      authWindow.close();
-    }
-  } catch (err) {
-    console.error('[CloudSync] 登入錯誤:', err);
-    if (authWindow) authWindow.close();
-    alert('登入時發生錯誤');
-  }
-}
-
-/**
- * 登出
- */
-async function signOut() {
-  const client = getSupabaseClient();
-  if (!client) return;
-
-  // 清除所有待處理的同步計時器，避免登出後仍執行同步
-  if (syncDebounceTimer) {
-    clearTimeout(syncDebounceTimer);
-    syncDebounceTimer = null;
-  }
-  hasPendingSync = false;
-
-  try {
-    const { error } = await client.auth.signOut();
-    if (error) {
-      console.error('[CloudSync] 登出失敗:', error);
-    } else {
-      console.log('[CloudSync] 已登出');
-    }
-  } catch (err) {
-    console.error('[CloudSync] 登出錯誤:', err);
-  }
+  refreshSyncIndicator();
 }
 
 /** 同步失敗个通知：伺服器忙／逾時／網路／金鑰錯誤分開講。 */
@@ -940,43 +843,16 @@ function mergeFamiliarity(localObj, cloudObj) {
 }
 
 /**
- * 更新同步 UI（登入/登出按鈕狀態）
+ * 同步指示鈕（#cloudSyncBtn，在資訊視窗標頭）：有同步金鑰才顯示，撳落去開手動共步視窗（金鑰設定）。
+ * 同步中／成功／失敗个狀態動畫由 updateSyncStatusUI 負責。
  */
-function updateSyncUI(isLoggedIn, user) {
-  const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-  const cloudSyncUserBtn = document.getElementById('cloudSyncUserBtn');
-  const cloudSyncLogoutBtn = document.getElementById('cloudSyncLogoutBtn');
-
-  if (!cloudSyncBtn) return;
-
-  if (isLoggedIn && user) {
-    cloudSyncBtn.innerHTML = '<i class="fas fa-cloud-check"></i>';
-    cloudSyncBtn.title = '已登入雲端同步';
-    cloudSyncBtn.classList.add('logged-in');
-
-    if (cloudSyncBtn.style.display !== 'none') {
-      if (cloudSyncUserBtn) {
-        const displayName =
-          user.user_metadata?.full_name || user.email || '使用者';
-        cloudSyncUserBtn.dataset.tooltip = displayName;
-        cloudSyncUserBtn.style.display = 'inline-block';
-      }
-      if (cloudSyncLogoutBtn) {
-        cloudSyncLogoutBtn.style.display = 'inline-block';
-      }
-    }
-  } else {
-    cloudSyncBtn.innerHTML = '<i class="fas fa-cloud"></i>';
-    cloudSyncBtn.title = '雲端同步（Google 登入）';
-    cloudSyncBtn.classList.remove('logged-in');
-
-    if (cloudSyncUserBtn) {
-      cloudSyncUserBtn.style.display = 'none';
-    }
-    if (cloudSyncLogoutBtn) {
-      cloudSyncLogoutBtn.style.display = 'none';
-    }
-  }
+function refreshSyncIndicator() {
+  const button = document.getElementById('cloudSyncBtn');
+  if (!button) return;
+  const enabled = hasSyncKey();
+  button.style.display = enabled ? '' : 'none';
+  button.classList.toggle('logged-in', enabled);
+  button.title = enabled ? '雲端同步已開啟（撳開設定）' : '雲端同步';
 }
 
 /**
@@ -1016,7 +892,7 @@ function updateSyncStatusUI(status) {
   const cloudSyncBtn = document.getElementById('cloudSyncBtn');
   if (!cloudSyncBtn) return;
 
-  cloudSyncBtn.classList.remove('syncing', 'sync-success', 'sync-error', 'sync-restricted');
+  cloudSyncBtn.classList.remove('syncing', 'sync-success', 'sync-error');
 
   switch (status) {
     case 'syncing':
@@ -1029,11 +905,6 @@ function updateSyncStatusUI(status) {
     case 'error':
       cloudSyncBtn.classList.add('sync-error');
       setTimeout(() => cloudSyncBtn.classList.remove('sync-error'), 3000);
-      break;
-    case 'restricted':
-      cloudSyncState.isRestricted = true;
-      cloudSyncBtn.classList.add('sync-restricted');
-      cloudSyncBtn.title = '雲端自動共步受限，點擊開啟手動共步';
       break;
   }
 }
@@ -1182,34 +1053,6 @@ async function checkUrlSyncPayload() {
   }
 }
 
-/**
- * 顯示雲端自動同步受限提示文案
- */
-function showSyncRestrictedNotice() {
-  const noticeId = 'cloudSyncRestrictedBanner';
-  let banner = document.getElementById(noticeId);
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = noticeId;
-    banner.style.cssText =
-      'background: #fff3cd; color: #856404; border-bottom: 1px solid #ffeeba; padding: 10px 16px; font-size: 14px; line-height: 1.5; text-align: center; position: sticky; top: 0; z-index: 10001; box-shadow: 0 2px 6px rgba(0,0,0,0.08);';
-    document.body.prepend(banner);
-  }
-  banner.innerHTML =
-    '⚠️ 失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="bannerManualSyncLink" style="color: #533f03; font-weight: bold; text-decoration: underline; cursor: pointer;"><i class="fas fa-arrows-rotate"></i> 請點這位</a>）';
-
-  const link = document.getElementById('bannerManualSyncLink');
-  if (link) {
-    link.onclick = (e) => {
-      e.preventDefault();
-      showManualSyncModal();
-    };
-  }
-}
-
-/**
- * 顯示手動同步對話框（Modal）
- */
 function cloudKeyEls() {
   const ids = ['Off', 'On', 'Input', 'Display', 'Status', 'EnableBtn', 'JoinBtn', 'ToggleBtn', 'CopyBtn', 'SyncNowBtn', 'DisableBtn', 'DeleteBtn'];
   const els = {};
@@ -1540,7 +1383,6 @@ if (typeof document !== 'undefined') {
       target &&
       (target.getAttribute('href') === '#manual-sync' ||
         target.id === 'manualSyncLink' ||
-        target.id === 'bannerManualSyncLink' ||
         target.id === 'manualSyncBtn')
     ) {
       e.preventDefault();

@@ -212,6 +212,21 @@ const readJson = async (resp) => JSON.parse(await resp.text());
     console.log('  ✅ 5. 用戶端金鑰工具 PASS');
   }
 
+  // ===== 5b. 同步指示鈕：有金鑰才顯示 =====
+  {
+    const d = makeDevice('indicator');
+    const button = { style: { display: 'none' }, title: '', classes: new Set(), classList: { toggle(c, on) { on ? button.classes.add(c) : button.classes.delete(c); }, remove() {}, add() {} } };
+    d.document.getElementById = (id) => (id === 'cloudSyncBtn' ? button : null);
+    d.refreshSyncIndicator();
+    assert.strictEqual(button.style.display, 'none', '無金鑰：隱藏');
+    d.setSyncKey(KEY_A);
+    assert.strictEqual(button.style.display, '', '有金鑰：顯示');
+    assert.ok(button.classes.has('logged-in'));
+    d.clearSyncKey();
+    assert.strictEqual(button.style.display, 'none', '停用後：又隱藏');
+    console.log('  ✅ 5b. 同步指示鈕（有金鑰才顯示）PASS');
+  }
+
   // ===== 6. 兩台裝置：推送、拉取合併、版本衝突重試 =====
   {
     const A = makeDevice('A'), B = makeDevice('B');
@@ -260,6 +275,15 @@ const readJson = async (resp) => JSON.parse(await resp.text());
     assert.ok(!/periodicSyncTimer|startPeriodicSync|stopPeriodicSync/.test(src), '定時輪詢殘留（會 ReferenceError）');
     assert.ok(!/SUPABASE_QUERY_TIMEOUT_MS/.test(src));
     assert.ok(!/Authorization/.test(src), '前端毋送 Authorization');
+    // 沒用个舊路徑（Supabase 登入）愛清掉：SDK、設定檔、按鈕、函式
+    const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+    const main = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
+    for (const [name, text] of [['cloud-sync.js', src], ['index.html', index], ['main.js', main]]) {
+      assert.ok(!/getSupabaseClient|initSupabase|supabase-js|supabase-config|signInWithGoogle|signInWithOAuth/.test(text), `${name} 殘留 Supabase 登入程式`);
+    }
+    assert.ok(!fs.existsSync(path.join(root, 'js/supabase-config.js')), 'js/supabase-config.js 愛刪掉');
+    assert.ok(!/cloudSyncUserBtn|cloudSyncLogoutBtn/.test(index + main + src), '舊个登入／登出鈕殘留');
+    assert.ok(!/showSyncRestrictedNotice|isRestricted|sync-restricted/.test(src + main), '舊个「受限」提示殘留');
     const migration = fs.readFileSync(path.join(root, 'migrations/0001_init.sql'), 'utf8');
     assert.ok(/CREATE TABLE IF NOT EXISTS user_sync/.test(migration));
     const fn = fs.readFileSync(path.join(root, 'functions/api/sync.js'), 'utf8');

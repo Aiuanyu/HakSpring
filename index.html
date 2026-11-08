@@ -29,11 +29,10 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.65" />
+    <link rel="stylesheet" href="style.css?v=4.7.66" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- 再載入自訂 JS（保留 defer 確保 DOM 載入完成） -->
@@ -54,7 +53,7 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.86" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.87" defer></script>
     <script type="text/javascript" src="js/sync-survey.js?v=1.1.0" defer></script>
     <script
       type="text/javascript"
@@ -63,7 +62,6 @@
     ></script>
     <script type="text/javascript" src="js/romaine-join.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.8" defer></script>
-    <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
       type="text/javascript"
       src="js/game/game-progress.js?v=4.9.2"
@@ -97,7 +95,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.7.0"
+      src="js/cloud-sync.js?v=4.7.1"
       defer
     ></script>
     <script
@@ -112,7 +110,7 @@
       href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-    <script type="text/javascript" src="js/onboarding.js" defer></script>
+    <script type="text/javascript" src="js/onboarding.js?v=1.0.1" defer></script>
 
     <script
       src="https://kit.fontawesome.com/6741caa77f.js"
@@ -1283,22 +1281,8 @@
               <button id="syncSurveyBtn" title="共步使用狀況問卷（1 分鐘，匿名）">
                 <i class="fas fa-clipboard-question"></i>
               </button>
-              <button id="cloudSyncBtn" title="雲端同步（Google 登入）" style="display: none;">
+              <button id="cloudSyncBtn" title="雲端同步" style="display: none;">
                 <i class="fas fa-cloud"></i>
-              </button>
-              <button
-                id="cloudSyncUserBtn"
-                style="display: none"
-                aria-label="使用者資訊"
-              >
-                <i class="fas fa-user-circle"></i>
-              </button>
-              <button
-                id="cloudSyncLogoutBtn"
-                style="display: none"
-                title="登出雲端同步"
-              >
-                <i class="fas fa-right-from-bracket"></i>
               </button>
               <button id="dataManagementBtn" title="資料管理（備份／還原）">
                 <i class="fas fa-database"></i>
