@@ -5,6 +5,19 @@
  * 並發：推送帶 base_updated_at，版本對毋著伺服器回 409，用戶端重新合併再推（合併函式在本檔下半部）。
  */
 
+function getSyncApiEndpoint() {
+  // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
+  // 則強制導向正式環境的 API，解決 local Apache 找不到 Endpoint 的問題（同 main.js 音檔代理機制）。
+  if (
+    typeof window !== 'undefined' &&
+    window.location &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+    window.location.port !== '8788'
+  ) {
+    return 'https://hakspring.pages.dev/api/sync';
+  }
+  return '/api/sync';
+}
 const SYNC_API_ENDPOINT = '/api/sync';
 const SYNC_KEY_STORAGE = 'hakkaSyncKey';
 const SYNC_REV_STORAGE = 'hakkaSyncCloudRev'; // 上次看著个雲端版本（updated_at），推送時當 base_updated_at
@@ -87,7 +100,7 @@ async function syncRequest(method, body) {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), SYNC_REQUEST_TIMEOUT_MS) : null;
   try {
-    const resp = await fetch(SYNC_API_ENDPOINT, {
+    const resp = await fetch(getSyncApiEndpoint(), {
       method,
       headers: {
         'X-Sync-Key': key,
@@ -595,9 +608,13 @@ const SYNC_PACKAGE_OBJECT_FIELDS = [
 ];
 
 function decodeBase64Utf8(base64) {
-  const binary = atob(base64);
-  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+  try {
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch (_) {
+    throw new Error('format');
+  }
 }
 
 /**
@@ -644,13 +661,32 @@ function legacyToPackage(legacy) {
 
 /** 舊版備份里肚个 5 項設定：覆蓋回本機（摎舊「資料管理」還原个行為共樣）。回傳還原个項數。 */
 function applyLegacySettings(legacy) {
+  if (!legacy || typeof legacy !== 'object') return 0;
   let count = 0;
   for (const key of LEGACY_SETTING_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(legacy, key)) continue;
-    let value = legacy[key];
-    if (typeof value === 'object' && value !== null) value = JSON.stringify(value);
-    localStorage.setItem(key, String(value));
-    count += 1;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    const value = legacy[key];
+    if (value === null || value === undefined) continue;
+
+    let cleanValue = null;
+    if (key === 'dontShowInfoModalAgain' || key === 'autoBookmarkMode') {
+      cleanValue = value === true || value === 'true' ? 'true' : 'false';
+    } else if (key === 'certAdvancedRepeatCount') {
+      const num = parseInt(value, 10);
+      if (!isNaN(num) && num >= 0 && num <= 100) cleanValue = String(num);
+    } else if (key === 'lastSearchMode' || key === 'lastSearchDialect') {
+      if (typeof value === 'string' && value.trim() && value.length <= 32) {
+        cleanValue = value.trim();
+      }
+    } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      cleanValue = String(value);
+    }
+
+    if (cleanValue !== null) {
+      localStorage.setItem(key, cleanValue);
+      count += 1;
+    }
   }
   return count;
 }
@@ -791,6 +827,7 @@ function mergeProgress(localObj, cloudObj) {
   
   for (const key in cloud) {
     if (!cloud.hasOwnProperty(key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
 
     const cloudItem = cloud[key];
     const localItem = local[key];
@@ -1029,6 +1066,8 @@ function mergeFamiliarity(localObj, cloudObj) {
 
   const merged = { ...cloud };
   for (const key in local) {
+    if (!Object.prototype.hasOwnProperty.call(local, key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
     const localEntry = local[key];
     const cloudEntry = cloud[key];
     const localTs = Array.isArray(localEntry) ? localEntry[1] : 0;
@@ -1106,7 +1145,6 @@ function refreshSyncIndicator() {
   const button = document.getElementById('manualSyncBtn');
   if (!button || button.dataset.errorTimeoutId) return;
   button.title = hasSyncKey() ? '共步與備份（雲端同步已開啟）' : '共步與備份（跨裝置無痛轉移）';
-  button.dataset.originalTitle = '';
   delete button.dataset.originalTitle;
 }
 
@@ -1137,6 +1175,11 @@ function updateSyncStatusUI(status) {
     case 'error':
       mark(true, 'sync-error');
       setTimeout(() => mark(false, 'sync-error'), 3000);
+      break;
+    case 'restricted':
+      cloudSyncState.isRestricted = true;
+      mark(true, 'sync-restricted');
+      buttons.forEach((b) => (b.title = '雲端自動共步受限，點擊開啟手動共步'));
       break;
   }
 }
@@ -1432,31 +1475,31 @@ function showManualSyncModal() {
     modal.style.cssText =
       'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; align-items: center; justify-content: center;';
     modal.innerHTML = `
-      <div class="modal-dialog" style="background: var(--bg-card, #fff); color: var(--text-main, #333); padding: 20px; border-radius: 12px; max-width: 520px; width: 92%; max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+      <div class="modal-dialog" style="padding: 20px; border-radius: 12px; max-width: 520px; width: 92%; max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <h3 style="margin: 0; font-size: 18px;"><i class="fas fa-arrows-rotate"></i> 共步摎備份</h3>
-          <button id="closeManualSyncModalBtn" aria-label="關忒" style="border: none; background: transparent; font-size: 22px; cursor: pointer; color: var(--text-muted, #888);">&times;</button>
+          <button id="closeManualSyncModalBtn" aria-label="關忒" style="border: none; background: transparent; font-size: 22px; cursor: pointer;">&times;</button>
         </div>
-        <div style="font-size: 13px; line-height: 1.6; margin-bottom: 12px; background: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px;">
+        <div class="sync-warning-banner" style="font-size: 13px; line-height: 1.6; margin-bottom: 12px; padding: 8px 12px; border-radius: 4px;">
           Google 登入該套雲端共步因為後台超過免費額暫停，預計 11/24 後恢復。這段時間請用下背个「雲端同步金鑰」，抑係「手動共步與備份」。
         </div>
 
-        <details id="cloudKeySection" open style="margin-bottom: 10px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; padding: 8px 12px;">
+        <details id="cloudKeySection" open style="margin-bottom: 10px; padding: 8px 12px;">
           <summary style="cursor: pointer; font-weight: bold; font-size: 15px;">雲端同步金鑰<span style="font-weight: normal; font-size: 12.5px;">（建議，免登入，自動共步）</span></summary>
-          <p style="margin: 8px 0; font-size: 13px; color: var(--text-muted, #666);">
+          <p class="sync-modal-muted" style="margin: 8px 0; font-size: 13px;">
             產生一把金鑰，每台裝置輸入同一把，書籤、學習進度就會自動共步。<strong>金鑰就是你个帳號，毋好分別人；弄毋見就拿毋轉雲端資料。</strong>
-            <a href="page.html?p=cloud-sync" target="_blank" rel="noopener noreferrer" style="color: #1565c0; text-decoration: underline; white-space: nowrap;">完整說明 ↗</a>
+            <a href="page.html?p=cloud-sync" target="_blank" rel="noopener noreferrer" class="sync-modal-link">完整說明 ↗</a>
           </p>
           <div id="cloudKeyOff">
             <button id="cloudKeyEnableBtn" type="button" style="background: #2e7d32; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">開啟雲端同步（產生新金鑰）</button>
             <div style="margin-top: 10px; display: flex; gap: 8px;">
-              <input id="cloudKeyInput" type="text" autocomplete="off" spellcheck="false" placeholder="已經有金鑰？貼在這" aria-label="同步金鑰" style="flex: 1; min-width: 0; padding: 8px; font-size: 13px; border: 1px solid var(--border-color, #ccc); border-radius: 6px;" />
+              <input id="cloudKeyInput" type="text" autocomplete="off" spellcheck="false" placeholder="已經有金鑰？貼在這" aria-label="同步金鑰" style="flex: 1; min-width: 0; padding: 8px; font-size: 13px; border-radius: 6px;" />
               <button id="cloudKeyJoinBtn" type="button" style="background: #1565c0; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">連結這台裝置</button>
             </div>
           </div>
           <div id="cloudKeyOn" hidden>
-            <div style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你个金鑰：</div>
-            <input id="cloudKeyDisplay" type="password" readonly aria-label="你个同步金鑰" style="width: 100%; box-sizing: border-box; padding: 8px; font-size: 13px; font-family: monospace; border: 1px solid var(--border-color, #ccc); border-radius: 6px;" />
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你个金鑰：</div>
+            <input id="cloudKeyDisplay" type="password" readonly aria-label="你个同步金鑰" style="width: 100%; box-sizing: border-box; padding: 8px; font-size: 13px; font-family: monospace; border-radius: 6px;" />
             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
               <button id="cloudKeyToggleBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">顯示金鑰</button>
               <button id="cloudKeyCopyBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">複製</button>
@@ -1468,22 +1511,22 @@ function showManualSyncModal() {
           <div id="cloudKeyStatus" role="status" style="margin-top: 8px; min-height: 1.4em; font-size: 13px;"></div>
         </details>
 
-        <details id="manualBackupSection" style="margin-bottom: 10px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; padding: 8px 12px;">
+        <details id="manualBackupSection" style="margin-bottom: 10px; padding: 8px 12px;">
           <summary style="cursor: pointer; font-weight: bold; font-size: 15px;">手動共步摎備份<span style="font-weight: normal; font-size: 12.5px;">（備援，免金鑰、免雲端）</span></summary>
-          <p style="margin: 8px 0; font-size: 13px; line-height: 1.6; color: var(--text-muted, #666);">
+          <p class="sync-modal-muted" style="margin: 8px 0; font-size: 13px; line-height: 1.6;">
             <strong>幾時用：</strong>無愛開金鑰、雲端暫時連毋著、一擺性搬去新裝置，抑係留一份備份。<br>
             <strong>愛知：</strong>手動共步係「搬一擺」，毋會自動更新；兩台裝置各自有變動，愛各傳一擺。傳過去个資料會摎對方原本个資料<strong>智慧合併</strong>，毋會蓋掉。
           </p>
           <div style="margin: 10px 0;">
             <div style="font-size: 14px; font-weight: bold; margin-bottom: 4px;">方法一：網址（最簡單）</div>
-            <div style="font-size: 13px; color: var(--text-muted, #666); margin-bottom: 6px;">複製進度短網址，用 AirDrop、LINE、Email 傳去另一台裝置打開，就會自動偵測並合併。</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">複製進度短網址，用 AirDrop、LINE、Email 傳去另一台裝置打開，就會自動偵測並合併。</div>
             <button id="copySyncUrlBtn" style="background: #2e7d32; color: #fff; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
               📋 複製手動共步網址
             </button>
           </div>
           <div style="margin: 12px 0 4px;">
             <div style="font-size: 14px; font-weight: bold; margin-bottom: 4px;">方法二：備份檔</div>
-            <div style="font-size: 13px; color: var(--text-muted, #666); margin-bottom: 6px;">下載完整備份（書籤、偏好、學習進度、日日一詞、熟悉度、統計），隨時讀取還原。也讀得舊版「資料管理」个備份檔。</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">下載完整備份（書籤、偏好、學習進度、日日一詞、熟悉度、統計），隨時讀取還原。也讀得舊版「資料管理」个備份檔。</div>
             <div style="display: flex; gap: 10px;">
               <button id="downloadSyncJsonBtn" style="flex: 1; background: #1565c0; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
                 💾 下載備份 JSON
@@ -1496,13 +1539,13 @@ function showManualSyncModal() {
           </div>
           <details style="margin-top: 8px;">
             <summary style="cursor: pointer; font-size: 13px;">貼上備份內容，抑係舊版遷移網址</summary>
-            <textarea id="importPasteArea" rows="3" aria-label="貼上備份內容" placeholder="貼上備份 JSON，抑係有 ?migrateData= 个舊版網址" style="width: 100%; box-sizing: border-box; margin-top: 6px; padding: 8px; font-size: 12px; border: 1px solid var(--border-color, #ccc); border-radius: 6px;"></textarea>
+            <textarea id="importPasteArea" rows="3" aria-label="貼上備份內容" placeholder="貼上備份 JSON，抑係有 ?migrateData= 个舊版網址" style="width: 100%; box-sizing: border-box; margin-top: 6px; padding: 8px; font-size: 12px; border-radius: 6px;"></textarea>
             <button id="importPasteBtn" type="button" style="margin-top: 6px; background: #546e7a; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">匯入貼上个內容</button>
           </details>
         </details>
 
         <div style="font-size: 12.5px; text-align: right;">
-          <a href="#" data-open-sync-survey style="color: #1565c0;"><i class="fas fa-clipboard-question"></i> 幫忙填 1 分鐘問卷，講你个使用狀況</a>
+          <a href="#" data-open-sync-survey><i class="fas fa-clipboard-question"></i> 幫忙填 1 分鐘問卷，講你个使用狀況</a>
         </div>
       </div>
     `;
@@ -1617,6 +1660,16 @@ function showManualSyncModal() {
       try {
         const result = await importBackupText(text);
         if (result.kind === 'legacy' && result.settings > 0) {
+          if (hasPendingSync) {
+            if (syncDebounceTimer) {
+              clearTimeout(syncDebounceTimer);
+              syncDebounceTimer = null;
+            }
+            try {
+              await syncFromCloud();
+            } catch (_) {}
+            hasPendingSync = false;
+          }
           alert(`✅ 舊版備份匯入成功（書籤已合併，${result.settings} 項設定已還原）。網站會重新載入。`);
           location.reload();
         } else {

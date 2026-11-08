@@ -4,7 +4,7 @@
  *
  * 身分：免登入，用「同步金鑰」（X-Sync-Key）。金鑰由用戶端隨機產生（32 碼 Base32，160 位元），
  * 伺服器淨存金鑰个 SHA-256 當 user_id，毋存金鑰本身。金鑰毋會出現在網址、log 抑係 Referer。
- * 同源使用，毋開 CORS。
+ * 限制 CORS：淨允許同源、官方網域摎本機開發環境（localhost / 127.0.0.1）存取。
  *
  * 並發：POST 帶 base_updated_at（用戶端上次看著个版本）。伺服器照版本做 compare-and-swap，
  * 版本對毋著回 409 摎目前个資料，用戶端重新合併再推（合併函式在 js/cloud-sync.js）。
@@ -25,12 +25,33 @@ const OBJECT_FIELDS = [
   'familiarity',
 ];
 
-function jsonResponse(data, status = 200) {
+function corsHeaders(request) {
+  if (!request || !request.headers) return {};
+  const origin = request.headers.get('Origin') || '';
+  if (!origin) return {};
+  const isAllowed =
+    /^https?:\/\/localhost(:[0-9]+)?$/.test(origin) ||
+    /^https?:\/\/127\.0\.0\.1(:[0-9]+)?$/.test(origin) ||
+    origin === 'https://aiuanyu.github.io' ||
+    /^https:\/\/([a-z0-9-]+\.)?hakspring\.pages\.dev$/.test(origin);
+
+  if (!isAllowed) return {};
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'X-Sync-Key, Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+function jsonResponse(data, status = 200, request = null) {
+  const cors = corsHeaders(request);
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
+      ...cors,
     },
   });
 }
@@ -91,63 +112,65 @@ async function currentRow(db, userId) {
 
 /** GET /api/sync：拉取雲端資料；?health=1 淨回狀態（毋含內部訊息） */
 export async function onRequestGet({ request, env }) {
+  const reply = (data, status = 200) => jsonResponse(data, status, request);
   const url = new URL(request.url);
   if (url.searchParams.get('health') === '1') {
-    return env && env.DB ? jsonResponse({ status: 'ok' }) : jsonResponse({ status: 'error' }, 500);
+    return env && env.DB ? reply({ status: 'ok' }) : reply({ status: 'error' }, 500);
   }
-  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
+  if (!env || !env.DB) return reply({ error: 'unavailable' }, 503);
 
   const userId = await userIdFromRequest(request);
-  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+  if (!userId) return reply({ error: 'unauthorized' }, 401);
 
   try {
     const row = await currentRow(env.DB, userId);
-    if (!row) return jsonResponse({ error: 'corrupted' }, 500);
-    return jsonResponse(row);
+    if (!row) return reply({ error: 'corrupted' }, 500);
+    return reply(row);
   } catch (err) {
     console.error('[sync] GET failed:', err);
-    return jsonResponse({ error: 'server_error' }, 500);
+    return reply({ error: 'server_error' }, 500);
   }
 }
 
 /** POST /api/sync：body = { data, base_updated_at }；版本對毋著回 409 */
 export async function onRequestPost({ request, env }) {
-  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
+  const reply = (data, status = 200) => jsonResponse(data, status, request);
+  if (!env || !env.DB) return reply({ error: 'unavailable' }, 503);
 
   const userId = await userIdFromRequest(request);
-  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+  if (!userId) return reply({ error: 'unauthorized' }, 401);
 
   // 先看 Content-Length，免得讀大 body；之後再用實際位元組數檢查（Content-Length 做得假）
   const declared = Number(request.headers.get('Content-Length'));
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return jsonResponse({ error: 'too_large' }, 413);
+    return reply({ error: 'too_large' }, 413);
   }
   let text;
   try {
     text = await request.text();
   } catch (_) {
-    return jsonResponse({ error: 'bad_request' }, 400);
+    return reply({ error: 'bad_request' }, 400);
   }
   if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) {
-    return jsonResponse({ error: 'too_large' }, 413);
+    return reply({ error: 'too_large' }, 413);
   }
 
   let body;
   try {
     body = JSON.parse(text);
   } catch (_) {
-    return jsonResponse({ error: 'bad_request' }, 400);
+    return reply({ error: 'bad_request' }, 400);
   }
-  if (!isPlainObject(body)) return jsonResponse({ error: 'bad_request' }, 400);
+  if (!isPlainObject(body)) return reply({ error: 'bad_request' }, 400);
 
   const data = sanitizeData(body.data);
   const base = body.base_updated_at === undefined ? 0 : body.base_updated_at;
   if (!data || !Number.isSafeInteger(base) || base < 0) {
-    return jsonResponse({ error: 'bad_request' }, 400);
+    return reply({ error: 'bad_request' }, 400);
   }
   const dataString = JSON.stringify(data);
   if (new TextEncoder().encode(dataString).length > MAX_BODY_BYTES) {
-    return jsonResponse({ error: 'too_large' }, 413);
+    return reply({ error: 'too_large' }, 413);
   }
 
   try {
@@ -167,25 +190,34 @@ export async function onRequestPost({ request, env }) {
     const changed = result && result.meta ? result.meta.changes : 0;
     if (changed === 0) {
       const row = await currentRow(env.DB, userId);
-      return jsonResponse({ error: 'conflict', ...(row || {}) }, 409);
+      return reply({ error: 'conflict', ...(row || {}) }, 409);
     }
-    return jsonResponse({ success: true, updated_at: now });
+    return reply({ success: true, updated_at: now });
   } catch (err) {
     console.error('[sync] POST failed:', err);
-    return jsonResponse({ error: 'server_error' }, 500);
+    return reply({ error: 'server_error' }, 500);
   }
 }
 
 /** DELETE /api/sync：刪掉這把金鑰个雲端資料 */
 export async function onRequestDelete({ request, env }) {
-  if (!env || !env.DB) return jsonResponse({ error: 'unavailable' }, 503);
+  const reply = (data, status = 200) => jsonResponse(data, status, request);
+  if (!env || !env.DB) return reply({ error: 'unavailable' }, 503);
   const userId = await userIdFromRequest(request);
-  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+  if (!userId) return reply({ error: 'unauthorized' }, 401);
   try {
     await env.DB.prepare('DELETE FROM user_sync WHERE user_id = ?').bind(userId).run();
-    return jsonResponse({ success: true });
+    return reply({ success: true });
   } catch (err) {
     console.error('[sync] DELETE failed:', err);
-    return jsonResponse({ error: 'server_error' }, 500);
+    return reply({ error: 'server_error' }, 500);
   }
+}
+
+/** OPTIONS /api/sync：處理預檢請求（CORS preflight） */
+export async function onRequestOptions({ request }) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request),
+  });
 }

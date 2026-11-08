@@ -98,15 +98,39 @@ const same = (actual, expected, msg) => assert.strictEqual(JSON.stringify(actual
   assert.strictEqual(c.localStorage.getItem('hakkaBookmarks'), before);
   console.log('  ✅ 6. 壞格式毋改本機 PASS');
 
-  // 7. 介面接線：資料管理已併入，無殘留
+  // 7. 介面接線：資料管理已併入，無殘留，暗色模式樣式完整適配
   const root = path.join(__dirname, '..');
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const main = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'js/cloud-sync.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
   assert.ok(!/dataManagement|exportDataBtn|importDataBtn/.test(index + main), '舊「資料管理」殘留');
   assert.ok(/id="importPasteArea"/.test(cloud) && /id="importPasteBtn"/.test(cloud) && /id="importSyncJsonInput"/.test(cloud));
   assert.ok(/max-height: calc\(100vh - 32px\); overflow-y: auto/.test(cloud), '共步視窗愛做得捲動');
   assert.ok(/<details id="cloudKeySection" open/.test(cloud) && /<details id="manualBackupSection"/.test(cloud), '分區收合');
+  assert.ok(/class="sync-modal-link"/.test(cloud), '連結愛套用主題類別（WCAG 對比度）');
+  assert.ok(!/var\(--bg-card/.test(cloud), '毋好使用未定義个 --bg-card 變數');
+  assert.ok(/#manualSyncModal \.modal-dialog[\s\S]*?var\(--dark-surface-color/.test(css), '共步視窗愛有暗色模式深底適配');
   console.log('  ✅ 7. 介面接線 PASS');
+
+  // 8. 防禦性強化：applyLegacySettings 略過 null、過濾原型屬性、壞掉 base64 轉拋 format 錯誤
+  assert.throws(() => c.parseBackupText('?migrateData=***invalid-base64***'), (err) => err.message === 'format', '壞掉 base64 丟 format 錯誤');
+  const taintedLegacy = {
+    hakkaBookmarks: [],
+    lastSearchMode: null,
+    certAdvancedRepeatCount: undefined,
+    autoBookmarkMode: true,
+    __proto__: { polluted: true },
+  };
+  c.localStorage.removeItem('lastSearchMode');
+  c.localStorage.removeItem('certAdvancedRepeatCount');
+  const restoredCount = c.applyLegacySettings(taintedLegacy);
+  assert.strictEqual(restoredCount, 1, '淨還原合法值（1 項）');
+  assert.strictEqual(c.localStorage.getItem('lastSearchMode'), null, 'null 毋寫入字串 "null"');
+  assert.strictEqual(c.localStorage.getItem('certAdvancedRepeatCount'), null, 'undefined 毋寫入');
+  assert.strictEqual(c.localStorage.getItem('autoBookmarkMode'), 'true');
+  assert.strictEqual(Object.prototype.polluted, undefined, '防範 Prototype Pollution');
+  console.log('  ✅ 8. 防禦性強化（null 檢查、安全過濾、壞掉 base64）PASS');
+
   console.log('✨ All backup import tests passed!');
 })().catch((err) => { console.error(err); process.exit(1); });

@@ -11,15 +11,15 @@ const root = path.join(__dirname, '..');
 // ---------- 載入伺服器 ----------
 function loadServer() {
   const source = fs.readFileSync(path.join(root, 'functions/api/sync.js'), 'utf8');
-  assert.ok(!/Access-Control-Allow-Origin/.test(source), '同源使用，毋開 CORS');
+  assert.ok(/Access-Control-Allow-Origin/.test(source), '支援安全 CORS（允許 localhost / 官方網域）');
   const code = source.replace(/^export (async )?function/gm, '$1function') +
-    '\nmodule.exports = { onRequestGet, onRequestPost, onRequestDelete, hasOptions: typeof onRequestOptions !== "undefined" };';
+    '\nmodule.exports = { onRequestGet, onRequestPost, onRequestDelete, onRequestOptions, hasOptions: typeof onRequestOptions !== "undefined" };';
   const mod = { exports: {} };
   new Function('module', 'exports', code)(mod, mod.exports);
   return mod.exports;
 }
 const server = loadServer();
-assert.strictEqual(server.hasOptions, false, '毋需要 OPTIONS（同源）');
+assert.strictEqual(server.hasOptions, true, '支援 OPTIONS 預檢請求');
 
 // ---------- 假 D1：支援 sync.js 用著个四種敘述 ----------
 class MockD1 {
@@ -265,6 +265,46 @@ const readJson = async (resp) => JSON.parse(await resp.text());
     const fn = fs.readFileSync(path.join(root, 'functions/api/sync.js'), 'utf8');
     assert.ok(!/CREATE TABLE/.test(fn), '建表放 migration，毋每擺請求跑 DDL');
     console.log('  ✅ 7. 殘留路徑、migration PASS');
+  }
+
+  // ===== 8. CORS 與本機跨域支援 =====
+  {
+    // localhost 來源（支援本機開發）
+    const reqLocal = new Request('https://hakspring.pages.dev/api/sync', {
+      method: 'OPTIONS',
+      headers: { Origin: 'http://localhost' },
+    });
+    const resLocal = await server.onRequestOptions({ request: reqLocal });
+    assert.strictEqual(resLocal.status, 204);
+    assert.strictEqual(resLocal.headers.get('Access-Control-Allow-Origin'), 'http://localhost');
+    assert.ok(resLocal.headers.get('Access-Control-Allow-Headers').includes('X-Sync-Key'));
+
+    // 127.0.0.1 來源
+    const reqIp = new Request('https://hakspring.pages.dev/api/sync', {
+      method: 'OPTIONS',
+      headers: { Origin: 'http://127.0.0.1:8080' },
+    });
+    const resIp = await server.onRequestOptions({ request: reqIp });
+    assert.strictEqual(resIp.headers.get('Access-Control-Allow-Origin'), 'http://127.0.0.1:8080');
+
+    // 未知惡意來源拒絕 CORS
+    const reqEvil = new Request('https://hakspring.pages.dev/api/sync', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://evil.attacker.com' },
+    });
+    const resEvil = await server.onRequestOptions({ request: reqEvil });
+    assert.strictEqual(resEvil.headers.get('Access-Control-Allow-Origin'), null);
+
+    // GET 請求帶 Origin 時回傳正確 Access-Control-Allow-Origin
+    const db = new MockD1();
+    const getReq = new Request('https://hakspring.pages.dev/api/sync', {
+      method: 'GET',
+      headers: { Origin: 'http://localhost', 'X-Sync-Key': KEY_A },
+    });
+    const getRes = await server.onRequestGet({ request: getReq, env: { DB: db } });
+    assert.strictEqual(getRes.headers.get('Access-Control-Allow-Origin'), 'http://localhost');
+
+    console.log('  ✅ 8. CORS（支援 localhost/127.0.0.1 本機開發、阻擋惡意跨域）PASS');
   }
 
   console.log('✨ All cloud sync tests passed!');
