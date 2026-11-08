@@ -194,7 +194,11 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 
 ## 雲端同步資料規範 (Cloud-Sync Data Governance)
 
-雲端同步是「客源翠」的核心功能。**每一種要落地的使用者資料，都必須先回答兩個問題**，再決定實作：
+雲端同步是「客源翠」的核心功能。
+
+> **後端（20261108 起）**：Cloudflare Pages Functions `functions/api/sync.js` ＋ D1（綁定 `DB`，資料表 `user_sync` 見 `migrations/0001_init.sql`；套用：`npx wrangler d1 migrations apply hakspring-sync --remote`）。**免登入，用「同步金鑰」認身分**：用戶端產生 32 碼 Base32 金鑰存 `localStorage.hakkaSyncKey`，請求帶 `X-Sync-Key`，伺服器淨存金鑰个 SHA-256 當 `user_id`。一把金鑰一列，整包同步資料是一個 JSON。**樂觀鎖**：推送帶 `base_updated_at`（本機 `hakkaSyncCloudRev`），版本對毋著回 409 摎目前資料，用戶端重新合併再推。Supabase（Google 登入）因流量超額暫停，同步毋倚靠佢；**毋好**加回「信任未驗證个 JWT／裸 user id」「`?key=`」「CORS `*`」。CORS 淨開**白名單**（同源、`*.hakspring.pages.dev`、`aiuanyu.github.io`、localhost／127.0.0.1，供本機開發打正式站 API），回應有 `Vary: Origin`；要加新來源愛改 `corsHeaders` 个白名單並補測試。伺服器對資料包有欄位白名單。
+
+**每一種要落地的使用者資料，都必須先回答兩個問題**，再決定實作：
 
 1. **要不要跨裝置同步？**
    - 使用者自己產生、換裝置想帶著走 → **要**（進度、書籤、偏好、統計…）。
@@ -209,7 +213,7 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 
 ### 現有資料分類表（新增資料時往此表補一列）
 
-| 資料 | localStorage key | Supabase 欄 | 同步 | 合併法 |
+| 資料 | localStorage key | 同步資料包欄位 | 同步 | 合併法 |
 |---|---|---|---|---|
 | 書籤 | `hakkaBookmarks` | `bookmarks` | ✅ | 逐項單調（同表取較新） |
 | 偏好 | `romanizerJoiningMode` | `preferences` | ✅ | LWW |
@@ -223,6 +227,8 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 | 日日一詞抽籤狀態 | `hakkaDailyCycle` | — | ❌ | 不同步（可重建） |
 | 字典快取 | （`HakkaDataDB`） | — | ❌ | 不同步（可重建） |
 | 美濃腔 | `showMeinungFill` | `preferences` | ✅ | LWW（`mergeBoolPref`；值為布林，未設定視為 `false`；雲端拉下新值時會即時更新開關摎畫面） |
+| 雲端同步金鑰 | `hakkaSyncKey` | —（伺服器淨存雜湊） | ❌ | 不同步、毋進備份檔／手動共步網址（等於帳號密碼，淨存本機，使用者自家抄去別台輸入） |
+| 雲端版本號 | `hakkaSyncCloudRev` | — | ❌ | 不同步（本機看著个雲端 `updated_at`，樂觀鎖用；換金鑰會清掉） |
 | 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
 | 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
@@ -235,13 +241,12 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 - **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。
 
 ### 加新同步欄位時必查（血淚教訓）
-加一個要同步的欄位，`js/cloud-sync.js` 裡有**四個地方要一起改，缺一不可**，尤其 select/upsert 要**對稱**：
-1. **SELECT**（`syncFromCloud` 的 `.select('...')`）——**最常漏這個**。漏了會「推得上、拉不下」：`data.欄位` 讀成 `undefined`→雲端當空的→跨裝置永遠同步不到（症狀：本機有、別台顯示空/歸零）。
-2. **合併**（呼叫對應 `mergeXxx`，並依合併法選對）。
+加一個要同步的欄位，**下面四處要一起改，缺一不可**，尤其「用戶端匯出」摎「伺服器白名單」要**對稱**：
+1. **匯出**（`exportCurrentSyncData`）——欄位愛放進資料包，`syncToCloud` 摎手動共步都共用這一份。
+2. **合併**（`applyIncomingSyncData` 呼叫對應 `mergeXxx`，並依合併法選對）。
 3. **寫回本地**（`localStorage.setItem`）＋（相加型還要）**基準快照**於「push 成功後」才更新。
-4. **UPSERT**（`syncToCloud` 的 upsert 物件加該欄）。
-5. Supabase 先 `ALTER TABLE ... ADD COLUMN`（欄位要先於引用它的程式上線）。
-> 2026-07-17 就栽在「upsert 有加 `daily_stats_by_level`、select 漏加」——推上雲端了卻誰都 SELECT 不出來。改完務必**跨裝置實測**同步。
+4. **伺服器白名單**（`functions/api/sync.js` 个 `ARRAY_FIELDS`／`OBJECT_FIELDS`）——**最常漏這個**：白名單外个欄位會被伺服器丟掉，症狀是「本機有、別台永遠拉毋著」。物件／陣列型態也愛對。
+> 2026-07-17 就栽在「upsert 有加 `daily_stats_by_level`、select 漏加」（Supabase 時代）——推上雲端了卻誰都讀不出來。改完務必**跨裝置實測**同步；`tests/cloudflare_d1_sync_test.js` 有兩台裝置對跑摎 409 重試。
 
 ## 暫存檔案清理慣例 (Temporary File Cleanup Conventions)
 - **隔離暫存檔案 (Isolate Temporary Files)**: 所有用於驗證的暫存檔案、腳本或螢幕截圖，都**必須**建立在版本庫(repository)以外的獨立目錄，例如 `/home/jules/verification`。

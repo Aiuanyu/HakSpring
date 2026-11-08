@@ -1,12 +1,128 @@
 /**
  * 雲端同步模組
- * HakSpring - 使用 Supabase 進行書籤同步
+ * HakSpring - Cloudflare Pages Functions + D1（/api/sync），免登入，用「同步金鑰」認身分。
+ * 金鑰由本機隨機產生（32 碼 Base32），伺服器淨存金鑰个 SHA-256。Supabase 流量超額期間毋倚靠任何 Supabase 服務。
+ * 並發：推送帶 base_updated_at，版本對毋著伺服器回 409，用戶端重新合併再推（合併函式在本檔下半部）。
  */
 
+function getSyncApiEndpoint() {
+  // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
+  // 則強制導向正式環境的 API，解決 local Apache 找不到 Endpoint 的問題（同 main.js 音檔代理機制）。
+  if (
+    typeof window !== 'undefined' &&
+    window.location &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+    window.location.port !== '8788'
+  ) {
+    return 'https://hakspring.pages.dev/api/sync';
+  }
+  return '/api/sync';
+}
+const SYNC_KEY_STORAGE = 'hakkaSyncKey';
+const SYNC_REV_STORAGE = 'hakkaSyncCloudRev'; // 上次看著个雲端版本（updated_at），推送時當 base_updated_at
 const BOOKMARK_LIMIT = 15;
-const SYNC_DEBOUNCE_MS = 30000; // 30 秒
-const PERIODIC_SYNC_INTERVAL_MS = 60000; // 60 秒
-const SUPABASE_QUERY_TIMEOUT_MS = 10000; // 10 秒
+const SYNC_DEBOUNCE_MS = 20000; // 20 秒
+const SYNC_REQUEST_TIMEOUT_MS = 10000; // 10 秒
+const SYNC_MAX_CONFLICT_RETRIES = 2;
+const SYNC_KEY_LENGTH = 32;
+const SYNC_KEY_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+/** 同步金鑰正規化：去掉連字號摎空白、轉大寫。 */
+function normalizeSyncKey(raw) {
+  return String(raw || '').replace(/[\s-]/g, '').toUpperCase();
+}
+
+function isValidSyncKey(raw) {
+  return new RegExp('^[A-Z2-7]{' + SYNC_KEY_LENGTH + '}$').test(normalizeSyncKey(raw));
+}
+
+/** 顯示用：每 4 碼一組，用連字號隔開。 */
+function formatSyncKey(raw) {
+  return (normalizeSyncKey(raw).match(/.{1,4}/g) || []).join('-');
+}
+
+/** 產生新金鑰（160 位元亂數，Base32）。cryptoObj 預設用瀏覽器 crypto，測試可傳入。 */
+function generateSyncKey(cryptoObj) {
+  const c = cryptoObj || (typeof crypto !== 'undefined' ? crypto : null);
+  if (!c || !c.getRandomValues) throw new Error('crypto_unavailable');
+  const bytes = new Uint8Array(SYNC_KEY_LENGTH);
+  // 每碼取 5 位元；用 rejection 毋需要（256 毋整除 32 係整除，無偏差）
+  c.getRandomValues(bytes);
+  let key = '';
+  for (let i = 0; i < SYNC_KEY_LENGTH; i += 1) key += SYNC_KEY_ALPHABET[bytes[i] & 31];
+  return key;
+}
+
+function getSyncKey() {
+  try {
+    const key = normalizeSyncKey(localStorage.getItem(SYNC_KEY_STORAGE));
+    return isValidSyncKey(key) ? key : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function hasSyncKey() {
+  return !!getSyncKey();
+}
+
+function setSyncKey(raw) {
+  if (!isValidSyncKey(raw)) return false;
+  localStorage.setItem(SYNC_KEY_STORAGE, normalizeSyncKey(raw));
+  localStorage.removeItem(SYNC_REV_STORAGE); // 換金鑰，版本重來
+  refreshSyncIndicator();
+  return true;
+}
+
+/** 停用這台裝置个雲端同步（淨清本機金鑰，毋動雲端資料）。 */
+function clearSyncKey() {
+  localStorage.removeItem(SYNC_KEY_STORAGE);
+  localStorage.removeItem(SYNC_REV_STORAGE);
+  refreshSyncIndicator();
+}
+
+function getCloudRev() {
+  const rev = Number(localStorage.getItem(SYNC_REV_STORAGE));
+  return Number.isSafeInteger(rev) && rev > 0 ? rev : 0;
+}
+
+/**
+ * 打 /api/sync。回傳 { status, json }；網路錯誤、逾時會丟出帶 status 个 Error。
+ */
+async function syncRequest(method, body) {
+  const key = getSyncKey();
+  if (!key) {
+    const err = new Error('no_sync_key');
+    err.status = 0;
+    throw err;
+  }
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), SYNC_REQUEST_TIMEOUT_MS) : null;
+  try {
+    const resp = await fetch(getSyncApiEndpoint(), {
+      method,
+      headers: {
+        'X-Sync-Key': key,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller ? controller.signal : undefined,
+    });
+    let json = null;
+    try {
+      json = await resp.json();
+    } catch (_) {
+      /* 無 JSON 就算 */
+    }
+    return { status: resp.status, json };
+  } catch (err) {
+    const wrapped = new Error(err && err.name === 'AbortError' ? 'timeout' : 'network');
+    wrapped.status = 0;
+    throw wrapped;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 // 顯示模式偏好值：舊版存 'hagpin'，現在統一叫 'hpp'；讀到舊值一律當 'hpp'。
 // 正規化个實作只放在 js/pfs-converter.js，這裡淨轉呼叫（index.html 先載入佢）。
@@ -20,6 +136,7 @@ function normalizeDisplayScript(value) {
 let cloudSyncState = {
   isLoggedIn: false,
   user: null,
+  session: null,
   isSyncing: false,
   lastSyncTime: null,
   isRestricted: false,
@@ -32,37 +149,32 @@ async function initCloudSync() {
   // 檢查是否從網址帶入手動同步資料 (#sync=...)
   checkUrlSyncPayload();
 
-  const client = getSupabaseClient();
-  if (!client) {
-    console.error('[CloudSync] Supabase Client 未初始化');
-    return;
-  }
-
   // 設置頁面離開時的同步機制
   setupPageUnloadSync();
+  refreshSyncIndicator();
 
-  // 監聽認證狀態變化
-  client.auth.onAuthStateChange(async (event, session) => {
-    console.log('[CloudSync] Auth state changed:', event);
+  // 有同步金鑰：開啟網頁時拉一擺（事件驅動；毋做定時輪詢）
+  if (hasSyncKey()) {
+    await syncFromCloud();
+  }
 
-    if (session?.user) {
-      cloudSyncState.isLoggedIn = true;
-      cloudSyncState.user = session.user;
-      updateSyncUI(true, session.user);
-      startPeriodicSync(); // 啟動背景同步排程
-
-      // 登入後自動從雲端拉取資料
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        console.log(`[CloudSync] 觸發 ${event} 同步`);
-        await syncFromCloud();
+  // Supabase 登入（Google）暫時毋倚靠：Supabase 流量超額期間淨更新畫面，毋觸發同步
+  const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (client && client.auth) {
+    client.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        cloudSyncState.isLoggedIn = true;
+        cloudSyncState.user = session.user;
+        cloudSyncState.session = session;
+        updateSyncUI(true, session.user);
+      } else {
+        cloudSyncState.isLoggedIn = false;
+        cloudSyncState.user = null;
+        cloudSyncState.session = null;
+        updateSyncUI(false, null);
       }
-    } else {
-      cloudSyncState.isLoggedIn = false;
-      cloudSyncState.user = null;
-      updateSyncUI(false, null);
-      stopPeriodicSync(); // 停止背景同步排程
-    }
-  });
+    });
+  }
 }
 
 /**
@@ -132,9 +244,6 @@ async function signOut() {
   }
   hasPendingSync = false;
 
-  // 停止週期性背景同步
-  stopPeriodicSync();
-
   try {
     const { error } = await client.auth.signOut();
     if (error) {
@@ -147,13 +256,38 @@ async function signOut() {
   }
 }
 
+/** 同步失敗个通知：伺服器忙／逾時／網路／金鑰錯誤分開講。 */
+function reportSyncFailure(err, action) {
+  console.error(`[CloudSync] ${action}失敗:`, err);
+  updateSyncStatusUI('error');
+  const status = err && err.status;
+  if (status === 401) showSyncError('同步金鑰毋對，請重新設定');
+  else if (status === 413) showSyncError('資料忒大，無法同步');
+  else if (status === 503 || status === 429) showSyncError('雲端同步暫時忙碌，稍後再試');
+  else showSyncError(`${action}失敗，請稍後再試`);
+}
+
+function snapshotAfterPush() {
+  localStorage.setItem('hakkaDailyStatsSynced', localStorage.getItem('hakkaDailyStats') || '{}');
+  localStorage.setItem('hakkaDailyStatsByLevelSynced', localStorage.getItem('hakkaDailyStatsByLevel') || '{}');
+  localStorage.setItem(
+    'hakkaPrefsSynced',
+    JSON.stringify({
+      romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
+      hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
+      showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+      gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
+      userName: localStorage.getItem('hakkaUserName') || '',
+      userLocation: localStorage.getItem('hakkaUserLocation') || '',
+    }),
+  );
+}
+
 /**
- * 從雲端拉取資料並合併
- * 實作 Pull-Merge-Push 流程
+ * 從雲端拉取資料並合併（Pull-Merge-Push）。
  */
 async function syncFromCloud() {
-  const client = getSupabaseClient();
-  if (!client || !cloudSyncState.isLoggedIn) return;
+  if (!hasSyncKey()) return;
 
   // 競合保護：避免同時執行多個同步
   if (cloudSyncState.isSyncing) return;
@@ -169,162 +303,72 @@ async function syncFromCloud() {
   updateSyncStatusUI('syncing');
 
   try {
-    // 加入 timeout 機制
-    const queryPromise = client
-      .from('user_sync_data')
-      .select('bookmarks, preferences, learning_progress, daily_stats, daily_stats_by_level, daily_favs, familiarity, updated_at')
-      .eq('user_id', cloudSyncState.user.id)
-      .maybeSingle();
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('SupabaseTimeout')), SUPABASE_QUERY_TIMEOUT_MS),
-    );
-
-    // 明確捕捉並處理錯誤
-    let data = null;
-    try {
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      if (result.error && result.error.code !== 'PGRST116') {
-        throw result.error;
-      }
-      data = result.data;
-    } catch (err) {
-      if (err.message === 'SupabaseTimeout') {
-        console.warn('[CloudSync] 查詢超時，本次跳過');
-        // 超時不視為嚴重錯誤，僅跳過
-        return;
-      }
+    const { status, json } = await syncRequest('GET');
+    if (status !== 200) {
+      const err = new Error(`sync_get_${status}`);
+      err.status = status;
       throw err;
     }
-
-    if (data) {
-      await applyIncomingSyncData(data, false);
+    if (json && json.exists && json.data) {
+      localStorage.setItem(SYNC_REV_STORAGE, String(json.updated_at));
+      await applyIncomingSyncData(json.data, false);
     } else {
-      // 雲端沒有資料，上傳本地資料
-      console.log('[CloudSync] 雲端無資料，執行初始化上傳');
-      await syncToCloud();
-      // 初始上傳成功後，基準＝目前本地統計／偏好設定
-      localStorage.setItem(
-        'hakkaDailyStatsSynced',
-        localStorage.getItem('hakkaDailyStats') || '{}'
-      );
-      localStorage.setItem(
-        'hakkaDailyStatsByLevelSynced',
-        localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
-      );
-      localStorage.setItem(
-        'hakkaPrefsSynced',
-        JSON.stringify({
-          romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
-          hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
-          showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
-          gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
-          userName: localStorage.getItem('hakkaUserName') || '',
-          userLocation: localStorage.getItem('hakkaUserLocation') || '',
-        })
-      );
+      // 雲端無資料：上傳本地資料（base_updated_at = 0）
+      localStorage.removeItem(SYNC_REV_STORAGE);
+      if (await syncToCloud()) snapshotAfterPush();
     }
-
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');
   } catch (err) {
-    console.error('[CloudSync] 同步失敗:', err);
-    updateSyncStatusUI('error');
-
-    // 檢查是否為 Supabase egress 超額或專案受限
-    const isRestricted =
-      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
-      String(err).includes('exceed_egress_quota') ||
-      String(err).includes('restricted');
-
-    if (isRestricted) {
-      stopPeriodicSync(); // 停止無謂輪詢
-      updateSyncStatusUI('restricted');
-      showSyncRestrictedNotice();
-    } else {
-      showSyncError('同步失敗，請稍後再試');
-    }
+    reportSyncFailure(err, '同步');
   } finally {
     cloudSyncState.isSyncing = false;
   }
 }
 
 /**
- * 上傳本地資料到雲端
+ * 上傳本地資料到雲端。版本衝突（409）就合併伺服器上个資料再推，最多重試 SYNC_MAX_CONFLICT_RETRIES 擺。
+ * @returns {Promise<boolean>} 有無成功
  */
-async function syncToCloud() {
-  const client = getSupabaseClient();
-  if (!client || !cloudSyncState.isLoggedIn) return;
-
+async function syncToCloud(retriesLeft = SYNC_MAX_CONFLICT_RETRIES) {
+  if (!hasSyncKey()) return false;
   try {
-    const bookmarks = JSON.parse(
-      localStorage.getItem('hakkaBookmarks') || '[]',
-    );
-    const preferences = {
-      romanizerJoiningMode:
-        localStorage.getItem('romanizerJoiningMode') || 'none',
-      hakfaDisplayScript: normalizeDisplayScript(
-        localStorage.getItem('hakfaDisplayScript'),
-      ),
-      showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
-      gameLastDataVarName:
-        localStorage.getItem('hakkaGameLastDataVarName') || '',
-      userName: localStorage.getItem('hakkaUserName') || '',
-      userLocation: localStorage.getItem('hakkaUserLocation') || '',
-    };
-    const learningProgress = JSON.parse(
-      localStorage.getItem('hakkaLearningProgress') || '{}'
-    );
-    const dailyStats = JSON.parse(
-      localStorage.getItem('hakkaDailyStats') || '{}'
-    );
-    const dailyStatsByLevel = JSON.parse(
-      localStorage.getItem('hakkaDailyStatsByLevel') || '{}'
-    );
-    const dailyFavs = JSON.parse(
-      localStorage.getItem('hakkaDailyFavs') || '{"items":[],"tomb":{}}'
-    );
-    const familiarity = JSON.parse(
-      localStorage.getItem('hakkaFamiliarity') || '{}'
-    );
-
-    const { error } = await client.from('user_sync_data').upsert(
-      {
-        user_id: cloudSyncState.user.id,
-        bookmarks: bookmarks,
-        preferences: preferences,
-        learning_progress: learningProgress,
-        daily_stats: dailyStats,
-        daily_stats_by_level: dailyStatsByLevel,
-        daily_favs: dailyFavs,
-        familiarity: familiarity,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: 'user_id',
-      },
-    );
-
-    if (error) {
-      throw error;
+    const payloadData = exportCurrentSyncData();
+    const { status, json } = await syncRequest('POST', {
+      data: payloadData,
+      base_updated_at: getCloudRev(),
+    });
+    if (status === 200 && json && json.success) {
+      localStorage.setItem(SYNC_REV_STORAGE, String(json.updated_at));
+      return true;
     }
-
-    console.log('[CloudSync] 已上傳到雲端');
+    if (status === 409 && retriesLeft > 0) {
+      // 別台裝置較早推上去：記下新版本，合併它个資料（毋重複觸發推送），再推一擺
+      localStorage.setItem(SYNC_REV_STORAGE, String(json && json.updated_at ? json.updated_at : 0));
+      if (json && json.data) await applyIncomingSyncData(json.data, false, { skipPush: true });
+      return syncToCloud(retriesLeft - 1);
+    }
+    const err = new Error(`sync_post_${status}`);
+    err.status = status;
+    throw err;
   } catch (err) {
-    console.error('[CloudSync] 上傳失敗:', err);
-    const isRestricted =
-      (err && typeof err === 'object' && (err.code === 'PGRST000' || err.status === 402 || err.message?.includes('exceed_egress_quota') || err.message?.includes('restricted'))) ||
-      String(err).includes('exceed_egress_quota') ||
-      String(err).includes('restricted');
-
-    if (isRestricted) {
-      stopPeriodicSync();
-      updateSyncStatusUI('restricted');
-      showSyncRestrictedNotice();
-    } else {
-      showSyncError('上傳失敗，請稍後再試');
-    }
+    reportSyncFailure(err, '上傳');
+    return false;
   }
+}
+
+/**
+ * 刪掉雲端資料（這把金鑰个）。本機資料毋動；成功後做得再 clearSyncKey()。
+ */
+async function deleteCloudData() {
+  const { status } = await syncRequest('DELETE');
+  if (status !== 200) {
+    const err = new Error(`sync_delete_${status}`);
+    err.status = status;
+    throw err;
+  }
+  localStorage.removeItem(SYNC_REV_STORAGE);
+  return true;
 }
 
 /**
@@ -332,7 +376,7 @@ async function syncToCloud() {
  * @param {object} data - 外部傳入之同步資料包
  * @param {boolean} isFromManual - 是否為手動匯入
  */
-async function applyIncomingSyncData(data, isFromManual = false) {
+async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   if (!data) return false;
 
   // 1. 準備資料
@@ -504,7 +548,9 @@ async function applyIncomingSyncData(data, isFromManual = false) {
     const familiarityChanged =
       JSON.stringify(mergedFamiliarity) !== JSON.stringify(incomingFamiliarity);
 
-    if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged) {
+    if (options.skipPush) {
+      // 衝突重試：由呼叫端（syncToCloud）自家再推，這裡毋重複推
+    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged) {
       console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
       await syncToCloud();
     } else {
@@ -538,6 +584,152 @@ async function applyIncomingSyncData(data, isFromManual = false) {
   }
 
   return true;
+}
+
+// ---- 備份匯入（手動共步「讀取備份」摎「貼上內容」共用）----
+// 認得三種來源：1. 新版備份／同步資料包（exportCurrentSyncData 个格式）
+// 2. 舊版「資料管理」備份檔（淨有 6 个 key）3. 舊版遷移網址（?migrateData=…）
+const LEGACY_BOOKMARK_KEY = 'hakkaBookmarks';
+const LEGACY_SETTING_KEYS = [
+  'dontShowInfoModalAgain',
+  'lastSearchMode',
+  'lastSearchDialect',
+  'autoBookmarkMode',
+  'certAdvancedRepeatCount',
+];
+const SAFE_SEARCH_SETTING_PATTERN = /^[\p{L}\p{N}_-]{1,32}$/u;
+const BACKUP_IMPORT_MAX_BYTES = 5 * 1024 * 1024; // 備份檔／貼上內容上限 5 MB
+const SYNC_PACKAGE_OBJECT_FIELDS = [
+  'preferences',
+  'learning_progress',
+  'daily_stats',
+  'daily_stats_by_level',
+  'daily_favs',
+  'familiarity',
+];
+
+function decodeBase64Utf8(base64) {
+  try {
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch (_) {
+    throw new Error('format');
+  }
+}
+
+/**
+ * 解析備份文字。回傳 { kind: 'sync' | 'legacy', data }；格式毋對丟出 Error('format')。
+ * @param {string} text - JSON 文字，抑係舊版遷移網址（有 migrateData= 參數）
+ */
+function parseBackupText(text) {
+  const raw = String(text || '').trim();
+  if (!raw) throw new Error('empty');
+  if (raw.length > BACKUP_IMPORT_MAX_BYTES) throw new Error('too_large');
+  let jsonText = raw;
+  const match = /(?:^|[?&#])migrateData=([^&#\s]+)/.exec(raw);
+  if (match) {
+    let encoded = match[1];
+    try {
+      encoded = decodeURIComponent(encoded);
+    } catch (_) {
+      /* 無百分比編碼就算 */
+    }
+    jsonText = decodeBase64Utf8(encoded);
+  }
+  const parsed = JSON.parse(jsonText);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('format');
+  const isPlain = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+  const isSyncPackage =
+    Array.isArray(parsed.bookmarks) || SYNC_PACKAGE_OBJECT_FIELDS.some((key) => isPlain(parsed[key]));
+  if (isSyncPackage) return { kind: 'sync', data: sanitizeSyncPackage(parsed) };
+  const isLegacy = [LEGACY_BOOKMARK_KEY, ...LEGACY_SETTING_KEYS].some((key) => key in parsed);
+  if (isLegacy) return { kind: 'legacy', data: parsed };
+  throw new Error('format');
+}
+
+/**
+ * 新版備份：摎伺服器（functions/api/sync.js）同一份欄位白名單，型別毋對就丟 Error('format')。
+ * 淨留已知欄位；避免壞資料寫入本機後，變成推毋上雲端（伺服器 400）。
+ */
+function sanitizeSyncPackage(data) {
+  const isPlain = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+  const clean = {};
+  if (data.bookmarks !== undefined) {
+    if (!Array.isArray(data.bookmarks)) throw new Error('format');
+    clean.bookmarks = data.bookmarks;
+  }
+  for (const key of SYNC_PACKAGE_OBJECT_FIELDS) {
+    if (data[key] === undefined) continue;
+    if (!isPlain(data[key])) throw new Error('format');
+    clean[key] = data[key];
+  }
+  if (Number.isFinite(data.version)) clean.version = data.version;
+  return clean;
+}
+
+/** 舊版備份 → 同步資料包（淨有書籤）。書籤做得係陣列，抑係 JSON 字串。 */
+function legacyToPackage(legacy) {
+  let bookmarks = legacy[LEGACY_BOOKMARK_KEY];
+  if (typeof bookmarks === 'string') {
+    try {
+      bookmarks = JSON.parse(bookmarks);
+    } catch (_) {
+      bookmarks = [];
+    }
+  }
+  return { bookmarks: Array.isArray(bookmarks) ? bookmarks : [] };
+}
+
+/** 舊版備份里肚个 5 項設定：覆蓋回本機（摎舊「資料管理」還原个行為共樣）。回傳還原个項數。 */
+function applyLegacySettings(legacy) {
+  if (!legacy || typeof legacy !== 'object') return 0;
+  let count = 0;
+  for (const key of LEGACY_SETTING_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(legacy, key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    const value = legacy[key];
+    if (value === null || value === undefined) continue;
+
+    let cleanValue = null;
+    if (key === 'dontShowInfoModalAgain' || key === 'autoBookmarkMode') {
+      cleanValue = value === true || value === 'true' ? 'true' : 'false';
+    } else if (key === 'certAdvancedRepeatCount') {
+      const num = parseInt(value, 10);
+      if (!isNaN(num) && num >= 0 && num <= 100) cleanValue = String(num);
+    } else if (key === 'lastSearchMode' || key === 'lastSearchDialect') {
+      // 這兩个值會被拼進 querySelector（value="…"），含引號、括號會丟例外、害頁面初始化壞去，
+      // 所以淨收字母、數字、底線、連字號（中文字算字母），長度 1～32
+      if (typeof value === 'string' && SAFE_SEARCH_SETTING_PATTERN.test(value.trim())) {
+        cleanValue = value.trim();
+      }
+    } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      cleanValue = String(value);
+    }
+
+    if (cleanValue !== null) {
+      localStorage.setItem(key, cleanValue);
+      count += 1;
+    }
+  }
+  return count;
+}
+
+/**
+ * 匯入備份：新版走智慧合併；舊版書籤合併、5 項設定覆蓋。成功後若有金鑰，排程推送到雲端。
+ * @returns {Promise<{kind: string, settings: number}>}
+ */
+async function importBackupText(text) {
+  const parsed = parseBackupText(text);
+  let settings = 0;
+  if (parsed.kind === 'sync') {
+    await applyIncomingSyncData(parsed.data, true);
+  } else {
+    await applyIncomingSyncData(legacyToPackage(parsed.data), true);
+    settings = applyLegacySettings(parsed.data);
+  }
+  if (typeof triggerCloudSync === 'function') triggerCloudSync();
+  return { kind: parsed.kind, settings };
 }
 
 /**
@@ -659,6 +851,7 @@ function mergeProgress(localObj, cloudObj) {
   
   for (const key in cloud) {
     if (!cloud.hasOwnProperty(key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
 
     const cloudItem = cloud[key];
     const localItem = local[key];
@@ -897,6 +1090,8 @@ function mergeFamiliarity(localObj, cloudObj) {
 
   const merged = { ...cloud };
   for (const key in local) {
+    if (!Object.prototype.hasOwnProperty.call(local, key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
     const localEntry = local[key];
     const cloudEntry = cloud[key];
     const localTs = Array.isArray(localEntry) ? localEntry[1] : 0;
@@ -953,56 +1148,58 @@ function updateSyncUI(isLoggedIn, user) {
  * 使用 dataset 存儲原始 title，避免快速觸發時的 race condition
  */
 function showSyncError(message) {
-  const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-  if (!cloudSyncBtn) return;
+  const button = document.getElementById('manualSyncBtn');
+  if (!button) return;
 
-  // 清除任何現有的 timeout
-  if (cloudSyncBtn.dataset.errorTimeoutId) {
-    clearTimeout(Number(cloudSyncBtn.dataset.errorTimeoutId));
-  }
+  if (button.dataset.errorTimeoutId) clearTimeout(Number(button.dataset.errorTimeoutId));
+  button.title = message;
 
-  // 首次調用時存儲真正的原始 title
-  if (!cloudSyncBtn.dataset.originalTitle) {
-    cloudSyncBtn.dataset.originalTitle = cloudSyncBtn.title;
-  }
-
-  cloudSyncBtn.title = message;
-
-  // 3 秒後恢復原本的 title
-  const timeoutId = setTimeout(() => {
-    cloudSyncBtn.title = cloudSyncBtn.dataset.originalTitle;
-    delete cloudSyncBtn.dataset.originalTitle;
-    delete cloudSyncBtn.dataset.errorTimeoutId;
+  // 3 秒後恢復提示文字：改成重新算（金鑰狀態可能已經變），毋係還原舊个
+  button.dataset.errorTimeoutId = setTimeout(() => {
+    delete button.dataset.errorTimeoutId;
+    refreshSyncIndicator();
   }, 3000);
+}
 
-  cloudSyncBtn.dataset.errorTimeoutId = timeoutId;
+/** 手動共步鈕个提示文字：有同步金鑰就講「雲端同步已開啟」。 */
+function refreshSyncIndicator() {
+  const button = document.getElementById('manualSyncBtn');
+  if (!button || button.dataset.errorTimeoutId) return;
+  button.title = hasSyncKey() ? '共步與備份（雲端同步已開啟）' : '共步與備份（跨裝置無痛轉移）';
+}
+
+/** 狀態動畫要標記个按鈕：手動共步鈕（看得著）摎舊个雲端鈕（隱藏）。 */
+function syncStatusButtons() {
+  return ['manualSyncBtn', 'cloudSyncBtn'].map((id) => document.getElementById(id)).filter(Boolean);
 }
 
 /**
  * 更新同步狀態提示
  */
 function updateSyncStatusUI(status) {
-  const cloudSyncBtn = document.getElementById('cloudSyncBtn');
-  if (!cloudSyncBtn) return;
+  // 狀態動畫畫在手動共步鈕（#manualSyncBtn，看得著）；舊个雲端鈕（#cloudSyncBtn，Supabase 登入用，目前隱藏）一齊標記
+  const buttons = syncStatusButtons();
+  if (!buttons.length) return;
+  const mark = (add, ...names) => buttons.forEach((b) => (add ? b.classList.add(...names) : b.classList.remove(...names)));
 
-  cloudSyncBtn.classList.remove('syncing', 'sync-success', 'sync-error', 'sync-restricted');
+  mark(false, 'syncing', 'sync-success', 'sync-error', 'sync-restricted');
 
   switch (status) {
     case 'syncing':
-      cloudSyncBtn.classList.add('syncing');
+      mark(true, 'syncing');
       break;
     case 'success':
-      cloudSyncBtn.classList.add('sync-success');
-      setTimeout(() => cloudSyncBtn.classList.remove('sync-success'), 2000);
+      mark(true, 'sync-success');
+      setTimeout(() => mark(false, 'sync-success'), 2000);
       break;
     case 'error':
-      cloudSyncBtn.classList.add('sync-error');
-      setTimeout(() => cloudSyncBtn.classList.remove('sync-error'), 3000);
+      mark(true, 'sync-error');
+      setTimeout(() => mark(false, 'sync-error'), 3000);
       break;
     case 'restricted':
       cloudSyncState.isRestricted = true;
-      cloudSyncBtn.classList.add('sync-restricted');
-      cloudSyncBtn.title = '雲端自動共步受限，點擊開啟手動共步';
+      mark(true, 'sync-restricted');
+      buttons.forEach((b) => (b.title = '雲端自動共步受限，點擊開啟手動共步'));
       break;
   }
 }
@@ -1016,7 +1213,7 @@ let syncDebounceTimer = null;
 let hasPendingSync = false;
 
 function triggerCloudSync() {
-  if (!cloudSyncState.isLoggedIn) return;
+  if (!hasSyncKey()) return;
 
   hasPendingSync = true;
 
@@ -1037,78 +1234,30 @@ function triggerCloudSync() {
 window.triggerCloudSync = triggerCloudSync;
 
 /**
- * 週期性背景同步計時器
- */
-let periodicSyncTimer = null;
-
-/**
- * 啟動週期性背景同步
- * 每 PERIODIC_SYNC_INTERVAL_MS 秒執行一次 syncFromCloud
- */
-function startPeriodicSync() {
-  stopPeriodicSync(); // 確保不會重複啟動
-
-  if (!cloudSyncState.isLoggedIn) return;
-
-  console.log('[CloudSync] 啟動背景同步排程');
-
-  periodicSyncTimer = setInterval(() => {
-    // 如果頁面可見，才執行同步
-    // 雖然 syncFromCloud 有競合保護，但判斷 visibility 可以更省資源
-    if (document.visibilityState === 'visible') {
-      // 清除待處理的 debounce timer，避免重複同步
-      if (syncDebounceTimer) {
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = null;
-      }
-      hasPendingSync = false;
-      console.log('[CloudSync] 執行背景自動同步');
-      syncFromCloud();
-    }
-  }, PERIODIC_SYNC_INTERVAL_MS);
-}
-
-/**
- * 停止週期性背景同步
- */
-function stopPeriodicSync() {
-  if (periodicSyncTimer) {
-    clearInterval(periodicSyncTimer);
-    periodicSyncTimer = null;
-    console.log('[CloudSync] 停止背景同步排程');
-  }
-}
-
-/**
- * 頁面離開時強制同步（確保資料不遺失）
- * 同時管理背景排程的暫停與恢復
- * 使用 syncFromCloud 以遵循 Pull-Merge-Push 機制，避免覆蓋其他裝置的更新
+ * 頁面離開與恢復時的同步機制（事件驅動）
+ * 1. 頁面隱藏/離開時：若有尚未防抖推送的資料，立即拉取合併並保存
+ * 2. 頁面恢復顯示時：若距離上次同步大於 5 分鐘，自動執行雲端拉取
  */
 function setupPageUnloadSync() {
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') {
-      // 頁面隱藏時
       if (hasPendingSync) {
         if (syncDebounceTimer) {
           clearTimeout(syncDebounceTimer);
           syncDebounceTimer = null;
         }
-        // [修正] 改為 syncFromCloud (Pull-Merge-Push) 以確保安全
-        // 雖然比直接 syncToCloud 慢，但避免覆蓋其他裝置更新
         await syncFromCloud();
         hasPendingSync = false;
       }
-      // 暫停背景排程，省電
-      stopPeriodicSync();
-    } else {
-      // 頁面恢復顯示時
-
-      // [修正 Round 3] 先等待同步完成，再啟動排程，避免 race condition
-      if (cloudSyncState.isLoggedIn) {
-        console.log('[CloudSync] 頁面恢復顯示，立即同步');
-        await syncFromCloud();
+    } else if (document.visibilityState === 'visible') {
+      if (hasSyncKey()) {
+        const now = Date.now();
+        const lastTime = cloudSyncState.lastSyncTime ? cloudSyncState.lastSyncTime.getTime() : 0;
+        if (now - lastTime > 5 * 60 * 1000) {
+          console.log('[CloudSync] 頁面切回且距上次同步大於 5 分鐘，自動執行拉取');
+          await syncFromCloud();
+        }
       }
-      startPeriodicSync(); // 重啟背景排程
     }
   });
 }
@@ -1227,6 +1376,115 @@ function showSyncRestrictedNotice() {
 /**
  * 顯示手動同步對話框（Modal）
  */
+function cloudKeyEls() {
+  const ids = ['Off', 'On', 'Input', 'Display', 'Status', 'EnableBtn', 'JoinBtn', 'ToggleBtn', 'CopyBtn', 'SyncNowBtn', 'DisableBtn', 'DeleteBtn'];
+  const els = {};
+  ids.forEach((id) => {
+    els[id] = document.getElementById('cloudKey' + id);
+  });
+  return els;
+}
+
+function setCloudKeyStatus(text, isError) {
+  const { Status } = cloudKeyEls();
+  if (!Status) return;
+  Status.textContent = text || '';
+  Status.style.color = isError ? '#b71c1c' : 'inherit';
+}
+
+/** 依目前有無金鑰，切換「開啟」摎「已開啟」兩個畫面。 */
+function renderCloudKeyUI() {
+  const els = cloudKeyEls();
+  if (!els.Off || !els.On) return;
+  const key = getSyncKey();
+  els.Off.hidden = !!key;
+  els.On.hidden = !key;
+  if (els.Display) {
+    els.Display.value = key ? formatSyncKey(key) : '';
+    els.Display.type = 'password';
+  }
+  if (els.ToggleBtn) els.ToggleBtn.textContent = '顯示金鑰';
+  setCloudKeyStatus('');
+}
+
+function bindCloudKeyUI() {
+  const els = cloudKeyEls();
+  if (!els.EnableBtn) return;
+
+  const runSync = async (doneText) => {
+    setCloudKeyStatus('共步中…');
+    await syncFromCloud();
+    const failed = document.getElementById('manualSyncBtn')?.classList.contains('sync-error');
+    setCloudKeyStatus(failed ? '共步失敗，請稍後再試。' : doneText, failed);
+  };
+
+  els.EnableBtn.onclick = async () => {
+    const key = generateSyncKey();
+    setSyncKey(key);
+    renderCloudKeyUI();
+    // 顯示新金鑰，提醒備份
+    const { Display, ToggleBtn } = cloudKeyEls();
+    if (Display) Display.type = 'text';
+    if (ToggleBtn) ToggleBtn.textContent = '隱藏金鑰';
+    await runSync('已開啟。請先複製金鑰存好，另一台裝置輸入同一把就會共步。');
+  };
+
+  els.JoinBtn.onclick = async () => {
+    const raw = els.Input.value;
+    if (!isValidSyncKey(raw)) {
+      setCloudKeyStatus('金鑰格式毋對（愛 32 碼英文字母摎數字 2～7，連字號做得有做得無）。', true);
+      return;
+    }
+    setSyncKey(raw);
+    els.Input.value = '';
+    renderCloudKeyUI();
+    await runSync('已連結，資料已合併。');
+  };
+
+  els.ToggleBtn.onclick = () => {
+    const { Display, ToggleBtn } = cloudKeyEls();
+    const show = Display.type === 'password';
+    Display.type = show ? 'text' : 'password';
+    ToggleBtn.textContent = show ? '隱藏金鑰' : '顯示金鑰';
+  };
+
+  els.CopyBtn.onclick = async () => {
+    const key = getSyncKey();
+    if (!key) return;
+    try {
+      await navigator.clipboard.writeText(formatSyncKey(key));
+      setCloudKeyStatus('已複製金鑰。');
+    } catch (_) {
+      const { Display } = cloudKeyEls();
+      Display.type = 'text';
+      Display.select();
+      setCloudKeyStatus('毋會自動複製，請手動選取複製。', true);
+    }
+  };
+
+  els.SyncNowBtn.onclick = () => runSync('已共步。');
+
+  els.DisableBtn.onclick = () => {
+    if (!confirm('停用這台裝置个雲端同步？（淨清掉這台裝置个金鑰；雲端資料摎本機資料都毋會刪）\n請先確定金鑰有存好，毋然會拿毋轉。')) return;
+    clearSyncKey();
+    renderCloudKeyUI();
+    setCloudKeyStatus('已停用這台裝置。');
+  };
+
+  els.DeleteBtn.onclick = async () => {
+    if (!confirm('刪除這把金鑰个雲端資料？刪掉就拿毋轉，其他裝置也無法再共步。（本機資料毋會刪）')) return;
+    try {
+      await deleteCloudData();
+      clearSyncKey();
+      renderCloudKeyUI();
+      setCloudKeyStatus('雲端資料已刪除，這台裝置已停用雲端同步。');
+    } catch (err) {
+      console.error('[CloudSync] 刪除雲端資料失敗:', err);
+      setCloudKeyStatus('刪除失敗，請稍後再試。', true);
+    }
+  };
+}
+
 function showManualSyncModal() {
   const modalId = 'manualSyncModal';
   let modal = document.getElementById(modalId);
@@ -1237,46 +1495,82 @@ function showManualSyncModal() {
     modal.style.cssText =
       'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; align-items: center; justify-content: center;';
     modal.innerHTML = `
-      <div class="modal-dialog" style="background: var(--bg-card, #fff); color: var(--text-main, #333); padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="margin: 0; font-size: 18px;"><i class="fas fa-arrows-rotate"></i> 客源翠手動共步（跨裝置無痛轉移）</h3>
-          <button id="closeManualSyncModalBtn" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted, #888);">&times;</button>
+      <div class="modal-dialog" style="padding: 20px; border-radius: 12px; max-width: 520px; width: 92%; max-height: calc(100vh - 32px); overflow-y: auto; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 18px;"><i class="fas fa-arrows-rotate"></i> 共步摎備份</h3>
+          <button id="closeManualSyncModalBtn" aria-label="關忒" style="border: none; background: transparent; font-size: 22px; cursor: pointer;">&times;</button>
         </div>
-        <div style="font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; background: rgba(255, 193, 7, 0.15); border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px;">
-          失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步。
-          <div style="margin-top: 8px;">
-            <a href="#" data-open-sync-survey style="font-weight: bold;">📝 幫忙填 1 分鐘問卷，講你个使用狀況 →</a>
+        <div class="sync-warning-banner" style="font-size: 13px; line-height: 1.6; margin-bottom: 12px; padding: 8px 12px; border-radius: 4px;">
+          Google 登入該套雲端共步因為後台超過免費額暫停，預計 11/24 後恢復。這段時間請用下背个「雲端同步金鑰」，抑係「手動共步與備份」。
+        </div>
+
+        <details id="cloudKeySection" open style="margin-bottom: 10px; padding: 8px 12px;">
+          <summary style="cursor: pointer; font-weight: bold; font-size: 15px;">雲端同步金鑰<span style="font-weight: normal; font-size: 12.5px;">（建議，免登入，自動共步）</span></summary>
+          <p class="sync-modal-muted" style="margin: 8px 0; font-size: 13px;">
+            產生一把金鑰，每台裝置輸入同一把，書籤、學習進度就會自動共步。<strong>金鑰就是你个帳號，毋好分別人；弄毋見就拿毋轉雲端資料。</strong>
+            <a href="page.html?p=cloud-sync" target="_blank" rel="noopener noreferrer" class="sync-modal-link">完整說明 ↗</a>
+          </p>
+          <div id="cloudKeyOff">
+            <button id="cloudKeyEnableBtn" type="button" style="background: #2e7d32; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">開啟雲端同步（產生新金鑰）</button>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <input id="cloudKeyInput" type="text" autocomplete="off" spellcheck="false" placeholder="已經有金鑰？貼在這" aria-label="同步金鑰" style="flex: 1; min-width: 0; padding: 8px; font-size: 13px; border-radius: 6px;" />
+              <button id="cloudKeyJoinBtn" type="button" style="background: #1565c0; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">連結這台裝置</button>
+            </div>
           </div>
-        </div>
+          <div id="cloudKeyOn" hidden>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你个金鑰：</div>
+            <input id="cloudKeyDisplay" type="password" readonly aria-label="你个同步金鑰" style="width: 100%; box-sizing: border-box; padding: 8px; font-size: 13px; font-family: monospace; border-radius: 6px;" />
+            <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <button id="cloudKeyToggleBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">顯示金鑰</button>
+              <button id="cloudKeyCopyBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">複製</button>
+              <button id="cloudKeySyncNowBtn" type="button" style="background: #2e7d32; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">立即共步</button>
+              <button id="cloudKeyDisableBtn" type="button" style="background: #a15c00; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">停用這台</button>
+              <button id="cloudKeyDeleteBtn" type="button" style="background: #b71c1c; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">刪除雲端資料</button>
+            </div>
+          </div>
+          <div id="cloudKeyStatus" role="status" style="margin-top: 8px; min-height: 1.4em; font-size: 13px;"></div>
+        </details>
 
-        <div style="margin-bottom: 20px;">
-          <h4 style="margin: 0 0 8px 0; font-size: 15px;">方案一：網址一鍵跨裝置共步（最推薦）</h4>
-          <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted, #666);">
-            點擊按鈕複製當前進度短網址（約數百字元），透過 AirDrop、LINE、Email 傳送至另一台裝置打開，即可自動偵測並智慧合併！
+        <details id="manualBackupSection" style="margin-bottom: 10px; padding: 8px 12px;">
+          <summary style="cursor: pointer; font-weight: bold; font-size: 15px;">手動共步摎備份<span style="font-weight: normal; font-size: 12.5px;">（備援，免金鑰、免雲端）</span></summary>
+          <p class="sync-modal-muted" style="margin: 8px 0; font-size: 13px; line-height: 1.6;">
+            <strong>幾時用：</strong>無愛開金鑰、雲端暫時連毋著、一擺性搬去新裝置，抑係留一份備份。<br>
+            <strong>愛知：</strong>手動共步係「搬一擺」，毋會自動更新；兩台裝置各自有變動，愛各傳一擺。傳過去个資料會摎對方原本个資料<strong>智慧合併</strong>，毋會蓋掉。
           </p>
-          <button id="copySyncUrlBtn" style="background: #2e7d32; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
-            📋 複製手動共步網址
-          </button>
-        </div>
-
-        <div style="border-top: 1px solid var(--border-color, #eee); padding-top: 16px;">
-          <h4 style="margin: 0 0 8px 0; font-size: 15px;">方案二：備份檔案（JSON 匯出／匯入）</h4>
-          <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted, #666);">
-            下載包含書籤、偏好、日日一詞收囥摎學習進度个完整備份檔，隨時匯入還原：
-          </p>
-          <div style="display: flex; gap: 10px;">
-            <button id="downloadSyncJsonBtn" style="flex: 1; background: #1976d2; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
-              💾 下載備份 JSON
+          <div style="margin: 10px 0;">
+            <div style="font-size: 14px; font-weight: bold; margin-bottom: 4px;">方法一：網址（最簡單）</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">複製進度短網址，用 AirDrop、LINE、Email 傳去另一台裝置打開，就會自動偵測並合併。</div>
+            <button id="copySyncUrlBtn" style="background: #2e7d32; color: #fff; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
+              📋 複製手動共步網址
             </button>
-            <label style="flex: 1; background: #607d8b; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: center;">
-              📂 讀取備份 JSON
-              <input type="file" id="importSyncJsonInput" accept=".json" style="display: none;" />
-            </label>
           </div>
+          <div style="margin: 12px 0 4px;">
+            <div style="font-size: 14px; font-weight: bold; margin-bottom: 4px;">方法二：備份檔</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">下載完整備份（書籤、偏好、學習進度、日日一詞、熟悉度、統計），隨時讀取還原。也讀得舊版「資料管理」个備份檔。</div>
+            <div style="display: flex; gap: 10px;">
+              <button id="downloadSyncJsonBtn" style="flex: 1; background: #1565c0; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                💾 下載備份 JSON
+              </button>
+              <label style="flex: 1; background: #546e7a; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: center;">
+                📂 讀取備份檔
+                <input type="file" id="importSyncJsonInput" accept=".json,.txt" style="display: none;" />
+              </label>
+            </div>
+          </div>
+          <details style="margin-top: 8px;">
+            <summary style="cursor: pointer; font-size: 13px;">貼上備份內容，抑係舊版遷移網址</summary>
+            <textarea id="importPasteArea" rows="3" aria-label="貼上備份內容" placeholder="貼上備份 JSON，抑係有 ?migrateData= 个舊版網址" style="width: 100%; box-sizing: border-box; margin-top: 6px; padding: 8px; font-size: 12px; border-radius: 6px;"></textarea>
+            <button id="importPasteBtn" type="button" style="margin-top: 6px; background: #546e7a; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">匯入貼上个內容</button>
+          </details>
+        </details>
+
+        <div style="font-size: 12.5px; text-align: right;">
+          <a href="#" data-open-sync-survey><i class="fas fa-clipboard-question"></i> 幫忙填 1 分鐘問卷，講你个使用狀況</a>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
+    bindCloudKeyUI();
 
     // 綁定關閉
     const closeBtn = document.getElementById('closeManualSyncModalBtn');
@@ -1368,26 +1662,77 @@ function showManualSyncModal() {
       };
     }
 
-    // 綁定讀取備份
+    // 綁定讀取備份（檔案）摎貼上內容：共用 importBackupText（認得新版、舊版備份檔、舊版遷移網址）
+    const runImport = async (text) => {
+      let parsed;
+      try {
+        parsed = parseBackupText(text);
+      } catch (err) {
+        console.error('[CloudSync] 解析備份失敗:', err);
+        alert(
+          err && err.message === 'too_large'
+            ? '匯入失敗：內容忒大（上限 5 MB）。'
+            : '匯入失敗：格式毋對，抑係檔案損壞。\n（接受：新版備份檔、舊版資料管理備份檔、舊版遷移網址）',
+        );
+        return false;
+      }
+      const message =
+        parsed.kind === 'legacy'
+          ? '📥 這係舊版備份：書籤會智慧合併，另外 5 項設定（搜尋模式等）會覆蓋回去。確定愛匯入？'
+          : '📥 確定愛匯入這份備份，並進行智慧合併？';
+      if (!confirm(message)) return false;
+      try {
+        const result = await importBackupText(text);
+        if (result.kind === 'legacy' && result.settings > 0) {
+          if (hasPendingSync) {
+            if (syncDebounceTimer) {
+              clearTimeout(syncDebounceTimer);
+              syncDebounceTimer = null;
+            }
+            try {
+              await syncFromCloud();
+            } catch (_) {}
+            hasPendingSync = false;
+          }
+          alert(`✅ 舊版備份匯入成功（書籤已合併，${result.settings} 項設定已還原）。網站會重新載入。`);
+          location.reload();
+        } else {
+          alert('✅ 備份匯入成功！資料已完整合併至本機。');
+          modal.style.display = 'none';
+        }
+        return true;
+      } catch (err) {
+        console.error('[CloudSync] 匯入備份失敗:', err);
+        alert('匯入失敗：' + (err && err.message ? err.message : '未知錯誤'));
+        return false;
+      }
+    };
+
     const importInput = document.getElementById('importSyncJsonInput');
     if (importInput) {
       importInput.onchange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-          const text = await file.text();
-          const parsed = JSON.parse(text);
-          if (confirm('📥 確定愛從此備份檔匯入資料並進行智慧合併？')) {
-            await applyIncomingSyncData(parsed, true);
-            alert('✅ 備份檔匯入成功！所有資料已完整合併至本機。');
-            modal.style.display = 'none';
+          if (file.size > BACKUP_IMPORT_MAX_BYTES) {
+            alert('匯入失敗：檔案忒大（上限 5 MB）。');
+            return;
           }
-        } catch (err) {
-          console.error('[CloudSync] 匯入備份檔失敗:', err);
-          alert('匯入失敗：檔案格式不正確或損壞。');
+          await runImport(await file.text());
         } finally {
           importInput.value = '';
         }
+      };
+    }
+    const pasteBtn = document.getElementById('importPasteBtn');
+    if (pasteBtn) {
+      pasteBtn.onclick = async () => {
+        const area = document.getElementById('importPasteArea');
+        if (!area || !area.value.trim()) {
+          alert('請先貼上備份內容。');
+          return;
+        }
+        if (await runImport(area.value)) area.value = '';
       };
     }
   }
@@ -1400,6 +1745,7 @@ function showManualSyncModal() {
     copyBtn.style.background = '#2e7d32';
   }
 
+  renderCloudKeyUI();
   modal.style.display = 'flex';
 }
 
@@ -1440,6 +1786,17 @@ if (typeof module !== 'undefined' && module.exports) {
     mergeDailyStats,
     mergeDailyFavs,
     mergeFamiliarity,
-    mergeBoolPref
+    mergeBoolPref,
+    normalizeSyncKey,
+    isValidSyncKey,
+    formatSyncKey,
+    generateSyncKey,
+    syncToCloud,
+    syncFromCloud,
+    parseBackupText,
+    legacyToPackage,
+    importBackupText,
+    showSyncError,
+    refreshSyncIndicator
   };
 }

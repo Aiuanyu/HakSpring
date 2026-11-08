@@ -2523,7 +2523,6 @@ input:checked+.slider:before {
 #infoButton,
 #settingsBtn,
 #manualSyncBtn,
-#syncSurveyBtn,
 #showRomanizerBtn,
 #charCoverageBtn,
 #dataManagementBtn,
@@ -2545,7 +2544,6 @@ input:checked+.slider:before {
 #infoButton i,
 #settingsBtn i,
 #manualSyncBtn i,
-#syncSurveyBtn i,
 #showRomanizerBtn i,
 #charCoverageBtn i,
 #dataManagementBtn i,
@@ -2557,7 +2555,6 @@ input:checked+.slider:before {
 #infoButton:hover i,
 #settingsBtn:hover i,
 #manualSyncBtn:hover i,
-#syncSurveyBtn:hover i,
 #showRomanizerBtn:hover i,
 #charCoverageBtn:hover i,
 #dataManagementBtn:hover i,
@@ -2830,20 +2827,23 @@ input:checked+.slider:before {
 }
 
 /* 雲端同步中動畫 */
-#cloudSyncBtn.syncing i {
+#cloudSyncBtn.syncing i,
+#manualSyncBtn.syncing i {
   animation: spin 1s linear infinite;
   color: #ffc107;
   /* 黃色表示同步中 */
 }
 
 /* 同步成功提示 */
-#cloudSyncBtn.sync-success i {
+#cloudSyncBtn.sync-success i,
+#manualSyncBtn.sync-success i {
   color: #28a745;
   animation: pulse-success 0.5s ease-out;
 }
 
 /* 同步失敗提示 */
-#cloudSyncBtn.sync-error i {
+#cloudSyncBtn.sync-error i,
+#manualSyncBtn.sync-error i {
   color: #dc3545;
 }
 
@@ -3072,7 +3072,6 @@ input:checked+.slider:before {
   #infoButton,
   #settingsBtn,
   #manualSyncBtn,
-  #syncSurveyBtn,
   #showRomanizerBtn,
   #charCoverageBtn,
   #dataManagementBtn,
@@ -3083,7 +3082,6 @@ input:checked+.slider:before {
   #infoButton:hover i,
   #settingsBtn:hover i,
   #manualSyncBtn:hover i,
-  #syncSurveyBtn:hover i,
   #showRomanizerBtn:hover i,
   #charCoverageBtn:hover i,
   #dataManagementBtn:hover i,
@@ -6820,4 +6818,106 @@ mark {
 
 #syncSurveyModal .sync-survey-back[hidden] {
   display: none;
+}
+
+/* 共步摎備份視窗樣式與暗色模式適配（WCAG AA） */
+#manualSyncModal .modal-dialog {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+#manualSyncModal #closeManualSyncModalBtn {
+  color: #888888;
+  transition: color 0.15s ease;
+}
+
+#manualSyncModal #closeManualSyncModalBtn:hover,
+#manualSyncModal #closeManualSyncModalBtn:focus-visible {
+  color: #222222;
+}
+
+#manualSyncModal .sync-warning-banner {
+  background: rgba(255, 193, 7, 0.15);
+  border-left: 4px solid #ffc107;
+  color: #333333;
+}
+
+#manualSyncModal details {
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+}
+
+#manualSyncModal .sync-modal-muted {
+  color: #555555;
+}
+
+#manualSyncModal input[type="text"],
+#manualSyncModal input[type="password"],
+#manualSyncModal textarea {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #cccccc;
+}
+
+#manualSyncModal input::placeholder,
+#manualSyncModal textarea::placeholder {
+  color: #888888;
+}
+
+.sync-modal-link {
+  color: #1565c0;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+#manualSyncModal a[data-open-sync-survey] {
+  color: #1565c0;
+}
+
+@media (prefers-color-scheme: dark) {
+  #manualSyncModal .modal-dialog {
+    background-color: var(--dark-surface-color, #2c2c2c) !important;
+    color: var(--dark-modal-text, #f5f5f5) !important;
+  }
+
+  #manualSyncModal #closeManualSyncModalBtn {
+    color: #aaaaaa !important;
+  }
+
+  #manualSyncModal #closeManualSyncModalBtn:hover,
+  #manualSyncModal #closeManualSyncModalBtn:focus-visible {
+    color: #ffffff !important;
+  }
+
+  #manualSyncModal .sync-warning-banner {
+    background: rgba(255, 193, 7, 0.12) !important;
+    border-left-color: #ffb300 !important;
+    color: #f0f0f0 !important;
+  }
+
+  #manualSyncModal details {
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  #manualSyncModal .sync-modal-muted {
+    color: #b0bec5 !important;
+  }
+
+  #manualSyncModal input[type="text"],
+  #manualSyncModal input[type="password"],
+  #manualSyncModal textarea {
+    background-color: #3a3a3a !important;
+    color: #f5f5f5 !important;
+    border-color: #555555 !important;
+  }
+
+  #manualSyncModal input::placeholder,
+  #manualSyncModal textarea::placeholder {
+    color: #9e9e9e !important;
+  }
+
+  .sync-modal-link,
+  #manualSyncModal a[data-open-sync-survey] {
+    color: var(--dark-link-color, #90caf9) !important;
+  }
 }
