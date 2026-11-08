@@ -196,7 +196,7 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 
 雲端同步是「客源翠」的核心功能。
 
-> **後端（20261108 起）**：Cloudflare Pages Functions `functions/api/sync.js` ＋ D1（綁定 `DB`，資料表 `user_sync` 見 `migrations/0001_init.sql`；套用：`npx wrangler d1 migrations apply hakspring-sync --remote`）。**免登入，用「同步金鑰」認身分**：用戶端產生 32 碼 Base32 金鑰存 `localStorage.hakkaSyncKey`，請求帶 `X-Sync-Key`，伺服器淨存金鑰个 SHA-256 當 `user_id`。一把金鑰一列，整包同步資料是一個 JSON。**樂觀鎖**：推送帶 `base_updated_at`（本機 `hakkaSyncCloudRev`），版本對毋著回 409 摎目前資料，用戶端重新合併再推。Supabase（Google 登入）因流量超額暫停，同步毋倚靠佢；**毋好**加回「信任未驗證个 JWT／裸 user id」「`?key=`」「CORS `*`」。伺服器對資料包有欄位白名單。
+> **後端（20261108 起）**：Cloudflare Pages Functions `functions/api/sync.js` ＋ D1（綁定 `DB`，資料表 `user_sync` 見 `migrations/0001_init.sql`；套用：`npx wrangler d1 migrations apply hakspring-sync --remote`）。**免登入，用「同步金鑰」認身分**：用戶端產生 32 碼 Base32 金鑰存 `localStorage.hakkaSyncKey`，請求帶 `X-Sync-Key`，伺服器淨存金鑰个 SHA-256 當 `user_id`。一把金鑰一列，整包同步資料是一個 JSON。**樂觀鎖**：推送帶 `base_updated_at`（本機 `hakkaSyncCloudRev`），版本對毋著回 409 摎目前資料，用戶端重新合併再推。Supabase（Google 登入）因流量超額暫停，同步毋倚靠佢；**毋好**加回「信任未驗證个 JWT／裸 user id」「`?key=`」「CORS `*`」。CORS 淨開**白名單**（同源、`*.hakspring.pages.dev`、`aiuanyu.github.io`、localhost／127.0.0.1，供本機開發打正式站 API），回應有 `Vary: Origin`；要加新來源愛改 `corsHeaders` 个白名單並補測試。伺服器對資料包有欄位白名單。
 
 **每一種要落地的使用者資料，都必須先回答兩個問題**，再決定實作：
 

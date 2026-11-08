@@ -51,6 +51,7 @@ function jsonResponse(data, status = 200, request = null) {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
+      Vary: 'Origin', // 回應依來源（CORS 白名單）而變
       ...cors,
     },
   });
@@ -218,6 +219,6 @@ export async function onRequestDelete({ request, env }) {
 export async function onRequestOptions({ request }) {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders(request),
+    headers: { Vary: 'Origin', ...corsHeaders(request) },
   });
 }

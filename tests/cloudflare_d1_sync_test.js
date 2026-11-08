@@ -304,6 +304,12 @@ const readJson = async (resp) => JSON.parse(await resp.text());
     const getRes = await server.onRequestGet({ request: getReq, env: { DB: db } });
     assert.strictEqual(getRes.headers.get('Access-Control-Allow-Origin'), 'http://localhost');
 
+    // 回應依來源而變：不管有無 Origin、允許與否，都愛有 Vary: Origin
+    assert.ok((getRes.headers.get('Vary') || '').includes('Origin'), 'GET 有 Vary: Origin');
+    assert.ok((resLocal.headers.get('Vary') || '').includes('Origin'), 'OPTIONS 有 Vary: Origin');
+    assert.ok((resEvil.headers.get('Vary') || '').includes('Origin'), '拒絕个來源嘛有 Vary: Origin');
+    const noOrigin = await server.onRequestGet({ request: new Request('https://hakspring.pages.dev/api/sync', { method: 'GET', headers: { 'X-Sync-Key': KEY_A } }), env: { DB: db } });
+    assert.ok((noOrigin.headers.get('Vary') || '').includes('Origin'), '無 Origin 个請求嘛有 Vary: Origin');
     console.log('  ✅ 8. CORS（支援 localhost/127.0.0.1 本機開發、阻擋惡意跨域）PASS');
   }
 

@@ -9,10 +9,11 @@ const vm = require('vm');
 function makeContext() {
   const store = new Map();
   const timers = [];
+  const timerFns = [];
   const ctx = vm.createContext({
     console: { log() {}, warn() {}, error() {} },
     setInterval() {}, clearInterval() {}, clearTimeout() {},
-    setTimeout: (fn, ms) => { timers.push(ms); return timers.length; },
+    setTimeout: (fn, ms) => { timers.push(ms); timerFns.push(fn); return timers.length; },
     URL, URLSearchParams, TextEncoder, TextDecoder, atob, btoa, Date, JSON, Uint8Array, AbortController,
   });
   ctx.window = ctx;
@@ -26,7 +27,7 @@ function makeContext() {
     removeItem: (k) => store.delete(k),
   };
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/cloud-sync.js'), 'utf8'), ctx);
-  ctx.store = store; ctx.timers = timers;
+  ctx.store = store; ctx.timers = timers; ctx.timerFns = timerFns;
   return ctx;
 }
 
@@ -131,6 +132,42 @@ const same = (actual, expected, msg) => assert.strictEqual(JSON.stringify(actual
   assert.strictEqual(c.localStorage.getItem('autoBookmarkMode'), 'true');
   assert.strictEqual(Object.prototype.polluted, undefined, '防範 Prototype Pollution');
   console.log('  ✅ 8. 防禦性強化（null 檢查、安全過濾、壞掉 base64）PASS');
+
+  // 9. bot 審查（20261109）：搜尋設定白名單、新版備份型別／大小、死碼、錯誤提示還原
+  {
+    const settings = (legacyObj) => { for (const k of ['lastSearchMode', 'lastSearchDialect']) c.localStorage.removeItem(k); c.applyLegacySettings(legacyObj); return [c.localStorage.getItem('lastSearchMode'), c.localStorage.getItem('lastSearchDialect')]; };
+    same(settings({ lastSearchMode: '客話', lastSearchDialect: '南四縣' }), ['客話', '南四縣'], '中文模式／腔名愛收');
+    same(settings({ lastSearchMode: '華語', lastSearchDialect: 'hak-4_x' }), ['華語', 'hak-4_x'], '字母數字底線連字號愛收');
+    for (const bad of ['a"b', 'x"]', "a'b", 'a b', 'a[b]', 'a\\b', '<b>', '', '   ', 'x'.repeat(33)]) {
+      same(settings({ lastSearchMode: bad, lastSearchDialect: bad }), [null, null], `愛拒絕：${JSON.stringify(bad)}`);
+    }
+    // 新版備份：型別愛對（同伺服器白名單），毋對就丟 format；未知欄位丟掉
+    for (const bad of [{ bookmarks: 'x', preferences: {} }, { preferences: [] , bookmarks: [] }, { familiarity: 'a', bookmarks: [] }, { daily_favs: null, bookmarks: [] , learning_progress: 5 }]) {
+      assert.throws(() => c.parseBackupText(JSON.stringify(bad)), (err) => err.message === 'format', JSON.stringify(bad));
+    }
+    const cleaned = c.parseBackupText(JSON.stringify({ version: 1, bookmarks: [], preferences: {}, evil: { a: 1 }, exportedAt: 'x' })).data;
+    same(Object.keys(cleaned).sort(), ['bookmarks', 'preferences', 'version'], '淨留白名單欄位');
+    // 大小上限
+    assert.throws(() => c.parseBackupText('{"bookmarks":["' + 'x'.repeat(5 * 1024 * 1024 + 10) + '"]}'), (err) => err.message === 'too_large', '超過 5 MB 愛拒絕');
+    // 源頭防呆：main.js 毋好用 localStorage 个值拼 querySelector（含引號會丟 SyntaxError、害初始化失敗）
+    const mainSrc = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
+    assert.ok(!/search-mode"\]\[value="\$\{/.test(mainSrc), '搜尋模式比對毋好拼進選擇器');
+    // 死碼
+    assert.ok(!/SYNC_API_ENDPOINT/.test(cloud), '死碼 SYNC_API_ENDPOINT 愛刪');
+    // 錯誤提示逾時後：重新算提示文字（毋係還原舊个）
+    const button = { dataset: {}, title: '', };
+    c.document.getElementById = (id) => (id === 'manualSyncBtn' ? button : null);
+    c.refreshSyncIndicator();
+    assert.ok(/雲端同步已開啟/.test(button.title), '先前測試已設金鑰');
+    c.showSyncError('同步失敗');
+    assert.strictEqual(button.title, '同步失敗');
+    c.clearSyncKey();                                   // 3 秒內金鑰狀態改變（refresh 因錯誤提示進行中而略過）
+    assert.strictEqual(button.title, '同步失敗');
+    c.timerFns[c.timerFns.length - 1]();                // 3 秒到
+    assert.ok(/跨裝置無痛轉移/.test(button.title) && !/已開啟/.test(button.title), `逾時後愛反映最新狀態：${button.title}`);
+    assert.strictEqual(button.dataset.errorTimeoutId, undefined);
+    console.log('  ✅ 9. 搜尋設定白名單、備份型別／大小、死碼、提示還原 PASS');
+  }
 
   console.log('✨ All backup import tests passed!');
 })().catch((err) => { console.error(err); process.exit(1); });

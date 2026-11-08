@@ -8420,9 +8420,11 @@ function initializeAppUI() {
         : '華語'
       : lastMode || '客話';
 
-    const modeRadio = document.querySelector(
-      `#search-popup input[name="search-mode"][value="${searchModeValue}"]`,
-    );
+    // 比對 value 毋用字串拼 querySelector：localStorage 个值若含引號（被毒化、匯入壞檔），
+    // 拼出來个選擇器會丟 SyntaxError，連帶整个應用程式初始化失敗。
+    const modeRadio = Array.from(
+      document.querySelectorAll('#search-popup input[name="search-mode"]'),
+    ).find((radio) => radio.value === searchModeValue);
     if (modeRadio) {
       modeRadio.checked = true;
     }

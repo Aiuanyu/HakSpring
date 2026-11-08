@@ -18,7 +18,6 @@ function getSyncApiEndpoint() {
   }
   return '/api/sync';
 }
-const SYNC_API_ENDPOINT = '/api/sync';
 const SYNC_KEY_STORAGE = 'hakkaSyncKey';
 const SYNC_REV_STORAGE = 'hakkaSyncCloudRev'; // 上次看著个雲端版本（updated_at），推送時當 base_updated_at
 const BOOKMARK_LIMIT = 15;
@@ -598,6 +597,8 @@ const LEGACY_SETTING_KEYS = [
   'autoBookmarkMode',
   'certAdvancedRepeatCount',
 ];
+const SAFE_SEARCH_SETTING_PATTERN = /^[\p{L}\p{N}_-]{1,32}$/u;
+const BACKUP_IMPORT_MAX_BYTES = 5 * 1024 * 1024; // 備份檔／貼上內容上限 5 MB
 const SYNC_PACKAGE_OBJECT_FIELDS = [
   'preferences',
   'learning_progress',
@@ -624,6 +625,7 @@ function decodeBase64Utf8(base64) {
 function parseBackupText(text) {
   const raw = String(text || '').trim();
   if (!raw) throw new Error('empty');
+  if (raw.length > BACKUP_IMPORT_MAX_BYTES) throw new Error('too_large');
   let jsonText = raw;
   const match = /(?:^|[?&#])migrateData=([^&#\s]+)/.exec(raw);
   if (match) {
@@ -637,13 +639,33 @@ function parseBackupText(text) {
   }
   const parsed = JSON.parse(jsonText);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('format');
+  const isPlain = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
   const isSyncPackage =
-    Array.isArray(parsed.bookmarks) ||
-    SYNC_PACKAGE_OBJECT_FIELDS.some((key) => parsed[key] && typeof parsed[key] === 'object');
-  if (isSyncPackage) return { kind: 'sync', data: parsed };
+    Array.isArray(parsed.bookmarks) || SYNC_PACKAGE_OBJECT_FIELDS.some((key) => isPlain(parsed[key]));
+  if (isSyncPackage) return { kind: 'sync', data: sanitizeSyncPackage(parsed) };
   const isLegacy = [LEGACY_BOOKMARK_KEY, ...LEGACY_SETTING_KEYS].some((key) => key in parsed);
   if (isLegacy) return { kind: 'legacy', data: parsed };
   throw new Error('format');
+}
+
+/**
+ * 新版備份：摎伺服器（functions/api/sync.js）同一份欄位白名單，型別毋對就丟 Error('format')。
+ * 淨留已知欄位；避免壞資料寫入本機後，變成推毋上雲端（伺服器 400）。
+ */
+function sanitizeSyncPackage(data) {
+  const isPlain = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+  const clean = {};
+  if (data.bookmarks !== undefined) {
+    if (!Array.isArray(data.bookmarks)) throw new Error('format');
+    clean.bookmarks = data.bookmarks;
+  }
+  for (const key of SYNC_PACKAGE_OBJECT_FIELDS) {
+    if (data[key] === undefined) continue;
+    if (!isPlain(data[key])) throw new Error('format');
+    clean[key] = data[key];
+  }
+  if (Number.isFinite(data.version)) clean.version = data.version;
+  return clean;
 }
 
 /** 舊版備份 → 同步資料包（淨有書籤）。書籤做得係陣列，抑係 JSON 字串。 */
@@ -676,7 +698,9 @@ function applyLegacySettings(legacy) {
       const num = parseInt(value, 10);
       if (!isNaN(num) && num >= 0 && num <= 100) cleanValue = String(num);
     } else if (key === 'lastSearchMode' || key === 'lastSearchDialect') {
-      if (typeof value === 'string' && value.trim() && value.length <= 32) {
+      // 這兩个值會被拼進 querySelector（value="…"），含引號、括號會丟例外、害頁面初始化壞去，
+      // 所以淨收字母、數字、底線、連字號（中文字算字母），長度 1～32
+      if (typeof value === 'string' && SAFE_SEARCH_SETTING_PATTERN.test(value.trim())) {
         cleanValue = value.trim();
       }
     } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -1128,15 +1152,12 @@ function showSyncError(message) {
   if (!button) return;
 
   if (button.dataset.errorTimeoutId) clearTimeout(Number(button.dataset.errorTimeoutId));
-  // 首次調用時存儲真正的原始 title
-  if (!button.dataset.originalTitle) button.dataset.originalTitle = button.title;
   button.title = message;
 
-  // 3 秒後恢復原本的 title
+  // 3 秒後恢復提示文字：改成重新算（金鑰狀態可能已經變），毋係還原舊个
   button.dataset.errorTimeoutId = setTimeout(() => {
-    button.title = button.dataset.originalTitle;
-    delete button.dataset.originalTitle;
     delete button.dataset.errorTimeoutId;
+    refreshSyncIndicator();
   }, 3000);
 }
 
@@ -1145,7 +1166,6 @@ function refreshSyncIndicator() {
   const button = document.getElementById('manualSyncBtn');
   if (!button || button.dataset.errorTimeoutId) return;
   button.title = hasSyncKey() ? '共步與備份（雲端同步已開啟）' : '共步與備份（跨裝置無痛轉移）';
-  delete button.dataset.originalTitle;
 }
 
 /** 狀態動畫要標記个按鈕：手動共步鈕（看得著）摎舊个雲端鈕（隱藏）。 */
@@ -1649,7 +1669,11 @@ function showManualSyncModal() {
         parsed = parseBackupText(text);
       } catch (err) {
         console.error('[CloudSync] 解析備份失敗:', err);
-        alert('匯入失敗：格式毋對，抑係檔案損壞。\n（接受：新版備份檔、舊版資料管理備份檔、舊版遷移網址）');
+        alert(
+          err && err.message === 'too_large'
+            ? '匯入失敗：內容忒大（上限 5 MB）。'
+            : '匯入失敗：格式毋對，抑係檔案損壞。\n（接受：新版備份檔、舊版資料管理備份檔、舊版遷移網址）',
+        );
         return false;
       }
       const message =
@@ -1690,6 +1714,10 @@ function showManualSyncModal() {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
+          if (file.size > BACKUP_IMPORT_MAX_BYTES) {
+            alert('匯入失敗：檔案忒大（上限 5 MB）。');
+            return;
+          }
           await runImport(await file.text());
         } finally {
           importInput.value = '';
@@ -1767,6 +1795,8 @@ if (typeof module !== 'undefined' && module.exports) {
     syncFromCloud,
     parseBackupText,
     legacyToPackage,
-    importBackupText
+    importBackupText,
+    showSyncError,
+    refreshSyncIndicator
   };
 }
