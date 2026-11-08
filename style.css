@@ -2523,7 +2523,6 @@ input:checked+.slider:before {
 #infoButton,
 #settingsBtn,
 #manualSyncBtn,
-#syncSurveyBtn,
 #showRomanizerBtn,
 #charCoverageBtn,
 #dataManagementBtn,
@@ -2545,7 +2544,6 @@ input:checked+.slider:before {
 #infoButton i,
 #settingsBtn i,
 #manualSyncBtn i,
-#syncSurveyBtn i,
 #showRomanizerBtn i,
 #charCoverageBtn i,
 #dataManagementBtn i,
@@ -2557,7 +2555,6 @@ input:checked+.slider:before {
 #infoButton:hover i,
 #settingsBtn:hover i,
 #manualSyncBtn:hover i,
-#syncSurveyBtn:hover i,
 #showRomanizerBtn:hover i,
 #charCoverageBtn:hover i,
 #dataManagementBtn:hover i,
@@ -2830,20 +2827,23 @@ input:checked+.slider:before {
 }
 
 /* 雲端同步中動畫 */
-#cloudSyncBtn.syncing i {
+#cloudSyncBtn.syncing i,
+#manualSyncBtn.syncing i {
   animation: spin 1s linear infinite;
   color: #ffc107;
   /* 黃色表示同步中 */
 }
 
 /* 同步成功提示 */
-#cloudSyncBtn.sync-success i {
+#cloudSyncBtn.sync-success i,
+#manualSyncBtn.sync-success i {
   color: #28a745;
   animation: pulse-success 0.5s ease-out;
 }
 
 /* 同步失敗提示 */
-#cloudSyncBtn.sync-error i {
+#cloudSyncBtn.sync-error i,
+#manualSyncBtn.sync-error i {
   color: #dc3545;
 }
 
@@ -3072,7 +3072,6 @@ input:checked+.slider:before {
   #infoButton,
   #settingsBtn,
   #manualSyncBtn,
-  #syncSurveyBtn,
   #showRomanizerBtn,
   #charCoverageBtn,
   #dataManagementBtn,
@@ -3083,7 +3082,6 @@ input:checked+.slider:before {
   #infoButton:hover i,
   #settingsBtn:hover i,
   #manualSyncBtn:hover i,
-  #syncSurveyBtn:hover i,
   #showRomanizerBtn:hover i,
   #charCoverageBtn:hover i,
   #dataManagementBtn:hover i,

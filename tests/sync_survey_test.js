@@ -160,13 +160,13 @@ const root = path.join(__dirname, '..');
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const cloud = fs.readFileSync(path.join(root, 'js/cloud-sync.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
-assert.ok(/id="syncSurveyBtn"/.test(index), 'index.html 缺問卷鈕');
+assert.ok(!/id="syncSurveyBtn"/.test(index), '標頭問卷鈕已拿掉（無人用，標頭按鈕愛少）');
 assert.ok(/js\/sync-survey\.js\?v=/.test(index), 'index.html 毋曾載入 sync-survey.js');
 assert.ok(/data-open-sync-survey/.test(cloud), '手動共步視窗缺邀請連結');
 assert.ok(/window\.showManualSyncModal\s*=/.test(cloud), '「回手動共步」愛 window.showManualSyncModal 做得呼叫');
 const z = css.match(/#syncSurveyModal \{\s*z-index:\s*(\d+)/);
 assert.ok(z && Number(z[1]) > 10002, '問卷彈窗个層級愛高過手動共步視窗 (10002)');
-for (const sel of ['#syncSurveyBtn,', '#syncSurveyBtn i,', '#syncSurveyBtn:hover i,', '.sync-survey-back[hidden]']) {
+for (const sel of ['.sync-survey-back[hidden]']) {
   assert.ok(css.includes(sel), `style.css 缺 ${sel}`);
 }
 console.log('  ✅ 入口接線 PASS');
