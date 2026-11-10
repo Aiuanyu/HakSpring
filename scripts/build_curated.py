@@ -7,9 +7,11 @@
 由 process_all_data.py 呼叫（在補字典之前）；也做得單獨跑：python3 scripts/build_curated.py
 """
 import csv
+import glob
 import io
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,6 +23,93 @@ DEFINITION = '（教典、認證未收；愛灣語依例句出現情形與個人
 CATEGORY = '個人加詞'
 SOURCE_TYPE = 'curated'
 REQUIRED = ['腔', '字', '客語標音_顯示', '客語標音_查詢']
+
+
+def build_ground_truth_char_readings():
+    """載入六腔官方教典、認證與補字典之單字音真值集合，供 Linter 驗證。"""
+    data_dir = os.path.join(ROOT, 'data')
+    valid = {l: {} for l in DIALECTS}
+    for l in DIALECTS:
+        # 1. 教典
+        p = os.path.join(data_dir, 'gip', f'20261020-{l}.json')
+        if os.path.exists(p):
+            with open(p, encoding='utf-8') as f:
+                content = json.load(f)['content']
+                for r in csv.DictReader(io.StringIO(content)):
+                    w = r['客家語']
+                    disp = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_顯示'].split('【')[0].split('/')[0].strip())
+                    query = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_查詢'].split('【')[0].split('/')[0].strip())
+                    if len(w) == 1:
+                        valid[l].setdefault(w, set()).add((disp, query))
+                    elif len(w) == len(disp.split()) == len(query.split()):
+                        for ch, d, q in zip(w, disp.split(), query.split()):
+                            valid[l].setdefault(ch, set()).add((d, q))
+        # 2. 認證
+        for cf in glob.glob(os.path.join(data_dir, 'cert', f'115{l}*.json')):
+            with open(cf, encoding='utf-8') as f:
+                content = json.load(f)['content']
+                for r in csv.DictReader(io.StringIO(content)):
+                    w = r['客家語']
+                    disp = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_顯示'].split('【')[0].split('/')[0].strip())
+                    query = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_查詢'].split('【')[0].split('/')[0].strip())
+                    if len(w) == 1:
+                        valid[l].setdefault(w, set()).add((disp, query))
+                    elif len(w) == len(disp.split()) == len(query.split()):
+                        for ch, d, q in zip(w, disp.split(), query.split()):
+                            valid[l].setdefault(ch, set()).add((d, q))
+        # 3. 補字典
+        sp = os.path.join(data_dir, 'supp', f'補字典-{l}.csv')
+        if os.path.exists(sp):
+            with open(sp, encoding='utf-8-sig') as f:
+                for r in csv.DictReader(f):
+                    w = r['客家語']
+                    disp = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_顯示'].split('【')[0].split('/')[0].strip())
+                    query = re.sub(r'^(又讀|文|白|特)\s*', '', r['客語標音_查詢'].split('【')[0].split('/')[0].strip())
+                    if len(w) == 1:
+                        valid[l].setdefault(w, set()).add((disp, query))
+    return valid
+
+
+def verify_against_ground_truth(rows, ground_truth=None):
+    """
+    單字音合法性阻斷檢查（Linter）：
+    加詞.csv 內的多字詞，每個單字配音必須存在於該腔教典／認證／補字典真值庫中。
+    若屬特殊造詞或特例，需於「判斷說明」標註「【特例免檢】」始予放行。
+    """
+    if ground_truth is None:
+        ground_truth = build_ground_truth_char_readings()
+
+    for i, r in enumerate(rows, start=2):
+        explanation = r.get('判斷說明', '')
+        if '【特例免檢】' in explanation:
+            continue
+
+        lect = r['腔']
+        word = r['字']
+        disp_sylls = r['客語標音_顯示'].split()
+        query_sylls = r['客語標音_查詢'].split()
+
+        # 多字詞且音節數相符時進行逐字校驗
+        if len(word) > 1 and len(word) == len(disp_sylls) == len(query_sylls):
+            for ch, d, q in zip(word, disp_sylls, query_sylls):
+                valid_set = ground_truth.get(lect, {}).get(ch, set())
+                # 乾淨化調號前綴
+                clean_d = re.sub(r'^(又讀|文|白|特)\s*', '', d).strip()
+                clean_q = re.sub(r'^(又讀|文|白|特)\s*', '', q).strip()
+
+                # 比對 (disp, query) 或至少 query (數字調) 匹配
+                matched = any(clean_d == vd and clean_q == vq for vd, vq in valid_set)
+                if not matched and valid_set:
+                    # 亦容許只比對數字調 (有些調符顯示微調)
+                    query_matched = any(clean_q == vq for vd, vq in valid_set)
+                    if not query_matched:
+                        valid_readings_str = ' ； '.join(f'{vd} ({vq})' for vd, vq in sorted(valid_set))
+                        raise ValueError(
+                            f"data/curated/加詞.csv 第 {i} 列 [{lect}腔] 詞彙「{word}」中的單字「{ch}」"
+                            f"配音 ({d} / {q}) 不在官方教典／認證／補字典真值庫中！\n"
+                            f"該字合法讀音為：{valid_readings_str}\n"
+                            f"（若為合音或特例，請在「判斷說明」欄位填入「【特例免檢】」以放行）"
+                        )
 
 
 def load_curated():
@@ -40,6 +129,9 @@ def load_curated():
         if key in seen:
             raise ValueError(f'{path} 第 {i} 列摎第 {seen[key]} 列重複：{key}')
         seen[key] = i
+
+    # 執行音韻真值 Linter 防呆阻斷
+    verify_against_ground_truth(rows)
     return rows
 
 
