@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>擬音審音（四縣）</title>
+<!--
+  擬音審音工具（開發用，毋係網站功能）。資料：review/nisim-queue.json（scripts/build_nisim_review.py 產生）。
+  判定存在瀏覽器（localStorage），匯出 擬音審音-四.csv（字,擬音,判定,正確讀音,備註）。
+  判「錯」个字：愛補正確讀音，再轉入 data/supp/人工沿襲.csv 或補字典人工修正。
+-->
+<style>
+  :root { --bg:#f7f7f4; --card:#fff; --ink:#222; --muted:#6b6b6b; --line:#ddd; --ok:#15803d; --bad:#b91c1c; --unsure:#7c3aed; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161616; --card:#222; --ink:#eee; --muted:#999; --line:#444; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 system-ui,"Noto Sans TC",sans-serif; }
+  header, main { max-width:760px; margin:0 auto; padding:12px 16px; }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin:10px 0; }
+  .item.current { outline:2px solid #0f766e; }
+  .item.ok { border-left:6px solid var(--ok); } .item.bad { border-left:6px solid var(--bad); } .item.unsure { border-left:6px solid var(--unsure); }
+  .ch { font-size:2.2rem; margin-right:12px; } .py { font-size:1.4rem; font-weight:700; }
+  .meta { color:var(--muted); font-size:.85rem; } .risk { color:var(--bad); font-size:.85rem; }
+  button { font:inherit; padding:4px 14px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; margin-right:6px; }
+  input[type=text] { font:inherit; padding:3px 8px; width:9em; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); }
+  #bar { position:sticky; top:0; background:var(--bg); padding:8px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1 style="font-size:1.3rem;margin:.3em 0">擬音審音（四縣）</h1>
+  <p class="meta">看「字＋讀音」，用你个耳音判：<b>對</b>（這字客語係恁般讀）、<b>毋對</b>（愛填正確讀音）、<b>毋確定</b>。毋使懂廣韻。鍵盤：<b>1</b> 對　<b>2</b> 毋對　<b>3</b> 毋確定　<b>j／k</b> 上下。</p>
+  <div id="bar"><span id="prog"></span> <button id="exp">匯出 CSV</button> <button id="todo">只看未審</button></div>
+</header>
+<main id="list"></main>
+<script>
+'use strict';
+const KEY = 'hakspring-nisim-review-v1';
+let items = [], dec = {}, cur = null, onlyTodo = true;
+try { dec = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { dec = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(dec)); } catch (e) { /* 存毋著就算 */ } };
+const el = (t, a = {}, ...k) => { const e = document.createElement(t); for (const [n, v] of Object.entries(a)) { if (n.startsWith('on')) e.addEventListener(n.slice(2), v); else if (n === 'class') e.className = v; else e.setAttribute(n, v); } e.append(...k.flat().filter(Boolean)); return e; };
+const state = (it) => (dec[it.id] ? dec[it.id].判定 : 'todo');
+function decide(it, v, fix, note) {
+  if (v === '毋對' && !fix) { alert('愛填正確讀音（毋知就按「毋確定」）'); return; }
+  dec[it.id] = { 判定: v, 正確讀音: fix || '', 備註: note || '', 時間: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 19) + '+08:00' };
+  save(); const vis = visible(); const i = vis.findIndex((x) => x.id === it.id); render(); const nx = visible(); cur = (nx[Math.min(i, nx.length - 1)] || {}).id; render();
+}
+const visible = () => items.filter((it) => !onlyTodo || state(it) === 'todo');
+function card(it) {
+  const s = state(it), d = dec[it.id] || {};
+  const fix = el('input', { type: 'text', placeholder: '正確讀音', value: d.正確讀音 || '' });
+  const note = el('input', { type: 'text', placeholder: '備註', value: d.備註 || '' });
+  const c = el('div', { class: `item ${s === '對' ? 'ok' : s === '毋對' ? 'bad' : s === '毋確定' ? 'unsure' : ''}${it.id === cur ? ' current' : ''}`, 'data-id': it.id, onclick: () => { cur = it.id; } },
+    el('div', {}, el('span', { class: 'ch' }, it.字), el('span', { class: 'py' }, it.讀音), el('span', { class: 'meta' }, `　${it.數字調}　${it.標籤}　字頻 ${it.字頻}／例句 ${it.例句次數}`)),
+    el('div', { class: 'meta' }, `其他候選：${it.其他候選.join('　') || '（無）'}`),
+    el('div', it.依據.includes('異體') ? { class: 'risk' } : { class: 'meta' }, `依據：${it.依據}`),
+    el('div', {}, el('button', { onclick: () => decide(it, '對', '', note.value) }, '1 對'), el('button', { onclick: () => decide(it, '毋對', fix.value.trim(), note.value) }, '2 毋對'), el('button', { onclick: () => decide(it, '毋確定', fix.value.trim(), note.value) }, '3 毋確定'), fix, note));
+  return c;
+}
+function render() {
+  const vis = visible();
+  if (!cur || !vis.some((x) => x.id === cur)) cur = (vis[0] || {}).id;
+  const n = (v) => items.filter((x) => state(x) === v).length;
+  document.getElementById('prog').textContent = `已審 ${items.length - n('todo')}／${items.length}（對 ${n('對')}、毋對 ${n('毋對')}、毋確定 ${n('毋確定')}）`;
+  const list = document.getElementById('list'); list.replaceChildren(...vis.slice(0, 30).map(card));
+  const c = list.querySelector('.current'); if (c) c.scrollIntoView({ block: 'nearest' });
+}
+document.addEventListener('keydown', (ev) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) { if (ev.key === 'Escape') document.activeElement.blur(); return; }
+  const vis = visible(), i = vis.findIndex((x) => x.id === cur), it = vis[i];
+  if (ev.key === 'j' && vis[i + 1]) { cur = vis[i + 1].id; render(); }
+  else if (ev.key === 'k' && vis[i - 1]) { cur = vis[i - 1].id; render(); }
+  else if (it && ev.key === '1') decide(it, '對', '', '');
+  else if (it && ev.key === '3') decide(it, '毋確定', '', '');
+  else if (it && ev.key === '2') document.querySelector('.current input').focus();
+});
+document.getElementById('todo').addEventListener('click', (ev) => { onlyTodo = !onlyTodo; ev.target.textContent = onlyTodo ? '只看未審' : '看全部'; render(); });
+document.getElementById('exp').addEventListener('click', () => {
+  const q = (v) => { v = String(v ?? ''); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const rows = items.filter((it) => dec[it.id]).map((it) => [it.字, it.讀音, dec[it.id].判定, dec[it.id].正確讀音, dec[it.id].備註, dec[it.id].時間]);
+  const text = '﻿' + [['字', '擬音', '判定', '正確讀音', '備註', '時間'], ...rows].map((r) => r.map(q).join(',')).join('\n') + '\n';
+  const a = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/csv' })), download: '擬音審音-四.csv' });
+  document.body.append(a); a.click(); a.remove();
+});
+fetch('review/nisim-queue.json', { cache: 'no-cache' }).then((r) => r.json()).then((d) => { items = d.items; render(); })
+  .catch(() => { document.getElementById('list').textContent = '讀毋著 review/nisim-queue.json，請用本機伺服器開這頁（python3 -m http.server）。'; });
+</script>
+</body>
+</html>
