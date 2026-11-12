@@ -30,6 +30,8 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
+      - 'tests/curated_linter_test.py'
+      - 'scripts/build_curated.py'
       - 'tests/variant_parser_test.js'
       - 'js/variant-parser.js'
       - 'data/curated/**'
@@ -76,6 +78,8 @@ on:
       - 'js/cloud-sync.js'
       - 'tests/build_subdialect_fill_test.py'
       - 'tests/curated_test.js'
+      - 'tests/curated_linter_test.py'
+      - 'scripts/build_curated.py'
       - 'tests/variant_parser_test.js'
       - 'js/variant-parser.js'
       - 'data/curated/**'
@@ -136,6 +140,8 @@ jobs:
         run: node tests/gip_superscript_test.js
       - name: Curated (愛灣語加詞) tests
         run: node tests/curated_test.js
+      - name: Curated linter tests
+        run: python3 tests/curated_linter_test.py
       - name: Variant parser tests
         run: node tests/variant_parser_test.js
       - name: Audio failure breaker tests
