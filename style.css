@@ -6921,3 +6921,20 @@ mark {
     color: var(--dark-link-color, #90caf9) !important;
   }
 }
+
+/* 腔級播放設定（設定 modal） */
+.audio-profile-section { margin-top: 20px; }
+.audio-profile-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.audio-profile-item { display: flex; align-items: center; gap: 8px; }
+.audio-profile-label { flex: 1; color: #212529; }
+.audio-profile-empty { color: #5c636a; font-size: 0.9em; }
+.audio-profile-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.audio-profile-form .form-select { width: auto; }
+.audio-profile-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid #2d6a4f; background: #fff; color: #1b4332; cursor: pointer; }
+.audio-profile-btn-danger { border-color: #a4262c; color: #8a1c21; }
+@media (prefers-color-scheme: dark) {
+  .audio-profile-label { color: #e9ecef; }
+  .audio-profile-empty { color: #adb5bd; }
+  .audio-profile-btn { background: #232426; color: #95d5b2; border-color: #52b788; }
+  .audio-profile-btn-danger { color: #ff9ea1; border-color: #ff9ea1; }
+}
