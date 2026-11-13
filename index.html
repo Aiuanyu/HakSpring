@@ -29,7 +29,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.67" />
+    <link rel="stylesheet" href="style.css?v=4.7.68" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -54,7 +54,7 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.88" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.89" defer></script>
     <script type="text/javascript" src="js/sync-survey.js?v=1.1.1" defer></script>
     <script
       type="text/javascript"
@@ -97,7 +97,7 @@
     ></script>
     <script
       type="text/javascript"
-      src="js/cloud-sync.js?v=4.7.4"
+      src="js/cloud-sync.js?v=4.7.5"
       defer
     ></script>
     <script
@@ -1472,6 +1472,23 @@
                 value="2"
                 style="cursor: pointer"
               />
+            </div>
+          </div>
+          <!-- 腔級播放設定：特定腔級自訂播放速度摎重播擺數（雲端同步） -->
+          <div class="setting-item audio-profile-section">
+            <div class="setting-info" style="width: 100%">
+              <label>腔級播放設定</label>
+              <span class="setting-description"
+                >替特定腔級設定認證詞句个播放速度摎放送幾擺，會跟雲端同步。有設定个腔級會優先用這裡个設定。</span
+              >
+              <ul id="audioProfileList" class="audio-profile-list"></ul>
+              <div class="audio-profile-form">
+                <select id="audioProfileAccent" class="form-select" aria-label="腔調"></select>
+                <select id="audioProfileLevel" class="form-select" aria-label="級別"></select>
+                <select id="audioProfileSpeed" class="form-select" aria-label="播放速度"></select>
+                <select id="audioProfileRepeat" class="form-select" aria-label="放送擺數"></select>
+                <button type="button" id="audioProfileSaveBtn" class="audio-profile-btn">新增</button>
+              </div>
             </div>
           </div>
         </div>

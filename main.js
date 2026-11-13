@@ -3451,6 +3451,66 @@ function isAdvancedLevel() {
   return !!(g_currentDialectInfo && g_currentDialectInfo.級 === '高');
 }
 
+// ---- 腔級播放設定：特定腔級（如 四基、海中高）自訂播放速度摎重播擺數，可雲端同步 ----
+// localStorage['hakkaAudioProfiles'] = { '四基': [速度, 擺數, 時間戳ms, 刪除旗標] }（格式摎合併見 js/cloud-sync.js mergeAudioProfiles）
+const AUDIO_PROFILES_KEY = 'hakkaAudioProfiles';
+
+function readAudioProfiles() {
+  try {
+    const obj = JSON.parse(localStorage.getItem(AUDIO_PROFILES_KEY) || '{}');
+    return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeAudioProfiles(obj) {
+  try {
+    localStorage.setItem(AUDIO_PROFILES_KEY, JSON.stringify(obj));
+  } catch (e) {
+    console.warn('儲存腔級播放設定失敗:', e);
+  }
+  if (typeof window !== 'undefined' && typeof window.triggerCloudSync === 'function') {
+    window.triggerCloudSync();
+  }
+}
+
+// 取某腔級个有效設定（無設定抑係已刪除就回 null）
+function getAudioProfile(key) {
+  const entry = key ? readAudioProfiles()[key] : null;
+  if (!Array.isArray(entry) || entry[3]) return null;
+  const speed = parseFloat(entry[0]);
+  const repeat = parseInt(entry[1], 10);
+  if (isNaN(speed) || speed < 0.5 || speed > 3.0) return null;
+  if (isNaN(repeat) || repeat < 1 || repeat > 3) return null;
+  return { speed, repeat };
+}
+
+function saveAudioProfile(key, speed, repeat) {
+  if (!key) return false;
+  const sp = parseFloat(speed);
+  const rp = parseInt(repeat, 10);
+  if (isNaN(sp) || sp < 0.5 || sp > 3.0 || isNaN(rp) || rp < 1 || rp > 3) return false;
+  const all = readAudioProfiles();
+  all[key] = [sp, rp, Date.now(), 0];
+  writeAudioProfiles(all);
+  return true;
+}
+
+// 刪除用 tombstone，雲端同步時別台正會跟到刪除
+function deleteAudioProfile(key) {
+  const all = readAudioProfiles();
+  if (!all[key]) return;
+  all[key] = [1, 1, Date.now(), 1];
+  writeAudioProfiles(all);
+}
+
+function getCurrentAudioProfileKey() {
+  return g_currentDialectInfo && g_currentDialectInfo.腔 && g_currentDialectInfo.級
+    ? g_currentDialectInfo.腔 + g_currentDialectInfo.級
+    : null;
+}
+
 function getPlaybackSpeedStorageKey() {
   return isAdvancedLevel() ? 'playbackSpeedAdvanced' : 'playbackSpeed';
 }
@@ -3458,6 +3518,12 @@ function getPlaybackSpeedStorageKey() {
 // 依目前級別，從 localStorage 載入對應个播放速度（預設 1x）
 function loadPlaybackSpeedForCurrentLevel() {
   let speed = 1.0;
+  const profile = getAudioProfile(getCurrentAudioProfileKey());
+  if (profile) {
+    g_playbackSpeed = profile.speed;
+    updateSpeedMenuUI(profile.speed);
+    return profile.speed;
+  }
   try {
     const saved = localStorage.getItem(getPlaybackSpeedStorageKey());
     if (saved) {
@@ -3531,6 +3597,10 @@ function setupPlaybackSpeedControls() {
         const newSpeed = parseFloat(e.target.dataset.speed);
         if (isNaN(newSpeed) || newSpeed < 0.5 || newSpeed > 3.0) return;
         g_playbackSpeed = newSpeed;
+        // 這個腔級有自訂設定，就更新自訂設定（毋然下擺切換腔級會跳轉去）
+        const profileKey = getCurrentAudioProfileKey();
+        const profile = getAudioProfile(profileKey);
+        if (profile) saveAudioProfile(profileKey, newSpeed, profile.repeat);
         try {
           localStorage.setItem(getPlaybackSpeedStorageKey(), newSpeed);
         } catch (err) {
@@ -3546,6 +3616,110 @@ function setupPlaybackSpeedControls() {
   }
 }
 
+
+function formatSpeedLabel(speed) {
+  return (Number.isInteger(speed) ? speed.toFixed(1) : String(speed)) + 'x';
+}
+
+// 設定頁个「腔級播放設定」：新增／編輯／刪除
+function setupAudioProfilesUI() {
+  const accentSel = document.getElementById('audioProfileAccent');
+  const levelSel = document.getElementById('audioProfileLevel');
+  const speedSel = document.getElementById('audioProfileSpeed');
+  const repeatSel = document.getElementById('audioProfileRepeat');
+  const saveBtn = document.getElementById('audioProfileSaveBtn');
+  const list = document.getElementById('audioProfileList');
+  if (!accentSel || !levelSel || !speedSel || !repeatSel || !saveBtn || !list) return;
+
+  accentSel.innerHTML = Object.keys(ACCENT_INFO)
+    .map((k) => `<option value="${k}">${ACCENT_INFO[k].腔名}</option>`)
+    .join('');
+  levelSel.innerHTML = Object.keys(LEVEL_INFO)
+    .map((k) => `<option value="${k}">${LEVEL_INFO[k].級名}</option>`)
+    .join('');
+  speedSel.innerHTML = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
+    .map((v) => `<option value="${v}">${formatSpeedLabel(v)}</option>`)
+    .join('');
+  speedSel.value = '1';
+  repeatSel.innerHTML = [1, 2, 3].map((v) => `<option value="${v}">${v} 擺</option>`).join('');
+
+  function render() {
+    const all = readAudioProfiles();
+    const keys = Object.keys(all).filter((k) => getAudioProfile(k));
+    list.innerHTML = '';
+    if (keys.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'audio-profile-empty';
+      empty.textContent = '還無設定。無設定个腔級照原本个播放速度摎擺數。';
+      list.appendChild(empty);
+      return;
+    }
+    keys.forEach((k) => {
+      const p = getAudioProfile(k);
+      const li = document.createElement('li');
+      li.className = 'audio-profile-item';
+      const label = document.createElement('span');
+      label.className = 'audio-profile-label';
+      const accent = ACCENT_INFO[k[0]];
+      const level = LEVEL_INFO[k.substring(1)];
+      label.textContent = `${accent ? accent.腔名 : k[0]}${level ? level.級名 : k.substring(1)}　${formatSpeedLabel(p.speed)}　${p.repeat} 擺`;
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'audio-profile-btn';
+      editBtn.textContent = '編輯';
+      editBtn.addEventListener('click', () => {
+        accentSel.value = k[0];
+        levelSel.value = k.substring(1);
+        speedSel.value = String(p.speed);
+        repeatSel.value = String(p.repeat);
+        saveBtn.textContent = '更新';
+      });
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'audio-profile-btn audio-profile-btn-danger';
+      delBtn.textContent = '刪除';
+      delBtn.addEventListener('click', () => {
+        deleteAudioProfile(k);
+        render();
+        refreshAudioProfileInPlayer();
+      });
+      li.append(label, editBtn, delBtn);
+      list.appendChild(li);
+    });
+  }
+
+  // 設定變動後，若正在播个就係這個腔級，即時套用新設定
+  function refreshAudioProfileInPlayer() {
+    loadPlaybackSpeedForCurrentLevel();
+    applyGlobalSpeedToAudioElements();
+    updateRepeatControlState();
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const key = accentSel.value + levelSel.value;
+    if (saveAudioProfile(key, speedSel.value, repeatSel.value)) {
+      saveBtn.textContent = '新增';
+      render();
+      refreshAudioProfileInPlayer();
+      trackEvent('save', 'AudioProfile', key);
+    }
+  });
+
+  // 選著已有設定个腔級，按鈕就變成「更新」
+  const syncSaveLabel = () => {
+    saveBtn.textContent = getAudioProfile(accentSel.value + levelSel.value) ? '更新' : '新增';
+  };
+  accentSel.addEventListener('change', syncSaveLabel);
+  levelSel.addEventListener('change', syncSaveLabel);
+
+  // 雲端同步拉下新設定，重畫清單摎套用
+  window.addEventListener('hakkaAudioProfilesChanged', () => {
+    render();
+    refreshAudioProfileInPlayer();
+  });
+
+  render();
+}
 
 function updateRepeatMenuUI(repeatCount) {
   const btn = document.getElementById('repeatControlBtn');
@@ -3580,6 +3754,8 @@ function updateRepeatControlState() {
 }
 
 function getGlobalRepeatCount() {
+  const profile = getAudioProfile(getCurrentAudioProfileKey());
+  if (profile) return profile.repeat;
   if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
     return getCertAdvancedRepeatCount();
   }
@@ -3612,6 +3788,10 @@ function setupRepeatControls() {
     menu.onclick = function(e) {
       if (e.target.tagName === 'LI') {
         const newRepeat = parseInt(e.target.dataset.repeat, 10);
+
+        const profileKey = getCurrentAudioProfileKey();
+        const profile = getAudioProfile(profileKey);
+        if (profile) saveAudioProfile(profileKey, profile.speed, newRepeat);
 
         if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
           localStorage.setItem('certAdvancedRepeatCount', newRepeat);
@@ -9073,6 +9253,9 @@ function initializeAppUI() {
       });
     }
 
+    // --- 腔級播放設定（速度摎擺數）---
+    setupAudioProfilesUI();
+
     // --- Settings Modal Logic ---
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -10163,6 +10346,9 @@ if (typeof module !== 'undefined' && module.exports) {
     renderPhoneticNoteLabels,
     getCertAdvancedRepeatCount,
     shouldRepeatWord,
+    getAudioProfile,
+    saveAudioProfile,
+    deleteAudioProfile,
     getDialectCode,
     getVariantDialectType,
     buildVariantsElement,

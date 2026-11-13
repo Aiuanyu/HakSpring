@@ -432,6 +432,11 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   );
   const incomingFamiliarity = data.familiarity || {};
 
+  const localAudioProfiles = JSON.parse(
+    localStorage.getItem('hakkaAudioProfiles') || '{}'
+  );
+  const incomingAudioProfiles = data.audio_profiles || {};
+
   // 2. 合併資料
   const mergedBookmarks = mergeBookmarks(localBookmarks, incomingBookmarks);
   const mergedProgress = mergeProgress(localProgress, incomingProgress);
@@ -439,6 +444,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   const mergedStatsByLevel = mergeDailyStatsByLevel(localStatsByLevel, incomingStatsByLevel, syncedStatsByLevel);
   const mergedFavs = mergeDailyFavs(localFavs, incomingFavs);
   const mergedFamiliarity = mergeFamiliarity(localFamiliarity, incomingFamiliarity);
+  const mergedAudioProfiles = mergeAudioProfiles(localAudioProfiles, incomingAudioProfiles);
 
   if (typeof window.foldTypeKeysIntoWordCards === 'function') {
     window.foldTypeKeysIntoWordCards(mergedProgress);
@@ -451,6 +457,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   localStorage.setItem('hakkaDailyStatsByLevel', JSON.stringify(mergedStatsByLevel));
   localStorage.setItem('hakkaDailyFavs', JSON.stringify(mergedFavs));
   localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
+  localStorage.setItem('hakkaAudioProfiles', JSON.stringify(mergedAudioProfiles));
 
   // 合併偏好設定
   let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
@@ -547,10 +554,12 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
       JSON.stringify(mergedFavs) !== JSON.stringify(incomingFavs);
     const familiarityChanged =
       JSON.stringify(mergedFamiliarity) !== JSON.stringify(incomingFamiliarity);
+    const audioProfilesChanged =
+      JSON.stringify(mergedAudioProfiles) !== JSON.stringify(incomingAudioProfiles);
 
     if (options.skipPush) {
       // 衝突重試：由呼叫端（syncToCloud）自家再推，這裡毋重複推
-    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged) {
+    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged || audioProfilesChanged) {
       console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
       await syncToCloud();
     } else {
@@ -581,6 +590,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('hakkaFavChanged'));
     window.dispatchEvent(new CustomEvent('hakkaFamiliarityChanged'));
+    window.dispatchEvent(new CustomEvent('hakkaAudioProfilesChanged'));
   }
 
   return true;
@@ -606,6 +616,7 @@ const SYNC_PACKAGE_OBJECT_FIELDS = [
   'daily_stats_by_level',
   'daily_favs',
   'familiarity',
+  'audio_profiles',
 ];
 
 function decodeBase64Utf8(base64) {
@@ -766,6 +777,9 @@ function exportCurrentSyncData() {
   const familiarity = JSON.parse(
     localStorage.getItem('hakkaFamiliarity') || '{}'
   );
+  const audioProfiles = JSON.parse(
+    localStorage.getItem('hakkaAudioProfiles') || '{}'
+  );
 
   return {
     version: 1,
@@ -777,6 +791,7 @@ function exportCurrentSyncData() {
     daily_stats_by_level: dailyStatsByLevel,
     daily_favs: dailyFavs,
     familiarity,
+    audio_profiles: audioProfiles,
   };
 }
 
@@ -1097,6 +1112,34 @@ function mergeFamiliarity(localObj, cloudObj) {
     const localTs = Array.isArray(localEntry) ? localEntry[1] : 0;
     const cloudTs = Array.isArray(cloudEntry) ? cloudEntry[1] : 0;
     if (!cloudEntry || localTs >= cloudTs) {
+      merged[key] = localEntry;
+    }
+  }
+  return merged;
+}
+
+/**
+ * 腔級播放設定（hakkaAudioProfiles）个合併：逐 key LWW。
+ * 格式 { '四基': [速度, 擺數, 時間戳ms, 刪除旗標(1=已刪)] }；已刪除用 tombstone 保留，才毋會被別台復活。
+ * 時間戳較新者勝；一樣就保留本地。
+ */
+function mergeAudioProfiles(localObj, cloudObj) {
+  const local = (localObj && typeof localObj === 'object') ? localObj : {};
+  const cloud = (cloudObj && typeof cloudObj === 'object') ? cloudObj : {};
+
+  const merged = {};
+  for (const key in cloud) {
+    if (!Object.prototype.hasOwnProperty.call(cloud, key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    if (Array.isArray(cloud[key])) merged[key] = cloud[key];
+  }
+  for (const key in local) {
+    if (!Object.prototype.hasOwnProperty.call(local, key)) continue;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    const localEntry = local[key];
+    if (!Array.isArray(localEntry)) continue;
+    const cloudEntry = merged[key];
+    if (!cloudEntry || (Number(localEntry[2]) || 0) >= (Number(cloudEntry[2]) || 0)) {
       merged[key] = localEntry;
     }
   }
@@ -1786,6 +1829,7 @@ if (typeof module !== 'undefined' && module.exports) {
     mergeDailyStats,
     mergeDailyFavs,
     mergeFamiliarity,
+    mergeAudioProfiles,
     mergeBoolPref,
     normalizeSyncKey,
     isValidSyncKey,

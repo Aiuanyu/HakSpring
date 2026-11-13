@@ -23,6 +23,7 @@ const OBJECT_FIELDS = [
   'daily_stats_by_level',
   'daily_favs',
   'familiarity',
+  'audio_profiles',
 ];
 
 function corsHeaders(request) {
