@@ -241,6 +241,16 @@ const readJson = async (resp) => JSON.parse(await resp.text());
     assert.deepStrictEqual(Object.keys(finalFam).sort(), ['a', 'b', 'c'], '衝突重試：B 个 b 毋會被 A 蓋掉');
     assert.deepStrictEqual(Object.keys(JSON.parse(A.localStorage.getItem('hakkaFamiliarity'))).sort(), ['a', 'b', 'c']);
 
+    // 腔級播放設定（audio_profiles）：A 新增、B 拉到；B 刪除、A 拉到刪除，毋會復活
+    A.localStorage.setItem('hakkaAudioProfiles', JSON.stringify({ 四基: [0.75, 3, Date.now(), 0] }));
+    await A.syncToCloud();
+    await B.syncFromCloud();
+    assert.deepStrictEqual(Array.from(JSON.parse(B.localStorage.getItem('hakkaAudioProfiles'))['四基']).slice(0, 2), [0.75, 3], 'B 拉著 A 个腔級播放設定');
+    B.localStorage.setItem('hakkaAudioProfiles', JSON.stringify({ 四基: [1, 1, Date.now() + 10, 1] }));
+    await B.syncToCloud();
+    await A.syncFromCloud();
+    assert.strictEqual(JSON.parse(A.localStorage.getItem('hakkaAudioProfiles'))['四基'][3], 1, 'B 个刪除同步到 A');
+
     // 金鑰毋對（別把）：拿毋著資料，也毋會寫到別人
     const C = makeDevice('C'); C.setSyncKey(KEY_B);
     C.localStorage.setItem('hakkaFamiliarity', JSON.stringify({ z: [9, 9] }));
