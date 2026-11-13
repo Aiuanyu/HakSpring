@@ -4,7 +4,7 @@
 # 「客源翠 HakSpring」新消息
 20261113 14:01
 
-- 2026/11/13 [新] 做得設定無共認證腔級自動放送速度、幾下擺（雲端共步設定）。到「全域設定」个「腔級播放設定」，替指定个腔級（比將講四縣基礎級）設定播放速度摎放送幾擺，會跟雲端同步，別台裝置輸入同一把金鑰就做得用。
+- 2026/11/13 [新] 做得設定無共認證腔級自動放送速度、幾下擺（雲端共步設定）
 
 - 2026/11/05 [公告] <mark class="whatsnew-highlight" style="background: rgba(255, 193, 7, 0.18); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px; display: block; margin: 6px 0; line-height: 1.6; color: inherit;">失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>；共步圖示亦囥佇「網站說明 ℹ️」視窗頂高）。</mark>
 
