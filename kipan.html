@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客源翠企盤 HakSpring Kipan（客語輸入法社群封測）</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="page.css?v=1.1.0">
+  <style>
+    /* 專屬增強樣式 */
+    .kipan-hero {
+      text-align: center;
+      padding: 2.5rem 1rem 2rem 1rem;
+      background: linear-gradient(180deg, var(--page-accent-light) 0%, transparent 100%);
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      border: 1px solid var(--page-border);
+    }
+    /* 雙平台標誌展示 */
+    .kipan-dual-icons {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2.2rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .icon-showcase-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .kipan-android-icon-img {
+      width: 92px;
+      height: 92px;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(36, 93, 72, 0.16);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+    .kipan-android-icon-img:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 12px 28px rgba(36, 93, 72, 0.24);
+    }
+
+    .kipan-macos-menubar-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 92px;
+    }
+    .kipan-macos-menubar-img {
+      width: 112px;
+      height: 82px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+    .kipan-macos-menubar-img:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+    }
+    .icon-divider-plus {
+      font-size: 1.6rem;
+      color: var(--page-accent);
+      font-weight: 300;
+      opacity: 0.45;
+    }
+    .icon-label {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--page-heading);
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .kipan-badge {
+      display: inline-block;
+      background-color: var(--page-accent);
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+    .kipan-title {
+      font-size: 2.1rem;
+      margin: 0.2rem 0 0.8rem 0;
+      color: var(--page-heading);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .kipan-subtitle {
+      font-size: 1.15rem;
+      color: var(--page-text);
+      max-width: 680px;
+      margin: 0 auto 1.5rem auto;
+      line-height: 1.7;
+    }
+    .kipan-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+      text-align: left;
+    }
+    .feature-card {
+      background: var(--page-card-bg);
+      border: 1px solid var(--page-border);
+      padding: 1.25rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .feature-card i {
+      font-size: 1.5rem;
+      color: var(--page-accent);
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+    .feature-card h4 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.05rem;
+      color: var(--page-heading);
+    }
+    .feature-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--page-text);
+      line-height: 1.6;
+    }
+
+    /* 下載卡片 */
+    .download-section {
+      margin: 2.5rem 0;
+    }
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .download-card {
+      background: var(--page-card-bg);
+      border: 2px solid var(--page-border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .download-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      border-color: var(--page-accent);
+    }
+    .download-card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .download-card-icon {
+      font-size: 2.2rem;
+      color: var(--page-accent);
+      width: 48px;
+      text-align: center;
+    }
+    .download-card-title {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--page-heading);
+    }
+    .download-card-meta {
+      font-size: 0.85rem;
+      color: var(--page-link);
+      font-weight: 600;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background-color: var(--page-accent);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 1.25rem;
+      transition: background-color 0.2s, opacity 0.2s;
+    }
+    .download-btn:hover {
+      background-color: var(--page-link-hover);
+      opacity: 0.95;
+    }
+
+    /* 現場打字測試區 */
+    .typing-sandbox {
+      background: var(--page-card-bg);
+      border: 1px solid var(--page-border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin: 2.5rem 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .sandbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .sandbox-textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 1rem;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      border: 2px solid var(--page-border);
+      border-radius: 10px;
+      background: var(--page-bg);
+      color: var(--page-text);
+      font-family: var(--page-font);
+      resize: vertical;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .sandbox-textarea:focus {
+      outline: none;
+      border-color: var(--page-accent);
+    }
+    .sandbox-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #718096;
+    }
+    .sandbox-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .sample-pill {
+      background: var(--page-accent-light);
+      color: var(--page-heading);
+      border: 1px solid var(--page-border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .sample-pill:hover {
+      background: var(--page-accent);
+      color: #fff;
+    }
+
+    /* Tab 切換器 */
+    .guide-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--page-border);
+      margin: 1.5rem 0 1rem 0;
+    }
+    .guide-tab-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--page-text);
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .guide-tab-btn.active {
+      color: var(--page-accent);
+      border-bottom-color: var(--page-accent);
+    }
+    .guide-tab-content {
+      display: none;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .guide-tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 步驟清單 */
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0;
+    }
+    .step-item {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      align-items: flex-start;
+    }
+    .step-number {
+      background: var(--page-accent);
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+    .step-body h4 {
+      margin: 0 0 0.35rem 0;
+      font-size: 1.1rem;
+      color: var(--page-heading);
+    }
+    .step-body p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .callout-box {
+      background: rgba(234, 179, 8, 0.12);
+      border-left: 4px solid #eab308;
+      padding: 0.85rem 1.1rem;
+      border-radius: 6px;
+      margin: 0.85rem 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* FAQ */
+    .faq-item {
+      background: var(--page-card-bg);
+      border: 1px solid var(--page-border);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0.85rem;
+    }
+    .faq-q {
+      font-weight: 700;
+      color: var(--page-heading);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .faq-a {
+      font-size: 0.93rem;
+      line-height: 1.7;
+      margin: 0;
+      color: var(--page-text);
+    }
+  </style>
+</head>
+<body>
+  <nav class="page-nav">
+    <a href="./" class="page-nav-link" id="back-to-home">
+      <span>🌱 來去客源翠</span>
+    </a>
+    <span class="page-nav-brand">客源翠企盤 HakSpring Kipan</span>
+  </nav>
+
+  <main class="page-container" style="max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem 1rem;">
+    <!-- Hero 頂部介紹 -->
+    <section class="kipan-hero">
+      <!-- 雙平台標誌並列展示（Android 官方圖示 ＋ Mac 選單列鍵帽圖示） -->
+      <div class="kipan-dual-icons">
+        <div class="icon-showcase-item">
+          <img src="img/kipan-android-icon.svg" alt="Android 應用程式圖示" class="kipan-android-icon-img" title="Android 應用程式圖示（構想 3-1 方案 3A：淡吊菜老鼠色大導角方圓鍵帽）">
+          <span class="icon-label"><i class="fab fa-android" style="color: #3ddc84;"></i> Android 桌面圖示</span>
+        </div>
+
+        <div class="icon-divider-plus">+</div>
+
+        <div class="icon-showcase-item">
+          <div class="kipan-macos-menubar-wrapper">
+            <img src="img/kipan-macos-menubar.svg" alt="macOS 選單列圖示" class="kipan-macos-menubar-img" title="macOS 選單列圖示（22×16 系統深色鍵帽風格）">
+          </div>
+          <span class="icon-label"><i class="fab fa-apple"></i> Mac 選單列圖示</span>
+        </div>
+      </div>
+      <div>
+        <span class="kipan-badge"><i class="fas fa-flask"></i> 社群閉門封測版</span>
+      </div>
+      <h1 class="kipan-title">客源翠企盤 HakSpring Kipan</h1>
+      <p class="kipan-subtitle">
+        專門為臺灣客話設計个跨平台輸入法。支援六大腔調、純本機離線運作，保護母語創作與對話隱私，打客字親像飛樣形快！
+      </p>
+
+      <div class="kipan-feature-grid">
+        <div class="feature-card">
+          <i class="fas fa-layer-group"></i>
+          <h4>六腔俱全齊備</h4>
+          <p>四縣、南四縣（美濃音）、海陸、大埔、饒平（卓蘭／桃園音）、詔安，六腔自由切換。</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-book-bookmark"></i>
+          <h4>權威詞庫收錄</h4>
+          <p>整合教育部 115 認證詞彙與 2026 最新教典，六腔出貨詞庫高達 168,095 筆。</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-shield-halved"></i>
+          <h4>100% 離線純淨</h4>
+          <p>完全毋使網路權限，絕不紀錄或上傳打字內容，母語創作最安心。</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-bolt"></i>
+          <h4>連打與智慧記憶</h4>
+          <p>支援無調號連續打字、聲母簡拼（zh/ch/sh/rh/bb/ng）、字詞聯想與個人自學自訂詞庫。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 下載專區 -->
+    <section class="download-section" id="download">
+      <h2 style="color: var(--page-heading); border-bottom: 2px solid var(--page-border); padding-bottom: 0.5rem;">
+        <i class="fas fa-download"></i> 封測軟體落載
+      </h2>
+      <p style="font-size: 0.95rem; color: var(--page-text);">
+        目前開放 <strong>Android</strong> 摎 <strong>macOS</strong> 雙平台測試。請照你自家个裝置點選落載：
+      </p>
+
+      <div class="download-grid">
+        <!-- Android 卡片 -->
+        <div class="download-card">
+          <div>
+            <div class="download-card-header">
+              <img src="img/kipan-android-icon.svg" alt="Android Icon" style="width: 48px; height: 48px; border-radius: 13px; box-shadow: 0 4px 10px rgba(36,93,72,0.18); flex-shrink: 0;">
+              <div>
+                <h3 class="download-card-title"><i class="fab fa-android" style="color: #3ddc84; font-size: 1.15rem;"></i> Android 版</h3>
+                <span class="download-card-meta">APK 直接安裝 ‧ 支援 Android 8.0+</span>
+              </div>
+            </div>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 0;">
+              包含丸仔烏體（Maruko Gothic）客話字型支援、Android 13+ 主題圖示、六腔輸入法子類型語言選單。
+            </p>
+          </div>
+          <div>
+            <a href="https://github.com/aiuanyu/HakSpring-Kipan/releases" target="_blank" rel="noopener noreferrer" class="download-btn" id="downloadAndroidBtn">
+              <i class="fas fa-file-arrow-down"></i> 落載 Android APK
+            </a>
+            <div style="font-size: 0.78rem; text-align: center; color: #888; margin-top: 0.5rem;">
+              版本：v0.0.3+dev 封測版 (約 134 MB)
+            </div>
+          </div>
+        </div>
+
+        <!-- macOS 卡片 -->
+        <div class="download-card">
+          <div>
+            <div class="download-card-header">
+              <img src="img/kipan-macos-menubar.svg" alt="macOS Menu Bar Icon" style="width: 56px; height: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.22); flex-shrink: 0;">
+              <div>
+                <h3 class="download-card-title"><i class="fab fa-apple" style="font-size: 1.15rem;"></i> macOS 版</h3>
+                <span class="download-card-meta">Apple Silicon & Intel 通用 ‧ macOS 12+</span>
+              </div>
+            </div>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 0;">
+              原生整合 macOS 輸入法架構，支援雙行文字重組快速鍵（<code>⌃⌘T</code>）、帶調手動標註與 HUD 提示。
+            </p>
+          </div>
+          <div>
+            <a href="https://github.com/aiuanyu/HakSpring-Kipan/releases" target="_blank" rel="noopener noreferrer" class="download-btn" id="downloadMacBtn" style="background-color: #374151;">
+              <i class="fas fa-file-zipper"></i> 落載 macOS 應用檔 (.zip)
+            </a>
+            <div style="font-size: 0.78rem; text-align: center; color: #888; margin-top: 0.5rem;">
+              版本：v0.0.3 封測版 (免簽章，請參考下方步驟打開)
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 現場打字試驗區 -->
+    <section class="typing-sandbox" id="sandbox">
+      <div class="sandbox-header">
+        <h3 style="margin: 0; color: var(--page-heading); display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-keyboard"></i> 打字試驗區（現場體驗）
+        </h3>
+        <button id="clearSandboxBtn" style="background: transparent; border: 1px solid var(--page-border); padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--page-text);">
+          <i class="fas fa-trash-can"></i> 清空文字
+        </button>
+      </div>
+      <p style="margin: 0 0 0.8rem 0; font-size: 0.92rem; color: var(--page-text);">
+        安頓好輸入法後，做得直接在下面橫框試打看啊！體會連打、簡拼摎客話出字个順暢感：
+      </p>
+
+      <textarea id="sandboxInput" class="sandbox-textarea" placeholder="👉 安頓好企盤輸入法後，點這隻橫框開始打客話試驗..."></textarea>
+
+      <div class="sandbox-toolbar">
+        <span>提示：若打客話無出來，請確定輸入法敢有切換到「客源翠企盤」</span>
+        <span id="charCount">0 字</span>
+      </div>
+
+      <!-- 快速範例錦囊 -->
+      <div style="margin-top: 1.25rem;">
+        <span style="font-size: 0.88rem; font-weight: bold; color: var(--page-heading);">
+          💡 點擊下方範例音讀，試打體驗：
+        </span>
+        <div class="sandbox-pills">
+          <span class="sample-pill" data-pinyin="ngai he hag ngin" title="四縣：𠊎係客人">四縣：ngai he hag ngin (𠊎係客人)</span>
+          <span class="sample-pill" data-pinyin="sienang an se-si" title="四縣：先生按細義">四縣：sienang an se-si (先生按細義)</span>
+          <span class="sample-pill" data-pinyin="ngaideu loi da hagfa" title="四縣：𫣆俚來打客話">四縣：ngaideu loi da hagfa (𫣆俚來打客話)</span>
+          <span class="sample-pill" data-pinyin="pug" title="四縣：𱱿（⿺皮卜）">四縣特字：pug (𱱿)</span>
+          <span class="sample-pill" data-pinyin="hanvoi" title="海陸：還會">海陸：hanvoi (還會)</span>
+          <span class="sample-pill" data-pinyin="me" title="大埔：哶">大埔：me (哶)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 安裝與啟用教學指引 -->
+    <section class="guide-section" id="guide">
+      <h2 style="color: var(--page-heading); border-bottom: 2px solid var(--page-border); padding-bottom: 0.5rem;">
+        <i class="fas fa-book-open"></i> 安頓摎啟用指引
+      </h2>
+
+      <!-- Tab 控制按鈕 -->
+      <div class="guide-tabs">
+        <button class="guide-tab-btn active" data-tab="android-guide">
+          <i class="fab fa-android"></i> Android 手機安頓教學
+        </button>
+        <button class="guide-tab-btn" data-tab="mac-guide">
+          <i class="fab fa-apple"></i> macOS 電腦安頓教學（免簽章）
+        </button>
+      </div>
+
+      <!-- Android 指引內容 -->
+      <div id="android-guide" class="guide-tab-content active">
+        <ol class="step-list">
+          <li class="step-item">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <h4>落載 APK 安裝檔</h4>
+              <p>點擊上方「落載 Android APK」按鈕。瀏覽器若出現「檔案可能具備危險性」之系統預設警示，請點選「<strong>仍要下載</strong>」（此為 Android 針對非 Google Play 管道 APK 之例行提醒）。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <h4>允許安裝外部來源應用</h4>
+              <p>點開下載完成之 APK。若系統阻擋安裝，請點選彈出視窗之「設定」，開啟「<strong>允許來自此來源的應用程式</strong>」，接著返回點擊「安裝」。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <h4>在系統啟用「客源翠企盤」</h4>
+              <p>進入手機「<strong>設定</strong>」&rarr;「<strong>系統</strong>」&rarr;「<strong>語言與鍵盤</strong>（或輸入法）」&rarr;「<strong>螢幕鍵盤</strong>（虛擬鍵盤）」，尋著淡紫灰鍵帽圖示个「<strong>客源翠企盤</strong>」並將開關切換為啟用開啟。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <h4>切換輸入法開始打字</h4>
+              <p>打開任何文字輸入框（例如 LINE 或上方試驗區），點擊螢幕右下角鍵盤圖示（或長按空白鍵），切換為「<strong>客源翠企盤</strong>」，即可享受全客語打字！</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <h4>自由切換六大腔調</h4>
+              <p>在鍵盤上<strong>長按空白鍵</strong>，或點選鍵盤齒輪進入「設定」，即可自由選用四縣、南四縣（美濃音）、海陸、大埔、饒平（卓蘭／桃園）、詔安等腔別。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- macOS 指引內容 -->
+      <div id="mac-guide" class="guide-tab-content">
+        <ol class="step-list">
+          <li class="step-item">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <h4>落載並解開壓縮檔</h4>
+              <p>落載 <code>HakSpring-Kipan-macOS.zip</code>，雙擊解壓縮後會得著 <code>HakSpring-Kipan.app</code> 應用程式。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <h4>搬移至輸入法系統目錄</h4>
+              <p>打開 Finder，在頂部選單點「前往」&rarr;「前往資料夾...」（或按快捷鍵 <code>Command + Shift + G</code>），輸入路徑：<br>
+              <code>~/Library/Input Methods</code><br>
+              按 Enter 進入後，將 <code>HakSpring-Kipan.app</code> 拖曳放進這隻資料夾裡肚。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <h4>【極重要】滑鼠右鍵打開（繞過 Apple Gatekeeper 檢查）</h4>
+              <div class="callout-box">
+                <strong>⚠️ 特別說明：</strong>因目前社群封測階段尚未花費每年 $99 美元向 Apple 購買商業開發者簽章，直接連按兩下打開會出現「無法打開，因為它不是由識別的開發者發送」。
+              </div>
+              <p><strong>請務必這樣做：</strong>在 <code>HakSpring-Kipan.app</code> 上按<strong>滑鼠右鍵</strong>（或按住鍵盤 <code>Control</code> 鍵點點擊），選選單最頂項「<strong>打開</strong>」。在彈出的安全確認對話框中，點選「<strong>打開</strong>」即可成功放行！</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <h4>至系統設定加入輸入方式</h4>
+              <p>打開 Mac「<strong>系統設定</strong>」&rarr;「<strong>鍵盤</strong>」&rarr;「<strong>文字輸入</strong>」&rarr; 點選「輸入方式」旁个「<strong>編輯...</strong>」按鈕。點左下角 <code>+</code> 號，在語言清單（客語或繁體中文）找到「<strong>客源翠企盤</strong>」，點選「加入」。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <h4>登出並重新登入（或重新開機）</h4>
+              <p>加入後，建議<strong>登出 macOS 使用者帳號並重新登入</strong>（或重開機）。右上角選單列即會出現客源翠企盤黑底白字「客」鍵帽圖示，點選即可啟用！快捷鍵：<code>Control + 數字鍵（1..8）</code> 可手動帶調號；選取文字按 <code>Control + Command + T</code> 可觸發雙行重組。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 常見問題與須知 -->
+    <section class="faq-section" style="margin: 3rem 0;">
+      <h2 style="color: var(--page-heading); border-bottom: 2px solid var(--page-border); padding-bottom: 0.5rem;">
+        <i class="fas fa-circle-question"></i> 常見問題摎已知限制
+      </h2>
+
+      <div class="faq-item">
+        <div class="faq-q"><i class="fas fa-lock" style="color: var(--page-accent);"></i> 企盤敢會紀錄或搜集𠊎打字个內容？</div>
+        <p class="faq-a">
+          <strong>絕對毋會！</strong>客源翠企盤 100% 本機離線運作，無連接任何外部雲端伺服器，無請求網路存取權限。你輸入个字句、自學詞庫與打字習慣，全部僅僅保存在你自家个手機或電腦裡肚，敬請安心創作。
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><i class="fas fa-mobile-screen" style="color: var(--page-accent);"></i> iOS（iPhone / iPad）摎 Windows 敢有支援？</div>
+        <p class="faq-a">
+          目前社群封測初期優先專注於 <strong>Android</strong> 摎 <strong>macOS</strong>。iOS、Windows 摎 Linux 版本正在軟體架構排程中，待穩定後會陸續開放測試。
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><i class="fas fa-triangle-exclamation" style="color: #eab308;"></i> 打字若搵毋著特定詞、或音讀有誤要仰般辦？</div>
+        <p class="faq-a">
+          這係社群封測最需要大家幫忙个地方！若遇到缺字、候選排序怪怪、或音讀需要勘誤，歡迎隨時透過下方回饋表單或 GitHub 回報，𫣆俚會持續校對收納進客源翠詞庫。
+        </p>
+      </div>
+    </section>
+
+    <!-- 回饋與社群管道 -->
+    <section style="background: var(--page-accent-light); border: 1px solid var(--page-border); border-radius: 16px; padding: 2rem; text-align: center; margin-top: 3rem;">
+      <h3 style="margin: 0 0 0.5rem 0; color: var(--page-heading); font-size: 1.4rem;">
+        <i class="fas fa-comments"></i> 意見回饋摎問題回報
+      </h3>
+      <p style="max-width: 600px; margin: 0 auto 1.5rem auto; font-size: 0.95rem; line-height: 1.7;">
+        試用過程肚若有任何想法、發現 bug 或打字感受，恁仔細請話𫣆俚知！每一隻回饋都係客話數位工具成長个珍貴養分：
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="https://github.com/aiuanyu/HakSpring-Kipan/issues" target="_blank" rel="noopener noreferrer" class="download-btn" style="background-color: #24292e; margin: 0;">
+          <i class="fab fa-github"></i> GitHub Issues 回報
+        </a>
+        <a href="https://forms.gle/" target="_blank" rel="noopener noreferrer" class="download-btn" style="background-color: var(--page-accent); margin: 0;" id="feedbackFormBtn">
+          <i class="fas fa-clipboard-list"></i> 填寫封測使用回饋問卷
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align: center; padding: 2rem 1rem; color: #888; font-size: 0.85rem; border-top: 1px solid var(--page-border);">
+    <p style="margin: 0 0 0.5rem 0;">客源翠 HakSpring ‧ 企盤 Kipan 輸入法開發小組</p>
+    <p style="margin: 0;">本軟體基於「台語齒盤」（Apache-2.0）軟分叉並專注客話適配開發 ‧ 辭典資料來源：教育部客語辭典與認證詞彙</p>
+  </footer>
+
+  <script>
+    // Tab 切換邏輯
+    document.querySelectorAll('.guide-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        document.querySelectorAll('.guide-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.guide-tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const content = document.getElementById(targetTab);
+        if (content) content.classList.add('active');
+      });
+    });
+
+    // 試打橫框計字與範例填入
+    const sandbox = document.getElementById('sandboxInput');
+    const charCount = document.getElementById('charCount');
+    const clearBtn = document.getElementById('clearSandboxBtn');
+
+    if (sandbox && charCount) {
+      sandbox.addEventListener('input', () => {
+        charCount.textContent = `${sandbox.value.length} 字`;
+      });
+    }
+
+    if (clearBtn && sandbox && charCount) {
+      clearBtn.addEventListener('click', () => {
+        sandbox.value = '';
+        charCount.textContent = '0 字';
+        sandbox.focus();
+      });
+    }
+
+    document.querySelectorAll('.sample-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const text = pill.getAttribute('title') || pill.textContent;
+        const pinyin = pill.getAttribute('data-pinyin') || '';
+        if (sandbox) {
+          sandbox.value += (sandbox.value ? '\n' : '') + `【試打範例】拼音：${pinyin} 👉 目標：${text}`;
+          if (charCount) charCount.textContent = `${sandbox.value.length} 字`;
+          sandbox.focus();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

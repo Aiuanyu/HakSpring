@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="100%" height="100%">
+  <!-- 客源翠企盤 Android 自適應圖示：構想 3-1 方案 3A（大導角方圓鍵帽 × 雙露珠鍵帽頂面內收納）
+       畫布 108×108 dp（1 單位＝1 dp）｜桌面可見區 72×72 dp（圓形桌面半徑 36）｜安全圓 66 dp（半徑 33）
+       第一個 rect 是背景層，其餘是前景層（tools/hakfa/build-kipan-icons.py 照這個切）。
+       前景整組往下平移 1.7 dp：原稿鍵帽比畫布中心高約 2 dp，頂面兩個圓角離中心 34.2 dp，超出安全圓（原註解寫 32.95 dp 是錯的）；
+       平移後 本體最遠 32.9 dp ≤ 33.0、連陰影最遠 33.9 dp < 36（桌面圓邊）。數字是腳本產生圖檔時實際量的，見 docs/hakfa/android-icon-metrics.json。 -->
+  <defs>
+    <linearGradient id="c31_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eae3f1"/>
+      <stop offset="60%" stop-color="#e3daec"/>
+      <stop offset="100%" stop-color="#dcd2e7"/>
+    </linearGradient>
+    <linearGradient id="c31_key" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#245d48"/>
+      <stop offset="100%" stop-color="#162e24"/>
+    </linearGradient>
+    <linearGradient id="c31_h" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eafbd0"/>
+      <stop offset="40%" stop-color="#d2dfd0"/>
+      <stop offset="100%" stop-color="#aa96b7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. 背景層（淡吊菜老鼠色 #EAE3F1 -> #DCD2E7） -->
+  <rect width="108" height="108" fill="url(#c31_bg)"/>
+
+  <g transform="translate(0 1.7)">
+
+  <!-- 2. 前景層：大導角方圓立體鍵帽 -->
+  <rect x="23.8" y="25.4" width="60.4" height="58.4" rx="23.8" fill="#0d1b15" opacity="0.88"/>
+  <rect x="23.8" y="23.8" width="60.4" height="57.4" rx="23.2" fill="#1b4636" stroke="#245d48" stroke-width="1.2"/>
+  <rect x="26.0" y="22.8" width="56.0" height="54.0" rx="20.8" fill="url(#c31_key)" stroke="#678c3f" stroke-width="1.4"/>
+
+  <!-- 底部空白鍵盲打定位線 -->
+  <path d="M 38.0 71.2 L 70.0 71.2" stroke="#aa96b7" stroke-width="1.8" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- H/h 游標與泉湧拱門（微調左下重心，騰出右上深綠舞台給嫩芽與雙露珠） -->
+  <path d="M 36.8 38.0 L 36.8 64.8" stroke="#eafbd0" stroke-width="4.0" stroke-linecap="round"/>
+  <path d="M 36.8 51.0 C 41.2 42.4, 57.2 42.4, 60.2 51.0 L 60.2 64.8" stroke="url(#c31_h)" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+  <path d="M 36.8 53.8 L 60.2 53.8" stroke="#aa96b7" stroke-width="1.9" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- 雙片嫩芽（完全舒展於深綠鍵帽頂面內） -->
+  <path d="M 60.0 48.2 C 62.2 40.6, 66.8 35.2, 70.6 35.0 C 69.4 41.0, 65.2 44.8, 60.0 48.2 Z" fill="#eafbd0"/>
+  <path d="M 61.2 46.0 C 56.2 40.8, 58.4 32.4, 63.6 30.2 C 64.8 36.0, 63.2 41.8, 61.2 46.0 Z" fill="#678c3f"/>
+
+  <!-- 葉尖兩顆露珠（100% 位於深翠綠頂面內，高反差晶瑩醒目） -->
+  <circle cx="71.2" cy="31.2" r="2.1" fill="#eafbd0"/>
+  <circle cx="75.2" cy="35.5" r="1.55" fill="#d0bee3"/>
+  </g>
+</svg>
