@@ -7566,12 +7566,17 @@ function initializeAppUI() {
   }
 
   /**
-   * Helper function: Scroll a specific td into view.
+   * Helper function: 窄螢幕捲動。詞摎句兩個音檔都愛放，就捲到該音檔个 td（詞抑係句）；
+   * 淨有一個音檔（比將講高級詞無例句音檔）就捲到整張卡片（tr）中央。
    */
   function scrollTdIntoView(audioElement) {
     if (audioElement && isNarrowLayout()) {
-      const td = audioElement.closest('td');
-      if (td) td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const row = audioElement.closest('tr');
+      const audios = row ? Array.from(row.querySelectorAll('audio.media')) : [];
+      const bothPlayable =
+        audios.length >= 2 && audios.slice(0, 2).every((a) => a.dataset.skip !== 'true');
+      const target = bothPlayable ? audioElement.closest('td') : row;
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
@@ -7764,10 +7769,11 @@ function initializeAppUI() {
 
     // 窄螢幕（手機版 td 變垂直排列）時，不要整列捲動，改為播個別音檔時捲動 td
     // 若兩個音檔皆被跳過或沒有音檔，則退回捲動 tr 確保焦點
-    const willSkipBoth = (!wordAudio || wordAudio.dataset.skip === 'true') &&
-                         (!sentenceAudio || sentenceAudio.dataset.skip === 'true');
+    // 詞摎句兩個音檔愛攏有，窄螢幕正逐個 td 捲動；淨有一個（高級詞）抑係兩個都無，就捲整張卡片
+    const bothPlayable = wordAudio && wordAudio.dataset.skip !== 'true' &&
+                         sentenceAudio && sentenceAudio.dataset.skip !== 'true';
 
-    if (!isNarrowLayout() || willSkipBoth) {
+    if (!isNarrowLayout() || !bothPlayable) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
