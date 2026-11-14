@@ -79,6 +79,19 @@ Work status for HakSpring (website) and Kipan lives on a kanban in the Obsidian 
 - Run `python3 <vault>/創作/程式/HakSpring/看板/check.py` (read-only) before wrapping up.
 - If you cannot reach the vault (e.g. a cloud session), say so in your report instead of skipping silently, so the coordinator can update the card.
 
+## 測試網址回報慣例 (Cloudflare Test URL Reporting)
+- **【鐵則】commit 或開 PR 時，對話裡必須直接寫出 Cloudflare 測試網域網址**，方便平哥直接點開測試，毋使另外去翻 Cloudflare Dashboard。
+- **網址規則**：
+    - 正式站：`https://hakspring.pages.dev/`
+    - 分支預覽站：`https://<分支名>.hakspring.pages.dev/`。分支名全部轉小寫，非英數字元（如 `/`、`_`、`.`）一律換成 `-`。例：目前分支 `ccr-6491c4a6-9nmdfi` → `https://ccr-6491c4a6-9nmdfi.hakspring.pages.dev/`。
+- **查詢方式（以部署結果為準，毋好只按命名推算）**：
+    - 有開 PR 時：用 GitHub 工具 `pull_request_read`（`method: get_check_runs`）讀 PR head 的 check runs，找 `Cloudflare Pages` 那一條，用 `get_check_run` 讀其 `output.summary`，裡面的 `Branch Preview URL` 就是分支預覽站網址，`Preview URL`（`<8 位部署 ID>.hakspring.pages.dev`）是這次部署的網址。
+    - 只限 PR head 的 commit 查得到。直接推到 `main` 或 PR 中間的 commit，這些工具查不到，要寫明「此 commit 無法查得部署網址」，毋好亂猜。
+    - 命名規則（`<分支名>.hakspring.pages.dev`）只做對照用，毋好當成已確認的網址。
+- **GitHub 細節**：PR 描述（body）愛寫入上述查得个測試網址；寫明部署狀態（成功／失敗／尚未完成）。
+- **回報時機**：每次 commit 煞、推上去、或開 PR 之後，在回覆末尾列出「測試網址」一行（分支預覽站優先，正式站另外標註）。
+- **誠實原則**：Cloudflare 部署毋一定完成，寫網址以前毋好假設部署一定好；查毋到部署狀態，愛註明「尚未確認部署」。
+
 ## 提交慣例 (Submission Conventions)
 - **【鐵則】Commit Message 必須使用客語（Hakka）撰寫**：
     - 專案的所有 Git commit message 內文與說明，**必須**使用臺灣客家語（四縣／海陸等共通詞彙，如「个」、「摎」、「在」、「肚底／裡肚」、「單淨」、「無共樣」、「毋使」等）撰寫。
