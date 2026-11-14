@@ -3767,8 +3767,13 @@ function getGlobalRepeatCount() {
 function autoRecordAudioProfile(speed, repeat) {
   const key = getCurrentAudioProfileKey();
   if (!key) return;
-  const differs = speed !== getBasePlaybackSpeed() || repeat !== getBaseRepeatCount();
-  if (differs) {
+  // 預設值：速度 1x；擺數高級用設定頁滑桿、其他 1 擺。舊版播放面板會直接改「基準」記憶值（playbackSpeed 等），
+  // 所以毋好單淨摎基準比——基準若已經被舊版改過，選一樣个值就會漏記。愛摎預設、基準兩邊都共樣，正算「無必要記」。
+  const defaultRepeat = isAdvancedLevel() ? getCertAdvancedRepeatCount() : 1;
+  const redundant =
+    speed === 1.0 && repeat === defaultRepeat &&
+    speed === getBasePlaybackSpeed() && repeat === getBaseRepeatCount();
+  if (!redundant) {
     saveAudioProfile(key, speed, repeat);
   } else if (getAudioProfile(key)) {
     deleteAudioProfile(key);
