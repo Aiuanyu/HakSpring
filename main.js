@@ -7846,6 +7846,8 @@ function initializeAppUI() {
                 currentAudioIndex,
               )
             ) {
+              // 窄螢幕：重播詞當時，捲轉去詞个位置（頭前正放完例句）
+              scrollTdIntoView(wordAudio);
               currentAudio = wordAudio;
               wordAudio.currentTime = 0;
               applyPlaybackSpeedAndPitch(wordAudio);
@@ -7874,6 +7876,7 @@ function initializeAppUI() {
             currentAudioIndex,
           )
         ) {
+          scrollTdIntoView(wordAudio);
           wordAudio.currentTime = 0;
           applyPlaybackSpeedAndPitch(wordAudio);
           wordAudio.play().catch((e) => {
@@ -8177,6 +8180,7 @@ function initializeAppUI() {
     const playSentence = () => {
       if (!isSingleWordLooping || signal.aborted) return;
       if (sentenceAudio && sentenceAudio.src) {
+        scrollTdIntoView(sentenceAudio);
         sentenceAudio.currentTime = 0;
         applyPlaybackSpeedAndPitch(sentenceAudio);
         sentenceAudio.play().catch((e) => {
@@ -8197,6 +8201,7 @@ function initializeAppUI() {
     const playWord = () => {
       if (!isSingleWordLooping || signal.aborted) return;
       if (wordAudio && wordAudio.src) {
+        scrollTdIntoView(wordAudio);
         wordAudio.currentTime = 0;
         applyPlaybackSpeedAndPitch(wordAudio);
         wordAudio.play().catch((e) => {
