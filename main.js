@@ -3516,14 +3516,9 @@ function getPlaybackSpeedStorageKey() {
 }
 
 // 依目前級別，從 localStorage 載入對應个播放速度（預設 1x）
-function loadPlaybackSpeedForCurrentLevel() {
+// 無腔級設定時个基準速度（舊版依高級／非高級分開記，預設 1x）
+function getBasePlaybackSpeed() {
   let speed = 1.0;
-  const profile = getAudioProfile(getCurrentAudioProfileKey());
-  if (profile) {
-    g_playbackSpeed = profile.speed;
-    updateSpeedMenuUI(profile.speed);
-    return profile.speed;
-  }
   try {
     const saved = localStorage.getItem(getPlaybackSpeedStorageKey());
     if (saved) {
@@ -3533,6 +3528,12 @@ function loadPlaybackSpeedForCurrentLevel() {
   } catch (e) {
     console.warn('讀取播放速度失敗:', e);
   }
+  return speed;
+}
+
+function loadPlaybackSpeedForCurrentLevel() {
+  const profile = getAudioProfile(getCurrentAudioProfileKey());
+  const speed = profile ? profile.speed : getBasePlaybackSpeed();
   g_playbackSpeed = speed;
   updateSpeedMenuUI(speed);
   return speed;
@@ -3596,16 +3597,9 @@ function setupPlaybackSpeedControls() {
       if (e.target.tagName === 'LI') {
         const newSpeed = parseFloat(e.target.dataset.speed);
         if (isNaN(newSpeed) || newSpeed < 0.5 || newSpeed > 3.0) return;
+        // 記住這個腔級最新个設定（摎基準無共樣就自動新增），下擺開這個腔級會自動套用
+        autoRecordAudioProfile(newSpeed, getGlobalRepeatCount());
         g_playbackSpeed = newSpeed;
-        // 這個腔級有自訂設定，就更新自訂設定（毋然下擺切換腔級會跳轉去）
-        const profileKey = getCurrentAudioProfileKey();
-        const profile = getAudioProfile(profileKey);
-        if (profile) saveAudioProfile(profileKey, newSpeed, profile.repeat);
-        try {
-          localStorage.setItem(getPlaybackSpeedStorageKey(), newSpeed);
-        } catch (err) {
-          console.warn('儲存播放速度失敗:', err);
-        }
 
         updateSpeedMenuUI(newSpeed);
         applyGlobalSpeedToAudioElements();
@@ -3753,9 +3747,8 @@ function updateRepeatControlState() {
   }
 }
 
-function getGlobalRepeatCount() {
-  const profile = getAudioProfile(getCurrentAudioProfileKey());
-  if (profile) return profile.repeat;
+// 無腔級設定時个基準擺數
+function getBaseRepeatCount() {
   if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
     return getCertAdvancedRepeatCount();
   }
@@ -3763,6 +3756,24 @@ function getGlobalRepeatCount() {
   if (isNaN(val) || val < 1) return 1;
   if (val > 3) return 3;
   return val;
+}
+
+function getGlobalRepeatCount() {
+  const profile = getAudioProfile(getCurrentAudioProfileKey());
+  return profile ? profile.repeat : getBaseRepeatCount();
+}
+
+// 使用者在播放面板改速度／擺數：摎基準無共樣就自動記入這個腔級个設定，共樣就移掉（維持清單單淨）
+function autoRecordAudioProfile(speed, repeat) {
+  const key = getCurrentAudioProfileKey();
+  if (!key) return;
+  const differs = speed !== getBasePlaybackSpeed() || repeat !== getBaseRepeatCount();
+  if (differs) {
+    saveAudioProfile(key, speed, repeat);
+  } else if (getAudioProfile(key)) {
+    deleteAudioProfile(key);
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('hakkaAudioProfilesChanged'));
 }
 
 function setupRepeatControls() {
@@ -3789,15 +3800,8 @@ function setupRepeatControls() {
       if (e.target.tagName === 'LI') {
         const newRepeat = parseInt(e.target.dataset.repeat, 10);
 
-        const profileKey = getCurrentAudioProfileKey();
-        const profile = getAudioProfile(profileKey);
-        if (profile) saveAudioProfile(profileKey, profile.speed, newRepeat);
-
-        if (g_currentDialectInfo && g_currentDialectInfo.級 === '高') {
-          localStorage.setItem('certAdvancedRepeatCount', newRepeat);
-        } else {
-          localStorage.setItem('globalRepeatCount', newRepeat);
-        }
+        // 記住這個腔級最新个設定（摎基準無共樣就自動新增）
+        autoRecordAudioProfile(g_playbackSpeed, newRepeat);
 
         updateRepeatMenuUI(newRepeat);
         menu.style.display = 'none';

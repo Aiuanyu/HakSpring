@@ -231,7 +231,7 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 | 美濃腔 | `showMeinungFill` | `preferences` | ✅ | LWW（`mergeBoolPref`；值為布林，未設定視為 `false`；雲端拉下新值時會即時更新開關摎畫面） |
 | 雲端同步金鑰 | `hakkaSyncKey` | —（伺服器淨存雜湊） | ❌ | 不同步、毋進備份檔／手動共步網址（等於帳號密碼，淨存本機，使用者自家抄去別台輸入） |
 | 雲端版本號 | `hakkaSyncCloudRev` | — | ❌ | 不同步（本機看著个雲端 `updated_at`，樂觀鎖用；換金鑰會清掉） |
-| 腔級播放設定 | `hakkaAudioProfiles` | `audio_profiles` | ✅ | 逐 key LWW（`mergeAudioProfiles`；值 `[速度, 擺數, 時間戳ms, 刪除旗標]`，刪除用 tombstone；有設定个腔級優先於全域播放速度／擺數） |
+| 腔級播放設定 | `hakkaAudioProfiles` | `audio_profiles` | ✅ | 逐 key LWW（`mergeAudioProfiles`；值 `[速度, 擺數, 時間戳ms, 刪除旗標]`，刪除用 tombstone；有設定个腔級優先於全域播放速度／擺數；使用者在播放面板改速度／擺數，摎基準無共樣就自動記入該腔級，共樣就移掉） |
 | 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
 | 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
