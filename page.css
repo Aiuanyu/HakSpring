@@ -199,6 +199,10 @@ body {
   border-radius: 6px;
 }
 
+.page-content rt {
+  font-size: 50%;
+}
+
 /* Day Count highlight */
 [data-day-count] {
   font-weight: 700;
