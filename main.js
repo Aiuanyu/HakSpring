@@ -5694,6 +5694,7 @@ function initializeAppUI() {
           event.preventDefault();
           searchInput.focus();
           searchInput.select();
+          openSearchPopup();
           console.log('Global hotkey: / or Ctrl/Cmd+/ pressed, focused search input.');
           return;
         }
@@ -9480,21 +9481,23 @@ function initializeAppUI() {
     selectionPopupBackdrop.addEventListener('click', closePopup);
   }
 
+  const openSearchPopup = () => {
+    if (!searchPopup || !searchContainer || !searchInput) return;
+    searchPopup.style.display = 'block';
+    searchPopup.classList.add('active');
+    searchContainer.classList.add('active');
+    searchInput.setAttribute('aria-expanded', 'true');
+  };
+
+  const closeSearchPopup = () => {
+    if (!searchPopup || !searchContainer || !searchInput) return;
+    searchPopup.style.display = 'none';
+    searchPopup.classList.remove('active');
+    searchContainer.classList.remove('active');
+    searchInput.setAttribute('aria-expanded', 'false');
+  };
+
   if (searchInput) {
-    const openSearchPopup = () => {
-      searchPopup.style.display = 'block';
-      searchPopup.classList.add('active');
-      searchContainer.classList.add('active');
-      searchInput.setAttribute('aria-expanded', 'true');
-    };
-
-    const closeSearchPopup = () => {
-      searchPopup.style.display = 'none';
-      searchPopup.classList.remove('active');
-      searchContainer.classList.remove('active');
-      searchInput.setAttribute('aria-expanded', 'false');
-    };
-
     searchInput.addEventListener('click', (event) => {
       event.stopPropagation();
       openSearchPopup();
