@@ -108,3 +108,26 @@ runTest('Mismatched segments fallback to null', () => {
   const res = splitRubyByBaseBreakpoints(base, rt);
   assert.strictEqual(res, null);
 });
+
+// 8. 整詞並列斜線（音節數與漢字字數相同）→ 斷行，漢字兩行都顯示
+runTest('Whole-word slash alternatives (equal syllables) split into lines', () => {
+  const res = splitRubyByBaseBreakpoints('溜走', 'tiu zèu/liu zèu');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['溜走', '溜走']);
+  assert.deepStrictEqual(res.rtSegs, ['tiu zèu/', 'liu zèu']);
+});
+
+runTest('Whole-word slash with 4 syllables and sandhi ruby tags', () => {
+  const res = splitRubyByBaseBreakpoints('咚咚咚咚', 'dǔng dǔng <ruby class="x">dung<rt>33</rt></ruby> dung/dǔng dúng dùng dùng');
+  assert.notStrictEqual(res, null);
+  assert.strictEqual(res.rtSegs.length, 2);
+  assert.strictEqual(res.rtSegs[1], 'dǔng dúng dùng dùng');
+});
+
+// 9. 單一音節異讀 → 跳過
+runTest('Single-syllable alternatives are skipped', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('欣賞', 'hím/hiún sòng'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('拔', 'bad/pad'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('起懶根', 'hì lán/nán gín'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('食自家', 'siid qi/cii/qìd gá'), null);
+});

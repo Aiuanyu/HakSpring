@@ -120,6 +120,83 @@ function isFirefox() {
 }
 
 /**
+ * 認證詞彙標音有斜線時，判斷係「整詞並列」抑係「單一音節異讀」。
+ * - 整詞並列：斜線兩爿（逐段）个音節數攏摎漢字字數相同，且字數 ≥ 2
+ *   （例：溜走 tiu zèu/liu zèu）→ 斷做兩行，漢字兩行都顯示，各配一段標音。
+ * - 單一音節異讀（例：欣賞 hím/hiún sòng、拔 bad/pad）→ 毋斷，回傳 null。
+ * 標音含括號、【】註記者保守毋處理。此邏輯淨 Firefox 个 adjustRubyFontSize 會用著。
+ *
+ * @param {string} baseHtml - ruby 基礎文字（漢字 HTML）
+ * @param {string} rtHtml - ruby rt 標音 HTML
+ * @param {function} tokenize - 將 HTML 切成 tag／文字 token 个函式
+ * @returns {{ baseSegs: string[], rtSegs: string[] } | null}
+ */
+function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
+  if (!rtHtml) return null;
+
+  // 抽出純文字（連 sandhi ruby 裡肚个 <rt>變調數字</rt> 一齊拿忒）
+  const plain = (html) => html.replace(/<rt[^>]*>.*?<\/rt>/gis, '').replace(/<[^>]+>/g, '');
+  const rtPlain = plain(rtHtml);
+  if (!rtPlain.includes('/')) return null;
+  if (/[（）()【】\[\]]/.test(rtPlain) || /phonetic-paren|phonetic-note/i.test(rtHtml)) return null;
+  const basePlain = plain(baseHtml);
+  if (/[（）()【】\[\]／/]/.test(basePlain)) return null;
+
+  // 漢字字數（含擴充區的代理對字，毋算空白摎標點）
+  const hanCount = Array.from(basePlain).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
+  if (hanCount < 2) return null;
+
+  const parts = rtPlain.split('/');
+  if (parts.length < 2) return null;
+  const syllableCount = (s) => s.split(/\s+/).filter(Boolean).length;
+  if (!parts.every((p) => syllableCount(p) === hanCount)) return null;
+
+  // 依斜線切分 rt HTML（保留並補齊 <ruby> 等標籤）
+  const rtSegs = [];
+  let cur = '';
+  const openTags = [];
+  const closeAll = () => openTags.slice().reverse().map((t) => `</${t.tag}>`).join('');
+  const reopenAll = () => openTags.map((t) => t.full).join('');
+  for (const t of tokenize(rtHtml)) {
+    if (t.isTag) {
+      const m = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
+      if (m) {
+        const tagName = m[1].toLowerCase();
+        const isClose = t.text.startsWith('</');
+        const isSelf = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(tagName);
+        if (!isClose && !isSelf) {
+          openTags.push({ tag: tagName, full: t.text });
+        } else if (isClose) {
+          for (let j = openTags.length - 1; j >= 0; j--) {
+            if (openTags[j].tag === tagName) { openTags.splice(j, 1); break; }
+          }
+        }
+      }
+      cur += t.text;
+    } else {
+      // <rt> 內部（sandhi 數字）毋會有斜線，直接逐字處理
+      for (const ch of t.text) {
+        if (ch === '/') {
+          cur += ch;
+          rtSegs.push(cur + closeAll());
+          cur = reopenAll();
+        } else {
+          cur += ch;
+        }
+      }
+    }
+  }
+  if (plain(cur).trim().length > 0) rtSegs.push(cur + closeAll());
+
+  if (rtSegs.length !== parts.length) return null;
+
+  return {
+    baseSegs: rtSegs.map(() => baseHtml),
+    rtSegs: rtSegs.map((seg, i) => (i > 0 ? seg.trimStart() : seg)),
+  };
+}
+
+/**
  * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
  * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
  *
@@ -152,7 +229,8 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   }
 
   if (!baseHasParen && !baseHasSlash) {
-    return null;
+    // 漢字無斷點時，看標音是否係「整詞並列」（例：tiu zèu/liu zèu）个斜線
+    return splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize);
   }
 
   function splitTokens(tokens, isRt, targetCount) {
