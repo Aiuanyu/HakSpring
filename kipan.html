@@ -376,6 +376,74 @@
       color: var(--page-text);
     }
 
+    /* 打字說明與功能設定卡片 */
+    .manual-section {
+      margin: 2.5rem 0;
+    }
+    .manual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .manual-card {
+      background: var(--page-card-bg);
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      padding: 1.2rem 1.35rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .manual-card.manual-card-wide {
+      grid-column: 1 / -1;
+    }
+    .manual-card h4 {
+      margin: 0 0 0.65rem 0;
+      font-size: 1.05rem;
+      color: var(--page-heading);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .manual-card h4 i {
+      color: var(--page-accent);
+    }
+    .manual-card ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 0.93rem;
+      line-height: 1.75;
+    }
+    .manual-card li {
+      margin-bottom: 0.35rem;
+    }
+    .manual-card li:last-child {
+      margin-bottom: 0;
+    }
+    .manual-card code {
+      background: var(--page-code-bg);
+      color: var(--page-heading);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    .typing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .typing-table th,
+    .typing-table td {
+      border: 1px solid var(--page-border);
+      padding: 0.5rem 0.7rem;
+      text-align: left;
+    }
+    .typing-table th {
+      background: var(--page-accent-light);
+      color: var(--page-heading);
+      font-weight: 600;
+    }
+
     /* 暫時翻譯警語斜條 Ribbon */
     .wip-ribbon {
       position: fixed;
@@ -659,6 +727,173 @@
       </div>
     </section>
 
+    <!-- 打字說明與功能設定 -->
+    <section class="manual-section" id="typing-manual">
+      <h2 style="color: var(--page-heading); border-bottom: 2px solid var(--page-border); padding-bottom: 0.5rem;">
+        <i class="fas fa-keyboard"></i> 打字說明摎功能設定
+      </h2>
+
+      <div class="guide-tabs">
+        <button class="guide-tab-btn active" data-tab="typing-guide-tab">
+          <i class="fas fa-pen-nib"></i> 打字說明
+        </button>
+        <button class="guide-tab-btn" data-tab="feature-settings-tab">
+          <i class="fas fa-sliders"></i> 功能設定
+        </button>
+      </div>
+
+      <!-- 打字說明（繼承上游核心輸入方式） -->
+      <div id="typing-guide-tab" class="guide-tab-content active">
+        <div class="manual-grid">
+          <div class="manual-card manual-card-wide">
+            <h4><i class="fas fa-spell-check"></i> 6 種打字方式（繼承上游核心）</h4>
+            <ul>
+              <li><strong>免聲調、音節打一半、單淨打頭字母</strong>：聲調毋使打，音節乜做得打一半，還係單淨打頭字母。像 <code>hag2fa55</code>、<code>hag2fa</code>、<code>hagfa</code>、<code>hagf</code>、<code>hf</code> 全部尋得著「客話」。</li>
+              <li><strong>整句共下打</strong>：規句連打乜做得，企盤會自家斷音節。像打 <code>ngaioisiidfan</code> 會尋著「𠊎愛食飯」。</li>
+              <li><strong>手動斷音節（連字符）</strong>：想愛自家斷音節，就打連字符 <code>-</code>。像打 <code>zui</code> 會尋著「最」摎「追」，打做 <code>zu-i</code> 正會尋著「注意」摎「主意」。</li>
+              <li><strong>事後補打聲調</strong>：打好字母正打聲調數字，企盤會換做聲調符號（像 <code>hag2fa55</code>）；聲調打毋著，撳一下刪字鍵過打一擺就做得（macOS 亦支援 <code>Control + 數字鍵</code>）。</li>
+            </ul>
+            <table class="typing-table">
+              <thead>
+                <tr>
+                  <th>打法類型</th>
+                  <th>輸入範例</th>
+                  <th>候選結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>帶調／無調／縮寫</td>
+                  <td><code>hag2fa55</code>、<code>hagfa</code>、<code>hagf</code>、<code>hf</code></td>
+                  <td>客話</td>
+                </tr>
+                <tr>
+                  <td>整句連打</td>
+                  <td><code>ngaioisiidfan</code></td>
+                  <td>𠊎愛食飯</td>
+                </tr>
+                <tr>
+                  <td>連字符斷音節</td>
+                  <td><code>zu-i</code>（對比 <code>zui</code>）</td>
+                  <td>注意、主意（最、追）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-language"></i> 輸入系統</h4>
+            <ul>
+              <li>用企盤頂高个工具列切換<strong>客語拼音（HagPinPlus）</strong>摎<strong>英文模式</strong>。</li>
+              <li>支援教育部臺灣客語拼音方案（HagPinPlus），四縣、南四縣、海陸、大埔、饒平、詔安六腔全部做得順暢打字。</li>
+              <li>未來乜會陸續加入客語白話字（PFS）等更多書寫系統支援。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-exchange-alt"></i> 羅馬字轉換器（漢羅切換）</h4>
+            <ul>
+              <li>空白鍵右邊个轉換鍵，做得切換<strong>漢字模式</strong>摎<strong>羅馬字模式</strong>。預設係漢字模式，擇候選詞會送出漢字。</li>
+              <li>標點符號乜會跈等換：漢字模式用全形，羅馬字模式用半形。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-font"></i> 自動大寫（大寫／細寫）</h4>
+            <ul>
+              <li>打開「自動大寫」，一句个頭一个字母會自動變大寫，Shift 鍵會變色反白；關起來就全部打細寫。</li>
+              <li>連續撳 Shift 兩下係 Caps Lock，會一路打大寫，過撳一下就解除。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-hand-pointer"></i> 單手模式</h4>
+            <ul>
+              <li>長撳工具列个企盤圖示，擇左手還係右手，企盤就會移去該片。</li>
+              <li>邊脣个撳鈕做得「換邊」，還係轉去「一般」。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 功能設定 -->
+      <div id="feature-settings-tab" class="guide-tab-content">
+        <div class="manual-grid">
+          <div class="manual-card">
+            <h4><i class="fas fa-list-ol"></i> 3 種候選詞顯示</h4>
+            <ul>
+              <li>在「設定」&rarr;「候選詞顯示」擇用：<strong>漢羅對應</strong>（共下顯示，用轉換鍵決定送出）、<strong>漢羅合用</strong>（分兩格，擇哪一格送哪一種）、<strong>羅馬字</strong>（單淨顯示並送出羅馬字）。</li>
+              <li>說明：企盤介面講著个『諸夏字』，同「漢字」同義。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-sliders"></i> 打字設定</h4>
+            <ul>
+              <li><strong>當在打个字放第一格</strong>：候選詞頭一格就係你打个羅馬字，辭典無收个詞乜做得直接送出（關起來時撳 Enter 亦可送出）。</li>
+              <li><strong>雙書寫標註</strong>：漢字摎羅馬字共下送出，像 <code>客話 (Hag-fa)</code>。</li>
+              <li><strong>音節分隔摎自動閬縫</strong>：音節分隔做得擇連字符（<code>hag-fa</code>）、閬縫（<code>hag fa</code>）還係無隔開（<code>hagfa</code>）；打開「自動加入閬縫」送出羅馬字後會自動加空格。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-lightbulb"></i> 連續建議詞</h4>
+            <ul>
+              <li>擇一隻詞之後，企盤會建議後一隻：像擇「恁」，「早」就會出現（恁早！）。</li>
+              <li>辭典無收个詞句，打過一擺就會記下來，下擺會在建議裡肚出現。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-book"></i> 辭典管理摎尋詞</h4>
+            <ul>
+              <li>預設包含教育部臺灣客語常用詞辭典、客家委員會認證詞彙等語料。</li>
+              <li>「詞庫」&rarr;「辭典管理」做得開關各腔辭典，亦有用「尋字」功能用漢字還係羅馬字查詞。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-plus-circle"></i> 自訂詞庫</h4>
+            <ul>
+              <li>辭典無个詞，做得在「詞庫」&rarr;「自訂詞庫」撳 <code>＋</code>，輸入羅馬字摎漢字。</li>
+              <li>乜做得匯入無標題个 CSV：第 1 欄羅馬字，第 2 欄漢字。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-history"></i> 學習紀錄</h4>
+            <ul>
+              <li>企盤會記等擇過个詞摎打過个詞句，輒輒用个排較頭前；在「詞庫」&rarr;「學習紀錄」做得排序還係刪忒。</li>
+              <li>有漢字个紀錄做得直接加入自訂詞庫（Android 撳該項个 <code>＋</code>、iOS 向右片滑）。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-palette"></i> 字型摎外觀</h4>
+            <ul>
+              <li>「設定」&rarr;「字型設定」提供支援客語特殊用字个字型。</li>
+              <li>「主題」頁做得調色目、撳鍵大小摎形狀，乜支援自訂背景相片，逐項都做得恢復預設。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-shield-alt"></i> 資料摎隱私</h4>
+            <ul>
+              <li>自訂詞摎學習紀錄全部放在手機裡肚，毋會送去網路。</li>
+              <li>換手機進前，記得在「詞庫」&rarr;「備份復原」匯出；Android 摎 iOS 都做得匯入。</li>
+            </ul>
+          </div>
+
+          <div class="manual-card">
+            <h4><i class="fas fa-tools"></i> 客語通用轉換器</h4>
+            <ul>
+              <li>本站另有線上轉換工具（<a href="annotation-converter.html" style="color: var(--page-link);">並列格式轉換器</a>／首頁羅馬字轉換工具），摎企盤用共一个核心，結果一致。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 常見問題與須知 -->
     <section class="faq-section" style="margin: 3rem 0;">
       <h2 style="color: var(--page-heading); border-bottom: 2px solid var(--page-border); padding-bottom: 0.5rem;">
@@ -682,7 +917,7 @@
       <div class="faq-item">
         <div class="faq-q"><i class="fas fa-triangle-exclamation" style="color: #eab308;"></i> 打字係講尋毋著特定詞、還係音讀有毋著愛仰般辦？</div>
         <p class="faq-a">
-          這係社群封測盡需要大家𢯭手个所在！係講堵著缺字、候選排序怪怪、還係音讀需要勘誤，歡迎隨時透過下背回饋表單抑係 GitHub 回報，𠊎兜會持續校對收納入客源翠詞庫。
+          這係社群封測盡需要大家𢯭手个所在！係講堵著缺字、候選排序怪怪、還係音讀需要勘誤，歡迎隨時透過下背回饋表單還係 GitHub 回報，𠊎兜會持續校對收納入客源翠詞庫。
         </p>
       </div>
     </section>
@@ -712,12 +947,14 @@
   </footer>
 
   <script>
-    // Tab 切換邏輯
+    // Tab 切換邏輯（各區塊獨立切換，互不干擾）
     document.querySelectorAll('.guide-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        const section = btn.closest('section');
+        if (!section) return;
         const targetTab = btn.getAttribute('data-tab');
-        document.querySelectorAll('.guide-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.guide-tab-content').forEach(c => c.classList.remove('active'));
+        section.querySelectorAll('.guide-tab-btn').forEach(b => b.classList.remove('active'));
+        section.querySelectorAll('.guide-tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         const content = document.getElementById(targetTab);
         if (content) content.classList.add('active');
