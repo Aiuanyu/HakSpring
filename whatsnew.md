@@ -6,9 +6,11 @@
 
 - 2026/11/16 [新] **「客源翠開發誌」開張！** 記錄網站同企盤開發大小事，創刊號記細顧問登場摎企盤第 1 位試用者開箱 👉 [看創刊號](page.html?p=j-20261116-advisor-tester) ｜ [開發誌總目錄](page.html?p=journal)
 
+- 2026/11/05 [公告] <mark class="whatsnew-highlight" style="background: rgba(255, 193, 7, 0.18); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px; display: block; margin: 6px 0; line-height: 1.6; color: inherit;">失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>；共步圖示亦囥佇「網站說明 ℹ️」視窗頂高）。</mark>
+
 - 2026/11/13 [新] 做得設定無共認證腔級自動放送速度、幾下擺（雲端共步設定）
 
-- 2026/11/05 [公告] <mark class="whatsnew-highlight" style="background: rgba(255, 193, 7, 0.18); border-left: 4px solid #ffc107; padding: 8px 12px; border-radius: 4px; display: block; margin: 6px 0; line-height: 1.6; color: inherit;">失禮！因為後台搣毋著，雲端自動共步功能超過免費額，可能愛到 11/24 正恢復。這段時間還係做得用手動共步（<a href="#manual-sync" id="manualSyncLink"><i class="fas fa-arrows-rotate"></i> 請點這位</a>；共步圖示亦囥佇「網站說明 ℹ️」視窗頂高）。</mark>
+- 2026/11/12 [新] 查詞結果表支援單詞循環播放。
 
 - 2026/11/08 [新] **雲端同步金鑰**：免登入、自動共步。到「手動共步」視窗撳「開啟雲端同步」，產生一把金鑰，別台裝置輸入同一把，書籤、學習進度就會自動共步。金鑰就係你个帳號，請自家存好。（Google 登入該套照舊暫停。）
 

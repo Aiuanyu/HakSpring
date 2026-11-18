@@ -740,23 +740,33 @@ function updateMediaSession(track, dialectInfo, isSingleLoop = false) {
   }
 
   // --- New: Calculate overall progress ---
-  const overallIndex = g_currentLevelData.findIndex(
-    (item) => item.編號 === track.編號,
-  );
-  const overallPercentage =
-    ((overallIndex + 1) / g_currentLevelData.length) * 100;
+  const hasLevelData = Array.isArray(g_currentLevelData) && g_currentLevelData.length > 0;
+  const overallIndex = (hasLevelData && track.編號)
+    ? g_currentLevelData.findIndex((item) => item.編號 === track.編號)
+    : -1;
+  const overallPercentage = (hasLevelData && overallIndex !== -1)
+    ? ((overallIndex + 1) / g_currentLevelData.length) * 100
+    : 0;
 
-  let title = `${track.客家語} (${track.編號})`;
+  let title = track.客家語 || '';
+  if (track.編號) {
+    title += ` (${track.編號})`;
+  }
   if (isSingleLoop) {
     title = `[反覆] ${title}`;
   }
 
-  let artist = `${dialectInfo.fullLvlName} - ${g_currentCategory}`;
+  const dialectName = (dialectInfo && dialectInfo.fullLvlName)
+    || (track.sourceName ? getFullLevelName(track.sourceName) : '客源翠');
+  const categoryName = g_currentCategory || (track.sourceType === 'gip' ? '教典' : '查詞結果');
+  let artist = `${dialectName} - ${categoryName}`;
   if (isCategoryLooping) {
     // Read global state for category loop
     artist = `[反覆] ${artist}`;
   }
-  artist = `${artist} (${overallPercentage.toFixed(1)}%)`;
+  if (overallPercentage > 0) {
+    artist = `${artist} (${overallPercentage.toFixed(1)}%)`;
+  }
 
   navigator.mediaSession.metadata = new MediaMetadata({
     title: title,
@@ -3733,12 +3743,16 @@ function updateRepeatControlState() {
   if (btn) {
     if (isSingleWordLooping) {
       btn.disabled = true;
+      btn.setAttribute('disabled', 'true');
       btn.style.opacity = '0.5';
       btn.style.cursor = 'not-allowed';
+      btn.title = '單詞循環中，毋使設定播放次數';
     } else {
       btn.disabled = false;
+      btn.removeAttribute('disabled');
       btn.style.opacity = '1';
       btn.style.cursor = 'pointer';
+      btn.title = '每詞播放幾擺';
 
       // Update UI to reflect current global setting or default
       const count = getGlobalRepeatCount();
@@ -3820,12 +3834,18 @@ function updateNewAudioControlsVisibility() {
   const panel = document.getElementById('newAudioControlsPanel');
   if (panel) {
     if (isPlaying || isPaused || isSingleWordLooping) {
+      const placeholder = document.getElementById('audioControlsPlaceholder');
+      if (placeholder && !placeholder.querySelector('#pauseResumeBtn') && typeof window.setupPlaybackControls === 'function') {
+        window.setupPlaybackControls();
+      }
       panel.style.display = 'flex';
       document.body.classList.add('audio-panel-visible');
       // 切換級別後，速度愛換成該級別个記憶值
       loadPlaybackSpeedForCurrentLevel();
       applyGlobalSpeedToAudioElements();
       updateRepeatControlState();
+      updateReturnButtonVisibility();
+      updateLoopCategoryButtonVisibility();
     } else {
       panel.style.display = 'none';
       document.body.classList.remove('audio-panel-visible');
@@ -4882,9 +4902,11 @@ function initializeAppUI() {
     options = options || {};
     g_currentSearchResults = results; // Store results globally
     let globalRowIndex = (page - 1) * itemsPerPage;
+    if (isSingleWordLooping) stopSingleWordLoop();
     const contentContainer = document.getElementById('generated');
     contentContainer.innerHTML = '';
     updateNewAudioControlsVisibility();
+    updateLoopCategoryButtonVisibility();
     hideFamiliarityFilterUI();
 
     const totalResults = results.length;
@@ -4976,6 +4998,27 @@ function initializeAppUI() {
       // 教典條目釋義摎例句都空時，借用別腔同詞目（見 borrowMissingGipFields）
       const borrowed = isGip ? borrowMissingGipFields(line, 腔, crossDialectResults) : null;
 
+      // 提早計算音檔網址，以便決定 td1 是否加單詞循環播放按鈕
+      const dataKey = isSupp
+        ? null
+        : line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
+      let audioSrc = constructWordAudioUrl(line, dataKey);
+      if (audioSrc) {
+        audioSrc = applyAudioProxy(audioSrc);
+      }
+      let sentenceAudioUrl = null;
+      if (line.sourceType === 'cert') {
+        const sKey = 'cert' + line.sourceName;
+        sentenceAudioUrl = constructSentenceAudioUrl(line, sKey);
+        if (sentenceAudioUrl) {
+          sentenceAudioUrl = applyAudioProxy(sentenceAudioUrl);
+        }
+      }
+      const hasAudio = Boolean(audioSrc || sentenceAudioUrl);
+
+      let wordAudioElem = null;
+      let sentenceAudioElem = null;
+
       if (crossDialectResults.length > 0) {
         const crossDialectBtn = document.createElement('button');
         crossDialectBtn.className = 'crossDialectBtn';
@@ -4983,6 +5026,32 @@ function initializeAppUI() {
         crossDialectBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
         crossDialectBtn.dataset.rowIndex = rowIndex;
         td1.appendChild(crossDialectBtn);
+      }
+
+      // 【新增】有音檔時，在 td1 加單詞循環播放按鈕（共 cert 辭彙樣式一致）
+      if (hasAudio) {
+        const loopOneBtn = document.createElement('button');
+        loopOneBtn.className = 'loop-one-btn';
+        loopOneBtn.title = '循環播放此行';
+        loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
+        if (line.編號) {
+          loopOneBtn.dataset.rowId = line.編號.includes('-') ? line.編號.split('-')[1] : line.編號;
+        }
+        loopOneBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (isSingleWordLooping && singleLoopingAudio.row === item) {
+            stopSingleWordLoop();
+          } else {
+            startSingleWordLoop(
+              wordAudioElem,
+              sentenceAudioElem,
+              item,
+              loopOneBtn,
+              line,
+            );
+          }
+        });
+        td1.appendChild(loopOneBtn);
       }
 
       const sourceSpan = document.createElement('span');
@@ -5019,14 +5088,6 @@ function initializeAppUI() {
       });
       td2.appendChild(document.createElement('br'));
 
-      const dataKey = isSupp
-        ? null
-        : line.sourceType === 'gip' ? line.sourceName : 'cert' + line.sourceName;
-      let audioSrc = constructWordAudioUrl(line, dataKey);
-      if (audioSrc) {
-        audioSrc = applyAudioProxy(audioSrc);
-      }
-
       if (audioSrc) {
         const audio = document.createElement('audio');
         audio.className = 'media';
@@ -5034,6 +5095,7 @@ function initializeAppUI() {
         audio.preload = 'none';
         audio.src = audioSrc;
         td2.appendChild(audio);
+        wordAudioElem = audio;
       }
 
       if (
@@ -5082,18 +5144,15 @@ function initializeAppUI() {
         sentenceSpan.innerHTML = rawSentence;
         td3.appendChild(sentenceSpan);
 
-        if (line.sourceType === 'cert') {
-          const dataKey = 'cert' + line.sourceName;
-          const audioUrl = constructSentenceAudioUrl(line, dataKey);
-          if (audioUrl) {
-            td3.appendChild(document.createElement('br'));
-            const audio2 = document.createElement('audio');
-            audio2.className = 'media';
-            audio2.controls = true;
-            audio2.preload = 'none';
-            audio2.src = audioUrl;
-            td3.appendChild(audio2);
-          }
+        if (sentenceAudioUrl) {
+          td3.appendChild(document.createElement('br'));
+          const audio2 = document.createElement('audio');
+          audio2.className = 'media';
+          audio2.controls = true;
+          audio2.preload = 'none';
+          audio2.src = sentenceAudioUrl;
+          td3.appendChild(audio2);
+          sentenceAudioElem = audio2;
         }
 
         td3.appendChild(document.createElement('br'));
@@ -6423,6 +6482,8 @@ function initializeAppUI() {
       updateResultsSummaryVisibility();
       updateNewAudioControlsVisibility();
     }
+    updateRepeatControlState();
+    updateReturnButtonVisibility();
     setTimeout(adjustHeaderFontSizeOnOverflow, 0);
   }
 
@@ -6706,6 +6767,10 @@ function initializeAppUI() {
     focusRowId = null, // 專屬連結：載入該行前後 20 行並捲到該行，但毋播放
   ) {
     const contentContainer = document.getElementById('generated');
+
+    if (isSingleWordLooping) {
+      stopSingleWordLoop();
+    }
 
     // 1. Reset global state for the new category
     g_currentDialectInfo = dialectInfo;
@@ -7555,6 +7620,8 @@ function initializeAppUI() {
       stopButton.classList.remove('ended');
       stopButton.classList.add('ongoing');
     }
+    updateReturnButtonVisibility();
+    updateRepeatControlState();
 
     playAudio(currentAudioIndex, playbackSessionId); // <-- 【修改此行】傳入新的 ID
   }
@@ -8184,6 +8251,21 @@ function initializeAppUI() {
     // 單詞循環開始，愛顯示浮動控制面板
     updateNewAudioControlsVisibility();
 
+    // 更新浮動面板按鈕外觀：套用 CERT 播放時的 .ongoing 樣式（暗色下為亮黃色）
+    const pauseResumeButton = document.getElementById('pauseResumeBtn');
+    const stopButton = document.getElementById('stopBtn');
+    if (pauseResumeButton) {
+      pauseResumeButton.innerHTML = '<i class="fas fa-pause"></i>';
+      pauseResumeButton.classList.remove('ended');
+      pauseResumeButton.classList.add('ongoing');
+    }
+    if (stopButton) {
+      stopButton.classList.remove('ended');
+      stopButton.classList.add('ongoing');
+    }
+    updateReturnButtonVisibility();
+    updateRepeatControlState();
+
     const playSentence = () => {
       if (!isSingleWordLooping || signal.aborted) return;
       if (sentenceAudio && sentenceAudio.src) {
@@ -8264,8 +8346,89 @@ function initializeAppUI() {
       track: null,
     };
 
+    if (!isPlaying) {
+      const pauseResumeButton = document.getElementById('pauseResumeBtn');
+      const stopButton = document.getElementById('stopBtn');
+      if (pauseResumeButton) {
+        pauseResumeButton.innerHTML = '<i class="fas fa-play"></i>';
+        pauseResumeButton.classList.remove('ongoing');
+        pauseResumeButton.classList.add('ended');
+      }
+      if (stopButton) {
+        stopButton.classList.remove('ongoing');
+        stopButton.classList.add('ended');
+      }
+    }
+
+    updateReturnButtonVisibility();
+    updateRepeatControlState();
     updateNewAudioControlsVisibility();
   }
+
+  /**
+   * 更新「捲回正在播放个行」按鈕顯示狀態。
+   * 只有在 single loop 時才顯示，並套用 CERT 播放時的 .ongoing 樣式（暗色下為亮黃色）；
+   * 非 single loop 時一律隱藏 (display: none)。
+   */
+  function updateReturnButtonVisibility() {
+    const returnBtn = document.getElementById('returnToPlayingBtn');
+    if (returnBtn) {
+      returnBtn.style.display = isSingleWordLooping ? 'inline-flex' : 'none';
+      if (isSingleWordLooping) {
+        returnBtn.classList.add('ongoing');
+        returnBtn.classList.remove('ended');
+      } else {
+        returnBtn.classList.remove('ongoing');
+      }
+    }
+  }
+
+  /**
+   * 更新「循環播放這个類別」按鈕顯示狀態。
+   * 只有在主分類表格（#category-table 存在）時才顯示；
+   * 在純查詞結果表（非主分類 category 表格）中一律隱藏 (display: none)。
+   */
+  function updateLoopCategoryButtonVisibility() {
+    const loopCategoryBtn = document.getElementById('loopCategoryBtn');
+    if (loopCategoryBtn) {
+      const isCategoryTable = Boolean(document.getElementById('category-table'));
+      loopCategoryBtn.style.display = isCategoryTable ? 'inline-flex' : 'none';
+    }
+  }
+
+  /**
+   * 一鍵自動將網頁捲回正在播放的那一行（包含跨腔展開列與主行）。
+   */
+  function scrollToPlayingRow() {
+    let targetRow = null;
+    // 1. 單詞循環模式：最精準指到當前循環的行（包含主行或跨腔展開列）
+    if (isSingleWordLooping && singleLoopingAudio && singleLoopingAudio.row) {
+      targetRow = singleLoopingAudio.row;
+    }
+    // 2. 整類別連續播放模式
+    if (!targetRow && isPlaying) {
+      targetRow = document.getElementById('nowPlaying') || document.querySelector('tr.nowPlaying');
+    }
+    // 3. 備用搜尋 looping-row
+    if (!targetRow) {
+      targetRow = document.querySelector('tr.looping-row');
+    }
+
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('focus-row-flash');
+      setTimeout(() => {
+        targetRow.classList.remove('focus-row-flash');
+      }, 2000);
+    }
+  }
+
+  window.startSingleWordLoop = startSingleWordLoop;
+  window.stopSingleWordLoop = stopSingleWordLoop;
+  window.scrollToPlayingRow = scrollToPlayingRow;
+  window.updateReturnButtonVisibility = updateReturnButtonVisibility;
+  window.updateLoopCategoryButtonVisibility = updateLoopCategoryButtonVisibility;
+  window.setupPlaybackControls = setupPlaybackControls;
 
   function setupPlaybackControls(
     dialectInfo,
@@ -8279,15 +8442,44 @@ function initializeAppUI() {
     placeholder.innerHTML = `
         <button id="pauseResumeBtn" title="暫停/繼續"><i class="fas fa-pause"></i></button>
         <button id="stopBtn" title="停止"><i class="fas fa-stop"></i></button>
+        <button id="returnToPlayingBtn" title="捲回正在播放个行" style="display: none;"><span class="return-icon">⏎</span></button>
         <button id="loopCategoryBtn" title="循環播放這个類別"><i class="fas fa-sync-alt"></i></button>
     `;
 
     const pauseResumeButton = document.getElementById('pauseResumeBtn');
     const stopButton = document.getElementById('stopBtn');
+    const returnToPlayingButton = document.getElementById('returnToPlayingBtn');
+
+    if (returnToPlayingButton) {
+      returnToPlayingButton.onclick = scrollToPlayingRow;
+    }
 
     if (pauseResumeButton) {
       pauseResumeButton.onclick = function () {
         if (!isPlaying) {
+          if (isSingleWordLooping) {
+            const wordAudio = singleLoopingAudio && singleLoopingAudio.word;
+            const sentenceAudio = singleLoopingAudio && singleLoopingAudio.sentence;
+            const currentLoopAudio = (wordAudio && !wordAudio.paused) ? wordAudio
+              : (sentenceAudio && !sentenceAudio.paused) ? sentenceAudio : (wordAudio || sentenceAudio);
+
+            if (isPaused) {
+              if (currentLoopAudio) {
+                applyPlaybackSpeedAndPitch(currentLoopAudio);
+                currentLoopAudio.play().catch((e) => console.error('恢復單詞循環播放失敗:', e));
+              }
+              isPaused = false;
+              this.innerHTML = '<i class="fas fa-pause"></i>';
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+            } else {
+              if (wordAudio) wordAudio.pause();
+              if (sentenceAudio) sentenceAudio.pause();
+              isPaused = true;
+              this.innerHTML = '<i class="fas fa-play"></i>';
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            }
+            return;
+          }
           // If stopped, decide where to resume from.
           if (g_mainPlaybackIndexBeforeLoop !== null) {
             // If playback was interrupted by a single loop, resume from where it left off.
@@ -8330,6 +8522,8 @@ function initializeAppUI() {
       stopButton.onclick = function () {
         if (isPlaying) {
           stopPlayback();
+        } else if (isSingleWordLooping) {
+          stopSingleWordLoop();
         }
       };
     }
@@ -8345,6 +8539,10 @@ function initializeAppUI() {
         console.log(`分類循環模式已 ${isCategoryLooping ? '開啟' : '關閉'}`);
       };
     }
+
+    updateReturnButtonVisibility();
+    updateRepeatControlState();
+    updateLoopCategoryButtonVisibility();
   }
 
   // 複製單詞專屬連結：文字格式「客源翠腔級：編號 詞目」換行後接網址
@@ -9766,6 +9964,10 @@ function initializeAppUI() {
       );
 
       if (selectedBookmark) {
+        if (isSingleWordLooping) {
+          stopSingleWordLoop();
+        }
+
         // [修正] 從找到的物件中安全地取得所有資訊
         const targetTableName = selectedBookmark.tableName;
         let targetCategory = selectedBookmark.cat;
@@ -9931,6 +10133,36 @@ function initializeAppUI() {
   });
 
   displayGitCommitInfo();
+}
+
+function startSingleWordLoop(...args) {
+  if (typeof window.startSingleWordLoop === 'function') {
+    return window.startSingleWordLoop(...args);
+  }
+}
+
+function stopSingleWordLoop(...args) {
+  if (typeof window.stopSingleWordLoop === 'function') {
+    return window.stopSingleWordLoop(...args);
+  }
+}
+
+function scrollToPlayingRow(...args) {
+  if (typeof window.scrollToPlayingRow === 'function') {
+    return window.scrollToPlayingRow(...args);
+  }
+}
+
+function updateReturnButtonVisibility(...args) {
+  if (typeof window.updateReturnButtonVisibility === 'function') {
+    return window.updateReturnButtonVisibility(...args);
+  }
+}
+
+function updateLoopCategoryButtonVisibility(...args) {
+  if (typeof window.updateLoopCategoryButtonVisibility === 'function') {
+    return window.updateLoopCategoryButtonVisibility(...args);
+  }
 }
 
 window.CROSS_DIALECT_CACHE = window.CROSS_DIALECT_CACHE || new WeakMap();
@@ -10146,17 +10378,6 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   const item = document.createElement('tr');
   item.className = dialectInfo.腔名; // Add dialect class for styling
 
-  // TD1: Dialect Name (replaces number/buttons)
-  const td1 = document.createElement('td');
-  td1.className = 'no';
-  td1.dataset.label = '腔調';
-  const sourceSpan = document.createElement('span');
-  sourceSpan.className = `dialect ${dialectInfo.腔名}`;
-  sourceSpan.textContent = dialectInfo.腔名;
-  td1.appendChild(sourceSpan);
-
-  item.appendChild(td1);
-
   // Audio setup using unified helpers
   let fullSourceName = '';
   if (isGip) {
@@ -10173,6 +10394,44 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   let sentenceAudioSrc = constructSentenceAudioUrl(line, fullSourceName);
   if (sentenceAudioSrc) sentenceAudioSrc = applyAudioProxy(sentenceAudioSrc);
 
+  const hasAudio = Boolean(wordAudioSrc || sentenceAudioSrc);
+  let wordAudioElem = null;
+  let sentenceAudioElem = null;
+
+  // TD1: Dialect Name (replaces number/buttons)
+  const td1 = document.createElement('td');
+  td1.className = 'no';
+  td1.dataset.label = '腔調';
+  const sourceSpan = document.createElement('span');
+  sourceSpan.className = `dialect ${dialectInfo.腔名}`;
+  sourceSpan.textContent = dialectInfo.腔名;
+  td1.appendChild(sourceSpan);
+
+  // 【新增】跨腔展開行有音檔時，加單詞循環播放按鈕
+  if (hasAudio) {
+    const loopOneBtn = document.createElement('button');
+    loopOneBtn.className = 'loop-one-btn';
+    loopOneBtn.title = '循環播放此行';
+    loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
+    loopOneBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (isSingleWordLooping && singleLoopingAudio.row === item) {
+        stopSingleWordLoop();
+      } else {
+        startSingleWordLoop(
+          wordAudioElem,
+          sentenceAudioElem,
+          item,
+          loopOneBtn,
+          line,
+        );
+      }
+    });
+    td1.appendChild(loopOneBtn);
+  }
+
+  item.appendChild(td1);
+
   // TD2: Vocabulary
   const td2 = document.createElement('td');
   td2.dataset.label = '詞彙';
@@ -10186,6 +10445,7 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
     audio1.preload = 'none';
     audio1.src = wordAudioSrc;
     td2.appendChild(audio1);
+    wordAudioElem = audio1;
   }
   td2.appendChild(document.createElement('br'));
   const meaningSpan = document.createElement('span');
@@ -10221,6 +10481,7 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
       audio2.preload = 'none';
       audio2.src = sentenceAudioSrc;
       td3.appendChild(audio2);
+      sentenceAudioElem = audio2;
     }
     td3.appendChild(document.createElement('br'));
     

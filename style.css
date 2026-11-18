@@ -6602,6 +6602,17 @@ mark {
   color: var(--audio-panel-btn-ongoing-fg);
 }
 
+#newAudioControlsPanel button#returnToPlayingBtn {
+  color: var(--audio-panel-btn-ongoing-fg);
+  font-size: 22px;
+  line-height: 1;
+}
+
+#newAudioControlsPanel button#returnToPlayingBtn .return-icon {
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
 #newAudioControlsPanel button.ended {
   color: var(--audio-panel-btn-ended-fg);
 }
