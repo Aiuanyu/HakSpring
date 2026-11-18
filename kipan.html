@@ -375,9 +375,31 @@
       margin: 0;
       color: var(--page-text);
     }
+
+    /* 暫時翻譯警語斜條 Ribbon */
+    .wip-ribbon {
+      position: fixed;
+      top: 34px;
+      right: -58px;
+      width: 240px;
+      padding: 8px 0;
+      background: #dc2626;
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-align: center;
+      transform: rotate(38deg);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+      border-top: 1px dashed rgba(255, 255, 255, 0.6);
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.6);
+      z-index: 9999;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
+  <div class="wip-ribbon">請暫時忍受爛膣翻譯</div>
   <nav class="page-nav">
     <a href="./" class="page-nav-link" id="back-to-home">
       <span>🌱 來去客源翠</span>
