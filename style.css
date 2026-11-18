@@ -68,6 +68,16 @@
   color: #333;
 }
 
+.loading-seo-summary {
+  max-width: 480px;
+  text-align: center;
+  padding: 0 1.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.95em;
+  color: #555;
+  line-height: 1.6;
+}
+
 .spinner {
   border: 8px solid #f3f3f3;
   border-top: 8px solid #3498db;
@@ -314,7 +324,9 @@ body * {
   flex-wrap: wrap;
 }
 
+#main-content .title-container h1,
 #main-content h2 {
+  font-size: 1.5em;
   margin-right: 1em;
   margin-bottom: 0;
   margin-top: 0;
@@ -325,6 +337,7 @@ body * {
   line-height: 1.2em;
 }
 
+#main-content .title-container h1 a,
 #main-content h2 a {
   text-decoration: none;
   display: block;
@@ -336,12 +349,14 @@ body * {
     text-align: center;
   }
 
+  #main-content .title-container h1,
   #main-content h2 {
     margin-right: 0;
     margin-bottom: 0.5em;
   }
 }
 
+#main-content .title-container h1 img,
 #main-content h2 img {
   height: 1.8em;
   border-radius: 50%;
@@ -1768,6 +1783,10 @@ input:checked+.slider:before {
 
   #loading-text {
     color: var(--main-text-color);
+  }
+
+  .loading-seo-summary {
+    color: #bbb;
   }
 
   .spinner {
@@ -4755,10 +4774,11 @@ mark {
   text-align: center;
   margin-bottom: 30px;
 }
-.game-question-card h1 {
+.game-question-card #game-target-word {
   /* 題幹漢字：對齊主詞彙表詞目字型（--title-font），!important 壓過 modal/reset */
   font-family: var(--title-font) !important;
   font-size: 3em;
+  font-weight: bold;
   margin: 0 0 10px 0;
   color: #333;
 }
@@ -4903,7 +4923,7 @@ mark {
   .game-btn-highlight:hover {
     background-color: #ffa726;
   }
-  .game-question-card h1 {
+  .game-question-card #game-target-word {
     color: #eee;
   }
   .game-question-card .pinyin-text, .game-progress-bar {
@@ -4988,7 +5008,7 @@ mark {
   .game-options {
     grid-template-columns: 1fr;
   }
-  .game-question-card h1 {
+  .game-question-card #game-target-word {
     font-size: 2em;
   }
 }

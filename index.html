@@ -5,14 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>客源翠 HakSpring：詞典+分類學習</title>
+    <meta
+      name="description"
+      content="客源翠（HakSpring）：免費線上客語詞典，支援四縣、南四縣、海陸、大埔、饒平、詔安六腔對照，附客語認證詞彙分類放送、詞彙復習遊戲與客話羅馬字轉換工具。"
+    />
+    <link rel="canonical" href="https://hakspring.pages.dev/" />
     <meta property="og:title" content="客源翠 HakSpring：詞典+分類學習" />
     <meta
       property="og:description"
-      content="客話詞典、認證詞彙分類放送學習網站"
+      content="客源翠（HakSpring）：免費線上客語詞典，支援四縣、南四縣、海陸、大埔、饒平、詔安六腔對照，附客語認證詞彙分類放送、詞彙復習遊戲與客話羅馬字轉換工具。"
     />
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:site_name" content="客源翠 HakSpring" />
     <meta property="og:url" content="https://hakspring.pages.dev/" />
-    <meta property="og:image" content="og-image.png" />
+    <meta
+      property="og:image"
+      content="https://hakspring.pages.dev/og-image.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="客源翠 HakSpring：詞典+分類學習" />
+    <meta
+      name="twitter:description"
+      content="客源翠（HakSpring）：免費線上客語詞典，支援四縣、南四縣、海陸、大埔、饒平、詔安六腔對照，附客語認證詞彙分類放送、詞彙復習遊戲與客話羅馬字轉換工具。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://hakspring.pages.dev/og-image.png"
+    />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
@@ -119,49 +139,66 @@
       crossorigin="anonymous"
     ></script>
     <!--20250309 上去申請的 kit-->
+
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      // Dynamic GA Tracking ID based on hostname
+      var gaId;
+      var hostname = window.location.hostname;
+
+      if (hostname.includes("hakspring.pages.dev")) {
+        // Cloudflare Pages hakspring.pages.dev GA ID
+        gaId = "G-CJ92SYFZG3";
+      } else {
+        // Default GA ID for aiuanyu.github.io
+        gaId = "G-GR13HH1VXW";
+      }
+
+      if (gaId) {
+        gtag("config", gaId);
+      }
+    </script>
   </head>
-
-  <!-- Google tag (gtag.js) -->
-  <script
-    async
-    src="https://www.googletagmanager.com/gtag/js?id=G-GR13HH1VXW"
-  ></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag("js", new Date());
-
-    // Dynamic GA Tracking ID based on hostname
-    var gaId;
-    var hostname = window.location.hostname;
-
-    if (hostname.includes("hakspring.pages.dev")) {
-      // Cloudflare Pages hakspring.pages.dev GA ID
-      gaId = "G-CJ92SYFZG3";
-    } else {
-      // Default GA ID for aiuanyu.github.io
-      gaId = "G-GR13HH1VXW";
-    }
-
-    if (gaId) {
-      gtag("config", gaId);
-    }
-  </script>
 
   <body>
     <div id="loading-indicator">
       <div class="spinner"></div>
       <p id="loading-text">客源翠 HakSpring 載入中...</p>
+      <p class="loading-seo-summary">
+        免費線上客話詞典摎學習工具，提供四縣、南四縣、海陸、大埔、饒平、詔安六腔對照、客語認證詞彙分類放送與復習遊戲。
+      </p>
     </div>
+    <noscript>
+      <section style="max-width: 720px; margin: 2rem auto; padding: 1rem;">
+        <h2>客源翠 HakSpring：客語詞典與分類學習</h2>
+        <p>
+          「客源翠 HakSpring」係一個線頂客話詞典摎分類學習工具，提供臺灣客語認證詞彙放送、教典民間介面與學習遊戲，支援四縣、南四縣、海陸、大埔、饒平、詔安六腔對照。
+        </p>
+        <ul>
+          <li><a href="page.html?p=about">關於客源翠</a></li>
+          <li><a href="page.html?p=gip-search">教典搜尋說明</a></li>
+          <li><a href="page.html?p=pfs">白話字（PFS）介紹</a></li>
+          <li><a href="page.html?p=cloud-sync">雲端同步說明</a></li>
+        </ul>
+      </section>
+    </noscript>
     <div id="main-content" style="display: none">
       <div class="title-container">
-        <h2>
+        <h1>
           <a href="/"
             ><img src="img/avatar.png" alt="logo" />客源翠 HakSpring</a
           >
-        </h2>
+        </h1>
         <h4 id="mainSubtitle">你个客援隊／客研隊。詞典+分類學習</h4>
       </div>
       <h3 id="header">
@@ -1017,7 +1054,7 @@
                 >
                   ❤️
                 </button>
-                <h1 id="game-target-word"></h1>
+                <p id="game-target-word"></p>
                 <p id="game-target-pinyin" class="pinyin-text"></p>
                 <button id="game-play-audio-btn" style="display: none">
                   <i class="fas fa-volume-up"></i>

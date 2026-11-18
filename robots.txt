@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /*?*migrateData=
+Sitemap: https://hakspring.pages.dev/sitemap.xml
