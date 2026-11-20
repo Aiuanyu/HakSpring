@@ -8,7 +8,7 @@ global.document = {
 global.navigator = { userAgent: 'firefox' };
 
 // Load main.js exports
-const { splitRubyByBaseBreakpoints } = require('../main.js');
+const { splitRubyByBaseBreakpoints, expandSlashReadings, sandhiRubyToSup } = require('../main.js');
 
 console.log('🧪 Starting Firefox ruby breakpoint unit tests...\n');
 
@@ -130,4 +130,28 @@ runTest('Single-syllable alternatives are skipped', () => {
   assert.strictEqual(splitRubyByBaseBreakpoints('拔', 'bad/pad'), null);
   assert.strictEqual(splitRubyByBaseBreakpoints('起懶根', 'hì lán/nán gín'), null);
   assert.strictEqual(splitRubyByBaseBreakpoints('食自家', 'siid qi/cii/qìd gá'), null);
+});
+
+// 10. rtc 多層展開：整詞並列、單音節異讀都展開成完整讀音
+runTest('expandSlashReadings: whole-word and single-syllable alternatives', () => {
+  assert.deepStrictEqual(expandSlashReadings('溜走', 'tiu zèu/liu zèu'), ['tiu zèu', 'liu zèu']);
+  assert.deepStrictEqual(expandSlashReadings('欣賞', 'hím/hiún sòng'), ['hím sòng', 'hiún sòng']);
+  assert.deepStrictEqual(expandSlashReadings('拔', 'bad/pad'), ['bad', 'pad']);
+  assert.deepStrictEqual(expandSlashReadings('起懶根', 'hì lán/nán gín'), ['hì lán gín', 'hì nán gín']);
+  assert.deepStrictEqual(expandSlashReadings('外背', 'ngoi/ngo/no/lo boi'),
+    ['ngoi boi', 'ngo boi', 'no boi', 'lo boi']);
+});
+
+runTest('expandSlashReadings: skips parentheses / notes / no slash / syllable mismatch', () => {
+  assert.strictEqual(expandSlashReadings('懶頭（懶懶）', 'lán/nán těu (lán lán/nán nán)'), null);
+  assert.strictEqual(expandSlashReadings('掀', 'ién/hién【ián/hián】'), null);
+  assert.strictEqual(expandSlashReadings('發燒', 'fàd séu'), null);
+  assert.strictEqual(expandSlashReadings('試看', 'cii/sii kon kon'), null);
+});
+
+runTest('sandhiRubyToSup converts nested sandhi ruby to sup', () => {
+  assert.strictEqual(
+    sandhiRubyToSup('<ruby class="sandhi-t53">tiu<rt>53</rt></ruby> zèu'),
+    '<span class="sandhi-sup sandhi-t53">tiu<sup>53</sup></span> zèu',
+  );
 });
