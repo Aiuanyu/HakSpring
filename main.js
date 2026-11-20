@@ -347,15 +347,22 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   const baseTokens = tokenize(baseHtml || '');
   let baseHasParen = false;
   let baseHasSlash = false;
+  let baseHasDun = false; // 括號裡肚个頓號（異體詞分隔，例：沙壩（沙埔、沙灘））
 
-  for (const t of baseTokens) {
-    if (!t.isTag) {
-      if (/[（\(]/.test(t.text)) baseHasParen = true;
-      if (/[／\/]/.test(t.text)) baseHasSlash = true;
+  {
+    let depth = 0;
+    for (const t of baseTokens) {
+      if (t.isTag) continue;
+      for (const ch of t.text) {
+        if (ch === '（' || ch === '(') { baseHasParen = true; depth++; }
+        else if (ch === '）' || ch === ')') depth = Math.max(0, depth - 1);
+        else if (ch === '／' || ch === '/') baseHasSlash = true;
+        else if (ch === '、' && depth > 0) baseHasDun = true;
+      }
     }
   }
 
-  if (!baseHasParen && !baseHasSlash) {
+  if (!baseHasParen && !baseHasSlash && !baseHasDun) {
     // 漢字無斷點時，看標音是否係「整詞並列」（例：tiu zèu/liu zèu）个斜線
     return splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize);
   }
@@ -364,6 +371,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
     const segs = [];
     let curSeg = '';
     const openTags = [];
+    let parenDepth = 0; // 目前个括號深度（頓號淨在括號裡肚斷）
 
     function pushSegment() {
       if (curSeg.trim().length > 0) {
@@ -423,7 +431,13 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
             if (!isRt || (isRt && baseHasSlash)) {
               if (char === '／' || char === '/') doSplitAfter = true;
             }
+            // 括號裡肚个頓號：異體詞分隔，像括號共樣斷行（頓號留佇頭前該行尾）
+            if (baseHasDun) {
+              if (char === '、' && parenDepth > 0) doSplitAfter = true;
+            }
           }
+          if (char === '（' || char === '(') parenDepth++;
+          else if (char === '）' || char === ')') parenDepth = Math.max(0, parenDepth - 1);
 
           if (doSplitBefore) {
             if (curSeg.trim().length > 0) pushSegment();
@@ -454,6 +468,14 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
 
   let rtTokens = tokenize(rtHtml || '');
   let rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+
+  // 頓號斷行對毋著（標音摎漢字个頓號數無共樣，例：標音用「/」）：退回淨用括號斷行
+  if (baseHasDun && baseSegs.length !== rtSegs.length) {
+    baseHasDun = false;
+    baseSegs = splitTokens(baseTokens, false);
+    if (baseSegs.length <= 1) return null;
+    rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+  }
 
   // If the RT segment length mismatches, fallback to non-split to avoid phonetics misaligning
   if (baseSegs.length !== rtSegs.length) {

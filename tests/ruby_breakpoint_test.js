@@ -96,7 +96,9 @@ runTest('Word with multiple items in parentheses', () => {
   const res = splitRubyByBaseBreakpoints(base, rt);
   assert.notStrictEqual(res, null);
   assert.strictEqual(res.baseSegs[0], '沙壩');
-  assert.strictEqual(res.baseSegs[1], '（沙埔、沙灘）');
+  // 20261120 起：括號裡肚个頓號（異體詞分隔）也斷行，原本係成串 '（沙埔、沙灘）'
+  assert.strictEqual(res.baseSegs[1], '（沙埔、');
+  assert.strictEqual(res.baseSegs[2], '沙灘）');
 });
 
 console.log(`🎉 All ${passedTests} ruby breakpoint unit tests passed successfully!\n`);
@@ -170,4 +172,22 @@ runTest('expandNoteReadings: skips 合音 / syllable mismatch / single layer', (
   assert.strictEqual(expandNoteReadings('幾久', 'gì giù【俗音】gìd gìd gìd giù'), null);
   assert.strictEqual(expandNoteReadings('若係', '【特殊音】na he'), null);
   assert.strictEqual(expandNoteReadings('下手', 'ha sù'), null);
+});
+
+// 12. 括號裡肚个頓號（異體詞分隔）也斷行
+runTest('Dun-separated variants inside parentheses split after each 、', () => {
+  const res = splitRubyByBaseBreakpoints('沙壩（沙埔、沙灘）', 'sá ba (sá pú、sá tán)');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['沙壩', '（沙埔、', '沙灘）']);
+  assert.deepStrictEqual(res.rtSegs, ['sá ba ', '(sá pú、', 'sá tán)']);
+});
+
+runTest('Dun outside parentheses is not a break point', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('七坐、八爬', 'qìd có 、 bàd pǎ'), null);
+});
+
+runTest('Dun split falls back to paren-only split when phonetic lacks matching 、', () => {
+  const res = splitRubyByBaseBreakpoints('上擺（上到、上回）', 'shòng bâi (shòng dò / shòng fǔi)');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['上擺', '（上到、上回）']);
 });
