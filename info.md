@@ -1,4 +1,4 @@
-[**>>> 最新消息 <<<**](#show-whats-new)
+[**>>> 最新消息 <<<**](#show-whats-new) ‧ [**⌨️ 客源翠企盤（客話輸入法封測中）**](kipan.html)
 
 # HakSpring!「客源翠」♥
 
