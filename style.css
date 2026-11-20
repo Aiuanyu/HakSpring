@@ -7011,9 +7011,14 @@ ruby.ruby-multi-reading .phonetic-note-label {
   line-height: 0;
   margin-left: 0.03em;
   color: inherit; /* 壓過 body * 个 color */
-  /* 變調數字毋好被選取、複製（免得複製出來標音摻著 53 這類數字） */
+  /* 變調數字毋好被選取、複製（免得複製出來標音摻著 53 這類數字）。
+     user-select: none 在 Firefox 跨選取範圍複製時還係會帶著，所以數字改放 data-tone，
+     用 ::before 生成內容顯示（生成內容無佇文字節點，毋會被複製） */
   -webkit-user-select: none;
   user-select: none;
+}
+.sandhi-sup > sup::before {
+  content: attr(data-tone);
 }
 /* 變調顏色：摎 ruby.sandhi-tN 共色（淺色主題） */
 .sandhi-sup.sandhi-t55 { color: red; }

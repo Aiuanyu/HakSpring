@@ -154,7 +154,7 @@ runTest('expandSlashReadings: skips parentheses / notes / no slash / syllable mi
 runTest('sandhiRubyToSup converts nested sandhi ruby to sup', () => {
   assert.strictEqual(
     sandhiRubyToSup('<ruby class="sandhi-t53">tiu<rt>53</rt></ruby> zèu'),
-    '<span class="sandhi-sup sandhi-t53">tiu<sup>53</sup></span> zèu',
+    '<span class="sandhi-sup sandhi-t53">tiu<sup data-tone="53"></sup></span> zèu',
   );
 });
 

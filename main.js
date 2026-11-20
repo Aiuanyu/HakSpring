@@ -281,7 +281,8 @@ function expandNoteReadings(rawWord, phoneticText) {
 
 /**
  * <rtc> 多層標音裡肚，變調改用上標（免巢狀 ruby）：
- * <ruby class="sandhi-t53">tiu<rt>53</rt></ruby> → <span class="sandhi-sup sandhi-t53">tiu<sup>53</sup></span>
+ * <ruby class="sandhi-t53">tiu<rt>53</rt></ruby> → <span class="sandhi-sup sandhi-t53">tiu<sup data-tone="53"></sup></span>
+ * 數字放 data-tone，由 CSS ::before 顯示（生成內容毋會被選取、複製；user-select: none 在 Firefox 擋毋住複製）
  * 因為 Firefox 算 rt 高度時毋會算著巢在裡肚个 ruby 標註，會摎別層重疊。
  * @param {string} html
  * @returns {string}
@@ -289,7 +290,7 @@ function expandNoteReadings(rawWord, phoneticText) {
 function sandhiRubyToSup(html) {
   return html.replace(
     /<ruby class="(sandhi-t\d+)"[^>]*>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g,
-    '<span class="sandhi-sup $1">$2<sup>$3</sup></span>',
+    '<span class="sandhi-sup $1">$2<sup data-tone="$3"></sup></span>',
   );
 }
 
