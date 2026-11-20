@@ -256,6 +256,30 @@ function sandhiRubyToSup(html) {
 }
 
 /**
+ * 將展開後个多隻讀音填入 ruby：第一層係 <rt>，後背每層一隻 <rtc><rt>（往上疊）。
+ * 每隻讀音各自算變調，變調用上標（見 sandhiRubyToSup）。
+ * @param {HTMLElement} ruby - 已放好漢字（或隱藏 base）个 <ruby>
+ * @param {string[]} readings - expandSlashReadings 个結果
+ * @param {string|null} dialectCode - getDialectCode 个結果（null／false 就毋算變調）
+ */
+function appendMultiReadingLayers(ruby, readings, dialectCode) {
+  ruby.classList.add('ruby-multi-reading');
+  readings.forEach((reading, idx) => {
+    let html = dialectCode ? getSandhiHtml(reading, dialectCode) : reading;
+    html = sandhiRubyToSup(html);
+    const layerRt = document.createElement('rt');
+    layerRt.innerHTML = html;
+    if (idx === 0) {
+      ruby.appendChild(layerRt);
+    } else {
+      const rtc = document.createElement('rtc');
+      rtc.appendChild(layerRt);
+      ruby.appendChild(rtc);
+    }
+  });
+}
+
+/**
  * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
  * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
  *
@@ -1483,7 +1507,11 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   const dialectCode = getDialectCode(dialectName);
   // 根據官方資料，饒平變調規則僅針對新竹腔說明；變體（卓蘭、桃園、卓桃）不套用 sandhi
   const shouldApplySandhi = dialectCode && (dialectCode !== 'rh' || isMain);
-  if (shouldApplySandhi) {
+  // Firefox 系：認證詞彙標音有斜線，漢字（phoneticOnly 係隱藏 base）留一份，各讀音用 <rtc> 多層展開
+  const multiReadings = (isFirefox() && !isGipData)
+    ? expandSlashReadings(entry.phoneticOnly ? fallbackWord : entry.word, phoneticText)
+    : null;
+  if (!multiReadings && shouldApplySandhi) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
 
@@ -1496,10 +1524,14 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     const hiddenBase = document.createElement('span');
     hiddenBase.className = 'variant-hidden-base';
     hiddenBase.textContent = fallbackWord || '';
-    const rt = document.createElement('rt');
-    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
     ruby.appendChild(hiddenBase);
-    ruby.appendChild(rt);
+    if (multiReadings) {
+      appendMultiReadingLayers(ruby, multiReadings, shouldApplySandhi ? dialectCode : null);
+    } else {
+      const rt = document.createElement('rt');
+      rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
+      ruby.appendChild(rt);
+    }
     block.appendChild(ruby);
   } else {
     // 完整 ruby 渲染（漢字 + rt 標音）
@@ -1509,9 +1541,13 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     } else {
       ruby.textContent = entry.word;
     }
-    const rt = document.createElement('rt');
-    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
-    ruby.appendChild(rt);
+    if (multiReadings) {
+      appendMultiReadingLayers(ruby, multiReadings, shouldApplySandhi ? dialectCode : null);
+    } else {
+      const rt = document.createElement('rt');
+      rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
+      ruby.appendChild(rt);
+    }
     block.appendChild(ruby);
   }
 
@@ -1940,20 +1976,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   if (isFirefox() && !isGip) {
     const readings = expandSlashReadings(rawWord, phoneticText);
     if (readings) {
-      ruby.classList.add('ruby-multi-reading');
-      readings.forEach((reading, idx) => {
-        let html = dialectCode ? getSandhiHtml(reading, dialectCode) : reading;
-        html = sandhiRubyToSup(html);
-        const layerRt = document.createElement('rt');
-        layerRt.innerHTML = html;
-        if (idx === 0) {
-          ruby.appendChild(layerRt);
-        } else {
-          const rtc = document.createElement('rtc');
-          rtc.appendChild(layerRt);
-          ruby.appendChild(rtc);
-        }
-      });
+      appendMultiReadingLayers(ruby, readings, dialectCode);
       td.appendChild(ruby);
       return;
     }
