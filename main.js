@@ -120,6 +120,214 @@ function isFirefox() {
 }
 
 /**
+ * 認證詞彙標音有斜線時，判斷係「整詞並列」抑係「單一音節異讀」。
+ * - 整詞並列：斜線兩爿（逐段）个音節數攏摎漢字字數相同，且字數 ≥ 2
+ *   （例：溜走 tiu zèu/liu zèu）→ 斷做兩行，漢字兩行都顯示，各配一段標音。
+ * - 單一音節異讀（例：欣賞 hím/hiún sòng、拔 bad/pad）→ 毋斷，回傳 null。
+ * 標音含括號、【】註記者保守毋處理。此邏輯淨 Firefox 个 adjustRubyFontSize 會用著。
+ *
+ * @param {string} baseHtml - ruby 基礎文字（漢字 HTML）
+ * @param {string} rtHtml - ruby rt 標音 HTML
+ * @param {function} tokenize - 將 HTML 切成 tag／文字 token 个函式
+ * @returns {{ baseSegs: string[], rtSegs: string[] } | null}
+ */
+function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
+  if (!rtHtml) return null;
+
+  // 抽出純文字（連 sandhi ruby 裡肚个 <rt>變調數字</rt> 一齊拿忒）
+  const plain = (html) => html.replace(/<rt(?:\s[^>]*)?>.*?<\/rt>/gis, '').replace(/<[^>]+>/g, '');
+  const rtPlain = plain(rtHtml);
+  if (!rtPlain.includes('/')) return null;
+  if (/[（）()【】\[\]]/.test(rtPlain) || /phonetic-paren|phonetic-note/i.test(rtHtml)) return null;
+  const basePlain = plain(baseHtml);
+  if (/[（）()【】\[\]／/]/.test(basePlain)) return null;
+
+  // 漢字字數（含擴充區的代理對字，毋算空白摎標點）
+  const hanCount = Array.from(basePlain).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
+  if (hanCount < 2) return null;
+
+  const parts = rtPlain.split('/');
+  if (parts.length < 2) return null;
+  const syllableCount = (s) => s.split(/[\s\-]+/).filter(Boolean).length; // 摎 expandSlashReadings 計法一致（連字號也算分隔）
+  if (!parts.every((p) => syllableCount(p) === hanCount)) return null;
+
+  // 依斜線切分 rt HTML（保留並補齊 <ruby> 等標籤）
+  const rtSegs = [];
+  let cur = '';
+  const openTags = [];
+  const closeAll = () => openTags.slice().reverse().map((t) => `</${t.tag}>`).join('');
+  const reopenAll = () => openTags.map((t) => t.full).join('');
+  for (const t of tokenize(rtHtml)) {
+    if (t.isTag) {
+      const m = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
+      if (m) {
+        const tagName = m[1].toLowerCase();
+        const isClose = t.text.startsWith('</');
+        const isSelf = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(tagName);
+        if (!isClose && !isSelf) {
+          openTags.push({ tag: tagName, full: t.text });
+        } else if (isClose) {
+          for (let j = openTags.length - 1; j >= 0; j--) {
+            if (openTags[j].tag === tagName) { openTags.splice(j, 1); break; }
+          }
+        }
+      }
+      cur += t.text;
+    } else {
+      // <rt> 內部（sandhi 數字）毋會有斜線，直接逐字處理
+      for (const ch of t.text) {
+        if (ch === '/') {
+          cur += ch;
+          rtSegs.push(cur + closeAll());
+          cur = reopenAll();
+        } else {
+          cur += ch;
+        }
+      }
+    }
+  }
+  if (plain(cur).trim().length > 0) rtSegs.push(cur + closeAll());
+
+  if (rtSegs.length !== parts.length) return null;
+
+  return {
+    baseSegs: rtSegs.map(() => baseHtml),
+    rtSegs: rtSegs.map((seg, i) => (i > 0 ? seg.trimStart() : seg)),
+  };
+}
+
+/**
+ * 認證詞彙標音有斜線時，展開成「完整个多隻讀音」，供 Firefox 用 <rtc> 多層 <rt> 顯示
+ * （漢字淨留一份，每種讀音一層，第一層 rt 在漢字上背，後背个 rtc 層往下排）。
+ * - 整詞並列：斜線兩爿（逐段）音節數攏摎漢字字數相同（例：溜走 tiu zèu/liu zèu）
+ * - 單音節異讀：逐個音節各自展開，組合出完整讀音（例：欣賞 hím/hiún sòng → hím sòng、hiún sòng）
+ * 展開後每隻讀音音節數愛摎漢字字數相同，毋然就放棄（回傳 null，走原本个顯示）。
+ * 漢字抑係標音有括號、【】註記，這擺保守毋處理（帶括號个詞後續再做）。
+ *
+ * @param {string} rawWord - 漢字詞目
+ * @param {string} phoneticText - 已經 formatPhoneticForDisplay 个標音（尚未變調）
+ * @returns {string[]|null} 展開後个各讀音，毋適用就 null
+ */
+function expandSlashReadings(rawWord, phoneticText) {
+  if (!rawWord || !phoneticText) return null;
+  if (/[（）()【】\[\]／/]/.test(rawWord)) return null;
+  if (/[（）()【】\[\]<>]/.test(phoneticText)) return null;
+
+  const text = phoneticText.replace(/\s*\/\s*/g, '/').trim();
+  if (!text.includes('/')) return null;
+
+  const han = Array.from(rawWord).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
+  if (han < 1) return null;
+  const count = (s) => s.split(/[\s\-]+/).filter(Boolean).length;
+
+  // 1. 整詞並列（字數 ≥ 2，毋會摎單字異讀混著）
+  const parts = text.split('/').map((p) => p.trim());
+  if (han >= 2 && parts.length >= 2 && parts.every((p) => count(p) === han)) {
+    return Array.from(new Set(parts));
+  }
+
+  // 2. 單音節異讀：逐音節展開成組合
+  const alts = text.split(/\s+/).map((tok) => tok.split('/').filter(Boolean));
+  const total = alts.reduce((n, a) => n * a.length, 1);
+  if (total < 2 || total > 8) return null;
+  let readings = [[]];
+  for (const a of alts) {
+    const next = [];
+    for (const r of readings) for (const x of a) next.push(r.concat(x));
+    readings = next;
+  }
+  const out = readings.map((r) => r.join(' '));
+  if (!out.every((r) => count(r) === han)) return null;
+  return Array.from(new Set(out));
+}
+
+/**
+ * 教典讀音有「又讀、俗音、又俗音、文／白、特」註記个，展開成多層讀音（Firefox <rtc> 用）。
+ * 例：`sán zá【俗音】xién zá` → [{label:null, text:'sán zá'}, {label:'俗音', text:'xién zá'}]
+ * - 本函式吃「已經 formatPhoneticForDisplay、註記已經包成【】」个標音。
+ * - 淨處理「完整讀音个別讀」：每層音節數愛摎漢字字數相同。
+ * - 合音、特殊音、小稱變調讀、後字變調、本調為這類毋係別讀个註記，抑係音節數對毋著、
+ *   有括號、有其他【】，一律回傳 null（走原本个顯示）。
+ * @param {string} rawWord - 漢字詞目
+ * @param {string} phoneticText - 已格式化个標音（尚未變調）
+ * @returns {{label:(string|null), text:string}[]|null}
+ */
+const PHONETIC_ALT_READING_NOTES = new Set(['又俗音', '又讀', '又音', '俗音', '文', '白', '特']);
+function expandNoteReadings(rawWord, phoneticText) {
+  if (!rawWord || !phoneticText) return null;
+  if (/[（）()\[\]／/]/.test(rawWord) || /[（）()\[\]<>/]/.test(phoneticText)) return null;
+  const han = Array.from(rawWord).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
+  if (han < 1) return null;
+  const count = (s) => s.split(/[\s\-]+/).filter(Boolean).length;
+
+  // 依【註記】切開：[文字, 註記, 文字, 註記, 文字…]
+  const pieces = phoneticText.split(/【([^】]*)】/);
+  const layers = [];
+  for (let i = 0; i < pieces.length; i += 2) {
+    const text = (pieces[i] || '').trim();
+    const label = i === 0 ? null : pieces[i - 1];
+    if (label !== null && !PHONETIC_ALT_READING_NOTES.has(label)) return null;
+    if (!text) {
+      // 開頭个空段（例：【特】xxx 前背無字）正常；其他位置空段就放棄
+      if (i === 0) continue;
+      return null;
+    }
+    layers.push({ label, text });
+  }
+  if (layers.length < 2) return null;
+  if (!layers.every((l) => count(l.text) === han)) return null;
+  return layers;
+}
+
+/**
+ * <rtc> 多層標音裡肚，變調改用上標（免巢狀 ruby）：
+ * <ruby class="sandhi-t53">tiu<rt>53</rt></ruby> → <span class="sandhi-sup sandhi-t53">tiu<sup data-tone="53"></sup></span>
+ * 數字放 data-tone，由 CSS ::before 顯示（生成內容毋會被選取、複製；user-select: none 在 Firefox 擋毋住複製）
+ * 因為 Firefox 算 rt 高度時毋會算著巢在裡肚个 ruby 標註，會摎別層重疊。
+ * @param {string} html
+ * @returns {string}
+ */
+function sandhiRubyToSup(html) {
+  return html.replace(
+    /<ruby class="(sandhi-t\d+)"[^>]*>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g,
+    '<span class="sandhi-sup $1">$2<sup data-tone="$3"></sup></span>',
+  );
+}
+
+/**
+ * 將展開後个多隻讀音填入 ruby：第一層係 <rt>，後背每層一隻 <rtc><rt>（rt 在漢字上背，rtc 往下排）。
+ * 每隻讀音各自算變調，變調用上標（見 sandhiRubyToSup）。
+ * @param {HTMLElement} ruby - 已放好漢字（或隱藏 base）个 <ruby>
+ * @param {string[]} readings - expandSlashReadings 个結果
+ * @param {string|null} dialectCode - getDialectCode 个結果（null／false 就毋算變調）
+ * @param {{lead?:string, trail?:string}} [wrap] - 每層前後愛補回个括號／頓號（斷行後个括號段用）
+ */
+function appendMultiReadingLayers(ruby, readings, dialectCode, wrap) {
+  ruby.classList.add('ruby-multi-reading');
+  readings.forEach((item, idx) => {
+    // item 可係字串（斜線展開），也可係 { label, text }（教典別讀，label 轉做註記小標）
+    const reading = typeof item === 'string' ? item : item.text;
+    const label = typeof item === 'string' ? null : item.label;
+    let html = dialectCode ? getSandhiHtml(reading, dialectCode) : reading;
+    html = sandhiRubyToSup(html);
+    if (label) {
+      html = `<span class="phonetic-note-label">${label}</span>` + html;
+    }
+    // 斷行後个括號段：每層前後補回括號、頓號（例：(gá tiám)、(di、）
+    if (wrap) html = (wrap.lead || '') + html + (wrap.trail || '');
+    const layerRt = document.createElement('rt');
+    layerRt.innerHTML = html;
+    if (idx === 0) {
+      ruby.appendChild(layerRt);
+    } else {
+      const rtc = document.createElement('rtc');
+      rtc.appendChild(layerRt);
+      ruby.appendChild(rtc);
+    }
+  });
+}
+
+/**
  * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
  * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
  *
@@ -143,22 +351,31 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   const baseTokens = tokenize(baseHtml || '');
   let baseHasParen = false;
   let baseHasSlash = false;
+  let baseHasDun = false; // 括號裡肚个頓號（異體詞分隔，例：沙壩（沙埔、沙灘））
 
-  for (const t of baseTokens) {
-    if (!t.isTag) {
-      if (/[（\(]/.test(t.text)) baseHasParen = true;
-      if (/[／\/]/.test(t.text)) baseHasSlash = true;
+  {
+    let depth = 0;
+    for (const t of baseTokens) {
+      if (t.isTag) continue;
+      for (const ch of t.text) {
+        if (ch === '（' || ch === '(') { baseHasParen = true; depth++; }
+        else if (ch === '）' || ch === ')') depth = Math.max(0, depth - 1);
+        else if (ch === '／' || ch === '/') baseHasSlash = true;
+        else if (ch === '、' && depth > 0) baseHasDun = true;
+      }
     }
   }
 
-  if (!baseHasParen && !baseHasSlash) {
-    return null;
+  if (!baseHasParen && !baseHasSlash && !baseHasDun) {
+    // 漢字無斷點時，看標音是否係「整詞並列」（例：tiu zèu/liu zèu）个斜線
+    return splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize);
   }
 
   function splitTokens(tokens, isRt, targetCount) {
     const segs = [];
     let curSeg = '';
     const openTags = [];
+    let parenDepth = 0; // 目前个括號深度（頓號淨在括號裡肚斷）
 
     function pushSegment() {
       if (curSeg.trim().length > 0) {
@@ -218,7 +435,13 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
             if (!isRt || (isRt && baseHasSlash)) {
               if (char === '／' || char === '/') doSplitAfter = true;
             }
+            // 括號裡肚个頓號：異體詞分隔，像括號共樣斷行（頓號留佇頭前該行尾）
+            if (baseHasDun) {
+              if (char === '、' && parenDepth > 0) doSplitAfter = true;
+            }
           }
+          if (char === '（' || char === '(') parenDepth++;
+          else if (char === '）' || char === ')') parenDepth = Math.max(0, parenDepth - 1);
 
           if (doSplitBefore) {
             if (curSeg.trim().length > 0) pushSegment();
@@ -250,6 +473,14 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   let rtTokens = tokenize(rtHtml || '');
   let rtSegs = splitTokens(rtTokens, true, baseSegs.length);
 
+  // 頓號斷行對毋著（標音摎漢字个頓號數無共樣，例：標音用「/」）：退回淨用括號斷行
+  if (baseHasDun && baseSegs.length !== rtSegs.length) {
+    baseHasDun = false;
+    baseSegs = splitTokens(baseTokens, false);
+    if (baseSegs.length <= 1) return null;
+    rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+  }
+
   // If the RT segment length mismatches, fallback to non-split to avoid phonetics misaligning
   if (baseSegs.length !== rtSegs.length) {
     return null;
@@ -258,6 +489,55 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   rtSegs = rtSegs.map((seg, i) => i > 0 ? seg.trimStart() : seg);
 
   return { baseSegs, rtSegs };
+}
+
+/**
+ * 在 ruby 上記變調腔碼（data-sandhi-code），斷行後重新展開標音要用。
+ * 測試環境个假 DOM 元素可能無 dataset，所以愛防呆。
+ */
+function setSandhiCodeData(el, code) {
+  if (!el || !code) return;
+  if (el.dataset) el.dataset.sandhiCode = code;
+  else if (typeof el.setAttribute === 'function') el.setAttribute('data-sandhi-code', code);
+}
+
+/**
+ * 斷行後，替每一段（行）建 ruby。若該段个標音有斜線（例：「增添」个 zen/zén tiám、
+ * 括號段「（懶懶）」个 lán lán/nán nán），就像無括號个詞共樣用 <rtc> 多層展開，
+ * 括號、頓號補回每層前後；毋適用就維持單一 <rt>。
+ * 變調愛重算，所以淨當 ruby 有 data-sandhi-code（建立時記）正展開。
+ * @param {string} bSeg - 該段漢字 HTML
+ * @param {string} rSeg - 該段標音 HTML（已含變調 ruby）
+ * @param {boolean} isPhoneticOnly
+ * @param {string} sandhiCode - 變調腔碼（空字串＝毋算變調）
+ * @returns {HTMLElement}
+ */
+function buildSplitLineRuby(bSeg, rSeg, isPhoneticOnly, sandhiCode) {
+  const lineRuby = document.createElement('ruby');
+  if (isPhoneticOnly) lineRuby.classList.add('variant-ruby-phonetic-only');
+  if (rSeg) {
+    // 還原成未變調个純文字：拿忒巢狀變調 ruby、標籤
+    const plainRt = rSeg
+      .replace(/<ruby class="sandhi-[^"]*"[^>]*>([^<]*)<rt>[^<]*<\/rt><\/ruby>/g, '$1')
+      .replace(/<[^>]+>/g, '');
+    const m = plainRt.match(/^([\s（(]*)([\s\S]*?)([\s）)、]*)$/);
+    const plainBase = bSeg.replace(/<[^>]+>/g, '').replace(/[（）()、\s]/g, '');
+    if (m && m[2].includes('/')) {
+      const readings = expandSlashReadings(plainBase, m[2].replace(/\u00a0/g, ' ').trim());
+      if (readings) {
+        lineRuby.innerHTML = bSeg;
+        appendMultiReadingLayers(lineRuby, readings, sandhiCode || null, {
+          lead: m[1].trim(),
+          trail: m[3].trim(),
+        });
+        return lineRuby;
+      }
+    }
+    lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
+  } else {
+    lineRuby.innerHTML = bSeg;
+  }
+  return lineRuby;
 }
 
 function adjustRubyFontSize(targetElement) {
@@ -274,6 +554,7 @@ function adjustRubyFontSize(targetElement) {
     if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
       restoredRuby.classList.add('variant-ruby-phonetic-only');
     }
+    if (splitGroup.dataset.sandhiCode) restoredRuby.dataset.sandhiCode = splitGroup.dataset.sandhiCode;
     if (unsplitRt) {
       restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
     } else {
@@ -345,17 +626,10 @@ function adjustRubyFontSize(targetElement) {
       group.dataset.unsplitBase = baseHtml;
       group.dataset.unsplitRt = rtHtml;
 
+      const sandhiCode = rubyElement.dataset ? rubyElement.dataset.sandhiCode || '' : '';
+      if (sandhiCode) group.dataset.sandhiCode = sandhiCode;
       splitRes.baseSegs.forEach((bSeg, idx) => {
-        const lineRuby = document.createElement('ruby');
-        if (isPhoneticOnly) {
-          lineRuby.classList.add('variant-ruby-phonetic-only');
-        }
-        const rSeg = splitRes.rtSegs[idx] || '';
-        if (rSeg) {
-          lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
-        } else {
-          lineRuby.innerHTML = bSeg;
-        }
+        const lineRuby = buildSplitLineRuby(bSeg, splitRes.rtSegs[idx] || '', isPhoneticOnly, sandhiCode);
         group.appendChild(lineRuby);
       });
 
@@ -859,6 +1133,21 @@ const PHONETIC_NOTE_RAW_REGEX = new RegExp(
 );
 
 /**
+ * 把標音裡肚「斜線兩爿完全共樣」个異讀合併成一隻：`dui/dui` → `dui`、`lán/lán` → `lán`。
+ * 淨處理整隻音節（前後係空白、括號、頓號抑係頭尾）完全相同个，毋會動著 `di/dui` 這類真个異讀。
+ * @param {string} text
+ * @returns {string}
+ */
+function collapseIdenticalSlashAlternatives(text) {
+  if (!text || !text.includes('/')) return text;
+  // 免用 lookbehind（舊版 Safari 解析會出錯）：用捕獲前綴（頭／空白／括號／頓號）代替
+  return text.replace(
+    /(^|[\s()（）、])([^\s/()（）、]+)(?:\/\2)+(?![^\s/()（）、])/g,
+    '$1$2',
+  );
+}
+
+/**
  * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @param {string} text - 原始標音字串。
@@ -876,6 +1165,8 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   result = result.replace(/\s+\)/g, ')');
   // 4. 讀音有 (...) 時，( 前面若無空白且非括號開頭，加上半形空格以提升視覺美觀與清晰度
   result = result.replace(/([^\s【（(\[])\(/g, '$1 (');
+  // 4b. 斜線兩爿係共樣个異讀（例：擬南「從（對、自）」个 dui/dui）合併，免白白變闊、害斷行
+  result = collapseIdenticalSlashAlternatives(result);
   // 5. 教典詞音裡肚个註記（特、文、白、又讀、俗音…）加上【】，後尾才轉做 label
   if (isGip) {
     result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
@@ -1356,9 +1647,17 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   const dialectCode = getDialectCode(dialectName);
   // 根據官方資料，饒平變調規則僅針對新竹腔說明；變體（卓蘭、桃園、卓桃）不套用 sandhi
   const shouldApplySandhi = dialectCode && (dialectCode !== 'rh' || isMain);
-  if (shouldApplySandhi) {
+  // Firefox 系：認證詞彙標音有斜線，漢字（phoneticOnly 係隱藏 base）留一份，各讀音用 <rtc> 多層展開
+  const multiWord = entry.phoneticOnly ? fallbackWord : entry.word;
+  const multiReadings = !isFirefox()
+    ? null
+    : (isGipData
+      ? expandNoteReadings(multiWord, phoneticText)
+      : expandSlashReadings(multiWord, phoneticText));
+  if (!multiReadings && shouldApplySandhi) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
+  const sandhiCodeForSplit = shouldApplySandhi ? dialectCode : '';
 
   // 3. 內容渲染
   if (entry.phoneticOnly) {
@@ -1366,25 +1665,35 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     // 讓變體標音原生以 rt 渲染，大小、字型、粗細與寬窄螢幕縮放永遠與主音 rt 100% 同步，且音節水平精準對齊
     const ruby = document.createElement('ruby');
     ruby.className = 'variant-ruby-phonetic-only';
+    if (sandhiCodeForSplit) setSandhiCodeData(ruby, sandhiCodeForSplit);
     const hiddenBase = document.createElement('span');
     hiddenBase.className = 'variant-hidden-base';
     hiddenBase.textContent = fallbackWord || '';
-    const rt = document.createElement('rt');
-    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
     ruby.appendChild(hiddenBase);
-    ruby.appendChild(rt);
+    if (multiReadings) {
+      appendMultiReadingLayers(ruby, multiReadings, shouldApplySandhi ? dialectCode : null);
+    } else {
+      const rt = document.createElement('rt');
+      rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
+      ruby.appendChild(rt);
+    }
     block.appendChild(ruby);
   } else {
     // 完整 ruby 渲染（漢字 + rt 標音）
     const ruby = document.createElement('ruby');
+    if (sandhiCodeForSplit) setSandhiCodeData(ruby, sandhiCodeForSplit);
     if (highlightOptions && highlightOptions.highlightWord && highlightOptions.highlightRegex) {
       ruby.innerHTML = entry.word.replace(highlightOptions.highlightRegex, '<mark>$1</mark>');
     } else {
       ruby.textContent = entry.word;
     }
-    const rt = document.createElement('rt');
-    rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
-    ruby.appendChild(rt);
+    if (multiReadings) {
+      appendMultiReadingLayers(ruby, multiReadings, shouldApplySandhi ? dialectCode : null);
+    } else {
+      const rt = document.createElement('rt');
+      rt.innerHTML = renderPhoneticNoteLabels(phoneticText);
+      ruby.appendChild(rt);
+    }
     block.appendChild(ruby);
   }
 
@@ -1809,6 +2118,18 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip, dialectName);
   const dialectCode = getDialectCode(dialectName);
+  if (dialectCode) setSandhiCodeData(ruby, dialectCode); // 斷行後重新展開標音要用
+  // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（rt 在上、rtc 往下排）
+  if (isFirefox()) {
+    const readings = isGip
+      ? expandNoteReadings(rawWord, phoneticText)
+      : expandSlashReadings(rawWord, phoneticText);
+    if (readings) {
+      appendMultiReadingLayers(ruby, readings, dialectCode);
+      td.appendChild(ruby);
+      return;
+    }
+  }
   if (dialectCode) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
@@ -10639,6 +10960,11 @@ if (typeof module !== 'undefined' && module.exports) {
     buildVariantsCompactHTML,
     getVariantAudioTitle,
     renderVocabWithVariants,
+    expandSlashReadings,
+    collapseIdenticalSlashAlternatives,
+    buildSplitLineRuby,
+    expandNoteReadings,
+    sandhiRubyToSup,
     createVariantBlock,
     getSubDialectFillKey,
     getSubDialectFill,
