@@ -6959,6 +6959,15 @@ ruby.ruby-multi-reading rtc > rt {
   color: inherit;
 }
 
+/* 往下排个 rtc 層：離漢字遠一點（平哥 Firefox 實測 20261120：margin-top 0.5em 有效），
+   教典別讀小標（.phonetic-note-label）个 vertical-align 改 text-top，免得蓋著漢字 */
+ruby.ruby-multi-reading rtc > rt {
+  margin-top: 0.5em;
+}
+ruby.ruby-multi-reading .phonetic-note-label {
+  vertical-align: text-top;
+}
+
 /* 多層標音裡肚个變調：免巢狀 ruby（Firefox 算 rt 高度毋會算著巢狀標註，會摎別層重疊），
    改用上標，作法摎 .gip-t 共樣 */
 .sandhi-sup {
