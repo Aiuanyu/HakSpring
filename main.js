@@ -299,8 +299,9 @@ function sandhiRubyToSup(html) {
  * @param {HTMLElement} ruby - 已放好漢字（或隱藏 base）个 <ruby>
  * @param {string[]} readings - expandSlashReadings 个結果
  * @param {string|null} dialectCode - getDialectCode 个結果（null／false 就毋算變調）
+ * @param {{lead?:string, trail?:string}} [wrap] - 每層前後愛補回个括號／頓號（斷行後个括號段用）
  */
-function appendMultiReadingLayers(ruby, readings, dialectCode) {
+function appendMultiReadingLayers(ruby, readings, dialectCode, wrap) {
   ruby.classList.add('ruby-multi-reading');
   readings.forEach((item, idx) => {
     // item 可係字串（斜線展開），也可係 { label, text }（教典別讀，label 轉做註記小標）
@@ -311,6 +312,8 @@ function appendMultiReadingLayers(ruby, readings, dialectCode) {
     if (label) {
       html = `<span class="phonetic-note-label">${label}</span>` + html;
     }
+    // 斷行後个括號段：每層前後補回括號、頓號（例：(gá tiám)、(di、）
+    if (wrap) html = (wrap.lead || '') + html + (wrap.trail || '');
     const layerRt = document.createElement('rt');
     layerRt.innerHTML = html;
     if (idx === 0) {
@@ -487,6 +490,45 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   return { baseSegs, rtSegs };
 }
 
+/**
+ * 斷行後，替每一段（行）建 ruby。若該段个標音有斜線（例：「增添」个 zen/zén tiám、
+ * 括號段「（懶懶）」个 lán lán/nán nán），就像無括號个詞共樣用 <rtc> 多層展開，
+ * 括號、頓號補回每層前後；毋適用就維持單一 <rt>。
+ * 變調愛重算，所以淨當 ruby 有 data-sandhi-code（建立時記）正展開。
+ * @param {string} bSeg - 該段漢字 HTML
+ * @param {string} rSeg - 該段標音 HTML（已含變調 ruby）
+ * @param {boolean} isPhoneticOnly
+ * @param {string} sandhiCode - 變調腔碼（空字串＝毋算變調）
+ * @returns {HTMLElement}
+ */
+function buildSplitLineRuby(bSeg, rSeg, isPhoneticOnly, sandhiCode) {
+  const lineRuby = document.createElement('ruby');
+  if (isPhoneticOnly) lineRuby.classList.add('variant-ruby-phonetic-only');
+  if (rSeg) {
+    // 還原成未變調个純文字：拿忒巢狀變調 ruby、標籤
+    const plainRt = rSeg
+      .replace(/<ruby class="sandhi-[^"]*"[^>]*>([^<]*)<rt>[^<]*<\/rt><\/ruby>/g, '$1')
+      .replace(/<[^>]+>/g, '');
+    const m = plainRt.match(/^([\s（(]*)([\s\S]*?)([\s）)、]*)$/);
+    const plainBase = bSeg.replace(/<[^>]+>/g, '').replace(/[（）()、\s]/g, '');
+    if (m && m[2].includes('/')) {
+      const readings = expandSlashReadings(plainBase, m[2].replace(/\u00a0/g, ' ').trim());
+      if (readings) {
+        lineRuby.innerHTML = bSeg;
+        appendMultiReadingLayers(lineRuby, readings, sandhiCode || null, {
+          lead: m[1].trim(),
+          trail: m[3].trim(),
+        });
+        return lineRuby;
+      }
+    }
+    lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
+  } else {
+    lineRuby.innerHTML = bSeg;
+  }
+  return lineRuby;
+}
+
 function adjustRubyFontSize(targetElement) {
   if (!isFirefox() || !targetElement) return;
 
@@ -501,6 +543,7 @@ function adjustRubyFontSize(targetElement) {
     if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
       restoredRuby.classList.add('variant-ruby-phonetic-only');
     }
+    if (splitGroup.dataset.sandhiCode) restoredRuby.dataset.sandhiCode = splitGroup.dataset.sandhiCode;
     if (unsplitRt) {
       restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
     } else {
@@ -572,17 +615,10 @@ function adjustRubyFontSize(targetElement) {
       group.dataset.unsplitBase = baseHtml;
       group.dataset.unsplitRt = rtHtml;
 
+      const sandhiCode = rubyElement.dataset ? rubyElement.dataset.sandhiCode || '' : '';
+      if (sandhiCode) group.dataset.sandhiCode = sandhiCode;
       splitRes.baseSegs.forEach((bSeg, idx) => {
-        const lineRuby = document.createElement('ruby');
-        if (isPhoneticOnly) {
-          lineRuby.classList.add('variant-ruby-phonetic-only');
-        }
-        const rSeg = splitRes.rtSegs[idx] || '';
-        if (rSeg) {
-          lineRuby.innerHTML = `${bSeg}<rt>${rSeg}</rt>`;
-        } else {
-          lineRuby.innerHTML = bSeg;
-        }
+        const lineRuby = buildSplitLineRuby(bSeg, splitRes.rtSegs[idx] || '', isPhoneticOnly, sandhiCode);
         group.appendChild(lineRuby);
       });
 
@@ -1583,6 +1619,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   if (!multiReadings && shouldApplySandhi) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
+  const sandhiCodeForSplit = shouldApplySandhi ? dialectCode : '';
 
   // 3. 內容渲染
   if (entry.phoneticOnly) {
@@ -1590,6 +1627,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
     // 讓變體標音原生以 rt 渲染，大小、字型、粗細與寬窄螢幕縮放永遠與主音 rt 100% 同步，且音節水平精準對齊
     const ruby = document.createElement('ruby');
     ruby.className = 'variant-ruby-phonetic-only';
+    if (sandhiCodeForSplit) ruby.dataset.sandhiCode = sandhiCodeForSplit;
     const hiddenBase = document.createElement('span');
     hiddenBase.className = 'variant-hidden-base';
     hiddenBase.textContent = fallbackWord || '';
@@ -1605,6 +1643,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   } else {
     // 完整 ruby 渲染（漢字 + rt 標音）
     const ruby = document.createElement('ruby');
+    if (sandhiCodeForSplit) ruby.dataset.sandhiCode = sandhiCodeForSplit;
     if (highlightOptions && highlightOptions.highlightWord && highlightOptions.highlightRegex) {
       ruby.innerHTML = entry.word.replace(highlightOptions.highlightRegex, '<mark>$1</mark>');
     } else {
@@ -2041,6 +2080,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip, dialectName);
   const dialectCode = getDialectCode(dialectName);
+  if (dialectCode) ruby.dataset.sandhiCode = dialectCode; // 斷行後重新展開標音要用
   // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（rt 在上、rtc 往下排）
   if (isFirefox()) {
     const readings = isGip
@@ -10632,6 +10672,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getVariantAudioTitle,
     renderVocabWithVariants,
     expandSlashReadings,
+    buildSplitLineRuby,
     expandNoteReadings,
     sandhiRubyToSup,
     createVariantBlock,
