@@ -242,6 +242,44 @@ function expandSlashReadings(rawWord, phoneticText) {
 }
 
 /**
+ * 教典讀音有「又讀、俗音、又俗音、文／白、特」註記个，展開成多層讀音（Firefox <rtc> 用）。
+ * 例：`sán zá【俗音】xién zá` → [{label:null, text:'sán zá'}, {label:'俗音', text:'xién zá'}]
+ * - 本函式吃「已經 formatPhoneticForDisplay、註記已經包成【】」个標音。
+ * - 淨處理「完整讀音个別讀」：每層音節數愛摎漢字字數相同。
+ * - 合音、特殊音、小稱變調讀、後字變調、本調為這類毋係別讀个註記，抑係音節數對毋著、
+ *   有括號、有其他【】，一律回傳 null（走原本个顯示）。
+ * @param {string} rawWord - 漢字詞目
+ * @param {string} phoneticText - 已格式化个標音（尚未變調）
+ * @returns {{label:(string|null), text:string}[]|null}
+ */
+const PHONETIC_ALT_READING_NOTES = new Set(['又俗音', '又讀', '又音', '俗音', '文', '白', '特']);
+function expandNoteReadings(rawWord, phoneticText) {
+  if (!rawWord || !phoneticText) return null;
+  if (/[（）()\[\]／/]/.test(rawWord) || /[（）()\[\]<>/]/.test(phoneticText)) return null;
+  const han = Array.from(rawWord).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
+  if (han < 1) return null;
+  const count = (s) => s.split(/[\s\-]+/).filter(Boolean).length;
+
+  // 依【註記】切開：[文字, 註記, 文字, 註記, 文字…]
+  const pieces = phoneticText.split(/【([^】]*)】/);
+  const layers = [];
+  for (let i = 0; i < pieces.length; i += 2) {
+    const text = (pieces[i] || '').trim();
+    const label = i === 0 ? null : pieces[i - 1];
+    if (label !== null && !PHONETIC_ALT_READING_NOTES.has(label)) return null;
+    if (!text) {
+      // 開頭个空段（例：【特】xxx 前背無字）正常；其他位置空段就放棄
+      if (i === 0) continue;
+      return null;
+    }
+    layers.push({ label, text });
+  }
+  if (layers.length < 2) return null;
+  if (!layers.every((l) => count(l.text) === han)) return null;
+  return layers;
+}
+
+/**
  * <rtc> 多層標音裡肚，變調改用上標（免巢狀 ruby）：
  * <ruby class="sandhi-t53">tiu<rt>53</rt></ruby> → <span class="sandhi-sup sandhi-t53">tiu<sup>53</sup></span>
  * 因為 Firefox 算 rt 高度時毋會算著巢在裡肚个 ruby 標註，會摎別層重疊。
@@ -264,9 +302,15 @@ function sandhiRubyToSup(html) {
  */
 function appendMultiReadingLayers(ruby, readings, dialectCode) {
   ruby.classList.add('ruby-multi-reading');
-  readings.forEach((reading, idx) => {
+  readings.forEach((item, idx) => {
+    // item 可係字串（斜線展開），也可係 { label, text }（教典別讀，label 轉做註記小標）
+    const reading = typeof item === 'string' ? item : item.text;
+    const label = typeof item === 'string' ? null : item.label;
     let html = dialectCode ? getSandhiHtml(reading, dialectCode) : reading;
     html = sandhiRubyToSup(html);
+    if (label) {
+      html = `<span class="phonetic-note-label">${label}</span>` + html;
+    }
     const layerRt = document.createElement('rt');
     layerRt.innerHTML = html;
     if (idx === 0) {
@@ -1508,9 +1552,12 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   // 根據官方資料，饒平變調規則僅針對新竹腔說明；變體（卓蘭、桃園、卓桃）不套用 sandhi
   const shouldApplySandhi = dialectCode && (dialectCode !== 'rh' || isMain);
   // Firefox 系：認證詞彙標音有斜線，漢字（phoneticOnly 係隱藏 base）留一份，各讀音用 <rtc> 多層展開
-  const multiReadings = (isFirefox() && !isGipData)
-    ? expandSlashReadings(entry.phoneticOnly ? fallbackWord : entry.word, phoneticText)
-    : null;
+  const multiWord = entry.phoneticOnly ? fallbackWord : entry.word;
+  const multiReadings = !isFirefox()
+    ? null
+    : (isGipData
+      ? expandNoteReadings(multiWord, phoneticText)
+      : expandSlashReadings(multiWord, phoneticText));
   if (!multiReadings && shouldApplySandhi) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
@@ -1973,8 +2020,10 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip, dialectName);
   const dialectCode = getDialectCode(dialectName);
   // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（往上疊）
-  if (isFirefox() && !isGip) {
-    const readings = expandSlashReadings(rawWord, phoneticText);
+  if (isFirefox()) {
+    const readings = isGip
+      ? expandNoteReadings(rawWord, phoneticText)
+      : expandSlashReadings(rawWord, phoneticText);
     if (readings) {
       appendMultiReadingLayers(ruby, readings, dialectCode);
       td.appendChild(ruby);
@@ -10561,6 +10610,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getVariantAudioTitle,
     renderVocabWithVariants,
     expandSlashReadings,
+    expandNoteReadings,
     sandhiRubyToSup,
     createVariantBlock,
     getSubDialectFillKey,

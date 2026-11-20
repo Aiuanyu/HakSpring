@@ -8,7 +8,7 @@ global.document = {
 global.navigator = { userAgent: 'firefox' };
 
 // Load main.js exports
-const { splitRubyByBaseBreakpoints, expandSlashReadings, sandhiRubyToSup } = require('../main.js');
+const { splitRubyByBaseBreakpoints, expandSlashReadings, expandNoteReadings, sandhiRubyToSup } = require('../main.js');
 
 console.log('🧪 Starting Firefox ruby breakpoint unit tests...\n');
 
@@ -154,4 +154,20 @@ runTest('sandhiRubyToSup converts nested sandhi ruby to sup', () => {
     sandhiRubyToSup('<ruby class="sandhi-t53">tiu<rt>53</rt></ruby> zèu'),
     '<span class="sandhi-sup sandhi-t53">tiu<sup>53</sup></span> zèu',
   );
+});
+
+// 11. 教典別讀註記（又讀、俗音…）展開成多層
+runTest('expandNoteReadings: alternate readings with labels', () => {
+  assert.deepStrictEqual(expandNoteReadings('山楂', 'sán zá【俗音】xién zá'),
+    [{ label: null, text: 'sán zá' }, { label: '俗音', text: 'xién zá' }]);
+  assert.deepStrictEqual(expandNoteReadings('牙确仔', '【特】ngǎ gog è【又俗音】ngǎ kog è'),
+    [{ label: '特', text: 'ngǎ gog è' }, { label: '又俗音', text: 'ngǎ kog è' }]);
+  assert.deepStrictEqual(expandNoteReadings('墳堂', '【文】fǔn tǒng【白】pǔn tǒng').map((l) => l.label), ['文', '白']);
+});
+
+runTest('expandNoteReadings: skips 合音 / syllable mismatch / single layer', () => {
+  assert.strictEqual(expandNoteReadings('來去', 'lǒi hi【合音】lí【合音】lói'), null);
+  assert.strictEqual(expandNoteReadings('幾久', 'gì giù【俗音】gìd gìd gìd giù'), null);
+  assert.strictEqual(expandNoteReadings('若係', '【特殊音】na he'), null);
+  assert.strictEqual(expandNoteReadings('下手', 'ha sù'), null);
 });
