@@ -198,7 +198,7 @@ function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
 
 /**
  * 認證詞彙標音有斜線時，展開成「完整个多隻讀音」，供 Firefox 用 <rtc> 多層 <rt> 顯示
- * （漢字淨留一份，每種讀音一層，往上疊）。
+ * （漢字淨留一份，每種讀音一層，第一層 rt 在漢字上背，後背个 rtc 層往下排）。
  * - 整詞並列：斜線兩爿（逐段）音節數攏摎漢字字數相同（例：溜走 tiu zèu/liu zèu）
  * - 單音節異讀：逐個音節各自展開，組合出完整讀音（例：欣賞 hím/hiún sòng → hím sòng、hiún sòng）
  * 展開後每隻讀音音節數愛摎漢字字數相同，毋然就放棄（回傳 null，走原本个顯示）。
@@ -294,7 +294,7 @@ function sandhiRubyToSup(html) {
 }
 
 /**
- * 將展開後个多隻讀音填入 ruby：第一層係 <rt>，後背每層一隻 <rtc><rt>（往上疊）。
+ * 將展開後个多隻讀音填入 ruby：第一層係 <rt>，後背每層一隻 <rtc><rt>（rt 在漢字上背，rtc 往下排）。
  * 每隻讀音各自算變調，變調用上標（見 sandhiRubyToSup）。
  * @param {HTMLElement} ruby - 已放好漢字（或隱藏 base）个 <ruby>
  * @param {string[]} readings - expandSlashReadings 个結果
@@ -2019,7 +2019,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   const rt = document.createElement('rt');
   let phoneticText = formatPhoneticForDisplay(rawPhonetic, isGip, dialectName);
   const dialectCode = getDialectCode(dialectName);
-  // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（往上疊）
+  // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（rt 在上、rtc 往下排）
   if (isFirefox()) {
     const readings = isGip
       ? expandNoteReadings(rawWord, phoneticText)

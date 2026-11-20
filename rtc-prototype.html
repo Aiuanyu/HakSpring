@@ -41,7 +41,7 @@
   ruby { ruby-align: center; }
   rt { font-size: .6em; }
   /* 第二層以後（rtc）个位置，由上背控制項切換 */
-  rtc { ruby-position: var(--rtc-pos, over); }
+  rtc { ruby-position: var(--rtc-pos, under); }
   /* 字級校正：Firefox UA 會把 rtc 本身縮小，裡肚个 rt 又縮一擺（雙重縮小）。
      rtc 還原成 1em，rt 个字級就摎第一層（直接放 ruby 下个 rt）一致。 */
   rtc { font-size: 1em; }
@@ -70,8 +70,8 @@
 <div class="controls">
   <label>第二層以後位置
     <select id="posSel">
+      <option value="under">under（漢字下背，目前採用）</option>
       <option value="over">over（疊在第一層上背）</option>
-      <option value="under">under（漢字下背）</option>
       <option value="alternate">alternate</option>
     </select>
   </label>
