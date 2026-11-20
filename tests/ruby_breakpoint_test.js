@@ -201,3 +201,10 @@ runTest('collapseIdenticalSlashAlternatives merges only identical alternatives',
   assert.strictEqual(c('ngoi/ngo/no/lo boi'), 'ngoi/ngo/no/lo boi');
   assert.strictEqual(c('a/a/a b'), 'a b');
 });
+
+runTest('collapseIdenticalSlashAlternatives handles adjacent duplicates and 、 boundaries', () => {
+  const { collapseIdenticalSlashAlternatives: c } = require('../main.js');
+  assert.strictEqual(c('a/a b/b'), 'a b');
+  assert.strictEqual(c('(a/a、b/b)'), '(a、b)');
+  assert.strictEqual(c('ab/b'), 'ab/b'); // 非完整音節相同，毋合併
+});

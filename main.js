@@ -1139,9 +1139,10 @@ const PHONETIC_NOTE_RAW_REGEX = new RegExp(
  */
 function collapseIdenticalSlashAlternatives(text) {
   if (!text || !text.includes('/')) return text;
+  // 免用 lookbehind（舊版 Safari 解析會出錯）：用捕獲前綴（頭／空白／括號／頓號）代替
   return text.replace(
-    /(?<![^\s()（）、])([^\s/()（）、]+)(?:\/\1)+(?![^\s/()（）、])/g,
-    '$1',
+    /(^|[\s()（）、])([^\s/()（）、]+)(?:\/\2)+(?![^\s/()（）、])/g,
+    '$1$2',
   );
 }
 
