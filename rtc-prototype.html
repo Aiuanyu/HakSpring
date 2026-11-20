@@ -42,9 +42,21 @@
   rt { font-size: .6em; }
   /* 第二層以後（rtc）个位置，由上背控制項切換 */
   rtc { ruby-position: var(--rtc-pos, over); }
+  /* 字級校正：Firefox UA 會把 rtc 本身縮小，裡肚个 rt 又縮一擺（雙重縮小）。
+     rtc 還原成 1em，rt 个字級就摎第一層（直接放 ruby 下个 rt）一致。 */
+  rtc { font-size: 1em; }
   /* 變調 ruby（嵌在 rt 裡肚） */
   ruby.sandhi-t53 { color: mediumvioletred; }
   ruby.sandhi-t53 rt { font-size: .7em; }
+  /* ── 變調 ruby 試法（作用在 <td class="sN">） ── */
+  /* S1：加高 rt 行高，替嵌在 rt 裡肚个變調數字留位 */
+  .s1 rt { line-height: 2.6; }
+  /* S2：第二層以後放漢字下背（under），避免摎第一層个變調數字相撞 */
+  .s2 rtc { ruby-position: under; }
+  /* S4：嵌在 rt 个變調數字改放音節下背 */
+  .s4 rt ruby > rt { ruby-position: under; }
+  /* S3：免巢狀 ruby，改用上標 */
+  sup.sd { font-size: .6em; color: mediumvioletred; margin-left: 1px; }
   /* phonetic-only：漢字 base 零高度 */
   ruby.variant-ruby-phonetic-only > .zero { font-size: 0; line-height: 0; }
 </style>
@@ -69,6 +81,13 @@
 
 <table id="tbl">
   <thead><tr><th>案例</th><th>現在（斜線文字）</th><th>rtc 展開</th><th>窄欄（6em）</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<h1 style="margin-top:1.4em">變調 ruby 試法</h1>
+<p class="note">同一詞「溜走」，第一層、第二層各帶變調。S0 係現況（巢狀 ruby 放 rt 裡肚）；S1～S4 係幾種處理，看哪種毋會相撞、毋會撐歪。</p>
+<table id="tbl2">
+  <thead><tr><th>試法</th><th>rtc 展開</th><th>窄欄（6em）</th></tr></thead>
   <tbody></tbody>
 </table>
 
@@ -109,6 +128,28 @@
       <td class="demo">${html}<code>${esc(html)}</code></td>
       <td class="demo narrow">${html}</td>`;
     tbody.appendChild(tr);
+  });
+
+  // 變調試法
+  const sd = (t, n) => `<ruby class="sandhi-t53">${t}<rt>${n}</rt></ruby>`;
+  const sup = (t, n) => `<span style="color:mediumvioletred">${t}<sup class="sd">${n}</sup></span>`;
+  const nested = { base: '溜走', readings: [`${sd('tiu', '53')} zèu`, `${sd('liu', '53')} zèu`] };
+  const supVer = { base: '溜走', readings: [`${sup('tiu', '53')} zèu`, `${sup('liu', '53')} zèu`] };
+  const VARS = [
+    ['S0 現況（巢狀 ruby）', '', nested],
+    ['S1 rt 加高行高', 's1', nested],
+    ['S2 第二層以後 under', 's2', nested],
+    ['S3 免巢狀，用上標 sup', '', supVer],
+    ['S4 變調數字放音節下背', 's4', nested],
+  ];
+  const tb2 = document.querySelector('#tbl2 tbody');
+  VARS.forEach(([name, cls, c]) => {
+    const html = rtcHtml(c);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="case">${name}</td>
+      <td class="demo ${cls}">${html}</td>
+      <td class="demo narrow ${cls}">${html}</td>`;
+    tb2.appendChild(tr);
   });
 
   // 控制項
