@@ -7011,6 +7011,9 @@ ruby.ruby-multi-reading .phonetic-note-label {
   line-height: 0;
   margin-left: 0.03em;
   color: inherit; /* 壓過 body * 个 color */
+  /* 變調數字毋好被選取、複製（免得複製出來標音摻著 53 這類數字） */
+  -webkit-user-select: none;
+  user-select: none;
 }
 /* 變調顏色：摎 ruby.sandhi-tN 共色（淺色主題） */
 .sandhi-sup.sandhi-t55 { color: red; }
