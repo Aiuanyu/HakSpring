@@ -57,6 +57,21 @@
   .s4 rt ruby > rt { ruby-position: under; }
   /* S3：免巢狀 ruby，改用上標 */
   sup.sd { font-size: .6em; color: mediumvioletred; margin-left: 1px; }
+  /* 教典別讀小標（摎站上 .phonetic-note-label 同款，免勾 style.css 也看會著）。
+     vertical-align 由下背「微調」控制項（--badge-va）切換。 */
+  .phonetic-note-label {
+    display: inline-block; font-size: .55em; font-weight: 700; line-height: 1; letter-spacing: .05em;
+    padding: .3em .3em; margin: 0 .15em; border-radius: .9em; color: #fff;
+    background: #2b8362; border: 1px solid #185a3f;
+    vertical-align: var(--badge-va, top) !important;
+  }
+  /* 微調旋鈕：作用在 rtc 裡肚个 rt（預設值＝毋改變）。用 !important 好壓過站上 style.css */
+  rtc > rt {
+    line-height: var(--rtc-lh, inherit) !important;
+    margin-top: var(--rtc-mt, 0) !important;
+    padding-top: var(--rtc-pt, 0) !important;
+    padding-bottom: var(--rtc-pb, 0) !important;
+  }
   /* phonetic-only：漢字 base 零高度 */
   ruby.variant-ruby-phonetic-only > .zero { font-size: 0; line-height: 0; }
 </style>
@@ -79,8 +94,33 @@
   <label><input id="siteCss" type="checkbox"> 套用站上 style.css（看真實樣式影響）</label>
 </div>
 
+<div class="controls" id="knobs">
+  <strong style="width:100%">微調（教典小標蓋著漢字時，拉這兜試；影響所有 rtc 層）</strong>
+  <label>rtc 行高 <input data-var="--rtc-lh" type="range" min="1" max="4" step="0.1" value="1.8"> <output>未改</output></label>
+  <label>rtc 上外距 margin-top <input data-var="--rtc-mt" data-unit="em" type="range" min="0" max="1.5" step="0.05" value="0"> <output>未改</output></label>
+  <label>rtc 上內距 padding-top <input data-var="--rtc-pt" data-unit="em" type="range" min="0" max="1.5" step="0.05" value="0"> <output>未改</output></label>
+  <label>rtc 下內距 padding-bottom <input data-var="--rtc-pb" data-unit="em" type="range" min="0" max="1.5" step="0.05" value="0"> <output>未改</output></label>
+  <label>小標 vertical-align
+    <select id="badgeVa">
+      <option value="top">top（目前）</option><option value="middle">middle</option>
+      <option value="baseline">baseline</option><option value="text-top">text-top</option>
+      <option value="text-bottom">text-bottom</option><option value="bottom">bottom</option>
+    </select>
+  </label>
+  <button id="copyKnobs" type="button">產生目前設定（CSS）</button>
+  <button id="resetKnobs" type="button">全部還原</button>
+  <pre id="knobOut" style="width:100%;margin:0;font-size:.7em;white-space:pre-wrap"></pre>
+</div>
+
 <table id="tbl">
   <thead><tr><th>案例</th><th>現在（斜線文字）</th><th>rtc 展開</th><th>窄欄（6em）</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<h1 style="margin-top:1.4em">教典別讀（含小標）</h1>
+<p class="note">教典「本音 + 俗音／又讀／文白…」展開成 rt（本音）加 rtc（別讀，帶小標）。重點看小標有無蓋著漢字，抑係撐高到摎下一列相撞。</p>
+<table id="tbl3">
+  <thead><tr><th>案例</th><th>rtc 展開</th><th>窄欄（6em）</th></tr></thead>
   <tbody></tbody>
 </table>
 
@@ -110,7 +150,9 @@
     const [first, ...rest] = c.readings;
     const cls = c.base === null ? ' class="variant-ruby-phonetic-only"' : '';
     const base = c.base === null ? '<span class="zero">&nbsp;</span>' : c.base;
-    return `<ruby${cls}>${base}<rt>${first}</rt>` + rest.map(r => `<rtc><rt>${r}</rt></rtc>`).join('') + '</ruby>';
+    const lay = r => (typeof r === 'string' ? r
+      : (r.label ? `<span class="phonetic-note-label">${r.label}</span>` : '') + r.text);
+    return `<ruby${cls}>${base}<rt>${lay(first)}</rt>` + rest.map(r => `<rtc><rt>${lay(r)}</rt></rtc>`).join('') + '</ruby>';
   }
   function currentHtml(c) {
     const cls = c.base === null ? ' class="variant-ruby-phonetic-only"' : '';
@@ -150,6 +192,50 @@
       <td class="demo ${cls}">${html}</td>
       <td class="demo narrow ${cls}">${html}</td>`;
     tb2.appendChild(tr);
+  });
+
+  // 教典別讀案例
+  const GIP_CASES = [
+    ['俗音（山楂）', { base: '山楂', readings: [{ label: null, text: 'sán zá' }, { label: '俗音', text: 'xién zá' }] }],
+    ['又讀（下手）', { base: '下手', readings: [{ label: null, text: 'ha sù' }, { label: '又讀', text: 'há sù' }] }],
+    ['文／白（墳堂）', { base: '墳堂', readings: [{ label: '文', text: 'fǔn tǒng' }, { label: '白', text: 'pǔn tǒng' }] }],
+    ['特＋又俗音（牙确仔）', { base: '牙确仔', readings: [{ label: '特', text: 'ngǎ gog è' }, { label: '又俗音', text: 'ngǎ kog è' }] }],
+    ['phonetic-only（無漢字 base）', { base: null, readings: [{ label: null, text: 'sán zá' }, { label: '俗音', text: 'xién zá' }] }],
+  ];
+  const tb3 = document.querySelector('#tbl3 tbody');
+  GIP_CASES.forEach(([name, c]) => {
+    const html = rtcHtml(c);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="case">${name}</td><td class="demo">${html}</td><td class="demo narrow">${html}</td>`;
+    tb3.appendChild(tr);
+  });
+
+  // 微調旋鈕
+  const root = document.documentElement;
+  const knobOut = document.getElementById('knobOut');
+  function knobCss() {
+    const rows = [];
+    document.querySelectorAll('#knobs input[data-var]').forEach(i => {
+      const v = root.style.getPropertyValue(i.dataset.var);
+      if (v) rows.push(`  ${i.dataset.var.replace('--rtc-', '')}: ${v};`);
+    });
+    const va = document.getElementById('badgeVa').value;
+    return `/* 微調結果（rtc > rt） */\n` + rows.join('\n') + `\n/* .phonetic-note-label vertical-align: ${va} */`;
+  }
+  document.querySelectorAll('#knobs input[data-var]').forEach(i => {
+    i.addEventListener('input', () => {
+      const val = i.dataset.unit ? i.value + i.dataset.unit : i.value;
+      root.style.setProperty(i.dataset.var, val);
+      i.nextElementSibling.textContent = val;
+    });
+  });
+  document.getElementById('badgeVa').addEventListener('change', e => root.style.setProperty('--badge-va', e.target.value));
+  document.getElementById('copyKnobs').addEventListener('click', () => { knobOut.textContent = knobCss(); });
+  document.getElementById('resetKnobs').addEventListener('click', () => {
+    ['--rtc-lh', '--rtc-mt', '--rtc-pt', '--rtc-pb', '--badge-va'].forEach(v => root.style.removeProperty(v));
+    document.querySelectorAll('#knobs input[data-var]').forEach(i => { i.value = i.defaultValue; i.nextElementSibling.textContent = '未改'; });
+    document.getElementById('badgeVa').value = 'top';
+    knobOut.textContent = '';
   });
 
   // 控制項
