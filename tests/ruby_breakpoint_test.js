@@ -208,3 +208,13 @@ runTest('collapseIdenticalSlashAlternatives handles adjacent duplicates and 、 
   assert.strictEqual(c('(a/a、b/b)'), '(a、b)');
   assert.strictEqual(c('ab/b'), 'ab/b'); // 非完整音節相同，毋合併
 });
+
+runTest('expandSlashReadings returns null when combinations exceed the limit (>8)', () => {
+  assert.strictEqual(expandSlashReadings('四個字詞', 'a/b c/d e/f g/h'), null);
+});
+
+runTest('splitRubyByWholeWordSlash counts hyphen-joined syllables like expandSlashReadings', () => {
+  const res = splitRubyByBaseBreakpoints('溜走', 'tiu-zèu/liu-zèu');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.rtSegs, ['tiu-zèu/', 'liu-zèu']);
+});

@@ -135,7 +135,7 @@ function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
   if (!rtHtml) return null;
 
   // 抽出純文字（連 sandhi ruby 裡肚个 <rt>變調數字</rt> 一齊拿忒）
-  const plain = (html) => html.replace(/<rt[^>]*>.*?<\/rt>/gis, '').replace(/<[^>]+>/g, '');
+  const plain = (html) => html.replace(/<rt(?:\s[^>]*)?>.*?<\/rt>/gis, '').replace(/<[^>]+>/g, '');
   const rtPlain = plain(rtHtml);
   if (!rtPlain.includes('/')) return null;
   if (/[（）()【】\[\]]/.test(rtPlain) || /phonetic-paren|phonetic-note/i.test(rtHtml)) return null;
@@ -148,7 +148,7 @@ function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
 
   const parts = rtPlain.split('/');
   if (parts.length < 2) return null;
-  const syllableCount = (s) => s.split(/\s+/).filter(Boolean).length;
+  const syllableCount = (s) => s.split(/[\s\-]+/).filter(Boolean).length; // 摎 expandSlashReadings 計法一致（連字號也算分隔）
   if (!parts.every((p) => syllableCount(p) === hanCount)) return null;
 
   // 依斜線切分 rt HTML（保留並補齊 <ruby> 等標籤）
