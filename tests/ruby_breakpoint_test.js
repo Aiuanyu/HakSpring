@@ -191,3 +191,13 @@ runTest('Dun split falls back to paren-only split when phonetic lacks matching �
   assert.notStrictEqual(res, null);
   assert.deepStrictEqual(res.baseSegs, ['上擺', '（上到、上回）']);
 });
+
+// 14. 斜線兩爿共樣个異讀合併，真个異讀毋動
+runTest('collapseIdenticalSlashAlternatives merges only identical alternatives', () => {
+  const { collapseIdenticalSlashAlternatives: c } = require('../main.js');
+  assert.strictEqual(c('qiǔng (dui/dui、cii)'), 'qiǔng (dui、cii)');
+  assert.strictEqual(c('hì lán/lán gín'), 'hì lán gín');
+  assert.strictEqual(c('qiǔng (di/dui、cii)'), 'qiǔng (di/dui、cii)');
+  assert.strictEqual(c('ngoi/ngo/no/lo boi'), 'ngoi/ngo/no/lo boi');
+  assert.strictEqual(c('a/a/a b'), 'a b');
+});

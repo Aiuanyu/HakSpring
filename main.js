@@ -1112,6 +1112,20 @@ const PHONETIC_NOTE_RAW_REGEX = new RegExp(
 );
 
 /**
+ * 把標音裡肚「斜線兩爿完全共樣」个異讀合併成一隻：`dui/dui` → `dui`、`lán/lán` → `lán`。
+ * 淨處理整隻音節（前後係空白、括號、頓號抑係頭尾）完全相同个，毋會動著 `di/dui` 這類真个異讀。
+ * @param {string} text
+ * @returns {string}
+ */
+function collapseIdenticalSlashAlternatives(text) {
+  if (!text || !text.includes('/')) return text;
+  return text.replace(
+    /(?<![^\s()（）、])([^\s/()（）、]+)(?:\/\1)+(?![^\s/()（）、])/g,
+    '$1',
+  );
+}
+
+/**
  * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @param {string} text - 原始標音字串。
@@ -1129,6 +1143,8 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   result = result.replace(/\s+\)/g, ')');
   // 4. 讀音有 (...) 時，( 前面若無空白且非括號開頭，加上半形空格以提升視覺美觀與清晰度
   result = result.replace(/([^\s【（(\[])\(/g, '$1 (');
+  // 4b. 斜線兩爿係共樣个異讀（例：擬南「從（對、自）」个 dui/dui）合併，免白白變闊、害斷行
+  result = collapseIdenticalSlashAlternatives(result);
   // 5. 教典詞音裡肚个註記（特、文、白、又讀、俗音…）加上【】，後尾才轉做 label
   if (isGip) {
     result = result.replace(PHONETIC_NOTE_RAW_REGEX, '$1【$2】');
@@ -10672,6 +10688,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getVariantAudioTitle,
     renderVocabWithVariants,
     expandSlashReadings,
+    collapseIdenticalSlashAlternatives,
     buildSplitLineRuby,
     expandNoteReadings,
     sandhiRubyToSup,
