@@ -1,0 +1,21 @@
+{
+  "dialect": "sixian",
+  "source": "Obsidian: 創作/程式/HakSpring/Romaine 四縣高頻多音字校對.md (2026-11-21)",
+  "overrides": {
+    "就": { "default": "qiu" },
+    "這": { "default": "ià" },
+    "會": { "default": "voi", "note": "名詞／助動詞" },
+    "無": { "default": "mǒ", "note": "動詞／形容詞" },
+    "當": { "default": "dóng", "note": "形容詞、動詞／副詞" },
+    "好": { "default": "hò", "note": "動詞／形容詞" },
+    "在": { "default": "di", "note": "南四縣愛用 té" },
+    "下": { "default": "há" },
+    "還": { "default": "hǎn", "note": "vǎn 係南四縣" },
+    "較": { "default": "ka", "note": "副詞" },
+    "著": { "default": "dò" },
+    "正": { "default": "zang" },
+    "都": { "default": "du" },
+    "阿": { "default": "á" },
+    "毋好": { "default": "m̌ hò" }
+  }
+}

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Romaine Auto (PoC) — 全自動客話羅馬字轉換</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --accent: #0f766e;
+      --poly-bg: #fef9c3;
+      --poly-border: #eab308;
+      --supp-bg: #e0f2fe;
+      --supp-border: #0284c7;
+      --nisim-bg: #f3e8ff;
+      --nisim-border: #9333ea;
+      --oov-bg: #fee2e2;
+      --oov-border: #ef4444;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: #334155;
+        --accent: #14b8a6;
+        --poly-bg: #422006;
+        --poly-border: #ca8a04;
+        --supp-bg: #0c4a6e;
+        --supp-border: #38bdf8;
+        --nisim-bg: #3b0764;
+        --nisim-border: #c084fc;
+        --oov-bg: #450a0a;
+        --oov-border: #dc2626;
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container { max-width: 920px; margin: 0 auto; display: grid; gap: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 110px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      resize: vertical;
+    }
+    button, select {
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+    .tokens-wrap { display: flex; flex-wrap: wrap; gap: 8px; min-height: 48px; }
+    .tok-chip {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .tok-chip.poly { background: var(--poly-bg); border-color: var(--poly-border); }
+    .tok-chip.supp-derived { background: var(--supp-bg); border-color: var(--supp-border); }
+    .tok-chip.supp-nisim { background: var(--nisim-bg); border-color: var(--nisim-border); border-style: dotted; }
+    .tok-chip.oov { background: var(--oov-bg); border-color: var(--oov-border); border-style: dashed; }
+    .tok-chip.uncertain { box-shadow: 0 0 0 2px #f97316; }
+    .tok-chip.comment {
+      background: rgba(128,128,128,0.12);
+      border-style: dashed;
+      color: var(--muted);
+      cursor: default;
+      font-size: 12px;
+      justify-content: center;
+    }
+    .tok-chip.punct { border-color: transparent; cursor: default; padding: 4px 2px; }
+    .tok-han { font-size: 15px; font-weight: 600; }
+    .tok-hpp { font-size: 13px; color: var(--muted); }
+    .tok-badge {
+      font-size: 10px;
+      padding: 0 4px;
+      border-radius: 4px;
+      background: rgba(128,128,128,0.18);
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .tok-case-btn {
+      display: none;
+      position: absolute;
+      top: -10px;
+      right: -8px;
+      min-width: 24px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 20px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      z-index: 20;
+    }
+    .tok-chip:hover .tok-case-btn,
+    .tok-chip.is-hovered .tok-case-btn {
+      display: inline-block;
+    }
+    .verified-list { display: grid; gap: 10px; margin-top: 10px; }
+    .verified-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--bg);
+      display: grid;
+      gap: 4px;
+    }
+    .verified-item-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .verified-item-han { font-weight: 600; font-size: 15px; }
+    .verified-item-hpp { font-size: 14px; color: var(--muted); word-break: break-word; }
+    .output-box {
+      white-space: pre-wrap;
+      font-size: 17px;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      min-height: 56px;
+    }
+    .status-line { font-size: 13px; color: var(--muted); }
+    .hint-line { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .popup {
+      position: fixed;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      z-index: 100;
+      display: none;
+      min-width: 210px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .popup button { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; margin-top: 4px; }
+    .cand-tag { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2 style="margin:0 0 8px">Romaine Auto PoC（四縣 v10）</h2>
+      <div class="toolbar">
+        <label class="switch">
+          <input type="checkbox" id="autoToggle" checked />
+          全自動即時產生
+        </label>
+        <select id="joiningMode">
+          <option value="none">連寫（標準 HPP）</option>
+          <option value="hyphen">連字號（-）</option>
+          <option value="space">空格（　）</option>
+        </select>
+        <button class="primary" id="runBtn">立即轉換</button>
+        <button id="loadSampleBtn">載入 P0 範例</button>
+        <button id="evalP0Btn">跑 P0 基準分</button>
+      </div>
+      <div class="status-line" id="statusLine" style="margin-top:8px">詞庫（教典＋認證＋補字典）載入中…</div>
+      <div class="hint-line">
+        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>恁+早</code> 強制斷詞加空格 ｜ <code>%%註解%%</code> 僅記入黃金語料不轉換
+      </div>
+    </div>
+
+    <div class="card">
+      <textarea id="inputHan" placeholder="輸入四縣客話諸夏字…（試看：輕-井-澤、美=臺、恁+早、妳）"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="status-line" style="margin-bottom:8px">
+        色標說明：黃底＝多音詞條 ｜ 藍底「補」＝補字典（拆音／沿襲・參考）｜ 紫點線「擬」＝廣韻擬音（參考）｜ 紅虛線＝未收錄 ｜ 橘框「？」＝已標記不確定
+      </div>
+      <div class="tokens-wrap" id="tokensWrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar" style="margin-bottom:8px; justify-content:space-between">
+        <strong>HagPinPlus 輸出</strong>
+        <div class="toolbar">
+          <button id="copyBtn">複製結果</button>
+          <button class="primary" id="verifyBtn">✓ 確認校正並入庫（localStorage）</button>
+          <button id="saveAsNewBtn" style="display:none">另存別筆</button>
+          <button id="toggleVerifiedBtn">檢視黃金語料 (<span id="verifiedCount">0</span>)</button>
+          <button id="exportBtn">匯出 JSON</button>
+        </div>
+      </div>
+      <div class="output-box" id="outputHpp"></div>
+    </div>
+
+    <div class="card" id="verifiedPanel" style="display:none">
+      <div class="toolbar" style="justify-content:space-between">
+        <strong>已存黃金語料（localStorage）</strong>
+        <button id="clearVerifiedBtn">清空全部</button>
+      </div>
+      <div class="verified-list" id="verifiedList"></div>
+    </div>
+  </div>
+
+  <div class="popup" id="candPopup"></div>
+
+  <script src="js/gip-converter.js"></script>
+  <script src="js/romaine-join.js"></script>
+  <script src="js/romaine-auto.js?v=5"></script>
+  <script>
+    const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
+    const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
+    const engine = new RomaineAutoEngine();
+    let currentTokens = [];
+    let prevPureCjk = [];
+    // Map<pureCjkIndex, { ch: string, syl?: string, isUpper?: boolean }>
+    let manualCharOverrides = new Map();
+
+    const autoToggle = document.getElementById('autoToggle');
+    const joiningMode = document.getElementById('joiningMode');
+    const inputHan = document.getElementById('inputHan');
+    const tokensWrap = document.getElementById('tokensWrap');
+    const outputHpp = document.getElementById('outputHpp');
+    const statusLine = document.getElementById('statusLine');
+    const candPopup = document.getElementById('candPopup');
+    const verifiedCountEl = document.getElementById('verifiedCount');
+
+    function loadVerified() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch { return []; }
+    }
+    function updateVerifiedBadge() {
+      verifiedCountEl.textContent = String(loadVerified().length);
+    }
+
+    function extractPureCjkChars(tokens) {
+      const list = [];
+      for (const tok of tokens) {
+        if (tok.punct || tok.nonCjk) continue;
+        for (const ch of Array.from(tok.han || '')) {
+          if (CJK_CHAR_TEST_RE.test(ch)) list.push(ch);
+        }
+      }
+      return list;
+    }
+
+    /** 依 LCS 將舊純諸夏字索引上的手動選擇，對齊移轉至新純諸夏字索引 */
+    function remapOverrides(oldChars, oldMap, newChars) {
+      const remapped = new Map();
+      if (!oldMap.size || !oldChars.length || !newChars.length) return remapped;
+      const m = oldChars.length, n = newChars.length;
+      const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = oldChars[i - 1] === newChars[j - 1]
+            ? dp[i - 1][j - 1] + 1
+            : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+      let i = m, j = n;
+      while (i > 0 && j > 0) {
+        if (oldChars[i - 1] === newChars[j - 1]) {
+          const ov = oldMap.get(i - 1);
+          if (ov) remapped.set(j - 1, ov);
+          i--; j--;
+        } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+          i--;
+        } else {
+          j--;
+        }
+      }
+      return remapped;
+    }
+
+    /** 將記憶的手動讀音與大小寫套回 newly segmented tokens */
+    function applyOverridesToTokens(tokens, ovMap) {
+      let cjkIdx = 0;
+      for (const tok of tokens) {
+        if (tok.punct || tok.nonCjk) continue;
+        const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+        const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+        let changed = false;
+        for (let k = 0; k < chars.length; k++) {
+          const ov = ovMap.get(cjkIdx + k);
+          if (ov && ov.ch === chars[k] && syls[k]) {
+            if (ov.syl) {
+              syls[k] = ov.syl;
+              changed = true;
+            }
+            if (ov.isUpper !== undefined) {
+              syls[k] = ov.isUpper
+                ? syls[k].charAt(0).toUpperCase() + syls[k].slice(1)
+                : syls[k].charAt(0).toLowerCase() + syls[k].slice(1);
+              changed = true;
+            }
+          }
+        }
+        if (changed) {
+          tok.hpp = syls.join(' ');
+          tok.oov = false;
+        }
+        if (chars.some((_, k) => ovMap.get(cjkIdx + k)?.uncertain)) {
+          tok.uncertain = true;
+        }
+        cjkIdx += chars.length;
+      }
+    }
+
+    /** 當使用者手動改動某個 token 時，更新對應純諸夏字索引的手動覆寫表 */
+    function recordTokenManualOverride(tokIdx, recordReading, recordCase, recordUncertain) {
+      let cjkIdx = 0;
+      for (let t = 0; t < currentTokens.length; t++) {
+        const tok = currentTokens[t];
+        if (tok.punct || tok.nonCjk) continue;
+        const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+        if (t === tokIdx) {
+          const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+          for (let k = 0; k < chars.length; k++) {
+            const prevOv = manualCharOverrides.get(cjkIdx + k) || { ch: chars[k] };
+            if (recordReading && syls[k]) prevOv.syl = syls[k].toLowerCase();
+            if (recordCase && syls[k]) {
+              const fc = syls[k].charAt(0);
+              prevOv.isUpper = fc !== fc.toLowerCase();
+            }
+            if (recordUncertain) prevOv.uncertain = !!tok.uncertain;
+            manualCharOverrides.set(cjkIdx + k, prevOv);
+          }
+          break;
+        }
+        cjkIdx += chars.length;
+      }
+      prevPureCjk = extractPureCjkChars(currentTokens);
+    }
+
+    function render() {
+      tokensWrap.innerHTML = '';
+      currentTokens.forEach((tok, idx) => {
+        if (tok.han === '\n' || tok.isSpace) return;
+        const chip = document.createElement('div');
+        if (tok.isComment) {
+          chip.className = 'tok-chip comment';
+          chip.textContent = tok.han;
+          chip.title = '註解（僅記入黃金語料，不予轉換）';
+          tokensWrap.appendChild(chip);
+          return;
+        }
+        let cls = 'tok-chip';
+        if (tok.punct || tok.nonCjk) cls += ' punct';
+        else if (tok.oov) cls += ' oov';
+        else if (tok.trust === 'supp-nisim') cls += ' supp-nisim';
+        else if (tok.trust === 'supp-derived') cls += ' supp-derived';
+        else if (tok.isPolyphone) cls += ' poly';
+        if (tok.uncertain) cls += ' uncertain';
+        chip.className = cls;
+        if (tok.label && !tok.punct && !tok.nonCjk) chip.title = tok.label;
+
+        const hanEl = document.createElement('span');
+        hanEl.className = 'tok-han';
+        hanEl.textContent = tok.displayHan || tok.han;
+        if (!tok.punct && !tok.nonCjk && tok.trust === 'supp-derived') {
+          const b = document.createElement('span');
+          b.className = 'tok-badge';
+          b.textContent = '補';
+          hanEl.appendChild(b);
+        } else if (!tok.punct && !tok.nonCjk && tok.trust === 'supp-nisim') {
+          const b = document.createElement('span');
+          b.className = 'tok-badge';
+          b.textContent = '擬';
+          hanEl.appendChild(b);
+        }
+        if (!tok.punct && !tok.nonCjk && tok.isPolyphone) {
+          const pb = document.createElement('span');
+          pb.className = 'tok-badge';
+          const cnt = tok.candidates && tok.candidates.length > 1
+            ? tok.candidates.length
+            : (tok.partsMeta || []).reduce((s, pm) => Math.max(s, (pm.candidates || []).length), 0);
+          pb.textContent = `${cnt}音▾`;
+          hanEl.appendChild(pb);
+        }
+        if (!tok.punct && !tok.nonCjk && tok.uncertain) {
+          const ub = document.createElement('span');
+          ub.className = 'tok-badge';
+          ub.style.cssText = 'background:#f97316;color:#fff;';
+          ub.textContent = '？';
+          hanEl.appendChild(ub);
+        }
+        chip.appendChild(hanEl);
+
+        if (!tok.punct && !tok.nonCjk) {
+          const hppEl = document.createElement('span');
+          hppEl.className = 'tok-hpp';
+          hppEl.textContent = engine.formatWordHpp(tok.hpp, joiningMode.value, tok.sylBoundaries);
+          chip.appendChild(hppEl);
+
+          // Hover U / l 快速切換大細寫鈕
+          const firstCh = (tok.hpp || '').trim().charAt(0);
+          const isCurUpper = firstCh && firstCh !== firstCh.toLowerCase();
+          const caseBtn = document.createElement('button');
+          caseBtn.type = 'button';
+          caseBtn.className = 'tok-case-btn';
+          caseBtn.textContent = isCurUpper ? 'l' : 'U';
+          caseBtn.title = isCurUpper ? '改為小寫 (l)' : '改為大寫 (U)';
+          caseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleTokenCase(idx);
+          });
+          chip.appendChild(caseBtn);
+
+          chip.addEventListener('click', (e) => openTokenPopup(idx, e));
+        }
+        tokensWrap.appendChild(chip);
+      });
+      outputHpp.textContent = engine.formatTokensToHpp(currentTokens, joiningMode.value);
+    }
+
+    function openTokenPopup(idx, event) {
+      event.stopPropagation();
+      const tok = currentTokens[idx];
+      candPopup.innerHTML = `<div style="font-weight:600;margin-bottom:4px">${tok.displayHan || tok.han} <span class="cand-tag">${tok.label || ''}</span></div>`;
+
+      if (tok.candidates && tok.candidates.length > 0) {
+        for (const c of tok.candidates) {
+          const btn = document.createElement('button');
+          const txt = document.createElement('span');
+          txt.textContent = engine.formatWordHpp(c.hpp, joiningMode.value, tok.sylBoundaries);
+          const tag = document.createElement('span');
+          tag.className = 'cand-tag';
+          tag.textContent = c.label;
+          btn.appendChild(txt);
+          btn.appendChild(tag);
+          btn.onclick = () => {
+            tok.hpp = c.hpp;
+            tok.trust = c.trust;
+            tok.label = c.label;
+            tok.oov = false;
+            recordTokenManualOverride(idx, true, false);
+            candPopup.style.display = 'none';
+            render();
+          };
+          candPopup.appendChild(btn);
+        }
+      }
+
+      // 若是強制連詞／hyphen 詞組，也展開各子詞的多音候選
+      if (tok.partsMeta && tok.partsMeta.length > 1) {
+        let sylOffset = 0;
+        for (const pm of tok.partsMeta) {
+          const offset = sylOffset;
+          sylOffset += pm.sylCount;
+          if (!pm.candidates || pm.candidates.length <= 1) continue;
+          const hdr = document.createElement('div');
+          hdr.style.cssText = 'font-size:12px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px;';
+          hdr.textContent = `子詞「${pm.han}」讀音：`;
+          candPopup.appendChild(hdr);
+          for (const c of pm.candidates) {
+            const btn = document.createElement('button');
+            const txt = document.createElement('span');
+            txt.textContent = engine.formatWordHpp(c.hpp, joiningMode.value);
+            const tag = document.createElement('span');
+            tag.className = 'cand-tag';
+            tag.textContent = c.label;
+            btn.appendChild(txt);
+            btn.appendChild(tag);
+            btn.onclick = () => {
+              const curSyls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+              const repSyls = c.hpp.trim().split(/\s+/).filter(Boolean);
+              for (let k = 0; k < pm.sylCount && k < repSyls.length; k++) {
+                const oldSyl = curSyls[offset + k] || '';
+                const wasUpper = oldSyl && oldSyl.charAt(0) !== oldSyl.charAt(0).toLowerCase();
+                curSyls[offset + k] = wasUpper
+                  ? repSyls[k].charAt(0).toUpperCase() + repSyls[k].slice(1)
+                  : repSyls[k];
+              }
+              tok.hpp = curSyls.join(' ');
+              recordTokenManualOverride(idx, true, false);
+              candPopup.style.display = 'none';
+              render();
+            };
+            candPopup.appendChild(btn);
+          }
+        }
+      }
+
+      const capBtn = document.createElement('button');
+      capBtn.textContent = '切換首字母大寫 (Aa)';
+      capBtn.onclick = () => {
+        toggleTokenCase(idx);
+        candPopup.style.display = 'none';
+      };
+      candPopup.appendChild(capBtn);
+
+      const uncertainBtn = document.createElement('button');
+      uncertainBtn.textContent = tok.uncertain ? '✓ 取消「不確定」標記' : '？ 標記為「不確定」';
+      uncertainBtn.onclick = () => {
+        tok.uncertain = !tok.uncertain;
+        recordTokenManualOverride(idx, false, false, true);
+        candPopup.style.display = 'none';
+        render();
+      };
+      candPopup.appendChild(uncertainBtn);
+
+      const customBtn = document.createElement('button');
+      customBtn.textContent = '自訂讀音…';
+      customBtn.onclick = () => {
+        // 帶出目前讀音，若有 '=' 強制 hyphen 則顯示 '=' 方便直接編輯
+        const curSyls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+        let defaultInput = curSyls[0] || '';
+        for (let i = 1; i < curSyls.length; i++) {
+          const isEq = tok.sylBoundaries && tok.sylBoundaries[i - 1] === 'hyphen';
+          defaultInput += (isEq ? '=' : ' ') + curSyls[i];
+        }
+
+        const val = prompt(
+          `輸入「${tok.displayHan || tok.han}」的 HPP 讀音（空格/-/' 分隔音節；= 強制 hyphen；+ 強制空格拆詞）：`,
+          defaultInput
+        );
+        if (val !== null && val.trim()) {
+          // 解析音節與其間的結構符號（= 或 +）
+          const rawParts = val.trim().split(/(\s*=\s*|\s*\+\s*|[\s'-]+)/).filter((p) => p && !/^\s+$/.test(p));
+          const newSyls = [];
+          const newOps = [];
+          for (const part of rawParts) {
+            if (/^[\s'-]+$/.test(part)) continue;
+            if (part.includes('=')) {
+              newOps.push('=');
+            } else if (part.includes('+')) {
+              newOps.push('+');
+            } else {
+              if (newSyls.length > newOps.length) newOps.push('normal');
+              newSyls.push(part.normalize('NFC'));
+            }
+          }
+
+          const chars = Array.from(tok.han || '');
+          const hadEq = tok.sylBoundaries && tok.sylBoundaries.includes('hyphen');
+          const hasNewStruct = newOps.includes('=') || newOps.includes('+') || hadEq;
+
+          if (newSyls.length > 0) {
+            tok.hpp = newSyls.join(' ');
+            tok.oov = false;
+            tok.trust = 'official';
+            tok.label = '人工自訂';
+            recordTokenManualOverride(idx, true, true);
+
+            // 若有 '=' / '+' 結構變化且可對應到 textarea 原文位置，反推回 textarea 並重跑斷詞
+            if (
+              hasNewStruct &&
+              newSyls.length === chars.length &&
+              tok.srcStart !== undefined &&
+              tok.srcEnd !== undefined
+            ) {
+              const oldDisp = tok.displayHan || tok.han;
+              let rebuilt = chars[0];
+              for (let k = 1; k < chars.length; k++) {
+                const op = newOps[k - 1];
+                if (op === '=' || op === '+') {
+                  rebuilt += op;
+                } else if (oldDisp.includes('-')) {
+                  // 保留原有的 '-' 強制連詞符號
+                  rebuilt += '-';
+                }
+                rebuilt += chars[k];
+              }
+              if (rebuilt !== oldDisp) {
+                const txt = inputHan.value;
+                inputHan.value = txt.slice(0, tok.srcStart) + rebuilt + txt.slice(tok.srcEnd);
+                candPopup.style.display = 'none';
+                runConvert();
+                return;
+              }
+            }
+            render();
+          }
+        }
+        candPopup.style.display = 'none';
+      };
+      candPopup.appendChild(customBtn);
+
+      candPopup.style.left = Math.min(event.clientX, window.innerWidth - 230) + 'px';
+      candPopup.style.top = Math.min(event.clientY + 8, window.innerHeight - 260) + 'px';
+      candPopup.style.display = 'block';
+    }
+
+    document.addEventListener('click', () => { candPopup.style.display = 'none'; });
+
+    tokensWrap.addEventListener('pointerover', (e) => {
+      const chip = e.target.closest('.tok-chip:not(.punct)');
+      if (!chip) return;
+      for (const el of tokensWrap.querySelectorAll('.tok-chip.is-hovered')) {
+        if (el !== chip) el.classList.remove('is-hovered');
+      }
+      chip.classList.add('is-hovered');
+    });
+    tokensWrap.addEventListener('pointerout', (e) => {
+      const chip = e.target.closest('.tok-chip:not(.punct)');
+      if (!chip) return;
+      if (!e.relatedTarget || !chip.contains(e.relatedTarget)) {
+        chip.classList.remove('is-hovered');
+      }
+    });
+
+    function runConvert() {
+      if (!engine.ready) return;
+      const newTokens = engine.segmentAndConvert(inputHan.value);
+      const newPureCjk = extractPureCjkChars(newTokens);
+      manualCharOverrides = remapOverrides(prevPureCjk, manualCharOverrides, newPureCjk);
+      applyOverridesToTokens(newTokens, manualCharOverrides);
+      currentTokens = newTokens;
+      prevPureCjk = newPureCjk;
+      render();
+    }
+
+    inputHan.addEventListener('input', () => {
+      if (autoToggle.checked) runConvert();
+    });
+    joiningMode.addEventListener('change', render);
+    document.getElementById('runBtn').addEventListener('click', runConvert);
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(outputHpp.textContent);
+      statusLine.textContent = '已複製 HagPinPlus 結果。';
+    });
+
+    document.getElementById('loadSampleBtn').addEventListener('click', async () => {
+      const p0 = await fetch('tests/romaine_p0.json').then((r) => r.json());
+      inputHan.value = p0.items[0].han;
+      runConvert();
+    });
+
+    document.getElementById('evalP0Btn').addEventListener('click', async () => {
+      if (!engine.ready) return;
+      const p0 = await fetch('tests/romaine_p0.json').then((r) => r.json());
+      let goldCount = 0;
+      let hitCount = 0;
+      for (const it of p0.items) {
+        const gSyls = it.tokens.filter((t) => !t.punct).flatMap((t) => t.hpp.trim().toLowerCase().split(/[\s'-]+/));
+        const pToks = engine.segmentAndConvert(it.han);
+        const pSyls = pToks.filter((t) => !t.punct).flatMap((t) => t.hpp.trim().toLowerCase().split(/[\s'-]+/));
+        const m = gSyls.length, n = pSyls.length;
+        const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            dp[i][j] = gSyls[i - 1] === pSyls[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+        goldCount += m;
+        hitCount += dp[m][n];
+      }
+      const pct = ((hitCount / goldCount) * 100).toFixed(1);
+      statusLine.textContent = `P0 基準測試（${p0.items.length} 筆）：音節讀音正確率 ${hitCount}/${goldCount} (${pct}%)`;
+    });
+
+    function toggleTokenCase(idx) {
+      const tok = currentTokens[idx];
+      if (!tok || !tok.hpp) return;
+      const isHyphenCompound = tok.sylBoundaries && tok.sylBoundaries.includes('hyphen');
+      if (isHyphenCompound) {
+        const syls = tok.hpp.trim().split(/\s+/).filter(Boolean);
+        const firstChar = syls[0] ? syls[0].charAt(0) : '';
+        const toUpper = firstChar === firstChar.toLowerCase();
+        tok.hpp = syls
+          .map((s) => (toUpper ? s.charAt(0).toUpperCase() + s.slice(1) : s.charAt(0).toLowerCase() + s.slice(1)))
+          .join(' ');
+      } else {
+        const first = tok.hpp.charAt(0);
+        tok.hpp = (first !== first.toLowerCase() ? first.toLowerCase() : first.toUpperCase()) + tok.hpp.slice(1);
+      }
+      recordTokenManualOverride(idx, false, true);
+      render();
+    }
+
+    const verifiedPanel = document.getElementById('verifiedPanel');
+    const verifiedList = document.getElementById('verifiedList');
+
+    const verifyBtn = document.getElementById('verifyBtn');
+    const saveAsNewBtn = document.getElementById('saveAsNewBtn');
+    let editingVerifiedId = null;
+    let editingVerifiedNum = 0;
+
+    function updateSaveButtons() {
+      if (editingVerifiedId) {
+        verifyBtn.textContent = `✓ 存回本筆黃金語料 (#${editingVerifiedNum})`;
+        saveAsNewBtn.style.display = 'inline-block';
+      } else {
+        verifyBtn.textContent = '✓ 確認校正並入庫（localStorage）';
+        saveAsNewBtn.style.display = 'none';
+      }
+    }
+
+    function buildVerifiedEntry(id) {
+      const comments = currentTokens
+        .filter((t) => t.isComment)
+        .map((t) => t.han.replace(/^%%|%%$/g, '').trim())
+        .filter(Boolean);
+      const entry = {
+        id: id || `v-${Date.now()}`,
+        dialect: 'sixian',
+        han: inputHan.value.trim(),
+        tokens: currentTokens.map((t) => {
+          if (t.isComment) return { han: t.han, comment: true };
+          if (t.punct) return { han: t.han, punct: true, hpp: t.hpp };
+          const obj = { han: t.han, hpp: t.hpp };
+          if (t.uncertain) obj.uncertain = true;
+          return obj;
+        }),
+        joined_hpp: outputHpp.textContent,
+        status: 'verified',
+        source: 'romaine-auto-poc',
+        updated_at: new Date().toISOString(),
+      };
+      if (comments.length) entry.comments = comments;
+      return entry;
+    }
+
+    function renderVerifiedPanel() {
+      const list = loadVerified();
+      verifiedList.innerHTML = '';
+      if (!list.length) {
+        verifiedList.innerHTML = '<div class="status-line">目前尚無已存黃金語料。</div>';
+        return;
+      }
+      list.slice().reverse().forEach((item, revIdx) => {
+        const origIdx = list.length - 1 - revIdx;
+        const row = document.createElement('div');
+        row.className = 'verified-item';
+
+        const head = document.createElement('div');
+        head.className = 'verified-item-head';
+        const timeStr = item.updated_at ? item.updated_at.slice(0, 19).replace('T', ' ') : '';
+        head.innerHTML = `<span class="status-line">#${origIdx + 1} · ${timeStr}</span>`;
+
+        const btns = document.createElement('div');
+        btns.style.display = 'flex';
+        btns.style.gap = '6px';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.textContent = '載入編輯';
+        loadBtn.onclick = () => {
+          editingVerifiedId = item.id;
+          editingVerifiedNum = origIdx + 1;
+          updateSaveButtons();
+          inputHan.value = item.han || '';
+          manualCharOverrides = new Map();
+          prevPureCjk = [];
+          let cjkIdx = 0;
+          for (const tok of item.tokens || []) {
+            if (tok.punct || tok.nonCjk) continue;
+            const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+            const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+            for (let k = 0; k < chars.length; k++) {
+              prevPureCjk.push(chars[k]);
+              const syl = syls[k] || '';
+              const fc = syl.charAt(0);
+              manualCharOverrides.set(cjkIdx, {
+                ch: chars[k],
+                syl: syl.toLowerCase(),
+                isUpper: !!fc && fc !== fc.toLowerCase(),
+                uncertain: !!tok.uncertain,
+              });
+              cjkIdx++;
+            }
+          }
+          runConvert();
+          statusLine.textContent = `已載入第 #${editingVerifiedNum} 筆黃金語料進行編輯。`;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '刪除';
+        delBtn.onclick = () => {
+          const cur = loadVerified();
+          const removed = cur.splice(origIdx, 1)[0];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cur));
+          if (removed && removed.id === editingVerifiedId) {
+            editingVerifiedId = null;
+            editingVerifiedNum = 0;
+            updateSaveButtons();
+          }
+          updateVerifiedBadge();
+          renderVerifiedPanel();
+        };
+
+        btns.appendChild(loadBtn);
+        btns.appendChild(delBtn);
+        head.appendChild(btns);
+
+        const hanDiv = document.createElement('div');
+        hanDiv.className = 'verified-item-han';
+        hanDiv.textContent = item.han;
+
+        const hppDiv = document.createElement('div');
+        hppDiv.className = 'verified-item-hpp';
+        hppDiv.textContent = item.joined_hpp;
+
+        row.appendChild(head);
+        row.appendChild(hanDiv);
+        row.appendChild(hppDiv);
+        verifiedList.appendChild(row);
+      });
+    }
+
+    document.getElementById('toggleVerifiedBtn').addEventListener('click', () => {
+      const open = verifiedPanel.style.display !== 'none';
+      verifiedPanel.style.display = open ? 'none' : 'block';
+      if (!open) renderVerifiedPanel();
+    });
+
+    document.getElementById('clearVerifiedBtn').addEventListener('click', () => {
+      if (!confirm('確定要清空本機所有已存黃金語料嗎？')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      editingVerifiedId = null;
+      editingVerifiedNum = 0;
+      updateSaveButtons();
+      updateVerifiedBadge();
+      renderVerifiedPanel();
+    });
+
+    verifyBtn.addEventListener('click', () => {
+      if (!currentTokens.length) return;
+      const list = loadVerified();
+      if (editingVerifiedId) {
+        const targetIdx = list.findIndex((it) => it.id === editingVerifiedId);
+        if (targetIdx !== -1) {
+          list[targetIdx] = buildVerifiedEntry(editingVerifiedId);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
+          statusLine.textContent = `已更新第 #${targetIdx + 1} 筆黃金語料。`;
+          return;
+        }
+      }
+      const entry = buildVerifiedEntry();
+      list.push(entry);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      editingVerifiedId = entry.id;
+      editingVerifiedNum = list.length;
+      updateSaveButtons();
+      updateVerifiedBadge();
+      if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
+      statusLine.textContent = `已確認寫入本機黃金語料（第 #${list.length} 筆）。`;
+    });
+
+    saveAsNewBtn.addEventListener('click', () => {
+      if (!currentTokens.length) return;
+      const list = loadVerified();
+      const entry = buildVerifiedEntry();
+      list.push(entry);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      editingVerifiedId = entry.id;
+      editingVerifiedNum = list.length;
+      updateSaveButtons();
+      updateVerifiedBadge();
+      if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
+      statusLine.textContent = `已另存為第 #${list.length} 筆黃金語料。`;
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const data = { schema_version: 1, items: loadVerified() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `romaine-verified-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    });
+
+    updateVerifiedBadge();
+    engine.init('.').then(() => {
+      statusLine.textContent = `詞庫載入完成：${engine.lexicon.size} 詞條（含補字典）、${engine.prefs.size} 多音偏好表。`;
+    }).catch((err) => {
+      statusLine.textContent = `載入失敗（請透過本機 HTTP 伺服器開啟）：${err.message}`;
+    });
+  </script>
+</body>
+</html>
