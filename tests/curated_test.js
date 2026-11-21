@@ -46,10 +46,12 @@ DIALECTS.forEach((d) => {
 });
 console.log('  ✅ 1. 六腔檔案、來源欄位 PASS');
 
-// 2. 「喺」：四、平 --he／he0，海 he33，大「哶」me33
+// 2. 「喺」：四、南、平 --he／he0，海 he33，大「哶」me33
 const find = (d, ch) => curated[d].find((r) => r['客家語'] === ch);
 assert.strictEqual(find('四', '喺')['客語標音_顯示'], '--he');
 assert.strictEqual(find('四', '喺')['客語標音_查詢'], 'he0');
+assert.strictEqual(find('南', '喺')['客語標音_顯示'], '--he');
+assert.strictEqual(find('南', '喺')['客語標音_查詢'], 'he0');
 assert.strictEqual(find('平', '喺')['客語標音_顯示'], '--he');
 assert.strictEqual(find('平', '喺')['客語標音_查詢'], 'he0');
 assert.strictEqual(find('海', '喺')['客語標音_查詢'], 'he33');
