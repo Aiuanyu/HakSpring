@@ -3668,32 +3668,30 @@ tr.ios-autoplay-instruction td::before {
   outline-offset: 2px;
 }
 
-/* 查詢面板快捷鍵數字細標籤（桌面瀏覽器專用：極簡精巧微型標籤） */
+/* 查詢面板快捷鍵數字細標籤（依 User-Agent 判斷，行動裝置才關閉） */
 .popup-shortcut {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62em;
+  font-family: var(--roman-font) !important;
+  font-weight: 500;
+  line-height: 1;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 2px;
+  margin: 0 2px 0 1px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  color: #737373;
+  box-shadow: none;
+  vertical-align: middle;
+  opacity: 0.8;
 }
 
-@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
-  .popup-shortcut {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.62em;
-    font-family: var(--roman-font) !important;
-    font-weight: 500;
-    line-height: 1;
-    min-width: 12px;
-    height: 12px;
-    padding: 0 2px;
-    margin: 0 2px 0 1px;
-    border-radius: 3px;
-    background: rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(0, 0, 0, 0.09);
-    color: #737373;
-    box-shadow: none;
-    vertical-align: middle;
-    opacity: 0.8;
-  }
+.mobile-device .popup-shortcut {
+  display: none;
 }
 
 /* --- 查詢結果相關樣式 (Search Results) --- */

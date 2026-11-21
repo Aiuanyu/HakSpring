@@ -6053,7 +6053,7 @@ function initializeAppUI() {
     const isPlainSlash = isSlashKey && !event.ctrlKey && !event.metaKey && !event.altKey;
     const isCtrlOrCmdSlash = isSlashKey && (event.ctrlKey || event.metaKey) && !event.altKey;
 
-    if (isPlainSlash || isCtrlOrCmdSlash) {
+    if (!isMobileDevice() && (isPlainSlash || isCtrlOrCmdSlash)) {
       const isTextInputFocused =
         activeElement &&
         (activeElement.tagName === 'INPUT' ||
@@ -10096,6 +10096,7 @@ function initializeAppUI() {
       };
 
       if (
+        !isMobileDevice() &&
         !event.ctrlKey &&
         !event.altKey &&
         !event.metaKey &&
