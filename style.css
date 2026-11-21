@@ -6969,3 +6969,73 @@ mark {
   .audio-profile-btn { background: #232426; color: #95d5b2; border-color: #52b788; }
   .audio-profile-btn-danger { color: #ff9ea1; border-color: #ff9ea1; }
 }
+
+/* ==========================================================================
+   rtc 多層標音（Firefox 系）：認證詞彙標音有斜線者，漢字留一份，
+   各讀音用 <rtc><rt> 完整展開，第一層 <rt> 在漢字上背，後面个 <rtc> 層在漢字下背一層一層往下排（20261120 改：原本全部往上疊）。
+   註：本站 `body *` 強制 Iansui／行高／顏色，所以這遮个字型、行高、顏色全部 explicit。
+   ========================================================================== */
+ruby.ruby-multi-reading rtc {
+  ruby-position: under;
+  /* Firefox UA 對 rtc 本身也會縮小，裡肚个 rt 又縮一擺（雙重縮小）；還原成 1em，
+     讓第二層以後个字級摎第一層（直接放 ruby 下个 rt）一致 */
+  font-size: 1em;
+  font-family: var(--roman-font) !important;
+  color: inherit;
+}
+ruby.ruby-multi-reading rt,
+ruby.ruby-multi-reading rtc > rt {
+  font-size: 1em;
+  font-family: var(--roman-font) !important;
+  color: inherit;
+}
+
+/* 往下排个 rtc 層：離漢字遠一點（平哥 Firefox 實測 20261120：margin-top 0.5em 有效），
+   教典別讀小標（.phonetic-note-label）个 vertical-align 改 text-top，免得蓋著漢字 */
+ruby.ruby-multi-reading rtc > rt {
+  margin-top: 0.5em;
+}
+ruby.ruby-multi-reading .phonetic-note-label {
+  vertical-align: text-top;
+}
+
+/* 多層標音裡肚个變調：免巢狀 ruby（Firefox 算 rt 高度毋會算著巢狀標註，會摎別層重疊），
+   改用上標，作法摎 .gip-t 共樣 */
+.sandhi-sup {
+  font-family: var(--roman-font) !important;
+}
+.sandhi-sup > sup {
+  font-family: var(--roman-font) !important;
+  font-size: 0.6em;
+  vertical-align: 0.5em;
+  line-height: 0;
+  margin-left: 0.03em;
+  color: inherit; /* 壓過 body * 个 color */
+  /* 變調數字毋好被選取、複製（免得複製出來標音摻著 53 這類數字）。
+     user-select: none 在 Firefox 跨選取範圍複製時還係會帶著，所以數字改放 data-tone，
+     用 ::before 生成內容顯示（生成內容無佇文字節點，毋會被複製） */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sandhi-sup > sup::before {
+  content: attr(data-tone);
+}
+/* 變調顏色：摎 ruby.sandhi-tN 共色（淺色主題） */
+.sandhi-sup.sandhi-t55 { color: red; }
+.sandhi-sup.sandhi-t35 { color: darkorchid; }
+.sandhi-sup.sandhi-t33 { color: blue; }
+.sandhi-sup.sandhi-t2 { color: forestgreen; }
+.sandhi-sup.sandhi-t11 { color: #c84c09; }
+.sandhi-sup.sandhi-t5 { color: teal; }
+.sandhi-sup.sandhi-t3 { color: saddlebrown; }
+.sandhi-sup.sandhi-t53 { color: mediumvioletred; }
+@media (prefers-color-scheme: dark) {
+  .sandhi-sup.sandhi-t55 { color: #FF8A80; }
+  .sandhi-sup.sandhi-t35 { color: lightgreen; }
+  .sandhi-sup.sandhi-t33 { color: #80CBC4; }
+  .sandhi-sup.sandhi-t2 { color: #A5D6A7; }
+  .sandhi-sup.sandhi-t11 { color: #FFB74D; }
+  .sandhi-sup.sandhi-t5 { color: #4DB6AC; }
+  .sandhi-sup.sandhi-t3 { color: #A1887F; }
+  .sandhi-sup.sandhi-t53 { color: #F48FB1; }
+}
