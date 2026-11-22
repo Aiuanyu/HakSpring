@@ -773,11 +773,37 @@
       return map[aForm + (hasStop ? 'd' : '')] || null;
     }
 
-    _getSandhiTone(currSyl, nextSyl, dialectCode) {
+    _getSandhiTone(currSyl, nextSyl, dialectCode, prevSyl = '', next2Syl = '') {
       const rules = this.sandhiRules && this.sandhiRules[dialectCode];
       if (!rules) return null;
       const frontTone = this._classifyHppTone(currSyl, dialectCode);
       if (!frontTone) return null;
+
+      const norm = (s) => String(s || '').trim().toLowerCase();
+      const prevN = norm(prevSyl);
+      const currN = norm(currSyl);
+      const nextN = norm(nextSyl);
+      const next2N = norm(next2Syl);
+
+      if (dialectCode === 'zh') {
+        const ZH_POST_SANDHI = {
+          'ngài|ngìn': '33', 'hèn|ngìn': '33', 'gùi|ngìn': '33', 'ěen|ngìn': '33',
+          'hôo|mò': '11', 'rhiǔ|mò': '11', 'ngìb|lòi': '11', 'loo|lòi': '11', 'lòo|lòi': '11',
+        };
+        if (prevN && ZH_POST_SANDHI[`${prevN}|${currN}`]) return ZH_POST_SANDHI[`${prevN}|${currN}`];
+        if (nextN && ZH_POST_SANDHI[`${currN}|${nextN}`]) return null;
+        if (nextN && currN === nextN && prevN !== currN && !['24', '24v', '43'].includes(frontTone)) {
+          return frontTone === '55' ? null : '55';
+        }
+      } else if (dialectCode === 'da') {
+        if (prevN !== currN && nextN && currN === nextN && nextN === next2N) {
+          if (['33', '113', '31', '54'].includes(frontTone)) return '35';
+        } else if (prevN === currN && nextN && currN === nextN && nextN !== next2N) {
+          if (['33', '31', '54'].includes(frontTone)) return '113';
+        }
+      }
+
+      if (!nextSyl) return null;
       const rule = rules[frontTone];
       if (!rule) return null;
       if (rule.always) return rule.always;
@@ -853,21 +879,31 @@
         } else if (item.type === 'sep') {
           out += esc(item.text);
         } else if (item.type === 'block' || item.type === 'punct') {
+          if (item.type === 'block') prevSyl = '';
           out = out.replace(/[ ]+$/, '') + esc(item.text);
         } else if (item.type === 'syl') {
           if (item.noSandhi) {
+            prevSyl = '';
             out += `<ruby class="sandhi-none">${esc(item.text)}<rt>#</rt></ruby>`;
             continue;
           }
           let nextSyl = null;
+          let next2Syl = null;
           for (let j = i + 1; j < stream.length; j++) {
             if (stream[j].type === 'syl') {
-              nextSyl = stream[j].text;
-              break;
+              if (!nextSyl) {
+                nextSyl = stream[j].text;
+              } else {
+                next2Syl = stream[j].text;
+                break;
+              }
             }
             if (stream[j].type === 'block' || stream[j].type === 'newline') break;
           }
-          const newTone = nextSyl ? this._getSandhiTone(item.text, nextSyl, dialectCode) : null;
+          const newTone = (nextSyl || (dialectCode === 'zh' && prevSyl))
+            ? this._getSandhiTone(item.text, nextSyl || '', dialectCode, prevSyl, next2Syl || '')
+            : null;
+          prevSyl = item.text;
           if (newTone) {
             out += `<ruby class="sandhi-t${esc(newTone)}">${esc(item.text)}<rt>${esc(newTone)}</rt></ruby>`;
           } else {
