@@ -198,6 +198,7 @@
       // Map<han, Array<{hpp: string, trust: string, label: string}>>
       this.lexicon = new Map();
       this.unigram = Object.create(null);
+      this.bigram = Object.create(null);
       this.learnedUnigram = Object.create(null);
       this.learnedReadingCounts = new Map();
       this.learnedCount = 0;
@@ -318,6 +319,7 @@
       }
 
       this.unigram = statsJson.unigram || Object.create(null);
+      this.bigram = statsJson.bigram || Object.create(null);
       this.totalTokens = (statsJson.meta && statsJson.meta.total_tokens) || 1;
       for (const item of prefsJson.items || []) {
         this.prefs.set(item.han, item.default);
@@ -419,6 +421,7 @@
       const n = chars.length;
       const dp = new Array(n + 1).fill(Infinity);
       const back = new Array(n + 1).fill(0);
+      const bestWord = new Array(n + 1).fill('');
       dp[0] = 0;
       const vocabSize = this.lexicon.size || 1;
 
@@ -426,6 +429,7 @@
         if (!Number.isFinite(dp[i])) continue;
         let matched = false;
         const limit = Math.min(this.maxWordLen, n - i);
+        const prevWord = bestWord[i];
         for (let len = 1; len <= limit; len++) {
           const w = chars.slice(i, i + len).join('');
           const cands = this.lexicon.get(w);
@@ -434,11 +438,14 @@
             const topTrust = TRUST_RANK[cands[0].trust] || 1;
             const trustPenalty = topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5;
             const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + 0.5;
+            const bi = prevWord ? (this.bigram[`${prevWord}\t${w}`] || 0) : 0;
+            const biBonus = bi > 0 ? 0.45 * mathLog(1 + bi) : 0;
             const cost =
-              -mathLog(freq / (this.totalTokens + 0.5 * vocabSize)) - 1.6 * (len - 1) + trustPenalty;
+              -mathLog(freq / (this.totalTokens + 0.5 * vocabSize)) - 1.6 * (len - 1) + trustPenalty - biBonus;
             if (dp[i] + cost < dp[i + len]) {
               dp[i + len] = dp[i] + cost;
               back[i + len] = i;
+              bestWord[i + len] = w;
             }
           }
         }
@@ -447,6 +454,7 @@
           if (dp[i] + 14 < dp[i + 1]) {
             dp[i + 1] = dp[i] + 14;
             back[i + 1] = i;
+            bestWord[i + 1] = single;
           }
         }
       }
@@ -568,6 +576,7 @@
       let cjkBuf = '';
       let cjkStartCp = -1;
       let cjkBufNoSandhi = new Set();
+      let cjkBufSpaceAfter = new Set();
       let cjkBufPureCount = 0;
       let nonCjkBuf = '';
       let needCap = true;
@@ -581,10 +590,21 @@
         nonCjkBuf = '';
       };
 
-      const applyNoSandhi = (tok, startPureIdx) => {
+      const applyTokenMarkers = (tok, startPureIdx) => {
         const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_RE.test(c));
         const flags = chars.map((_, k) => cjkBufNoSandhi.has(startPureIdx + k));
         if (flags.some(Boolean)) tok.noSandhi = flags;
+        if (chars.length > 1) {
+          const bounds = tok.sylBoundaries ? tok.sylBoundaries.slice() : new Array(chars.length - 1).fill('normal');
+          let hasSpace = false;
+          for (let k = 0; k < chars.length - 1; k++) {
+            if (cjkBufSpaceAfter.has(startPureIdx + k)) {
+              bounds[k] = 'space';
+              hasSpace = true;
+            }
+          }
+          if (hasSpace || tok.sylBoundaries) tok.sylBoundaries = bounds;
+        }
         return chars.length;
       };
 
@@ -600,7 +620,7 @@
             tok.srcStart = cpToUtf16[segCpOffset];
             tok.srcEnd = cpToUtf16[segCpOffset + segCpLen];
             if (!tok.oov) needCap = false;
-            pureIdx += applyNoSandhi(tok, pureIdx);
+            pureIdx += applyTokenMarkers(tok, pureIdx);
             tokens.push(tok);
           } else {
             let wordCpOffset = segCpOffset;
@@ -626,7 +646,7 @@
                 label: picked.label,
                 punct: false,
               };
-              pureIdx += applyNoSandhi(tok, pureIdx);
+              pureIdx += applyTokenMarkers(tok, pureIdx);
               tokens.push(tok);
               wordCpOffset += wCpLen;
             }
@@ -636,6 +656,7 @@
         cjkBuf = '';
         cjkStartCp = -1;
         cjkBufNoSandhi = new Set();
+        cjkBufSpaceAfter = new Set();
         cjkBufPureCount = 0;
       };
 
@@ -674,7 +695,8 @@
         } else if ((ch === '-' || ch === '=') && (CJK_CHAR_RE.test(prev) || prev === '#') && CJK_CHAR_RE.test(next)) {
           cjkBuf += ch;
         } else if (ch === '+' && (CJK_CHAR_RE.test(prev) || prev === '#') && CJK_CHAR_RE.test(next)) {
-          flushCjk();
+          // `+` 強制在輸出中加空格，但查讀音與斷詞單位維持不變
+          if (cjkBufPureCount > 0) cjkBufSpaceAfter.add(cjkBufPureCount - 1);
         } else if (ch === '\n') {
           flushCjk();
           flushNonCjk();
@@ -720,6 +742,8 @@
         const forced = sylBoundaries && sylBoundaries[i - 1];
         if (forced === 'hyphen') {
           wordOut += '-';
+        } else if (forced === 'space') {
+          wordOut += ' ';
         } else {
           wordOut += join.getJoiningSeparator(joiningMode, false, syls[i - 1], syls[i - 1], syls[i]);
         }
@@ -856,6 +880,8 @@
               const forced = tok.sylBoundaries && tok.sylBoundaries[i - 1];
               if (forced === 'hyphen') {
                 sepBefore = '-';
+              } else if (forced === 'space') {
+                sepBefore = ' ';
               } else if (join) {
                 sepBefore = join.getJoiningSeparator(joiningMode, false, syls[i - 1], syls[i - 1], syls[i]);
               }
@@ -868,9 +894,11 @@
       }
 
       let out = '';
+      let prevSyl = '';
       for (let i = 0; i < stream.length; i++) {
         const item = stream[i];
         if (item.type === 'newline') {
+          prevSyl = '';
           out = out.replace(/[ \t]+$/, '') + '\n';
         } else if (item.type === 'space') {
           if (!out.endsWith(' ') && !out.endsWith('\n')) out += ' ';
