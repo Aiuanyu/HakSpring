@@ -47,7 +47,23 @@
       padding: 20px;
       line-height: 1.6;
     }
-    .container { max-width: 920px; margin: 0 auto; display: grid; gap: 16px; }
+    .container { max-width: 1360px; margin: 0 auto; display: grid; gap: 16px; align-items: start; }
+    .main-col { display: grid; gap: 16px; min-width: 0; }
+    @media (min-width: 980px) {
+      .container { grid-template-columns: 380px minmax(0, 1fr); }
+      .cert-loader {
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 32px);
+        display: flex;
+        flex-direction: column;
+      }
+      .cert-loader .cert-sent-list {
+        max-height: none;
+        flex: 1;
+        min-height: 220px;
+      }
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -175,13 +191,211 @@
     }
     .popup button { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; margin-top: 4px; }
     .cand-tag { font-size: 11px; color: var(--muted); }
+    .cand-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .cand-ext-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .cand-ext-link:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    @media (prefers-color-scheme: dark) {
+      .cand-ext-link:hover { color: #0f172a; }
+    }
+    .dict-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .dict-modal-dialog {
+      width: min(1060px, 96vw);
+      height: min(88vh, 860px);
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .dict-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .dict-modal-title { font-size: 16px; font-weight: 700; }
+    .dict-modal-actions { display: flex; align-items: center; gap: 8px; }
+    .dict-modal-ext {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .dict-modal-ext:hover { text-decoration: underline; }
+    .dict-modal-cands {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .dict-cand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+    }
+    .dict-cand-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .dict-cand-pill.active .cand-tag { color: rgba(255,255,255,0.88); }
+    @media (prefers-color-scheme: dark) {
+      .dict-cand-pill.active { color: #0f172a; }
+      .dict-cand-pill.active .cand-tag { color: #0f172a; }
+    }
+    .dict-modal-frame {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: var(--bg);
+    }
+    .cert-loader summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+    .cert-loader-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .cert-active-meta {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .cert-sent-list {
+      margin-top: 8px;
+      max-height: 210px;
+      overflow-y: auto;
+      display: grid;
+      gap: 6px;
+    }
+    .cert-sent-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      font-size: 13px;
+    }
+    .cert-sent-row.active { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+    .cert-sent-row.verified {
+      background: #ecfdf5;
+      border-color: #16a34a;
+    }
+    .cert-verified-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #15803d;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+    @media (prefers-color-scheme: dark) {
+      .cert-sent-row.verified {
+        background: #052e16;
+        border-color: #22c55e;
+      }
+      .cert-verified-badge {
+        background: #4ade80;
+        color: #052e16;
+      }
+    }
+    .cert-sent-text { flex: 1; min-width: 0; }
+    .cert-sent-sub { font-size: 12px; color: var(--muted); }
+    .cert-audio-btn { padding: 4px 8px; font-size: 13px; line-height: 1.2; }
+    .cert-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .output-box ruby[class^="sandhi-"] { ruby-position: over; font-weight: 500; }
+    .output-box ruby[class^="sandhi-"] rt { font-size: 0.65em; font-weight: 700; color: inherit; }
+    ruby.sandhi-t55 { color: #dc2626; }
+    ruby.sandhi-t35 { color: #9333ea; }
+    ruby.sandhi-t33 { color: #2563eb; }
+    ruby.sandhi-t2 { color: #15803d; }
+    ruby.sandhi-t11 { color: #c84c09; }
+    ruby.sandhi-t5 { color: #0f766e; }
+    ruby.sandhi-t3 { color: #9a3412; }
+    ruby.sandhi-t53 { color: #be185d; }
+    ruby.sandhi-none { color: inherit; }
+    ruby.sandhi-none rt { color: var(--muted); font-weight: 500; }
+    @media (prefers-color-scheme: dark) {
+      ruby.sandhi-t55 { color: #ff8a80; }
+      ruby.sandhi-t35 { color: #c4b5fd; }
+      ruby.sandhi-t33 { color: #93c5fd; }
+      ruby.sandhi-t2 { color: #86efac; }
+      ruby.sandhi-t11 { color: #ffb74d; }
+      ruby.sandhi-t5 { color: #5eead4; }
+      ruby.sandhi-t3 { color: #fdba74; }
+      ruby.sandhi-t53 { color: #f48fb1; }
+      .cert-audio-btn.playing { color: #0f172a; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <details class="card cert-loader" id="certLoaderCard" open>
+      <summary>CERT 認證例句載入器（邊學邊測）</summary>
+      <div class="cert-loader-controls">
+        <select id="certLevelSelect" title="級別"></select>
+        <select id="certCategorySelect" title="分類"></select>
+        <button type="button" id="certPrevBtn">◀ 上一句</button>
+        <button type="button" id="certNextBtn">下一句 ▶</button>
+        <span class="status-line" id="certCounter"></span>
+      </div>
+      <div class="cert-active-meta" id="certActiveMeta" style="display:none"></div>
+      <div class="cert-sent-list" id="certSentList"></div>
+    </details>
+
+    <div class="main-col">
     <div class="card">
-      <h2 style="margin:0 0 8px">Romaine Auto PoC（四縣 v10）</h2>
+      <h2 style="margin:0 0 8px">Romaine Auto PoC（多腔詞典／例句測試）</h2>
       <div class="toolbar">
+        <select id="dialectSelect" title="選擇腔調">
+          <option value="sixian">四縣</option>
+          <option value="zhaoan">詔安</option>
+        </select>
         <label class="switch">
           <input type="checkbox" id="autoToggle" checked />
           全自動即時產生
@@ -197,12 +411,12 @@
       </div>
       <div class="status-line" id="statusLine" style="margin-top:8px">詞庫（教典＋認證＋補字典）載入中…</div>
       <div class="hint-line">
-        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>恁+早</code> 強制斷詞加空格 ｜ <code>%%註解%%</code> 僅記入黃金語料不轉換
+        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>恁+早</code> 強制斷詞加空格 ｜ <code>字#</code> 標記前音節不變調 ｜ <code>%%註解%%</code> 僅記入黃金語料不轉換
       </div>
     </div>
 
     <div class="card">
-      <textarea id="inputHan" placeholder="輸入四縣客話諸夏字…（試看：輕-井-澤、美=臺、恁+早、妳）"></textarea>
+      <textarea id="inputHan" placeholder="輸入客話諸夏字…（試看：輕-井-澤、美=臺、恁+早、妳）"></textarea>
     </div>
 
     <div class="card">
@@ -214,7 +428,13 @@
 
     <div class="card">
       <div class="toolbar" style="margin-bottom:8px; justify-content:space-between">
-        <strong>HagPinPlus 輸出</strong>
+        <div class="toolbar">
+          <strong>HagPinPlus 輸出</strong>
+          <label class="switch" style="font-size:13px;font-weight:500">
+            <input type="checkbox" id="sandhiToggle" checked />
+            顯示變調 (Sandhi)
+          </label>
+        </div>
         <div class="toolbar">
           <button id="copyBtn">複製結果</button>
           <button class="primary" id="verifyBtn">✓ 確認校正並入庫（localStorage）</button>
@@ -233,13 +453,30 @@
       </div>
       <div class="verified-list" id="verifiedList"></div>
     </div>
+    </div>
   </div>
 
   <div class="popup" id="candPopup"></div>
 
+  <div class="dict-modal-overlay" id="dictModal" role="dialog" aria-modal="true" aria-labelledby="dictModalTitle">
+    <div class="dict-modal-dialog">
+      <div class="dict-modal-header">
+        <span class="dict-modal-title" id="dictModalTitle">客源翠詞典查詢</span>
+        <div class="dict-modal-actions">
+          <a class="dict-modal-ext" id="dictModalExtLink" href="#" target="_blank" rel="noopener">在新分頁開啟 ↗</a>
+          <button type="button" id="dictModalCloseBtn">✕ 關閉</button>
+        </div>
+      </div>
+      <div class="dict-modal-cands" id="dictModalCands" style="display:none"></div>
+      <iframe class="dict-modal-frame" id="dictModalFrame" title="客源翠詞典查詢結果"></iframe>
+    </div>
+  </div>
+
+  <script src="exclusions.js"></script>
+  <script src="NAmedias.js"></script>
   <script src="js/gip-converter.js"></script>
   <script src="js/romaine-join.js"></script>
-  <script src="js/romaine-auto.js?v=5"></script>
+  <script src="js/romaine-auto.js?v=9"></script>
   <script>
     const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
     const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
@@ -249,7 +486,9 @@
     // Map<pureCjkIndex, { ch: string, syl?: string, isUpper?: boolean }>
     let manualCharOverrides = new Map();
 
+    const dialectSelect = document.getElementById('dialectSelect');
     const autoToggle = document.getElementById('autoToggle');
+    const sandhiToggle = document.getElementById('sandhiToggle');
     const joiningMode = document.getElementById('joiningMode');
     const inputHan = document.getElementById('inputHan');
     const tokensWrap = document.getElementById('tokensWrap');
@@ -257,6 +496,103 @@
     const statusLine = document.getElementById('statusLine');
     const candPopup = document.getElementById('candPopup');
     const verifiedCountEl = document.getElementById('verifiedCount');
+    const dictModal = document.getElementById('dictModal');
+    const dictModalTitle = document.getElementById('dictModalTitle');
+    const dictModalExtLink = document.getElementById('dictModalExtLink');
+    const dictModalCands = document.getElementById('dictModalCands');
+    const dictModalFrame = document.getElementById('dictModalFrame');
+    const dictModalCloseBtn = document.getElementById('dictModalCloseBtn');
+
+    function closeDictModal() {
+      dictModal.style.display = 'none';
+      dictModalFrame.src = 'about:blank';
+    }
+
+    dictModalCloseBtn.addEventListener('click', closeDictModal);
+    dictModal.addEventListener('click', (e) => {
+      if (e.target === dictModal) closeDictModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dictModal.style.display === 'flex') closeDictModal();
+    });
+
+    function openDictSearchModal(word, tokIdx, subPartMeta) {
+      const tok = currentTokens[tokIdx];
+      if (!tok || !word) return;
+      const searchUrl = `index.html?musiid=hak&ca=${encodeURIComponent(word)}&kiong=${engine.kiong}`;
+      dictModalTitle.textContent = `客源翠客文尋「${word}」（${engine.dialectLabel}）`;
+      dictModalExtLink.href = searchUrl;
+
+      const cands = subPartMeta ? subPartMeta.candidates : tok.candidates;
+      dictModalCands.innerHTML = '';
+      if (cands && cands.length > 0) {
+        const lbl = document.createElement('span');
+        lbl.style.color = 'var(--muted)';
+        lbl.textContent = '選用讀音：';
+        dictModalCands.appendChild(lbl);
+
+        const renderPills = () => {
+          for (const old of dictModalCands.querySelectorAll('.dict-cand-pill')) old.remove();
+          for (const c of cands) {
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            let isActive = false;
+            if (subPartMeta) {
+              const offset = tok.partsMeta
+                .slice(0, tok.partsMeta.indexOf(subPartMeta))
+                .reduce((s, pm) => s + pm.sylCount, 0);
+              const curSlice = (tok.hpp || '').trim().split(/\s+/).slice(offset, offset + subPartMeta.sylCount).join(' ').toLowerCase();
+              isActive = curSlice === c.hpp.toLowerCase();
+            } else {
+              isActive = (tok.hpp || '').trim().toLowerCase() === c.hpp.toLowerCase();
+            }
+            pill.className = 'dict-cand-pill' + (isActive ? ' active' : '');
+            const txt = document.createElement('span');
+            txt.textContent = engine.formatWordHpp(c.hpp, joiningMode.value, subPartMeta ? undefined : tok.sylBoundaries);
+            const tag = document.createElement('span');
+            tag.className = 'cand-tag';
+            tag.textContent = c.label;
+            pill.appendChild(txt);
+            pill.appendChild(tag);
+            pill.onclick = () => {
+              if (subPartMeta) {
+                const offset = tok.partsMeta
+                  .slice(0, tok.partsMeta.indexOf(subPartMeta))
+                  .reduce((s, pm) => s + pm.sylCount, 0);
+                const curSyls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+                const repSyls = c.hpp.trim().split(/\s+/).filter(Boolean);
+                for (let k = 0; k < subPartMeta.sylCount && k < repSyls.length; k++) {
+                  const oldSyl = curSyls[offset + k] || '';
+                  const wasUpper = oldSyl && oldSyl.charAt(0) !== oldSyl.charAt(0).toLowerCase();
+                  curSyls[offset + k] = wasUpper
+                    ? repSyls[k].charAt(0).toUpperCase() + repSyls[k].slice(1)
+                    : repSyls[k];
+                }
+                tok.hpp = curSyls.join(' ');
+              } else {
+                const oldFirst = (tok.hpp || '').trim().charAt(0);
+                const wasUpper = oldFirst && oldFirst !== oldFirst.toLowerCase();
+                tok.hpp = wasUpper ? c.hpp.charAt(0).toUpperCase() + c.hpp.slice(1) : c.hpp;
+                tok.trust = c.trust;
+                tok.label = c.label;
+                tok.oov = false;
+              }
+              recordTokenManualOverride(tokIdx, true, false);
+              render();
+              renderPills();
+            };
+            dictModalCands.appendChild(pill);
+          }
+        };
+        renderPills();
+        dictModalCands.style.display = 'flex';
+      } else {
+        dictModalCands.style.display = 'none';
+      }
+
+      dictModalFrame.src = searchUrl;
+      dictModal.style.display = 'flex';
+    }
 
     function loadVerified() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -443,13 +779,37 @@
         }
         tokensWrap.appendChild(chip);
       });
-      outputHpp.textContent = engine.formatTokensToHpp(currentTokens, joiningMode.value);
+      if (sandhiToggle.checked) {
+        outputHpp.innerHTML = engine.formatTokensToSandhiHtml(currentTokens, joiningMode.value);
+      } else {
+        outputHpp.textContent = engine.formatTokensToHpp(currentTokens, joiningMode.value);
+      }
     }
 
     function openTokenPopup(idx, event) {
       event.stopPropagation();
       const tok = currentTokens[idx];
-      candPopup.innerHTML = `<div style="font-weight:600;margin-bottom:4px">${tok.displayHan || tok.han} <span class="cand-tag">${tok.label || ''}</span></div>`;
+      const createExtLink = (word) => {
+        const a = document.createElement('a');
+        a.className = 'cand-ext-link';
+        a.href = `index.html?musiid=hak&ca=${encodeURIComponent(word)}&kiong=${engine.kiong}`;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = '↗';
+        a.title = `另開網頁查客源翠「${word}」結果（${engine.dialectLabel}）`;
+        a.addEventListener('click', (e) => e.stopPropagation());
+        return a;
+      };
+
+      candPopup.innerHTML = '';
+      const head = document.createElement('div');
+      head.className = 'cand-head';
+      const titleSpan = document.createElement('span');
+      titleSpan.style.fontWeight = '600';
+      titleSpan.innerHTML = `${tok.displayHan || tok.han} <span class="cand-tag">${tok.label || ''}</span>`;
+      head.appendChild(titleSpan);
+      head.appendChild(createExtLink(tok.han));
+      candPopup.appendChild(head);
 
       if (tok.candidates && tok.candidates.length > 0) {
         for (const c of tok.candidates) {
@@ -462,7 +822,9 @@
           btn.appendChild(txt);
           btn.appendChild(tag);
           btn.onclick = () => {
-            tok.hpp = c.hpp;
+            const oldFirst = (tok.hpp || '').trim().charAt(0);
+            const wasUpper = oldFirst && oldFirst !== oldFirst.toLowerCase();
+            tok.hpp = wasUpper ? c.hpp.charAt(0).toUpperCase() + c.hpp.slice(1) : c.hpp;
             tok.trust = c.trust;
             tok.label = c.label;
             tok.oov = false;
@@ -482,8 +844,12 @@
           sylOffset += pm.sylCount;
           if (!pm.candidates || pm.candidates.length <= 1) continue;
           const hdr = document.createElement('div');
+          hdr.className = 'cand-head';
           hdr.style.cssText = 'font-size:12px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px;';
-          hdr.textContent = `子詞「${pm.han}」讀音：`;
+          const subLbl = document.createElement('span');
+          subLbl.textContent = `子詞「${pm.han}」讀音：`;
+          hdr.appendChild(subLbl);
+          hdr.appendChild(createExtLink(pm.han));
           candPopup.appendChild(hdr);
           for (const c of pm.candidates) {
             const btn = document.createElement('button');
@@ -644,17 +1010,26 @@
     }
 
     inputHan.addEventListener('input', () => {
+      if (activeCertRef) {
+        const curPure = Array.from(inputHan.value.replace(/%%[\s\S]*?%%/g, '')).filter((c) => CJK_CHAR_TEST_RE.test(c)).join('');
+        if (curPure !== activeCertRef.pureCjk) {
+          activeCertRef = null;
+        }
+      }
       if (autoToggle.checked) runConvert();
     });
+    sandhiToggle.addEventListener('change', render);
     joiningMode.addEventListener('change', render);
     document.getElementById('runBtn').addEventListener('click', runConvert);
 
     document.getElementById('copyBtn').addEventListener('click', async () => {
-      await navigator.clipboard.writeText(outputHpp.textContent);
+      const plain = engine.formatTokensToHpp(currentTokens, joiningMode.value);
+      await navigator.clipboard.writeText(plain);
       statusLine.textContent = '已複製 HagPinPlus 結果。';
     });
 
     document.getElementById('loadSampleBtn').addEventListener('click', async () => {
+      activeCertRef = null;
       const p0 = await fetch('tests/romaine_p0.json').then((r) => r.json());
       inputHan.value = p0.items[0].han;
       runConvert();
@@ -709,6 +1084,7 @@
     const saveAsNewBtn = document.getElementById('saveAsNewBtn');
     let editingVerifiedId = null;
     let editingVerifiedNum = 0;
+    let activeCertRef = null;
 
     function updateSaveButtons() {
       if (editingVerifiedId) {
@@ -727,22 +1103,75 @@
         .filter(Boolean);
       const entry = {
         id: id || `v-${Date.now()}`,
-        dialect: 'sixian',
+        dialect: engine.dialect,
         han: inputHan.value.trim(),
         tokens: currentTokens.map((t) => {
           if (t.isComment) return { han: t.han, comment: true };
           if (t.punct) return { han: t.han, punct: true, hpp: t.hpp };
           const obj = { han: t.han, hpp: t.hpp };
           if (t.uncertain) obj.uncertain = true;
+          if (t.noSandhi) obj.no_sandhi = t.noSandhi;
           return obj;
         }),
-        joined_hpp: outputHpp.textContent,
+        joined_hpp: engine.formatTokensToHpp(currentTokens, joiningMode.value),
         status: 'verified',
         source: 'romaine-auto-poc',
         updated_at: new Date().toISOString(),
       };
+      if (activeCertRef) {
+        entry.cert_ref = {
+          dialect: activeCertRef.dialect,
+          level: activeCertRef.level,
+          id: activeCertRef.id,
+          category: activeCertRef.category,
+          han: activeCertRef.han,
+        };
+      }
       if (comments.length) entry.comments = comments;
       return entry;
+    }
+
+    async function loadVerifiedItemIntoEditor(item, origIdx, { scrollToTop = true } = {}) {
+      const targetDialect = item.dialect || 'sixian';
+      if (targetDialect !== engine.dialect) {
+        dialectSelect.value = targetDialect;
+        await loadDialect(targetDialect, false);
+      }
+      editingVerifiedId = item.id;
+      editingVerifiedNum = origIdx + 1;
+      activeCertRef = item.cert_ref
+        ? {
+            ...item.cert_ref,
+            pureCjk: Array.from((item.han || '').replace(/%%[\s\S]*?%%/g, ''))
+              .filter((c) => CJK_CHAR_TEST_RE.test(c))
+              .join(''),
+          }
+        : null;
+      updateSaveButtons();
+      inputHan.value = item.han || '';
+      manualCharOverrides = new Map();
+      prevPureCjk = [];
+      let cjkIdx = 0;
+      for (const tok of item.tokens || []) {
+        if (tok.punct || tok.nonCjk) continue;
+        const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+        const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+        for (let k = 0; k < chars.length; k++) {
+          prevPureCjk.push(chars[k]);
+          const syl = syls[k] || '';
+          const fc = syl.charAt(0);
+          manualCharOverrides.set(cjkIdx, {
+            ch: chars[k],
+            syl: syl.toLowerCase(),
+            isUpper: !!fc && fc !== fc.toLowerCase(),
+            uncertain: !!tok.uncertain,
+          });
+          cjkIdx++;
+        }
+      }
+      runConvert();
+      statusLine.textContent = `已載入第 #${editingVerifiedNum} 筆黃金語料進行編輯。`;
+      if (scrollToTop) window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderVerifiedPanel() {
@@ -760,7 +1189,9 @@
         const head = document.createElement('div');
         head.className = 'verified-item-head';
         const timeStr = item.updated_at ? item.updated_at.slice(0, 19).replace('T', ' ') : '';
-        head.innerHTML = `<span class="status-line">#${origIdx + 1} · ${timeStr}</span>`;
+        const dTag = item.dialect === 'zhaoan' ? '詔安' : '四縣';
+        const certTag = item.cert_ref ? ` · CERT ${item.cert_ref.level} ${item.cert_ref.id}` : '';
+        head.innerHTML = `<span class="status-line">#${origIdx + 1} · ${dTag}${certTag} · ${timeStr}</span>`;
 
         const btns = document.createElement('div');
         btns.style.display = 'flex';
@@ -768,35 +1199,7 @@
 
         const loadBtn = document.createElement('button');
         loadBtn.textContent = '載入編輯';
-        loadBtn.onclick = () => {
-          editingVerifiedId = item.id;
-          editingVerifiedNum = origIdx + 1;
-          updateSaveButtons();
-          inputHan.value = item.han || '';
-          manualCharOverrides = new Map();
-          prevPureCjk = [];
-          let cjkIdx = 0;
-          for (const tok of item.tokens || []) {
-            if (tok.punct || tok.nonCjk) continue;
-            const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
-            const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
-            for (let k = 0; k < chars.length; k++) {
-              prevPureCjk.push(chars[k]);
-              const syl = syls[k] || '';
-              const fc = syl.charAt(0);
-              manualCharOverrides.set(cjkIdx, {
-                ch: chars[k],
-                syl: syl.toLowerCase(),
-                isUpper: !!fc && fc !== fc.toLowerCase(),
-                uncertain: !!tok.uncertain,
-              });
-              cjkIdx++;
-            }
-          }
-          runConvert();
-          statusLine.textContent = `已載入第 #${editingVerifiedNum} 筆黃金語料進行編輯。`;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+        loadBtn.onclick = () => loadVerifiedItemIntoEditor(item, origIdx, { scrollToTop: true });
 
         const delBtn = document.createElement('button');
         delBtn.textContent = '刪除';
@@ -809,8 +1212,10 @@
             editingVerifiedNum = 0;
             updateSaveButtons();
           }
+          engine.applyVerifiedLearning(cur);
           updateVerifiedBadge();
           renderVerifiedPanel();
+          refreshCertVerifiedHighlights();
         };
 
         btns.appendChild(loadBtn);
@@ -843,9 +1248,11 @@
       localStorage.removeItem(STORAGE_KEY);
       editingVerifiedId = null;
       editingVerifiedNum = 0;
+      engine.applyVerifiedLearning([]);
       updateSaveButtons();
       updateVerifiedBadge();
       renderVerifiedPanel();
+      refreshCertVerifiedHighlights();
     });
 
     verifyBtn.addEventListener('click', () => {
@@ -856,20 +1263,24 @@
         if (targetIdx !== -1) {
           list[targetIdx] = buildVerifiedEntry(editingVerifiedId);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          engine.applyVerifiedLearning(list);
           if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
-          statusLine.textContent = `已更新第 #${targetIdx + 1} 筆黃金語料。`;
+          refreshCertVerifiedHighlights();
+          statusLine.textContent = `已更新第 #${targetIdx + 1} 筆黃金語料，並即時更新學習權重。`;
           return;
         }
       }
       const entry = buildVerifiedEntry();
       list.push(entry);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      engine.applyVerifiedLearning(list);
       editingVerifiedId = entry.id;
       editingVerifiedNum = list.length;
       updateSaveButtons();
       updateVerifiedBadge();
       if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
-      statusLine.textContent = `已確認寫入本機黃金語料（第 #${list.length} 筆）。`;
+      refreshCertVerifiedHighlights();
+      statusLine.textContent = `已確認寫入本機黃金語料（第 #${list.length} 筆），並即時更新學習權重。`;
     });
 
     saveAsNewBtn.addEventListener('click', () => {
@@ -878,12 +1289,14 @@
       const entry = buildVerifiedEntry();
       list.push(entry);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      engine.applyVerifiedLearning(list);
       editingVerifiedId = entry.id;
       editingVerifiedNum = list.length;
       updateSaveButtons();
       updateVerifiedBadge();
       if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
-      statusLine.textContent = `已另存為第 #${list.length} 筆黃金語料。`;
+      refreshCertVerifiedHighlights();
+      statusLine.textContent = `已另存為第 #${list.length} 筆黃金語料，並即時更新學習權重。`;
     });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
@@ -895,10 +1308,335 @@
       a.click();
     });
 
+    // --- CERT 認證例句載入器 ---
+    const certLevelSelect = document.getElementById('certLevelSelect');
+    const certCategorySelect = document.getElementById('certCategorySelect');
+    const certPrevBtn = document.getElementById('certPrevBtn');
+    const certNextBtn = document.getElementById('certNextBtn');
+    const certCounter = document.getElementById('certCounter');
+    const certActiveMeta = document.getElementById('certActiveMeta');
+    const certSentList = document.getElementById('certSentList');
+    let certFilteredRows = [];
+    let certActiveIdx = -1;
+
+    function cleanCertSentence(raw) {
+      return (raw || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    }
+
+    const CERT_LEVEL_INFO = {
+      '基礎級': { 目錄級: '5', 目錄另級: '1', 檔級: '', 例外變數: '基例外音檔' },
+      '初級': { 目錄級: '1', 檔級: '', 例外變數: '初例外音檔' },
+      '中級': { 目錄級: '2', 檔級: '1', 例外變數: '中例外音檔' },
+      '中高級': { 目錄級: '3', 檔級: '2', 例外變數: '中高例外音檔' },
+      '高級': { 目錄級: '4', 檔級: '3', 例外變數: '高例外音檔' },
+    };
+
+    let certAudioPlayer = null;
+    let certPlayingBtn = null;
+
+    function applyCertAudioProxy(url) {
+      if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) return url;
+      const isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port !== '8788';
+      const prefix = isLocal ? 'https://hakspring.pages.dev/audio-proxy?url=' : '/audio-proxy?url=';
+      return prefix + encodeURIComponent(url);
+    }
+
+    function buildCertSentenceAudioUrl(row, dialectKey, levelName) {
+      if (!row || !row.id || levelName === '高級') return null;
+      const lvl = CERT_LEVEL_INFO[levelName];
+      if (!lvl) return null;
+      const 檔腔 = dialectKey === 'zhaoan' ? 'zh' : 'si';
+      const 腔名 = dialectKey === 'zhaoan' ? '詔安' : '四縣';
+      const fullLvlName = 腔名 + levelName;
+      if (typeof getMissingAudioInfo === 'function') {
+        const miss = getMissingAudioInfo(fullLvlName, row.category, row.id);
+        if (miss && miss.sentence === false) return null;
+      }
+      const no = String(row.id).split('-');
+      if (no.length < 2) return null;
+      const no0 = Number(no[0]) <= 9 ? '0' + Number(no[0]) : no[0];
+      const n1 = Number(no[1]);
+      let mediaNo = n1 <= 9 ? '00' + n1 : n1 <= 99 ? '0' + n1 : String(n1);
+      let mediaYr = '115';
+      let pre112 = '';
+      let dirLvl = lvl.目錄級;
+      const exList = window[lvl.例外變數] || [];
+      const ex = exList.find(([id]) => id === row.id);
+      if (ex) {
+        mediaYr = ex[1];
+        mediaNo = ex[2];
+        pre112 = 's/';
+        if (lvl.目錄另級 !== undefined) dirLvl = lvl.目錄另級;
+      }
+      const dir = `${dirLvl}/${檔腔}/${pre112}${lvl.檔級}${檔腔}`;
+      return applyCertAudioProxy(`https://elearning.hakka.gov.tw/hakka/files/cert/vocabulary/${mediaYr}/${dir}-${no0}-${mediaNo}s.mp3`);
+    }
+
+    function playCertAudio(url, btn) {
+      if (!url) return;
+      if (certAudioPlayer) {
+        certAudioPlayer.pause();
+        certAudioPlayer = null;
+      }
+      if (certPlayingBtn) {
+        certPlayingBtn.classList.remove('playing');
+        if (certPlayingBtn === btn) {
+          certPlayingBtn = null;
+          return;
+        }
+      }
+      const audio = new Audio(url);
+      certAudioPlayer = audio;
+      certPlayingBtn = btn;
+      btn.classList.add('playing');
+      const cleanup = () => {
+        btn.classList.remove('playing');
+        if (certPlayingBtn === btn) certPlayingBtn = null;
+        if (certAudioPlayer === audio) certAudioPlayer = null;
+      };
+      audio.addEventListener('ended', cleanup);
+      audio.addEventListener('error', cleanup);
+      audio.play().catch(cleanup);
+    }
+
+    async function loadCertSentence(idx) {
+      if (idx < 0 || idx >= certFilteredRows.length) return;
+      certActiveIdx = idx;
+      const row = certFilteredRows[idx];
+      const levelName = certLevelSelect.value;
+
+      // Single Source of Truth：若此認證例句已有黃金語料記憶，直接載入黃金語料
+      const verifiedList = loadVerified();
+      let matchedIdx = -1;
+      for (let i = verifiedList.length - 1; i >= 0; i--) {
+        const ref = verifiedList[i].cert_ref;
+        if (
+          ref &&
+          (ref.dialect || 'sixian') === engine.dialect &&
+          ref.level === levelName &&
+          ref.id === (row.id || '')
+        ) {
+          matchedIdx = i;
+          break;
+        }
+      }
+
+      if (matchedIdx !== -1) {
+        await loadVerifiedItemIntoEditor(verifiedList[matchedIdx], matchedIdx, { scrollToTop: false });
+      } else {
+        const cleanedSent = cleanCertSentence(row.sentence);
+        editingVerifiedId = null;
+        editingVerifiedNum = 0;
+        activeCertRef = {
+          dialect: engine.dialect,
+          level: levelName,
+          id: row.id || '',
+          category: row.category || '',
+          han: row.han || '',
+          pureCjk: Array.from(cleanedSent).filter((c) => CJK_CHAR_TEST_RE.test(c)).join(''),
+        };
+        updateSaveButtons();
+        manualCharOverrides = new Map();
+        prevPureCjk = [];
+        inputHan.value = cleanedSent;
+        runConvert();
+      }
+
+      certCounter.textContent = `${idx + 1} / ${certFilteredRows.length}`;
+      certActiveMeta.style.display = 'block';
+      certActiveMeta.innerHTML = '';
+      const topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;';
+      const line1 = document.createElement('div');
+      line1.innerHTML = `<strong>${row.id || ''} ${row.han || ''}</strong>`;
+      if (matchedIdx !== -1) {
+        const badge = document.createElement('span');
+        badge.className = 'cert-verified-badge';
+        badge.textContent = `✓ 已載入黃金語料 #${matchedIdx + 1}`;
+        line1.appendChild(badge);
+      }
+      topRow.appendChild(line1);
+      const audioUrl = buildCertSentenceAudioUrl(row, engine.dialect, levelName);
+      if (audioUrl) {
+        const audioBtn = document.createElement('button');
+        audioBtn.type = 'button';
+        audioBtn.className = 'cert-audio-btn';
+        audioBtn.textContent = '🔊 聽例句';
+        audioBtn.onclick = () => playCertAudio(audioUrl, audioBtn);
+        topRow.appendChild(audioBtn);
+      }
+      const line2 = document.createElement('div');
+      line2.className = 'cert-sent-sub';
+      line2.textContent = `華語翻譯：${cleanCertSentence(row.translation) || '（無）'}`;
+      certActiveMeta.appendChild(topRow);
+      certActiveMeta.appendChild(line2);
+
+      for (const el of certSentList.querySelectorAll('.cert-sent-row')) {
+        el.classList.toggle('active', Number(el.dataset.idx) === idx);
+      }
+      const activeEl = certSentList.querySelector(`.cert-sent-row[data-idx="${idx}"]`);
+      if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+    }
+
+    function getVerifiedCertKeySet() {
+      const keys = new Set();
+      for (const it of loadVerified()) {
+        if (it.cert_ref && it.cert_ref.id) {
+          keys.add(`${it.cert_ref.dialect || 'sixian'}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`);
+        }
+      }
+      return keys;
+    }
+
+    function refreshCertVerifiedHighlights() {
+      const keys = getVerifiedCertKeySet();
+      let doneCount = 0;
+      for (const el of certSentList.querySelectorAll('.cert-sent-row')) {
+        const isDone = keys.has(el.dataset.certKey || '');
+        if (isDone) doneCount++;
+        el.classList.toggle('verified', isDone);
+        const badge = el.querySelector('.cert-verified-badge');
+        if (badge) badge.style.display = isDone ? 'inline-block' : 'none';
+      }
+      if (certActiveIdx === -1) {
+        certCounter.textContent = `共 ${certFilteredRows.length} 句（已校 ${doneCount} 句）`;
+      }
+    }
+
+    function renderCertSentences() {
+      const lvlObj = engine.certLevels.find((l) => l.level === certLevelSelect.value) || engine.certLevels[0];
+      const levelName = lvlObj ? lvlObj.level : certLevelSelect.value;
+      const cat = certCategorySelect.value;
+      certFilteredRows = lvlObj ? lvlObj.rows.filter((r) => !cat || r.category === cat) : [];
+      certActiveIdx = -1;
+      certActiveMeta.style.display = 'none';
+      certSentList.innerHTML = '';
+      const verifiedKeys = getVerifiedCertKeySet();
+      let doneCount = 0;
+
+      certFilteredRows.forEach((row, idx) => {
+        const certKey = `${engine.dialect}\t${levelName}\t${row.id || ''}`;
+        const isDone = Boolean(row.id) && verifiedKeys.has(certKey);
+        if (isDone) doneCount++;
+        const div = document.createElement('div');
+        div.className = 'cert-sent-row' + (isDone ? ' verified' : '');
+        div.dataset.idx = String(idx);
+        div.dataset.certKey = certKey;
+
+        const textWrap = document.createElement('div');
+        textWrap.className = 'cert-sent-text';
+        const main = document.createElement('div');
+        main.textContent = `${row.id ? row.id + ' ' : ''}[${row.han}] ${cleanCertSentence(row.sentence)}`;
+        const badge = document.createElement('span');
+        badge.className = 'cert-verified-badge';
+        badge.textContent = '✓ 已校';
+        badge.style.display = isDone ? 'inline-block' : 'none';
+        main.appendChild(badge);
+        const sub = document.createElement('div');
+        sub.className = 'cert-sent-sub';
+        sub.textContent = cleanCertSentence(row.translation);
+        textWrap.appendChild(main);
+        textWrap.appendChild(sub);
+
+        const btnGroup = document.createElement('div');
+        btnGroup.style.cssText = 'display:flex;gap:6px;flex-shrink:0;';
+
+        const audioUrl = buildCertSentenceAudioUrl(row, engine.dialect, levelName);
+        if (audioUrl) {
+          const audioBtn = document.createElement('button');
+          audioBtn.type = 'button';
+          audioBtn.className = 'cert-audio-btn';
+          audioBtn.textContent = '🔊';
+          audioBtn.title = '播放例句音檔';
+          audioBtn.onclick = (e) => {
+            e.stopPropagation();
+            playCertAudio(audioUrl, audioBtn);
+          };
+          btnGroup.appendChild(audioBtn);
+        }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '載入';
+        btn.onclick = () => loadCertSentence(idx);
+        btnGroup.appendChild(btn);
+
+        div.appendChild(textWrap);
+        div.appendChild(btnGroup);
+        certSentList.appendChild(div);
+      });
+      certCounter.textContent = `共 ${certFilteredRows.length} 句（已校 ${doneCount} 句）`;
+    }
+
+    function populateCertCategories() {
+      const lvlObj = engine.certLevels.find((l) => l.level === certLevelSelect.value) || engine.certLevels[0];
+      const cats = [];
+      if (lvlObj) {
+        for (const r of lvlObj.rows) {
+          if (r.category && !cats.includes(r.category)) cats.push(r.category);
+        }
+      }
+      certCategorySelect.innerHTML = '';
+      for (const c of cats) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        certCategorySelect.appendChild(opt);
+      }
+      renderCertSentences();
+    }
+
+    function initCertLoader() {
+      certLevelSelect.innerHTML = '';
+      for (const l of engine.certLevels) {
+        const opt = document.createElement('option');
+        opt.value = l.level;
+        opt.textContent = l.level;
+        certLevelSelect.appendChild(opt);
+      }
+      populateCertCategories();
+    }
+
+    certLevelSelect.addEventListener('change', populateCertCategories);
+    certCategorySelect.addEventListener('change', renderCertSentences);
+    certPrevBtn.addEventListener('click', () => {
+      if (!certFilteredRows.length) return;
+      loadCertSentence(certActiveIdx > 0 ? certActiveIdx - 1 : 0);
+    });
+    certNextBtn.addEventListener('click', () => {
+      if (!certFilteredRows.length) return;
+      const next = certActiveIdx + 1 < certFilteredRows.length ? certActiveIdx + 1 : 0;
+      loadCertSentence(next);
+    });
+
+    async function loadDialect(dialect, shouldConvert = true) {
+      statusLine.textContent = `載入 ${dialect === 'zhaoan' ? '詔安' : '四縣'} 詞庫中…`;
+      await engine.init('.', dialect);
+      initCertLoader();
+      const learnMsg = engine.learnedCount ? `、已即時學習 ${engine.learnedCount} 筆黃金語料` : '';
+      statusLine.textContent = `[${engine.dialectLabel}] 詞庫載入完成：${engine.lexicon.size} 詞條（含補字典）、${engine.prefs.size} 多音偏好表${learnMsg}。`;
+      if (shouldConvert && inputHan.value.trim()) {
+        manualCharOverrides = new Map();
+        prevPureCjk = [];
+        runConvert();
+      }
+    }
+
+    const DIALECT_STORAGE_KEY = 'romaineAutoDialect';
+    const savedDialect = localStorage.getItem(DIALECT_STORAGE_KEY);
+    if (savedDialect === 'sixian' || savedDialect === 'zhaoan') {
+      dialectSelect.value = savedDialect;
+    }
+
+    dialectSelect.addEventListener('change', () => {
+      localStorage.setItem(DIALECT_STORAGE_KEY, dialectSelect.value);
+      loadDialect(dialectSelect.value, true).catch((err) => {
+        statusLine.textContent = `切換腔調失敗：${err.message}`;
+      });
+    });
+
     updateVerifiedBadge();
-    engine.init('.').then(() => {
-      statusLine.textContent = `詞庫載入完成：${engine.lexicon.size} 詞條（含補字典）、${engine.prefs.size} 多音偏好表。`;
-    }).catch((err) => {
+    loadDialect(dialectSelect.value, false).catch((err) => {
       statusLine.textContent = `載入失敗（請透過本機 HTTP 伺服器開啟）：${err.message}`;
     });
   </script>

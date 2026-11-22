@@ -28,6 +28,10 @@ DIALECT_SOURCES = {
         "gip": "data/gip/20261020-四.json",
         "cert_glob": "data/cert/115四*.json",
     },
+    "zhaoan": {
+        "gip": "data/gip/20261020-安.json",
+        "cert_glob": "data/cert/115安*.json",
+    },
 }
 
 CJK_RE = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf\U00020000-\U0002ebef]")
