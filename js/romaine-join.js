@@ -50,6 +50,7 @@
       if (p === 'u' && 'aei'.includes(n0)) return true;        // 6. u＋a／e／i
       if (isVowel(p) && n0 === 'n' && n1 === 'g') return true; // 7. 母音＋ng
       if (p === 'n' && n0 === 'g') return true;                // 8. n＋g
+      if (p === 'e' && n0 === 'r' && n1 === 'h') return true;  // 9. e＋rh（如詔安 bbue'rhung 會用）
       return false;
     }
 
