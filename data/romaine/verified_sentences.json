@@ -1,0 +1,1791 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "v-1795309091904",
+      "dialect": "zhaoan",
+      "han": "略略仔發燒。",
+      "tokens": [
+        {
+          "han": "略略仔",
+          "hpp": "Lio lio à"
+        },
+        {
+          "han": "發燒",
+          "hpp": "fád shiǒo"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Liolioà fádshiǒo.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T00:58:11.904Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-1",
+        "category": "1人體與醫療",
+        "han": "發燒"
+      }
+    },
+    {
+      "id": "v-1795309152306",
+      "dialect": "zhaoan",
+      "han": "做護理師，愛有耐心。",
+      "tokens": [
+        {
+          "han": "做",
+          "hpp": "Zôo"
+        },
+        {
+          "han": "護理師",
+          "hpp": "fu lî sǐi"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "有",
+          "hpp": "rhiǔ"
+        },
+        {
+          "han": "耐心",
+          "hpp": "nai sǐm"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Zôo fulîsǐi, ôi rhiǔ naisǐm.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:05:55.410Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-2",
+        "category": "1人體與醫療",
+        "han": "護理師"
+      }
+    },
+    {
+      "id": "v-1795310301134",
+      "dialect": "zhaoan",
+      "han": "病院在車頭#就近。",
+      "tokens": [
+        {
+          "han": "病院",
+          "hpp": "Piang ǐnn"
+        },
+        {
+          "han": "在",
+          "hpp": "da"
+        },
+        {
+          "han": "車頭",
+          "hpp": "chǎ tèu",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "就近",
+          "hpp": "ciu kǔn"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Piang'ǐnn da chǎtèu ciukǔn.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T01:18:21.135Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-3",
+        "category": "1人體與醫療",
+        "han": "病院"
+      }
+    },
+    {
+      "id": "v-1795311782046",
+      "dialect": "zhaoan",
+      "han": "先生開个藥，愛記得照時間食。\n這#菜#無射藥，會用#安心食。",
+      "tokens": [
+        {
+          "han": "先生",
+          "hpp": "Siěn sěn"
+        },
+        {
+          "han": "開",
+          "hpp": "kǒi"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "藥",
+          "hpp": "rhioo"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "記得",
+          "hpp": "kî déd"
+        },
+        {
+          "han": "照",
+          "hpp": "zhiôo"
+        },
+        {
+          "han": "時間",
+          "hpp": "shì gěen"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "這",
+          "hpp": "Liá",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "菜",
+          "hpp": "côi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "射藥",
+          "hpp": "sha rhioo"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "會用",
+          "hpp": "bbue rhung",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "安心",
+          "hpp": "ǒn sǐm"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Siěnsěn kǒi e rhioo, ôi kîdéd zhiôo shìgěen shièd.\nLiá côi mò sharhioo, bbuerhung ǒnsǐm shièd.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T01:43:02.046Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-4",
+        "category": "1人體與醫療",
+        "han": "藥"
+      }
+    },
+    {
+      "id": "v-1795329836837",
+      "dialect": "zhaoan",
+      "han": "今日先生無拁人䀴病。",
+      "tokens": [
+        {
+          "han": "今日",
+          "hpp": "Gǐn ngíd"
+        },
+        {
+          "han": "先生",
+          "hpp": "siěn sěn"
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "拁人",
+          "hpp": "gǎ ngìn"
+        },
+        {
+          "han": "䀴病",
+          "hpp": "ngiâng piang"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gǐnngíd siěnsěn mò gǎ'ngìn ngiângpiang.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T06:43:56.837Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-5",
+        "category": "1人體與醫療",
+        "han": "䀴病"
+      }
+    },
+    {
+      "id": "v-1795330128889",
+      "dialect": "zhaoan",
+      "han": "洗好膴身，感覺真+快活。\n佢#+人#無快活，今日討#請假。",
+      "tokens": [
+        {
+          "han": "洗",
+          "hpp": "Sê"
+        },
+        {
+          "han": "好",
+          "hpp": "hôo"
+        },
+        {
+          "han": "膴身",
+          "hpp": "bbǔ shǐn"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "感覺",
+          "hpp": "gâm góo"
+        },
+        {
+          "han": "真",
+          "hpp": "zhǐn"
+        },
+        {
+          "han": "快活",
+          "hpp": "kuâi bbàd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "人",
+          "hpp": "ngìn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "快活",
+          "hpp": "kuâi bbàd"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "今日",
+          "hpp": "gǐn ngíd"
+        },
+        {
+          "han": "討",
+          "hpp": "tôo",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "請假",
+          "hpp": "ciâng gâ"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Sê hôo bbǔshǐn, gâmgóo zhǐn kuâibbàd.\nGùi ngìn mò kuâibbàd, gǐnngíd tôo ciânggâ.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T06:48:48.889Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-6",
+        "category": "1人體與醫療",
+        "han": "快活"
+      }
+    },
+    {
+      "id": "v-1795330495491",
+      "dialect": "zhaoan",
+      "han": "阿弟想討屙尿，直直+尋便所。",
+      "tokens": [
+        {
+          "han": "阿弟",
+          "hpp": "Ǎ tě"
+        },
+        {
+          "han": "想討",
+          "hpp": "siong tôo"
+        },
+        {
+          "han": "屙尿",
+          "hpp": "ǒo neeu"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "直直",
+          "hpp": "chìd chìd"
+        },
+        {
+          "han": "尋",
+          "hpp": "cim"
+        },
+        {
+          "han": "便所",
+          "hpp": "pen sû"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Ǎtě siongtôo ǒoneeu, chìdchìd cim pensû.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T06:54:55.492Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-7",
+        "category": "1人體與醫療",
+        "han": "屙尿"
+      }
+    },
+    {
+      "id": "v-1795330892867",
+      "dialect": "zhaoan",
+      "han": "佢#去便所屙屎，你#討#等#+一下無？",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "去",
+          "hpp": "kûi"
+        },
+        {
+          "han": "便所",
+          "hpp": "pen sû"
+        },
+        {
+          "han": "屙屎",
+          "hpp": "ǒo shî"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "討",
+          "hpp": "tôo",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "等",
+          "hpp": "dên",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "一",
+          "hpp": "rhíd"
+        },
+        {
+          "han": "下",
+          "hpp": "ha"
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        }
+      ],
+      "joined_hpp": "Gùi kûi pensû ǒoshî, hèn tôo dên rhíd ha mò?",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:01:32.868Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-8",
+        "category": "1人體與醫療",
+        "han": "屙屎"
+      },
+      "note": "「一下」疑為連音 hia55"
+    },
+    {
+      "id": "v-1795331454733",
+      "dialect": "zhaoan",
+      "han": "佢#毋知食+著麼个，屙个屁#真臭。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "毋知",
+          "hpp": "m̌ dǐ"
+        },
+        {
+          "han": "食著",
+          "hpp": "shièd choo"
+        },
+        {
+          "han": "麼个",
+          "hpp": "bbóo gâi"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "屙",
+          "hpp": "ǒo"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "屁",
+          "hpp": "pî",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "真",
+          "hpp": "zhǐn"
+        },
+        {
+          "han": "臭",
+          "hpp": "chiû"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi m̌dǐ shièd choo bbóogâi, ǒo e pî zhǐn chiû.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:11:35.227Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-9",
+        "category": "1人體與醫療",
+        "han": "屁"
+      }
+    },
+    {
+      "id": "v-1795331993986",
+      "dialect": "zhaoan",
+      "han": "歸日頭那#疾。",
+      "tokens": [
+        {
+          "han": "歸日",
+          "hpp": "Gǔi ngíd"
+        },
+        {
+          "han": "頭那",
+          "hpp": "tèu nà",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "疾",
+          "hpp": "cìd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gǔi'ngíd tèunà cìd.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:19:53.987Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-10",
+        "category": "1人體與醫療",
+        "han": "頭那"
+      }
+    },
+    {
+      "id": "v-1795332438720",
+      "dialect": "zhaoan",
+      "han": "剃頭那毛。\n佢#个頭那毛#烏金烏金，足靚个！",
+      "tokens": [
+        {
+          "han": "剃",
+          "hpp": "Tê"
+        },
+        {
+          "han": "頭那毛",
+          "hpp": "tèu nà hm̌"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "佢个",
+          "hpp": "Gùi e",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "頭那毛",
+          "hpp": "tèu nà hm̌",
+          "no_sandhi": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "han": "烏金烏金",
+          "hpp": "bbǔ gǐm bbǔ gǐm"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "足",
+          "hpp": "ziú"
+        },
+        {
+          "han": "靚",
+          "hpp": "ziǎng"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "！",
+          "punct": true,
+          "hpp": "! "
+        }
+      ],
+      "joined_hpp": "Tê tèunàhm̌.\nGùi'e tèunàhm̌ bbǔgǐmbbǔgǐm, ziú ziǎng e!",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:27:18.722Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-11",
+        "category": "1人體與醫療",
+        "han": "頭那毛"
+      },
+      "note": "「烏金烏金」聽感像「bbǔ **gim55** bbǔgǐm」；\n「个」句尾像輕聲"
+    },
+    {
+      "id": "v-1795332728287",
+      "dialect": "zhaoan",
+      "han": "老#啊！目珠+花花。",
+      "tokens": [
+        {
+          "han": "老",
+          "hpp": "Lôo",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "！",
+          "punct": true,
+          "hpp": "! "
+        },
+        {
+          "han": "目珠花花",
+          "hpp": "Múd zhǐ fǎ fǎ"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Lôo ǎ! Múdzhǐ fǎfǎ.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:32:08.287Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-13",
+        "category": "1人體與醫療",
+        "han": "目珠"
+      },
+      "note": "「花花」應是疊詞前字變調 55"
+    },
+    {
+      "id": "v-1795332758304",
+      "dialect": "zhaoan",
+      "han": "講佢兩句，即目汁直直流。",
+      "tokens": [
+        {
+          "han": "講",
+          "hpp": "Gông"
+        },
+        {
+          "han": "佢",
+          "hpp": "gùi"
+        },
+        {
+          "han": "兩",
+          "hpp": "liǒng"
+        },
+        {
+          "han": "句",
+          "hpp": "gûi"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "即",
+          "hpp": "zíd"
+        },
+        {
+          "han": "目汁",
+          "hpp": "hḿ zhíb"
+        },
+        {
+          "han": "直直",
+          "hpp": "chìd chìd"
+        },
+        {
+          "han": "流",
+          "hpp": "làu"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gông gùi liǒng gûi, zíd hḿzhíb chìdchìd làu.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:32:38.304Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-14",
+        "category": "1人體與醫療",
+        "han": "目汁"
+      }
+    },
+    {
+      "id": "v-1795332789461",
+      "dialect": "zhaoan",
+      "han": "鼻#+塞塞。",
+      "tokens": [
+        {
+          "han": "鼻塞塞",
+          "hpp": "Pinn séd séd",
+          "no_sandhi": [
+            true,
+            false,
+            false
+          ]
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Pinn sédséd.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:33:09.461Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-15",
+        "category": "1人體與醫療",
+        "han": "鼻"
+      }
+    },
+    {
+      "id": "v-1795332894122",
+      "dialect": "zhaoan",
+      "han": "佢#耳子#無利，你#講事#愛#較大聲兜。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "耳子",
+          "hpp": "ngî zû",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "利",
+          "hpp": "li"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "講",
+          "hpp": "gông"
+        },
+        {
+          "han": "事",
+          "hpp": "su",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "較",
+          "hpp": "kâ"
+        },
+        {
+          "han": "大聲",
+          "hpp": "tai shǎng"
+        },
+        {
+          "han": "兜",
+          "hpp": "děu"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi ngîzû mò li, hèn gông su ôi kâ taishǎng děu.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:34:54.122Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-16",
+        "category": "1人體與醫療",
+        "han": "耳子"
+      }
+    },
+    {
+      "id": "v-1795333726616",
+      "dialect": "zhaoan",
+      "han": "佢#个嘴真+大，會用#一口食半碗飯。\n佢#食墨斗魚，食到#嘴#烏烏。",
+      "tokens": [
+        {
+          "han": "佢个",
+          "hpp": "Gùi e",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "嘴",
+          "hpp": "zhê"
+        },
+        {
+          "han": "真大",
+          "hpp": "zhǐn tai"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "會用",
+          "hpp": "bbue rhung",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "一",
+          "hpp": "rhíd"
+        },
+        {
+          "han": "口",
+          "hpp": "kêu"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "半",
+          "hpp": "bân"
+        },
+        {
+          "han": "碗",
+          "hpp": "bbân"
+        },
+        {
+          "han": "飯",
+          "hpp": "pon"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "墨斗",
+          "hpp": "mèed dêu"
+        },
+        {
+          "han": "魚",
+          "hpp": "m̀"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "到",
+          "hpp": "dôo",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "嘴",
+          "hpp": "zhê",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "烏",
+          "hpp": "bbǔ"
+        },
+        {
+          "han": "烏",
+          "hpp": "bbǔ"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi'e zhê zhǐn tai, bbuerhung rhíd kêu shièd bân bbân pon.\nGùi shièd mèeddêu m̀, shièd dôo zhê bbǔ bbǔ.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:48:46.617Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-17",
+        "category": "1人體與醫療",
+        "han": "嘴"
+      },
+      "note": "「烏烏」疊詞前字變調 bbu55-bbu11"
+    },
+    {
+      "id": "v-1795333871036",
+      "dialect": "zhaoan",
+      "han": "牙#+疾，愛去得先生䀴。\n阿嬰#正發牙。",
+      "tokens": [
+        {
+          "han": "牙疾",
+          "hpp": "Ngà cìd",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "去",
+          "hpp": "kûi"
+        },
+        {
+          "han": "得",
+          "hpp": "déd"
+        },
+        {
+          "han": "先生",
+          "hpp": "siěn sěn"
+        },
+        {
+          "han": "䀴",
+          "hpp": "ngiâng"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "阿嬰",
+          "hpp": "Ǎ eenn",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "正",
+          "hpp": "zhǎng"
+        },
+        {
+          "han": "發",
+          "hpp": "fád"
+        },
+        {
+          "han": "牙",
+          "hpp": "ngà"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Ngà cìd, ôi kûi déd siěnsěn ngiâng.\nǍeenn zhǎng fád ngà.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:51:11.037Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-18",
+        "category": "1人體與醫療",
+        "han": "牙"
+      }
+    },
+    {
+      "id": "v-1795334176717",
+      "dialect": "zhaoan",
+      "han": "晨早#起來愛洗牙#洗面。",
+      "tokens": [
+        {
+          "han": "晨早",
+          "hpp": "Chìn zôo",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "起來",
+          "hpp": "kî lòi"
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "洗牙",
+          "hpp": "sê ngà",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "洗面",
+          "hpp": "sê miên"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Chìnzôo kîlòi ôi sê'ngà sêmiên.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:56:16.717Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-19",
+        "category": "1人體與醫療",
+        "han": "面"
+      },
+      "note": "「起來」似乎也是後字變調「kî loi11」"
+    },
+    {
+      "id": "v-1795334234352",
+      "dialect": "zhaoan",
+      "han": "感覺肩頭#硬硬#个款。",
+      "tokens": [
+        {
+          "han": "感覺",
+          "hpp": "Gâm góo"
+        },
+        {
+          "han": "肩頭",
+          "hpp": "gěen tèu",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "硬硬",
+          "hpp": "ngang ngang",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "款",
+          "hpp": "kuân"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gâmgóo gěentèu ngangngang e kuân.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:57:14.352Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-20",
+        "category": "1人體與醫療",
+        "han": "肩頭"
+      }
+    },
+    {
+      "id": "v-1795334260183",
+      "dialect": "zhaoan",
+      "han": "阿怙#牽著𠊎#个手。",
+      "tokens": [
+        {
+          "han": "阿怙",
+          "hpp": "Ǎ ú",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "牽著",
+          "hpp": "kiěn choo"
+        },
+        {
+          "han": "𠊎个",
+          "hpp": "ngài e",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "手",
+          "hpp": "shiû"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Ǎ'ú kiěnchoo ngài'e shiû.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:57:40.183Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-21",
+        "category": "1人體與醫療",
+        "han": "手"
+      }
+    },
+    {
+      "id": "v-1795334322500",
+      "dialect": "zhaoan",
+      "han": "阿弟个手指頭#得門#夾+著，疾到直直+唩。",
+      "tokens": [
+        {
+          "han": "阿弟",
+          "hpp": "Ǎ tě"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "手指頭",
+          "hpp": "shiû zhî tèu",
+          "no_sandhi": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "han": "得",
+          "hpp": "déd"
+        },
+        {
+          "han": "門",
+          "hpp": "mùn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "夾著",
+          "hpp": "giàb choo",
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "疾",
+          "hpp": "cìd"
+        },
+        {
+          "han": "到",
+          "hpp": "dôo"
+        },
+        {
+          "han": "直直唩",
+          "hpp": "chìd chìd bbôo",
+          "syl_boundaries": [
+            "normal",
+            "space"
+          ]
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Ǎtě e shiûzhîtèu déd mùn giàb choo, cìd dôo chìdchìd bbôo.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:58:42.500Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-22",
+        "category": "1人體與醫療",
+        "han": "手指頭"
+      }
+    },
+    {
+      "id": "v-1795334393554",
+      "dialect": "zhaoan",
+      "han": "食+著無淨俐#个物件，食肚#+疾#直直+走便所。",
+      "tokens": [
+        {
+          "han": "食著",
+          "hpp": "Shièd choo",
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "淨俐",
+          "hpp": "ciang li",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "物件",
+          "hpp": "mi kien"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "食肚疾",
+          "hpp": "shìd dû cìd",
+          "no_sandhi": [
+            false,
+            true,
+            true
+          ],
+          "syl_boundaries": [
+            "normal",
+            "space"
+          ]
+        },
+        {
+          "han": "直直走",
+          "hpp": "chìd chìd zêu",
+          "syl_boundaries": [
+            "normal",
+            "space"
+          ]
+        },
+        {
+          "han": "便所",
+          "hpp": "pen sû"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Shièd choo mò ciangli e mikien, shìddû cìd chìdchìd zêu pensû.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T07:59:53.554Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-23",
+        "category": "1人體與醫療",
+        "han": "食肚"
+      }
+    },
+    {
+      "id": "v-1795334678257",
+      "dialect": "zhaoan",
+      "han": "洗+膴身遐#下#腳#愛#洗淨俐。",
+      "tokens": [
+        {
+          "han": "洗膴身",
+          "hpp": "Sê bbǔ shǐn",
+          "syl_boundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "遐下",
+          "hpp": "gá ha",
+          "no_sandhi": [
+            true,
+            true
+          ]
+        },
+        {
+          "han": "腳",
+          "hpp": "gióo",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "洗",
+          "hpp": "sê"
+        },
+        {
+          "han": "淨俐",
+          "hpp": "ciang li"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Sê bbǔshǐn gáha gióo ôi sê ciangli.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T08:04:38.257Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-24",
+        "category": "1人體與醫療",
+        "han": "腳"
+      },
+      "note": "「遐下」聽起來攏無變調 🤷"
+    },
+    {
+      "id": "v-1795334757477",
+      "dialect": "zhaoan",
+      "han": "阿依#企傷久，身體#拄+毋會+核#啊！",
+      "tokens": [
+        {
+          "han": "阿依",
+          "hpp": "Ǎ i",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "企",
+          "hpp": "kǐ"
+        },
+        {
+          "han": "傷",
+          "hpp": "shǒng"
+        },
+        {
+          "han": "久",
+          "hpp": "giû"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "身體",
+          "hpp": "shǐn tê",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "拄毋會核",
+          "hpp": "dû m̌ moi hèd",
+          "no_sandhi": [
+            false,
+            false,
+            false,
+            true
+          ],
+          "syl_boundaries": [
+            "space",
+            "normal",
+            "space"
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "！",
+          "punct": true,
+          "hpp": "! "
+        }
+      ],
+      "joined_hpp": "Ǎ'i kǐ shǒng giû, shǐntê dû m̌moi hèd ǎ!",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T08:05:57.477Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-25",
+        "category": "1人體與醫療",
+        "han": "身體"
+      }
+    },
+    {
+      "id": "v-1795334799443",
+      "dialect": "zhaoan",
+      "han": "佢#跌倒，骨頭#斷去。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "跌倒",
+          "hpp": "déed dôo"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "骨頭",
+          "hpp": "gúd tèu",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "斷",
+          "hpp": "tǒn"
+        },
+        {
+          "han": "去",
+          "hpp": "kûi"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi déeddôo, gúdtèu tǒn kûi.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T08:06:39.443Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-26",
+        "category": "1人體與醫療",
+        "han": "骨頭"
+      }
+    },
+    {
+      "id": "v-1795334832980",
+      "dialect": "zhaoan",
+      "han": "厥#屋下有五個 人。",
+      "tokens": [
+        {
+          "han": "厥",
+          "hpp": "Gua",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "屋下",
+          "hpp": "bbú hǎ"
+        },
+        {
+          "han": "有",
+          "hpp": "rhiǔ"
+        },
+        {
+          "han": "五",
+          "hpp": "m̂"
+        },
+        {
+          "han": "個",
+          "hpp": "gâi"
+        },
+        {
+          "han": " ",
+          "punct": true,
+          "hpp": " "
+        },
+        {
+          "han": "人",
+          "hpp": "ngìn"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gua bbúhǎ rhiǔ m̂ gâi ngìn.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T08:07:12.980Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-27",
+        "category": "1人體與醫療",
+        "han": "人"
+      }
+    },
+    {
+      "id": "v-1795334879732",
+      "dialect": "zhaoan",
+      "han": "佢#个聲真軟柔，聽著心情#即真+好。",
+      "tokens": [
+        {
+          "han": "佢个",
+          "hpp": "Gùi e",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "聲",
+          "hpp": "shǎng"
+        },
+        {
+          "han": "真",
+          "hpp": "zhǐn"
+        },
+        {
+          "han": "軟柔",
+          "hpp": "ngiěn rhiù"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "聽",
+          "hpp": "těn"
+        },
+        {
+          "han": "著",
+          "hpp": "choo"
+        },
+        {
+          "han": "心情",
+          "hpp": "sǐm cìn",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "即",
+          "hpp": "zíd"
+        },
+        {
+          "han": "真好",
+          "hpp": "zhǐn hôo",
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi'e shǎng zhǐn ngiěnrhiù, těn choo sǐmcìn zíd zhǐn hôo.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T08:07:59.732Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "1-28",
+        "category": "1人體與醫療",
+        "han": "聲"
+      }
+    }
+  ]
+}

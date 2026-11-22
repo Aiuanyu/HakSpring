@@ -49,7 +49,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.75" />
+    <link rel="stylesheet" href="style.css?v=4.7.79" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -81,7 +81,9 @@
       src="js/gip-superscript.js?v=1.0.1"
       defer
     ></script>
-    <script type="text/javascript" src="js/romaine-join.js?v=1.0.0" defer></script>
+    <script type="text/javascript" src="js/romaine-join.js?v=1.0.1" defer></script>
+    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.3" defer></script>
+    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.7" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.8" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -211,6 +213,13 @@
         <button id="showRomanizerBtn" title="客語羅馬字轉換工具">
           <i class="fas fa-pen-to-square"></i>
         </button>
+        <button
+          id="autoSentenceHppBtn"
+          type="button"
+          class="header-pill-btn is-active"
+          title="切換主表例句羅馬字＋Sandhi 顯示"
+          aria-pressed="true"
+        >句 Lo</button>
         <span id="progressDetails"></span>
         <!-- <--- 在這裡加入這個 span -->
         <div id="search-container">
