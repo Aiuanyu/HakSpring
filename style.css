@@ -101,7 +101,7 @@
 :root {
   --title-font: 'PT Sans', /*'jf蘭陽黑體 1.0', */'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
   --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
-  --sentence-font: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive;
+  --sentence-font: 'Marion', 'Marion+jfBunguan', tauhu-oo, var(--roman-font), cursive;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
 
@@ -398,7 +398,7 @@ a {
 .sentence,
 .sentence * {
   font-family: var(--sentence-font);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 #header {
@@ -6148,7 +6148,7 @@ mark {
 
 /* 例句區域變體彩繪標記（南四縣橘／卓蘭色／桃園色／卓桃漸層色） */
 .sentence-variant {
-  font-family: 'Marion', 'Marion+jfBunguan', tauhu-oo, cursive !important;
+  font-family: var(--sentence-font) !important;
   padding: 0;
   margin: 0;
   border-radius: 1em;
@@ -7077,19 +7077,101 @@ ruby.ruby-multi-reading .phonetic-note-label {
   line-height: 1.5;
 }
 .romaine-auto-hpp-text {
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 4px;
   text-decoration-thickness: 1px;
 }
 .romaine-pair.is-auto .romaine-auto-hpp-text {
-  text-decoration-style: dashed;
   font-style: italic;
 }
-.romaine-pair.is-verified .romaine-auto-hpp-text {
+body.romaine-no-italic-auto .romaine-pair.is-auto .romaine-auto-hpp-text {
+  font-style: normal;
+}
+body.romaine-trust-underline .romaine-auto-hpp-text {
+  text-decoration-line: underline;
+}
+body.romaine-trust-underline .romaine-pair.is-auto .romaine-auto-hpp-text {
+  text-decoration-style: dashed;
+}
+body.romaine-trust-underline .romaine-pair.is-verified .romaine-auto-hpp-text {
   text-decoration-style: dotted;
 }
-.romaine-pair.is-confirmed .romaine-auto-hpp-text {
+body.romaine-trust-underline .romaine-pair.is-confirmed .romaine-auto-hpp-text {
   text-decoration-style: solid;
+}
+.romaine-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-family: Georgia, serif !important;
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  vertical-align: middle;
+  margin-left: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+.romaine-status-icon.auto {
+  background: #f5d0fe;
+  color: #86198f;
+  border-color: #c026d3;
+}
+.romaine-status-icon.verified {
+  background: #fde047;
+  color: #422006;
+  border-color: #ca8a04;
+}
+.romaine-status-icon.confirmed {
+  background: #dcfce7;
+  color: #14532d;
+  border-color: #16a34a;
+}
+body.romaine-trust-underline .romaine-status-icon {
+  display: none;
+}
+.romaine-status-tip {
+  position: fixed;
+  z-index: 9999;
+  max-width: min(280px, 88vw);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  font-family: var(--roman-font);
+  font-size: 13px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+.romaine-marker-radios {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.romaine-radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+}
+.romaine-radio-option input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+  accent-color: var(--primary-color, #2d6a4f);
 }
 .romaine-auto-hpp ruby[class^="sandhi-"] {
   ruby-position: over;
@@ -7126,6 +7208,11 @@ ruby.ruby-multi-reading .phonetic-note-label {
   margin: 4px 0 0;
 }
 @media (prefers-color-scheme: dark) {
+  .romaine-radio-option {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: #232426;
+    color: var(--main-text-color);
+  }
   #autoSentenceHppBtn {
     border-color: rgba(255, 255, 255, 0.3);
     color: var(--main-text-color);
@@ -7136,6 +7223,21 @@ ruby.ruby-multi-reading .phonetic-note-label {
     border-color: #4ade80;
   }
   .romaine-auto-hpp ruby.sandhi-none rt { color: #94a3b8; }
+  .romaine-status-icon.auto {
+    background: #86198f;
+    color: #fdf4ff;
+    border-color: #f0abfc;
+  }
+  .romaine-status-icon.verified {
+    background: #facc15;
+    color: #422006;
+    border-color: #fef08a;
+  }
+  .romaine-status-icon.confirmed {
+    background: #15803d;
+    color: #f0fdf4;
+    border-color: #86efac;
+  }
   .romaine-note-toggle {
     border-color: #c084fc;
     color: #e9d5ff;

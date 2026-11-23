@@ -952,9 +952,9 @@ function applyAudioProxy(url) {
   // 預設的 proxy 路徑，適用於上線環境或 wrangler 開發環境
   let proxyPath = '/audio-proxy?url=';
 
-  // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
-  // 則強制導向正式環境的 Proxy API，解決 local Apache 找不到 Endpoint 的問題。
-  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8788') {
+  // 若在本機或區網／Tailscale HTTP 預覽伺服器（非 wrangler 預設 port 8788），
+  // 則強制導向正式環境的 Proxy API，解決本機靜態伺服器找不到 Endpoint 的問題。
+  if ((window.location.protocol === 'http:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8788') {
     proxyPath = 'https://hakspring.pages.dev/audio-proxy?url=';
   }
 

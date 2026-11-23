@@ -40,24 +40,52 @@
     return ops;
   }
 
+  function extractInlineNoSandhiSet(rawHan) {
+    const set = new Set();
+    const cleaned = (rawHan || '').replace(/%%[\s\S]*?%%/g, '');
+    const chars = Array.from(cleaned);
+    let cjkIdx = -1;
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      if (CJK_RE.test(ch)) {
+        cjkIdx++;
+      } else if ((ch === '#' || ch === '~') && cjkIdx >= 0) {
+        set.add(cjkIdx);
+      }
+    }
+    return set;
+  }
+
+  function registerVerifiedItem(it) {
+    if (!it || !it.cert_ref || !it.cert_ref.id) return;
+    const d = it.cert_ref.dialect || it.dialect || 'sixian';
+    const lvl = it.cert_ref.level || '';
+    const id = it.cert_ref.id;
+    verifiedByKey.set(`${d}|${lvl}|${id}`, it);
+    const cjk = pureCjk(it.han);
+    if (cjk) verifiedByCjk.set(`${d}|${cjk}`, it);
+  }
+
+  function mergeLocalVerifiedCorpus() {
+    try {
+      const localList = JSON.parse(localStorage.getItem('romaineAutoVerifiedCorpus') || '[]');
+      if (Array.isArray(localList)) {
+        for (const it of localList) registerVerifiedItem(it);
+      }
+    } catch {}
+  }
+
   async function ensureVerifiedLoaded() {
-    if (verifiedPromise) return verifiedPromise;
-    verifiedPromise = fetch('data/romaine/verified_sentences.json')
-      .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((data) => {
-        for (const it of data.items || []) {
-          if (it.cert_ref && it.cert_ref.id) {
-            const d = it.cert_ref.dialect || it.dialect || 'sixian';
-            const lvl = it.cert_ref.level || '';
-            const id = it.cert_ref.id;
-            verifiedByKey.set(`${d}|${lvl}|${id}`, it);
-            const cjk = pureCjk(it.han);
-            if (cjk) verifiedByCjk.set(`${d}|${cjk}`, it);
-          }
-        }
-      })
-      .catch(() => {});
-    return verifiedPromise;
+    if (!verifiedPromise) {
+      verifiedPromise = fetch('data/romaine/verified_sentences.json?v=20261123')
+        .then((r) => (r.ok ? r.json() : { items: [] }))
+        .then((data) => {
+          for (const it of data.items || []) registerVerifiedItem(it);
+        })
+        .catch(() => {});
+    }
+    await verifiedPromise;
+    mergeLocalVerifiedCorpus();
   }
 
   async function getEngine(dialectKey) {
@@ -109,6 +137,7 @@
   function renderVerifiedHtml(item, eng) {
     if (!item || !item.tokens || !eng) return item ? item.joined_hpp || '' : '';
     const inlineOps = extractInlineBoundaryOps(item.han);
+    const inlineNoSandhi = extractInlineNoSandhiSet(item.han);
     let pureIdx = 0;
     const toks = item.tokens.map((t) => {
       if (t.punct || t.nonCjk || t.comment) return t;
@@ -126,10 +155,18 @@
         }
         if (hasOp) sb = derived;
       }
+      let ns = t.noSandhi || t.no_sandhi;
+      if (!ns && inlineNoSandhi.size > 0) {
+        const flags = [];
+        for (let k = 0; k < cLen; k++) {
+          flags.push(inlineNoSandhi.has(pureIdx + k));
+        }
+        if (flags.some(Boolean)) ns = flags;
+      }
       pureIdx += cLen;
       return {
         ...t,
-        noSandhi: t.noSandhi || t.no_sandhi,
+        noSandhi: ns,
         sylBoundaries: sb,
       };
     });
@@ -176,16 +213,153 @@
   }
 
   function splitSentenceHtmlLines(html) {
-    const rawBrLines = (html || '').split(/<br\s*\/?>/i);
-    const out = [];
-    for (const bl of rawBrLines) {
-      const parts = bl
-        .split(/(?<=[。！？][」』）)]*)\s*(?=(?:<(?:span|mark)[^>]*>)?[^\s<])/)
-        .filter((p) => p && p.trim());
-      if (parts.length) out.push(...parts);
-      else if (bl.trim()) out.push(bl.trim());
+    return (html || '')
+      .split(/<br\s*\/?>/i)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  let activeTipEl = null;
+  let activeTipTarget = null;
+  let activeTipTimer = null;
+
+  function closeStatusTip() {
+    if (activeTipTimer) {
+      clearTimeout(activeTipTimer);
+      activeTipTimer = null;
     }
-    return out;
+    if (activeTipEl) {
+      activeTipEl.remove();
+      activeTipEl = null;
+    }
+    activeTipTarget = null;
+  }
+
+  function showStatusTip(targetEl, text) {
+    if (!targetEl || !text) return;
+    if (activeTipTarget === targetEl && activeTipEl) {
+      closeStatusTip();
+      return;
+    }
+    closeStatusTip();
+    const tip = document.createElement('div');
+    tip.className = 'romaine-status-tip';
+    tip.textContent = text;
+    document.body.appendChild(tip);
+    const rect = targetEl.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
+    let top = rect.top - tipRect.height - 8;
+    if (top < 8) top = rect.bottom + 8;
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+    activeTipEl = tip;
+    activeTipTarget = targetEl;
+    activeTipTimer = setTimeout(closeStatusTip, 3800);
+  }
+
+  function getNoSandhiMarkerPref() {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getNoSandhiMarker === 'function') {
+      return window.RomaineAutoEngine.getNoSandhiMarker();
+    }
+    try {
+      return localStorage.getItem('romaineNoSandhiMarker') === '#' ? '#' : '~';
+    } catch {
+      return '~';
+    }
+  }
+
+  function setNoSandhiMarkerPref(val) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.setNoSandhiMarker === 'function') {
+      return window.RomaineAutoEngine.setNoSandhiMarker(val);
+    }
+    const m = val === '#' ? '#' : '~';
+    try {
+      localStorage.setItem('romaineNoSandhiMarker', m);
+    } catch {}
+    return m;
+  }
+
+  function getUnverifiedItalicPref() {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getUnverifiedItalic === 'function') {
+      return window.RomaineAutoEngine.getUnverifiedItalic();
+    }
+    try {
+      const v = localStorage.getItem('romaineUnverifiedItalic');
+      return v === null ? true : v !== 'false';
+    } catch {
+      return true;
+    }
+  }
+
+  function setUnverifiedItalicPref(flag) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.setUnverifiedItalic === 'function') {
+      return window.RomaineAutoEngine.setUnverifiedItalic(flag);
+    }
+    const b = Boolean(flag);
+    try {
+      localStorage.setItem('romaineUnverifiedItalic', String(b));
+    } catch {}
+    return b;
+  }
+
+  function getTrustUnderlinePref() {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getTrustUnderline === 'function') {
+      return window.RomaineAutoEngine.getTrustUnderline();
+    }
+    try {
+      return localStorage.getItem('romaineTrustUnderline') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  function setTrustUnderlinePref(flag) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.setTrustUnderline === 'function') {
+      return window.RomaineAutoEngine.setTrustUnderline(flag);
+    }
+    const b = Boolean(flag);
+    try {
+      localStorage.setItem('romaineTrustUnderline', String(b));
+    } catch {}
+    return b;
+  }
+
+  function applyNoSandhiMarkerToDom() {
+    const sym = getNoSandhiMarkerPref();
+    for (const rt of document.querySelectorAll('#generated .romaine-auto-hpp ruby.sandhi-none > rt')) {
+      rt.textContent = sym;
+    }
+  }
+
+  function applyUnverifiedItalicToDom() {
+    const useItalic = getUnverifiedItalicPref();
+    if (document.body) {
+      document.body.classList.toggle('romaine-no-italic-auto', !useItalic);
+    }
+  }
+
+  function applyTrustUnderlineToDom() {
+    const useUnderline = getTrustUnderlinePref();
+    if (document.body) {
+      document.body.classList.toggle('romaine-trust-underline', useUnderline);
+    }
+  }
+
+  function syncSettingsControls() {
+    const sym = getNoSandhiMarkerPref();
+    for (const r of document.querySelectorAll('input[name="romaineNoSandhiMarker"]')) {
+      r.checked = r.value === sym;
+    }
+    const italicChk = document.getElementById('romaineUnverifiedItalicToggle');
+    if (italicChk) {
+      italicChk.checked = getUnverifiedItalicPref();
+    }
+    const underlineChk = document.getElementById('romaineTrustUnderlineToggle');
+    if (underlineChk) {
+      underlineChk.checked = getTrustUnderlinePref();
+    }
   }
 
   function updateToggleButton() {
@@ -209,10 +383,6 @@
       }
       for (const s of generated.querySelectorAll('td[data-label="例句"] .sentence')) {
         s.style.display = '';
-      }
-      for (const ts of generated.querySelectorAll('td[data-label="例句"] > span[data-romaine-orig-html]')) {
-        ts.innerHTML = ts.dataset.romaineOrigHtml;
-        delete ts.dataset.romaineOrigHtml;
       }
       return;
     }
@@ -275,12 +445,31 @@
         hppDiv.className = 'romaine-auto-hpp';
         const hppTextSpan = document.createElement('span');
         hppTextSpan.className = 'romaine-auto-hpp-text';
-        hppTextSpan.title = isVerified
-          ? '作者已初校（dotted）'
+        const statusTitle = isVerified
+          ? '作者已初校（待社群回報確認）'
           : '單純程式產生，還毋曾經過人工檢驗，請細義使用！';
+        hppTextSpan.title = statusTitle;
         const hppLineHtml = hppLines[i] !== undefined ? hppLines[i] : '';
         hppTextSpan.innerHTML = applyHppVariantColors(hppLineHtml, dialect);
         hppDiv.appendChild(hppTextSpan);
+
+        const statusIcon = document.createElement('button');
+        statusIcon.type = 'button';
+        statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
+        statusIcon.textContent = 'i';
+        statusIcon.title = statusTitle;
+        statusIcon.setAttribute('aria-label', statusTitle);
+        const stopIconEvent = (e) => {
+          e.stopPropagation();
+        };
+        statusIcon.addEventListener('mousedown', stopIconEvent);
+        statusIcon.addEventListener('mouseup', stopIconEvent);
+        statusIcon.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          showStatusTip(statusIcon, statusTitle);
+        });
+        hppDiv.appendChild(statusIcon);
 
         if (i === pairCount - 1 && isVerified && verifiedItem.note) {
           const qBtn = document.createElement('button');
@@ -337,14 +526,6 @@
         container.nextElementSibling.style.display = 'none';
         container.nextElementSibling.dataset.romaineHiddenBr = '1';
       }
-
-      const transSpan = Array.from(td3.children).find(
-        (el) => el.tagName === 'SPAN' && !el.classList.contains('sentence')
-      );
-      if (transSpan && !transSpan.dataset.romaineOrigHtml) {
-        transSpan.dataset.romaineOrigHtml = transSpan.innerHTML;
-        transSpan.innerHTML = splitSentenceHtmlLines(transSpan.innerHTML).join('<br>');
-      }
     }
   }
 
@@ -356,6 +537,69 @@
   }
 
   function init() {
+    document.addEventListener('click', (e) => {
+      if (activeTipEl && activeTipTarget && !activeTipTarget.contains(e.target)) {
+        closeStatusTip();
+      }
+    });
+    window.addEventListener('scroll', closeStatusTip, { passive: true });
+    applyUnverifiedItalicToDom();
+    applyTrustUnderlineToDom();
+    syncSettingsControls();
+
+    for (const r of document.querySelectorAll('input[name="romaineNoSandhiMarker"]')) {
+      r.addEventListener('change', () => {
+        if (r.checked) {
+          setNoSandhiMarkerPref(r.value);
+          applyNoSandhiMarkerToDom();
+        }
+      });
+    }
+
+    const italicChk = document.getElementById('romaineUnverifiedItalicToggle');
+    if (italicChk) {
+      italicChk.addEventListener('change', () => {
+        setUnverifiedItalicPref(italicChk.checked);
+        applyUnverifiedItalicToDom();
+      });
+    }
+
+    const underlineChk = document.getElementById('romaineTrustUnderlineToggle');
+    if (underlineChk) {
+      underlineChk.addEventListener('change', () => {
+        setTrustUnderlinePref(underlineChk.checked);
+        applyTrustUnderlineToDom();
+      });
+    }
+
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', syncSettingsControls);
+    }
+
+    window.addEventListener('romainePrefsChanged', () => {
+      syncSettingsControls();
+      applyUnverifiedItalicToDom();
+      applyTrustUnderlineToDom();
+      applyNoSandhiMarkerToDom();
+    });
+
+    window.addEventListener('storage', (e) => {
+      if (e && e.key === 'romaineAutoVerifiedCorpus') {
+        for (const el of document.querySelectorAll('#generated .romaine-interleaved')) {
+          if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
+            el.nextElementSibling.style.display = '';
+            delete el.nextElementSibling.dataset.romaineHiddenBr;
+          }
+          el.remove();
+        }
+        for (const s of document.querySelectorAll('#generated td[data-label="例句"] .sentence')) {
+          s.style.display = '';
+        }
+        scheduleApply();
+      }
+    });
+
     const btn = document.getElementById('autoSentenceHppBtn');
     if (btn) {
       updateToggleButton();

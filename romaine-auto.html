@@ -44,24 +44,24 @@
       background: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 20px;
+      padding: 12px 14px;
       line-height: 1.6;
     }
-    .container { max-width: 1360px; margin: 0 auto; display: grid; gap: 16px; align-items: start; }
+    .container { max-width: none; width: 100%; margin: 0 auto; display: grid; gap: 16px; align-items: start; }
     .main-col { display: grid; gap: 16px; min-width: 0; }
     @media (min-width: 980px) {
-      .container { grid-template-columns: 380px minmax(0, 1fr); }
+      .container { grid-template-columns: minmax(340px, 1fr) minmax(560px, 964px); }
       .cert-loader {
         position: sticky;
-        top: 16px;
-        max-height: calc(100vh - 32px);
-        display: flex;
-        flex-direction: column;
+        top: 12px;
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .cert-loader .cert-sent-list {
-        max-height: none;
-        flex: 1;
-        min-height: 220px;
+        max-height: calc(100vh - 260px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
     }
     .card {
@@ -312,11 +312,11 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border: 1px solid var(--border);
       border-radius: 6px;
       background: var(--bg);
-      font-size: 13px;
+      font-size: 15px;
     }
     .cert-sent-row.active { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
     .cert-sent-row.verified {
@@ -345,11 +345,18 @@
       }
     }
     .cert-sent-text { flex: 1; min-width: 0; }
-    .cert-sent-sub { font-size: 12px; color: var(--muted); }
+    .cert-sent-main { font-size: 16px; font-weight: 600; line-height: 1.5; }
+    .cert-sent-row.unverified-italic:not(.verified) .cert-sent-main { font-style: italic; }
+    .cert-sent-hpp { font-size: 15px; color: var(--accent); font-weight: 600; margin-top: 4px; line-height: 1.85; word-break: break-word; }
+    .radio-group { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); }
+    .radio-group label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600; }
+    .cert-sent-sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
     .cert-audio-btn { padding: 4px 8px; font-size: 13px; line-height: 1.2; }
     .cert-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .output-box ruby[class^="sandhi-"] { ruby-position: over; font-weight: 500; }
-    .output-box ruby[class^="sandhi-"] rt { font-size: 0.65em; font-weight: 700; color: inherit; }
+    .output-box ruby[class^="sandhi-"],
+    .cert-sent-hpp ruby[class^="sandhi-"] { ruby-position: over; font-weight: 500; }
+    .output-box ruby[class^="sandhi-"] rt,
+    .cert-sent-hpp ruby[class^="sandhi-"] rt { font-size: 0.65em; font-weight: 700; color: inherit; }
     ruby.sandhi-t55 { color: #dc2626; }
     ruby.sandhi-t35 { color: #9333ea; }
     ruby.sandhi-t33 { color: #2563eb; }
@@ -410,8 +417,23 @@
         <button id="evalP0Btn">跑 P0 基準分</button>
       </div>
       <div class="status-line" id="statusLine" style="margin-top:8px">詞庫（教典＋認證＋補字典）載入中…</div>
+      <div class="toolbar" style="margin-top:8px; gap:14px;">
+        <div class="radio-group" role="radiogroup" aria-label="無愛變調个標示字元">
+          <span>無愛變調个標示字元：</span>
+          <label><input type="radio" name="noSandhiMarker" value="#" /> <code>#</code></label>
+          <label><input type="radio" name="noSandhiMarker" value="~" checked /> <code>~</code></label>
+        </div>
+        <label class="switch" style="font-size:13px; font-weight:500;">
+          <input type="checkbox" id="unverifiedItalicToggle" checked />
+          毋曾有人審查過个句仔用竵體／斜體
+        </label>
+        <label class="switch" style="font-size:13px; font-weight:500;">
+          <input type="checkbox" id="trustUnderlineToggle" />
+          用底線表示例句羅馬字个可信度
+        </label>
+      </div>
       <div class="hint-line">
-        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>恁+早</code> 強制斷詞加空格 ｜ <code>字#</code> 標記前音節不變調 ｜ <code>%%註解%%</code> 僅記入黃金語料不轉換
+        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>頭那+毛</code> 輸出加空格（不改斷詞）｜ <code>恁 早</code> 空格拆詞 ｜ <code>字~</code>／<code>字#</code> 前音節不變調
       </div>
     </div>
 
@@ -440,10 +462,16 @@
           <button class="primary" id="verifyBtn">✓ 確認校正並入庫（localStorage）</button>
           <button id="saveAsNewBtn" style="display:none">另存別筆</button>
           <button id="toggleVerifiedBtn">檢視黃金語料 (<span id="verifiedCount">0</span>)</button>
+          <button id="importBtn" type="button">匯入 JSON</button>
+          <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" />
           <button id="exportBtn">匯出 JSON</button>
         </div>
       </div>
       <div class="output-box" id="outputHpp"></div>
+      <div style="margin-top:10px;">
+        <textarea id="noteInput" rows="2" style="min-height:48px;font-size:14px;" placeholder="註解／校對備註（僅記入黃金語料，不影響轉換）"></textarea>
+      </div>
+      <div class="hint-line" id="exportReminder" style="margin-top:8px;"></div>
     </div>
 
     <div class="card" id="verifiedPanel" style="display:none">
@@ -476,7 +504,7 @@
   <script src="NAmedias.js"></script>
   <script src="js/gip-converter.js"></script>
   <script src="js/romaine-join.js"></script>
-  <script src="js/romaine-auto.js?v=9"></script>
+  <script src="js/romaine-auto.js?v=14"></script>
   <script>
     const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
     const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
@@ -490,7 +518,51 @@
     const autoToggle = document.getElementById('autoToggle');
     const sandhiToggle = document.getElementById('sandhiToggle');
     const joiningMode = document.getElementById('joiningMode');
+    const unverifiedItalicToggle = document.getElementById('unverifiedItalicToggle');
+    const trustUnderlineToggle = document.getElementById('trustUnderlineToggle');
+    const noSandhiMarkerRadios = Array.from(document.querySelectorAll('input[name="noSandhiMarker"]'));
+
+    function syncRomainePrefsUI() {
+      const marker = RomaineAutoEngine.getNoSandhiMarker();
+      for (const r of noSandhiMarkerRadios) {
+        r.checked = r.value === marker;
+      }
+      if (unverifiedItalicToggle) {
+        unverifiedItalicToggle.checked = RomaineAutoEngine.getUnverifiedItalic();
+      }
+      if (trustUnderlineToggle) {
+        trustUnderlineToggle.checked = RomaineAutoEngine.getTrustUnderline();
+      }
+    }
+    syncRomainePrefsUI();
+
+    for (const r of noSandhiMarkerRadios) {
+      r.addEventListener('change', () => {
+        if (r.checked) {
+          RomaineAutoEngine.setNoSandhiMarker(r.value);
+          render();
+          refreshCertVerifiedHighlights();
+        }
+      });
+    }
+    if (unverifiedItalicToggle) {
+      unverifiedItalicToggle.addEventListener('change', () => {
+        RomaineAutoEngine.setUnverifiedItalic(unverifiedItalicToggle.checked);
+        refreshCertVerifiedHighlights();
+      });
+    }
+    if (trustUnderlineToggle) {
+      trustUnderlineToggle.addEventListener('change', () => {
+        RomaineAutoEngine.setTrustUnderline(trustUnderlineToggle.checked);
+      });
+    }
+    window.addEventListener('romainePrefsChanged', () => {
+      syncRomainePrefsUI();
+      render();
+      refreshCertVerifiedHighlights();
+    });
     const inputHan = document.getElementById('inputHan');
+    const noteInput = document.getElementById('noteInput');
     const tokensWrap = document.getElementById('tokensWrap');
     const outputHpp = document.getElementById('outputHpp');
     const statusLine = document.getElementById('statusLine');
@@ -599,7 +671,16 @@
       catch { return []; }
     }
     function updateVerifiedBadge() {
-      verifiedCountEl.textContent = String(loadVerified().length);
+      const list = loadVerified();
+      verifiedCountEl.textContent = String(list.length);
+      const reminderEl = document.getElementById('exportReminder');
+      if (reminderEl) {
+        const certCnt = list.filter((it) => it.cert_ref && it.cert_ref.id).length;
+        const stat = list.length
+          ? `目前已暫存 ${list.length} 筆（含 ${certCnt} 筆客源翠認證例句）`
+          : '目前尚無本機暫存';
+        reminderEl.textContent = `💡 localStorage 即時學習僅存於本機瀏覽器（${stat}）；校正成果、註解與 # + - = 標記日後須按「匯出 JSON」交由專案合併，才會成為主站顯示資產與測試集。`;
+      }
     }
 
     function extractPureCjkChars(tokens) {
@@ -1018,8 +1099,14 @@
       }
       if (autoToggle.checked) runConvert();
     });
-    sandhiToggle.addEventListener('change', render);
-    joiningMode.addEventListener('change', render);
+    sandhiToggle.addEventListener('change', () => {
+      render();
+      refreshCertVerifiedHighlights();
+    });
+    joiningMode.addEventListener('change', () => {
+      render();
+      refreshCertVerifiedHighlights();
+    });
     document.getElementById('runBtn').addEventListener('click', runConvert);
 
     document.getElementById('copyBtn').addEventListener('click', async () => {
@@ -1030,6 +1117,7 @@
 
     document.getElementById('loadSampleBtn').addEventListener('click', async () => {
       activeCertRef = null;
+      noteInput.value = '';
       const p0 = await fetch('tests/romaine_p0.json').then((r) => r.json());
       inputHan.value = p0.items[0].han;
       runConvert();
@@ -1111,6 +1199,9 @@
           const obj = { han: t.han, hpp: t.hpp };
           if (t.uncertain) obj.uncertain = true;
           if (t.noSandhi) obj.no_sandhi = t.noSandhi;
+          if (t.sylBoundaries && t.sylBoundaries.some((b) => b === 'hyphen' || b === 'space')) {
+            obj.syl_boundaries = t.sylBoundaries;
+          }
           return obj;
         }),
         joined_hpp: engine.formatTokensToHpp(currentTokens, joiningMode.value),
@@ -1127,6 +1218,8 @@
           han: activeCertRef.han,
         };
       }
+      const noteVal = noteInput.value.trim();
+      if (noteVal) entry.note = noteVal;
       if (comments.length) entry.comments = comments;
       return entry;
     }
@@ -1149,6 +1242,7 @@
         : null;
       updateSaveButtons();
       inputHan.value = item.han || '';
+      noteInput.value = item.note || '';
       manualCharOverrides = new Map();
       prevPureCjk = [];
       let cjkIdx = 0;
@@ -1233,6 +1327,12 @@
         row.appendChild(head);
         row.appendChild(hanDiv);
         row.appendChild(hppDiv);
+        if (item.note) {
+          const noteDiv = document.createElement('div');
+          noteDiv.className = 'status-line';
+          noteDiv.textContent = `註解：${item.note}`;
+          row.appendChild(noteDiv);
+        }
         verifiedList.appendChild(row);
       });
     }
@@ -1308,6 +1408,47 @@
       a.click();
     });
 
+    const importBtn = document.getElementById('importBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    if (importBtn && importFileInput) {
+      importBtn.addEventListener('click', () => importFileInput.click());
+      importFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed.items || []);
+          if (!Array.isArray(incoming)) throw new Error('JSON 格式不符');
+          const cur = loadVerified();
+          const byId = new Map(cur.map((it, idx) => [it.id, idx]));
+          let added = 0;
+          let updated = 0;
+          for (const it of incoming) {
+            if (!it || !it.id) continue;
+            if (byId.has(it.id)) {
+              cur[byId.get(it.id)] = it;
+              updated++;
+            } else {
+              byId.set(it.id, cur.length);
+              cur.push(it);
+              added++;
+            }
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cur));
+          engine.applyVerifiedLearning(cur);
+          updateVerifiedBadge();
+          if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
+          refreshCertVerifiedHighlights();
+          statusLine.textContent = `已匯入黃金語料：新增 ${added} 筆、更新 ${updated} 筆（共 ${cur.length} 筆）。`;
+        } catch (err) {
+          alert(`匯入失敗：${err.message}`);
+        } finally {
+          importFileInput.value = '';
+        }
+      });
+    }
+
     // --- CERT 認證例句載入器 ---
     const certLevelSelect = document.getElementById('certLevelSelect');
     const certCategorySelect = document.getElementById('certCategorySelect');
@@ -1336,7 +1477,7 @@
 
     function applyCertAudioProxy(url) {
       if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) return url;
-      const isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port !== '8788';
+      const isLocal = (location.protocol === 'http:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port !== '8788';
       const prefix = isLocal ? 'https://hakspring.pages.dev/audio-proxy?url=' : '/audio-proxy?url=';
       return prefix + encodeURIComponent(url);
     }
@@ -1438,6 +1579,7 @@
         updateSaveButtons();
         manualCharOverrides = new Map();
         prevPureCjk = [];
+        noteInput.value = '';
         inputHan.value = cleanedSent;
         runConvert();
       }
@@ -1478,25 +1620,115 @@
       if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
     }
 
-    function getVerifiedCertKeySet() {
-      const keys = new Set();
+    function getVerifiedCertMap() {
+      const map = new Map();
       for (const it of loadVerified()) {
         if (it.cert_ref && it.cert_ref.id) {
-          keys.add(`${it.cert_ref.dialect || 'sixian'}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`);
+          map.set(`${it.cert_ref.dialect || 'sixian'}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`, it);
         }
       }
-      return keys;
+      return map;
+    }
+
+    function extractInlineBoundaryOps(rawHan) {
+      const ops = new Map();
+      const cleaned = (rawHan || '').replace(/%%[\s\S]*?%%/g, '');
+      const chars = Array.from(cleaned);
+      let cjkIdx = -1;
+      for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
+        if (CJK_CHAR_TEST_RE.test(ch)) {
+          cjkIdx++;
+        } else if ((ch === '+' || ch === '=') && cjkIdx >= 0) {
+          ops.set(cjkIdx, ch === '+' ? 'space' : 'hyphen');
+        }
+      }
+      return ops;
+    }
+
+    function extractInlineNoSandhiSet(rawHan) {
+      const set = new Set();
+      const cleaned = (rawHan || '').replace(/%%[\s\S]*?%%/g, '');
+      const chars = Array.from(cleaned);
+      let cjkIdx = -1;
+      for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
+        if (CJK_CHAR_TEST_RE.test(ch)) {
+          cjkIdx++;
+        } else if ((ch === '#' || ch === '~') && cjkIdx >= 0) {
+          set.add(cjkIdx);
+        }
+      }
+      return set;
+    }
+
+    function renderCertHppLine(hppEl, verifiedItem) {
+      if (!hppEl) return;
+      if (!verifiedItem || (!verifiedItem.joined_hpp && !(verifiedItem.tokens && verifiedItem.tokens.length))) {
+        hppEl.textContent = '';
+        hppEl.style.display = 'none';
+        return;
+      }
+      if (verifiedItem.tokens && verifiedItem.tokens.length) {
+        const inlineOps = extractInlineBoundaryOps(verifiedItem.han);
+        const inlineNoSandhi = extractInlineNoSandhiSet(verifiedItem.han);
+        let pureIdx = 0;
+        const toks = verifiedItem.tokens.map((t) => {
+          if (t.punct || t.nonCjk || t.comment) return t;
+          const cLen = Array.from(t.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c)).length;
+          let sb = t.sylBoundaries || t.syl_boundaries;
+          if (!sb && cLen > 1 && inlineOps.size > 0) {
+            const derived = new Array(cLen - 1).fill('normal');
+            let hasOp = false;
+            for (let k = 0; k < cLen - 1; k++) {
+              const op = inlineOps.get(pureIdx + k);
+              if (op) {
+                derived[k] = op;
+                hasOp = true;
+              }
+            }
+            if (hasOp) sb = derived;
+          }
+          let ns = t.noSandhi || t.no_sandhi;
+          if (!ns && inlineNoSandhi.size > 0) {
+            const flags = [];
+            for (let k = 0; k < cLen; k++) {
+              flags.push(inlineNoSandhi.has(pureIdx + k));
+            }
+            if (flags.some(Boolean)) ns = flags;
+          }
+          pureIdx += cLen;
+          return {
+            ...t,
+            noSandhi: ns,
+            sylBoundaries: sb,
+          };
+        });
+        if (sandhiToggle.checked && engine.sandhiRules) {
+          hppEl.innerHTML = engine.formatTokensToSandhiHtml(toks, joiningMode.value);
+        } else {
+          hppEl.textContent = engine.formatTokensToHpp(toks, joiningMode.value);
+        }
+      } else {
+        hppEl.textContent = verifiedItem.joined_hpp || '';
+      }
+      hppEl.style.display = 'block';
     }
 
     function refreshCertVerifiedHighlights() {
-      const keys = getVerifiedCertKeySet();
+      const vMap = getVerifiedCertMap();
+      const useItalic = RomaineAutoEngine.getUnverifiedItalic();
       let doneCount = 0;
       for (const el of certSentList.querySelectorAll('.cert-sent-row')) {
-        const isDone = keys.has(el.dataset.certKey || '');
+        const key = el.dataset.certKey || '';
+        const item = vMap.get(key);
+        const isDone = Boolean(item);
         if (isDone) doneCount++;
         el.classList.toggle('verified', isDone);
+        el.classList.toggle('unverified-italic', !isDone && useItalic);
         const badge = el.querySelector('.cert-verified-badge');
         if (badge) badge.style.display = isDone ? 'inline-block' : 'none';
+        renderCertHppLine(el.querySelector('.cert-sent-hpp'), item);
       }
       if (certActiveIdx === -1) {
         certCounter.textContent = `共 ${certFilteredRows.length} 句（已校 ${doneCount} 句）`;
@@ -1511,31 +1743,38 @@
       certActiveIdx = -1;
       certActiveMeta.style.display = 'none';
       certSentList.innerHTML = '';
-      const verifiedKeys = getVerifiedCertKeySet();
+      const verifiedMap = getVerifiedCertMap();
+      const useItalic = RomaineAutoEngine.getUnverifiedItalic();
       let doneCount = 0;
 
       certFilteredRows.forEach((row, idx) => {
         const certKey = `${engine.dialect}\t${levelName}\t${row.id || ''}`;
-        const isDone = Boolean(row.id) && verifiedKeys.has(certKey);
+        const verifiedItem = row.id ? verifiedMap.get(certKey) : null;
+        const isDone = Boolean(verifiedItem);
         if (isDone) doneCount++;
         const div = document.createElement('div');
-        div.className = 'cert-sent-row' + (isDone ? ' verified' : '');
+        div.className = 'cert-sent-row' + (isDone ? ' verified' : useItalic ? ' unverified-italic' : '');
         div.dataset.idx = String(idx);
         div.dataset.certKey = certKey;
 
         const textWrap = document.createElement('div');
         textWrap.className = 'cert-sent-text';
         const main = document.createElement('div');
+        main.className = 'cert-sent-main';
         main.textContent = `${row.id ? row.id + ' ' : ''}[${row.han}] ${cleanCertSentence(row.sentence)}`;
         const badge = document.createElement('span');
         badge.className = 'cert-verified-badge';
         badge.textContent = '✓ 已校';
         badge.style.display = isDone ? 'inline-block' : 'none';
         main.appendChild(badge);
+        const hppLine = document.createElement('div');
+        hppLine.className = 'cert-sent-hpp';
+        renderCertHppLine(hppLine, verifiedItem);
         const sub = document.createElement('div');
         sub.className = 'cert-sent-sub';
         sub.textContent = cleanCertSentence(row.translation);
         textWrap.appendChild(main);
+        textWrap.appendChild(hppLine);
         textWrap.appendChild(sub);
 
         const btnGroup = document.createElement('div');

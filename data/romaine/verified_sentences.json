@@ -4,11 +4,16 @@
     {
       "id": "v-1795309091904",
       "dialect": "zhaoan",
-      "han": "略略仔發燒。",
+      "han": "略略仔#發燒。",
       "tokens": [
         {
           "han": "略略仔",
-          "hpp": "Lio lio à"
+          "hpp": "Lio lio à",
+          "no_sandhi": [
+            false,
+            false,
+            true
+          ]
         },
         {
           "han": "發燒",
@@ -23,7 +28,7 @@
       "joined_hpp": "Liolioà fádshiǒo.",
       "status": "verified",
       "source": "romaine-auto-poc",
-      "updated_at": "2026-11-22T00:58:11.904Z",
+      "updated_at": "2026-11-22T20:35:48.074Z",
       "cert_ref": {
         "dialect": "zhaoan",
         "level": "基礎級",
@@ -1785,6 +1790,709 @@
         "id": "1-28",
         "category": "1人體與醫療",
         "han": "聲"
+      }
+    },
+    {
+      "id": "v-1795361032891",
+      "dialect": "zhaoan",
+      "han": "食+飽+夜#來去#散步#好無？",
+      "tokens": [
+        {
+          "han": "食飽夜",
+          "hpp": "Shièd bâu rhia",
+          "no_sandhi": [
+            false,
+            false,
+            true
+          ],
+          "syl_boundaries": [
+            "space",
+            "space"
+          ]
+        },
+        {
+          "han": "來去",
+          "hpp": "lòi kûi",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "散步",
+          "hpp": "sân pu",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "好",
+          "hpp": "hôo"
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        }
+      ],
+      "joined_hpp": "Shièd bâu rhia lòikûi sânpu hôo mò?",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T15:23:52.892Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-1",
+        "category": "2心理活動與感覺",
+        "han": "飽"
+      }
+    },
+    {
+      "id": "v-1795362672518",
+      "dialect": "zhaoan",
+      "han": "罐-子插一蕊花。",
+      "tokens": [
+        {
+          "han": "罐子",
+          "hpp": "Guân zû"
+        },
+        {
+          "han": "插",
+          "hpp": "cáb"
+        },
+        {
+          "han": "一",
+          "hpp": "rhíd"
+        },
+        {
+          "han": "蕊",
+          "hpp": "lûi"
+        },
+        {
+          "han": "花",
+          "hpp": "fǎ"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Guânzû cáb rhíd lûi fǎ.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T15:51:12.518Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-2",
+        "category": "2心理活動與感覺",
+        "han": "插"
+      }
+    },
+    {
+      "id": "v-1795363025423",
+      "dialect": "zhaoan",
+      "han": "後禮拜#愛考試，你#知無？\n逐擺#攏按，賞#到毋#+知好轉。",
+      "tokens": [
+        {
+          "han": "後",
+          "hpp": "Heu"
+        },
+        {
+          "han": "禮拜",
+          "hpp": "lê bâi",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "愛",
+          "hpp": "ǒi",
+          "uncertain": true
+        },
+        {
+          "han": "考試",
+          "hpp": "kôo chî"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "知",
+          "hpp": "dǐ"
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "逐擺",
+          "hpp": "Tu bâi",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "攏",
+          "hpp": "lûng",
+          "uncertain": true
+        },
+        {
+          "han": "按",
+          "hpp": "án"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "賞",
+          "hpp": "sông",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "到",
+          "hpp": "dôo"
+        },
+        {
+          "han": "毋知",
+          "hpp": "m̌ dǐ",
+          "no_sandhi": [
+            true,
+            false
+          ],
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "好",
+          "hpp": "hôo"
+        },
+        {
+          "han": "轉",
+          "hpp": "zhên"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Heu lêbâi ǒi kôochî, hèn dǐ mò?\nTubâi lûng án, sông dôo m̌ dǐ hôo zhên.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T15:57:05.423Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-3",
+        "category": "2心理活動與感覺",
+        "han": "知"
+      },
+      "note": "「愛」較像 oi11；「攏」較像 lung55"
+    },
+    {
+      "id": "v-1795363105176",
+      "dialect": "zhaoan",
+      "han": "買個#等路#送佢，得+佢#歡喜一下。",
+      "tokens": [
+        {
+          "han": "買",
+          "hpp": "Mǐ"
+        },
+        {
+          "han": "個",
+          "hpp": "gâi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "等路",
+          "hpp": "dên lu",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "送",
+          "hpp": "sûng"
+        },
+        {
+          "han": "佢",
+          "hpp": "gùi"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "得佢",
+          "hpp": "déd gùi",
+          "no_sandhi": [
+            false,
+            true
+          ],
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "歡喜",
+          "hpp": "fǎn hî"
+        },
+        {
+          "han": "一",
+          "hpp": "rhíd"
+        },
+        {
+          "han": "下",
+          "hpp": "ha"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Mǐ gâi dênlu sûng gùi, déd gùi fǎnhî rhíd ha.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T15:58:25.176Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-4",
+        "category": "2心理活動與感覺",
+        "han": "歡喜"
+      }
+    },
+    {
+      "id": "v-1795391115201",
+      "dialect": "zhaoan",
+      "han": "你#講佢#怪怪？𠊎#即感覺毋會出。\n轉+寒#啊！你#無感覺係#無？",
+      "tokens": [
+        {
+          "han": "你",
+          "hpp": "Hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "講",
+          "hpp": "gông"
+        },
+        {
+          "han": "佢",
+          "hpp": "gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "怪",
+          "hpp": "guâi"
+        },
+        {
+          "han": "怪",
+          "hpp": "guâi"
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        },
+        {
+          "han": "𠊎",
+          "hpp": "Ngài",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "即",
+          "hpp": "zíd"
+        },
+        {
+          "han": "感覺",
+          "hpp": "gâm góo"
+        },
+        {
+          "han": "毋會",
+          "hpp": "m̌ bboi"
+        },
+        {
+          "han": "出",
+          "hpp": "chíd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "轉寒",
+          "hpp": "Zhêen hòn",
+          "no_sandhi": [
+            false,
+            true
+          ],
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "！",
+          "punct": true,
+          "hpp": "! "
+        },
+        {
+          "han": "你",
+          "hpp": "Hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "感覺",
+          "hpp": "gâm góo"
+        },
+        {
+          "han": "係無",
+          "hpp": "he mò",
+          "no_sandhi": [
+            true,
+            false
+          ]
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        }
+      ],
+      "joined_hpp": "Hèn gông gùi guâi guâi? Ngài zíd gâmgóo m̌bboi chíd.\nZhêen hòn ǎ! Hèn mò gâmgóo hemò?",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T23:45:15.201Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-5",
+        "category": "2心理活動與感覺",
+        "han": "感覺"
+      }
+    },
+    {
+      "id": "v-1795391154776",
+      "dialect": "zhaoan",
+      "han": "恁久#無來，你#猶記得路#無？",
+      "tokens": [
+        {
+          "han": "恁久",
+          "hpp": "Ngîn giû",
+          "no_sandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "來",
+          "hpp": "lòi"
+        },
+        {
+          "han": "，",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "猶",
+          "hpp": "ià"
+        },
+        {
+          "han": "記得",
+          "hpp": "kî déd"
+        },
+        {
+          "han": "路",
+          "hpp": "lu",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mò"
+        },
+        {
+          "han": "？",
+          "punct": true,
+          "hpp": "? "
+        }
+      ],
+      "joined_hpp": "Ngîn'giû mò lòi, hèn ià kîdéd lu mò?",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T23:45:54.776Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-6",
+        "category": "2心理活動與感覺",
+        "han": "記得"
+      }
+    },
+    {
+      "id": "v-1795391172790",
+      "dialect": "zhaoan",
+      "han": "佢#頭+驚蛇。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "頭驚",
+          "hpp": "tèu giǎng",
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "蛇",
+          "hpp": "shà"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Gùi tèu giǎng shà.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T23:46:12.790Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-7",
+        "category": "2心理活動與感覺",
+        "han": "驚"
+      }
+    },
+    {
+      "id": "v-1795391224350",
+      "dialect": "zhaoan",
+      "han": "毋#使#恁#緊張。\n緊張到舌打結。",
+      "tokens": [
+        {
+          "han": "毋使",
+          "hpp": "M sû",
+          "no_sandhi": [
+            true,
+            true
+          ]
+        },
+        {
+          "han": "恁",
+          "hpp": "ngîn",
+          "no_sandhi": [
+            true
+          ]
+        },
+        {
+          "han": "緊張",
+          "hpp": "gîn zhǒng"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "緊張",
+          "hpp": "Gîn zhǒng"
+        },
+        {
+          "han": "到",
+          "hpp": "dôo"
+        },
+        {
+          "han": "舌",
+          "hpp": "shèd"
+        },
+        {
+          "han": "打結",
+          "hpp": "dâ giéd"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Msû ngîn gînzhǒng.\nGînzhǒng dôo shèd dâgiéd.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T23:47:04.351Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-8",
+        "category": "2心理活動與感覺",
+        "han": "緊張"
+      }
+    },
+    {
+      "id": "v-1795391275904",
+      "dialect": "zhaoan",
+      "han": "阿公頭愛食腹內。\n愛食、愛+聽、愛賞。",
+      "tokens": [
+        {
+          "han": "阿公",
+          "hpp": "Ǎ gǔng"
+        },
+        {
+          "han": "頭",
+          "hpp": "tèu"
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "腹內",
+          "hpp": "bú nui"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        },
+        {
+          "han": "\n",
+          "punct": true,
+          "hpp": "\n"
+        },
+        {
+          "han": "愛",
+          "hpp": "Ôi"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "、",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "愛聽",
+          "hpp": "ôi těn",
+          "syl_boundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "、",
+          "punct": true,
+          "hpp": ", "
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "賞",
+          "hpp": "sông"
+        },
+        {
+          "han": "。",
+          "punct": true,
+          "hpp": ". "
+        }
+      ],
+      "joined_hpp": "Ǎgǔng tèu ôi shièd búnui.\nÔi shièd, ôi těn, ôi sông.",
+      "status": "verified",
+      "source": "romaine-auto-poc",
+      "updated_at": "2026-11-22T23:47:55.905Z",
+      "cert_ref": {
+        "dialect": "zhaoan",
+        "level": "基礎級",
+        "id": "2-9",
+        "category": "2心理活動與感覺",
+        "han": "愛"
       }
     }
   ]
