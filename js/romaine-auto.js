@@ -37,6 +37,89 @@
   };
 
   const VERIFIED_STORAGE_KEY = 'romaineAutoVerifiedCorpus';
+  const NO_SANDHI_MARKER_KEY = 'romaineNoSandhiMarker';
+  const UNVERIFIED_ITALIC_KEY = 'romaineUnverifiedItalic';
+  const TRUST_UNDERLINE_KEY = 'romaineTrustUnderline';
+
+  if (typeof root.addEventListener === 'function') {
+    if (!root.__romainePrefsStorageBound) {
+      root.__romainePrefsStorageBound = true;
+      root.addEventListener('storage', (e) => {
+        if (!e) return;
+        if (
+          e.key === NO_SANDHI_MARKER_KEY ||
+          e.key === UNVERIFIED_ITALIC_KEY ||
+          e.key === TRUST_UNDERLINE_KEY
+        ) {
+          root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: e.key } }));
+        }
+      });
+    }
+  }
+
+  function getNoSandhiMarker() {
+    try {
+      const v = typeof localStorage !== 'undefined' ? localStorage.getItem(NO_SANDHI_MARKER_KEY) : null;
+      return v === '#' ? '#' : '~';
+    } catch {
+      return '~';
+    }
+  }
+
+  function setNoSandhiMarker(val) {
+    const m = val === '#' ? '#' : '~';
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(NO_SANDHI_MARKER_KEY, m);
+    } catch {}
+    if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: NO_SANDHI_MARKER_KEY, value: m } }));
+    }
+    return m;
+  }
+
+  function getUnverifiedItalic() {
+    try {
+      const v = typeof localStorage !== 'undefined' ? localStorage.getItem(UNVERIFIED_ITALIC_KEY) : null;
+      return v === null ? true : v !== 'false';
+    } catch {
+      return true;
+    }
+  }
+
+  function setUnverifiedItalic(flag) {
+    const b = Boolean(flag);
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(UNVERIFIED_ITALIC_KEY, String(b));
+    } catch {}
+    if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: UNVERIFIED_ITALIC_KEY, value: b } }));
+    }
+    return b;
+  }
+
+  function getTrustUnderline() {
+    try {
+      const v = typeof localStorage !== 'undefined' ? localStorage.getItem(TRUST_UNDERLINE_KEY) : null;
+      return v === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  function setTrustUnderline(flag) {
+    const b = Boolean(flag);
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(TRUST_UNDERLINE_KEY, String(b));
+    } catch {}
+    if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: TRUST_UNDERLINE_KEY, value: b } }));
+    }
+    return b;
+  }
+
+  function isNoSandhiChar(ch) {
+    return ch === '#' || ch === '~';
+  }
 
   const DIALECT_CONFIG = {
     sixian: {
@@ -344,8 +427,14 @@
       }
       if (!Array.isArray(list)) return;
 
-      for (const entry of list) {
-        if ((entry.dialect || 'sixian') !== this.dialect) continue;
+      const seenEntryKeys = new Set();
+      const learnFromEntry = (entry) => {
+        if (!entry || (entry.dialect || 'sixian') !== this.dialect) return;
+        const eKey = entry.cert_ref && entry.cert_ref.id
+          ? `cert:${entry.cert_ref.dialect || entry.dialect}:${entry.cert_ref.level || ''}:${entry.cert_ref.id}`
+          : `id:${entry.id || entry.han}`;
+        if (seenEntryKeys.has(eKey)) return;
+        seenEntryKeys.add(eKey);
         this.learnedCount++;
         for (const tok of entry.tokens || []) {
           if (tok.punct || tok.nonCjk || tok.comment || tok.uncertain) continue;
@@ -369,7 +458,11 @@
             this.lexicon.get(han).push({ hpp: hppLower, trust: 'official', label: '黃金語料' });
           }
         }
-      }
+      };
+
+      // 先讀 localStorage（使用者最新修改優先），再讀專案內建 verified_sentences.json
+      for (const entry of list) learnFromEntry(entry);
+      for (const entry of this.repoVerifiedItems || []) learnFromEntry(entry);
     }
 
     _pickDefault(han) {
@@ -689,12 +782,12 @@
           if (cjkStartCp < 0) cjkStartCp = i;
           cjkBuf += ch;
           cjkBufPureCount++;
-        } else if (ch === '#' && CJK_CHAR_RE.test(prev) && cjkBufPureCount > 0) {
-          // `#` 標記前一個音節不變調（若後面緊接漢字仍維持同詞，不拆詞）
+        } else if (isNoSandhiChar(ch) && CJK_CHAR_RE.test(prev) && cjkBufPureCount > 0) {
+          // `#` 或 `~` 標記前一個音節不變調（若後面緊接漢字仍維持同詞，不拆詞）
           cjkBufNoSandhi.add(cjkBufPureCount - 1);
-        } else if ((ch === '-' || ch === '=') && (CJK_CHAR_RE.test(prev) || prev === '#') && CJK_CHAR_RE.test(next)) {
+        } else if ((ch === '-' || ch === '=') && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
           cjkBuf += ch;
-        } else if (ch === '+' && (CJK_CHAR_RE.test(prev) || prev === '#') && CJK_CHAR_RE.test(next)) {
+        } else if (ch === '+' && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
           // `+` 強制在輸出中加空格，但查讀音與斷詞單位維持不變
           if (cjkBufPureCount > 0) cjkBufSpaceAfter.add(cjkBufPureCount - 1);
         } else if (ch === '\n') {
@@ -839,13 +932,16 @@
     }
 
     /** 依目前連詞模式產出整句含連讀變調 <ruby> 標記的 HTML */
-    formatTokensToSandhiHtml(tokens, joiningMode = 'none') {
+    formatTokensToSandhiHtml(tokens, joiningMode = 'none', noSandhiMarkerOverride = null) {
       const esc = (s) =>
         String(s)
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
+      const noSandhiSym = noSandhiMarkerOverride === '#' || noSandhiMarkerOverride === '~'
+        ? noSandhiMarkerOverride
+        : getNoSandhiMarker();
       const join = root.romaineJoin;
       const dialectCode = this.kiong;
       const BLOCK_PUNCT_RE = /[()（）【】、，,；;。.!?]/;
@@ -912,7 +1008,7 @@
         } else if (item.type === 'syl') {
           if (item.noSandhi) {
             prevSyl = '';
-            out += `<ruby class="sandhi-none">${esc(item.text)}<rt>#</rt></ruby>`;
+            out += `<ruby class="sandhi-none">${esc(item.text)}<rt>${esc(noSandhiSym)}</rt></ruby>`;
             continue;
           }
           let nextSyl = null;
@@ -947,5 +1043,14 @@
     return Math.log(x);
   }
 
+  RomaineAutoEngine.NO_SANDHI_MARKER_KEY = NO_SANDHI_MARKER_KEY;
+  RomaineAutoEngine.UNVERIFIED_ITALIC_KEY = UNVERIFIED_ITALIC_KEY;
+  RomaineAutoEngine.TRUST_UNDERLINE_KEY = TRUST_UNDERLINE_KEY;
+  RomaineAutoEngine.getNoSandhiMarker = getNoSandhiMarker;
+  RomaineAutoEngine.setNoSandhiMarker = setNoSandhiMarker;
+  RomaineAutoEngine.getUnverifiedItalic = getUnverifiedItalic;
+  RomaineAutoEngine.setUnverifiedItalic = setUnverifiedItalic;
+  RomaineAutoEngine.getTrustUnderline = getTrustUnderline;
+  RomaineAutoEngine.setTrustUnderline = setTrustUnderline;
   root.RomaineAutoEngine = RomaineAutoEngine;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
