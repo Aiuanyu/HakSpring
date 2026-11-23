@@ -5295,11 +5295,22 @@ function initializeAppUI() {
     }
 
     const newUrl = getBaseUrlWithoutIndex();
+    if (options?.focusId && !options?.pageExplicit) {
+      const focusIdx = results.findIndex(
+        (it) => it.sourceType === 'gip' && it.編號 === options.focusId,
+      );
+      if (focusIdx !== -1) {
+        page = Math.floor(focusIdx / itemsPerPage) + 1;
+      }
+    }
     newUrl.searchParams.set('musiid', searchMode === '客話' ? 'hak' : 'zh');
     newUrl.searchParams.set('ca', keyword);
     newUrl.searchParams.set('bidsu', itemsPerPage.toString());
     newUrl.searchParams.set('iab', page.toString());
     newUrl.searchParams.set('kiong', DIALECT_NAME_TO_CODE[selectedDialect]);
+    if (options?.focusId) {
+      newUrl.searchParams.set('focus', options.focusId);
+    }
     history.pushState({}, '', newUrl);
 
     displayQueryResults(
@@ -5501,6 +5512,54 @@ function initializeAppUI() {
       if (!isSupp) {
         td1.appendChild(document.createTextNode(' '));
         td1.appendChild(favBtn);
+      }
+
+      if (isGip && line.編號) {
+        item.dataset.gipId = line.編號;
+        const copyGipLinkBtn = document.createElement('button');
+        copyGipLinkBtn.type = 'button';
+        copyGipLinkBtn.className = 'copy-gip-link-btn copy-url-btn';
+        copyGipLinkBtn.title = '複製此詞連結';
+        copyGipLinkBtn.innerHTML = '<i class="fas fa-link"></i>';
+        copyGipLinkBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          copyGipWordLink(copyGipLinkBtn, line, selectedDialect, fullSourceName);
+        });
+        td1.appendChild(document.createTextNode(' '));
+        td1.appendChild(copyGipLinkBtn);
+      }
+
+      if (line.sourceType === 'cert' && line.編號 && line.分類) {
+        const dataObject = window[line.sourceName];
+        const categoryName = line.分類.replace(/^\d+/, '');
+        const rowId = line.編號.includes('-') ? line.編號.split('-')[1] : line.編號;
+        if (dataObject && categoryName && rowId) {
+          const contextBtn = document.createElement('button');
+          contextBtn.type = 'button';
+          contextBtn.className = 'cert-context-btn';
+          contextBtn.textContent = '去看認證詞表上下文';
+          contextBtn.title = `跳轉至 ${fullSourceName}「${categoryName}」第 ${line.編號} 筆`;
+          contextBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (typeof currentFamiliarityFilter !== 'undefined' && currentFamiliarityFilter !== 'all') {
+              currentFamiliarityFilter = 'all';
+              const filterSelect = document.getElementById('famFilterSelect');
+              if (filterSelect) filterSelect.value = 'all';
+            }
+            document.querySelectorAll('span[data-varname]').forEach((span) => {
+              span.classList.remove('active-dialect-level');
+            });
+            const activeDialectSpan = document.querySelector(
+              `.dialect > span[data-varname="${line.sourceName}"]`,
+            );
+            if (activeDialectSpan) {
+              activeDialectSpan.classList.add('active-dialect-level');
+            }
+            generate(dataObject, categoryName, null, rowId);
+          });
+          td1.appendChild(document.createElement('br'));
+          td1.appendChild(contextBtn);
+        }
       }
 
       item.appendChild(td1);
@@ -5733,7 +5792,16 @@ function initializeAppUI() {
 
     setTimeout(() => repositionViewport({ fromRender: true }), 0); // Trigger font size adjustment after table is rendered
 
-    if (!options?.preserveScroll) {
+    const focusTr = options?.focusId
+      ? contentContainer.querySelector(`tr[data-gip-id="${CSS.escape(options.focusId)}"]`)
+      : null;
+    if (focusTr) {
+      setTimeout(() => {
+        focusTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        focusTr.classList.add('focus-row-flash');
+        setTimeout(() => focusTr.classList.remove('focus-row-flash'), 3000);
+      }, 300);
+    } else if (!options?.preserveScroll) {
       setTimeout(() => {
         const firstResultElement = contentContainer.querySelector('h4, table');
         if (firstResultElement) {
@@ -8970,27 +9038,7 @@ function initializeAppUI() {
     updateLoopCategoryButtonVisibility();
   }
 
-  // 複製單詞專屬連結：文字格式「客源翠腔級：編號 詞目」換行後接網址
-  function copyWordLink(btn, dialectInfo, category) {
-    if (btn.disabled) return;
-    const rowId = btn.dataset.rowId;
-    const item = activeCategoryData.find(
-      (it) => it.編號.split('-')[1] === rowId,
-    );
-    const codes = extractDialectLevelCodes(dialectInfo.fullLvlName);
-    if (!item || !codes) return;
-    const url = getBaseUrlWithoutIndex();
-    ['row', 'musiid', 'ca', 'bidsu', 'iab', 'kiong', 'filter'].forEach((k) =>
-      url.searchParams.delete(k),
-    );
-    url.searchParams.set('dialect', codes.dialect);
-    url.searchParams.set('level', codes.level);
-    url.searchParams.set('category', category);
-    url.searchParams.set('focus', rowId);
-    if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
-    else url.searchParams.delete('mn');
-    const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
-    const text = `${SHARE_SITE_NAME}${displayLvlName}：${item.編號} ${item.客家語}\n${url.toString()}`;
+  function copyTextWithButtonFeedback(btn, text) {
     const done = () => {
       const orig = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-check"></i>';
@@ -9022,6 +9070,50 @@ function initializeAppUI() {
     } else {
       fallback();
     }
+  }
+
+  // 複製單詞專屬連結：文字格式「客源翠腔級：編號 詞目」換行後接網址
+  function copyWordLink(btn, dialectInfo, category) {
+    if (btn.disabled) return;
+    const rowId = btn.dataset.rowId;
+    const item = activeCategoryData.find(
+      (it) => it.編號.split('-')[1] === rowId,
+    );
+    const codes = extractDialectLevelCodes(dialectInfo.fullLvlName);
+    if (!item || !codes) return;
+    const url = getBaseUrlWithoutIndex();
+    ['row', 'musiid', 'ca', 'bidsu', 'iab', 'kiong', 'filter'].forEach((k) =>
+      url.searchParams.delete(k),
+    );
+    url.searchParams.set('dialect', codes.dialect);
+    url.searchParams.set('level', codes.level);
+    url.searchParams.set('category', category);
+    url.searchParams.set('focus', rowId);
+    if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
+    else url.searchParams.delete('mn');
+    const displayLvlName = getMeinungDisplayName(dialectInfo.腔名, dialectInfo.fullLvlName);
+    const text = `${SHARE_SITE_NAME}${displayLvlName}：${item.編號} ${item.客家語}\n${url.toString()}`;
+    copyTextWithButtonFeedback(btn, text);
+  }
+
+  // 複製教典詞專屬連結：文字格式「客源翠腔教典：詞目」換行後接查詞定位網址
+  function copyGipWordLink(btn, line, selectedDialect, fullSourceName) {
+    if (!btn || btn.disabled || !line || !line.編號 || !line.客家語) return;
+    const kiongCode = DIALECT_NAME_TO_CODE[selectedDialect];
+    if (!kiongCode) return;
+    const url = getBaseUrlWithoutIndex();
+    ['dialect', 'level', 'category', 'row', 'bidsu', 'iab', 'filter'].forEach((k) =>
+      url.searchParams.delete(k),
+    );
+    url.searchParams.set('musiid', 'hak');
+    url.searchParams.set('ca', line.客家語);
+    url.searchParams.set('kiong', kiongCode);
+    url.searchParams.set('focus', line.編號);
+    if (isMeinungFillEnabled()) url.searchParams.set('mn', '1');
+    else url.searchParams.delete('mn');
+    const displayLvlName = getMeinungDisplayName(selectedDialect, fullSourceName);
+    const text = `${SHARE_SITE_NAME}${displayLvlName}：${line.客家語}\n${url.toString()}`;
+    copyTextWithButtonFeedback(btn, text);
   }
 
   function setupDynamicEventListeners(dialectInfo, category) {
@@ -9279,7 +9371,10 @@ function initializeAppUI() {
       const itemsPerPage = parseInt(bidsuParam) || 50;
       const page = parseInt(iabParam) || 1;
       searchInput.value = caParam;
-      performSearch(page, itemsPerPage);
+      performSearch(page, itemsPerPage, {
+        focusId: focusParam || undefined,
+        pageExplicit: Boolean(iabParam),
+      });
     } else if (dialectParam && levelParam && categoryParam) {
       loadedViaUrlParams = true; // 標記是透過 URL 載入
       const rowParam = urlParams.get('row'); // 獲取 row 參數備用
