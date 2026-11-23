@@ -193,6 +193,7 @@ function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
   return {
     baseSegs: rtSegs.map(() => baseHtml),
     rtSegs: rtSegs.map((seg, i) => (i > 0 ? seg.trimStart() : seg)),
+    breakKinds: rtSegs.slice(1).map(() => 'primary'),
   };
 }
 
@@ -373,14 +374,18 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
 
   function splitTokens(tokens, isRt, targetCount) {
     const segs = [];
+    const breakKinds = [];
+    let nextBreakKind = null;
     let curSeg = '';
     const openTags = [];
     let parenDepth = 0; // 目前个括號深度（頓號淨在括號裡肚斷）
 
-    function pushSegment() {
+    function pushSegment(kindForNext) {
       if (curSeg.trim().length > 0) {
         let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
         segs.push(curSeg + closeStr);
+        if (segs.length > 1) breakKinds.push(nextBreakKind || 'primary');
+        nextBreakKind = kindForNext || 'primary';
         let openStr = openTags.map(tag => tag.full).join('');
         curSeg = openStr;
       }
@@ -399,7 +404,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
           }
         }
 
-        if (doSplitBefore) pushSegment();
+        if (doSplitBefore) pushSegment('primary');
 
         const match = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
         if (match) {
@@ -427,6 +432,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
           let char = text[iPos];
           let doSplitBefore = false;
           let doSplitAfter = false;
+          let afterKind = 'primary';
 
           if (!isRt || targetCount === undefined || segs.length < targetCount - 1) {
             if (!isRt || (isRt && baseHasParen)) {
@@ -437,19 +443,22 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
             }
             // 括號裡肚个頓號：異體詞分隔，像括號共樣斷行（頓號留佇頭前該行尾）
             if (baseHasDun) {
-              if (char === '、' && parenDepth > 0) doSplitAfter = true;
+              if (char === '、' && parenDepth > 0) {
+                doSplitAfter = true;
+                afterKind = 'dun';
+              }
             }
           }
           if (char === '（' || char === '(') parenDepth++;
           else if (char === '）' || char === ')') parenDepth = Math.max(0, parenDepth - 1);
 
           if (doSplitBefore) {
-            if (curSeg.trim().length > 0) pushSegment();
+            if (curSeg.trim().length > 0) pushSegment('primary');
             curSeg += char;
           } else if (doSplitAfter) {
             curSeg += char;
             if (curSeg.trim().length > 0 && (!isRt || targetCount === undefined || segs.length < targetCount - 1)) {
-              pushSegment();
+              pushSegment(afterKind);
             }
           } else {
             curSeg += char;
@@ -462,23 +471,26 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
     if (curSeg.trim().length > 0) {
       let closeStr = openTags.slice().reverse().map(tag => `</${tag.tag}>`).join('');
       segs.push(curSeg + closeStr);
+      if (segs.length > 1) breakKinds.push(nextBreakKind || 'primary');
     }
 
-    return segs;
+    return { segs, breakKinds };
   }
 
-  let baseSegs = splitTokens(baseTokens, false);
+  let baseSplit = splitTokens(baseTokens, false);
+  let baseSegs = baseSplit.segs;
   if (baseSegs.length <= 1) return null;
 
   let rtTokens = tokenize(rtHtml || '');
-  let rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+  let rtSegs = splitTokens(rtTokens, true, baseSegs.length).segs;
 
   // 頓號斷行對毋著（標音摎漢字个頓號數無共樣，例：標音用「/」）：退回淨用括號斷行
   if (baseHasDun && baseSegs.length !== rtSegs.length) {
     baseHasDun = false;
-    baseSegs = splitTokens(baseTokens, false);
+    baseSplit = splitTokens(baseTokens, false);
+    baseSegs = baseSplit.segs;
     if (baseSegs.length <= 1) return null;
-    rtSegs = splitTokens(rtTokens, true, baseSegs.length);
+    rtSegs = splitTokens(rtTokens, true, baseSegs.length).segs;
   }
 
   // If the RT segment length mismatches, fallback to non-split to avoid phonetics misaligning
@@ -488,7 +500,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
 
   rtSegs = rtSegs.map((seg, i) => i > 0 ? seg.trimStart() : seg);
 
-  return { baseSegs, rtSegs };
+  return { baseSegs, rtSegs, breakKinds: baseSplit.breakKinds };
 }
 
 /**
@@ -628,12 +640,45 @@ function adjustRubyFontSize(targetElement) {
 
       const sandhiCode = rubyElement.dataset ? rubyElement.dataset.sandhiCode || '' : '';
       if (sandhiCode) group.dataset.sandhiCode = sandhiCode;
-      splitRes.baseSegs.forEach((bSeg, idx) => {
-        const lineRuby = buildSplitLineRuby(bSeg, splitRes.rtSegs[idx] || '', isPhoneticOnly, sandhiCode);
-        group.appendChild(lineRuby);
-      });
+
+      // 依主斷點（括號、斜線）先分組；組內若有頓號分隔个異體詞，先整行放落去，
+      // 空間毋夠正對最尾一個 segment 開始逐隻斷行，空間夠就毋使全斷。
+      const primaryGroups = [[{ b: splitRes.baseSegs[0], r: splitRes.rtSegs[0] || '' }]];
+      for (let i = 1; i < splitRes.baseSegs.length; i++) {
+        const seg = { b: splitRes.baseSegs[i], r: splitRes.rtSegs[i] || '' };
+        if (splitRes.breakKinds && splitRes.breakKinds[i - 1] === 'dun') {
+          primaryGroups[primaryGroups.length - 1].push(seg);
+        } else {
+          primaryGroups.push([seg]);
+        }
+      }
 
       rubyElement.parentNode.replaceChild(group, rubyElement);
+
+      primaryGroups.forEach((segGroup) => {
+        if (segGroup.length === 1) {
+          group.appendChild(buildSplitLineRuby(segGroup[0].b, segGroup[0].r, isPhoneticOnly, sandhiCode));
+          return;
+        }
+        const buildCombinedHead = (count) => {
+          const b = segGroup.slice(0, count).map((s) => s.b).join('');
+          const r = segGroup.slice(0, count).map((s) => s.r).join('');
+          return buildSplitLineRuby(b, r, isPhoneticOnly, sandhiCode);
+        };
+        let keepCount = segGroup.length;
+        let headRuby = buildCombinedHead(keepCount);
+        group.appendChild(headRuby);
+        const tailRubies = [];
+        while (keepCount > 1 && headRuby.scrollWidth > availableWidth) {
+          keepCount -= 1;
+          const detachedSeg = segGroup[keepCount];
+          const nextHeadRuby = buildCombinedHead(keepCount);
+          group.replaceChild(nextHeadRuby, headRuby);
+          headRuby = nextHeadRuby;
+          tailRubies.unshift(buildSplitLineRuby(detachedSeg.b, detachedSeg.r, isPhoneticOnly, sandhiCode));
+        }
+        tailRubies.forEach((tailRuby) => group.appendChild(tailRuby));
+      });
 
       // 分別計算各行 ruby 的文字大小
       const lineRubies = group.querySelectorAll(':scope > ruby');
@@ -2268,22 +2313,70 @@ function getSandhiHtml(htmlContent, dialectCode) {
   // 所以四縣唯一一條變調規則（24 觸發）無機會；24 調个音節改註 ruby 33，毋做變調。
   const meinungMode = dialectCode === 'si' && isMeinungFillEnabled();
 
-  const applySandhiRule = (variant, next) => {
+  const ZH_POST_SANDHI = {
+    'ngài|ngìn': '33',
+    'hèn|ngìn': '33',
+    'gùi|ngìn': '33',
+    'ěen|ngìn': '33',
+    'hôo|mò': '11',
+    'rhiǔ|mò': '11',
+    'ngìb|lòi': '11',
+    'loo|lòi': '11',
+    'lòo|lòi': '11',
+  };
+
+  const normSyl = (s) => String(s || '').trim().toLowerCase();
+
+  // 回傳字串為目標調值；'' 表示明確不變調；null 表示繼續套用一般規則
+  const resolveSpecialSandhi = (prev, curr, next, next2, frontTone) => {
+    const prevN = normSyl(prev);
+    const currN = normSyl(curr);
+    const nextN = normSyl(next);
+    const next2N = normSyl(next2);
+
+    if (dialectCode === 'zh') {
+      if (prevN && ZH_POST_SANDHI[`${prevN}|${currN}`]) {
+        return ZH_POST_SANDHI[`${prevN}|${currN}`];
+      }
+      if (nextN && ZH_POST_SANDHI[`${currN}|${nextN}`]) {
+        return '';
+      }
+      // 詔安 AA 疊詞（入聲除外）前字變 55；AAA 首字亦同、中字不套用
+      if (nextN && currN === nextN && prevN !== currN && frontTone && !['24', '24v', '43'].includes(frontTone)) {
+        return frontTone === '55' ? '' : '55';
+      }
+    } else if (dialectCode === 'da') {
+      // 大埔 AAA 三疊詞：首字 33/113/31/54 → 35；中字 33/31/54 → 113（113 續走一般 113+113→33）
+      if (prevN !== currN && nextN && currN === nextN && nextN === next2N) {
+        if (['33', '113', '31', '54'].includes(frontTone)) return '35';
+      } else if (prevN === currN && nextN && currN === nextN && nextN !== next2N) {
+        if (['33', '31', '54'].includes(frontTone)) return '113';
+      }
+    }
+    return null;
+  };
+
+  const applySandhiRule = (variant, next, prev = '', next2 = '') => {
     let newTone = null;
 
     if (meinungMode) {
       newTone = classifyTone(variant, dialectCode) === '24' ? '33' : null;
     } else if (window.sandhiRulesData && window.sandhiRulesData[dialectCode]) {
       const frontTone = classifyTone(variant, dialectCode);
-      const rule = window.sandhiRulesData[dialectCode][frontTone];
-      if (rule) {
-        if (rule.always) {
-          newTone = rule.always;
-        } else if (rule.when) {
-          const nextTone = classifyTone(next, dialectCode);
-          newTone = rule.when[nextTone] || rule.else || null;
-        } else {
-          newTone = rule.else || null;
+      const special = resolveSpecialSandhi(prev, variant, next, next2, frontTone);
+      if (special !== null) {
+        newTone = special || null;
+      } else if (next) {
+        const rule = window.sandhiRulesData[dialectCode][frontTone];
+        if (rule) {
+          if (rule.always) {
+            newTone = rule.always;
+          } else if (rule.when) {
+            const nextTone = classifyTone(next, dialectCode);
+            newTone = rule.when[nextTone] || rule.else || null;
+          } else {
+            newTone = rule.else || null;
+          }
         }
       }
     }
@@ -2302,10 +2395,12 @@ function getSandhiHtml(htmlContent, dialectCode) {
   };
 
   let inBracket = false;
+  let prevWordToken = '';
   for (let i = 0; i < tokens.length; i++) {
     let currentToken = tokens[i];
 
     if (currentToken.startsWith('<ruby class="sandhi-')) {
+      prevWordToken = '';
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -2316,6 +2411,7 @@ function getSandhiHtml(htmlContent, dialectCode) {
       } else if (currentToken.includes('】')) {
         inBracket = false;
       }
+      prevWordToken = '';
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -2329,11 +2425,13 @@ function getSandhiHtml(htmlContent, dialectCode) {
     // 官方也沒給那兩地的變調規則，套新竹規則會出錯，故整段保留本調。
     // 其他腔的【】（）內部仍照常連讀變調（20260717 裁示），不要一起擋。
     if (inBracket && dialectCode === 'rh') {
+      prevWordToken = '';
       modifiedTokens.push(currentToken);
       continue;
     }
 
     let nextWordToken = '';
+    let next2WordToken = '';
     for (let j = i + 1; j < tokens.length; j++) {
       if (
         tokens[j].startsWith('<ruby class="sandhi-') ||
@@ -2342,15 +2440,20 @@ function getSandhiHtml(htmlContent, dialectCode) {
         continue;
       }
       if (BLOCKING_REGEX.test(tokens[j])) {
-        nextWordToken = '';
         break;
       }
-      nextWordToken = tokens[j];
-      break;
+      if (!nextWordToken) {
+        nextWordToken = tokens[j];
+      } else {
+        next2WordToken = tokens[j];
+        break;
+      }
     }
 
-    // 美濃模式毋使看後一隻音節（單音節、詞尾个 24 調乜愛註 ruby 33）
-    if (currentToken.length === 0 || (!meinungMode && !nextWordToken)) {
+    const canCheckZhPost = dialectCode === 'zh' && Boolean(prevWordToken);
+    // 美濃模式毋使看後一隻音節（單音節、詞尾个 24 調乜愛註 ruby 33）；詔安後字變調亦可能落於詞尾
+    if (currentToken.length === 0 || (!meinungMode && !nextWordToken && !canCheckZhPost)) {
+      prevWordToken = currentToken;
       modifiedTokens.push(currentToken);
       continue;
     }
@@ -2359,16 +2462,17 @@ function getSandhiHtml(htmlContent, dialectCode) {
     if (currentToken.includes('/')) {
       const variants = currentToken.split('/');
       const processedVariants = variants.map((variant) =>
-        applySandhiRule(variant, nextWordToken),
+        applySandhiRule(variant, nextWordToken, prevWordToken, next2WordToken),
       );
       finalToken = processedVariants.join('/');
     } else {
-      finalToken = applySandhiRule(currentToken, nextWordToken);
+      finalToken = applySandhiRule(currentToken, nextWordToken, prevWordToken, next2WordToken);
     }
 
     if (finalToken !== currentToken) {
       hasActualModification = true;
     }
+    prevWordToken = currentToken;
     modifiedTokens.push(finalToken);
   }
 

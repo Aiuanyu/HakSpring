@@ -64,7 +64,25 @@ const fixtures = [
   { pair: 'sáb san', expected: '<ruby class="sandhi-t5">sáb<rt>5</rt></ruby> san', dialect: 'zh', desc: '詔安 24(-b)->5' },
   { pair: 'sà sá', expected: '<ruby class="sandhi-t33">sà<rt>33</rt></ruby> sá', dialect: 'zh', desc: '詔安 53+24->33' },
   { pair: 'sàd san', expected: '<ruby class="sandhi-t3">sàd<rt>3</rt></ruby> san', dialect: 'zh', desc: '詔安 43(-d)+55->3' },
-  { pair: 'm̌ sà', expected: 'm̌ sà', dialect: 'zh', desc: '詔安 鼻音測試 m̌ (11) 無變調' }
+  { pair: 'm̌ sà', expected: 'm̌ sà', dialect: 'zh', desc: '詔安 鼻音測試 m̌ (11) 無變調' },
+
+  // 詔安 AA 疊詞前字變 55（除入聲外）與 AAA
+  { pair: 'lěn lěn', expected: '<ruby class="sandhi-t55">lěn<rt>55</rt></ruby> lěn', dialect: 'zh', desc: '詔安 AA 陰平疊詞 11+11->55+11' },
+  { pair: 'bbǔ bbǔ', expected: '<ruby class="sandhi-t55">bbǔ<rt>55</rt></ruby> bbǔ', dialect: 'zh', desc: '詔安 AA 陰平疊詞 烏烏 11+11->55+11' },
+  { pair: 'fùng fùng', expected: '<ruby class="sandhi-t55">fùng<rt>55</rt></ruby> fùng', dialect: 'zh', desc: '詔安 AA 陽平疊詞 紅紅 53+53->55+53' },
+  { pair: 'fùng fùng fùng', expected: '<ruby class="sandhi-t55">fùng<rt>55</rt></ruby> <ruby class="sandhi-t33">fùng<rt>33</rt></ruby> fùng', dialect: 'zh', desc: '詔安 AAA 陽平三疊詞 紅紅紅 53+53+53->55+33+53' },
+  { pair: 'sáb sáb', expected: '<ruby class="sandhi-t5">sáb<rt>5</rt></ruby> sáb', dialect: 'zh', desc: '詔安 AA 入聲疊詞不變 55（仍走陰入變 5）' },
+
+  // 詔安 後字變調白名單（前字維持本調）
+  { pair: 'ngài ngìn', expected: 'ngài <ruby class="sandhi-t33">ngìn<rt>33</rt></ruby>', dialect: 'zh', desc: '詔安 後字變調 𠊎人 53+53->53+33' },
+  { pair: 'hôo mò', expected: 'hôo <ruby class="sandhi-t11">mò<rt>11</rt></ruby>', dialect: 'zh', desc: '詔安 後字變調 好無 31+53->31+11' },
+  { pair: 'ngìb lòi', expected: 'ngìb <ruby class="sandhi-t11">lòi<rt>11</rt></ruby>', dialect: 'zh', desc: '詔安 後字變調 入來 43+53->43+11' },
+
+  // 大埔 AAA 三疊詞
+  { pair: 'ziāng ziāng ziāng', expected: '<ruby class="sandhi-t35">ziāng<rt>35</rt></ruby> <ruby class="sandhi-t113">ziāng<rt>113</rt></ruby> ziāng', dialect: 'da', desc: '大埔 AAA 陰平三疊詞 33+33+33->35+113+33' },
+  { pair: 'chîu chîu chîu', expected: '<ruby class="sandhi-t35">chîu<rt>35</rt></ruby> <ruby class="sandhi-t113">chîu<rt>113</rt></ruby> chîu', dialect: 'da', desc: '大埔 AAA 上聲三疊詞 31+31+31->35+113+31' },
+  { pair: 'fǔng fǔng fǔng', expected: '<ruby class="sandhi-t35">fǔng<rt>35</rt></ruby> <ruby class="sandhi-t33">fǔng<rt>33</rt></ruby> fǔng', dialect: 'da', desc: '大埔 AAA 陽平三疊詞 113+113+113->35+33+113' },
+  { pair: 'pàg pàg pàg', expected: '<ruby class="sandhi-t35">pàg<rt>35</rt></ruby> <ruby class="sandhi-t113">pàg<rt>113</rt></ruby> pàg', dialect: 'da', desc: '大埔 AAA 陽入三疊詞 54+54+54->35+113+54' }
 ];
 
 let failed = 0;
