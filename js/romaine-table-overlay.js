@@ -56,9 +56,24 @@
     return set;
   }
 
+  function normDialect(d) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.normalizeDialect === 'function') {
+      return window.RomaineAutoEngine.normalizeDialect(d);
+    }
+    const ALIAS = {
+      sixian: 'xiien',
+      nansixian: 'namxiian',
+      hailu: 'hoiliug',
+      dapu: 'taibu',
+      raoping: 'ngiaupin',
+      zhaoan: 'zhioon',
+    };
+    return ALIAS[d] || d || 'xiien';
+  }
+
   function registerVerifiedItem(it) {
     if (!it || !it.cert_ref || !it.cert_ref.id) return;
-    const d = it.cert_ref.dialect || it.dialect || 'sixian';
+    const d = normDialect(it.cert_ref.dialect || it.dialect || 'xiien');
     const lvl = it.cert_ref.level || '';
     const id = it.cert_ref.id;
     verifiedByKey.set(`${d}|${lvl}|${id}`, it);
@@ -98,33 +113,65 @@
     return engines.get(dialectKey);
   }
 
+  function detectDialectFromText(text) {
+    if (!text) return null;
+    if (text.includes('南四縣')) return 'namxiian';
+    if (text.includes('四縣')) return 'xiien';
+    if (text.includes('海陸')) return 'hoiliug';
+    if (text.includes('大埔')) return 'taibu';
+    if (text.includes('饒平')) return 'ngiaupin';
+    if (text.includes('詔安')) return 'zhioon';
+    return null;
+  }
+
   function detectContextInfo(row) {
+    const isComparisonRow = row.classList.contains('accordion-row');
+    const dialectCell = row.querySelector('td[data-label="腔調"]');
     const srcTag = row.querySelector('.source-tag');
-    const summaryEl = document.getElementById('summary-text-content');
-    const hintText = (srcTag ? srcTag.textContent : '') + ' ' + (summaryEl ? summaryEl.textContent : '');
+    const srcText = srcTag ? srcTag.textContent : '';
+
     let dialect = null;
-    if (hintText.includes('詔安')) dialect = 'zhaoan';
-    else if (hintText.includes('四縣')) dialect = 'sixian';
-    else {
-      const params = new URLSearchParams(window.location.search);
-      const d = params.get('dialect') || params.get('kiong');
-      if (d === 'zh') dialect = 'zhaoan';
-      else if (d === 'si') dialect = 'sixian';
+    if (isComparisonRow || dialectCell) {
+      // 跨腔對照展開列（或有明確腔調欄）：只依該列自身腔調判定，絕不回退抓主表腔別
+      dialect = detectDialectFromText(dialectCell ? dialectCell.textContent : '') || detectDialectFromText(srcText);
+    } else {
+      const summaryEl = document.getElementById('summary-text-content');
+      const hintText = srcText + ' ' + (summaryEl ? summaryEl.textContent : '');
+      dialect = detectDialectFromText(hintText);
+      if (!dialect) {
+        const params = new URLSearchParams(window.location.search);
+        const d = params.get('dialect') || params.get('kiong');
+        const CODE_MAP = {
+          si: 'xiien',
+          na: 'namxiian',
+          ha: 'hoiliug',
+          da: 'taibu',
+          rh: 'ngiaupin',
+          zh: 'zhioon',
+        };
+        if (d && CODE_MAP[d]) dialect = CODE_MAP[d];
+      }
     }
 
     let level = '';
+    const levelHint = isComparisonRow
+      ? srcText
+      : srcText + ' ' + (document.getElementById('summary-text-content')?.textContent || '');
     for (const lvl of ['基礎級', '初級', '中級', '中高級', '高級']) {
-      if (hintText.includes(lvl)) {
+      if (levelHint.includes(lvl)) {
         level = lvl;
         break;
       }
     }
 
     let rowId = '';
-    const anchor = row.querySelector('td[data-label="編號"] a[name]');
-    if (anchor) {
-      rowId = anchor.getAttribute('name') || '';
-    } else {
+    if (!isComparisonRow) {
+      const anchor = row.querySelector('td[data-label="編號"] a[name]');
+      if (anchor) {
+        rowId = anchor.getAttribute('name') || '';
+      }
+    }
+    if (!rowId) {
       const favBtn = row.querySelector('.fav-btn[data-fav-id]');
       if (favBtn) {
         const m = (favBtn.dataset.favId || '').match(/(\d+-\d+):/);
@@ -174,14 +221,15 @@
   }
 
   function applyHppVariantColors(html, dialectKey) {
-    if (!html || (dialectKey !== 'sixian' && dialectKey !== 'raoping')) return html;
+    const dKey = normDialect(dialectKey);
+    if (!html || (dKey !== 'xiien' && dKey !== 'ngiaupin')) return html;
     const GENRE_RE = /^\((?:諺|山|歇|俗|童|謠)\)$/;
     return html.replace(/\(([^()]+)\)/g, (match, content) => {
       if (GENRE_RE.test(match)) return match;
-      if (dialectKey === 'sixian') {
+      if (dKey === 'xiien') {
         return `<span class="sentence-variant sentence-variant-南">(${content})</span>`;
       }
-      if (dialectKey === 'raoping') {
+      if (dKey === 'ngiaupin') {
         if (content.includes('/')) {
           const parts = content.split('/');
           const zhuolan = parts[0] ? parts[0].trim() : '';
@@ -425,7 +473,7 @@
         isVerified = true;
         rawHppHtml = renderVerifiedHtml(verifiedItem, eng);
       } else {
-        const openBookMap = dialect === 'sixian' ? extractRowNanOpenBook(row) : null;
+        const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
         const toks = eng.segmentAndConvert(sentText, openBookMap);
         rawHppHtml = eng.formatTokensToSandhiHtml(toks, 'none');
       }
