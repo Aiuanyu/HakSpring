@@ -302,6 +302,7 @@ async function syncFromCloud() {
   cloudSyncState.isSyncing = true;
   updateSyncStatusUI('syncing');
 
+  let syncSucceeded = false;
   try {
     const { status, json } = await syncRequest('GET');
     if (status !== 200) {
@@ -319,10 +320,15 @@ async function syncFromCloud() {
     }
     cloudSyncState.lastSyncTime = new Date();
     updateSyncStatusUI('success');
+    syncSucceeded = true;
   } catch (err) {
     reportSyncFailure(err, '同步');
   } finally {
     cloudSyncState.isSyncing = false;
+    // 若同步期間有新變動（例如使用者在初始化拉取期間剛改了腔級設定），立即補同步一擺
+    if (syncSucceeded && hasPendingSync && hasSyncKey()) {
+      syncFromCloud();
+    }
   }
 }
 
@@ -1255,20 +1261,28 @@ function updateSyncStatusUI(status) {
 let syncDebounceTimer = null;
 let hasPendingSync = false;
 
-function triggerCloudSync() {
+function triggerCloudSync(options) {
   if (!hasSyncKey()) return;
 
+  const immediate = !!(options && options.immediate);
   hasPendingSync = true;
 
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = null;
+  }
+
+  if (immediate) {
+    if (!cloudSyncState.isSyncing) {
+      syncFromCloud();
+    }
+    return;
   }
 
   syncDebounceTimer = setTimeout(() => {
     // 改為呼叫 syncFromCloud，確保先拉取最新資料再合併上傳
     // 避免直接覆蓋雲端可能存在的更新
     syncFromCloud();
-    hasPendingSync = false;
   }, SYNC_DEBOUNCE_MS); // 使用常數
 }
 
@@ -1282,16 +1296,19 @@ window.triggerCloudSync = triggerCloudSync;
  * 2. 頁面恢復顯示時：若距離上次同步大於 5 分鐘，自動執行雲端拉取
  */
 function setupPageUnloadSync() {
+  const flushOnLeave = async () => {
+    if (hasPendingSync) {
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+      await syncFromCloud();
+    }
+  };
+
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') {
-      if (hasPendingSync) {
-        if (syncDebounceTimer) {
-          clearTimeout(syncDebounceTimer);
-          syncDebounceTimer = null;
-        }
-        await syncFromCloud();
-        hasPendingSync = false;
-      }
+      await flushOnLeave();
     } else if (document.visibilityState === 'visible') {
       if (hasSyncKey()) {
         const now = Date.now();
@@ -1303,6 +1320,10 @@ function setupPageUnloadSync() {
       }
     }
   });
+
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('pagehide', flushOnLeave);
+  }
 }
 
 /**

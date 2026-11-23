@@ -40,3 +40,39 @@ assert.ok(/'audio_profiles',\n\];/.test(src), 'SYNC_PACKAGE_OBJECT_FIELDS 愛有
 const server = fs.readFileSync(path.join(__dirname, '../functions/api/sync.js'), 'utf8');
 assert.ok(/OBJECT_FIELDS = \[[\s\S]*'audio_profiles'[\s\S]*\];/.test(server), '伺服器白名單愛有 audio_profiles');
 console.log('  ✅ audio profiles wiring PASS');
+
+// triggerCloudSync({ immediate: true })：有金鑰時應略過 20 秒防抖立即呼叫 GET /api/sync
+(async () => {
+  let getCount = 0;
+  const immCtx = vm.createContext({
+    console,
+    setInterval() {},
+    clearInterval() {},
+    setTimeout(fn) { return 1; },
+    clearTimeout() {},
+    fetch: async () => {
+      getCount += 1;
+      return { status: 200, json: async () => ({ exists: false }) };
+    },
+  });
+  immCtx.window = immCtx;
+  immCtx.document = { addEventListener() {}, getElementById() { return null; }, visibilityState: 'visible' };
+  const store = { hakkaSyncKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567' };
+  immCtx.localStorage = {
+    getItem: (k) => (k in store ? store[k] : null),
+    setItem: (k, v) => { store[k] = String(v); },
+    removeItem: (k) => { delete store[k]; },
+  };
+  immCtx.navigator = {};
+  vm.runInContext(src, immCtx);
+  immCtx.triggerCloudSync({ immediate: true });
+  assert.strictEqual(getCount, 1, 'triggerCloudSync({ immediate: true }) 應立即發起同步請求');
+
+  // autoRecordAudioProfile 毋會因為等於本機基準（certAdvancedRepeatCount 等）就略過或刪除設定
+  const mainSrc = fs.readFileSync(path.join(__dirname, '../main.js'), 'utf8');
+  const autoRecordBlock = mainSrc.match(/function autoRecordAudioProfile\([\s\S]*?\n\}/);
+  assert.ok(autoRecordBlock, '愛找著 autoRecordAudioProfile');
+  assert.ok(!/deleteAudioProfile/.test(autoRecordBlock[0]), 'autoRecordAudioProfile 毋得因基準相同而刪除雲端設定');
+  assert.ok(/saveAudioProfile\(key,\s*speed,\s*repeat,\s*true\)/.test(autoRecordBlock[0]), 'autoRecordAudioProfile 愛直接儲存並立即同步');
+  console.log('  ✅ immediate sync & autoRecordAudioProfile PASS');
+})();
