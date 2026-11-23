@@ -400,8 +400,12 @@
       <h2 style="margin:0 0 8px">Romaine Auto PoC（多腔詞典／例句測試）</h2>
       <div class="toolbar">
         <select id="dialectSelect" title="選擇腔調">
-          <option value="sixian">四縣</option>
-          <option value="zhaoan">詔安</option>
+          <option value="xiien">四縣</option>
+          <option value="namxiian">南四縣</option>
+          <option value="hoiliug">海陸</option>
+          <option value="taibu">大埔</option>
+          <option value="ngiaupin">饒平</option>
+          <option value="zhioon">詔安</option>
         </select>
         <label class="switch">
           <input type="checkbox" id="autoToggle" checked />
@@ -506,6 +510,15 @@
   <script src="js/romaine-join.js"></script>
   <script src="js/romaine-auto.js?v=14"></script>
   <script>
+    const DIALECT_LABELS = {
+      xiien: '四縣',
+      namxiian: '南四縣',
+      hoiliug: '海陸',
+      taibu: '大埔',
+      ngiaupin: '饒平',
+      zhioon: '詔安',
+    };
+    const normDialect = (d) => (RomaineAutoEngine.normalizeDialect ? RomaineAutoEngine.normalizeDialect(d) : d);
     const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
     const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
     const engine = new RomaineAutoEngine();
@@ -1225,7 +1238,7 @@
     }
 
     async function loadVerifiedItemIntoEditor(item, origIdx, { scrollToTop = true } = {}) {
-      const targetDialect = item.dialect || 'sixian';
+      const targetDialect = normDialect(item.dialect || 'xiien');
       if (targetDialect !== engine.dialect) {
         dialectSelect.value = targetDialect;
         await loadDialect(targetDialect, false);
@@ -1283,7 +1296,7 @@
         const head = document.createElement('div');
         head.className = 'verified-item-head';
         const timeStr = item.updated_at ? item.updated_at.slice(0, 19).replace('T', ' ') : '';
-        const dTag = item.dialect === 'zhaoan' ? '詔安' : '四縣';
+        const dTag = DIALECT_LABELS[normDialect(item.dialect)] || '四縣';
         const certTag = item.cert_ref ? ` · CERT ${item.cert_ref.level} ${item.cert_ref.id}` : '';
         head.innerHTML = `<span class="status-line">#${origIdx + 1} · ${dTag}${certTag} · ${timeStr}</span>`;
 
@@ -1482,12 +1495,22 @@
       return prefix + encodeURIComponent(url);
     }
 
+    const CERT_AUDIO_MAP = {
+      xiien: { 檔腔: 'si', 腔名: '四縣' },
+      namxiian: { 檔腔: 'si', 腔名: '四縣' },
+      hoiliug: { 檔腔: 'ha', 腔名: '海陸' },
+      taibu: { 檔腔: 'da', 腔名: '大埔' },
+      ngiaupin: { 檔腔: 'rh', 腔名: '饒平' },
+      zhioon: { 檔腔: 'zh', 腔名: '詔安' },
+    };
+
     function buildCertSentenceAudioUrl(row, dialectKey, levelName) {
       if (!row || !row.id || levelName === '高級') return null;
       const lvl = CERT_LEVEL_INFO[levelName];
       if (!lvl) return null;
-      const 檔腔 = dialectKey === 'zhaoan' ? 'zh' : 'si';
-      const 腔名 = dialectKey === 'zhaoan' ? '詔安' : '四縣';
+      const info = CERT_AUDIO_MAP[normDialect(dialectKey)] || CERT_AUDIO_MAP.xiien;
+      const 檔腔 = info.檔腔;
+      const 腔名 = info.腔名;
       const fullLvlName = 腔名 + levelName;
       if (typeof getMissingAudioInfo === 'function') {
         const miss = getMissingAudioInfo(fullLvlName, row.category, row.id);
@@ -1553,7 +1576,7 @@
         const ref = verifiedList[i].cert_ref;
         if (
           ref &&
-          (ref.dialect || 'sixian') === engine.dialect &&
+          normDialect(ref.dialect || 'xiien') === engine.dialect &&
           ref.level === levelName &&
           ref.id === (row.id || '')
         ) {
@@ -1624,7 +1647,7 @@
       const map = new Map();
       for (const it of loadVerified()) {
         if (it.cert_ref && it.cert_ref.id) {
-          map.set(`${it.cert_ref.dialect || 'sixian'}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`, it);
+          map.set(`${normDialect(it.cert_ref.dialect || 'xiien')}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`, it);
         }
       }
       return map;
@@ -1849,7 +1872,7 @@
     });
 
     async function loadDialect(dialect, shouldConvert = true) {
-      statusLine.textContent = `載入 ${dialect === 'zhaoan' ? '詔安' : '四縣'} 詞庫中…`;
+      statusLine.textContent = `載入 ${DIALECT_LABELS[dialect] || '四縣'} 詞庫中…`;
       await engine.init('.', dialect);
       initCertLoader();
       const learnMsg = engine.learnedCount ? `、已即時學習 ${engine.learnedCount} 筆黃金語料` : '';
@@ -1862,8 +1885,8 @@
     }
 
     const DIALECT_STORAGE_KEY = 'romaineAutoDialect';
-    const savedDialect = localStorage.getItem(DIALECT_STORAGE_KEY);
-    if (savedDialect === 'sixian' || savedDialect === 'zhaoan') {
+    const savedDialect = normDialect(localStorage.getItem(DIALECT_STORAGE_KEY));
+    if (savedDialect && DIALECT_LABELS[savedDialect]) {
       dialectSelect.value = savedDialect;
     }
 

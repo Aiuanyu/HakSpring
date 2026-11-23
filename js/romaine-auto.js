@@ -121,10 +121,24 @@
     return ch === '#' || ch === '~';
   }
 
+  const DIALECT_ALIASES = {
+    sixian: 'xiien',
+    nansixian: 'namxiian',
+    hailu: 'hoiliug',
+    dapu: 'taibu',
+    raoping: 'ngiaupin',
+    zhaoan: 'zhioon',
+  };
+
+  function normalizeDialect(d) {
+    return DIALECT_ALIASES[d] || d || 'xiien';
+  }
+
   const DIALECT_CONFIG = {
-    sixian: {
+    xiien: {
       label: '四縣',
       kiong: 'si',
+      sandhiCode: 'si',
       gip: 'data/gip/20261020-四.json',
       cert: [
         { level: '基礎級', file: 'data/cert/115四基.json' },
@@ -134,12 +148,78 @@
         { level: '高級', file: 'data/cert/115四高.json' },
       ],
       supp: 'data/supp/補字典-四.json',
-      stats: 'data/romaine/sixian_stats.json',
-      prefs: 'data/romaine/sixian_prefs.json',
+      stats: 'data/romaine/xiien_stats.json',
+      prefs: 'data/romaine/xiien_prefs.json',
     },
-    zhaoan: {
+    namxiian: {
+      label: '南四縣',
+      kiong: 'na',
+      sandhiCode: 'si',
+      gip: 'data/gip/20261020-南.json',
+      cert: [
+        { level: '基礎級', file: 'data/cert/115四基.json' },
+        { level: '初級', file: 'data/cert/115四初.json' },
+        { level: '中級', file: 'data/cert/115四中.json' },
+        { level: '中高級', file: 'data/cert/115四中高.json' },
+        { level: '高級', file: 'data/cert/115四高.json' },
+      ],
+      extractNanBracket: true,
+      supp: 'data/supp/補字典-南.json',
+      stats: 'data/romaine/namxiian_stats.json',
+      prefs: 'data/romaine/namxiian_prefs.json',
+    },
+    hoiliug: {
+      label: '海陸',
+      kiong: 'ha',
+      sandhiCode: 'ha',
+      gip: 'data/gip/20261020-海.json',
+      cert: [
+        { level: '基礎級', file: 'data/cert/115海基.json' },
+        { level: '初級', file: 'data/cert/115海初.json' },
+        { level: '中級', file: 'data/cert/115海中.json' },
+        { level: '中高級', file: 'data/cert/115海中高.json' },
+        { level: '高級', file: 'data/cert/115海高.json' },
+      ],
+      supp: 'data/supp/補字典-海.json',
+      stats: 'data/romaine/hoiliug_stats.json',
+      prefs: 'data/romaine/hoiliug_prefs.json',
+    },
+    taibu: {
+      label: '大埔',
+      kiong: 'da',
+      sandhiCode: 'da',
+      gip: 'data/gip/20261020-大.json',
+      cert: [
+        { level: '基礎級', file: 'data/cert/115大基.json' },
+        { level: '初級', file: 'data/cert/115大初.json' },
+        { level: '中級', file: 'data/cert/115大中.json' },
+        { level: '中高級', file: 'data/cert/115大中高.json' },
+        { level: '高級', file: 'data/cert/115大高.json' },
+      ],
+      supp: 'data/supp/補字典-大.json',
+      stats: 'data/romaine/taibu_stats.json',
+      prefs: 'data/romaine/taibu_prefs.json',
+    },
+    ngiaupin: {
+      label: '饒平',
+      kiong: 'rh',
+      sandhiCode: 'rh',
+      gip: 'data/gip/20261020-平.json',
+      cert: [
+        { level: '基礎級', file: 'data/cert/115平基.json' },
+        { level: '初級', file: 'data/cert/115平初.json' },
+        { level: '中級', file: 'data/cert/115平中.json' },
+        { level: '中高級', file: 'data/cert/115平中高.json' },
+        { level: '高級', file: 'data/cert/115平高.json' },
+      ],
+      supp: 'data/supp/補字典-平.json',
+      stats: 'data/romaine/ngiaupin_stats.json',
+      prefs: 'data/romaine/ngiaupin_prefs.json',
+    },
+    zhioon: {
       label: '詔安',
       kiong: 'zh',
+      sandhiCode: 'zh',
       gip: 'data/gip/20261020-安.json',
       cert: [
         { level: '基礎級', file: 'data/cert/115安基.json' },
@@ -149,8 +229,8 @@
         { level: '高級', file: 'data/cert/115安高.json' },
       ],
       supp: 'data/supp/補字典-安.json',
-      stats: 'data/romaine/zhaoan_stats.json',
-      prefs: 'data/romaine/zhaoan_prefs.json',
+      stats: 'data/romaine/zhioon_stats.json',
+      prefs: 'data/romaine/zhioon_prefs.json',
     },
   };
 
@@ -288,9 +368,10 @@
       this.totalTokens = 0;
       this.prefs = new Map();
       this.certLevels = [];
-      this.dialect = 'sixian';
+      this.dialect = 'xiien';
       this.dialectLabel = '四縣';
       this.kiong = 'si';
+      this.sandhiCode = 'si';
       this.maxWordLen = 8;
       this.sandhiRules = null;
       this.reverseToneMap = null;
@@ -322,15 +403,17 @@
       this.lexicon.get(han).push(cand);
     }
 
-    async init(basePath = '.', dialect = 'sixian') {
-      const cfg = DIALECT_CONFIG[dialect] || DIALECT_CONFIG.sixian;
-      const targetDialect = DIALECT_CONFIG[dialect] ? dialect : 'sixian';
+    async init(basePath = '.', dialect = 'xiien') {
+      const normDialect = normalizeDialect(dialect);
+      const cfg = DIALECT_CONFIG[normDialect] || DIALECT_CONFIG.xiien;
+      const targetDialect = DIALECT_CONFIG[normDialect] ? normDialect : 'xiien';
       if (this.ready && this.dialect === targetDialect) return;
 
       this.ready = false;
       this.dialect = targetDialect;
       this.dialectLabel = cfg.label;
       this.kiong = cfg.kiong;
+      this.sandhiCode = cfg.sandhiCode || cfg.kiong;
       this.lexicon = new Map();
       this.prefs = new Map();
       this.certLevels = [];
@@ -354,11 +437,19 @@
       const seen = new Map();
 
       // 1. 先收官方詞庫（教典、認證分開標記；兩邊皆有才顯示「教典/認證」）
-      const addOfficial = (obj, srcName) => {
+      const addOfficial = (obj, srcName, preferNanBracket = false) => {
         const rows = parseCsv(obj.content || '');
         for (const r of rows) {
-          const hans = cleanHanVariants(r.han);
-          const hpps = cleanHppVariants(r.hpp);
+          let rawHan = r.han;
+          let rawHpp = r.hpp;
+          if (preferNanBracket) {
+            const hMatch = (r.han || '').match(/【([^】]+)】/);
+            const pMatch = (r.hpp || '').match(/【([^】]+)】/);
+            if (hMatch) rawHan = hMatch[1];
+            if (pMatch) rawHpp = pMatch[1];
+          }
+          const hans = cleanHanVariants(rawHan);
+          const hpps = cleanHppVariants(rawHpp);
           for (const h of hans) {
             const hLen = Array.from(h).length;
             for (const item of hpps) {
@@ -373,7 +464,7 @@
       };
       addOfficial(gipJson, '教典');
       certJsons.forEach((obj, i) => {
-        const rows = addOfficial(obj, '認證');
+        const rows = addOfficial(obj, '認證', Boolean(cfg.extractNanBracket));
         this.certLevels.push({
           level: cfg.cert[i].level,
           rows: rows.filter((r) => r.sentence && r.sentence.trim()),
@@ -429,7 +520,7 @@
 
       const seenEntryKeys = new Set();
       const learnFromEntry = (entry) => {
-        if (!entry || (entry.dialect || 'sixian') !== this.dialect) return;
+        if (!entry || normalizeDialect(entry.dialect || 'xiien') !== this.dialect) return;
         const eKey = entry.cert_ref && entry.cert_ref.id
           ? `cert:${entry.cert_ref.dialect || entry.dialect}:${entry.cert_ref.level || ''}:${entry.cert_ref.id}`
           : `id:${entry.id || entry.han}`;
@@ -943,7 +1034,7 @@
         ? noSandhiMarkerOverride
         : getNoSandhiMarker();
       const join = root.romaineJoin;
-      const dialectCode = this.kiong;
+      const dialectCode = this.sandhiCode || this.kiong;
       const BLOCK_PUNCT_RE = /[()（）【】、，,；;。.!?]/;
 
       // 攤平為音節與邊界事件流，確保連寫模式下詞內音節也能正確判斷前後音節變調
@@ -1043,6 +1134,7 @@
     return Math.log(x);
   }
 
+  RomaineAutoEngine.normalizeDialect = normalizeDialect;
   RomaineAutoEngine.NO_SANDHI_MARKER_KEY = NO_SANDHI_MARKER_KEY;
   RomaineAutoEngine.UNVERIFIED_ITALIC_KEY = UNVERIFIED_ITALIC_KEY;
   RomaineAutoEngine.TRUST_UNDERLINE_KEY = TRUST_UNDERLINE_KEY;

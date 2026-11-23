@@ -1,11 +1,11 @@
 {
-  "dialect": "zhaoan",
+  "dialect": "zhioon",
   "total_polyphones": 1269,
   "items": [
     {
       "han": "个",
       "freq": 8607,
-      "default": "gâi",
+      "default": "e",
       "candidates": [
         "gâi",
         "e"
@@ -14,7 +14,7 @@
     {
       "han": "會",
       "freq": 2451,
-      "default": "文fui",
+      "default": "bbue",
       "candidates": [
         "文fui",
         "bbue"
@@ -64,7 +64,7 @@
     {
       "han": "正",
       "freq": 1078,
-      "default": "zhǎng",
+      "default": "zhâng",
       "candidates": [
         "zhǎng",
         "zhâng",
@@ -74,7 +74,7 @@
     {
       "han": "較",
       "freq": 1078,
-      "default": "gâu",
+      "default": "kâ",
       "candidates": [
         "gâu",
         "kâ"
@@ -92,7 +92,7 @@
     {
       "han": "下",
       "freq": 723,
-      "default": "ha",
+      "default": "hǎ",
       "candidates": [
         "ha",
         "hǎ"
@@ -101,7 +101,7 @@
     {
       "han": "毋好",
       "freq": 702,
-      "default": "m hôo",
+      "default": "m̀ hôo",
       "candidates": [
         "m hôo",
         "m̀ hôo"
@@ -119,7 +119,7 @@
     {
       "han": "都",
       "freq": 668,
-      "default": "dǔ",
+      "default": "dǒo",
       "candidates": [
         "dǔ",
         "dǒo",
@@ -129,7 +129,7 @@
     {
       "han": "當",
       "freq": 583,
-      "default": "dông",
+      "default": "dǒng",
       "candidates": [
         "dông",
         "dǒng"
@@ -191,6 +191,16 @@
       ]
     },
     {
+      "han": "分",
+      "freq": 422,
+      "default": "fǔn",
+      "candidates": [
+        "bǔn",
+        "fǔn",
+        "fun"
+      ]
+    },
+    {
       "han": "細子",
       "freq": 407,
       "default": "sê zû",
@@ -219,16 +229,6 @@
       ]
     },
     {
-      "han": "分",
-      "freq": 364,
-      "default": "bǔn",
-      "candidates": [
-        "bǔn",
-        "fǔn",
-        "fun"
-      ]
-    },
-    {
       "han": "行",
       "freq": 353,
       "default": "hàng",
@@ -241,7 +241,7 @@
     {
       "han": "上",
       "freq": 307,
-      "default": "shǒng",
+      "default": "shong",
       "candidates": [
         "shǒng",
         "shong"
@@ -297,7 +297,7 @@
     {
       "han": "幾",
       "freq": 268,
-      "default": "gî",
+      "default": "gíd",
       "candidates": [
         "gî",
         "gíd"
@@ -306,7 +306,7 @@
     {
       "han": "忒",
       "freq": 266,
-      "default": "tèd",
+      "default": "téd",
       "candidates": [
         "tèd",
         "téd"
@@ -315,7 +315,7 @@
     {
       "han": "毋過",
       "freq": 261,
-      "default": "m gôo",
+      "default": "m̀ gôo",
       "candidates": [
         "m gôo",
         "m goo",
@@ -372,7 +372,7 @@
     {
       "han": "尋",
       "freq": 192,
-      "default": "cim",
+      "default": "cìm",
       "candidates": [
         "cim",
         "cìm"
@@ -391,7 +391,7 @@
     {
       "han": "定",
       "freq": 191,
-      "default": "ten",
+      "default": "těn",
       "candidates": [
         "ten",
         "těn"
@@ -455,7 +455,7 @@
     {
       "han": "重",
       "freq": 141,
-      "default": "chùng",
+      "default": "chǔng",
       "candidates": [
         "chùng",
         "chǔng",
@@ -621,7 +621,7 @@
     {
       "han": "發",
       "freq": 88,
-      "default": "búd",
+      "default": "fád",
       "candidates": [
         "búd",
         "fád"
@@ -659,7 +659,7 @@
     {
       "han": "幾多",
       "freq": 82,
-      "default": "gî dǒo",
+      "default": "gíd dǒo",
       "candidates": [
         "gî dǒo",
         "gíd dǒo"
@@ -714,7 +714,7 @@
     {
       "han": "毋驚",
       "freq": 77,
-      "default": "m giǎng",
+      "default": "m̀ giǎng",
       "candidates": [
         "m giǎng",
         "m̀ giǎng"
@@ -733,7 +733,7 @@
     {
       "han": "抑係",
       "freq": 73,
-      "default": "iâ he",
+      "default": "iâ heiâ",
       "candidates": [
         "iâ he",
         "iâ heiâ"
@@ -760,7 +760,7 @@
     {
       "han": "特別",
       "freq": 70,
-      "default": "tèd pèd",
+      "default": "tèd pièd",
       "candidates": [
         "tèd pèd",
         "tèd pièd"
@@ -769,7 +769,7 @@
     {
       "han": "合",
       "freq": 69,
-      "default": "gáb",
+      "default": "hàb",
       "candidates": [
         "gáb",
         "hàb"
@@ -787,7 +787,7 @@
     {
       "han": "斷",
       "freq": 66,
-      "default": "dôn",
+      "default": "tǒn",
       "candidates": [
         "dôn",
         "tǒn"
@@ -887,7 +887,7 @@
     {
       "han": "擇",
       "freq": 56,
-      "default": "文too",
+      "default": "too",
       "candidates": [
         "文too",
         "too"
@@ -905,7 +905,7 @@
     {
       "han": "盤",
       "freq": 55,
-      "default": "pǎn",
+      "default": "pàn",
       "candidates": [
         "pǎn",
         "pàn"
@@ -923,7 +923,7 @@
     {
       "han": "捋",
       "freq": 54,
-      "default": "lód",
+      "default": "lóo",
       "candidates": [
         "lód",
         "lóo"
@@ -960,7 +960,7 @@
     {
       "han": "兄弟",
       "freq": 49,
-      "default": "sǎng tě",
+      "default": "shǎng tě",
       "candidates": [
         "sǎng tě",
         "shiǎng tě",
@@ -970,7 +970,7 @@
     {
       "han": "抑",
       "freq": 49,
-      "default": "iâ",
+      "default": "éd",
       "candidates": [
         "iâ",
         "éd"
@@ -1110,10 +1110,19 @@
     {
       "han": "幾時",
       "freq": 40,
-      "default": "gî shì",
+      "default": "gíd shì",
       "candidates": [
         "gî shì",
         "gíd shì"
+      ]
+    },
+    {
+      "han": "畜",
+      "freq": 40,
+      "default": "chú",
+      "candidates": [
+        "chú",
+        "hiú"
       ]
     },
     {
@@ -1128,7 +1137,7 @@
     {
       "han": "慢",
       "freq": 38,
-      "default": "men",
+      "default": "meen",
       "candidates": [
         "men",
         "meen"
@@ -1156,7 +1165,7 @@
     {
       "han": "西瓜",
       "freq": 37,
-      "default": "sě guǎ",
+      "default": "sǐ guǎ",
       "candidates": [
         "sě guǎ",
         "sǐ guǎ"
@@ -1193,7 +1202,7 @@
     {
       "han": "綿",
       "freq": 35,
-      "default": "mièn",
+      "default": "mien",
       "candidates": [
         "mièn",
         "mien"
@@ -1211,7 +1220,7 @@
     {
       "han": "搵",
       "freq": 34,
-      "default": "bbùd",
+      "default": "bbûn",
       "candidates": [
         "bbùd",
         "bbûn"
@@ -1275,7 +1284,7 @@
     {
       "han": "垃圾",
       "freq": 32,
-      "default": "lâ sáb",
+      "default": "lî sáb",
       "candidates": [
         "lâ sáb",
         "lî sáb"
@@ -1394,7 +1403,7 @@
     {
       "han": "自然",
       "freq": 30,
-      "default": "cu rhièn",
+      "default": "cu rhèen",
       "candidates": [
         "cu rhièn",
         "cu rhèen"
@@ -1403,7 +1412,7 @@
     {
       "han": "摻",
       "freq": 29,
-      "default": "cǎm",
+      "default": "sâm",
       "candidates": [
         "cǎm",
         "sâm"
@@ -1421,7 +1430,7 @@
     {
       "han": "無幾久",
       "freq": 29,
-      "default": "mò gî giû",
+      "default": "mò gíd giû",
       "candidates": [
         "mò gî giû",
         "mò gíd giû"
@@ -1477,7 +1486,7 @@
     {
       "han": "嶄然",
       "freq": 26,
-      "default": "zâm rhèn",
+      "default": "zhâm rhèn",
       "candidates": [
         "zâm rhèn",
         "zâm rhèen",
@@ -1543,7 +1552,7 @@
     {
       "han": "箍",
       "freq": 25,
-      "default": "gǔ",
+      "default": "kěu",
       "candidates": [
         "gǔ",
         "kěu"
@@ -1552,7 +1561,7 @@
     {
       "han": "蒔田",
       "freq": 25,
-      "default": "shì tèen",
+      "default": "shi tèen",
       "candidates": [
         "shì tèen",
         "shi tèen"
@@ -1571,7 +1580,7 @@
     {
       "han": "巡查",
       "freq": 24,
-      "default": "sùn cà",
+      "default": "sùn zǎ",
       "candidates": [
         "sùn cà",
         "sùn zǎ"
@@ -1589,7 +1598,7 @@
     {
       "han": "挼",
       "freq": 23,
-      "default": "nuâ",
+      "default": "rhuè",
       "candidates": [
         "nuâ",
         "rhuè",
@@ -1617,7 +1626,7 @@
     {
       "han": "惹",
       "freq": 22,
-      "default": "rhià",
+      "default": "rhiâ",
       "candidates": [
         "rhià",
         "rhiâ",
@@ -1654,7 +1663,7 @@
     {
       "han": "衰",
       "freq": 22,
-      "default": "cǔi",
+      "default": "sǔi",
       "candidates": [
         "cǔi",
         "sǔi"
@@ -1718,7 +1727,7 @@
     {
       "han": "投",
       "freq": 20,
-      "default": "dàu",
+      "default": "tèu",
       "candidates": [
         "dàu",
         "tèu"
@@ -1736,7 +1745,7 @@
     {
       "han": "值",
       "freq": 19,
-      "default": "chìd",
+      "default": "dàd",
       "candidates": [
         "chìd",
         "dàd"
@@ -1809,7 +1818,7 @@
     {
       "han": "丁",
       "freq": 18,
-      "default": "děn",
+      "default": "dǐng",
       "candidates": [
         "děn",
         "dǐng"
@@ -1836,7 +1845,7 @@
     {
       "han": "拍",
       "freq": 18,
-      "default": "pá",
+      "default": "pòg",
       "candidates": [
         "pá",
         "pòg"
@@ -1872,7 +1881,7 @@
     {
       "han": "縫",
       "freq": 18,
-      "default": "fùng",
+      "default": "pung",
       "candidates": [
         "fùng",
         "pung"
@@ -1911,7 +1920,7 @@
     {
       "han": "學會",
       "freq": 17,
-      "default": "hoo fui",
+      "default": "hoo bbue",
       "candidates": [
         "hoo fui",
         "hoo bbue"
@@ -1974,7 +1983,7 @@
     {
       "han": "拄毋會核",
       "freq": 16,
-      "default": "dû m̌ bboi hèd",
+      "default": "dû m̌ moi hèd",
       "candidates": [
         "dû m̌ bboi hèd",
         "dû m̌ moi hèd"
@@ -1992,7 +2001,7 @@
     {
       "han": "環保",
       "freq": 16,
-      "default": "fàn bôo",
+      "default": "kuàn bôo",
       "candidates": [
         "fàn bôo",
         "kuàn bôo"
@@ -2010,7 +2019,7 @@
     {
       "han": "舌",
       "freq": 16,
-      "default": "shèd",
+      "default": "shèed",
       "candidates": [
         "shèd",
         "shèed"
@@ -2092,7 +2101,7 @@
     {
       "han": "貌",
       "freq": 15,
-      "default": "mau",
+      "default": "màu",
       "candidates": [
         "mau",
         "màu"
@@ -2120,7 +2129,7 @@
     {
       "han": "人老",
       "freq": 14,
-      "default": "ngǐn lô",
+      "default": "ngìn lôo",
       "candidates": [
         "ngǐn lô",
         "ngìn lôo"
@@ -2174,7 +2183,7 @@
     {
       "han": "扇",
       "freq": 14,
-      "default": "shên",
+      "default": "shêen",
       "candidates": [
         "shên",
         "shêen"
@@ -2183,7 +2192,7 @@
     {
       "han": "撈",
       "freq": 14,
-      "default": "lèu",
+      "default": "lěu",
       "candidates": [
         "lèu",
         "lěu"
@@ -2192,19 +2201,10 @@
     {
       "han": "毋盼",
       "freq": 14,
-      "default": "m pan",
+      "default": "m̀ pan",
       "candidates": [
         "m pan",
         "m̀ pan"
-      ]
-    },
-    {
-      "han": "畜",
-      "freq": 14,
-      "default": "chú",
-      "candidates": [
-        "chú",
-        "hiú"
       ]
     },
     {
@@ -2219,7 +2219,7 @@
     {
       "han": "睡毋會落眠",
       "freq": 14,
-      "default": "fe m̌ bboi loo mìn",
+      "default": "fe m̌ moi loo mìn",
       "candidates": [
         "fe m̌ bboi loo mìn",
         "fe m̌ moi loo mìn"
@@ -2246,7 +2246,7 @@
     {
       "han": "食物",
       "freq": 14,
-      "default": "shìd bbùd",
+      "default": "shièd mi",
       "candidates": [
         "shìd bbùd",
         "shièd mi"
@@ -2311,7 +2311,7 @@
     {
       "han": "懶尸",
       "freq": 13,
-      "default": "lǎn shǐ",
+      "default": "nǎn shǐ",
       "candidates": [
         "lǎn shǐ",
         "nǎn shǐ"
@@ -2320,7 +2320,7 @@
     {
       "han": "早慢",
       "freq": 13,
-      "default": "zôo men",
+      "default": "zôo meen",
       "candidates": [
         "zôo men",
         "zôo meen"
@@ -2338,7 +2338,7 @@
     {
       "han": "濫糝",
       "freq": 13,
-      "default": "nam sâm",
+      "default": "nâm sâm",
       "candidates": [
         "nam sâm",
         "nâm sâm"
@@ -2347,7 +2347,7 @@
     {
       "han": "烘",
       "freq": 13,
-      "default": "fǔng",
+      "default": "hǎng",
       "candidates": [
         "fǔng",
         "hǎng"
@@ -2356,7 +2356,7 @@
     {
       "han": "科技",
       "freq": 13,
-      "default": "kǒo gî",
+      "default": "kǒo gǐ",
       "candidates": [
         "kǒo gî",
         "kǒo gǐ"
@@ -2432,7 +2432,7 @@
     {
       "han": "乳",
       "freq": 12,
-      "default": "rhî",
+      "default": "něen",
       "candidates": [
         "rhî",
         "něen"
@@ -2495,7 +2495,7 @@
     {
       "han": "犯著",
       "freq": 12,
-      "default": "fan choo",
+      "default": "fam choo",
       "candidates": [
         "fan choo",
         "fam choo"
@@ -2550,7 +2550,7 @@
     {
       "han": "前日",
       "freq": 11,
-      "default": "cièn ngíd",
+      "default": "cia ngíd",
       "candidates": [
         "cièn ngíd",
         "cia ngid",
@@ -2673,7 +2673,7 @@
     {
       "han": "塌",
       "freq": 11,
-      "default": "táb",
+      "default": "láb",
       "candidates": [
         "táb",
         "láb"
@@ -2682,7 +2682,7 @@
     {
       "han": "婚姻",
       "freq": 11,
-      "default": "fǔn rhǐm",
+      "default": "fǔn rhǐn",
       "candidates": [
         "fǔn rhǐm",
         "fǔn rhǐn"
@@ -2736,7 +2736,7 @@
     {
       "han": "燒香",
       "freq": 11,
-      "default": "shiǒ hiǒng",
+      "default": "shiǒo hiǒng",
       "candidates": [
         "shiǒ hiǒng",
         "shiǒo hiǒng"
@@ -2772,7 +2772,7 @@
     {
       "han": "綻",
       "freq": 11,
-      "default": "can",
+      "default": "cân",
       "candidates": [
         "can",
         "cân"
@@ -2809,7 +2809,7 @@
     {
       "han": "材",
       "freq": 10,
-      "default": "文cài",
+      "default": "cài",
       "candidates": [
         "文cài",
         "白cài",
@@ -2864,7 +2864,7 @@
     {
       "han": "束",
       "freq": 10,
-      "default": "sú",
+      "default": "sòg",
       "candidates": [
         "sú",
         "sòg"
@@ -2882,7 +2882,7 @@
     {
       "han": "炸",
       "freq": 10,
-      "default": "zâ",
+      "default": "zînn",
       "candidates": [
         "zâ",
         "zînn"
@@ -2900,7 +2900,7 @@
     {
       "han": "真成",
       "freq": 10,
-      "default": "zhǐn shìn",
+      "default": "zhǐn shàng",
       "candidates": [
         "zhǐn shìn",
         "zhǐn shàng"
@@ -2909,7 +2909,7 @@
     {
       "han": "蕃",
       "freq": 10,
-      "default": "fǎn",
+      "default": "pǒn",
       "candidates": [
         "fǎn",
         "pǒn"
@@ -3041,7 +3041,7 @@
     {
       "han": "億",
       "freq": 9,
-      "default": "rhi",
+      "default": "rhíd",
       "candidates": [
         "rhi",
         "rhíd"
@@ -3077,7 +3077,7 @@
     {
       "han": "嘴碼",
       "freq": 9,
-      "default": "zhê mâ",
+      "default": "zhê mǎ",
       "candidates": [
         "zhê mâ",
         "zhê mǎ"
@@ -3122,7 +3122,7 @@
     {
       "han": "會䀴个",
       "freq": 9,
-      "default": "bbue ngiâng e",
+      "default": "bbue ngiâng ě",
       "candidates": [
         "bbue ngiâng e",
         "bbue ngiâng ě"
@@ -3153,6 +3153,15 @@
       "candidates": [
         "bûn",
         "fûn"
+      ]
+    },
+    {
+      "han": "耕種人",
+      "freq": 9,
+      "default": "gǎng zhûng ngìn",
+      "candidates": [
+        "gǎng zhûng ngìn",
+        "gǐng zhûng ngìn"
       ]
     },
     {
@@ -3243,7 +3252,7 @@
     {
       "han": "主席",
       "freq": 8,
-      "default": "zhî sìd",
+      "default": "zhî síd",
       "candidates": [
         "zhî sìd",
         "zhî síd"
@@ -3270,7 +3279,7 @@
     {
       "han": "傳代",
       "freq": 8,
-      "default": "chèn toi",
+      "default": "chèen toi",
       "candidates": [
         "chèn toi",
         "chèen toi"
@@ -3288,7 +3297,7 @@
     {
       "han": "公共場所",
       "freq": 8,
-      "default": "gǔng kung chòng sû",
+      "default": "gǔng kiung chòng sû",
       "candidates": [
         "gǔng kung chòng sû",
         "gǔng kiung chòng sû"
@@ -3333,7 +3342,7 @@
     {
       "han": "只",
       "freq": 8,
-      "default": "zhî",
+      "default": "zá",
       "candidates": [
         "zhî",
         "zá"
@@ -3342,7 +3351,7 @@
     {
       "han": "大舌",
       "freq": 8,
-      "default": "tai shèd",
+      "default": "tai shèed",
       "candidates": [
         "tai shèd",
         "tai shèed"
@@ -3369,16 +3378,25 @@
     {
       "han": "微毛末節",
       "freq": 8,
-      "default": "bbì hm̌ màd ziéd",
+      "default": "bbì mǒ màd ziéd",
       "candidates": [
         "bbì hm̌ màd ziéd",
         "bbì mǒ màd ziéd"
       ]
     },
     {
+      "han": "拈",
+      "freq": 8,
+      "default": "ngiǎm",
+      "candidates": [
+        "ngiǎm",
+        "něem"
+      ]
+    },
+    {
       "han": "搉",
       "freq": 8,
-      "default": "kòg",
+      "default": "kóo",
       "candidates": [
         "kòg",
         "kóo"
@@ -3396,7 +3414,7 @@
     {
       "han": "樹林",
       "freq": 8,
-      "default": "shi lìm",
+      "default": "shi nà",
       "candidates": [
         "shi lìm",
         "shi nà"
@@ -3459,7 +3477,7 @@
     {
       "han": "縮著",
       "freq": 8,
-      "default": "sóg choo",
+      "default": "sòg choo",
       "candidates": [
         "sóg choo",
         "sòg choo"
@@ -3531,7 +3549,7 @@
     {
       "han": "斡頭",
       "freq": 7,
-      "default": "bbád tèu",
+      "default": "uàd tèu",
       "candidates": [
         "bbád tèu",
         "uàd tèu",
@@ -3542,7 +3560,7 @@
     {
       "han": "哱",
       "freq": 7,
-      "default": "bùd",
+      "default": "bú",
       "candidates": [
         "bùd",
         "bòg",
@@ -3552,7 +3570,7 @@
     {
       "han": "撥",
       "freq": 7,
-      "default": "bád",
+      "default": "pàd",
       "candidates": [
         "bád",
         "pád",
@@ -3671,7 +3689,7 @@
     {
       "han": "溜皮",
       "freq": 7,
-      "default": "liû pì",
+      "default": "liǔ pì",
       "candidates": [
         "liû pì",
         "liǔ pì"
@@ -3752,7 +3770,7 @@
     {
       "han": "递",
       "freq": 7,
-      "default": "tǎi",
+      "default": "tǎinn",
       "candidates": [
         "tǎi",
         "tǎinn"
@@ -3770,7 +3788,7 @@
     {
       "han": "頭犁犁",
       "freq": 7,
-      "default": "tèu lè lè",
+      "default": "tèu le le",
       "candidates": [
         "tèu lè lè",
         "tèu le le"
@@ -3809,7 +3827,7 @@
     {
       "han": "水餃",
       "freq": 6,
-      "default": "fî giâu",
+      "default": "fî gâu",
       "candidates": [
         "fî giâu",
         "fî gâu",
@@ -3829,7 +3847,7 @@
     {
       "han": "㸐著",
       "freq": 6,
-      "default": "nád choo",
+      "default": "làd choo",
       "candidates": [
         "nád choo",
         "làd choo"
@@ -3865,7 +3883,7 @@
     {
       "han": "便便",
       "freq": 6,
-      "default": "pien pien",
+      "default": "pen pen",
       "candidates": [
         "pien pien",
         "pen pen"
@@ -3955,7 +3973,7 @@
     {
       "han": "字墨",
       "freq": 6,
-      "default": "cu mèed",
+      "default": "cu mèd",
       "candidates": [
         "cu mèed",
         "cu mèd"
@@ -4000,7 +4018,7 @@
     {
       "han": "敵人",
       "freq": 6,
-      "default": "tìd ngìn",
+      "default": "tèd ngìn",
       "candidates": [
         "tìd ngìn",
         "tèd ngìn"
@@ -4036,7 +4054,7 @@
     {
       "han": "煙腸",
       "freq": 6,
-      "default": "rhiěn chòng",
+      "default": "rhěen chòng",
       "candidates": [
         "rhiěn chòng",
         "rhěen chòng"
@@ -4099,7 +4117,7 @@
     {
       "han": "背景",
       "freq": 6,
-      "default": "buê gîn",
+      "default": "pue gîn",
       "candidates": [
         "buê gîn",
         "pue gîn"
@@ -4108,7 +4126,7 @@
     {
       "han": "莫插佢",
       "freq": 6,
-      "default": "mâi cáb gùi",
+      "default": "mâi cáb gûi",
       "candidates": [
         "mâi cáb gùi",
         "mâi cáb gûi"
@@ -4144,7 +4162,7 @@
     {
       "han": "蠕蠕動",
       "freq": 6,
-      "default": "nung nung tǔng",
+      "default": "nú nú tǔng",
       "candidates": [
         "nung nung tǔng",
         "nú nú tǔng"
@@ -4153,7 +4171,7 @@
     {
       "han": "計程車",
       "freq": 6,
-      "default": "gê chìn cǎ",
+      "default": "gê chìn chǎ",
       "candidates": [
         "gê chìn cǎ",
         "gê chìn chǎ"
@@ -4198,7 +4216,7 @@
     {
       "han": "轉骨",
       "freq": 6,
-      "default": "zhên gúd",
+      "default": "zhêen gúd",
       "candidates": [
         "zhên gúd",
         "zhêen gúd"
@@ -4335,7 +4353,7 @@
     {
       "han": "㐁舌",
       "freq": 5,
-      "default": "léeb shèd",
+      "default": "léeb shèed",
       "candidates": [
         "léeb shèd",
         "léeb shèed"
@@ -4407,7 +4425,7 @@
     {
       "han": "別莊",
       "freq": 5,
-      "default": "pièd zǒng",
+      "default": "pèd zǒng",
       "candidates": [
         "pièd zǒng",
         "pèd zǒng"
@@ -4416,7 +4434,7 @@
     {
       "han": "口涎披波",
       "freq": 5,
-      "default": "kêu lǎn pǐ pǒo",
+      "default": "kěu lǎn bî pǒo",
       "candidates": [
         "kêu lǎn pǐ pǒo",
         "kěu lǎn bî pǒo"
@@ -4425,7 +4443,7 @@
     {
       "han": "唊嘴",
       "freq": 5,
-      "default": "giàb zhê",
+      "default": "giáb zhê",
       "candidates": [
         "giàb zhê",
         "giáb zhê"
@@ -4434,7 +4452,7 @@
     {
       "han": "唧",
       "freq": 5,
-      "default": "zìd",
+      "default": "zíd",
       "candidates": [
         "zìd",
         "zíd"
@@ -4443,7 +4461,7 @@
     {
       "han": "嘴甜舌滑",
       "freq": 5,
-      "default": "zhê tèem shèd bbàd",
+      "default": "zhê tèem shèed bbàd",
       "candidates": [
         "zhê tèem shèd bbàd",
         "zhê tèem shèed bbàd"
@@ -4506,7 +4524,7 @@
     {
       "han": "崩山",
       "freq": 5,
-      "default": "běn sǎn",
+      "default": "běn sǎm",
       "candidates": [
         "běn sǎn",
         "běn sǎm"
@@ -4542,7 +4560,7 @@
     {
       "han": "揤",
       "freq": 5,
-      "default": "zìd",
+      "default": "zíd",
       "candidates": [
         "zìd",
         "zíd"
@@ -4560,7 +4578,7 @@
     {
       "han": "撩",
       "freq": 5,
-      "default": "lèeu",
+      "default": "lěeu",
       "candidates": [
         "lèeu",
         "lěeu"
@@ -4578,7 +4596,7 @@
     {
       "han": "改善",
       "freq": 5,
-      "default": "gôi shen",
+      "default": "gôi sheen",
       "candidates": [
         "gôi shen",
         "gôi sheen"
@@ -4596,7 +4614,7 @@
     {
       "han": "斷水",
       "freq": 5,
-      "default": "dôn fî",
+      "default": "tǒn fî",
       "candidates": [
         "dôn fî",
         "tǒn fî"
@@ -4605,7 +4623,7 @@
     {
       "han": "旱坑",
       "freq": 5,
-      "default": "hǒn kǎng",
+      "default": "hon kǎng",
       "candidates": [
         "hǒn kǎng",
         "hon kǎng"
@@ -4650,7 +4668,7 @@
     {
       "han": "漏氣",
       "freq": 5,
-      "default": "leu kî",
+      "default": "lâu kûi",
       "candidates": [
         "leu kî",
         "lâu kûi"
@@ -4659,7 +4677,7 @@
     {
       "han": "烏刻刻",
       "freq": 5,
-      "default": "bbǔ kièd kièd",
+      "default": "bbǔ kéd kéd",
       "candidates": [
         "bbǔ kièd kièd",
         "bbǔ kéd kéd"
@@ -4731,7 +4749,7 @@
     {
       "han": "硬程",
       "freq": 5,
-      "default": "ngang châng",
+      "default": "ngang chàng",
       "candidates": [
         "ngang châng",
         "ngang chàng"
@@ -4767,25 +4785,16 @@
     {
       "han": "繫",
       "freq": 5,
-      "default": "gě",
+      "default": "gìd",
       "candidates": [
         "gě",
         "gìd"
       ]
     },
     {
-      "han": "耕種人",
-      "freq": 5,
-      "default": "gǎng zhûng ngìn",
-      "candidates": [
-        "gǎng zhûng ngìn",
-        "gǐng zhûng ngìn"
-      ]
-    },
-    {
       "han": "聽毋會入耳",
       "freq": 5,
-      "default": "těn m̌ bboi ngìb ngî",
+      "default": "těn m̌ moi ngìb ngî",
       "candidates": [
         "těn m̌ bboi ngìb ngî",
         "těn m̌ moi ngìb ngî"
@@ -4794,7 +4803,7 @@
     {
       "han": "肉麩",
       "freq": 5,
-      "default": "ngiú fǔ",
+      "default": "ngiú fû",
       "candidates": [
         "ngiú fǔ",
         "ngiú fû"
@@ -4803,7 +4812,7 @@
     {
       "han": "臨臨",
       "freq": 5,
-      "default": "lîm lîm",
+      "default": "lìm lìm",
       "candidates": [
         "lîm lîm",
         "lìm lìm"
@@ -4812,7 +4821,7 @@
     {
       "han": "茄",
       "freq": 5,
-      "default": "gǎ",
+      "default": "kiòo",
       "candidates": [
         "gǎ",
         "kiòo"
@@ -4830,7 +4839,7 @@
     {
       "han": "行頭",
       "freq": 5,
-      "default": "hàng tèu",
+      "default": "hòng tèu",
       "candidates": [
         "hàng tèu",
         "hòng tèu"
@@ -4866,7 +4875,7 @@
     {
       "han": "轉夜",
       "freq": 5,
-      "default": "zhên rhia",
+      "default": "zhêen rhia",
       "candidates": [
         "zhên rhia",
         "zhêen rhia"
@@ -4875,7 +4884,7 @@
     {
       "han": "轉鉸",
       "freq": 5,
-      "default": "zhên gâu",
+      "default": "zhêen gâu",
       "candidates": [
         "zhên gâu",
         "zhêen gâu"
@@ -4893,7 +4902,7 @@
     {
       "han": "邊脣",
       "freq": 5,
-      "default": "biěn fìn",
+      "default": "běen fìn",
       "candidates": [
         "biěn fìn",
         "běen fìn"
@@ -4902,7 +4911,7 @@
     {
       "han": "酪酪",
       "freq": 5,
-      "default": "loo loo",
+      "default": "1oo loo",
       "candidates": [
         "loo loo",
         "1oo loo"
@@ -4938,7 +4947,7 @@
     {
       "han": "閒亍亍",
       "freq": 5,
-      "default": "hèen chòg chòg",
+      "default": "hèen còg còg",
       "candidates": [
         "hèen chòg chòg",
         "hèen còg còg"
@@ -4974,7 +4983,7 @@
     {
       "han": "編輯",
       "freq": 4,
-      "default": "biěn cìb",
+      "default": "piěn zìb",
       "candidates": [
         "biěn cìb",
         "piěn cìb",
@@ -4995,7 +5004,7 @@
     {
       "han": "伸俥",
       "freq": 4,
-      "default": "chǔn chǎ",
+      "default": "chǐn chǎ",
       "candidates": [
         "chǔn chǎ",
         "chǔn chá",
@@ -5035,7 +5044,7 @@
     {
       "han": "恩主公",
       "freq": 4,
-      "default": "ěn zû gǔng",
+      "default": "bbǔn zhî gǔng",
       "candidates": [
         "ěn zû gǔng",
         "bbǔn zhî gǔng",
@@ -5045,7 +5054,7 @@
     {
       "han": "敬字亭",
       "freq": 4,
-      "default": "gîn ci tèn",
+      "default": "gîn cu tèn",
       "candidates": [
         "gîn ci tèn",
         "gîn cu tèn",
@@ -5065,7 +5074,7 @@
     {
       "han": "欣羨",
       "freq": 4,
-      "default": "hǐm siên",
+      "default": "hǐm sien",
       "candidates": [
         "hǐm siên",
         "hǐn sien",
@@ -5085,7 +5094,7 @@
     {
       "han": "滴滴溚溚",
       "freq": 4,
-      "default": "dìd dìd dàb dàb",
+      "default": "díd díd dàb dàb",
       "candidates": [
         "dìd dìd dàb dàb",
         "díd díd dàb dàb",
@@ -5115,7 +5124,7 @@
     {
       "han": "蝕去",
       "freq": 4,
-      "default": "shìd kûi",
+      "default": "shièd kûi",
       "candidates": [
         "shìd kûi",
         "shèed kûi",
@@ -5125,7 +5134,7 @@
     {
       "han": "轉潤",
       "freq": 4,
-      "default": "zhên bbin",
+      "default": "zhêen ngî",
       "candidates": [
         "zhên bbin",
         "zhêen bbin",
@@ -5135,7 +5144,7 @@
     {
       "han": "阿啾箭",
       "freq": 4,
-      "default": "ǎ ziǔ zien",
+      "default": "ǎ ziù zien",
       "candidates": [
         "ǎ ziǔ zien",
         "ǎ ziu zien",
@@ -5155,7 +5164,7 @@
     {
       "han": "三朝",
       "freq": 4,
-      "default": "sǎm zhiǒo",
+      "default": "sǎm chiòo",
       "candidates": [
         "sǎm zhiǒo",
         "sǎm chiòo"
@@ -5182,7 +5191,7 @@
     {
       "han": "企坐毋會核",
       "freq": 4,
-      "default": "kǐ cǒo m̌ bboi hèd",
+      "default": "kǐ cǒo m̌ moi hèd",
       "candidates": [
         "kǐ cǒo m̌ bboi hèd",
         "kǐ cǒo m̌ moi hèd"
@@ -5191,7 +5200,7 @@
     {
       "han": "住址",
       "freq": 4,
-      "default": "chu zhî",
+      "default": "chi zhî",
       "candidates": [
         "chu zhî",
         "chi zhî"
@@ -5209,7 +5218,7 @@
     {
       "han": "冤家泌背",
       "freq": 4,
-      "default": "bbiěn gǎ bî buê",
+      "default": "bbiěn gǎ bi buê",
       "candidates": [
         "bbiěn gǎ bî buê",
         "bbiěn gǎ bi buê"
@@ -5308,7 +5317,7 @@
     {
       "han": "啾啾䛍",
       "freq": 4,
-      "default": "ziù ziù bûi",
+      "default": "ziu ziu bûi",
       "candidates": [
         "ziù ziù bûi",
         "ziu ziu bûi"
@@ -5317,7 +5326,7 @@
     {
       "han": "嗀嗀䛍",
       "freq": 4,
-      "default": "òg òg bûi",
+      "default": "óg óg bûi",
       "candidates": [
         "òg òg bûi",
         "óg óg bûi"
@@ -5353,7 +5362,7 @@
     {
       "han": "尷尬",
       "freq": 4,
-      "default": "gǎm gôi",
+      "default": "gǎm gâi",
       "candidates": [
         "gǎm gôi",
         "gǎm gâi"
@@ -5389,7 +5398,7 @@
     {
       "han": "怨怪",
       "freq": 4,
-      "default": "bbiên guâi",
+      "default": "uân guâi",
       "candidates": [
         "bbiên guâi",
         "uân guâi"
@@ -5407,7 +5416,7 @@
     {
       "han": "戴絭",
       "freq": 4,
-      "default": "dôi guên",
+      "default": "dâi guên",
       "candidates": [
         "dôi guên",
         "dâi guên"
@@ -5450,15 +5459,6 @@
       ]
     },
     {
-      "han": "拈",
-      "freq": 4,
-      "default": "ngiǎm",
-      "candidates": [
-        "ngiǎm",
-        "něem"
-      ]
-    },
-    {
       "han": "拈香",
       "freq": 4,
       "default": "ngiǎm hiǒng",
@@ -5497,7 +5497,7 @@
     {
       "han": "撿禾串",
       "freq": 4,
-      "default": "giâm bbòo chên",
+      "default": "giâm bbòo chêen",
       "candidates": [
         "giâm bbòo chên",
         "giâm bbòo chêen"
@@ -5506,7 +5506,7 @@
     {
       "han": "擎揇跤",
       "freq": 4,
-      "default": "kià lâm gǎu",
+      "default": "kià nâm gǎu",
       "candidates": [
         "kià lâm gǎu",
         "kià nâm gǎu"
@@ -5515,7 +5515,7 @@
     {
       "han": "擎槌擎棍",
       "freq": 4,
-      "default": "kià chùi kià gûn",
+      "default": "kià chì kià gûn",
       "candidates": [
         "kià chùi kià gûn",
         "kià chì kià gûn"
@@ -5551,7 +5551,7 @@
     {
       "han": "朗朗膨膨",
       "freq": 4,
-      "default": "lông lông pông pông",
+      "default": "lòng lòng pông pông",
       "candidates": [
         "lông lông pông pông",
         "lòng lòng pông pông"
@@ -5641,7 +5641,7 @@
     {
       "han": "溚溚汀",
       "freq": 4,
-      "default": "dàb dàb din",
+      "default": "dáb dáb din",
       "candidates": [
         "dàb dàb din",
         "dáb dáb din"
@@ -5686,7 +5686,7 @@
     {
       "han": "燒炣燒炣",
       "freq": 4,
-      "default": "shiǒo hânn shiǒo hânn",
+      "default": "shiǒo hǎnn shiǒo hǎnn",
       "candidates": [
         "shiǒo hânn shiǒo hânn",
         "shiǒo hǎnn shiǒo hǎnn"
@@ -5713,7 +5713,7 @@
     {
       "han": "皮堅堅",
       "freq": 4,
-      "default": "pì giěn giěn",
+      "default": "pì gien gien",
       "candidates": [
         "pì giěn giěn",
         "pì gien gien"
@@ -5731,7 +5731,7 @@
     {
       "han": "算毋會和",
       "freq": 4,
-      "default": "sôn m̌ bboi fòo",
+      "default": "sôn m̌ moi fòo",
       "candidates": [
         "sôn m̌ bboi fòo",
         "sôn m̌ moi fòo"
@@ -5740,7 +5740,7 @@
     {
       "han": "罷工",
       "freq": 4,
-      "default": "bâ gǔng",
+      "default": "pa gǔng",
       "candidates": [
         "bâ gǔng",
         "pa gǔng"
@@ -5756,6 +5756,15 @@
       ]
     },
     {
+      "han": "耕田人",
+      "freq": 4,
+      "default": "gǎng tèen ngìn",
+      "candidates": [
+        "gǎng tèen ngìn",
+        "gǐng tèen ngìn"
+      ]
+    },
+    {
       "han": "腳數",
       "freq": 4,
       "default": "gióo sû",
@@ -5767,7 +5776,7 @@
     {
       "han": "膏膏",
       "freq": 4,
-      "default": "gǒo gǒo",
+      "default": "gòo gòo",
       "candidates": [
         "gǒo gǒo",
         "gòo gòo"
@@ -5803,7 +5812,7 @@
     {
       "han": "蒂頭",
       "freq": 4,
-      "default": "dî tèu",
+      "default": "di tèu",
       "candidates": [
         "dî tèu",
         "di tèu"
@@ -5821,7 +5830,7 @@
     {
       "han": "蝦公夾",
       "freq": 4,
-      "default": "hà gǔng giáb",
+      "default": "hà gǔng giàb",
       "candidates": [
         "hà gǔng giáb",
         "hà gǔng giàb"
@@ -5848,7 +5857,7 @@
     {
       "han": "走毋會赴",
       "freq": 4,
-      "default": "zêu m̌ bboi fû",
+      "default": "zêu m̌ moi fû",
       "candidates": [
         "zêu m̌ bboi fû",
         "zêu m̌ moi fû"
@@ -5884,7 +5893,7 @@
     {
       "han": "轉色",
       "freq": 4,
-      "default": "zhên séd",
+      "default": "zhêen séd",
       "candidates": [
         "zhên séd",
         "zhêen séd"
@@ -5893,7 +5902,7 @@
     {
       "han": "轉酒",
       "freq": 4,
-      "default": "zhên ziû",
+      "default": "zhêen ziû",
       "candidates": [
         "zhên ziû",
         "zhêen ziû"
@@ -5902,7 +5911,7 @@
     {
       "han": "退癀",
       "freq": 4,
-      "default": "tôi fùng",
+      "default": "tôi fòng",
       "candidates": [
         "tôi fùng",
         "tôi fòng"
@@ -5956,7 +5965,7 @@
     {
       "han": "靚膩膩",
       "freq": 4,
-      "default": "ziǎng nê nê",
+      "default": "ziǎng nè nè",
       "candidates": [
         "ziǎng nê nê",
         "ziǎng nè nè"
@@ -5974,7 +5983,7 @@
     {
       "han": "黃鱔",
       "freq": 4,
-      "default": "bbòng shěn",
+      "default": "bbòng shěen",
       "candidates": [
         "bbòng shěn",
         "bbòng shěen"
@@ -5996,7 +6005,7 @@
     {
       "han": "溫溫子疾",
       "freq": 3,
-      "default": "bbǔn bbǔn zî cìd",
+      "default": "bbǔn bbǔn zû chìd",
       "candidates": [
         "bbǔn bbǔn zî cìd",
         "bbǔn bbǔn zû cìd",
@@ -6027,7 +6036,7 @@
     {
       "han": "叔伯兄弟",
       "freq": 3,
-      "default": "shú bá sǎng tě",
+      "default": "shú bá shǎng tě",
       "candidates": [
         "shú bá sǎng tě",
         "shú bá shǎng tě",
@@ -6037,7 +6046,7 @@
     {
       "han": "噪音",
       "freq": 3,
-      "default": "zǎu rhǐm",
+      "default": "câu rhǐm",
       "candidates": [
         "zǎu rhǐm",
         "sôo rhǐm",
@@ -6067,7 +6076,7 @@
     {
       "han": "挼刀",
       "freq": 3,
-      "default": "nùi dǒo",
+      "default": "nù dǒo",
       "candidates": [
         "nùi dǒo",
         "nùng dǒo",
@@ -6227,7 +6236,7 @@
     {
       "han": "㝗㝗㝩㝩",
       "freq": 3,
-      "default": "lǒng lǒng kǒng kǒng",
+      "default": "lòng lòng kǒng kǒng",
       "candidates": [
         "lǒng lǒng kǒng kǒng",
         "lòng lòng kǒng kǒng"
@@ -6236,7 +6245,7 @@
     {
       "han": "三下钁頭兩畚箕",
       "freq": 3,
-      "default": "sǎm ha gió tèu liông bûn gǐ",
+      "default": "sǎm ha gióo tèu liǒng bûn gǐ",
       "candidates": [
         "sǎm ha gió tèu liông bûn gǐ",
         "sǎm ha gióo tèu liǒng bûn gǐ"
@@ -6245,7 +6254,7 @@
     {
       "han": "上上下下",
       "freq": 3,
-      "default": "shǒng shǒng hǎ hǎ",
+      "default": "shong shong hǎ hǎ",
       "candidates": [
         "shǒng shǒng hǎ hǎ",
         "shong shong hǎ hǎ"
@@ -6281,7 +6290,7 @@
     {
       "han": "傳真",
       "freq": 3,
-      "default": "chèn zhǐn",
+      "default": "chèen zhǐn",
       "candidates": [
         "chèn zhǐn",
         "chèen zhǐn"
@@ -6290,7 +6299,7 @@
     {
       "han": "傳香火",
       "freq": 3,
-      "default": "chèn hiǒng fôo",
+      "default": "chèen hiǒng fôo",
       "candidates": [
         "chèn hiǒng fôo",
         "chèen hiǒng fôo"
@@ -6344,7 +6353,7 @@
     {
       "han": "刓",
       "freq": 3,
-      "default": "ngǎn",
+      "default": "ngàn",
       "candidates": [
         "ngǎn",
         "ngàn"
@@ -6389,7 +6398,7 @@
     {
       "han": "合界",
       "freq": 3,
-      "default": "gáb gôi",
+      "default": "gáb gâi",
       "candidates": [
         "gáb gôi",
         "gáb gâi"
@@ -6398,7 +6407,7 @@
     {
       "han": "呸口涎",
       "freq": 3,
-      "default": "pùi kêu lǎn",
+      "default": "pûi kêu lǎn",
       "candidates": [
         "pùi kêu lǎn",
         "pûi kêu lǎn"
@@ -6407,7 +6416,7 @@
     {
       "han": "呸痰",
       "freq": 3,
-      "default": "pùi tàm",
+      "default": "pûi tàm",
       "candidates": [
         "pùi tàm",
         "pûi tàm"
@@ -6416,7 +6425,7 @@
     {
       "han": "和挼",
       "freq": 3,
-      "default": "fòo nùi",
+      "default": "fòo nûi",
       "candidates": [
         "fòo nùi",
         "fòo nûi"
@@ -6434,7 +6443,7 @@
     {
       "han": "咬薑啜醋",
       "freq": 3,
-      "default": "ngǎu giǒng cód cû",
+      "default": "ngâu giǒng cód cû",
       "candidates": [
         "ngǎu giǒng cód cû",
         "ngâu giǒng cód cû"
@@ -6443,7 +6452,7 @@
     {
       "han": "唊唊䛍",
       "freq": 3,
-      "default": "giàb giàb bûi",
+      "default": "giáb giáb bûi",
       "candidates": [
         "giàb giàb bûi",
         "giáb giáb bûi"
@@ -6461,7 +6470,7 @@
     {
       "han": "嗍乳",
       "freq": 3,
-      "default": "sóo něn",
+      "default": "sóo něen",
       "candidates": [
         "sóo něn",
         "sóo něen"
@@ -6479,7 +6488,7 @@
     {
       "han": "堅疕",
       "freq": 3,
-      "default": "gěen pî",
+      "default": "giěn pî",
       "candidates": [
         "gěen pî",
         "giěn pî"
@@ -6551,7 +6560,7 @@
     {
       "han": "律不",
       "freq": 3,
-      "default": "lùd bùd",
+      "default": "lùd búd",
       "candidates": [
         "lùd bùd",
         "lùd búd"
@@ -6564,6 +6573,15 @@
       "candidates": [
         "cûi",
         "zúd"
+      ]
+    },
+    {
+      "han": "愛使",
+      "freq": 3,
+      "default": "ôi sû",
+      "candidates": [
+        "ôi sû",
+        "â sû"
       ]
     },
     {
@@ -6587,7 +6605,7 @@
     {
       "han": "打孔翹",
       "freq": 3,
-      "default": "dâ kûng kiôo",
+      "default": "dâ kông kiôo",
       "candidates": [
         "dâ kûng kiôo",
         "dâ kông kiôo"
@@ -6623,7 +6641,7 @@
     {
       "han": "撓",
       "freq": 3,
-      "default": "nâu",
+      "default": "niǔ",
       "candidates": [
         "nâu",
         "niǔ"
@@ -6641,7 +6659,7 @@
     {
       "han": "晟目",
       "freq": 3,
-      "default": "càng hḿ",
+      "default": "chàng hḿ",
       "candidates": [
         "càng hḿ",
         "chàng hḿ"
@@ -6650,7 +6668,7 @@
     {
       "han": "暗光鳥",
       "freq": 3,
-      "default": "âm gǒng dêeu",
+      "default": "âm kǒng dêeu",
       "candidates": [
         "âm gǒng dêeu",
         "âm kǒng dêeu"
@@ -6677,7 +6695,7 @@
     {
       "han": "梟心",
       "freq": 3,
-      "default": "hiǒo sǐm",
+      "default": "hiǎu sǐm",
       "candidates": [
         "hiǒo sǐm",
         "hiǎu sǐm"
@@ -6695,7 +6713,7 @@
     {
       "han": "毋會堪",
       "freq": 3,
-      "default": "m̌ bboi kǎm",
+      "default": "m̌ moi kǎm",
       "candidates": [
         "m̌ bboi kǎm",
         "m̌ moi kǎm"
@@ -6704,7 +6722,7 @@
     {
       "han": "毋驚死",
       "freq": 3,
-      "default": "m giǎng sî",
+      "default": "m̀ giǎng sî",
       "candidates": [
         "m giǎng sî",
         "m̀ giǎng sî"
@@ -6740,7 +6758,7 @@
     {
       "han": "溚渧",
       "freq": 3,
-      "default": "dàb di",
+      "default": "dáb di",
       "candidates": [
         "dàb di",
         "dáb di"
@@ -6749,7 +6767,7 @@
     {
       "han": "溼漉漉",
       "freq": 3,
-      "default": "shíb lòb lòb",
+      "default": "shíb lòg lòg",
       "candidates": [
         "shíb lòb lòb",
         "shíb lòg lòg"
@@ -6839,7 +6857,7 @@
     {
       "han": "玻璃珠",
       "freq": 3,
-      "default": "bǒo lì zhǐ",
+      "default": "bǒo lì zhǔ",
       "candidates": [
         "bǒo lì zhǐ",
         "bǒo lì zhǔ"
@@ -6884,7 +6902,7 @@
     {
       "han": "砰砰䛍",
       "freq": 3,
-      "default": "biàng biàng bûi",
+      "default": "biâng biâng bûi",
       "candidates": [
         "biàng biàng bûi",
         "biâng biâng bûi"
@@ -6974,7 +6992,7 @@
     {
       "han": "肚囊",
       "freq": 3,
-      "default": "dû nòng",
+      "default": "dû nǒng",
       "candidates": [
         "dû nòng",
         "dû nǒng"
@@ -6983,7 +7001,7 @@
     {
       "han": "肚膕膕",
       "freq": 3,
-      "default": "dû guǎinn guǎinn",
+      "default": "dû guainn guainn",
       "candidates": [
         "dû guǎinn guǎinn",
         "dû guainn guainn"
@@ -7001,7 +7019,7 @@
     {
       "han": "背帶",
       "freq": 3,
-      "default": "bà dâi",
+      "default": "bà dai",
       "candidates": [
         "bà dâi",
         "bà dai"
@@ -7010,7 +7028,7 @@
     {
       "han": "腹臍",
       "freq": 3,
-      "default": "bú cì",
+      "default": "búd cì",
       "candidates": [
         "bú cì",
         "búd cì"
@@ -7091,7 +7109,7 @@
     {
       "han": "走毋會俐",
       "freq": 3,
-      "default": "zêu m̌ bboi li",
+      "default": "zêu m̌ moi li",
       "candidates": [
         "zêu m̌ bboi li",
         "zêu m̌ moi li"
@@ -7100,7 +7118,7 @@
     {
       "han": "走毋會開腳",
       "freq": 3,
-      "default": "zêu m̌ bboi kǒi gióo",
+      "default": "zêu m̌ moi kǒi gióo",
       "candidates": [
         "zêu m̌ bboi kǒi gióo",
         "zêu m̌ moi kǒi gióo"
@@ -7109,7 +7127,7 @@
     {
       "han": "踉流連",
       "freq": 3,
-      "default": "lông liu lien",
+      "default": "lǒng liu lien",
       "candidates": [
         "lông liu lien",
         "lǒng liu lien"
@@ -7118,7 +7136,7 @@
     {
       "han": "輪輪轉",
       "freq": 3,
-      "default": "lên lên zhêen",
+      "default": "lǐn lǐn zhêen",
       "candidates": [
         "lên lên zhêen",
         "lǐn lǐn zhêen"
@@ -7127,7 +7145,7 @@
     {
       "han": "轉嘴",
       "freq": 3,
-      "default": "zhên zhê",
+      "default": "zhêen zhê",
       "candidates": [
         "zhên zhê",
         "zhêen zhê"
@@ -7145,7 +7163,7 @@
     {
       "han": "轉鉗",
       "freq": 3,
-      "default": "zhên kiàm",
+      "default": "zhêen kiàm",
       "candidates": [
         "zhên kiàm",
         "zhêen kiàm"
@@ -7172,7 +7190,7 @@
     {
       "han": "長橫橫",
       "freq": 3,
-      "default": "chòng bbǎng bbǎng",
+      "default": "chòng bbàng bbàng",
       "candidates": [
         "chòng bbǎng bbǎng",
         "chòng bbàng bbàng"
@@ -7181,7 +7199,7 @@
     {
       "han": "長纜纜",
       "freq": 3,
-      "default": "chòng làm làm",
+      "default": "chòng nàm nàm",
       "candidates": [
         "chòng làm làm",
         "chòng nàm nàm"
@@ -7217,7 +7235,7 @@
     {
       "han": "阿里不答",
       "freq": 3,
-      "default": "ǎ lî búd dàb",
+      "default": "ǎ lî búd dáb",
       "candidates": [
         "ǎ lî búd dàb",
         "ǎ lî búd dáb"
@@ -7226,7 +7244,7 @@
     {
       "han": "隕石",
       "freq": 3,
-      "default": "bbûn sha",
+      "default": "bbîn sha",
       "candidates": [
         "bbûn sha",
         "bbîn sha"
@@ -7262,7 +7280,7 @@
     {
       "han": "頭臥臥",
       "freq": 3,
-      "default": "tèu ngo ngo",
+      "default": "tèu ngǒ ngǒ",
       "candidates": [
         "tèu ngo ngo",
         "tèu ngǒ ngǒ"
@@ -7280,7 +7298,7 @@
     {
       "han": "香馞馞",
       "freq": 3,
-      "default": "hiǒng púd púd",
+      "default": "hiǒng pùd pùd",
       "candidates": [
         "hiǒng púd púd",
         "hiǒng pùd pùd"
@@ -7289,7 +7307,7 @@
     {
       "han": "齬齬齖齖",
       "freq": 3,
-      "default": "ngi ngi ngai ngai",
+      "default": "ngi ngi ngia ngia",
       "candidates": [
         "ngi ngi ngai ngai",
         "ngi ngi ngia ngia"
@@ -7351,7 +7369,7 @@
     {
       "han": "哯",
       "freq": 2,
-      "default": "lûn",
+      "default": "liên",
       "candidates": [
         "lûn",
         "liên",
@@ -7361,7 +7379,7 @@
     {
       "han": "大戇槌",
       "freq": 2,
-      "default": "tai ngǒng chì",
+      "default": "tai ngông chì",
       "candidates": [
         "tai ngǒng chì",
         "tai ngǒng tùi",
@@ -7621,7 +7639,7 @@
     {
       "han": "韌界界",
       "freq": 2,
-      "default": "ngun gâi gâi",
+      "default": "ngun gâinn gâinn",
       "candidates": [
         "ngun gâi gâi",
         "ngun gàinn gàinn",
@@ -7659,7 +7677,7 @@
     {
       "han": "㸐角蟲",
       "freq": 2,
-      "default": "nád góo chùng",
+      "default": "nàd góo chùng",
       "candidates": [
         "nád góo chùng",
         "nàd góo chùng"
@@ -7668,7 +7686,7 @@
     {
       "han": "一時半刻",
       "freq": 2,
-      "default": "rhíd shì bân kiéd",
+      "default": "rhíd shì bân kéd",
       "candidates": [
         "rhíd shì bân kiéd",
         "rhíd shì bân kéd"
@@ -7677,7 +7695,7 @@
     {
       "han": "七上八落",
       "freq": 2,
-      "default": "cíd shong béed loo",
+      "default": "cíd shǒng béed loo",
       "candidates": [
         "cíd shong béed loo",
         "cíd shǒng béed loo"
@@ -7695,7 +7713,7 @@
     {
       "han": "主動",
       "freq": 2,
-      "default": "zhî tǔng",
+      "default": "zhî tung",
       "candidates": [
         "zhî tǔng",
         "zhî tung"
@@ -7767,7 +7785,7 @@
     {
       "han": "做夜米",
       "freq": 2,
-      "default": "zôo ia mî",
+      "default": "zôo rhia mî",
       "candidates": [
         "zôo ia mî",
         "zôo rhia mî"
@@ -7776,7 +7794,7 @@
     {
       "han": "停跎",
       "freq": 2,
-      "default": "tèn tòo",
+      "default": "tìn tòo",
       "candidates": [
         "tèn tòo",
         "tìn tòo"
@@ -7785,7 +7803,7 @@
     {
       "han": "傳事",
       "freq": 2,
-      "default": "chèn su",
+      "default": "chèen su",
       "candidates": [
         "chèn su",
         "chèen su"
@@ -7794,7 +7812,7 @@
     {
       "han": "傷本",
       "freq": 2,
-      "default": "shiong bûn",
+      "default": "shǒng bûn",
       "candidates": [
         "shiong bûn",
         "shǒng bûn"
@@ -7875,7 +7893,7 @@
     {
       "han": "刺目",
       "freq": 2,
-      "default": "cág hḿ",
+      "default": "càg hḿ",
       "candidates": [
         "cág hḿ",
         "càg hḿ"
@@ -7900,9 +7918,18 @@
       ]
     },
     {
+      "han": "勸話",
+      "freq": 2,
+      "default": "kuên bba",
+      "candidates": [
+        "kuên bba",
+        "kiên bba"
+      ]
+    },
+    {
       "han": "半尷尬",
       "freq": 2,
-      "default": "bân làm hà",
+      "default": "bân gǎm gâi",
       "candidates": [
         "bân làm hà",
         "bân gǎm gâi"
@@ -7929,7 +7956,7 @@
     {
       "han": "受當毋會起",
       "freq": 2,
-      "default": "shiu dǒng m̌ bboi kî",
+      "default": "shiu dǒng m̌ moi kî",
       "candidates": [
         "shiu dǒng m̌ bboi kî",
         "shiu dǒng m̌ moi kî"
@@ -7947,7 +7974,7 @@
     {
       "han": "唉唉唧唧",
       "freq": 2,
-      "default": "ǎi ǎi zìd zìd",
+      "default": "ǎi ǎi zìb zìb",
       "candidates": [
         "ǎi ǎi zìd zìd",
         "ǎi ǎi zìb zìb"
@@ -7965,7 +7992,7 @@
     {
       "han": "單家園屋",
       "freq": 2,
-      "default": "dǎn gǎ bbièn bbú",
+      "default": "dǎn gǎ bbièn bú",
       "candidates": [
         "dǎn gǎ bbièn bbú",
         "dǎn gǎ bbièn bú"
@@ -8001,7 +8028,7 @@
     {
       "han": "圈雞鴨",
       "freq": 2,
-      "default": "kien gě áb",
+      "default": "kuěn gě áb",
       "candidates": [
         "kien gě áb",
         "kuěn gě áb"
@@ -8037,7 +8064,7 @@
     {
       "han": "堆山塞海",
       "freq": 2,
-      "default": "dǔi sǎn céd hôi",
+      "default": "dǔi sǎn séd hôi",
       "candidates": [
         "dǔi sǎn céd hôi",
         "dǔi sǎn séd hôi"
@@ -8073,7 +8100,7 @@
     {
       "han": "大籃肚",
       "freq": 2,
-      "default": "tai làm dû",
+      "default": "tai lǎm dû",
       "candidates": [
         "tai làm dû",
         "tai lǎm dû"
@@ -8100,7 +8127,7 @@
     {
       "han": "奇巧",
       "freq": 2,
-      "default": "kì kiôo",
+      "default": "kì kâu",
       "candidates": [
         "kì kiôo",
         "kì kâu"
@@ -8163,7 +8190,7 @@
     {
       "han": "尛尛仔",
       "freq": 2,
-      "default": "diu diu à",
+      "default": "diǔ diǔ à",
       "candidates": [
         "diu diu à",
         "diǔ diǔ à"
@@ -8172,7 +8199,7 @@
     {
       "han": "山壢",
       "freq": 2,
-      "default": "sǎn léd",
+      "default": "sǎn lád",
       "candidates": [
         "sǎn léd",
         "sǎn lád"
@@ -8181,7 +8208,7 @@
     {
       "han": "幫幫拔拔",
       "freq": 2,
-      "default": "bǒng bǒng bàd bàd",
+      "default": "bǒng bǒng bád bád",
       "candidates": [
         "bǒng bǒng bàd bàd",
         "bǒng bǒng bád bád"
@@ -8190,7 +8217,7 @@
     {
       "han": "座大",
       "freq": 2,
-      "default": "cǒo tai",
+      "default": "coo tai",
       "candidates": [
         "cǒo tai",
         "coo tai"
@@ -8217,7 +8244,7 @@
     {
       "han": "弛",
       "freq": 2,
-      "default": "chì",
+      "default": "rhè",
       "candidates": [
         "chì",
         "rhè"
@@ -8226,7 +8253,7 @@
     {
       "han": "愊愊掣",
       "freq": 2,
-      "default": "bìd bìd chéed",
+      "default": "bíd bíd chéed",
       "candidates": [
         "bìd bìd chéed",
         "bíd bíd chéed"
@@ -8244,7 +8271,7 @@
     {
       "han": "慢慢趖",
       "freq": 2,
-      "default": "men men sòo",
+      "default": "meen meen sòo",
       "candidates": [
         "men men sòo",
         "meen meen sòo"
@@ -8253,7 +8280,7 @@
     {
       "han": "懶尸骨",
       "freq": 2,
-      "default": "lǎn shǐ gúd",
+      "default": "nǎn shǐ gúd",
       "candidates": [
         "lǎn shǐ gúd",
         "nǎn shǐ gúd"
@@ -8307,7 +8334,7 @@
     {
       "han": "打裎脧",
       "freq": 2,
-      "default": "dâ chîn zǒi",
+      "default": "dâ cîn zǒi",
       "candidates": [
         "dâ chîn zǒi",
         "dâ cîn zǒi"
@@ -8361,7 +8388,7 @@
     {
       "han": "撩手弄腳",
       "freq": 2,
-      "default": "lèeu shiû nung gióo",
+      "default": "lěeu shiû nung gióo",
       "candidates": [
         "lèeu shiû nung gióo",
         "lěeu shiû nung gióo"
@@ -8379,7 +8406,7 @@
     {
       "han": "擎脧火",
       "freq": 2,
-      "default": "kià zǒi fôo",
+      "default": "kià zôi fôo",
       "candidates": [
         "kià zǒi fôo",
         "kià zôi fôo"
@@ -8397,7 +8424,7 @@
     {
       "han": "教精人",
       "freq": 2,
-      "default": "gǎu zǐn ngìn",
+      "default": "gǎu zhǐn ngìn",
       "candidates": [
         "gǎu zǐn ngìn",
         "gǎu zhǐn ngìn"
@@ -8406,7 +8433,7 @@
     {
       "han": "斷乳",
       "freq": 2,
-      "default": "tǒn něn",
+      "default": "tǒn něen",
       "candidates": [
         "tǒn něn",
         "tǒn něen"
@@ -8415,7 +8442,7 @@
     {
       "han": "日頭擎枷",
       "freq": 2,
-      "default": "ngíd tèu kià kànn",
+      "default": "ngíd tèu kià kà",
       "candidates": [
         "ngíd tèu kià kànn",
         "ngíd tèu kià kà"
@@ -8424,7 +8451,7 @@
     {
       "han": "早去早轉",
       "freq": 2,
-      "default": "zôo kûi zôo zhên",
+      "default": "zôo kûi zôo zhêen",
       "candidates": [
         "zôo kûi zôo zhên",
         "zôo kûi zôo zhêen"
@@ -8469,7 +8496,7 @@
     {
       "han": "本意",
       "freq": 2,
-      "default": "bûn rhî",
+      "default": "bûn rhì",
       "candidates": [
         "bûn rhî",
         "bûn rhì"
@@ -8478,7 +8505,7 @@
     {
       "han": "杈椏",
       "freq": 2,
-      "default": "câ bbǎ",
+      "default": "cǎ bbǎ",
       "candidates": [
         "câ bbǎ",
         "cǎ bbǎ"
@@ -8491,6 +8518,15 @@
       "candidates": [
         "ngiâm piang",
         "rhiâm piang"
+      ]
+    },
+    {
+      "han": "榮榮",
+      "freq": 2,
+      "default": "bbìn bbìn",
+      "candidates": [
+        "bbìn bbìn",
+        "rhùng rhùng"
       ]
     },
     {
@@ -8559,7 +8595,7 @@
     {
       "han": "求求乞乞",
       "freq": 2,
-      "default": "kiù kiù kiéd kiéd",
+      "default": "kiù kiù kíd kíd",
       "candidates": [
         "kiù kiù kiéd kiéd",
         "kiù kiù kíd kíd"
@@ -8577,7 +8613,7 @@
     {
       "han": "洗碗會相磕",
       "freq": 2,
-      "default": "sê bbân bbue siǒng kàb",
+      "default": "sê bbân bbue siǒng kòg",
       "candidates": [
         "sê bbân bbue siǒng kàb",
         "sê bbân bbue siǒng kòg"
@@ -8586,7 +8622,7 @@
     {
       "han": "淬水",
       "freq": 2,
-      "default": "cî fî",
+      "default": "ci fî",
       "candidates": [
         "cî fî",
         "ci fî"
@@ -8604,7 +8640,7 @@
     {
       "han": "潑血",
       "freq": 2,
-      "default": "pád fiéd",
+      "default": "pàd fiéd",
       "candidates": [
         "pád fiéd",
         "pàd fiéd"
@@ -8622,7 +8658,7 @@
     {
       "han": "無嘻哼",
       "freq": 2,
-      "default": "mò hǐnn hǎinn",
+      "default": "mò hînn hǎinn",
       "candidates": [
         "mò hǐnn hǎinn",
         "mò hînn hǎinn"
@@ -8658,7 +8694,7 @@
     {
       "han": "牙确仔",
       "freq": 2,
-      "default": "ngà kòg â",
+      "default": "ngà kòg à",
       "candidates": [
         "ngà kòg â",
         "ngà kòg à"
@@ -8730,7 +8766,7 @@
     {
       "han": "畏畏",
       "freq": 2,
-      "default": "bbûi bbûi",
+      "default": "bûi bûi",
       "candidates": [
         "bbûi bbûi",
         "bûi bûi"
@@ -8748,7 +8784,7 @@
     {
       "han": "病膩膩",
       "freq": 2,
-      "default": "piang nê nê",
+      "default": "piang ngî ngî",
       "candidates": [
         "piang nê nê",
         "piang ngî ngî"
@@ -8757,7 +8793,7 @@
     {
       "han": "瘦皮邋𨒇",
       "freq": 2,
-      "default": "sêu pì làb gàb",
+      "default": "sêu pì làb gáb",
       "candidates": [
         "sêu pì làb gàb",
         "sêu pì làb gáb"
@@ -8766,7 +8802,7 @@
     {
       "han": "目眨眨",
       "freq": 2,
-      "default": "hḿ sháb sháb",
+      "default": "hḿ sáb sáb",
       "candidates": [
         "hḿ sháb sháb",
         "hḿ sáb sáb"
@@ -8793,7 +8829,7 @@
     {
       "han": "眼時下",
       "freq": 2,
-      "default": "ngiên shì ha",
+      "default": "ngiên shì hǎ",
       "candidates": [
         "ngiên shì ha",
         "ngiên shì hǎ"
@@ -8820,7 +8856,7 @@
     {
       "han": "砂鐐",
       "freq": 2,
-      "default": "sǎ lèeu",
+      "default": "sǎ lěeu",
       "candidates": [
         "sǎ lèeu",
         "sǎ lěeu"
@@ -8829,7 +8865,7 @@
     {
       "han": "磅輪",
       "freq": 2,
-      "default": "bong liên",
+      "default": "bong lên",
       "candidates": [
         "bong liên",
         "bong lên"
@@ -8865,7 +8901,7 @@
     {
       "han": "笑噳噳",
       "freq": 2,
-      "default": "siôo ngî ngî",
+      "default": "siôo ngǐ ngǐ",
       "candidates": [
         "siôo ngî ngî",
         "siôo ngǐ ngǐ"
@@ -8883,7 +8919,7 @@
     {
       "han": "筆瀝直",
       "freq": 2,
-      "default": "bíd líd chìd",
+      "default": "bíd lìd chìd",
       "candidates": [
         "bíd líd chìd",
         "bíd lìd chìd"
@@ -8901,7 +8937,7 @@
     {
       "han": "精鑽",
       "freq": 2,
-      "default": "zǐn zôn",
+      "default": "zǐn zòn",
       "candidates": [
         "zǐn zôn",
         "zǐn zòn"
@@ -8910,7 +8946,7 @@
     {
       "han": "紙膏个",
       "freq": 2,
-      "default": "zhî gòo e",
+      "default": "zhî gòo ě",
       "candidates": [
         "zhî gòo e",
         "zhî gòo ě"
@@ -8946,7 +8982,7 @@
     {
       "han": "脝水",
       "freq": 2,
-      "default": "hâng fî",
+      "default": "hǎng fî",
       "candidates": [
         "hâng fî",
         "hǎng fî"
@@ -8955,7 +8991,7 @@
     {
       "han": "臭火煙",
       "freq": 2,
-      "default": "chiû fôo rhěn",
+      "default": "chiû fôo rhěen",
       "candidates": [
         "chiû fôo rhěn",
         "chiû fôo rhěen"
@@ -8964,7 +9000,7 @@
     {
       "han": "臭青",
       "freq": 2,
-      "default": "chiû ciâng",
+      "default": "chiû ciǎng",
       "candidates": [
         "chiû ciâng",
         "chiû ciǎng"
@@ -8982,7 +9018,7 @@
     {
       "han": "苦丟丟",
       "freq": 2,
-      "default": "kû diù diù",
+      "default": "kû diû diû",
       "candidates": [
         "kû diù diù",
         "kû diû diû"
@@ -9018,7 +9054,7 @@
     {
       "han": "落瀉",
       "freq": 2,
-      "default": "lâu siâ",
+      "default": "loo siâ",
       "candidates": [
         "lâu siâ",
         "loo siâ"
@@ -9153,7 +9189,7 @@
     {
       "han": "軟怠怠",
       "freq": 2,
-      "default": "ngiěn tai tai",
+      "default": "ngiěn dâi dâi",
       "candidates": [
         "ngiěn tai tai",
         "ngiěn dâi dâi"
@@ -9162,7 +9198,7 @@
     {
       "han": "軟濟濟",
       "freq": 2,
-      "default": "ngiěn zǐ zǐ",
+      "default": "ngiěn zòb zòb",
       "candidates": [
         "ngiěn zǐ zǐ",
         "ngiěn zòb zòb"
@@ -9180,7 +9216,7 @@
     {
       "han": "轉側",
       "freq": 2,
-      "default": "zhên zéd",
+      "default": "zhêen zéd",
       "candidates": [
         "zhên zéd",
         "zhêen zéd"
@@ -9198,7 +9234,7 @@
     {
       "han": "轉想",
       "freq": 2,
-      "default": "zhên siong",
+      "default": "zhêen siong",
       "candidates": [
         "zhên siong",
         "zhêen siong"
@@ -9216,7 +9252,7 @@
     {
       "han": "轉秋",
       "freq": 2,
-      "default": "zhên ciǔ",
+      "default": "zhêen ciǔ",
       "candidates": [
         "zhên ciǔ",
         "zhêen ciǔ"
@@ -9225,7 +9261,7 @@
     {
       "han": "通書",
       "freq": 2,
-      "default": "tǔng shǐ",
+      "default": "tǔng shi",
       "candidates": [
         "tǔng shǐ",
         "tǔng shi"
@@ -9252,7 +9288,7 @@
     {
       "han": "邋食狗",
       "freq": 2,
-      "default": "liàb shièd gêu",
+      "default": "làb shièd gêu",
       "candidates": [
         "liàb shièd gêu",
         "làb shièd gêu"
@@ -9342,7 +9378,7 @@
     {
       "han": "頷頷子食",
       "freq": 2,
-      "default": "ngǎm ngǎm zû shièd",
+      "default": "ngàm ngàm zû shièd",
       "candidates": [
         "ngǎm ngǎm zû shièd",
         "ngàm ngàm zû shièd"
@@ -9351,7 +9387,7 @@
     {
       "han": "頷頷拜",
       "freq": 2,
-      "default": "ngâm ngâm bâi",
+      "default": "ngàm ngàm bâi",
       "candidates": [
         "ngâm ngâm bâi",
         "ngàm ngàm bâi"
@@ -9360,7 +9396,7 @@
     {
       "han": "食祿",
       "freq": 2,
-      "default": "shièd lú",
+      "default": "shièd lu",
       "candidates": [
         "shièd lú",
         "shièd lu"
@@ -9405,7 +9441,7 @@
     {
       "han": "鬢角",
       "freq": 2,
-      "default": "bǐn góo",
+      "default": "bîn góo",
       "candidates": [
         "bǐn góo",
         "bîn góo"
@@ -9450,7 +9486,7 @@
     {
       "han": "默默",
       "freq": 2,
-      "default": "hḿ hḿ",
+      "default": "hm̂ hm̂",
       "candidates": [
         "hḿ hḿ",
         "hm̂ hm̂"
@@ -9468,7 +9504,7 @@
     {
       "han": "𣻸𣻸",
       "freq": 2,
-      "default": "siòng siòng",
+      "default": "siònn siònn",
       "candidates": [
         "siòng siòng",
         "siònn siònn"
@@ -10116,7 +10152,7 @@
     {
       "han": "供蛇食雞",
       "freq": 1,
-      "default": "giǔng shà shièd gě",
+      "default": "gǔng shà shièd gě",
       "candidates": [
         "giǔng shà shièd gě",
         "gǔng shà shièd gě"
@@ -10258,15 +10294,6 @@
       ]
     },
     {
-      "han": "勸話",
-      "freq": 1,
-      "default": "kuên bba",
-      "candidates": [
-        "kuên bba",
-        "kiên bba"
-      ]
-    },
-    {
       "han": "召見",
       "freq": 1,
       "default": "zhiôo giên",
@@ -10368,7 +10395,7 @@
     {
       "han": "夾髀",
       "freq": 1,
-      "default": "giàb bî",
+      "default": "giáb bî",
       "candidates": [
         "giàb bî",
         "giáb bî"
@@ -10404,7 +10431,7 @@
     {
       "han": "完福",
       "freq": 1,
-      "default": "bbièn fú",
+      "default": "bbàn fú",
       "candidates": [
         "bbièn fú",
         "bbàn fú"
@@ -10501,15 +10528,6 @@
       ]
     },
     {
-      "han": "愛使",
-      "freq": 1,
-      "default": "ôi sû",
-      "candidates": [
-        "ôi sû",
-        "â sû"
-      ]
-    },
-    {
       "han": "懊",
       "freq": 1,
       "default": "âu",
@@ -10539,7 +10557,7 @@
     {
       "han": "手指縫",
       "freq": 1,
-      "default": "shiû zhǐ pung",
+      "default": "shiû zhî pung",
       "candidates": [
         "shiû zhǐ pung",
         "shiû zhî pung"
@@ -10548,7 +10566,7 @@
     {
       "han": "手指腡",
       "freq": 1,
-      "default": "shiû zhî lòo",
+      "default": "shiû zhǐ lòo",
       "candidates": [
         "shiû zhî lòo",
         "shiû zhǐ lòo"
@@ -10557,7 +10575,7 @@
     {
       "han": "打醮墓",
       "freq": 1,
-      "default": "dâ ziôo m̂",
+      "default": "dâ ziôo hḿ",
       "candidates": [
         "dâ ziôo m̂",
         "dâ ziôo hḿ"
@@ -10726,15 +10744,6 @@
       ]
     },
     {
-      "han": "榮榮",
-      "freq": 1,
-      "default": "bbìn bbìn",
-      "candidates": [
-        "bbìn bbìn",
-        "rhùng rhùng"
-      ]
-    },
-    {
       "han": "榻",
       "freq": 1,
       "default": "ta",
@@ -10881,7 +10890,7 @@
     {
       "han": "畚箕𢯭𣛮",
       "freq": 1,
-      "default": "bûn gǐ ten chang",
+      "default": "bûn gǐ tèn chang",
       "candidates": [
         "bûn gǐ ten chang",
         "bûn gǐ tèn chang"
@@ -10890,7 +10899,7 @@
     {
       "han": "疊磚子",
       "freq": 1,
-      "default": "tèeb zhěn zû",
+      "default": "tèeb zhěen zû",
       "candidates": [
         "tèeb zhěn zû",
         "tèeb zhěen zû"
@@ -10908,7 +10917,7 @@
     {
       "han": "眼綻綻",
       "freq": 1,
-      "default": "ngiên can can",
+      "default": "ngiên cân cân",
       "candidates": [
         "ngiên can can",
         "ngiên cân cân"
@@ -10935,7 +10944,7 @@
     {
       "han": "碾泥下",
       "freq": 1,
-      "default": "zân nì hǎ",
+      "default": "liên nì hǎ",
       "candidates": [
         "zân nì hǎ",
         "liên nì hǎ"
@@ -11086,15 +11095,6 @@
       ]
     },
     {
-      "han": "耕田人",
-      "freq": 1,
-      "default": "gǎng tèen ngìn",
-      "candidates": [
-        "gǎng tèen ngìn",
-        "gǐng tèen ngìn"
-      ]
-    },
-    {
       "han": "耿性",
       "freq": 1,
       "default": "guên sîn",
@@ -11187,7 +11187,7 @@
     {
       "han": "藕藕",
       "freq": 1,
-      "default": "niǎu niǎu",
+      "default": "niâu niâu",
       "candidates": [
         "niǎu niǎu",
         "niâu niâu"
@@ -11196,7 +11196,7 @@
     {
       "han": "蘆薈",
       "freq": 1,
-      "default": "lù fui",
+      "default": "lù fùi",
       "candidates": [
         "lù fui",
         "lù fùi"
@@ -11205,7 +11205,7 @@
     {
       "han": "蚡蟲",
       "freq": 1,
-      "default": "mûn chùng",
+      "default": "mǔn chùng",
       "candidates": [
         "mûn chùng",
         "mǔn chùng"
@@ -11259,7 +11259,7 @@
     {
       "han": "轉大人",
       "freq": 1,
-      "default": "zhên tai ngìn",
+      "default": "zhêen tai ngìn",
       "candidates": [
         "zhên tai ngìn",
         "zhêen tai ngìn"
@@ -11358,7 +11358,7 @@
     {
       "han": "金斗盎",
       "freq": 1,
-      "default": "gǐm dêu ǎng",
+      "default": "gǐm dêu âng",
       "candidates": [
         "gǐm dêu ǎng",
         "gǐm dêu âng"
@@ -11403,7 +11403,7 @@
     {
       "han": "長孫錢",
       "freq": 1,
-      "default": "zhông sǔn cièn",
+      "default": "chòng sǔn cièn",
       "candidates": [
         "zhông sǔn cièn",
         "chòng sǔn cièn"
@@ -11584,7 +11584,7 @@
     {
       "han": "盼",
       "freq": 0,
-      "default": "pân",
+      "default": "pan",
       "candidates": [
         "pân",
         "pan"
@@ -11665,7 +11665,7 @@
     {
       "han": "鼻ㄤㄤ",
       "freq": 0,
-      "default": "pinn ǎng ǎng",
+      "default": "pinn âng âng",
       "candidates": [
         "pinn ǎng ǎng",
         "pinn âng âng"
