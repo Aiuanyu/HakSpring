@@ -4,12 +4,12 @@
 
 const MANIFESTS = {
   macos: {
-    version: '0.0.5',
+    version: '0.0.6',
     downloadPageURL: 'https://hakspring.pages.dev/kipan/',
     // macOS 封測版目前為免簽章 .zip，省略 packageURL 讓使用者點通知後前往官網下載頁面
   },
   windows: {
-    version: '0.0.5',
+    version: '0.0.6',
     downloadPageURL: 'https://hakspring.pages.dev/kipan/',
   },
 };
