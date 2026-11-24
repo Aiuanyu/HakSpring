@@ -372,8 +372,13 @@
       this.nanLexicon = new Map();
       this.unigram = Object.create(null);
       this.bigram = Object.create(null);
+      this.ctxPrev = Object.create(null);
+      this.ctxNext = Object.create(null);
       this.learnedUnigram = Object.create(null);
+      this.learnedBigram = Object.create(null);
       this.learnedReadingCounts = new Map();
+      this.learnedCtxPrev = new Map();
+      this.learnedCtxNext = new Map();
       this.learnedCount = 0;
       this.totalTokens = 0;
       this.prefs = new Map();
@@ -552,6 +557,8 @@
 
       this.unigram = statsJson.unigram || Object.create(null);
       this.bigram = statsJson.bigram || Object.create(null);
+      this.ctxPrev = statsJson.ctx_prev || Object.create(null);
+      this.ctxNext = statsJson.ctx_next || Object.create(null);
       this.totalTokens = (statsJson.meta && statsJson.meta.total_tokens) || 1;
       for (const item of prefsJson.items || []) {
         this.prefs.set(item.han, item.default);
@@ -560,10 +567,13 @@
       this.ready = true;
     }
 
-    /** 從 localStorage 黃金語料即時學習斷詞權重、偏好讀音與自訂詞條 */
+    /** 從 localStorage / repo 黃金語料即時學習斷詞權重、Bigram 與上下文偏好讀音（區分 verified 初校 vs confirmed 專家確認） */
     applyVerifiedLearning(itemsOverride) {
       this.learnedUnigram = Object.create(null);
+      this.learnedBigram = Object.create(null);
       this.learnedReadingCounts = new Map();
+      this.learnedCtxPrev = new Map();
+      this.learnedCtxNext = new Map();
       this.learnedCount = 0;
 
       let list = itemsOverride;
@@ -576,6 +586,12 @@
       }
       if (!Array.isArray(list)) return;
 
+      const addCtxCount = (ctxMap, key, hppLower, w) => {
+        if (!ctxMap.has(key)) ctxMap.set(key, new Map());
+        const m = ctxMap.get(key);
+        m.set(hppLower, (m.get(hppLower) || 0) + w);
+      };
+
       const seenEntryKeys = new Set();
       const learnFromEntry = (entry) => {
         if (!entry || normalizeDialect(entry.dialect || 'xiien') !== this.dialect) return;
@@ -585,20 +601,40 @@
         if (seenEntryKeys.has(eKey)) return;
         seenEntryKeys.add(eKey);
         this.learnedCount++;
+
+        const tierWeight = entry.status === 'confirmed' ? 5 : 1;
+        let prevHan = '';
+        let prevHppLower = '';
+
         for (const tok of entry.tokens || []) {
-          if (tok.punct || tok.nonCjk || tok.comment || tok.uncertain) continue;
+          if (tok.punct || tok.nonCjk || tok.comment || tok.uncertain) {
+            prevHan = '';
+            prevHppLower = '';
+            continue;
+          }
           const han = (tok.han || '').trim();
           const hppLower = (tok.hpp || '').trim().toLowerCase();
-          if (!han || !hppLower || !CJK_CHAR_RE.test(han)) continue;
+          if (!han || !hppLower || !CJK_CHAR_RE.test(han)) {
+            prevHan = '';
+            prevHppLower = '';
+            continue;
+          }
 
           // 提升已校正詞條在 Viterbi 斷詞的權重
-          this.learnedUnigram[han] = (this.learnedUnigram[han] || 0) + 50;
+          this.learnedUnigram[han] = (this.learnedUnigram[han] || 0) + 50 * tierWeight;
 
           if (!this.learnedReadingCounts.has(han)) {
             this.learnedReadingCounts.set(han, new Map());
           }
           const rMap = this.learnedReadingCounts.get(han);
-          rMap.set(hppLower, (rMap.get(hppLower) || 0) + 1);
+          rMap.set(hppLower, (rMap.get(hppLower) || 0) + tierWeight);
+
+          if (prevHan) {
+            const biKey = `${prevHan}\t${han}`;
+            this.learnedBigram[biKey] = (this.learnedBigram[biKey] || 0) + 20 * tierWeight;
+            addCtxCount(this.learnedCtxPrev, biKey, hppLower, tierWeight);
+            addCtxCount(this.learnedCtxNext, biKey, prevHppLower, tierWeight);
+          }
 
           // 若原詞庫無此詞或無此讀音（例如自訂讀音／強制詞組），補入詞庫候選
           const existingCands = this.lexicon.get(han) || [];
@@ -606,6 +642,9 @@
             if (!this.lexicon.has(han)) this.lexicon.set(han, []);
             this.lexicon.get(han).push({ hpp: hppLower, trust: 'official', label: '黃金語料' });
           }
+
+          prevHan = han;
+          prevHppLower = hppLower;
         }
       };
 
@@ -614,7 +653,28 @@
       for (const entry of this.repoVerifiedItems || []) learnFromEntry(entry);
     }
 
-    _pickDefault(han, useNan = false, openBookMap = null) {
+    _pickContextRule(han, prevHan, nextHan, cands) {
+      const findCand = (hppTarget) => cands.find((c) => c.hpp.toLowerCase() === hppTarget.toLowerCase());
+      if (this.dialect === 'xiien') {
+        if (han === '著') {
+          if (/^[衫褲鞋帽裙襪被]/.test(nextHan)) {
+            const m = findCand('zòg');
+            if (m) return m;
+          }
+          if (/^(毋|無|寫|講|算|聽|猜|估)$/.test(prevHan) || /^(火|獎|驚|傷|緊)$/.test(nextHan)) {
+            const m = findCand('cog');
+            if (m) return m;
+          }
+          if (/^(看|睡|想|尋|買|食|行|企|坐|拿|抓|捉|聽|問|講|寫|等|寒|冷|熱|傷|打|撞|碰|跌|落|開|關|點|燒|對|摎)$/.test(prevHan)) {
+            const m = findCand('dò');
+            if (m) return m;
+          }
+        }
+      }
+      return null;
+    }
+
+    _pickDefault(han, useNan = false, openBookMap = null, prevHan = '', nextHan = '') {
       if (useNan && openBookMap && openBookMap.has(han)) {
         const obHpp = openBookMap.get(han);
         return {
@@ -629,7 +689,68 @@
       const cands = nanCands.length ? nanCands : (this.lexicon.get(han) || []);
       if (!cands.length) return { hpp: han, trust: 'oov', label: '未收錄', candidates: [], oov: true };
 
-      if (!useNan) {
+      if (!useNan && cands.length > 1) {
+        // 1. 黃金語料／專家上下文選音（Contextual Reading Bigram）
+        if (prevHan || nextHan) {
+          const ctxScores = new Map();
+          if (prevHan) {
+            const mPrev = this.learnedCtxPrev.get(`${prevHan}\t${han}`);
+            if (mPrev) {
+              for (const [hLower, w] of mPrev.entries()) {
+                ctxScores.set(hLower, (ctxScores.get(hLower) || 0) + w);
+              }
+            }
+          }
+          if (nextHan) {
+            const mNext = this.learnedCtxNext.get(`${han}\t${nextHan}`);
+            if (mNext) {
+              for (const [hLower, w] of mNext.entries()) {
+                ctxScores.set(hLower, (ctxScores.get(hLower) || 0) + w);
+              }
+            }
+          }
+          let bestCtxHpp = null;
+          let bestCtxScore = 0;
+          for (const [hLower, w] of ctxScores.entries()) {
+            if (w > bestCtxScore) {
+              bestCtxScore = w;
+              bestCtxHpp = hLower;
+            }
+          }
+          if (bestCtxHpp) {
+            const ctxMatch = cands.find((c) => c.hpp.toLowerCase() === bestCtxHpp);
+            if (ctxMatch) {
+              return { hpp: ctxMatch.hpp, trust: ctxMatch.trust, label: ctxMatch.label, candidates: cands, oov: false };
+            }
+          }
+        }
+
+        // 2. 高頻多音字語境規則
+        const ruleMatch = this._pickContextRule(han, prevHan, nextHan, cands);
+        if (ruleMatch) {
+          return { hpp: ruleMatch.hpp, trust: ruleMatch.trust, label: ruleMatch.label, candidates: cands, oov: false };
+        }
+
+        // 3. 詞典合成詞萃取之單字共現上下文
+        if (prevHan) {
+          const pChars = Array.from(prevHan);
+          const pLast = pChars[pChars.length - 1];
+          const dictPrevHpp = this.ctxPrev[`${pLast}\t${han}`];
+          if (dictPrevHpp) {
+            const m = cands.find((c) => c.hpp.toLowerCase() === dictPrevHpp.toLowerCase());
+            if (m) return { hpp: m.hpp, trust: m.trust, label: m.label, candidates: cands, oov: false };
+          }
+        }
+        if (nextHan) {
+          const nFirst = Array.from(nextHan)[0];
+          const dictNextHpp = this.ctxNext[`${han}\t${nFirst}`];
+          if (dictNextHpp) {
+            const m = cands.find((c) => c.hpp.toLowerCase() === dictNextHpp.toLowerCase());
+            if (m) return { hpp: m.hpp, trust: m.trust, label: m.label, candidates: cands, oov: false };
+          }
+        }
+
+        // 4. 黃金語料單詞最高頻讀音
         const learnedMap = this.learnedReadingCounts.get(han);
         if (learnedMap && learnedMap.size > 0) {
           let bestHpp = null;
@@ -653,6 +774,7 @@
             }
           }
         }
+        // 5. 各腔人工／互學偏好讀音表
         const pref = this.prefs.get(han);
         if (pref) {
           const match = cands.find((c) => c.hpp === pref);
@@ -695,7 +817,8 @@
             const topTrust = TRUST_RANK[cands[0].trust] || 1;
             const trustPenalty = topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5;
             const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + (hasOpenBook ? 500 : 0) + 0.5;
-            const bi = prevWord ? (this.bigram[`${prevWord}\t${w}`] || 0) : 0;
+            const biKey = prevWord ? `${prevWord}\t${w}` : '';
+            const bi = biKey ? ((this.bigram[biKey] || 0) + (this.learnedBigram[biKey] || 0)) : 0;
             const biBonus = bi > 0 ? 0.45 * mathLog(1 + bi) : 0;
             const cost =
               -mathLog(freq / (this.totalTokens + 0.5 * vocabSize)) - 1.6 * (len - 1) + trustPenalty - biBonus;
@@ -884,9 +1007,13 @@
           } else {
             let wordCpOffset = segCpOffset;
             const useNan = inParen && this.dialect === 'xiien';
-            for (const w of this.viterbiSegment(seg, useNan, openBookMap)) {
+            const segWords = this.viterbiSegment(seg, useNan, openBookMap);
+            for (let wi = 0; wi < segWords.length; wi++) {
+              const w = segWords[wi];
+              const prevHan = wi > 0 ? segWords[wi - 1] : '';
+              const nextHan = wi + 1 < segWords.length ? segWords[wi + 1] : '';
               const wCpLen = Array.from(w).length;
-              const picked = this._pickDefault(w, useNan, openBookMap);
+              const picked = this._pickDefault(w, useNan, openBookMap, prevHan, nextHan);
               let hpp = picked.hpp;
               const wasCap = !picked.oov && needCap;
               if (wasCap) {

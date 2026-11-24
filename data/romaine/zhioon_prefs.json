@@ -1,6 +1,6 @@
 {
   "dialect": "zhioon",
-  "total_polyphones": 1269,
+  "total_polyphones": 1277,
   "items": [
     {
       "han": "个",
@@ -16,7 +16,7 @@
       "freq": 2451,
       "default": "bbue",
       "candidates": [
-        "文fui",
+        "fui",
         "bbue"
       ]
     },
@@ -174,7 +174,7 @@
     {
       "han": "兩",
       "freq": 456,
-      "default": "liǒng",
+      "default": "liông",
       "candidates": [
         "liǒng",
         "liông"
@@ -192,8 +192,8 @@
     },
     {
       "han": "分",
-      "freq": 422,
-      "default": "fǔn",
+      "freq": 421,
+      "default": "bǔn",
       "candidates": [
         "bǔn",
         "fǔn",
@@ -217,6 +217,15 @@
       "candidates": [
         "gùi e",
         "gùi gâi"
+      ]
+    },
+    {
+      "han": "自家",
+      "freq": 392,
+      "default": "zǐ gǎ",
+      "candidates": [
+        "zǐ gǎ",
+        "cu gǎ"
       ]
     },
     {
@@ -325,7 +334,7 @@
     {
       "han": "毋使",
       "freq": 247,
-      "default": "m sû",
+      "default": "m̀ sû",
       "candidates": [
         "m sû",
         "m̀ sû",
@@ -885,15 +894,6 @@
       ]
     },
     {
-      "han": "擇",
-      "freq": 56,
-      "default": "too",
-      "candidates": [
-        "文too",
-        "too"
-      ]
-    },
-    {
       "han": "為",
       "freq": 55,
       "default": "bbùi",
@@ -1448,10 +1448,10 @@
     {
       "han": "整",
       "freq": 28,
-      "default": "白zhâng",
+      "default": "zhâng",
       "candidates": [
-        "白zhâng",
-        "文zhîn"
+        "zhâng",
+        "zhîn"
       ]
     },
     {
@@ -1652,6 +1652,15 @@
       ]
     },
     {
+      "han": "工程",
+      "freq": 22,
+      "default": "gǔng chàng",
+      "candidates": [
+        "gǔng chàng",
+        "gǔng chìn"
+      ]
+    },
+    {
       "han": "歷史",
       "freq": 22,
       "default": "lèd sû",
@@ -1686,6 +1695,16 @@
         "hǎ",
         "hà",
         "hád"
+      ]
+    },
+    {
+      "han": "毋成",
+      "freq": 21,
+      "default": "m̀ shàng",
+      "candidates": [
+        "m̀ shiàng",
+        "m̀ shàng",
+        "m̀ shìn"
       ]
     },
     {
@@ -1831,15 +1850,6 @@
       "candidates": [
         "céd chǎ",
         "séd chǎ"
-      ]
-    },
-    {
-      "han": "展",
-      "freq": 18,
-      "default": "白dêen",
-      "candidates": [
-        "白dêen",
-        "dêen"
       ]
     },
     {
@@ -2028,9 +2038,9 @@
     {
       "han": "裁",
       "freq": 16,
-      "default": "白còi",
+      "default": "còi",
       "candidates": [
-        "白còi",
+        "còi",
         "coi"
       ]
     },
@@ -2051,6 +2061,15 @@
         "nàm zû ngìn",
         "nàm zî ngìn",
         "nàm zîi ngìn"
+      ]
+    },
+    {
+      "han": "分家",
+      "freq": 15,
+      "default": "bǔn gǎ",
+      "candidates": [
+        "fǔn gǎ",
+        "bǔn gǎ"
       ]
     },
     {
@@ -2351,6 +2370,15 @@
       "candidates": [
         "fǔng",
         "hǎng"
+      ]
+    },
+    {
+      "han": "生命",
+      "freq": 13,
+      "default": "sǎng miang",
+      "candidates": [
+        "sěn miang",
+        "sǎng miang"
       ]
     },
     {
@@ -2779,15 +2807,6 @@
       ]
     },
     {
-      "han": "耕",
-      "freq": 11,
-      "default": "白gǎng",
-      "candidates": [
-        "白gǎng",
-        "文gǎng"
-      ]
-    },
-    {
       "han": "說",
       "freq": 11,
       "default": "shéd",
@@ -2804,16 +2823,6 @@
         "bǎu zû",
         "bǎu zî",
         "bǎu zîi"
-      ]
-    },
-    {
-      "han": "材",
-      "freq": 10,
-      "default": "cài",
-      "candidates": [
-        "文cài",
-        "白cài",
-        "cài"
       ]
     },
     {
@@ -3147,15 +3156,6 @@
       ]
     },
     {
-      "han": "糞",
-      "freq": 9,
-      "default": "bûn",
-      "candidates": [
-        "bûn",
-        "fûn"
-      ]
-    },
-    {
       "han": "耕種人",
       "freq": 9,
       "default": "gǎng zhûng ngìn",
@@ -3185,10 +3185,10 @@
     {
       "han": "追",
       "freq": 9,
-      "default": "白dǔi",
+      "default": "dǔi",
       "candidates": [
-        "白dǔi",
-        "文zǔi"
+        "dǔi",
+        "zǔi"
       ]
     },
     {
@@ -3720,6 +3720,15 @@
       "candidates": [
         "bî mèd",
         "bî mèed"
+      ]
+    },
+    {
+      "han": "糞",
+      "freq": 7,
+      "default": "bûn",
+      "candidates": [
+        "bûn",
+        "fûn"
       ]
     },
     {
@@ -4273,10 +4282,10 @@
     {
       "han": "更",
       "freq": 5,
-      "default": "白gǎng",
+      "default": "gǎng",
       "candidates": [
-        "白gǎng",
-        "文gên",
+        "gǎng",
+        "gên",
         "gěn"
       ]
     },
@@ -4321,6 +4330,16 @@
       ]
     },
     {
+      "han": "程度",
+      "freq": 5,
+      "default": "chìn tu",
+      "candidates": [
+        "tèn tu",
+        "chàng tu",
+        "chìn tu"
+      ]
+    },
+    {
       "han": "笑事",
       "freq": 5,
       "default": "siôo su",
@@ -4357,15 +4376,6 @@
       "candidates": [
         "léeb shèd",
         "léeb shèed"
-      ]
-    },
-    {
-      "han": "七層塔",
-      "freq": 5,
-      "default": "cíd cèn téb",
-      "candidates": [
-        "cíd cèn téb",
-        "cièn téb 「七層」合音"
       ]
     },
     {
@@ -4776,10 +4786,10 @@
     {
       "han": "符",
       "freq": 5,
-      "default": "文fù",
+      "default": "fù",
       "candidates": [
-        "文fù",
-        "白pù"
+        "fù",
+        "pù"
       ]
     },
     {
@@ -5378,6 +5388,15 @@
       ]
     },
     {
+      "han": "平等",
+      "freq": 4,
+      "default": "piàng dên",
+      "candidates": [
+        "pìn dên",
+        "piàng dên"
+      ]
+    },
+    {
       "han": "後悔",
       "freq": 4,
       "default": "heu fuê",
@@ -5762,6 +5781,15 @@
       "candidates": [
         "gǎng tèen ngìn",
         "gǐng tèen ngìn"
+      ]
+    },
+    {
+      "han": "耕耘",
+      "freq": 4,
+      "default": "gǎng bbùn",
+      "candidates": [
+        "gǎng bbùn",
+        "giěn bbùn"
       ]
     },
     {
@@ -7882,6 +7910,15 @@
       ]
     },
     {
+      "han": "分組",
+      "freq": 2,
+      "default": "fǔn zǔ",
+      "candidates": [
+        "fǔn zǔ",
+        "bǔn zǔ"
+      ]
+    },
+    {
       "han": "划飯",
       "freq": 2,
       "default": "pà pon",
@@ -8944,6 +8981,15 @@
       ]
     },
     {
+      "han": "糞堆",
+      "freq": 2,
+      "default": "bûn dǔi",
+      "candidates": [
+        "bûn dǔi",
+        "fûn dǔi"
+      ]
+    },
+    {
       "han": "紙膏个",
       "freq": 2,
       "default": "zhî gòo ě",
@@ -9058,15 +9104,6 @@
       "candidates": [
         "lâu siâ",
         "loo siâ"
-      ]
-    },
-    {
-      "han": "蔫去",
-      "freq": 2,
-      "default": "leen kǔi",
-      "candidates": [
-        "leen kǔi",
-        "lien kǔi"
       ]
     },
     {
@@ -9614,16 +9651,6 @@
         "ziâng dê guâi zû",
         "ziâng dê guâi zî",
         "ziâng dê guâi zîi"
-      ]
-    },
-    {
-      "han": "人公子",
-      "freq": 1,
-      "default": "ngìn gǔng zû",
-      "candidates": [
-        "ngìn gǔng zû",
-        "ngìn gǔng zî",
-        "ngìn gǔng zîi"
       ]
     },
     {
@@ -10255,6 +10282,24 @@
       "candidates": [
         "chíd ngièd",
         "chúd ngièd"
+      ]
+    },
+    {
+      "han": "分班",
+      "freq": 1,
+      "default": "fǔn bǎn",
+      "candidates": [
+        "fǔn bǎn",
+        "bǔn bǎn"
+      ]
+    },
+    {
+      "han": "分香",
+      "freq": 1,
+      "default": "fǔn hiǒng",
+      "candidates": [
+        "fǔn hiǒng",
+        "bǔn hiǒng"
       ]
     },
     {
@@ -11482,6 +11527,16 @@
       ]
     },
     {
+      "han": "人公子",
+      "freq": 0,
+      "default": "ngìn gǔng zû",
+      "candidates": [
+        "ngìn gǔng zû",
+        "ngìn gǔng zî",
+        "ngìn gǔng zîi"
+      ]
+    },
+    {
       "han": "真事",
       "freq": 0,
       "default": "zhǐn si",
@@ -11609,6 +11664,15 @@
       ]
     },
     {
+      "han": "耕田又耕埔，做到兩頭烏",
+      "freq": 0,
+      "default": "gǎng tèen rhiu gǎng bǔ ， zôo dôo liông tèu bbǔ",
+      "candidates": [
+        "gǎng tèen rhiu gǎng bǔ ， zôo dôo liông tèu bbǔ",
+        "giěn tèn rhiu giěn bǔ ， zô dô liông tèu bbǔ"
+      ]
+    },
+    {
       "han": "脾",
       "freq": 0,
       "default": "bì",
@@ -11624,6 +11688,15 @@
       "candidates": [
         "fû",
         "fu"
+      ]
+    },
+    {
+      "han": "自家人",
+      "freq": 0,
+      "default": "zǐ gǎ ngìn",
+      "candidates": [
+        "zǐ gǎ ngìn",
+        "cu gǎ ngìn"
       ]
     },
     {

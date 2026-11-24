@@ -113,7 +113,12 @@ def clean_hpp_variants(raw: str) -> list[str]:
         for c in combos:
             out.append(" ".join(c))
 
-    note_split_re = re.compile(r"(又俗音|又讀|又音|俗音|特殊音|特)")
+    drop_notes_re = re.compile(
+        r"(?:小稱變調讀本調為|小稱變調讀|後字變調又讀|後字變調讀|為後字變調|後字變調為|後字變調|為新調值|之合音|合音讀|合音|本調為|詞目刪除|七層|分佢|為)"
+    )
+    s = drop_notes_re.sub(" ", s)
+    s = re.sub(r"^\s*\d+[.．、]\s*", "", s)
+    note_split_re = re.compile(r"(又俗音|又讀|又音|俗音|特殊音|特|又|文|白)")
     for slash_chunk in re.split(r"\s+/\s+", s):
         for i, piece in enumerate(note_split_re.split(slash_chunk)):
             part = re.sub(r"\s+", " ", piece).strip()
@@ -322,12 +327,14 @@ def collect_seed_preferences(cdm_index: dict[str, dict[int, str]]):
         with open(xiien_ov_path, "r", encoding="utf-8") as f:
             xiien_overrides = json.load(f).get("overrides", {})
 
-    # 2. 黃金語料 verified_sentences.json（統計實際人工選用的 (han, hpp)）
+    # 2. 黃金語料 verified_sentences.json（僅 confirmed 專家確認資料納入跨腔互學種子，verified 初校僅留本腔）
     gold_counts: dict[str, dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
     gold_path = os.path.join(ROOT, "data", "romaine", "verified_sentences.json")
     if os.path.exists(gold_path):
         with open(gold_path, "r", encoding="utf-8") as f:
             for item in json.load(f).get("items", []):
+                if item.get("status") != "confirmed":
+                    continue
                 d = item.get("dialect", "xiien")
                 d = DIALECT_ALIASES.get(d, d)
                 for tok in item.get("tokens", []):
@@ -338,11 +345,9 @@ def collect_seed_preferences(cdm_index: dict[str, dict[int, str]]):
                     if han and hpp:
                         gold_counts[d][han][hpp] += 1
 
-    # 將四縣 overrides 與各腔黃金語料對回各自的 link_id（gip:Gxxxx / cert:級:編號）
-    for src_d in ("xiien", "zhioon"):
-        if src_d not in DIALECT_SOURCES:
-            continue
-        _, _, _, _, src_links, = build_lexicon(src_d, cdm_index)
+    # 將四縣 overrides 與 confirmed 專家黃金語料對回各自的 link_id（gip:Gxxxx / cert:級:編號）
+    for src_d in DIALECT_SOURCES:
+        _, _, _, _, src_links = build_lexicon(src_d, cdm_index)
         for (han, hpp), links in src_links.items():
             score = 0.0
             if src_d == "xiien" and han in xiien_overrides:
@@ -355,6 +360,51 @@ def collect_seed_preferences(cdm_index: dict[str, dict[int, str]]):
                     seed_links[(han, lid)] += score
 
     return seed_links
+
+
+def build_context_readings(
+    lexicon: dict[str, list[str]],
+    poly_defaults: dict[str, str],
+) -> tuple[dict[str, str], dict[str, str]]:
+    """從本腔多字合成詞（2～4 字）萃取單字多音詞的「前字/後字共現讀音」知識。"""
+    prev_counts: dict[str, Counter] = defaultdict(Counter)
+    next_counts: dict[str, Counter] = defaultdict(Counter)
+
+    poly_chars = {h for h, rs in lexicon.items() if len(h) == 1 and len(rs) > 1}
+    char_valid_hpps = {h: {r.lower(): r for r in lexicon[h]} for h in poly_chars}
+
+    for word, readings in lexicon.items():
+        wlen = len(word)
+        if wlen < 2 or wlen > 4:
+            continue
+        hpp = poly_defaults.get(word, readings[0])
+        syls = hpp.split()
+        if len(syls) != wlen:
+            continue
+        for idx, ch in enumerate(word):
+            if ch not in poly_chars:
+                continue
+            syl_lower = syls[idx].lower()
+            if syl_lower not in char_valid_hpps[ch]:
+                continue
+            canon_hpp = char_valid_hpps[ch][syl_lower]
+            if idx > 0:
+                prev_ch = word[idx - 1]
+                prev_counts[f"{prev_ch}\t{ch}"][canon_hpp] += 1
+            if idx + 1 < wlen:
+                next_ch = word[idx + 1]
+                next_counts[f"{ch}\t{next_ch}"][canon_hpp] += 1
+
+    def finalize(tbl: dict[str, Counter]) -> dict[str, str]:
+        out = {}
+        for k, cnt in tbl.items():
+            total = sum(cnt.values())
+            best_hpp, best_c = cnt.most_common(1)[0]
+            if total > 0 and best_c / total >= 0.75:
+                out[k] = best_hpp
+        return out
+
+    return finalize(prev_counts), finalize(next_counts)
 
 
 def build_for_dialect(
@@ -378,30 +428,6 @@ def build_for_dialect(
     out_dir = os.path.join(ROOT, "data", "romaine")
     os.makedirs(out_dir, exist_ok=True)
 
-    pruned_uni = {k: v for k, v in unigram.items() if v >= 1}
-    pruned_bi = {k: v for k, v in bigram.items() if v >= min_bigram}
-
-    stats_path = os.path.join(out_dir, f"{dialect}_stats.json")
-    with open(stats_path, "w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "dialect": dialect,
-                "meta": {
-                    "raw_rows": raw_rows,
-                    "sentences": len(sentences),
-                    "chunks": chunk_count,
-                    "lexicon_words": len(lexicon),
-                    "total_tokens": sum(unigram.values()),
-                    "unique_unigrams": len(pruned_uni),
-                    "unique_bigrams": len(pruned_bi),
-                },
-                "unigram": pruned_uni,
-                "bigram": pruned_bi,
-            },
-            f,
-            ensure_ascii=False,
-        )
-
     # 載入本腔人工校對覆寫表（若有）
     overrides_path = os.path.join(out_dir, f"{dialect}_prefs_overrides.json")
     overrides = {}
@@ -411,6 +437,7 @@ def build_for_dialect(
 
     # 多讀音詞條：1) 本腔人工 override > 2) 跨腔同形同義詞偏好遷移 > 3) 認證詞庫優先 > 4) 原序
     polyphones = []
+    poly_defaults: dict[str, str] = {}
     transferred_count = 0
     for han, readings in lexicon.items():
         if len(readings) > 1:
@@ -434,6 +461,7 @@ def build_for_dialect(
                 default_hpp = best_hpp
                 if has_seed:
                     transferred_count += 1
+            poly_defaults[han] = default_hpp
             entry = {
                 "han": han,
                 "freq": unigram.get(han, 0),
@@ -443,7 +471,50 @@ def build_for_dialect(
             if ov.get("note"):
                 entry["note"] = ov["note"]
             polyphones.append(entry)
+    # 若人工覆寫表指定的詞條僅收於補字典（不在官方 gip/cert 詞庫），仍寫入 prefs 供前端偏好套用
+    for ov_han, ov in overrides.items():
+        if ov.get("default") and ov_han not in poly_defaults:
+            poly_defaults[ov_han] = ov["default"]
+            entry = {
+                "han": ov_han,
+                "freq": unigram.get(ov_han, 0),
+                "default": ov["default"],
+                "candidates": [ov["default"]],
+            }
+            if ov.get("note"):
+                entry["note"] = ov["note"]
+            polyphones.append(entry)
     polyphones.sort(key=lambda x: (-x["freq"], -len(x["candidates"]), x["han"]))
+
+    ctx_prev, ctx_next = build_context_readings(lexicon, poly_defaults)
+
+    pruned_uni = {k: v for k, v in unigram.items() if v >= 1}
+    pruned_bi = {k: v for k, v in bigram.items() if v >= min_bigram}
+
+    stats_path = os.path.join(out_dir, f"{dialect}_stats.json")
+    with open(stats_path, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "dialect": dialect,
+                "meta": {
+                    "raw_rows": raw_rows,
+                    "sentences": len(sentences),
+                    "chunks": chunk_count,
+                    "lexicon_words": len(lexicon),
+                    "total_tokens": sum(unigram.values()),
+                    "unique_unigrams": len(pruned_uni),
+                    "unique_bigrams": len(pruned_bi),
+                    "unique_ctx_prev": len(ctx_prev),
+                    "unique_ctx_next": len(ctx_next),
+                },
+                "unigram": pruned_uni,
+                "bigram": pruned_bi,
+                "ctx_prev": ctx_prev,
+                "ctx_next": ctx_next,
+            },
+            f,
+            ensure_ascii=False,
+        )
 
     prefs_path = os.path.join(out_dir, f"{dialect}_prefs.json")
     with open(prefs_path, "w", encoding="utf-8") as f:
@@ -461,7 +532,8 @@ def build_for_dialect(
     print(
         f"[{dialect}] rows={raw_rows}, sentences={len(sentences)}, "
         f"lexicon={len(lexicon)}, polyphones={len(polyphones)} (seed_transferred={transferred_count}), "
-        f"unigrams={len(pruned_uni)}, bigrams(>={min_bigram})={len(pruned_bi)}"
+        f"unigrams={len(pruned_uni)}, bigrams(>={min_bigram})={len(pruned_bi)}, "
+        f"ctx_prev={len(ctx_prev)}, ctx_next={len(ctx_next)}"
     )
     print(f"Wrote: {stats_path}")
     print(f"Wrote: {prefs_path}")
