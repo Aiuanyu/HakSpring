@@ -1453,6 +1453,26 @@
       return isCap && s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
     }
 
+    _stripToneMarks(syl) {
+      return String(syl || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .normalize('NFC');
+    }
+
+    _isRaopingSylCompatible(zhukSyl, subSyl, targetSub) {
+      if (!zhukSyl || !subSyl) return false;
+      const derivedBase = this._stripToneMarks(this._deriveRaopingSubSyl(zhukSyl, targetSub));
+      const subBase = this._stripToneMarks(subSyl);
+      if (derivedBase === subBase) return true;
+      // 容許部分韻母微調（如 rh->零、i->ii、er->e 等），但至少入聲屬性與主要聲母不能完全無關
+      const zStop = /[bdpt]$/.test(derivedBase) || (/[gk]$/.test(derivedBase) && !derivedBase.endsWith('ng'));
+      const sStop = /[bdpt]$/.test(subBase) || (/[gk]$/.test(subBase) && !subBase.endsWith('ng'));
+      if (zStop !== sStop) return false;
+      return derivedBase.charAt(0) === subBase.charAt(0);
+    }
+
     _resolveRaopingSubHpp(han, zhukHpp, targetSub) {
       if (!han || !zhukHpp) return { hpp: zhukHpp, trust: 'official' };
       const first = zhukHpp.charAt(0);
@@ -1463,16 +1483,49 @@
       };
 
       const subLex = targetSub === 'zhuolan' ? this.zhuolanLexicon : this.taoyuanLexicon;
-      const cands = subLex && subLex.get(han);
-      if (cands && cands.length > 0) {
-        // 若有完全對應且 trust 為 official 優先
-        const off = cands.find((c) => c.trust === 'official') || cands[0];
-        return { hpp: applyCap(off.hpp), trust: off.trust };
-      }
-
       const charMap = targetSub === 'zhuolan' ? this.zhuolanCharMap : this.taoyuanCharMap;
       const chars = Array.from(han).filter((c) => CJK_CHAR_RE.test(c));
       const syls = zhukHpp.trim().split(/\s+/).filter(Boolean);
+
+      // 單字詞優先以 (字, 新竹音節) 精準對照，避免多音字（如 毒 tug / téu）被別音覆蓋
+      if (chars.length === 1 && syls.length === 1) {
+        const mapKey = `${chars[0]}\t${syls[0].toLowerCase()}`;
+        const mapped = charMap && charMap.get(mapKey);
+        if (mapped) {
+          return { hpp: applyCap(mapped), trust: 'official' };
+        }
+        const cands = (subLex && subLex.get(han)) || [];
+        const compat = cands.filter((c) => this._isRaopingSylCompatible(syls[0], c.hpp, targetSub));
+        if (compat.length > 0) {
+          const off = compat.find((c) => c.trust === 'official') || compat[0];
+          return { hpp: applyCap(off.hpp), trust: off.trust };
+        }
+        return { hpp: applyCap(this._deriveRaopingSubSyl(syls[0], targetSub)), trust: 'supp-derived' };
+      }
+
+      const cands = subLex && subLex.get(han);
+      if (cands && cands.length > 0 && syls.length > 0) {
+        // 多字詞挑選與當前新竹音節最相容的候選
+        let bestCand = null;
+        let bestScore = 0;
+        for (const c of cands) {
+          const cSyls = (c.hpp || '').trim().split(/\s+/).filter(Boolean);
+          if (cSyls.length !== syls.length) continue;
+          let score = 0;
+          for (let k = 0; k < syls.length; k++) {
+            if (this._isRaopingSylCompatible(syls[k], cSyls[k], targetSub)) score++;
+          }
+          if (c.trust === 'official') score += 0.1;
+          if (score > bestScore) {
+            bestScore = score;
+            bestCand = c;
+          }
+        }
+        if (bestCand && bestScore >= 1) {
+          return { hpp: applyCap(bestCand.hpp), trust: bestCand.trust };
+        }
+      }
+
       if (chars.length !== syls.length) {
         return {
           hpp: applyCap(syls.map((sy) => this._deriveRaopingSubSyl(sy, targetSub)).join(' ')),
@@ -1487,10 +1540,9 @@
         const mapKey = `${ch}\t${sy.toLowerCase()}`;
         let mapped = charMap && charMap.get(mapKey);
         if (!mapped) {
-          const singleCands = subLex && subLex.get(ch);
-          if (singleCands && singleCands.length > 0) {
-            mapped = singleCands[0].hpp;
-          }
+          const singleCands = (subLex && subLex.get(ch)) || [];
+          const compat = singleCands.find((c) => this._isRaopingSylCompatible(sy, c.hpp, targetSub));
+          if (compat) mapped = compat.hpp;
         }
         if (mapped) {
           const wasUpper = sy.charAt(0) !== sy.charAt(0).toLowerCase();
