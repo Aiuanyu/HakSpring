@@ -91,7 +91,7 @@
     },
     {
       "han": "下",
-      "freq": 723,
+      "freq": 750,
       "default": "hǎ",
       "candidates": [
         "ha",
@@ -229,22 +229,22 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 387,
+      "default": "hàng",
+      "candidates": [
+        "hàng",
+        "hen",
+        "hòng"
+      ]
+    },
+    {
       "han": "哦",
       "freq": 368,
       "default": "ǒ",
       "candidates": [
         "ǒ",
         "ô"
-      ]
-    },
-    {
-      "han": "行",
-      "freq": 353,
-      "default": "hàng",
-      "candidates": [
-        "hàng",
-        "hen",
-        "hòng"
       ]
     },
     {
@@ -380,7 +380,7 @@
     },
     {
       "han": "尋",
-      "freq": 192,
+      "freq": 195,
       "default": "cìm",
       "candidates": [
         "cim",
@@ -4290,6 +4290,16 @@
       ]
     },
     {
+      "han": "棋子",
+      "freq": 5,
+      "default": "kì zû",
+      "candidates": [
+        "kì zû",
+        "kì zî",
+        "kì zîi"
+      ]
+    },
+    {
       "han": "洗腰子",
       "freq": 5,
       "default": "sê rhiǒo zû",
@@ -5069,16 +5079,6 @@
         "gîn ci tèn",
         "gîn cu tèn",
         "gîn cii tèn"
-      ]
-    },
-    {
-      "han": "棋子",
-      "freq": 4,
-      "default": "kì zû",
-      "candidates": [
-        "kì zû",
-        "kì zî",
-        "kì zîi"
       ]
     },
     {

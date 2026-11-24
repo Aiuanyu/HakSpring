@@ -283,6 +283,16 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 458,
+      "default": "hǎng",
+      "candidates": [
+        "hǎng",
+        "hen",
+        "hǒng"
+      ]
+    },
+    {
       "han": "話",
       "freq": 452,
       "default": "va",
@@ -307,16 +317,6 @@
       "candidates": [
         "zùng",
         "zung"
-      ]
-    },
-    {
-      "han": "行",
-      "freq": 416,
-      "default": "hǎng",
-      "candidates": [
-        "hǎng",
-        "hen",
-        "hǒng"
       ]
     },
     {

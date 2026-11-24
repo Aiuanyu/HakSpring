@@ -286,6 +286,16 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 460,
+      "default": "hang",
+      "candidates": [
+        "hang",
+        "hén",
+        "hong"
+      ]
+    },
+    {
       "han": "話",
       "freq": 447,
       "default": "vá",
@@ -302,16 +312,6 @@
       "candidates": [
         "ti",
         "teté"
-      ]
-    },
-    {
-      "han": "行",
-      "freq": 422,
-      "default": "hang",
-      "candidates": [
-        "hang",
-        "hén",
-        "hong"
       ]
     },
     {
@@ -1026,6 +1026,15 @@
       ]
     },
     {
+      "han": "食飽",
+      "freq": 67,
+      "default": "shed bàu",
+      "candidates": [
+        "shed bàu",
+        "shid bàu"
+      ]
+    },
+    {
       "han": "核",
       "freq": 66,
       "default": "fud",
@@ -1445,15 +1454,6 @@
       "candidates": [
         "gò kiù",
         "gò hiù"
-      ]
-    },
-    {
-      "han": "食飽",
-      "freq": 44,
-      "default": "shed bàu",
-      "candidates": [
-        "shed bàu",
-        "shid bàu"
       ]
     },
     {
@@ -2106,15 +2106,6 @@
       ]
     },
     {
-      "han": "食飽夜",
-      "freq": 23,
-      "default": "shed bàu rhiá",
-      "candidates": [
-        "shed bàu rhiá",
-        "shid bàu rhiá"
-      ]
-    },
-    {
       "han": "衰",
       "freq": 22,
       "default": "sǒi",
@@ -2760,16 +2751,6 @@
         "vín túng fúi",
         "rhiún túng fúi",
         "vínrhiún túng fúi"
-      ]
-    },
-    {
-      "han": "隔壁鄰舍",
-      "freq": 15,
-      "default": "gàg biàg lin sháshà",
-      "candidates": [
-        "gàg biàg lin shá",
-        "gàg biàg lin shà",
-        "gàg biàg lin sháshà"
       ]
     },
     {
@@ -10398,6 +10379,16 @@
       ]
     },
     {
+      "han": "隔壁鄰舍",
+      "freq": 0,
+      "default": "gàg biàg lin sháshà",
+      "candidates": [
+        "gàg biàg lin shá",
+        "gàg biàg lin shà",
+        "gàg biàg lin sháshà"
+      ]
+    },
+    {
       "han": "□擺",
       "freq": 0,
       "default": "giá bài",
@@ -10575,6 +10566,15 @@
       "candidates": [
         "shed lùg",
         "shid lùg"
+      ]
+    },
+    {
+      "han": "食飽夜",
+      "freq": 0,
+      "default": "shed bàu rhiá",
+      "candidates": [
+        "shed bàu rhiá",
+        "shid bàu rhiá"
       ]
     }
   ]
