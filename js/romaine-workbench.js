@@ -10,7 +10,26 @@
   'use strict';
 
   const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
+  const RAOPING_TRACKS_KEY = 'romaineRaopingTracks';
   const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
+
+  function loadRaopingTracks() {
+    const valid = new Set(['zhuk', 'zhuolan', 'taoyuan']);
+    try {
+      const raw = JSON.parse(localStorage.getItem(RAOPING_TRACKS_KEY) || '["zhuk"]');
+      if (Array.isArray(raw)) {
+        const filtered = raw.filter((k) => valid.has(k));
+        if (filtered.length > 0) return filtered;
+      }
+    } catch {}
+    return ['zhuk'];
+  }
+
+  function saveRaopingTracks(tracks) {
+    try {
+      localStorage.setItem(RAOPING_TRACKS_KEY, JSON.stringify(tracks));
+    } catch {}
+  }
 
   const DIALECT_OPTIONS = [
     { key: 'xiien', label: '四縣' },
@@ -62,6 +81,8 @@
   let statusEl = null;
   let localCountEl = null;
   let importFileEl = null;
+  let raopingBarEl = null;
+  let raopingTracks = loadRaopingTracks();
 
   function normDialect(d) {
     if (DIALECT_NAME_TO_KEY[d]) return DIALECT_NAME_TO_KEY[d];
@@ -125,6 +146,13 @@
         <label class="wb-check"><input type="checkbox" id="wbSandhiToggle" checked /> 變調色</label>
       </div>
 
+      <div class="wb-raoping-bar" id="wbRaopingBar" style="display:none;">
+        <span class="wb-raoping-title">饒平地區：</span>
+        <label class="wb-raoping-chip"><input type="checkbox" value="zhuk" /><span class="variant-label variant-label-竹">竹</span>新竹</label>
+        <label class="wb-raoping-chip"><input type="checkbox" value="zhuolan" /><span class="variant-label variant-label-卓">卓</span>卓蘭</label>
+        <label class="wb-raoping-chip"><input type="checkbox" value="taoyuan" /><span class="variant-label variant-label-桃">桃</span>桃園</label>
+      </div>
+
       <div class="wb-section">
         <textarea id="wbInputHan" rows="3" placeholder="輸入客話漢字，或點左側例句「✎」載入校對…&#10;控制符：- 強制連詞 / = 加連字號 / + 斷開 / ~ 或 # 不變調 / %%註解%%"></textarea>
         <div class="wb-input-actions">
@@ -176,6 +204,30 @@
     statusEl = document.getElementById('wbStatusLine');
     localCountEl = document.getElementById('wbLocalCountBadge');
     importFileEl = document.getElementById('wbImportFile');
+    raopingBarEl = document.getElementById('wbRaopingBar');
+
+    if (raopingBarEl) {
+      const chks = Array.from(raopingBarEl.querySelectorAll('input[type="checkbox"]'));
+      const syncChks = () => {
+        chks.forEach((c) => {
+          c.checked = raopingTracks.includes(c.value);
+        });
+      };
+      syncChks();
+      chks.forEach((c) => {
+        c.addEventListener('change', () => {
+          const order = ['zhuk', 'zhuolan', 'taoyuan'];
+          const checked = chks.filter((x) => x.checked).map((x) => x.value);
+          if (!checked.length) {
+            c.checked = true;
+            return;
+          }
+          raopingTracks = order.filter((k) => checked.includes(k));
+          saveRaopingTracks(raopingTracks);
+          render();
+        });
+      });
+    }
 
     const savedJoin = localStorage.getItem('romanizerJoiningMode');
     if (savedJoin && ['none', 'hyphen', 'space'].includes(savedJoin)) {
@@ -259,6 +311,7 @@
     engine = eng;
     engineDialect = dk;
     if (dialectSel && dialectSel.value !== dk) dialectSel.value = dk;
+    if (raopingBarEl) raopingBarEl.style.display = dk === 'ngiaupin' ? 'flex' : 'none';
     setStatus(`${eng.dialectLabel || dk} 就緒`);
     return engine;
   }
@@ -390,6 +443,9 @@
     if (manualCharOverrides.size > 0 && prevPureCjk.length > 0) {
       manualCharOverrides = remapOverrides(prevPureCjk, manualCharOverrides, newPureCjk);
       applyOverridesToTokens(newTokens, manualCharOverrides);
+      if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+        engine.populateRaopingSubTokens(newTokens);
+      }
     }
     currentTokens = newTokens;
     prevPureCjk = newPureCjk;
@@ -398,7 +454,18 @@
 
   function getPlainJoinedOutput() {
     if (!engine || !currentTokens.length) return '';
-    return engine.formatTokensToHpp(currentTokens, joinSel ? joinSel.value : 'none');
+    const mode = joinSel ? joinSel.value : 'none';
+    if (engineDialect === 'ngiaupin') {
+      const tracks = raopingTracks.length ? raopingTracks : ['zhuk'];
+      if (tracks.length === 1) {
+        return engine.formatTokensToHppForVariant(currentTokens, mode, tracks[0]);
+      }
+      const lbl = { zhuk: '竹', zhuolan: '卓', taoyuan: '桃' };
+      return tracks
+        .map((t) => `[${lbl[t]}] ${engine.formatTokensToHppForVariant(currentTokens, mode, t)}`)
+        .join('\n');
+    }
+    return engine.formatTokensToHpp(currentTokens, mode);
   }
 
   function toggleTokenCase(tokIdx) {
@@ -410,6 +477,9 @@
       ? first.toLowerCase() + tok.hpp.slice(1)
       : first.toUpperCase() + tok.hpp.slice(1);
     recordTokenManualOverride(tokIdx, false, true);
+    if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+      engine.populateRaopingSubTokens([tok]);
+    }
     render();
   }
 
@@ -460,6 +530,9 @@
             }
             tok.hpp = curSyls.join(' ');
             recordTokenManualOverride(tokIdx, true, false);
+            if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+              engine.populateRaopingSubTokens([tok]);
+            }
             candPopupEl.style.display = 'none';
             render();
           });
@@ -479,6 +552,9 @@
           tok.label = c.label;
           tok.oov = false;
           recordTokenManualOverride(tokIdx, true, false);
+          if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+            engine.populateRaopingSubTokens([tok]);
+          }
           candPopupEl.style.display = 'none';
           render();
         });
@@ -554,7 +630,38 @@
     });
 
     const mode = joinSel ? joinSel.value : 'none';
-    if (sandhiChk && sandhiChk.checked) {
+    const useSandhi = Boolean(sandhiChk && sandhiChk.checked);
+    if (engineDialect === 'ngiaupin' && (raopingTracks.length > 1 || raopingTracks[0] !== 'zhuk')) {
+      const tracks = raopingTracks.length ? raopingTracks : ['zhuk'];
+      const meta = {
+        zhuk: { badge: '竹', cls: 'variant-label-竹', title: '新竹饒平（含 6 條連讀變調）' },
+        zhuolan: { badge: '卓', cls: 'variant-label-卓', title: '卓蘭饒平（本調，尚無官方變調規則）' },
+        taoyuan: { badge: '桃', cls: 'variant-label-桃', title: '桃園饒平（本調，尚無官方變調規則）' },
+      };
+      const italicUnverified =
+        window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getUnverifiedItalic === 'function'
+          ? window.RomaineAutoEngine.getUnverifiedItalic()
+          : true;
+      const rowsHtml = tracks
+        .map((t) => {
+          const m = meta[t];
+          let bodyHtml = '';
+          let noteHtml = '';
+          if (t === 'zhuk') {
+            bodyHtml = useSandhi
+              ? engine.formatTokensToSandhiHtml(currentTokens, mode)
+              : engine.formatTokensToHpp(currentTokens, mode);
+          } else {
+            bodyHtml = engine.formatTokensToVariantHtml(currentTokens, mode, t, italicUnverified);
+            if (useSandhi) {
+              noteHtml = '<span class="wb-no-sandhi-note" title="尚無官方卓蘭／桃園連讀變調規則">本調</span>';
+            }
+          }
+          return `<div class="wb-track-row"><span class="wb-track-badge"><span class="variant-label ${m.cls}" title="${m.title}">${m.badge}</span>${noteHtml}</span><span class="wb-track-text">${bodyHtml}</span></div>`;
+        })
+        .join('');
+      outputEl.innerHTML = `<div class="wb-track-list">${rowsHtml}</div>`;
+    } else if (useSandhi) {
       outputEl.innerHTML = engine.formatTokensToSandhiHtml(currentTokens, mode);
     } else {
       outputEl.textContent = engine.formatTokensToHpp(currentTokens, mode);

@@ -7692,3 +7692,88 @@ tr.romaine-row-editing td[data-label="例句"] {
     color: #5eead4;
   }
 }
+
+/* === 饒平竹／卓／桃三地區多軌顯示與開關 === */
+.wb-raoping-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+.wb-raoping-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+.wb-raoping-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--input-bg-color, #f8fafc);
+  font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
+}
+.wb-raoping-chip input {
+  margin: 0;
+  cursor: pointer;
+}
+.wb-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wb-track-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
+}
+.wb-track-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.wb-track-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.wb-track-text {
+  flex: 1;
+  min-width: 0;
+}
+.wb-no-sandhi-note {
+  font-size: 0.68rem;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.22);
+  color: #64748b;
+  font-family: sans-serif;
+}
+.wb-derived-word {
+  text-decoration: underline dotted rgba(2, 132, 199, 0.55);
+  text-underline-offset: 3px;
+}
+.wb-derived-word.is-italic {
+  font-style: italic;
+}
+@media (prefers-color-scheme: dark) {
+  .wb-raoping-title,
+  .wb-no-sandhi-note {
+    color: #94a3b8;
+  }
+  .wb-raoping-chip {
+    background: #0f172a;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+  .wb-derived-word {
+    text-decoration-color: rgba(56, 189, 248, 0.6);
+  }
+}

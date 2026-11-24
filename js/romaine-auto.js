@@ -278,6 +278,7 @@
     const idIdx = header.indexOf('編號');
     const sentIdx = header.indexOf('例句');
     const transIdx = header.indexOf('翻譯');
+    const noteIdx = header.indexOf('備註');
     if (hanIdx < 0 || hppIdx < 0) return [];
     const out = [];
     for (let i = 1; i < rows.length; i++) {
@@ -289,6 +290,7 @@
           id: idIdx >= 0 ? rows[i][idIdx] : '',
           sentence: sentIdx >= 0 ? rows[i][sentIdx] : '',
           translation: transIdx >= 0 ? rows[i][transIdx] : '',
+          note: noteIdx >= 0 ? rows[i][noteIdx] : '',
         });
       }
     }
@@ -370,6 +372,10 @@
       // Map<han, Array<{hpp: string, trust: string, label: string}>>
       this.lexicon = new Map();
       this.nanLexicon = new Map();
+      this.zhuolanLexicon = new Map();
+      this.taoyuanLexicon = new Map();
+      this.zhuolanCharMap = new Map();
+      this.taoyuanCharMap = new Map();
       this.unigram = Object.create(null);
       this.bigram = Object.create(null);
       this.ctxPrev = Object.create(null);
@@ -431,6 +437,10 @@
       this.sandhiCode = cfg.sandhiCode || cfg.kiong;
       this.lexicon = new Map();
       this.nanLexicon = new Map();
+      this.zhuolanLexicon = new Map();
+      this.taoyuanLexicon = new Map();
+      this.zhuolanCharMap = new Map();
+      this.taoyuanCharMap = new Map();
       this.prefs = new Map();
       this.certLevels = [];
 
@@ -438,6 +448,7 @@
       const certFiles = cfg.cert.map((c) => `${basePath}/${c.file}`);
       const suppFile = `${basePath}/${cfg.supp}`;
       const isSixian = targetDialect === 'xiien';
+      const isRaoping = targetDialect === 'ngiaupin';
 
       const [gipJson, certJsons, suppJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
         fetch(gipFile).then((r) => r.json()),
@@ -454,6 +465,30 @@
       this.reverseToneMap = (rtmJson && rtmJson.dialect_reverse_map) || rtmJson;
 
       const seen = new Map();
+      const zhuolanCharStats = new Map();
+      const taoyuanCharStats = new Map();
+      const addSubLex = (map, han, hpp, trust, label) => {
+        if (!han || !hpp) return;
+        if (!map.has(han)) map.set(han, []);
+        const list = map.get(han);
+        if (!list.some((c) => c.hpp.toLowerCase() === hpp.toLowerCase())) {
+          list.push({ hpp, trust, label });
+        }
+      };
+      const recordSubCharStats = (statsMap, mainHan, mainHpp, subHan, subHpp) => {
+        if (mainHan !== subHan) return;
+        const chars = Array.from(mainHan);
+        const mSyls = (mainHpp || '').trim().split(/\s+/).filter(Boolean);
+        const sSyls = (subHpp || '').trim().split(/\s+/).filter(Boolean);
+        if (chars.length !== mSyls.length || chars.length !== sSyls.length) return;
+        for (let k = 0; k < chars.length; k++) {
+          const key = `${chars[k]}\t${mSyls[k].toLowerCase()}`;
+          if (!statsMap.has(key)) statsMap.set(key, new Map());
+          const m = statsMap.get(key);
+          const sv = sSyls[k];
+          m.set(sv, (m.get(sv) || 0) + 1);
+        }
+      };
 
       // 1. 先收官方詞庫（教典、認證分開標記；兩邊皆有才顯示「教典/認證」）
       const addOfficial = (obj, srcName, preferNanBracket = false) => {
@@ -497,6 +532,74 @@
                   if (!this.nanLexicon.has(nh)) this.nanLexicon.set(nh, []);
                   if (!this.nanLexicon.get(nh).some((c) => c.hpp === item.hpp)) {
                     this.nanLexicon.get(nh).push({ hpp: item.hpp, trust: 'official', label: '認證·南' });
+                  }
+                }
+              }
+            }
+          }
+        }
+        if (isRaoping) {
+          for (const r of rows) {
+            const pMatch = (r.hpp || '').match(/【([^】]+)】/);
+            if (!pMatch) continue;
+            const mainHans = cleanHanVariants(r.han);
+            const mainHpps = cleanHppVariants(r.hpp);
+            const primaryMainHan = mainHans[0] || '';
+            const primaryMainHpp = mainHpps[0] ? mainHpps[0].hpp : '';
+
+            const hMatch = (r.han || '').match(/【([^】]+)】/);
+            const hInner = hMatch ? hMatch[1].trim() : '';
+            const pInner = pMatch[1].trim();
+
+            let zHanRaw = hInner || primaryMainHan;
+            let tHanRaw = hInner || primaryMainHan;
+            if (hInner.includes('／')) {
+              const hp = hInner.split('／');
+              zHanRaw = (hp[0] || '').trim();
+              tHanRaw = (hp[1] || '').trim();
+            }
+
+            let zHppRaw = pInner;
+            let tHppRaw = pInner;
+            if (pInner.includes('/')) {
+              const parts = pInner.split('/').map((s) => s.trim()).filter(Boolean);
+              const zHanLen = Array.from((cleanHanVariants(zHanRaw)[0] || primaryMainHan)).length;
+              const tHanLen = Array.from((cleanHanVariants(tHanRaw)[0] || primaryMainHan)).length;
+              if (
+                parts.length === 2 &&
+                parts[0].split(/\s+/).length === zHanLen &&
+                parts[1].split(/\s+/).length === tHanLen
+              ) {
+                zHppRaw = parts[0];
+                tHppRaw = parts[1];
+              }
+            }
+
+            const zHans = cleanHanVariants(zHanRaw);
+            const tHans = cleanHanVariants(tHanRaw);
+            const zHpps = cleanHppVariants(zHppRaw);
+            const tHpps = cleanHppVariants(tHppRaw);
+
+            for (const zh of zHans) {
+              const zLen = Array.from(zh).length;
+              for (const item of zHpps) {
+                if (item.hpp.split(' ').length === zLen) {
+                  addSubLex(this.zhuolanLexicon, zh, item.hpp, 'official', '認證·卓蘭');
+                  if (primaryMainHan && Array.from(primaryMainHan).length === zLen) {
+                    addSubLex(this.zhuolanLexicon, primaryMainHan, item.hpp, 'official', '認證·卓蘭');
+                    recordSubCharStats(zhuolanCharStats, primaryMainHan, primaryMainHpp, zh, item.hpp);
+                  }
+                }
+              }
+            }
+            for (const th of tHans) {
+              const tLen = Array.from(th).length;
+              for (const item of tHpps) {
+                if (item.hpp.split(' ').length === tLen) {
+                  addSubLex(this.taoyuanLexicon, th, item.hpp, 'official', '認證·桃園');
+                  if (primaryMainHan && Array.from(primaryMainHan).length === tLen) {
+                    addSubLex(this.taoyuanLexicon, primaryMainHan, item.hpp, 'official', '認證·桃園');
+                    recordSubCharStats(taoyuanCharStats, primaryMainHan, primaryMainHpp, th, item.hpp);
                   }
                 }
               }
@@ -550,9 +653,39 @@
           for (const item of hpps) {
             if (item.hpp.split(' ').length === hLen) {
               this._addCandidate(h, item.hpp, trust, label, seen);
+              if (isRaoping && r.note) {
+                const areaMatch = r.note.match(/腔內：([^；]+)/);
+                if (areaMatch) {
+                  const areas = areaMatch[1];
+                  if (areas.includes('卓蘭')) {
+                    addSubLex(this.zhuolanLexicon, h, item.hpp, 'supp-derived', '補字典·卓蘭');
+                  }
+                  if (areas.includes('桃園')) {
+                    addSubLex(this.taoyuanLexicon, h, item.hpp, 'supp-derived', '補字典·桃園');
+                  }
+                }
+              }
             }
           }
         }
+      }
+
+      if (isRaoping) {
+        const buildBestCharMap = (statsMap, outMap) => {
+          for (const [key, counts] of statsMap.entries()) {
+            let bestSyl = '';
+            let bestCnt = -1;
+            for (const [syl, cnt] of counts.entries()) {
+              if (cnt > bestCnt) {
+                bestCnt = cnt;
+                bestSyl = syl;
+              }
+            }
+            if (bestSyl) outMap.set(key, bestSyl);
+          }
+        };
+        buildBestCharMap(zhuolanCharStats, this.zhuolanCharMap);
+        buildBestCharMap(taoyuanCharStats, this.taoyuanCharMap);
       }
 
       this.unigram = statsJson.unigram || Object.create(null);
@@ -1131,7 +1264,127 @@
       }
       flushCjk();
       flushNonCjk();
+      if (this.dialect === 'ngiaupin') {
+        this.populateRaopingSubTokens(tokens);
+      }
       return tokens;
+    }
+
+    _deriveRaopingSubSyl(zhukSyl, targetSub) {
+      if (!zhukSyl) return zhukSyl;
+      const first = zhukSyl.charAt(0);
+      const isCap = first !== first.toLowerCase();
+      let s = zhukSyl.toLowerCase().normalize('NFC');
+
+      if (s === 'èr') {
+        const res = 'ê';
+        return isCap ? res.charAt(0).toUpperCase() + res.slice(1) : res;
+      }
+
+      // 聲母轉換
+      if (s.startsWith('zh') || s.startsWith('ch') || s.startsWith('sh')) {
+        s = s.charAt(0) + s.slice(2);
+      } else if (targetSub === 'taoyuan') {
+        if (s.startsWith('rh')) {
+          s = s.slice(2);
+        } else if (s.startsWith('v') && s.length > 1) {
+          s = s.slice(1);
+        }
+      }
+
+      // 舒聲調號轉換（非入聲尾）
+      const isStop = /[bdpt]$/i.test(s) || (/[gk]$/i.test(s) && !s.endsWith('ng'));
+      if (!isStop) {
+        const nfd = s.normalize('NFD');
+        const m = nfd.match(/[\u0301\u0300\u030C\u0302\u0304]/);
+        if (!m) {
+          // 55 (無符號) -> 53 (\u0300)
+          const chars = Array.from(s);
+          let vIdx = chars.findIndex((c) => /[aeo]/.test(c));
+          if (vIdx < 0) {
+            for (let i = chars.length - 1; i >= 0; i--) {
+              if (/[iu]/.test(chars[i])) {
+                vIdx = i;
+                break;
+              }
+            }
+          }
+          if (vIdx >= 0) {
+            chars[vIdx] = (chars[vIdx] + '\u0300').normalize('NFC');
+            s = chars.join('');
+          }
+        } else if (m[0] === '\u0300') {
+          // 53 (\u0300) -> 31 (\u0302)
+          s = nfd.replace('\u0300', '\u0302').normalize('NFC');
+        } else if (m[0] === '\u0301') {
+          // 24 (\u0301) -> 55 (無符號)
+          s = nfd.replace('\u0301', '').normalize('NFC');
+        }
+      }
+
+      return isCap && s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    }
+
+    _resolveRaopingSubHpp(han, zhukHpp, targetSub) {
+      if (!han || !zhukHpp) return { hpp: zhukHpp, trust: 'official' };
+      const first = zhukHpp.charAt(0);
+      const isCap = first !== first.toLowerCase();
+      const applyCap = (str) => {
+        if (!str) return str;
+        return isCap ? str.charAt(0).toUpperCase() + str.slice(1) : str;
+      };
+
+      const subLex = targetSub === 'zhuolan' ? this.zhuolanLexicon : this.taoyuanLexicon;
+      const cands = subLex && subLex.get(han);
+      if (cands && cands.length > 0) {
+        // 若有完全對應且 trust 為 official 優先
+        const off = cands.find((c) => c.trust === 'official') || cands[0];
+        return { hpp: applyCap(off.hpp), trust: off.trust };
+      }
+
+      const charMap = targetSub === 'zhuolan' ? this.zhuolanCharMap : this.taoyuanCharMap;
+      const chars = Array.from(han).filter((c) => CJK_CHAR_RE.test(c));
+      const syls = zhukHpp.trim().split(/\s+/).filter(Boolean);
+      if (chars.length !== syls.length) {
+        return {
+          hpp: applyCap(syls.map((sy) => this._deriveRaopingSubSyl(sy, targetSub)).join(' ')),
+          trust: 'supp-derived',
+        };
+      }
+
+      const outSyls = [];
+      for (let k = 0; k < chars.length; k++) {
+        const ch = chars[k];
+        const sy = syls[k];
+        const mapKey = `${ch}\t${sy.toLowerCase()}`;
+        let mapped = charMap && charMap.get(mapKey);
+        if (!mapped) {
+          const singleCands = subLex && subLex.get(ch);
+          if (singleCands && singleCands.length > 0) {
+            mapped = singleCands[0].hpp;
+          }
+        }
+        if (mapped) {
+          const wasUpper = sy.charAt(0) !== sy.charAt(0).toLowerCase();
+          outSyls.push(wasUpper ? mapped.charAt(0).toUpperCase() + mapped.slice(1) : mapped);
+        } else {
+          outSyls.push(this._deriveRaopingSubSyl(sy, targetSub));
+        }
+      }
+      return { hpp: applyCap(outSyls.join(' ')), trust: 'supp-derived' };
+    }
+
+    populateRaopingSubTokens(tokens) {
+      if (this.dialect !== 'ngiaupin' || !Array.isArray(tokens)) return;
+      for (const tok of tokens) {
+        if (!tok || tok.punct || tok.nonCjk || tok.isComment || !tok.hpp) continue;
+        const z = this._resolveRaopingSubHpp(tok.han, tok.hpp, 'zhuolan');
+        const t = this._resolveRaopingSubHpp(tok.han, tok.hpp, 'taoyuan');
+        tok.zhuolanHpp = z.hpp;
+        tok.zhuolanTrust = z.trust;
+        tok.taoyuanHpp = t.hpp;
+        tok.taoyuanTrust = t.trust;
+      }
     }
 
     /** 依目前連詞模式格式化單一詞條或候選讀音 */
@@ -1194,6 +1447,76 @@
           out += this.formatWordHpp(tok.hpp, joiningMode, tok.sylBoundaries);
           if (tok.nanHpp) {
             out += ' (' + this.formatWordHpp(tok.nanHpp, joiningMode, tok.sylBoundaries) + ')';
+          }
+        }
+        prevWasWord = true;
+      }
+      return out.trim();
+    }
+
+    formatTokensToHppForVariant(tokens, joiningMode = 'none', variant = 'zhuk') {
+      if (variant === 'zhuk' || this.dialect !== 'ngiaupin') {
+        return this.formatTokensToHpp(tokens, joiningMode);
+      }
+      const field = variant === 'zhuolan' ? 'zhuolanHpp' : 'taoyuanHpp';
+      const mapped = tokens.map((tok) => {
+        if (!tok || tok.punct || tok.nonCjk || tok.isComment) return tok;
+        return { ...tok, hpp: tok[field] || tok.hpp, nanHpp: null };
+      });
+      return this.formatTokensToHpp(mapped, joiningMode);
+    }
+
+    formatTokensToVariantHtml(tokens, joiningMode = 'none', variant = 'zhuk', italicUnverified = false) {
+      if (variant === 'zhuk' || this.dialect !== 'ngiaupin') {
+        return this.formatTokensToHpp(tokens, joiningMode);
+      }
+      const esc = (s) =>
+        String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      const hppField = variant === 'zhuolan' ? 'zhuolanHpp' : 'taoyuanHpp';
+      const trustField = variant === 'zhuolan' ? 'zhuolanTrust' : 'taoyuanTrust';
+      let out = '';
+      let prevWasWord = false;
+
+      for (const tok of tokens) {
+        if (tok.isComment) continue;
+        if (tok.punct) {
+          if (tok.han === '\n') {
+            out = out.replace(/[ \t]+$/, '') + '\n';
+            prevWasWord = false;
+          } else if (tok.isSpace) {
+            if (!out.endsWith(' ') && !out.endsWith('\n')) out += ' ';
+            prevWasWord = false;
+          } else {
+            const p = tok.hpp !== undefined ? tok.hpp : tok.han;
+            if (p === '(') {
+              if (prevWasWord) out += ' ';
+              out += '(';
+              prevWasWord = false;
+            } else if (p === ')') {
+              out = out.replace(/[ ]+$/, '') + ')';
+              prevWasWord = true;
+            } else {
+              out = out.replace(/[ ]+$/, '') + esc(p);
+              prevWasWord = false;
+            }
+          }
+          continue;
+        }
+        if (prevWasWord) out += ' ';
+        if (tok.nonCjk) {
+          out += esc(tok.hpp);
+        } else {
+          const wordText = this.formatWordHpp(tok[hppField] || tok.hpp, joiningMode, tok.sylBoundaries);
+          const isDerived = tok[trustField] !== 'official';
+          if (isDerived) {
+            const cls = italicUnverified ? 'wb-derived-word is-italic' : 'wb-derived-word';
+            out += `<span class="${cls}" title="字級／規則推導（尚待人工審定）">${esc(wordText)}</span>`;
+          } else {
+            out += esc(wordText);
           }
         }
         prevWasWord = true;
