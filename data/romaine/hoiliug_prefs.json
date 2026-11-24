@@ -79,7 +79,7 @@
     },
     {
       "han": "仔",
-      "freq": 1465,
+      "freq": 1457,
       "default": "er",
       "candidates": [
         "er",
@@ -190,22 +190,22 @@
       ]
     },
     {
+      "han": "下",
+      "freq": 776,
+      "default": "hà",
+      "candidates": [
+        "há",
+        "hà",
+        "hā"
+      ]
+    },
+    {
       "han": "已",
       "freq": 767,
       "default": "ì",
       "candidates": [
         "ì",
         "rhí"
-      ]
-    },
-    {
-      "han": "下",
-      "freq": 750,
-      "default": "hà",
-      "candidates": [
-        "há",
-        "hà",
-        "hā"
       ]
     },
     {
@@ -274,6 +274,16 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 454,
+      "default": "hang",
+      "candidates": [
+        "hang",
+        "hēn",
+        "hong"
+      ]
+    },
+    {
       "han": "話",
       "freq": 446,
       "default": "vā",
@@ -284,13 +294,12 @@
       ]
     },
     {
-      "han": "行",
-      "freq": 416,
-      "default": "hang",
+      "han": "等",
+      "freq": 434,
+      "default": "dén",
       "candidates": [
-        "hang",
-        "hēn",
-        "hong"
+        "dén",
+        "nén"
       ]
     },
     {
@@ -318,15 +327,6 @@
       "candidates": [
         "sě",
         "sǐ"
-      ]
-    },
-    {
-      "han": "等",
-      "freq": 400,
-      "default": "dén",
-      "candidates": [
-        "dén",
-        "nén"
       ]
     },
     {
@@ -1188,6 +1188,15 @@
       ]
     },
     {
+      "han": "一下仔",
+      "freq": 55,
+      "default": "rhid hā er",
+      "candidates": [
+        "rhid há ēr",
+        "rhid hā er"
+      ]
+    },
+    {
       "han": "清",
       "freq": 55,
       "default": "ciàng",
@@ -1222,6 +1231,15 @@
       "candidates": [
         "liá bog er",
         "lia bog er"
+      ]
+    },
+    {
+      "han": "鄰舍",
+      "freq": 53,
+      "default": "lin shǎ",
+      "candidates": [
+        "lin shǎ",
+        "lin shā"
       ]
     },
     {
@@ -1290,15 +1308,6 @@
         "mià",
         "mò",
         "mō"
-      ]
-    },
-    {
-      "han": "一下仔",
-      "freq": 47,
-      "default": "rhid hā er",
-      "candidates": [
-        "rhid há ēr",
-        "rhid hā er"
       ]
     },
     {
@@ -1539,15 +1548,6 @@
       "candidates": [
         "dùi",
         "zhùi"
-      ]
-    },
-    {
-      "han": "鄰舍",
-      "freq": 37,
-      "default": "lin shǎ",
-      "candidates": [
-        "lin shǎ",
-        "lin shā"
       ]
     },
     {

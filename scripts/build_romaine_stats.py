@@ -230,10 +230,26 @@ def build_lexicon(dialect: str, cdm_index: dict[str, dict[int, str]] | None = No
     for idx, r in enumerate(gip_rows):
         gid = gip_idx_map.get(idx)
         add_row(r, False, link_id=f"gip:{gid}" if gid else None, cert_w=0)
+    curated_path = os.path.join(ROOT, "data", "curated", f"加詞-{cdm_key}.json")
+    if os.path.exists(curated_path):
+        for r in load_csv_json(curated_path):
+            r_copy = dict(r)
+            if r_copy.get("客語標音_顯示"):
+                r_copy["客語標音_顯示"] = re.sub(r"^--", "", r_copy["客語標音_顯示"])
+            add_row(r_copy, False, link_id=None, cert_w=1)
     for cert_key, lvl_w, r in cert_rows_with_meta:
         add_row(r, bool(cfg.get("extract_nan_bracket")), link_id=f"cert:{cert_key}", cert_w=lvl_w)
 
     return lexicon, sentences, len(gip_rows) + len(cert_rows_with_meta), cert_scores, pair_links
+
+
+def load_segmentation_rules() -> tuple[set[str], list[str]]:
+    path = os.path.join(ROOT, "data", "romaine", "segmentation_rules.json")
+    if not os.path.exists(path):
+        return set(), []
+    with open(path, "r", encoding="utf-8") as f:
+        obj = json.load(f)
+    return set(obj.get("no_merge") or []), list(obj.get("common_words") or [])
 
 
 def viterbi_segment(
@@ -242,6 +258,7 @@ def viterbi_segment(
     max_len: int,
     unigram: Counter | None = None,
     total_tokens: int = 0,
+    no_merge: set[str] | None = None,
 ) -> list[str]:
     n = len(chunk)
     dp = [float("inf")] * (n + 1)
@@ -255,6 +272,8 @@ def viterbi_segment(
         matched = False
         for length in range(1, min(max_len, n - i) + 1):
             w = chunk[i : i + length]
+            if no_merge and w in no_merge:
+                continue
             if w in lexicon:
                 matched = True
                 if unigram and total_tokens > 0:
@@ -285,7 +304,7 @@ def viterbi_segment(
     return tokens
 
 
-def run_em(lexicon: dict[str, list[str]], sentences: list[str], rounds: int = 2):
+def run_em(lexicon: dict[str, list[str]], sentences: list[str], rounds: int = 2, no_merge: set[str] | None = None):
     max_len = max((len(w) for w in lexicon), default=1)
     max_len = min(max_len, 8)
     all_chunks = []
@@ -298,7 +317,7 @@ def run_em(lexicon: dict[str, list[str]], sentences: list[str], rounds: int = 2)
     for _ in range(rounds):
         new_uni: Counter = Counter()
         for ch in all_chunks:
-            for tok in viterbi_segment(ch, lexicon, max_len, unigram, total_tokens):
+            for tok in viterbi_segment(ch, lexicon, max_len, unigram, total_tokens, no_merge):
                 new_uni[tok] += 1
         unigram = new_uni
         total_tokens = sum(unigram.values())
@@ -306,7 +325,7 @@ def run_em(lexicon: dict[str, list[str]], sentences: list[str], rounds: int = 2)
     # 最後一輪同時統計 bigram
     bigram: Counter = Counter()
     for ch in all_chunks:
-        toks = viterbi_segment(ch, lexicon, max_len, unigram, total_tokens)
+        toks = viterbi_segment(ch, lexicon, max_len, unigram, total_tokens, no_merge)
         for a, b in zip(toks, toks[1:]):
             bigram[f"{a}\t{b}"] += 1
 
@@ -413,9 +432,11 @@ def build_for_dialect(
     cdm_index: dict[str, dict[int, str]],
     seed_links: dict[tuple[str, str], float],
     xiien_transfer_freq: dict[str, int],
+    no_merge: set[str],
+    common_words: list[str],
 ):
     lexicon, sentences, raw_rows, cert_scores, pair_links = build_lexicon(dialect, cdm_index)
-    unigram, bigram, chunk_count = run_em(lexicon, sentences, rounds=2)
+    unigram, bigram, chunk_count = run_em(lexicon, sentences, rounds=2, no_merge=no_merge)
 
     # 跨腔同形同義詞頻遷移（僅補入目標腔詞典確有收錄的同形詞）
     if dialect != "xiien" and xiien_transfer_freq:
@@ -511,6 +532,8 @@ def build_for_dialect(
                 "bigram": pruned_bi,
                 "ctx_prev": ctx_prev,
                 "ctx_next": ctx_next,
+                "no_merge": sorted(no_merge),
+                "common_words": common_words,
             },
             f,
             ensure_ascii=False,
@@ -548,15 +571,16 @@ def main():
 
     cdm_index = load_cross_dialect_index()
     seed_links = collect_seed_preferences(cdm_index)
+    no_merge, common_words = load_segmentation_rules()
 
     # 先算四縣 xiien 詞頻作為同形詞頻遷移基底
     xiien_lex, xiien_sents, _, _, _ = build_lexicon("xiien", cdm_index)
-    xiien_uni, _, _ = run_em(xiien_lex, xiien_sents, rounds=2)
+    xiien_uni, _, _ = run_em(xiien_lex, xiien_sents, rounds=2, no_merge=no_merge)
     xiien_transfer_freq = {k: v for k, v in xiien_uni.items() if v >= 3}
 
     targets = list(DIALECT_SOURCES.keys()) if args.dialect == "all" else [args.dialect]
     for d in targets:
-        build_for_dialect(d, args.min_bigram, cdm_index, seed_links, xiien_transfer_freq)
+        build_for_dialect(d, args.min_bigram, cdm_index, seed_links, xiien_transfer_freq, no_merge, common_words)
 
 
 if __name__ == "__main__":

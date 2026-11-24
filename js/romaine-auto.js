@@ -514,6 +514,8 @@
       this.bigram = Object.create(null);
       this.ctxPrev = Object.create(null);
       this.ctxNext = Object.create(null);
+      this.noMergeSet = new Set();
+      this.commonWordSet = new Set();
       this.learnedUnigram = Object.create(null);
       this.learnedBigram = Object.create(null);
       this.learnedReadingCounts = new Map();
@@ -581,13 +583,15 @@
       const gipFile = `${basePath}/${cfg.gip}`;
       const certFiles = cfg.cert.map((c) => `${basePath}/${c.file}`);
       const suppFile = `${basePath}/${cfg.supp}`;
+      const curatedFile = `${basePath}/${cfg.supp.replace('data/supp/補字典-', 'data/curated/加詞-')}`;
       const isSixian = targetDialect === 'xiien';
       const isRaoping = targetDialect === 'ngiaupin';
 
-      const [gipJson, certJsons, suppJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
+      const [gipJson, certJsons, suppJson, curatedJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
         fetch(gipFile).then((r) => r.json()),
         Promise.all(certFiles.map((f) => fetch(f).then((r) => r.json()))),
         fetch(suppFile).then((r) => r.json()),
+        fetch(curatedFile).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch(`${basePath}/${cfg.stats}`).then((r) => r.json()),
         fetch(`${basePath}/${cfg.prefs}`).then((r) => r.json()),
         this.sandhiRules ? Promise.resolve(this.sandhiRules) : fetch(`${basePath}/sandhi_rules.json`).then((r) => r.json()),
@@ -765,6 +769,23 @@
         if (nanSuppJson) addNanRows(parseCsv(nanSuppJson.content || ''), 'supp-derived', '補字典·南');
       }
 
+      // 1b. 愛灣語人工加詞（data/curated/加詞-{腔}.json，優先於補字典與擬音）
+      if (curatedJson && curatedJson.content) {
+        const curatedRows = parseCsv(curatedJson.content || '');
+        for (const r of curatedRows) {
+          const hans = cleanHanVariants(r.han);
+          const hpps = cleanHppVariants((r.hpp || '').replace(/^--/, ''));
+          for (const h of hans) {
+            const hLen = Array.from(h).length;
+            for (const item of hpps) {
+              if (item.hpp.split(' ').length === hLen) {
+                this._addCandidate(h, item.hpp, 'official', '愛灣語加詞', seen, '愛灣語加詞');
+              }
+            }
+          }
+        }
+      }
+
       // 2. 再收補字典（先拆音/沿襲，再廣韻擬音）
       const suppRows = parseCsv(suppJson.content || '');
       const sortedSupp = suppRows.slice().sort((a, b) => {
@@ -820,6 +841,8 @@
       this.bigram = statsJson.bigram || Object.create(null);
       this.ctxPrev = statsJson.ctx_prev || Object.create(null);
       this.ctxNext = statsJson.ctx_next || Object.create(null);
+      this.noMergeSet = new Set(statsJson.no_merge || []);
+      this.commonWordSet = new Set(statsJson.common_words || []);
       this.totalTokens = (statsJson.meta && statsJson.meta.total_tokens) || 1;
       for (const item of prefsJson.items || []) {
         this.prefs.set(item.han, item.default);
@@ -948,7 +971,30 @@
       }
       const nanCands = useNan ? (this.nanLexicon.get(han) || []) : [];
       const cands = nanCands.length ? nanCands : (this.lexicon.get(han) || []);
-      if (!cands.length) return { hpp: han, trust: 'oov', label: '未收錄', candidates: [], oov: true };
+      if (!cands.length) {
+        const chars = Array.from(han);
+        const synKind = this._classifySyntheticWord(han, chars);
+        if (synKind) {
+          const syls = [];
+          let worstTrust = 'supp-derived';
+          for (let ci = 0; ci < chars.length; ci++) {
+            const pChar = ci > 0 ? chars[ci - 1] : prevHan;
+            const nChar = ci + 1 < chars.length ? chars[ci + 1] : nextHan;
+            const sub = this._pickDefault(chars[ci], useNan, openBookMap, pChar, nChar);
+            if (sub.oov) worstTrust = 'oov';
+            syls.push(sub.hpp);
+          }
+          const joined = syls.join(' ');
+          return {
+            hpp: joined,
+            trust: worstTrust,
+            label: synKind,
+            candidates: [{ hpp: joined, trust: worstTrust, label: synKind }],
+            oov: false,
+          };
+        }
+        return { hpp: han, trust: 'oov', label: '未收錄', candidates: [], oov: true };
+      }
 
       if (!useNan && cands.length > 1) {
         // 1. 黃金語料／專家上下文選音（Contextual Reading Bigram）
@@ -1053,6 +1099,23 @@
       };
     }
 
+    _classifySyntheticWord(w, chars) {
+      if (this.commonWordSet.has(w)) {
+        if (chars.every((c) => this.lexicon.has(c))) return '共通詞';
+      }
+      if (chars.length === 3 && chars[0] === chars[1] && chars[0] !== chars[2]) {
+        if (chars[2] === '仔' && this.lexicon.has(chars[0]) && this.lexicon.has('仔')) return '重疊構詞';
+        // 排除結構虛詞（个、的、了、啊、呢、嗎、無），避免把「硬硬个」合併
+        if (!/^[个的了啊呢嗎無]$/.test(chars[2]) && this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) {
+          return '重疊構詞';
+        }
+      }
+      if (chars.length === 4 && chars[0] === chars[1] && chars[2] === chars[3] && chars[0] !== chars[2]) {
+        if (this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) return '重疊構詞';
+      }
+      return null;
+    }
+
     viterbiSegment(chunk, useNan = false, openBookMap = null) {
       const chars = Array.from(chunk);
       const n = chars.length;
@@ -1068,16 +1131,19 @@
         const limit = Math.min(this.maxWordLen, n - i);
         const prevWord = bestWord[i];
         for (let len = 1; len <= limit; len++) {
-          const w = chars.slice(i, i + len).join('');
+          const sliceChars = chars.slice(i, i + len);
+          const w = sliceChars.join('');
+          if (this.noMergeSet.has(w)) continue;
           const hasOpenBook = Boolean(openBookMap && openBookMap.has(w));
           const cands = hasOpenBook
             ? [{ trust: 'official' }]
             : (useNan && this.nanLexicon.get(w)) || this.lexicon.get(w);
-          if (cands && cands.length) {
+          const synKind = (!cands || !cands.length) && len >= 2 ? this._classifySyntheticWord(w, sliceChars) : null;
+          if ((cands && cands.length) || synKind) {
             matched = true;
-            const topTrust = TRUST_RANK[cands[0].trust] || 1;
-            const trustPenalty = topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5;
-            const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + (hasOpenBook ? 500 : 0) + 0.5;
+            const topTrust = cands && cands.length ? (TRUST_RANK[cands[0].trust] || 1) : 2;
+            const trustPenalty = synKind ? 0.2 : (topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5);
+            const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + (hasOpenBook ? 500 : synKind ? 5 : 0) + 0.5;
             const biKey = prevWord ? `${prevWord}\t${w}` : '';
             const bi = biKey ? ((this.bigram[biKey] || 0) + (this.learnedBigram[biKey] || 0)) : 0;
             const biBonus = bi > 0 ? 0.45 * mathLog(1 + bi) : 0;

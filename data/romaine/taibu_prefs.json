@@ -320,22 +320,22 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 431,
+      "default": "hǎng",
+      "candidates": [
+        "hǎng",
+        "hèn",
+        "hǒng"
+      ]
+    },
+    {
       "han": "若",
       "freq": 420,
       "default": "ngiā",
       "candidates": [
         "ngiā",
         "nā"
-      ]
-    },
-    {
-      "han": "行",
-      "freq": 396,
-      "default": "hǎng",
-      "candidates": [
-        "hǎng",
-        "hèn",
-        "hǒng"
       ]
     },
     {

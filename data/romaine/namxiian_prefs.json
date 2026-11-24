@@ -49,7 +49,7 @@
     },
     {
       "han": "你",
-      "freq": 1925,
+      "freq": 1923,
       "default": "ň",
       "candidates": [
         "ň",
@@ -187,7 +187,7 @@
     },
     {
       "han": "下",
-      "freq": 680,
+      "freq": 700,
       "default": "há",
       "candidates": [
         "hà",
@@ -253,22 +253,22 @@
       ]
     },
     {
+      "han": "行",
+      "freq": 439,
+      "default": "hǎng",
+      "candidates": [
+        "hǎng",
+        "hen",
+        "hǒng"
+      ]
+    },
+    {
       "han": "種",
       "freq": 422,
       "default": "zung",
       "candidates": [
         "zùng",
         "zung"
-      ]
-    },
-    {
-      "han": "行",
-      "freq": 396,
-      "default": "hǎng",
-      "candidates": [
-        "hǎng",
-        "hen",
-        "hǒng"
       ]
     },
     {
