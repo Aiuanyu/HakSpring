@@ -936,13 +936,13 @@
     }
 
     _pickDefault(han, useNan = false, openBookMap = null, prevHan = '', nextHan = '') {
-      if (useNan && openBookMap && openBookMap.has(han)) {
+      if (openBookMap && openBookMap.has(han)) {
         const obHpp = openBookMap.get(han);
         return {
           hpp: obHpp,
           trust: 'official',
-          label: '南四縣(本詞)',
-          candidates: [{ hpp: obHpp, trust: 'official', label: '南四縣(本詞)' }],
+          label: useNan ? '南四縣(本詞)' : '本詞',
+          candidates: [{ hpp: obHpp, trust: 'official', label: useNan ? '南四縣(本詞)' : '本詞' }],
           oov: false,
         };
       }
@@ -1069,7 +1069,7 @@
         const prevWord = bestWord[i];
         for (let len = 1; len <= limit; len++) {
           const w = chars.slice(i, i + len).join('');
-          const hasOpenBook = useNan && openBookMap && openBookMap.has(w);
+          const hasOpenBook = Boolean(openBookMap && openBookMap.has(w));
           const cands = hasOpenBook
             ? [{ trust: 'official' }]
             : (useNan && this.nanLexicon.get(w)) || this.lexicon.get(w);

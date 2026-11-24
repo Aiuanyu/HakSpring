@@ -291,22 +291,97 @@
     });
   }
 
-  function extractRowNanOpenBook(row) {
-    const map = new Map();
+  function extractCleanRubyBase(rubyEl) {
+    if (!rubyEl) return '';
+    const clone = rubyEl.cloneNode(true);
+    clone.querySelectorAll('rt, rp').forEach((el) => el.remove());
+    return (clone.textContent || '').trim();
+  }
+
+  function extractCleanBaseToneHpp(el) {
+    if (!el) return '';
+    const clone = el.cloneNode(true);
+    // 移除變調 <ruby class="sandhi-..."> 內的 <rt>，只保留本調拼寫
+    clone.querySelectorAll('ruby > rt, rp').forEach((r) => r.remove());
+    let txt = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!txt) return '';
+    // 若有多音斜線或括號補充，取第一組主要讀音
+    txt = txt.replace(/[（(][^（）()]*[）)]/g, '').trim();
+    if (txt.includes('/')) {
+      txt = txt.split('/')[0].trim();
+    }
+    return txt;
+  }
+
+  function extractRowOpenBook(row, dialect) {
+    const mainMap = new Map();
+    const nanMap = new Map();
+    const zhuolanMap = new Map();
+    const taoyuanMap = new Map();
     const td2 = row.querySelector('td[data-label="詞彙"]');
-    if (!td2) return map;
-    const nanVar = td2.querySelector('.variant-label-南');
-    if (nanVar) {
-      const txt = nanVar.textContent.replace(/[（）()]/g, '').trim();
-      const wordEl = td2.querySelector('.word-text, strong, b');
-      const pronEl = td2.querySelector('.pronunciation-text');
-      if (pronEl) {
-        const pTxt = pronEl.textContent.replace(/【南】/g, '').trim();
-        const m = txt || (wordEl ? wordEl.textContent.trim() : '');
-        if (m && pTxt) map.set(m, pTxt);
+    if (!td2) return { mainMap, nanMap, zhuolanMap, taoyuanMap };
+
+    const addIfAligned = (map, han, hpp) => {
+      const cleanHan = (han || '').replace(/[（()）【】\s]/g, '').trim();
+      const cleanHpp = (hpp || '').trim();
+      if (!cleanHan || !cleanHpp) return;
+      if (Array.from(cleanHan).length === cleanHpp.split(/\s+/).length) {
+        if (!map.has(cleanHan)) map.set(cleanHan, cleanHpp);
+      }
+    };
+
+    const variantsWrap = td2.querySelector('.vocab-variants');
+    if (variantsWrap) {
+      let baseWord = '';
+      for (const v of variantsWrap.querySelectorAll('.variant')) {
+        const lblEl = v.querySelector('.variant-label');
+        const lbl = lblEl ? lblEl.textContent.trim() : '';
+        const ruby = v.querySelector('ruby');
+        const phonOnly = v.querySelector('.variant-phonetic');
+        let word = baseWord;
+        let hpp = '';
+        if (ruby) {
+          word = extractCleanRubyBase(ruby);
+          if (!baseWord) baseWord = word;
+          const rt = ruby.querySelector(':scope > rt');
+          hpp = extractCleanBaseToneHpp(rt);
+        } else if (phonOnly) {
+          hpp = extractCleanBaseToneHpp(phonOnly);
+        }
+        if (!word || !hpp) continue;
+        if (lbl === '南') {
+          addIfAligned(nanMap, word, hpp);
+        } else if (lbl === '卓') {
+          addIfAligned(zhuolanMap, word, hpp);
+        } else if (lbl === '桃') {
+          addIfAligned(taoyuanMap, word, hpp);
+        } else if (lbl === '卓桃') {
+          addIfAligned(zhuolanMap, word, hpp);
+          addIfAligned(taoyuanMap, word, hpp);
+        } else {
+          // '北'、'竹' 或無標籤主音
+          addIfAligned(mainMap, word, hpp);
+        }
+      }
+    } else {
+      const rubies = Array.from(td2.querySelectorAll('ruby')).filter((r) => !r.closest('rt'));
+      if (rubies.length > 0) {
+        const words = [];
+        const hpps = [];
+        for (const r of rubies) {
+          const w = extractCleanRubyBase(r);
+          const rt = r.querySelector(':scope > rt');
+          const h = extractCleanBaseToneHpp(rt);
+          if (w && h) {
+            words.push(w);
+            hpps.push(h);
+          }
+        }
+        addIfAligned(mainMap, words.join(''), hpps.join(' '));
       }
     }
-    return map;
+
+    return { mainMap, nanMap, zhuolanMap, taoyuanMap };
   }
 
   function splitSentenceHtmlLines(html) {
@@ -588,7 +663,10 @@
       dialect === 'ngiaupin' &&
       (raopingTracks.length > 1 || raopingTracks[0] !== 'zhuk');
 
-    const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
+    const openBook = extractRowOpenBook(row, dialect);
+    const openBookMap = dialect === 'xiien'
+      ? (openBook.nanMap.size > 0 ? openBook.nanMap : openBook.mainMap)
+      : openBook.mainMap;
     let rawHppHtml = '';
     let isVerified = false;
     let rowTokens = null;
@@ -621,7 +699,7 @@
         window.RomaineAutoEngine && typeof window.RomaineAutoEngine.expandRaopingSentenceVariants === 'function'
           ? window.RomaineAutoEngine.expandRaopingSentenceVariants(sentText)
           : { hasVariant: false, zhuk: sentText, zhuolan: sentText, taoyuan: sentText };
-      const zhukToks = eng.segmentAndConvert(exp.zhuk, null);
+      const zhukToks = eng.segmentAndConvert(exp.zhuk, openBook.mainMap);
       const zhukHtml = eng.formatTokensToSandhiHtml(zhukToks, 'none');
 
       for (const tk of raopingTracks) {
@@ -630,7 +708,25 @@
           html = zhukHtml;
         } else {
           const subText = tk === 'zhuolan' ? exp.zhuolan : exp.taoyuan;
-          const subToks = subText === exp.zhuk ? zhukToks : eng.segmentAndConvert(subText, null);
+          const subOpenBook = tk === 'zhuolan' ? openBook.zhuolanMap : openBook.taoyuanMap;
+          const subToks = subText === exp.zhuk ? zhukToks : eng.segmentAndConvert(subText, openBook.mainMap);
+          if (subOpenBook && subOpenBook.size > 0) {
+            for (const st of subToks) {
+              if (!st.punct && !st.nonCjk && !st.isComment && subOpenBook.has(st.han)) {
+                const ob = subOpenBook.get(st.han);
+                const firstCh = (st.hpp || '').charAt(0);
+                const wasCap = firstCh && firstCh !== firstCh.toLowerCase();
+                const finalOb = wasCap ? ob.charAt(0).toUpperCase() + ob.slice(1) : ob;
+                if (tk === 'zhuolan') {
+                  st.zhuolanHpp = finalOb;
+                  st.zhuolanTrust = 'official';
+                } else {
+                  st.taoyuanHpp = finalOb;
+                  st.taoyuanTrust = 'official';
+                }
+              }
+            }
+          }
           html = eng.formatTokensToVariantHtml(subToks, 'none', tk, false);
         }
         const lines = html.split('\n');
@@ -638,7 +734,7 @@
         if (lines.length > pairCount) pairCount = lines.length;
       }
     } else {
-      rowTokens = eng.segmentAndConvert(sentText, openBookMap);
+      rowTokens = eng.segmentAndConvert(sentText, openBook.mainMap);
       rawHppHtml = eng.formatTokensToSandhiHtml(rowTokens, 'none');
       trackLinesMap.zhuk = rawHppHtml.split('\n');
       if (trackLinesMap.zhuk.length > pairCount) pairCount = trackLinesMap.zhuk.length;
