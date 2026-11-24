@@ -40,6 +40,8 @@
   const NO_SANDHI_MARKER_KEY = 'romaineNoSandhiMarker';
   const UNVERIFIED_ITALIC_KEY = 'romaineUnverifiedItalic';
   const TRUST_UNDERLINE_KEY = 'romaineTrustUnderline';
+  const RAOPING_TRACKS_KEY = 'romaineRaopingTracks';
+  const DEFAULT_RAOPING_TRACKS = ['zhuk', 'zhuolan', 'taoyuan'];
 
   if (typeof root.addEventListener === 'function') {
     if (!root.__romainePrefsStorageBound) {
@@ -49,7 +51,8 @@
         if (
           e.key === NO_SANDHI_MARKER_KEY ||
           e.key === UNVERIFIED_ITALIC_KEY ||
-          e.key === TRUST_UNDERLINE_KEY
+          e.key === TRUST_UNDERLINE_KEY ||
+          e.key === RAOPING_TRACKS_KEY
         ) {
           root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: e.key } }));
         }
@@ -115,6 +118,37 @@
       root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: TRUST_UNDERLINE_KEY, value: b } }));
     }
     return b;
+  }
+
+  function getRaopingTracks() {
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    const valid = new Set(order);
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(RAOPING_TRACKS_KEY) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const filtered = order.filter((k) => valid.has(k) && parsed.includes(k));
+          if (filtered.length > 0) return filtered;
+        }
+      }
+    } catch {}
+    return DEFAULT_RAOPING_TRACKS.slice();
+  }
+
+  function setRaopingTracks(tracks) {
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    const list = Array.isArray(tracks) ? order.filter((k) => tracks.includes(k)) : [];
+    const finalTracks = list.length > 0 ? list : ['zhuk'];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(RAOPING_TRACKS_KEY, JSON.stringify(finalTracks));
+      }
+    } catch {}
+    if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: RAOPING_TRACKS_KEY, value: finalTracks } }));
+    }
+    return finalTracks;
   }
 
   function isNoSandhiChar(ch) {
@@ -1710,11 +1744,14 @@
   RomaineAutoEngine.NO_SANDHI_MARKER_KEY = NO_SANDHI_MARKER_KEY;
   RomaineAutoEngine.UNVERIFIED_ITALIC_KEY = UNVERIFIED_ITALIC_KEY;
   RomaineAutoEngine.TRUST_UNDERLINE_KEY = TRUST_UNDERLINE_KEY;
+  RomaineAutoEngine.RAOPING_TRACKS_KEY = RAOPING_TRACKS_KEY;
   RomaineAutoEngine.getNoSandhiMarker = getNoSandhiMarker;
   RomaineAutoEngine.setNoSandhiMarker = setNoSandhiMarker;
   RomaineAutoEngine.getUnverifiedItalic = getUnverifiedItalic;
   RomaineAutoEngine.setUnverifiedItalic = setUnverifiedItalic;
   RomaineAutoEngine.getTrustUnderline = getTrustUnderline;
   RomaineAutoEngine.setTrustUnderline = setTrustUnderline;
+  RomaineAutoEngine.getRaopingTracks = getRaopingTracks;
+  RomaineAutoEngine.setRaopingTracks = setRaopingTracks;
   root.RomaineAutoEngine = RomaineAutoEngine;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

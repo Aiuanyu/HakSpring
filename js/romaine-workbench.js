@@ -14,21 +14,28 @@
   const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
 
   function loadRaopingTracks() {
-    const valid = new Set(['zhuk', 'zhuolan', 'taoyuan']);
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getRaopingTracks === 'function') {
+      return window.RomaineAutoEngine.getRaopingTracks();
+    }
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
     try {
-      const raw = JSON.parse(localStorage.getItem(RAOPING_TRACKS_KEY) || '["zhuk"]');
+      const raw = JSON.parse(localStorage.getItem(RAOPING_TRACKS_KEY) || '["zhuk","zhuolan","taoyuan"]');
       if (Array.isArray(raw)) {
-        const filtered = raw.filter((k) => valid.has(k));
+        const filtered = order.filter((k) => raw.includes(k));
         if (filtered.length > 0) return filtered;
       }
     } catch {}
-    return ['zhuk'];
+    return order.slice();
   }
 
   function saveRaopingTracks(tracks) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.setRaopingTracks === 'function') {
+      return window.RomaineAutoEngine.setRaopingTracks(tracks);
+    }
     try {
       localStorage.setItem(RAOPING_TRACKS_KEY, JSON.stringify(tracks));
     } catch {}
+    return tracks;
   }
 
   const DIALECT_OPTIONS = [
@@ -290,6 +297,12 @@
     });
 
     window.addEventListener('romainePrefsChanged', () => {
+      raopingTracks = loadRaopingTracks();
+      if (raopingBarEl) {
+        raopingBarEl.querySelectorAll('input[type="checkbox"]').forEach((c) => {
+          c.checked = raopingTracks.includes(c.value);
+        });
+      }
       if (isOpen) render();
     });
 

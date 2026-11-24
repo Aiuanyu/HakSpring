@@ -7777,3 +7777,41 @@ tr.romaine-row-editing td[data-label="例句"] {
     text-decoration-color: rgba(56, 189, 248, 0.6);
   }
 }
+
+/* === 主表饒平竹／卓／桃地區切換列與多軌例句 === */
+.romaine-raoping-main-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 900px;
+  margin: 6px auto 10px auto;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--card-bg, rgba(255, 255, 255, 0.85));
+}
+.romaine-raoping-setting-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.romaine-auto-hpp.is-raoping-track {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+.romaine-track-badge {
+  font-size: 0.72em;
+  line-height: 1.2;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .romaine-raoping-main-bar {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: #475569;
+  }
+}

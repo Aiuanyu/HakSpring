@@ -213,12 +213,11 @@
     return { dialect, level, rowId };
   }
 
-  function renderVerifiedHtml(item, eng) {
-    if (!item || !item.tokens || !eng) return item ? item.joined_hpp || '' : '';
+  function renderVerifiedTokens(item) {
     const inlineOps = extractInlineBoundaryOps(item.han);
     const inlineNoSandhi = extractInlineNoSandhiSet(item.han);
     let pureIdx = 0;
-    const toks = item.tokens.map((t) => {
+    return item.tokens.map((t) => {
       if (t.punct || t.nonCjk || t.comment) return t;
       const cLen = Array.from(t.han || '').filter((c) => CJK_RE.test(c)).length;
       let sb = t.sylBoundaries || t.syl_boundaries;
@@ -249,6 +248,11 @@
         sylBoundaries: sb,
       };
     });
+  }
+
+  function renderVerifiedHtml(item, eng) {
+    if (!item || !item.tokens || !eng) return item ? item.joined_hpp || '' : '';
+    const toks = renderVerifiedTokens(item);
     return eng.formatTokensToSandhiHtml(toks, 'none');
   }
 
@@ -262,11 +266,24 @@
         return `<span class="sentence-variant sentence-variant-南">(${content})</span>`;
       }
       if (dKey === 'ngiaupin') {
-        if (content.includes('/')) {
-          const parts = content.split('/');
-          const zhuolan = parts[0] ? parts[0].trim() : '';
-          const taoyuan = parts.slice(1).join('/').trim();
-          return `<span class="sentence-variant sentence-variant-卓">(${zhuolan}</span><span class="sentence-variant sentence-variant-卓桃">/</span><span class="sentence-variant sentence-variant-桃">${taoyuan})</span>`;
+        const splitVariantParts = (str) => {
+          if (str.includes('／')) {
+            const idx = str.indexOf('／');
+            return [str.slice(0, idx), str.slice(idx + 1), '／'];
+          }
+          // 僅切非 HTML 結束標籤（如 </rt>、</ruby>）的半形 '/'
+          const m = str.match(/(?<!<)\/(?!(?:rt|ruby|span|i|b)>)/i);
+          if (m && typeof m.index === 'number') {
+            return [str.slice(0, m.index), str.slice(m.index + 1), '/'];
+          }
+          return null;
+        };
+        const sp = splitVariantParts(content);
+        if (sp) {
+          const zhuolan = sp[0].trim();
+          const taoyuan = sp[1].trim();
+          const sep = sp[2];
+          return `<span class="sentence-variant sentence-variant-卓">(${zhuolan}</span><span class="sentence-variant sentence-variant-卓桃">${sep}</span><span class="sentence-variant sentence-variant-桃">${taoyuan})</span>`;
         }
         return `<span class="sentence-variant sentence-variant-卓桃">(${content})</span>`;
       }
@@ -440,6 +457,94 @@
     if (underlineChk) {
       underlineChk.checked = getTrustUnderlinePref();
     }
+    const tracks = getRaopingTracksPref();
+    for (const chk of document.querySelectorAll('input[name="romaineRaopingTrackSetting"]')) {
+      chk.checked = tracks.includes(chk.value);
+    }
+    const mainBar = document.getElementById('romaineRaopingMainBar');
+    if (mainBar) {
+      for (const chk of mainBar.querySelectorAll('input[type="checkbox"]')) {
+        chk.checked = tracks.includes(chk.value);
+      }
+    }
+  }
+
+  function getRaopingTracksPref() {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.getRaopingTracks === 'function') {
+      return window.RomaineAutoEngine.getRaopingTracks();
+    }
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    try {
+      const raw = JSON.parse(localStorage.getItem('romaineRaopingTracks') || '["zhuk","zhuolan","taoyuan"]');
+      if (Array.isArray(raw)) {
+        const filtered = order.filter((k) => raw.includes(k));
+        if (filtered.length > 0) return filtered;
+      }
+    } catch {}
+    return order.slice();
+  }
+
+  function setRaopingTracksPref(tracks) {
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.setRaopingTracks === 'function') {
+      return window.RomaineAutoEngine.setRaopingTracks(tracks);
+    }
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    const filtered = Array.isArray(tracks) ? order.filter((k) => tracks.includes(k)) : [];
+    const finalTracks = filtered.length > 0 ? filtered : ['zhuk'];
+    try {
+      localStorage.setItem('romaineRaopingTracks', JSON.stringify(finalTracks));
+    } catch {}
+    return finalTracks;
+  }
+
+  function rerenderRaopingRows() {
+    const generated = document.getElementById('generated');
+    if (!generated) return;
+    for (const row of generated.querySelectorAll('tr')) {
+      const info = detectContextInfo(row);
+      if (info && info.dialect === 'ngiaupin') {
+        resetRowOverlay(row);
+      }
+    }
+    scheduleApply();
+  }
+
+  function ensureRaopingMainBar(generated, show) {
+    let bar = document.getElementById('romaineRaopingMainBar');
+    if (!show) {
+      if (bar) bar.style.display = 'none';
+      return;
+    }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'romaineRaopingMainBar';
+      bar.className = 'romaine-raoping-main-bar';
+      bar.innerHTML = `
+        <span class="wb-raoping-title">饒平例句地區：</span>
+        <label class="wb-raoping-chip"><input type="checkbox" value="zhuk" /><span class="variant-label variant-label-竹">竹</span>新竹</label>
+        <label class="wb-raoping-chip"><input type="checkbox" value="zhuolan" /><span class="variant-label variant-label-卓">卓</span>卓蘭</label>
+        <label class="wb-raoping-chip"><input type="checkbox" value="taoyuan" /><span class="variant-label variant-label-桃">桃</span>桃園</label>
+      `;
+      generated.insertAdjacentElement('beforebegin', bar);
+      const chks = Array.from(bar.querySelectorAll('input[type="checkbox"]'));
+      chks.forEach((c) => {
+        c.addEventListener('change', () => {
+          const checked = chks.filter((x) => x.checked).map((x) => x.value);
+          if (!checked.length) {
+            c.checked = true;
+            return;
+          }
+          setRaopingTracksPref(checked);
+          syncSettingsControls();
+          rerenderRaopingRows();
+        });
+      });
+    }
+    const tracks = getRaopingTracksPref();
+    for (const c of bar.querySelectorAll('input[type="checkbox"]')) {
+      c.checked = tracks.includes(c.value);
+    }
+    bar.style.display = 'flex';
   }
 
   function updateToggleButton() {
@@ -481,17 +586,47 @@
     const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
     let rawHppHtml = '';
     let isVerified = false;
+    let rowTokens = null;
     if (verifiedItem) {
       isVerified = true;
-      rawHppHtml = renderVerifiedHtml(verifiedItem, eng);
+      rowTokens = verifiedItem.tokens && eng ? renderVerifiedTokens(verifiedItem) : null;
+      if (rowTokens && dialect === 'ngiaupin' && typeof eng.populateRaopingSubTokens === 'function') {
+        eng.populateRaopingSubTokens(rowTokens);
+      }
+      rawHppHtml = rowTokens ? eng.formatTokensToSandhiHtml(rowTokens, 'none') : (verifiedItem.joined_hpp || '');
     } else {
-      const toks = eng.segmentAndConvert(sentText, openBookMap);
-      rawHppHtml = eng.formatTokensToSandhiHtml(toks, 'none');
+      rowTokens = eng.segmentAndConvert(sentText, openBookMap);
+      rawHppHtml = eng.formatTokensToSandhiHtml(rowTokens, 'none');
     }
 
-    // 依斷行配對：每句「羅馬字在上、諸夏字在下」（配合 td2 詞音位置）
-    const hppLines = rawHppHtml.split('\n');
-    const pairCount = Math.max(hanLines.length, hppLines.length);
+    const raopingTracks = dialect === 'ngiaupin' ? getRaopingTracksPref() : ['zhuk'];
+    const useMultiRaoping =
+      dialect === 'ngiaupin' &&
+      rowTokens &&
+      (raopingTracks.length > 1 || raopingTracks[0] !== 'zhuk');
+
+    const trackLinesMap = {};
+    let pairCount = hanLines.length;
+    if (useMultiRaoping) {
+      for (const tk of raopingTracks) {
+        const html =
+          tk === 'zhuk'
+            ? rawHppHtml
+            : eng.formatTokensToVariantHtml(rowTokens, 'none', tk, false);
+        const lines = html.split('\n');
+        trackLinesMap[tk] = lines;
+        if (lines.length > pairCount) pairCount = lines.length;
+      }
+    } else {
+      trackLinesMap.zhuk = rawHppHtml.split('\n');
+      if (trackLinesMap.zhuk.length > pairCount) pairCount = trackLinesMap.zhuk.length;
+    }
+
+    const TRACK_META = {
+      zhuk: { badge: '竹', cls: 'variant-label-竹', title: '新竹饒平（含 6 條連讀變調）' },
+      zhuolan: { badge: '卓', cls: 'variant-label-卓', title: '卓蘭饒平（本調，尚無官方變調規則）' },
+      taoyuan: { badge: '桃', cls: 'variant-label-桃', title: '桃園饒平（本調，尚無官方變調規則）' },
+    };
 
     const container = document.createElement('div');
     container.className = 'romaine-interleaved';
@@ -500,111 +635,127 @@
       const pair = document.createElement('div');
       pair.className = 'romaine-pair ' + (isVerified ? 'is-verified' : 'is-auto');
 
-      const hppDiv = document.createElement('div');
-      hppDiv.className = 'romaine-auto-hpp';
-      const hppTextSpan = document.createElement('span');
-      hppTextSpan.className = 'romaine-auto-hpp-text';
       const statusTitle = isVerified
         ? '作者已初校（待社群回報確認）'
         : '單純程式產生，還毋曾經過人工檢驗，請細義使用！';
-      hppTextSpan.title = statusTitle;
-      const hppLineHtml = hppLines[i] !== undefined ? hppLines[i] : '';
-      hppTextSpan.innerHTML = applyHppVariantColors(hppLineHtml, dialect);
-      hppDiv.appendChild(hppTextSpan);
+      const activeTracks = useMultiRaoping ? raopingTracks : ['zhuk'];
 
-      const statusIcon = document.createElement('button');
-      statusIcon.type = 'button';
-      statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
-      statusIcon.textContent = 'i';
-      statusIcon.title = statusTitle;
-      statusIcon.setAttribute('aria-label', statusTitle);
-      const stopIconEvent = (e) => {
-        e.stopPropagation();
-      };
-      statusIcon.addEventListener('mousedown', stopIconEvent);
-      statusIcon.addEventListener('mouseup', stopIconEvent);
-      statusIcon.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        showStatusTip(statusIcon, statusTitle);
-      });
-      hppDiv.appendChild(statusIcon);
+      let lastHppDiv = null;
+      let noteElToAppend = null;
 
-      if (i === 0) {
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'romaine-edit-btn';
-        editBtn.textContent = '✎';
-        editBtn.title = '在工作台校對這句';
-        editBtn.setAttribute('aria-label', '在工作台校對這句');
-        editBtn.addEventListener('mousedown', stopIconEvent);
-        editBtn.addEventListener('mouseup', stopIconEvent);
-        editBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (window.romaineWorkbench && typeof window.romaineWorkbench.loadRow === 'function') {
-            const td2 = row.querySelector('td[data-label="詞彙"]');
-            const wordEl = td2 ? td2.querySelector('.word-text, strong, b') : null;
-            window.romaineWorkbench.loadRow({
-              han: sentText,
-              dialect,
-              level,
-              rowId,
-              word: wordEl ? wordEl.textContent.trim() : '',
-              rowEl: row,
-              openBookMap,
+      activeTracks.forEach((tk, tIdx) => {
+        const hppDiv = document.createElement('div');
+        hppDiv.className = 'romaine-auto-hpp' + (useMultiRaoping ? ' is-raoping-track' : '');
+
+        if (useMultiRaoping) {
+          const m = TRACK_META[tk];
+          const badgeEl = document.createElement('span');
+          badgeEl.className = `variant-label ${m.cls} romaine-track-badge`;
+          badgeEl.title = m.title;
+          badgeEl.textContent = m.badge;
+          hppDiv.appendChild(badgeEl);
+        }
+
+        const hppTextSpan = document.createElement('span');
+        hppTextSpan.className = 'romaine-auto-hpp-text';
+        hppTextSpan.title = statusTitle;
+        const hppLineHtml = (trackLinesMap[tk] && trackLinesMap[tk][i] !== undefined) ? trackLinesMap[tk][i] : '';
+        hppTextSpan.innerHTML = tk === 'zhuk' ? applyHppVariantColors(hppLineHtml, dialect) : hppLineHtml;
+        hppDiv.appendChild(hppTextSpan);
+
+        if (tIdx === 0) {
+          const statusIcon = document.createElement('button');
+          statusIcon.type = 'button';
+          statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
+          statusIcon.textContent = 'i';
+          statusIcon.title = statusTitle;
+          statusIcon.setAttribute('aria-label', statusTitle);
+          const stopIconEvent = (e) => {
+            e.stopPropagation();
+          };
+          statusIcon.addEventListener('mousedown', stopIconEvent);
+          statusIcon.addEventListener('mouseup', stopIconEvent);
+          statusIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showStatusTip(statusIcon, statusTitle);
+          });
+          hppDiv.appendChild(statusIcon);
+
+          if (i === 0) {
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'romaine-edit-btn';
+            editBtn.textContent = '✎';
+            editBtn.title = '在工作台校對這句';
+            editBtn.setAttribute('aria-label', '在工作台校對這句');
+            editBtn.addEventListener('mousedown', stopIconEvent);
+            editBtn.addEventListener('mouseup', stopIconEvent);
+            editBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (window.romaineWorkbench && typeof window.romaineWorkbench.loadRow === 'function') {
+                const td2 = row.querySelector('td[data-label="詞彙"]');
+                const wordEl = td2 ? td2.querySelector('.word-text, strong, b') : null;
+                window.romaineWorkbench.loadRow({
+                  han: sentText,
+                  dialect,
+                  level,
+                  rowId,
+                  word: wordEl ? wordEl.textContent.trim() : '',
+                  rowEl: row,
+                  openBookMap,
+                });
+              }
             });
+            hppDiv.appendChild(editBtn);
           }
-        });
-        hppDiv.appendChild(editBtn);
-      }
+        }
 
-      if (i === pairCount - 1 && isVerified && verifiedItem.note) {
-        const qBtn = document.createElement('button');
-        qBtn.type = 'button';
-        qBtn.className = 'romaine-note-toggle';
-        qBtn.textContent = '？';
-        qBtn.title = '檢視校對註解';
-        qBtn.setAttribute('aria-expanded', 'false');
-        hppDiv.appendChild(qBtn);
+        if (tIdx === activeTracks.length - 1 && i === pairCount - 1 && isVerified && verifiedItem.note) {
+          const qBtn = document.createElement('button');
+          qBtn.type = 'button';
+          qBtn.className = 'romaine-note-toggle';
+          qBtn.textContent = '？';
+          qBtn.title = '檢視校對註解';
+          qBtn.setAttribute('aria-expanded', 'false');
+          hppDiv.appendChild(qBtn);
 
-        const noteEl = document.createElement('p');
-        noteEl.className = 'notes romaine-auto-note';
-        noteEl.style.display = 'none';
-        const escNote = verifiedItem.note
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>');
-        noteEl.innerHTML = `（${escNote}）`;
+          const noteEl = document.createElement('p');
+          noteEl.className = 'notes romaine-auto-note';
+          noteEl.style.display = 'none';
+          const escNote = verifiedItem.note
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>');
+          noteEl.innerHTML = `（${escNote}）`;
 
-        const stopAll = (e) => {
-          e.stopPropagation();
-        };
-        qBtn.addEventListener('mousedown', stopAll);
-        qBtn.addEventListener('mouseup', stopAll);
-        qBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const isOpen = noteEl.style.display !== 'none';
-          noteEl.style.display = isOpen ? 'none' : 'block';
-          qBtn.setAttribute('aria-expanded', String(!isOpen));
-          qBtn.classList.toggle('is-open', !isOpen);
-        });
+          const stopAll = (e) => {
+            e.stopPropagation();
+          };
+          qBtn.addEventListener('mousedown', stopAll);
+          qBtn.addEventListener('mouseup', stopAll);
+          qBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isOpen = noteEl.style.display !== 'none';
+            noteEl.style.display = isOpen ? 'none' : 'block';
+            qBtn.setAttribute('aria-expanded', String(!isOpen));
+            qBtn.classList.toggle('is-open', !isOpen);
+          });
+          noteElToAppend = noteEl;
+        }
 
         pair.appendChild(hppDiv);
-        const hanDiv = document.createElement('div');
-        hanDiv.className = 'romaine-han-line sentence';
-        hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
-        pair.appendChild(hanDiv);
-        pair.appendChild(noteEl);
-      } else {
-        pair.appendChild(hppDiv);
-        const hanDiv = document.createElement('div');
-        hanDiv.className = 'romaine-han-line sentence';
-        hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
-        pair.appendChild(hanDiv);
-      }
+        lastHppDiv = hppDiv;
+      });
+
+      const hanDiv = document.createElement('div');
+      hanDiv.className = 'romaine-han-line sentence';
+      hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
+      pair.appendChild(hanDiv);
+      if (noteElToAppend) pair.appendChild(noteElToAppend);
       container.appendChild(pair);
     }
 
@@ -621,6 +772,7 @@
     if (!generated) return;
 
     if (!enabled) {
+      ensureRaopingMainBar(generated, false);
       for (const el of generated.querySelectorAll('.romaine-interleaved')) {
         if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
           el.nextElementSibling.style.display = '';
@@ -637,6 +789,9 @@
     await ensureVerifiedLoaded();
 
     const rows = Array.from(generated.querySelectorAll('tr'));
+    const hasRaopingRows = rows.some((r) => detectContextInfo(r).dialect === 'ngiaupin');
+    ensureRaopingMainBar(generated, hasRaopingRows);
+
     for (const row of rows) {
       await renderRowOverlay(row);
     }
@@ -685,16 +840,33 @@
       });
     }
 
+    const raopingSettingChks = Array.from(document.querySelectorAll('input[name="romaineRaopingTrackSetting"]'));
+    raopingSettingChks.forEach((chk) => {
+      chk.addEventListener('change', () => {
+        const checked = raopingSettingChks.filter((x) => x.checked).map((x) => x.value);
+        if (!checked.length) {
+          chk.checked = true;
+          return;
+        }
+        setRaopingTracksPref(checked);
+        syncSettingsControls();
+        rerenderRaopingRows();
+      });
+    });
+
     const settingsBtn = document.getElementById('settingsBtn');
     if (settingsBtn) {
       settingsBtn.addEventListener('click', syncSettingsControls);
     }
 
-    window.addEventListener('romainePrefsChanged', () => {
+    window.addEventListener('romainePrefsChanged', (e) => {
       syncSettingsControls();
       applyUnverifiedItalicToDom();
       applyTrustUnderlineToDom();
       applyNoSandhiMarkerToDom();
+      if (e && e.detail && e.detail.key === 'romaineRaopingTracks' && enabled) {
+        rerenderRaopingRows();
+      }
     });
 
     window.addEventListener('storage', (e) => {

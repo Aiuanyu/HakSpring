@@ -49,7 +49,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.85" />
+    <link rel="stylesheet" href="style.css?v=4.7.86" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -82,9 +82,9 @@
       defer
     ></script>
     <script type="text/javascript" src="js/romaine-join.js?v=1.0.1" defer></script>
-    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.8" defer></script>
-    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.13" defer></script>
-    <script type="text/javascript" src="js/romaine-workbench.js?v=1.0.2" defer></script>
+    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.9" defer></script>
+    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.15" defer></script>
+    <script type="text/javascript" src="js/romaine-workbench.js?v=1.0.3" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.9" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -1545,6 +1545,19 @@
                 style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color, #2d6a4f);"
               />
             </label>
+          </div>
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label>饒平例句地區顯示（竹／卓／桃）</label>
+              <span class="setting-description"
+                >開啟「句 Lo」或工作台顯示饒平例句時，可自由切換要顯示哪幾隻地區音（新竹含 6 條連讀變調；卓蘭、桃園目前顯示本調，同工作台設定連動）</span
+              >
+            </div>
+            <div class="romaine-raoping-setting-checks" role="group" aria-label="饒平例句地區顯示">
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="zhuk" checked /><span class="variant-label variant-label-竹">竹</span>新竹</label>
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="zhuolan" checked /><span class="variant-label variant-label-卓">卓</span>卓蘭</label>
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="taoyuan" checked /><span class="variant-label variant-label-桃">桃</span>桃園</label>
+            </div>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">
