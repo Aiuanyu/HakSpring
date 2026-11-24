@@ -12,6 +12,8 @@
 
   let enabled = localStorage.getItem(STORAGE_KEY) !== 'false';
   let verifiedPromise = null;
+  let repoVerifiedByKey = new Map();
+  let repoVerifiedByCjk = new Map();
   let verifiedByKey = new Map();
   let verifiedByCjk = new Map();
   const engines = new Map();
@@ -71,23 +73,53 @@
     return ALIAS[d] || d || 'xiien';
   }
 
-  function registerVerifiedItem(it) {
-    if (!it || !it.cert_ref || !it.cert_ref.id) return;
-    const d = normDialect(it.cert_ref.dialect || it.dialect || 'xiien');
-    const lvl = it.cert_ref.level || '';
-    const id = it.cert_ref.id;
-    verifiedByKey.set(`${d}|${lvl}|${id}`, it);
+  function registerVerifiedItem(it, isRepo) {
+    if (!it || !it.han) return;
+    const d = normDialect((it.cert_ref && it.cert_ref.dialect) || it.dialect || 'xiien');
+    const lvl = (it.cert_ref && it.cert_ref.level) || '';
+    const id = (it.cert_ref && it.cert_ref.id) || '';
     const cjk = pureCjk(it.han);
-    if (cjk) verifiedByCjk.set(`${d}|${cjk}`, it);
+    if (id) {
+      verifiedByKey.set(`${d}|${lvl}|${id}`, it);
+      if (isRepo) repoVerifiedByKey.set(`${d}|${lvl}|${id}`, it);
+    }
+    if (cjk) {
+      verifiedByCjk.set(`${d}|${cjk}`, it);
+      if (isRepo) repoVerifiedByCjk.set(`${d}|${cjk}`, it);
+    }
   }
 
   function mergeLocalVerifiedCorpus() {
+    let keptCount = 0;
     try {
       const localList = JSON.parse(localStorage.getItem('romaineAutoVerifiedCorpus') || '[]');
       if (Array.isArray(localList)) {
-        for (const it of localList) registerVerifiedItem(it);
+        const kept = [];
+        for (const it of localList) {
+          if (!it || !it.han) continue;
+          const d = normDialect((it.cert_ref && it.cert_ref.dialect) || it.dialect || 'xiien');
+          const lvl = (it.cert_ref && it.cert_ref.level) || '';
+          const id = (it.cert_ref && it.cert_ref.id) || '';
+          const cjk = pureCjk(it.han);
+          const repoItem = (id && repoVerifiedByKey.get(`${d}|${lvl}|${id}`)) || (cjk && repoVerifiedByCjk.get(`${d}|${cjk}`));
+          const repoTs = repoItem ? (Date.parse(repoItem.updated_at || 0) || 0) : -1;
+          const localTs = Date.parse(it.updated_at || 0) || 0;
+          if (repoItem && repoTs >= localTs) {
+            // Auto-GC：repo 已整合較新或同時間版本，清除本機舊暫存
+            continue;
+          }
+          kept.push(it);
+          registerVerifiedItem(it, false);
+        }
+        keptCount = kept.length;
+        if (kept.length !== localList.length) {
+          localStorage.setItem('romaineAutoVerifiedCorpus', JSON.stringify(kept));
+        }
       }
     } catch {}
+    if (window.romaineWorkbench && typeof window.romaineWorkbench.updateLocalCount === 'function') {
+      window.romaineWorkbench.updateLocalCount(keptCount);
+    }
   }
 
   async function ensureVerifiedLoaded() {
@@ -95,7 +127,7 @@
       verifiedPromise = fetch('data/romaine/verified_sentences.json?v=20261123')
         .then((r) => (r.ok ? r.json() : { items: [] }))
         .then((data) => {
-          for (const it of data.items || []) registerVerifiedItem(it);
+          for (const it of data.items || []) registerVerifiedItem(it, true);
         })
         .catch(() => {});
     }
@@ -417,6 +449,173 @@
     btn.setAttribute('aria-pressed', String(enabled));
   }
 
+  async function renderRowOverlay(row) {
+    const td3 = row.querySelector('td[data-label="例句"]');
+    if (!td3) return;
+    if (td3.querySelector('.romaine-interleaved')) return;
+    const sentSpan = td3.querySelector('.sentence');
+    if (!sentSpan) return;
+
+    const { dialect, level, rowId } = detectContextInfo(row);
+    if (!dialect) return;
+
+    const hanLines = splitSentenceHtmlLines(sentSpan.innerHTML);
+    const tmpDiv = document.createElement('div');
+    const sentText = hanLines
+      .map((h) => {
+        tmpDiv.innerHTML = h;
+        return (tmpDiv.textContent || '').trim();
+      })
+      .join('\n')
+      .trim();
+    if (!sentText) return;
+
+    const cjkKey = `${dialect}|${pureCjk(sentText)}`;
+    const fullKey = rowId && level ? `${dialect}|${level}|${rowId}` : '';
+    const verifiedItem = (fullKey && verifiedByKey.get(fullKey)) || verifiedByCjk.get(cjkKey);
+
+    const eng = await getEngine(dialect);
+    if (!eng || !enabled) return;
+    if (td3.querySelector('.romaine-interleaved')) return;
+
+    const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
+    let rawHppHtml = '';
+    let isVerified = false;
+    if (verifiedItem) {
+      isVerified = true;
+      rawHppHtml = renderVerifiedHtml(verifiedItem, eng);
+    } else {
+      const toks = eng.segmentAndConvert(sentText, openBookMap);
+      rawHppHtml = eng.formatTokensToSandhiHtml(toks, 'none');
+    }
+
+    // 依斷行配對：每句「羅馬字在上、諸夏字在下」（配合 td2 詞音位置）
+    const hppLines = rawHppHtml.split('\n');
+    const pairCount = Math.max(hanLines.length, hppLines.length);
+
+    const container = document.createElement('div');
+    container.className = 'romaine-interleaved';
+
+    for (let i = 0; i < pairCount; i++) {
+      const pair = document.createElement('div');
+      pair.className = 'romaine-pair ' + (isVerified ? 'is-verified' : 'is-auto');
+
+      const hppDiv = document.createElement('div');
+      hppDiv.className = 'romaine-auto-hpp';
+      const hppTextSpan = document.createElement('span');
+      hppTextSpan.className = 'romaine-auto-hpp-text';
+      const statusTitle = isVerified
+        ? '作者已初校（待社群回報確認）'
+        : '單純程式產生，還毋曾經過人工檢驗，請細義使用！';
+      hppTextSpan.title = statusTitle;
+      const hppLineHtml = hppLines[i] !== undefined ? hppLines[i] : '';
+      hppTextSpan.innerHTML = applyHppVariantColors(hppLineHtml, dialect);
+      hppDiv.appendChild(hppTextSpan);
+
+      const statusIcon = document.createElement('button');
+      statusIcon.type = 'button';
+      statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
+      statusIcon.textContent = 'i';
+      statusIcon.title = statusTitle;
+      statusIcon.setAttribute('aria-label', statusTitle);
+      const stopIconEvent = (e) => {
+        e.stopPropagation();
+      };
+      statusIcon.addEventListener('mousedown', stopIconEvent);
+      statusIcon.addEventListener('mouseup', stopIconEvent);
+      statusIcon.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showStatusTip(statusIcon, statusTitle);
+      });
+      hppDiv.appendChild(statusIcon);
+
+      if (i === 0) {
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'romaine-edit-btn';
+        editBtn.textContent = '✎';
+        editBtn.title = '在工作台校對這句';
+        editBtn.setAttribute('aria-label', '在工作台校對這句');
+        editBtn.addEventListener('mousedown', stopIconEvent);
+        editBtn.addEventListener('mouseup', stopIconEvent);
+        editBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.romaineWorkbench && typeof window.romaineWorkbench.loadRow === 'function') {
+            const td2 = row.querySelector('td[data-label="詞彙"]');
+            const wordEl = td2 ? td2.querySelector('.word-text, strong, b') : null;
+            window.romaineWorkbench.loadRow({
+              han: sentText,
+              dialect,
+              level,
+              rowId,
+              word: wordEl ? wordEl.textContent.trim() : '',
+              rowEl: row,
+              openBookMap,
+            });
+          }
+        });
+        hppDiv.appendChild(editBtn);
+      }
+
+      if (i === pairCount - 1 && isVerified && verifiedItem.note) {
+        const qBtn = document.createElement('button');
+        qBtn.type = 'button';
+        qBtn.className = 'romaine-note-toggle';
+        qBtn.textContent = '？';
+        qBtn.title = '檢視校對註解';
+        qBtn.setAttribute('aria-expanded', 'false');
+        hppDiv.appendChild(qBtn);
+
+        const noteEl = document.createElement('p');
+        noteEl.className = 'notes romaine-auto-note';
+        noteEl.style.display = 'none';
+        const escNote = verifiedItem.note
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        noteEl.innerHTML = `（${escNote}）`;
+
+        const stopAll = (e) => {
+          e.stopPropagation();
+        };
+        qBtn.addEventListener('mousedown', stopAll);
+        qBtn.addEventListener('mouseup', stopAll);
+        qBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isOpen = noteEl.style.display !== 'none';
+          noteEl.style.display = isOpen ? 'none' : 'block';
+          qBtn.setAttribute('aria-expanded', String(!isOpen));
+          qBtn.classList.toggle('is-open', !isOpen);
+        });
+
+        pair.appendChild(hppDiv);
+        const hanDiv = document.createElement('div');
+        hanDiv.className = 'romaine-han-line sentence';
+        hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
+        pair.appendChild(hanDiv);
+        pair.appendChild(noteEl);
+      } else {
+        pair.appendChild(hppDiv);
+        const hanDiv = document.createElement('div');
+        hanDiv.className = 'romaine-han-line sentence';
+        hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
+        pair.appendChild(hanDiv);
+      }
+      container.appendChild(pair);
+    }
+
+    sentSpan.style.display = 'none';
+    sentSpan.insertAdjacentElement('afterend', container);
+    if (container.nextElementSibling && container.nextElementSibling.tagName === 'BR') {
+      container.nextElementSibling.style.display = 'none';
+      container.nextElementSibling.dataset.romaineHiddenBr = '1';
+    }
+  }
+
   async function applyToTable() {
     const generated = document.getElementById('generated');
     if (!generated) return;
@@ -439,141 +638,7 @@
 
     const rows = Array.from(generated.querySelectorAll('tr'));
     for (const row of rows) {
-      const td3 = row.querySelector('td[data-label="例句"]');
-      if (!td3) continue;
-      if (td3.querySelector('.romaine-interleaved')) continue;
-      const sentSpan = td3.querySelector('.sentence');
-      if (!sentSpan) continue;
-
-      const { dialect, level, rowId } = detectContextInfo(row);
-      if (!dialect) continue;
-
-      const hanLines = splitSentenceHtmlLines(sentSpan.innerHTML);
-      const tmpDiv = document.createElement('div');
-      const sentText = hanLines
-        .map((h) => {
-          tmpDiv.innerHTML = h;
-          return (tmpDiv.textContent || '').trim();
-        })
-        .join('\n')
-        .trim();
-      if (!sentText) continue;
-
-      const cjkKey = `${dialect}|${pureCjk(sentText)}`;
-      const fullKey = rowId && level ? `${dialect}|${level}|${rowId}` : '';
-      const verifiedItem = (fullKey && verifiedByKey.get(fullKey)) || verifiedByCjk.get(cjkKey);
-
-      const eng = await getEngine(dialect);
-      if (!eng || !enabled) continue;
-      if (td3.querySelector('.romaine-interleaved')) continue;
-
-      let rawHppHtml = '';
-      let isVerified = false;
-      if (verifiedItem) {
-        isVerified = true;
-        rawHppHtml = renderVerifiedHtml(verifiedItem, eng);
-      } else {
-        const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
-        const toks = eng.segmentAndConvert(sentText, openBookMap);
-        rawHppHtml = eng.formatTokensToSandhiHtml(toks, 'none');
-      }
-
-      // 依斷行配對：每句「羅馬字在上、諸夏字在下」（配合 td2 詞音位置）
-      const hppLines = rawHppHtml.split('\n');
-      const pairCount = Math.max(hanLines.length, hppLines.length);
-
-      const container = document.createElement('div');
-      container.className = 'romaine-interleaved';
-
-      for (let i = 0; i < pairCount; i++) {
-        const pair = document.createElement('div');
-        pair.className = 'romaine-pair ' + (isVerified ? 'is-verified' : 'is-auto');
-
-        const hppDiv = document.createElement('div');
-        hppDiv.className = 'romaine-auto-hpp';
-        const hppTextSpan = document.createElement('span');
-        hppTextSpan.className = 'romaine-auto-hpp-text';
-        const statusTitle = isVerified
-          ? '作者已初校（待社群回報確認）'
-          : '單純程式產生，還毋曾經過人工檢驗，請細義使用！';
-        hppTextSpan.title = statusTitle;
-        const hppLineHtml = hppLines[i] !== undefined ? hppLines[i] : '';
-        hppTextSpan.innerHTML = applyHppVariantColors(hppLineHtml, dialect);
-        hppDiv.appendChild(hppTextSpan);
-
-        const statusIcon = document.createElement('button');
-        statusIcon.type = 'button';
-        statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
-        statusIcon.textContent = 'i';
-        statusIcon.title = statusTitle;
-        statusIcon.setAttribute('aria-label', statusTitle);
-        const stopIconEvent = (e) => {
-          e.stopPropagation();
-        };
-        statusIcon.addEventListener('mousedown', stopIconEvent);
-        statusIcon.addEventListener('mouseup', stopIconEvent);
-        statusIcon.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          showStatusTip(statusIcon, statusTitle);
-        });
-        hppDiv.appendChild(statusIcon);
-
-        if (i === pairCount - 1 && isVerified && verifiedItem.note) {
-          const qBtn = document.createElement('button');
-          qBtn.type = 'button';
-          qBtn.className = 'romaine-note-toggle';
-          qBtn.textContent = '？';
-          qBtn.title = '檢視校對註解';
-          qBtn.setAttribute('aria-expanded', 'false');
-          hppDiv.appendChild(qBtn);
-
-          const noteEl = document.createElement('p');
-          noteEl.className = 'notes romaine-auto-note';
-          noteEl.style.display = 'none';
-          const escNote = verifiedItem.note
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '<br>');
-          noteEl.innerHTML = `（${escNote}）`;
-
-          const stopAll = (e) => {
-            e.stopPropagation();
-          };
-          qBtn.addEventListener('mousedown', stopAll);
-          qBtn.addEventListener('mouseup', stopAll);
-          qBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const isOpen = noteEl.style.display !== 'none';
-            noteEl.style.display = isOpen ? 'none' : 'block';
-            qBtn.setAttribute('aria-expanded', String(!isOpen));
-            qBtn.classList.toggle('is-open', !isOpen);
-          });
-
-          pair.appendChild(hppDiv);
-          const hanDiv = document.createElement('div');
-          hanDiv.className = 'romaine-han-line sentence';
-          hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
-          pair.appendChild(hanDiv);
-          pair.appendChild(noteEl);
-        } else {
-          pair.appendChild(hppDiv);
-          const hanDiv = document.createElement('div');
-          hanDiv.className = 'romaine-han-line sentence';
-          hanDiv.innerHTML = hanLines[i] !== undefined ? hanLines[i] : '';
-          pair.appendChild(hanDiv);
-        }
-        container.appendChild(pair);
-      }
-
-      sentSpan.style.display = 'none';
-      sentSpan.insertAdjacentElement('afterend', container);
-      if (container.nextElementSibling && container.nextElementSibling.tagName === 'BR') {
-        container.nextElementSibling.style.display = 'none';
-        container.nextElementSibling.dataset.romaineHiddenBr = '1';
-      }
+      await renderRowOverlay(row);
     }
   }
 
@@ -676,6 +741,60 @@
       scheduleApply();
     }
   }
+
+  function resetRowOverlay(row) {
+    if (!row) return;
+    for (const el of row.querySelectorAll('.romaine-interleaved')) {
+      if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
+        el.nextElementSibling.style.display = '';
+        delete el.nextElementSibling.dataset.romaineHiddenBr;
+      }
+      el.remove();
+    }
+    for (const s of row.querySelectorAll('td[data-label="例句"] .sentence')) {
+      s.style.display = '';
+    }
+  }
+
+  async function upsertVerifiedItem(item, rowEl) {
+    if (!item || !item.han) return;
+    registerVerifiedItem(item, false);
+    if (rowEl && enabled) {
+      resetRowOverlay(rowEl);
+      await renderRowOverlay(rowEl);
+    } else if (enabled) {
+      refreshFromStorage();
+    }
+  }
+
+  function refreshFromStorage() {
+    verifiedByKey = new Map(repoVerifiedByKey);
+    verifiedByCjk = new Map(repoVerifiedByCjk);
+    mergeLocalVerifiedCorpus();
+    const generated = document.getElementById('generated');
+    if (generated) {
+      for (const row of generated.querySelectorAll('tr')) {
+        resetRowOverlay(row);
+      }
+      scheduleApply();
+    }
+  }
+
+  function getVerifiedItem(dialect, level, rowId, han) {
+    const d = normDialect(dialect || 'xiien');
+    if (rowId && level) {
+      const byKey = verifiedByKey.get(`${d}|${level}|${rowId}`);
+      if (byKey) return byKey;
+    }
+    const cjk = pureCjk(han);
+    return cjk ? verifiedByCjk.get(`${d}|${cjk}`) || null : null;
+  }
+
+  window.romaineTableOverlay = {
+    upsertVerifiedItem,
+    refreshFromStorage,
+    getVerifiedItem,
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

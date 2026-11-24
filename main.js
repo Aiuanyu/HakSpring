@@ -2874,18 +2874,9 @@ function showPronunciationPopup(
   if (romanizerBtn) {
     romanizerBtn.onclick = (e) => {
       e.stopPropagation();
-      const mainRomanizerBtn = document.getElementById('showRomanizerBtn');
-      const romanizerInput = document.getElementById('romanizer-input');
-      if (mainRomanizerBtn && romanizerInput) {
-        if (contextualDialect) {
-          // The romanizer uses this global variable to set its initial dialect.
-          currentActiveMainDialectName = contextualDialect;
-          console.log(
-            `Setting Romanizer dialect context to: ${contextualDialect}`,
-          );
-        }
-        romanizerInput.value = selectedText;
-        mainRomanizerBtn.click();
+      if (window.romaineWorkbench && typeof window.romaineWorkbench.openWithText === 'function') {
+        const dialectCtx = contextualDialect || currentActiveMainDialectName || '四縣';
+        window.romaineWorkbench.openWithText(selectedText, dialectCtx);
         hidePronunciationPopup(popupEl, backdropEl);
       }
     };
@@ -9426,28 +9417,24 @@ function initializeAppUI() {
         );
       }
     } else if (romParam) {
-      const romanizerInput = document.getElementById('romanizer-input');
-      const showRomanizerBtn = document.getElementById('showRomanizerBtn');
+      const dialectParam = urlParams.get('kiong');
+      if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
+        currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
+      } else {
+        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+        currentActiveMainDialectName =
+          lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]
+            ? lastUsedDialect
+            : '四縣';
+      }
 
-      if (romanizerInput && showRomanizerBtn) {
-        const dialectParam = urlParams.get('kiong');
-        if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
-          currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
-        } else {
-          const lastUsedDialect = localStorage.getItem('lastSearchDialect');
-          currentActiveMainDialectName =
-            lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]
-              ? lastUsedDialect
-              : '四縣';
-        }
+      if (window.romaineWorkbench && typeof window.romaineWorkbench.openWithText === 'function') {
+        window.romaineWorkbench.openWithText(decodeURIComponent(romParam), currentActiveMainDialectName);
+      }
 
-        showRomanizerBtn.click();
-        romanizerInput.value = decodeURIComponent(romParam);
-
-        const learningPanel = document.getElementById('learningSelectionPanel');
-        if (learningPanel) {
-          learningPanel.open = false;
-        }
+      const learningPanel = document.getElementById('learningSelectionPanel');
+      if (learningPanel) {
+        learningPanel.open = false;
       }
     }
   }

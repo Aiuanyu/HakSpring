@@ -1,0 +1,807 @@
+/**
+ * js/romaine-workbench.js
+ * 主頁右側「蘿蔓生菜工作台」：
+ *   - 取代舊版 #romanizerContainer 彈窗，由 #header #showRomanizerBtn 開關
+ *   - 寬螢幕為右側 sticky 分欄；窄螢幕（手機）為底部可展開抽屜
+ *   - 支援自由輸入詞句轉換，也支援直接點選主表例句 ✎ 即時編輯並回存 localStorage
+ *   - 回存後即時重繪左側對應列，不須重整頁面
+ */
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
+  const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
+
+  const DIALECT_OPTIONS = [
+    { key: 'xiien', label: '四縣' },
+    { key: 'namxiian', label: '南四縣' },
+    { key: 'hoiliug', label: '海陸' },
+    { key: 'taibu', label: '大埔' },
+    { key: 'ngiaupin', label: '饒平' },
+    { key: 'zhioon', label: '詔安' },
+  ];
+
+  const DIALECT_NAME_TO_KEY = {
+    四縣: 'xiien',
+    北四縣: 'xiien',
+    南四縣: 'namxiian',
+    '南四縣（美濃）': 'namxiian',
+    海陸: 'hoiliug',
+    大埔: 'taibu',
+    饒平: 'ngiaupin',
+    '饒平（新竹）': 'ngiaupin',
+    '饒平（卓蘭）': 'ngiaupin',
+    '饒平（桃園）': 'ngiaupin',
+    詔安: 'zhioon',
+  };
+
+  let isOpen = false;
+  let isExpandedMobile = false;
+  let engine = null;
+  let engineDialect = null;
+  let currentTokens = [];
+  let prevPureCjk = [];
+  let manualCharOverrides = new Map();
+  let activeCertRef = null;
+  let activeRowEl = null;
+  let activeOpenBookMap = null;
+  let inputDebounceTimer = null;
+
+  // DOM refs (created lazily on init)
+  let paneEl = null;
+  let candPopupEl = null;
+  let dialectSel = null;
+  let autoChk = null;
+  let sandhiChk = null;
+  let joinSel = null;
+  let inputEl = null;
+  let tokensEl = null;
+  let outputEl = null;
+  let noteEl = null;
+  let certBadgeEl = null;
+  let statusEl = null;
+  let localCountEl = null;
+  let importFileEl = null;
+
+  function normDialect(d) {
+    if (DIALECT_NAME_TO_KEY[d]) return DIALECT_NAME_TO_KEY[d];
+    if (window.RomaineAutoEngine && typeof window.RomaineAutoEngine.normalizeDialect === 'function') {
+      return window.RomaineAutoEngine.normalizeDialect(d);
+    }
+    return d || 'xiien';
+  }
+
+  function loadVerifiedList() {
+    try {
+      const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveVerifiedList(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn('[romaine-workbench] localStorage save failed:', e);
+    }
+    updateLocalCount(list.length);
+  }
+
+  function updateLocalCount(count) {
+    if (!localCountEl) return;
+    const n = typeof count === 'number' ? count : loadVerifiedList().length;
+    localCountEl.textContent = n > 0 ? `未整合 ${n} 筆` : '無本機暫存';
+    localCountEl.classList.toggle('has-pending', n > 0);
+  }
+
+  function buildDom() {
+    paneEl = document.getElementById('romaineWorkbenchPane');
+    if (!paneEl) return false;
+
+    paneEl.innerHTML = `
+      <div class="wb-header">
+        <div class="wb-title-row">
+          <span class="wb-title">🌿 蘿蔓生菜工作台</span>
+          <span class="wb-cert-badge" id="wbCertBadge">自由輸入</span>
+        </div>
+        <div class="wb-header-actions">
+          <button type="button" class="wb-icon-btn wb-expand-btn" id="wbExpandBtn" title="展開／收合高度" aria-label="展開或收合工作台">⇕</button>
+          <button type="button" class="wb-icon-btn" id="wbCloseBtn" title="關閉工作台" aria-label="關閉工作台">&times;</button>
+        </div>
+      </div>
+
+      <div class="wb-toolbar">
+        <select id="wbDialectSelect" aria-label="選擇腔調">
+          ${DIALECT_OPTIONS.map((d) => `<option value="${d.key}">${d.label}</option>`).join('')}
+        </select>
+        <select id="wbJoiningMode" aria-label="連寫模式">
+          <option value="none">連寫（無空格）</option>
+          <option value="hyphen">連字號（-）</option>
+          <option value="space">分音節（空格）</option>
+        </select>
+        <label class="wb-check"><input type="checkbox" id="wbAutoToggle" checked /> 自動斷詞</label>
+        <label class="wb-check"><input type="checkbox" id="wbSandhiToggle" checked /> 變調色</label>
+      </div>
+
+      <div class="wb-section">
+        <textarea id="wbInputHan" rows="3" placeholder="輸入客話漢字，或點左側例句「✎」載入校對…&#10;控制符：- 強制連詞 / = 加連字號 / + 斷開 / ~ 或 # 不變調 / %%註解%%"></textarea>
+        <div class="wb-input-actions">
+          <button type="button" id="wbConvertBtn" class="wb-btn">重新斷詞</button>
+          <span class="wb-status" id="wbStatusLine">準備就緒</span>
+        </div>
+      </div>
+
+      <div class="wb-section">
+        <div class="wb-label">詞彙切分與讀音微調（點詞片換音、右上 U/l 切換大小寫）</div>
+        <div class="wb-tokens-wrap" id="wbTokensWrap"></div>
+      </div>
+
+      <div class="wb-section">
+        <div class="wb-output-head">
+          <span class="wb-label">羅馬字輸出（HPP）</span>
+          <button type="button" id="wbCopyBtn" class="wb-btn wb-btn-sm">複製</button>
+        </div>
+        <div class="wb-output-box" id="wbOutputHpp"></div>
+      </div>
+
+      <div class="wb-section">
+        <input type="text" id="wbNoteInput" class="wb-note-input" placeholder="校對備註（選填，將附於例句「？」按鈕）" />
+      </div>
+
+      <div class="wb-footer">
+        <button type="button" id="wbSaveBtn" class="wb-btn wb-btn-primary">儲存／核可</button>
+        <button type="button" id="wbExportBtn" class="wb-btn">匯出 JSON</button>
+        <button type="button" id="wbImportBtn" class="wb-btn">匯入 JSON</button>
+        <input type="file" id="wbImportFile" accept=".json,application/json" style="display:none" />
+        <span class="wb-local-badge" id="wbLocalCountBadge">無本機暫存</span>
+      </div>
+    `;
+
+    candPopupEl = document.createElement('div');
+    candPopupEl.id = 'wbCandPopup';
+    candPopupEl.className = 'wb-cand-popup';
+    document.body.appendChild(candPopupEl);
+
+    dialectSel = document.getElementById('wbDialectSelect');
+    autoChk = document.getElementById('wbAutoToggle');
+    sandhiChk = document.getElementById('wbSandhiToggle');
+    joinSel = document.getElementById('wbJoiningMode');
+    inputEl = document.getElementById('wbInputHan');
+    tokensEl = document.getElementById('wbTokensWrap');
+    outputEl = document.getElementById('wbOutputHpp');
+    noteEl = document.getElementById('wbNoteInput');
+    certBadgeEl = document.getElementById('wbCertBadge');
+    statusEl = document.getElementById('wbStatusLine');
+    localCountEl = document.getElementById('wbLocalCountBadge');
+    importFileEl = document.getElementById('wbImportFile');
+
+    const savedJoin = localStorage.getItem('romanizerJoiningMode');
+    if (savedJoin && ['none', 'hyphen', 'space'].includes(savedJoin)) {
+      joinSel.value = savedJoin;
+    }
+
+    document.getElementById('wbCloseBtn').addEventListener('click', close);
+    document.getElementById('wbExpandBtn').addEventListener('click', () => {
+      isExpandedMobile = !isExpandedMobile;
+      paneEl.classList.toggle('is-expanded', isExpandedMobile);
+    });
+
+    dialectSel.addEventListener('change', async () => {
+      await ensureEngine(dialectSel.value);
+      manualCharOverrides.clear();
+      runConvert();
+    });
+
+    joinSel.addEventListener('change', () => {
+      localStorage.setItem('romanizerJoiningMode', joinSel.value);
+      render();
+    });
+
+    sandhiChk.addEventListener('change', render);
+
+    document.getElementById('wbConvertBtn').addEventListener('click', () => {
+      manualCharOverrides.clear();
+      runConvert();
+    });
+
+    inputEl.addEventListener('input', () => {
+      clearTimeout(inputDebounceTimer);
+      inputDebounceTimer = setTimeout(() => {
+        if (autoChk.checked) runConvert();
+      }, 150);
+    });
+
+    document.getElementById('wbCopyBtn').addEventListener('click', async () => {
+      const txt = getPlainJoinedOutput();
+      if (!txt) return;
+      try {
+        await navigator.clipboard.writeText(txt);
+        setStatus('已複製 HPP 結果');
+      } catch {
+        setStatus('複製失敗，請手動選取');
+      }
+    });
+
+    document.getElementById('wbSaveBtn').addEventListener('click', saveCurrentItem);
+    document.getElementById('wbExportBtn').addEventListener('click', exportJson);
+    document.getElementById('wbImportBtn').addEventListener('click', () => importFileEl.click());
+    importFileEl.addEventListener('change', handleImportFile);
+
+    document.addEventListener('click', (e) => {
+      if (candPopupEl && candPopupEl.style.display === 'block') {
+        if (!candPopupEl.contains(e.target) && !e.target.closest('.wb-tok-chip')) {
+          candPopupEl.style.display = 'none';
+        }
+      }
+    });
+
+    window.addEventListener('romainePrefsChanged', () => {
+      if (isOpen) render();
+    });
+
+    updateLocalCount();
+    return true;
+  }
+
+  function setStatus(msg) {
+    if (statusEl) statusEl.textContent = msg;
+  }
+
+  async function ensureEngine(dialectKey) {
+    const dk = normDialect(dialectKey);
+    if (engine && engineDialect === dk) return engine;
+    if (typeof window.RomaineAutoEngine !== 'function') return null;
+    setStatus(`載入 ${dk} 語料中…`);
+    const eng = new window.RomaineAutoEngine();
+    await eng.init('.', dk);
+    engine = eng;
+    engineDialect = dk;
+    if (dialectSel && dialectSel.value !== dk) dialectSel.value = dk;
+    setStatus(`${eng.dialectLabel || dk} 就緒`);
+    return engine;
+  }
+
+  function extractPureCjkChars(tokens) {
+    const list = [];
+    for (const tok of tokens) {
+      if (tok.punct || tok.nonCjk || tok.comment) continue;
+      for (const ch of Array.from(tok.han || '')) {
+        if (CJK_CHAR_TEST_RE.test(ch)) list.push(ch);
+      }
+    }
+    return list;
+  }
+
+  function remapOverrides(oldChars, oldMap, newChars) {
+    const remapped = new Map();
+    if (!oldMap.size || !oldChars.length || !newChars.length) return remapped;
+    const m = oldChars.length;
+    const n = newChars.length;
+    const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = oldChars[i - 1] === newChars[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+    let i = m;
+    let j = n;
+    while (i > 0 && j > 0) {
+      if (oldChars[i - 1] === newChars[j - 1]) {
+        const ov = oldMap.get(i - 1);
+        if (ov) remapped.set(j - 1, ov);
+        i--;
+        j--;
+      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+        i--;
+      } else {
+        j--;
+      }
+    }
+    return remapped;
+  }
+
+  function applyOverridesToTokens(tokens, ovMap) {
+    let cjkIdx = 0;
+    for (const tok of tokens) {
+      if (tok.punct || tok.nonCjk || tok.comment) continue;
+      const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+      const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+      let changed = false;
+      for (let k = 0; k < chars.length; k++) {
+        const ov = ovMap.get(cjkIdx + k);
+        if (ov && ov.ch === chars[k] && syls[k]) {
+          if (ov.syl) {
+            syls[k] = ov.syl;
+            changed = true;
+          }
+          if (typeof ov.isUpper === 'boolean') {
+            syls[k] = ov.isUpper
+              ? syls[k].charAt(0).toUpperCase() + syls[k].slice(1)
+              : syls[k].charAt(0).toLowerCase() + syls[k].slice(1);
+            changed = true;
+          }
+        }
+      }
+      if (changed) tok.hpp = syls.join(' ');
+      cjkIdx += chars.length;
+    }
+  }
+
+  function recordTokenManualOverride(tokIdx, saveSyl, saveCase) {
+    let cjkIdx = 0;
+    for (let t = 0; t < currentTokens.length; t++) {
+      const tok = currentTokens[t];
+      if (tok.punct || tok.nonCjk || tok.comment) continue;
+      const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+      const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+      if (t === tokIdx) {
+        for (let k = 0; k < chars.length; k++) {
+          const prev = manualCharOverrides.get(cjkIdx + k) || { ch: chars[k] };
+          if (saveSyl && syls[k]) prev.syl = syls[k];
+          if (saveCase && syls[k]) {
+            const first = syls[k].charAt(0);
+            prev.isUpper = Boolean(first && first !== first.toLowerCase());
+          }
+          manualCharOverrides.set(cjkIdx + k, prev);
+        }
+        break;
+      }
+      cjkIdx += chars.length;
+    }
+  }
+
+  function seedOverridesFromTokens(tokens) {
+    manualCharOverrides.clear();
+    let cjkIdx = 0;
+    for (const tok of tokens) {
+      if (tok.punct || tok.nonCjk || tok.comment) continue;
+      const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
+      const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+      for (let k = 0; k < chars.length; k++) {
+        if (syls[k]) {
+          const first = syls[k].charAt(0);
+          manualCharOverrides.set(cjkIdx + k, {
+            ch: chars[k],
+            syl: syls[k],
+            isUpper: Boolean(first && first !== first.toLowerCase()),
+          });
+        }
+      }
+      cjkIdx += chars.length;
+    }
+    prevPureCjk = extractPureCjkChars(tokens);
+  }
+
+  function runConvert() {
+    if (!engine || !inputEl) return;
+    const text = inputEl.value;
+    if (!text.trim()) {
+      currentTokens = [];
+      prevPureCjk = [];
+      render();
+      return;
+    }
+    const newTokens = engine.segmentAndConvert(text, activeOpenBookMap);
+    const newPureCjk = extractPureCjkChars(newTokens);
+    if (manualCharOverrides.size > 0 && prevPureCjk.length > 0) {
+      manualCharOverrides = remapOverrides(prevPureCjk, manualCharOverrides, newPureCjk);
+      applyOverridesToTokens(newTokens, manualCharOverrides);
+    }
+    currentTokens = newTokens;
+    prevPureCjk = newPureCjk;
+    render();
+  }
+
+  function getPlainJoinedOutput() {
+    if (!engine || !currentTokens.length) return '';
+    return engine.formatTokensToHpp(currentTokens, joinSel ? joinSel.value : 'none');
+  }
+
+  function toggleTokenCase(tokIdx) {
+    const tok = currentTokens[tokIdx];
+    if (!tok || !tok.hpp) return;
+    const first = tok.hpp.charAt(0);
+    const isUpper = first !== first.toLowerCase();
+    tok.hpp = isUpper
+      ? first.toLowerCase() + tok.hpp.slice(1)
+      : first.toUpperCase() + tok.hpp.slice(1);
+    recordTokenManualOverride(tokIdx, false, true);
+    render();
+  }
+
+  function openCandidatePopup(tokIdx, anchorEl) {
+    const tok = currentTokens[tokIdx];
+    if (!tok || tok.punct || tok.nonCjk || tok.comment || !candPopupEl) return;
+    candPopupEl.innerHTML = '';
+
+    const head = document.createElement('div');
+    head.className = 'wb-cand-head';
+    const title = document.createElement('strong');
+    title.textContent = tok.han;
+    head.appendChild(title);
+
+    const ext = document.createElement('a');
+    ext.className = 'wb-cand-ext';
+    ext.href = `?musiid=hak&ca=${encodeURIComponent(tok.han)}&kiong=${engine ? engine.kiong : 'si'}`;
+    ext.target = '_blank';
+    ext.rel = 'noopener';
+    ext.title = '在新分頁查詞典';
+    ext.textContent = '↗';
+    head.appendChild(ext);
+    candPopupEl.appendChild(head);
+
+    if (tok.partsMeta && tok.partsMeta.length > 0) {
+      for (const pm of tok.partsMeta) {
+        if (!pm.candidates || !pm.candidates.length) continue;
+        const subLbl = document.createElement('div');
+        subLbl.className = 'wb-cand-sub';
+        subLbl.textContent = pm.han;
+        candPopupEl.appendChild(subLbl);
+        for (const c of pm.candidates) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.innerHTML = `<span>${c.hpp}</span><span class="wb-cand-tag">${c.label || ''}</span>`;
+          btn.addEventListener('click', () => {
+            const offset = tok.partsMeta
+              .slice(0, tok.partsMeta.indexOf(pm))
+              .reduce((s, item) => s + item.sylCount, 0);
+            const curSyls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+            const repSyls = c.hpp.trim().split(/\s+/).filter(Boolean);
+            for (let k = 0; k < pm.sylCount && k < repSyls.length; k++) {
+              const oldSyl = curSyls[offset + k] || '';
+              const wasUpper = oldSyl && oldSyl.charAt(0) !== oldSyl.charAt(0).toLowerCase();
+              curSyls[offset + k] = wasUpper
+                ? repSyls[k].charAt(0).toUpperCase() + repSyls[k].slice(1)
+                : repSyls[k];
+            }
+            tok.hpp = curSyls.join(' ');
+            recordTokenManualOverride(tokIdx, true, false);
+            candPopupEl.style.display = 'none';
+            render();
+          });
+          candPopupEl.appendChild(btn);
+        }
+      }
+    } else if (tok.candidates && tok.candidates.length > 0) {
+      for (const c of tok.candidates) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerHTML = `<span>${c.hpp}</span><span class="wb-cand-tag">${c.label || ''}</span>`;
+        btn.addEventListener('click', () => {
+          const oldFirst = (tok.hpp || '').trim().charAt(0);
+          const wasUpper = oldFirst && oldFirst !== oldFirst.toLowerCase();
+          tok.hpp = wasUpper ? c.hpp.charAt(0).toUpperCase() + c.hpp.slice(1) : c.hpp;
+          tok.trust = c.trust;
+          tok.label = c.label;
+          tok.oov = false;
+          recordTokenManualOverride(tokIdx, true, false);
+          candPopupEl.style.display = 'none';
+          render();
+        });
+        candPopupEl.appendChild(btn);
+      }
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'wb-cand-sub';
+      empty.textContent = '無其他候選讀音';
+      candPopupEl.appendChild(empty);
+    }
+
+    candPopupEl.style.display = 'block';
+    const rect = anchorEl.getBoundingClientRect();
+    const popRect = candPopupEl.getBoundingClientRect();
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - popRect.width - 8));
+    let top = rect.bottom + 6;
+    if (top + popRect.height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - popRect.height - 6);
+    }
+    candPopupEl.style.left = `${Math.round(left)}px`;
+    candPopupEl.style.top = `${Math.round(top)}px`;
+  }
+
+  function render() {
+    if (!tokensEl || !outputEl || !engine) return;
+    tokensEl.innerHTML = '';
+
+    currentTokens.forEach((tok, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'wb-tok-chip';
+      if (tok.punct) chip.classList.add('punct');
+      else if (tok.comment) chip.classList.add('comment');
+      else if (tok.oov) chip.classList.add('oov');
+      else if (tok.trust === 'supp-nisim') chip.classList.add('supp-nisim');
+      else if (tok.trust === 'supp-derived') chip.classList.add('supp-derived');
+      else if (tok.candidates && tok.candidates.length > 1) chip.classList.add('poly');
+      if (tok.uncertain) chip.classList.add('uncertain');
+
+      if (tok.comment) {
+        chip.textContent = tok.han;
+      } else if (tok.punct || tok.nonCjk) {
+        chip.textContent = tok.han === '\n' ? '↵' : tok.han;
+      } else {
+        const hanSpan = document.createElement('span');
+        hanSpan.className = 'wb-tok-han';
+        hanSpan.textContent = tok.han;
+        chip.appendChild(hanSpan);
+
+        const hppSpan = document.createElement('span');
+        hppSpan.className = 'wb-tok-hpp';
+        hppSpan.textContent = engine.formatWordHpp(tok.hpp, joinSel ? joinSel.value : 'none', tok.sylBoundaries);
+        chip.appendChild(hppSpan);
+
+        const caseBtn = document.createElement('button');
+        caseBtn.type = 'button';
+        caseBtn.className = 'wb-tok-case';
+        const first = (tok.hpp || '').charAt(0);
+        caseBtn.textContent = first && first !== first.toLowerCase() ? 'l' : 'U';
+        caseBtn.title = '切換首字母大小寫';
+        caseBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleTokenCase(idx);
+        });
+        chip.appendChild(caseBtn);
+
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openCandidatePopup(idx, chip);
+        });
+      }
+      tokensEl.appendChild(chip);
+    });
+
+    const mode = joinSel ? joinSel.value : 'none';
+    if (sandhiChk && sandhiChk.checked) {
+      outputEl.innerHTML = engine.formatTokensToSandhiHtml(currentTokens, mode);
+    } else {
+      outputEl.textContent = engine.formatTokensToHpp(currentTokens, mode);
+    }
+  }
+
+  function buildItemIdentity(it) {
+    const d = normDialect((it.cert_ref && it.cert_ref.dialect) || it.dialect || 'xiien');
+    const lvl = (it.cert_ref && it.cert_ref.level) || '';
+    const id = (it.cert_ref && it.cert_ref.id) || '';
+    if (id) return `id:${d}|${lvl}|${id}`;
+    return `han:${d}|${(it.han || '').trim()}`;
+  }
+
+  function saveCurrentItem() {
+    if (!engine || !inputEl) return;
+    const han = inputEl.value.trim();
+    if (!han) {
+      setStatus('請先輸入或載入例句');
+      return;
+    }
+    const dialect = dialectSel ? dialectSel.value : 'xiien';
+    const cleanTokens = currentTokens.map((t) => {
+      const out = { han: t.han, hpp: t.hpp || '' };
+      if (t.punct) out.punct = true;
+      if (t.nonCjk) out.nonCjk = true;
+      if (t.comment) out.comment = true;
+      if (t.noSandhi) out.noSandhi = t.noSandhi;
+      if (t.sylBoundaries) out.sylBoundaries = t.sylBoundaries;
+      return out;
+    });
+    const item = {
+      dialect,
+      han,
+      tokens: cleanTokens,
+      joined_hpp: engine.formatTokensToHpp(currentTokens, 'none'),
+      note: noteEl ? noteEl.value.trim() : '',
+      updated_at: new Date().toISOString(),
+    };
+    if (activeCertRef && activeCertRef.id) {
+      item.cert_ref = { ...activeCertRef, dialect };
+    }
+
+    const list = loadVerifiedList();
+    const key = buildItemIdentity(item);
+    const idx = list.findIndex((existing) => buildItemIdentity(existing) === key);
+    if (idx >= 0) list[idx] = item;
+    else list.push(item);
+    saveVerifiedList(list);
+
+    if (window.romaineTableOverlay && typeof window.romaineTableOverlay.upsertVerifiedItem === 'function') {
+      window.romaineTableOverlay.upsertVerifiedItem(item, activeRowEl);
+    }
+    setStatus('已儲存至本機並更新左表 ✓');
+  }
+
+  function exportJson() {
+    const list = loadVerifiedList();
+    if (!list.length) {
+      setStatus('目前無本機待匯出資料');
+      return;
+    }
+    const payload = {
+      schema: 'hakspring-romaine-verified-v1',
+      exported_at: new Date().toISOString(),
+      count: list.length,
+      items: list,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `romaine-verified-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus(`已匯出 ${list.length} 筆 JSON`);
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || '{}'));
+        const incoming = Array.isArray(parsed) ? parsed : (parsed.items || []);
+        const list = loadVerifiedList();
+        const byKey = new Map(list.map((it) => [buildItemIdentity(it), it]));
+        let added = 0;
+        let updated = 0;
+        for (const it of incoming) {
+          if (!it || !it.han) continue;
+          const k = buildItemIdentity(it);
+          const prev = byKey.get(k);
+          const inTs = Date.parse(it.updated_at || 0) || 0;
+          const prevTs = prev ? (Date.parse(prev.updated_at || 0) || 0) : -1;
+          if (!prev) {
+            byKey.set(k, it);
+            added++;
+          } else if (inTs >= prevTs) {
+            byKey.set(k, it);
+            updated++;
+          }
+        }
+        const merged = Array.from(byKey.values());
+        saveVerifiedList(merged);
+        if (window.romaineTableOverlay && typeof window.romaineTableOverlay.refreshFromStorage === 'function') {
+          window.romaineTableOverlay.refreshFromStorage();
+        }
+        setStatus(`匯入完成：新增 ${added}、更新 ${updated}`);
+      } catch {
+        setStatus('JSON 格式錯誤，匯入失敗');
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function updateHeaderToggleBtn() {
+    const btn = document.getElementById('showRomanizerBtn');
+    if (!btn) return;
+    btn.classList.toggle('is-active', isOpen);
+    btn.setAttribute('aria-pressed', String(isOpen));
+  }
+
+  function open() {
+    if (!paneEl && !buildDom()) return;
+    isOpen = true;
+    paneEl.hidden = false;
+    document.body.classList.add('romaine-workbench-open');
+    updateHeaderToggleBtn();
+    const d = dialectSel ? dialectSel.value : 'xiien';
+    ensureEngine(d).then(() => {
+      if (inputEl && inputEl.value.trim() && currentTokens.length === 0) {
+        runConvert();
+      }
+    });
+  }
+
+  function close() {
+    isOpen = false;
+    if (paneEl) paneEl.hidden = true;
+    if (candPopupEl) candPopupEl.style.display = 'none';
+    document.body.classList.remove('romaine-workbench-open');
+    if (activeRowEl) {
+      activeRowEl.classList.remove('romaine-row-editing');
+      activeRowEl = null;
+    }
+    updateHeaderToggleBtn();
+  }
+
+  function toggle() {
+    if (isOpen) close();
+    else open();
+  }
+
+  async function openWithText(text, dialectNameOrKey) {
+    open();
+    const dk = normDialect(dialectNameOrKey || (dialectSel ? dialectSel.value : 'xiien'));
+    activeCertRef = null;
+    activeOpenBookMap = null;
+    if (activeRowEl) {
+      activeRowEl.classList.remove('romaine-row-editing');
+      activeRowEl = null;
+    }
+    if (certBadgeEl) certBadgeEl.textContent = '自由輸入';
+    if (noteEl) noteEl.value = '';
+    if (dialectSel) dialectSel.value = dk;
+    await ensureEngine(dk);
+    if (inputEl) inputEl.value = text || '';
+    manualCharOverrides.clear();
+    runConvert();
+  }
+
+  async function loadRow(meta) {
+    open();
+    const dk = normDialect(meta.dialect || 'xiien');
+    if (activeRowEl && activeRowEl !== meta.rowEl) {
+      activeRowEl.classList.remove('romaine-row-editing');
+    }
+    activeRowEl = meta.rowEl || null;
+    if (activeRowEl) activeRowEl.classList.add('romaine-row-editing');
+
+    activeOpenBookMap = meta.openBookMap || null;
+    activeCertRef = meta.rowId
+      ? { dialect: dk, level: meta.level || '', id: meta.rowId, word: meta.word || '' }
+      : null;
+
+    if (certBadgeEl) {
+      const parts = [DIALECT_OPTIONS.find((x) => x.key === dk)?.label || dk, meta.level, meta.rowId].filter(Boolean);
+      certBadgeEl.textContent = parts.length ? parts.join(' ') : '例句校對';
+    }
+
+    if (dialectSel) dialectSel.value = dk;
+    await ensureEngine(dk);
+
+    const existing =
+      window.romaineTableOverlay && typeof window.romaineTableOverlay.getVerifiedItem === 'function'
+        ? window.romaineTableOverlay.getVerifiedItem(dk, meta.level, meta.rowId, meta.han)
+        : null;
+
+    if (existing && existing.tokens && existing.tokens.length) {
+      if (inputEl) inputEl.value = existing.han || meta.han || '';
+      if (noteEl) noteEl.value = existing.note || '';
+      const freshTokens = engine.segmentAndConvert(inputEl.value, activeOpenBookMap);
+      // 將已校對 token 讀音與邊界套回 freshTokens（保留 candidates 供點選微調）
+      seedOverridesFromTokens(existing.tokens);
+      const newPure = extractPureCjkChars(freshTokens);
+      const remapped = remapOverrides(prevPureCjk, manualCharOverrides, newPure);
+      manualCharOverrides = remapped;
+      applyOverridesToTokens(freshTokens, manualCharOverrides);
+      currentTokens = freshTokens;
+      prevPureCjk = newPure;
+      render();
+      setStatus('已載入既有校對版本');
+    } else {
+      if (inputEl) inputEl.value = meta.han || '';
+      if (noteEl) noteEl.value = '';
+      manualCharOverrides.clear();
+      runConvert();
+    }
+  }
+
+  function init() {
+    buildDom();
+    const btn = document.getElementById('showRomanizerBtn');
+    if (btn) {
+      btn.addEventListener('click', toggle);
+      updateHeaderToggleBtn();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.romaineWorkbench = {
+    open,
+    close,
+    toggle,
+    openWithText,
+    loadRow,
+    updateLocalCount,
+  };
+})();
