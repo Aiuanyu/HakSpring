@@ -151,6 +151,106 @@
     return finalTracks;
   }
 
+  /**
+   * 將饒平例句中的「（卓／桃）」或「（卓桃）」括號變體，分別展開成竹、卓、桃三條純淨漢字句。
+   * 語體標記如（諺）、（山）等保留不動。
+   */
+  function expandRaopingSentenceVariants(text) {
+    if (!text || (!text.includes('（') && !text.includes('('))) {
+      return { hasVariant: false, zhuk: text, zhuolan: text, taoyuan: text };
+    }
+    const GENRE_RE = /^(?:諺|山|歇|俗|童|謠)$/;
+    const PAREN_RE = /[（(]([^（）()]+)[）)]/g;
+    let hasVariant = false;
+    let zhukOut = '';
+    let zhuoOut = '';
+    let taoOut = '';
+    let lastIdx = 0;
+
+    const findReplaceLen = (prefixStr, zPart, tPart) => {
+      const pChars = Array.from(prefixStr);
+      // 僅看緊接在括號前的連續諸夏字
+      let cjkCount = 0;
+      for (let i = pChars.length - 1; i >= 0; i--) {
+        if (CJK_CHAR_RE.test(pChars[i])) cjkCount++;
+        else break;
+      }
+      if (cjkCount === 0) return 0;
+      const tailChars = pChars.slice(pChars.length - cjkCount);
+      const tailStr = tailChars.join('');
+
+      // 1. 優先比對精確後綴（最常見：發子（病子／發子）、刀仔（刀／刀仔）、斷忒（撇／忒））
+      const candidates = [tPart, zPart].filter(Boolean).sort((a, b) => Array.from(b).length - Array.from(a).length);
+      for (const cand of candidates) {
+        if (tailStr.endsWith(cand)) {
+          return Array.from(cand).length;
+        }
+      }
+
+      // 2. 次之比對共用首字（如 好點點（好恬恬）、後枕額（後腦殼／腦後背））
+      for (const cand of candidates) {
+        const cChars = Array.from(cand);
+        const firstCh = cChars[0];
+        if (!firstCh) continue;
+        // 往回找長度相近位置的共用首字
+        const targetPos = cjkCount - cChars.length;
+        if (targetPos >= 0 && tailChars[targetPos] === firstCh) {
+          return cChars.length;
+        }
+      }
+
+      // 3. 預設取兩邊最大長度（不超過前面連續漢字數）
+      const maxLen = Math.max(Array.from(zPart).length, Array.from(tPart).length);
+      return Math.min(cjkCount, maxLen);
+    };
+
+    const replaceTail = (buf, len, replacement) => {
+      if (len <= 0) return buf + replacement;
+      const arr = Array.from(buf);
+      return arr.slice(0, arr.length - len).join('') + replacement;
+    };
+
+    let m;
+    while ((m = PAREN_RE.exec(text)) !== null) {
+      const between = text.slice(lastIdx, m.index);
+      zhukOut += between;
+      zhuoOut += between;
+      taoOut += between;
+
+      const inner = m[1].trim();
+      if (GENRE_RE.test(inner) || !CJK_CHAR_RE.test(inner)) {
+        zhukOut += m[0];
+        zhuoOut += m[0];
+        taoOut += m[0];
+      } else {
+        hasVariant = true;
+        let zPart = inner;
+        let tPart = inner;
+        if (inner.includes('／')) {
+          const sp = inner.split('／');
+          zPart = (sp[0] || '').trim();
+          tPart = sp.slice(1).join('／').trim();
+        } else if (inner.includes('/')) {
+          const sp = inner.split('/');
+          zPart = (sp[0] || '').trim();
+          tPart = sp.slice(1).join('/').trim();
+        }
+        const repLen = findReplaceLen(zhukOut, zPart, tPart);
+        // 竹軌：直接移除括號，保留原漢字
+        zhuoOut = replaceTail(zhuoOut, repLen, zPart);
+        taoOut = replaceTail(taoOut, repLen, tPart);
+      }
+      lastIdx = m.index + m[0].length;
+    }
+
+    const rest = text.slice(lastIdx);
+    zhukOut += rest;
+    zhuoOut += rest;
+    taoOut += rest;
+
+    return { hasVariant, zhuk: zhukOut, zhuolan: zhuoOut, taoyuan: taoOut };
+  }
+
   function isNoSandhiChar(ch) {
     return ch === '#' || ch === '~';
   }
@@ -1753,5 +1853,6 @@
   RomaineAutoEngine.setTrustUnderline = setTrustUnderline;
   RomaineAutoEngine.getRaopingTracks = getRaopingTracks;
   RomaineAutoEngine.setRaopingTracks = setRaopingTracks;
+  RomaineAutoEngine.expandRaopingSentenceVariants = expandRaopingSentenceVariants;
   root.RomaineAutoEngine = RomaineAutoEngine;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

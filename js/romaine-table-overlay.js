@@ -583,10 +583,18 @@
     if (!eng || !enabled) return;
     if (td3.querySelector('.romaine-interleaved')) return;
 
+    const raopingTracks = dialect === 'ngiaupin' ? getRaopingTracksPref() : ['zhuk'];
+    const useMultiRaoping =
+      dialect === 'ngiaupin' &&
+      (raopingTracks.length > 1 || raopingTracks[0] !== 'zhuk');
+
     const openBookMap = dialect === 'xiien' ? extractRowNanOpenBook(row) : null;
     let rawHppHtml = '';
     let isVerified = false;
     let rowTokens = null;
+    const trackLinesMap = {};
+    let pairCount = hanLines.length;
+
     if (verifiedItem) {
       isVerified = true;
       rowTokens = verifiedItem.tokens && eng ? renderVerifiedTokens(verifiedItem) : null;
@@ -594,30 +602,44 @@
         eng.populateRaopingSubTokens(rowTokens);
       }
       rawHppHtml = rowTokens ? eng.formatTokensToSandhiHtml(rowTokens, 'none') : (verifiedItem.joined_hpp || '');
-    } else {
-      rowTokens = eng.segmentAndConvert(sentText, openBookMap);
-      rawHppHtml = eng.formatTokensToSandhiHtml(rowTokens, 'none');
-    }
+      if (useMultiRaoping && rowTokens) {
+        for (const tk of raopingTracks) {
+          const html =
+            tk === 'zhuk'
+              ? rawHppHtml
+              : eng.formatTokensToVariantHtml(rowTokens, 'none', tk, false);
+          const lines = html.split('\n');
+          trackLinesMap[tk] = lines;
+          if (lines.length > pairCount) pairCount = lines.length;
+        }
+      } else {
+        trackLinesMap.zhuk = rawHppHtml.split('\n');
+        if (trackLinesMap.zhuk.length > pairCount) pairCount = trackLinesMap.zhuk.length;
+      }
+    } else if (useMultiRaoping) {
+      const exp =
+        window.RomaineAutoEngine && typeof window.RomaineAutoEngine.expandRaopingSentenceVariants === 'function'
+          ? window.RomaineAutoEngine.expandRaopingSentenceVariants(sentText)
+          : { hasVariant: false, zhuk: sentText, zhuolan: sentText, taoyuan: sentText };
+      const zhukToks = eng.segmentAndConvert(exp.zhuk, null);
+      const zhukHtml = eng.formatTokensToSandhiHtml(zhukToks, 'none');
 
-    const raopingTracks = dialect === 'ngiaupin' ? getRaopingTracksPref() : ['zhuk'];
-    const useMultiRaoping =
-      dialect === 'ngiaupin' &&
-      rowTokens &&
-      (raopingTracks.length > 1 || raopingTracks[0] !== 'zhuk');
-
-    const trackLinesMap = {};
-    let pairCount = hanLines.length;
-    if (useMultiRaoping) {
       for (const tk of raopingTracks) {
-        const html =
-          tk === 'zhuk'
-            ? rawHppHtml
-            : eng.formatTokensToVariantHtml(rowTokens, 'none', tk, false);
+        let html = '';
+        if (tk === 'zhuk') {
+          html = zhukHtml;
+        } else {
+          const subText = tk === 'zhuolan' ? exp.zhuolan : exp.taoyuan;
+          const subToks = subText === exp.zhuk ? zhukToks : eng.segmentAndConvert(subText, null);
+          html = eng.formatTokensToVariantHtml(subToks, 'none', tk, false);
+        }
         const lines = html.split('\n');
         trackLinesMap[tk] = lines;
         if (lines.length > pairCount) pairCount = lines.length;
       }
     } else {
+      rowTokens = eng.segmentAndConvert(sentText, openBookMap);
+      rawHppHtml = eng.formatTokensToSandhiHtml(rowTokens, 'none');
       trackLinesMap.zhuk = rawHppHtml.split('\n');
       if (trackLinesMap.zhuk.length > pairCount) pairCount = trackLinesMap.zhuk.length;
     }
