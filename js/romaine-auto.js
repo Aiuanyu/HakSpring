@@ -719,10 +719,7 @@
               for (const item of zHpps) {
                 if (item.hpp.split(' ').length === zLen) {
                   addSubLex(this.zhuolanLexicon, zh, item.hpp, 'official', '認證·卓蘭');
-                  if (primaryMainHan && Array.from(primaryMainHan).length === zLen) {
-                    addSubLex(this.zhuolanLexicon, primaryMainHan, item.hpp, 'official', '認證·卓蘭');
-                    recordSubCharStats(zhuolanCharStats, primaryMainHan, primaryMainHpp, zh, item.hpp);
-                  }
+                  recordSubCharStats(zhuolanCharStats, primaryMainHan, primaryMainHpp, zh, item.hpp);
                 }
               }
             }
@@ -731,10 +728,7 @@
               for (const item of tHpps) {
                 if (item.hpp.split(' ').length === tLen) {
                   addSubLex(this.taoyuanLexicon, th, item.hpp, 'official', '認證·桃園');
-                  if (primaryMainHan && Array.from(primaryMainHan).length === tLen) {
-                    addSubLex(this.taoyuanLexicon, primaryMainHan, item.hpp, 'official', '認證·桃園');
-                    recordSubCharStats(taoyuanCharStats, primaryMainHan, primaryMainHpp, th, item.hpp);
-                  }
+                  recordSubCharStats(taoyuanCharStats, primaryMainHan, primaryMainHpp, th, item.hpp);
                 }
               }
             }
