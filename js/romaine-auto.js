@@ -439,12 +439,14 @@
       const gipFile = `${basePath}/${cfg.gip}`;
       const certFiles = cfg.cert.map((c) => `${basePath}/${c.file}`);
       const suppFile = `${basePath}/${cfg.supp}`;
+      const curatedFile = `${basePath}/${cfg.supp.replace('data/supp/補字典-', 'data/curated/加詞-')}`;
       const isSixian = targetDialect === 'xiien';
 
-      const [gipJson, certJsons, suppJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
+      const [gipJson, certJsons, suppJson, curatedJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
         fetch(gipFile).then((r) => r.json()),
         Promise.all(certFiles.map((f) => fetch(f).then((r) => r.json()))),
         fetch(suppFile).then((r) => r.json()),
+        fetch(curatedFile).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch(`${basePath}/${cfg.stats}`).then((r) => r.json()),
         fetch(`${basePath}/${cfg.prefs}`).then((r) => r.json()),
         this.sandhiRules ? Promise.resolve(this.sandhiRules) : fetch(`${basePath}/sandhi_rules.json`).then((r) => r.json()),
@@ -534,6 +536,23 @@
         };
         addNanRows(parseCsv(nanGipJson.content || ''), 'official', '教典·南');
         if (nanSuppJson) addNanRows(parseCsv(nanSuppJson.content || ''), 'supp-derived', '補字典·南');
+      }
+
+      // 1b. 愛灣語人工加詞（data/curated/加詞-{腔}.json，優先於補字典與擬音）
+      if (curatedJson && curatedJson.content) {
+        const curatedRows = parseCsv(curatedJson.content || '');
+        for (const r of curatedRows) {
+          const hans = cleanHanVariants(r.han);
+          const hpps = cleanHppVariants((r.hpp || '').replace(/^--/, ''));
+          for (const h of hans) {
+            const hLen = Array.from(h).length;
+            for (const item of hpps) {
+              if (item.hpp.split(' ').length === hLen) {
+                this._addCandidate(h, item.hpp, 'official', '愛灣語加詞', seen, '愛灣語加詞');
+              }
+            }
+          }
+        }
       }
 
       // 2. 再收補字典（先拆音/沿襲，再廣韻擬音）
@@ -825,7 +844,10 @@
       }
       if (chars.length === 3 && chars[0] === chars[1] && chars[0] !== chars[2]) {
         if (chars[2] === '仔' && this.lexicon.has(chars[0]) && this.lexicon.has('仔')) return '重疊構詞';
-        if (this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) return '重疊構詞';
+        // 排除結構虛詞（个、的、了、啊、呢、嗎、無），避免把「硬硬个」合併
+        if (!/^[个的了啊呢嗎無]$/.test(chars[2]) && this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) {
+          return '重疊構詞';
+        }
       }
       if (chars.length === 4 && chars[0] === chars[1] && chars[2] === chars[3] && chars[0] !== chars[2]) {
         if (this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) return '重疊構詞';

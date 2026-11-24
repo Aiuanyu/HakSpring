@@ -258,6 +258,8 @@ def collect_needed_files(root: str) -> dict[str, str]:
         "data/supp/補字典-四.json",
         "data/supp/補字典-南.json",
         "data/supp/補字典-安.json",
+        "data/curated/加詞-四.json",
+        "data/curated/加詞-安.json",
     ]
     for d_char, lvl in [
         ("四", "基"), ("四", "初"), ("四", "中"), ("四", "中高"), ("四", "高"),

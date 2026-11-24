@@ -230,6 +230,13 @@ def build_lexicon(dialect: str, cdm_index: dict[str, dict[int, str]] | None = No
     for idx, r in enumerate(gip_rows):
         gid = gip_idx_map.get(idx)
         add_row(r, False, link_id=f"gip:{gid}" if gid else None, cert_w=0)
+    curated_path = os.path.join(ROOT, "data", "curated", f"加詞-{cdm_key}.json")
+    if os.path.exists(curated_path):
+        for r in load_csv_json(curated_path):
+            r_copy = dict(r)
+            if r_copy.get("客語標音_顯示"):
+                r_copy["客語標音_顯示"] = re.sub(r"^--", "", r_copy["客語標音_顯示"])
+            add_row(r_copy, False, link_id=None, cert_w=1)
     for cert_key, lvl_w, r in cert_rows_with_meta:
         add_row(r, bool(cfg.get("extract_nan_bracket")), link_id=f"cert:{cert_key}", cert_w=lvl_w)
 

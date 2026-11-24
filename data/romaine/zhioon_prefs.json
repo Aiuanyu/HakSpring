@@ -9654,6 +9654,16 @@
       ]
     },
     {
+      "han": "人公子",
+      "freq": 1,
+      "default": "ngìn gǔng zû",
+      "candidates": [
+        "ngìn gǔng zû",
+        "ngìn gǔng zî",
+        "ngìn gǔng zîi"
+      ]
+    },
+    {
       "han": "傳子",
       "freq": 1,
       "default": "ton zû",
@@ -11524,16 +11534,6 @@
       "candidates": [
         "hòb",
         "gòb"
-      ]
-    },
-    {
-      "han": "人公子",
-      "freq": 0,
-      "default": "ngìn gǔng zû",
-      "candidates": [
-        "ngìn gǔng zû",
-        "ngìn gǔng zî",
-        "ngìn gǔng zîi"
       ]
     },
     {
