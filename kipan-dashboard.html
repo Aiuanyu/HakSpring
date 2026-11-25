@@ -237,7 +237,8 @@
         renderDashboard(data);
         dashContent.style.display = 'block';
         statusBar.className = 'status-msg';
-        statusBar.textContent = `最後更新：${fmtTime(data.generatedAt)}`;
+        const ghWarn = data.github && data.github.warning ? ` ｜ ⚠️ ${data.github.warning}` : '';
+        statusBar.textContent = `最後更新：${fmtTime(data.generatedAt)}${ghWarn}`;
       } catch (err) {
         dashContent.style.display = 'none';
         statusBar.className = 'status-msg error-msg';

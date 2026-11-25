@@ -116,16 +116,56 @@ async function verifyMaintainerKey(request, env) {
   return { ok: true };
 }
 
-async function fetchGitHubReleases() {
+const GH_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function fetchGitHubReleases(env) {
+  const now = Date.now();
+  let cachedPayload = null;
+  let cachedAt = 0;
+
+  if (env && env.DB) {
+    try {
+      await ensureTables(env.DB);
+      const cached = await env.DB.prepare(
+        'SELECT config_value, updated_at FROM maintainer_config WHERE config_key = ?'
+      )
+        .bind('github_releases_cache')
+        .first();
+      if (cached && cached.config_value) {
+        cachedPayload = JSON.parse(cached.config_value);
+        cachedAt = Number(cached.updated_at || 0);
+        if (now - cachedAt < GH_CACHE_TTL_MS) {
+          return { ...cachedPayload, cached: true, cachedAt };
+        }
+      }
+    } catch (_e) {
+      // 快取讀取失敗不影響後續抓取
+    }
+  }
+
   try {
+    const headers = {
+      'Accept': 'application/vnd.github+json',
+      'User-Agent': 'HakSpring-Kipan-Dashboard',
+    };
+    if (env && env.GITHUB_TOKEN) {
+      headers['Authorization'] = `Bearer ${String(env.GITHUB_TOKEN).trim()}`;
+    }
+
     const resp = await fetch('https://api.github.com/repos/Aiuanyu/HakSpring-Kipan/releases?per_page=15', {
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'User-Agent': 'HakSpring-Kipan-Dashboard',
-      },
+      headers,
     });
     if (!resp.ok) {
-      return { ok: false, error: `GitHub API HTTP ${resp.status}`, releases: [], totalDownloads: 0 };
+      if (cachedPayload) {
+        return {
+          ...cachedPayload,
+          cached: true,
+          stale: true,
+          cachedAt,
+          warning: `GitHub API HTTP ${resp.status}（暫時顯示快取數據）`,
+        };
+      }
+      return { ok: false, error: `GitHub API HTTP ${resp.status}（Cloudflare 共享 IP 限流，可設定 GITHUB_TOKEN Secret 解決）`, releases: [], totalDownloads: 0 };
     }
     const list = await resp.json();
     let totalDownloads = 0;
@@ -148,8 +188,31 @@ async function fetchGitHubReleases() {
         assets,
       };
     });
-    return { ok: true, releases, totalDownloads };
+    const fresh = { ok: true, releases, totalDownloads };
+    if (env && env.DB) {
+      try {
+        await env.DB.prepare(
+          `INSERT INTO maintainer_config (config_key, config_value, updated_at)
+           VALUES ('github_releases_cache', ?, ?)
+           ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = excluded.updated_at`
+        )
+          .bind(JSON.stringify(fresh), now)
+          .run();
+      } catch (_e) {
+        // 忽略快取寫入失敗
+      }
+    }
+    return fresh;
   } catch (err) {
+    if (cachedPayload) {
+      return {
+        ...cachedPayload,
+        cached: true,
+        stale: true,
+        cachedAt,
+        warning: `${err.message || 'GitHub API 連線失敗'}（顯示快取數據）`,
+      };
+    }
     return { ok: false, error: err.message || 'GitHub API 連線失敗', releases: [], totalDownloads: 0 };
   }
 }
@@ -217,7 +280,7 @@ export async function onRequestGet(context) {
     return jsonResponse({ error: auth.error }, auth.status, request);
   }
 
-  const githubPromise = fetchGitHubReleases();
+  const githubPromise = fetchGitHubReleases(env);
 
   let dbStats = {
     totalsByType: [],
