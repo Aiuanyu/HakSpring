@@ -7512,10 +7512,12 @@ tr.romaine-row-editing td[data-label="例句"] {
   font-size: 11px;
   font-weight: 700;
   line-height: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  z-index: 5;
+  z-index: 20;
 }
 .wb-tok-chip:hover .wb-tok-case,
+.wb-tok-chip.is-hovered .wb-tok-case,
 .wb-tok-chip:focus-within .wb-tok-case {
   display: inline-block;
 }
@@ -7532,12 +7534,18 @@ tr.romaine-row-editing td[data-label="例句"] {
   border-radius: 8px;
   border: 1px solid var(--border-color, #cbd5e1);
   background: var(--input-bg-color, #f8fafc);
-  font-family: var(--sentence-font);
+  font-family: var(--sentence-font) !important;
   font-size: 1rem;
   line-height: 1.85;
   min-height: 44px;
   white-space: pre-wrap;
   word-break: break-word;
+}
+.wb-output-box .wb-track-text,
+.wb-output-box .wb-track-text *,
+.wb-output-box ruby[class^="sandhi-"],
+.wb-output-box ruby[class^="sandhi-"] rt {
+  font-family: var(--sentence-font) !important;
 }
 .wb-output-box ruby[class^="sandhi-"] { ruby-position: over; }
 .wb-output-box ruby[class^="sandhi-"] rt { font-size: 0.65em; color: inherit; }
@@ -7845,17 +7853,17 @@ tr.romaine-row-editing td[data-label="例句"] {
   gap: 6px;
 }
 .romaine-auto-hpp.is-raoping-track {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 5px;
+  display: block;
   margin-bottom: 2px;
 }
 .romaine-track-badge {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.72em;
   line-height: 1.2;
   padding: 1px 5px;
-  flex-shrink: 0;
+  margin-right: 5px;
+  vertical-align: 0.1em;
 }
 @media (prefers-color-scheme: dark) {
   .romaine-raoping-main-bar {

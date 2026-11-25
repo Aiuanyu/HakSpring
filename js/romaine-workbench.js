@@ -213,6 +213,22 @@
     importFileEl = document.getElementById('wbImportFile');
     raopingBarEl = document.getElementById('wbRaopingBar');
 
+    if (tokensEl) {
+      tokensEl.addEventListener('pointerover', (e) => {
+        const chip = e.target.closest('.wb-tok-chip:not(.punct):not(.comment)');
+        for (const el of tokensEl.querySelectorAll('.wb-tok-chip.is-hovered')) {
+          if (el !== chip) el.classList.remove('is-hovered');
+        }
+        if (chip) chip.classList.add('is-hovered');
+      });
+      tokensEl.addEventListener('pointerout', (e) => {
+        const chip = e.target.closest('.wb-tok-chip');
+        if (chip && (!e.relatedTarget || !chip.contains(e.relatedTarget))) {
+          chip.classList.remove('is-hovered');
+        }
+      });
+    }
+
     if (raopingBarEl) {
       const chks = Array.from(raopingBarEl.querySelectorAll('input[type="checkbox"]'));
       const syncChks = () => {

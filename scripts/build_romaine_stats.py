@@ -95,7 +95,9 @@ def clean_hpp_variants(raw: str) -> list[str]:
     if not raw:
         return []
     s = re.sub(r"【.*?】", "", raw)
-    s = re.sub(r"[（）()]", "", s)
+    s = s.replace("（", "(").replace("）", ")")
+    s = re.sub(r"([^\s(]+)\(([^()\s]+)\)", r"\1/\2", s)
+    s = re.sub(r"[()]", " / ", s)
     out = []
 
     def expand_phrase(phrase: str):
@@ -204,25 +206,38 @@ def build_lexicon(dialect: str, cdm_index: dict[str, dict[int, str]] | None = No
     def add_row(r: dict, prefer_nan_bracket: bool = False, link_id: str | None = None, cert_w: int = 0):
         raw_han = r.get("客家語", "")
         raw_hpp = r.get("客語標音_顯示", "")
+        pairs_to_add = []
         if prefer_nan_bracket:
             h_m = re.search(r"【([^】]+)】", raw_han)
             p_m = re.search(r"【([^】]+)】", raw_hpp)
-            hans = clean_han_variants(h_m.group(1) if h_m else raw_han)
+            if h_m:
+                hans = clean_han_variants(h_m.group(1))
+            else:
+                han_paren = re.search(r"[（(]([^）)]+)[）)]", re.sub(r"【.*?】", "", raw_han))
+                hans = clean_han_variants(raw_han) + (clean_han_variants(han_paren.group(1)) if han_paren else [])
             hpps = clean_hpp_variants(p_m.group(1) if p_m else raw_hpp)
+            pairs_to_add.append((hans, hpps))
         else:
-            hans = clean_han_variants(raw_han)
-            hpps = clean_hpp_variants(raw_hpp)
-        if hans and hpps:
-            for h in hans:
-                for p in hpps:
-                    if len(p.split()) == len(h):
-                        if (h, p) not in seen_pairs:
-                            seen_pairs.add((h, p))
-                            lexicon[h].append(p)
-                        if cert_w > 0:
-                            cert_scores[(h, p)] += cert_w
-                        if link_id:
-                            pair_links[(h, p)].add(link_id)
+            han_no_br = re.sub(r"【.*?】", "", raw_han)
+            hpp_no_br = re.sub(r"【.*?】", "", raw_hpp)
+            han_paren = re.search(r"[（(]([^）)]+)[）)]", han_no_br)
+            hpp_paren = re.search(r"(?:^|\s)[（(]([^）)]+)[）)]", hpp_no_br)
+            main_hpp_src = re.sub(r"(?:^|\s)[（(][^）)]+[）)]", "", hpp_no_br) if (han_paren and hpp_paren) else raw_hpp
+            pairs_to_add.append((clean_han_variants(raw_han), clean_hpp_variants(main_hpp_src)))
+            if han_paren and hpp_paren:
+                pairs_to_add.append((clean_han_variants(han_paren.group(1)), clean_hpp_variants(hpp_paren.group(1))))
+        for hans, hpps in pairs_to_add:
+            if hans and hpps:
+                for h in hans:
+                    for p in hpps:
+                        if len(p.split()) == len(h):
+                            if (h, p) not in seen_pairs:
+                                seen_pairs.add((h, p))
+                                lexicon[h].append(p)
+                            if cert_w > 0:
+                                cert_scores[(h, p)] += cert_w
+                            if link_id:
+                                pair_links[(h, p)].add(link_id)
         ex = r.get("例句", "")
         if ex:
             sentences.append(ex)

@@ -442,12 +442,17 @@
 
   function cleanHppVariants(raw) {
     if (!raw) return [];
-    // 先移除【】變體、括號、序號前綴（如 2.）與教典變調說明文字
+    // 先移除【】變體、序號前綴（如 2.）與教典變調說明文字
+    // 括號：緊接音節後的 (alt) 視為同位替代（如 ngiong(ngióng) → ngiong/ngióng）；
+    // 獨立括號片語（如 àn ngiǒng (àn ě)）以 " / " 分隔，避免與主片語黏成一串
     const DROP_NOTES_RE = /(?:小稱變調讀本調為|小稱變調讀|後字變調又讀|後字變調讀|為後字變調|後字變調為|後字變調|為新調值|之合音|合音讀|合音|本調為|詞目刪除|七層|分佢|為)/g;
     const s = raw
       .replace(/【.*?】/g, '')
+      .replace(/[（]/g, '(')
+      .replace(/[）]/g, ')')
+      .replace(/([^\s(]+)\(([^()\s]+)\)/g, '$1/$2')
+      .replace(/[()]/g, ' / ')
       .replace(DROP_NOTES_RE, ' ')
-      .replace(/[（）()]/g, ' ')
       .replace(/(?:^|\s)\d+\.\s*/g, ' ');
     const results = [];
 
@@ -592,8 +597,8 @@
         Promise.all(certFiles.map((f) => fetch(f).then((r) => r.json()))),
         fetch(suppFile).then((r) => r.json()),
         fetch(curatedFile).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        fetch(`${basePath}/${cfg.stats}`).then((r) => r.json()),
-        fetch(`${basePath}/${cfg.prefs}`).then((r) => r.json()),
+        fetch(`${basePath}/${cfg.stats}`, { cache: 'no-cache' }).then((r) => r.json()),
+        fetch(`${basePath}/${cfg.prefs}`, { cache: 'no-cache' }).then((r) => r.json()),
         this.sandhiRules ? Promise.resolve(this.sandhiRules) : fetch(`${basePath}/sandhi_rules.json`).then((r) => r.json()),
         this.reverseToneMap ? Promise.resolve(this.reverseToneMap) : fetch(`${basePath}/reverse_tone_mapping.json`).then((r) => r.json()),
         isSixian ? fetch(`${basePath}/data/gip/20261020-南.json`).then((r) => (r.ok ? r.json() : null)) : Promise.resolve(null),
@@ -640,14 +645,35 @@
             if (hMatch) rawHan = hMatch[1];
             if (pMatch) rawHpp = pMatch[1];
           }
+          const rawHanNoBr = (rawHan || '').replace(/【.*?】/g, '');
+          const rawHppNoBr = (rawHpp || '').replace(/【.*?】/g, '');
+          const hanParenM = rawHanNoBr.match(/[（(]([^）)]+)[）)]/);
+          const hppParenM = rawHppNoBr.match(/(?:^|\s)[（(]([^）)]+)[）)]/);
           const hans = cleanHanVariants(rawHan);
-          const hpps = cleanHppVariants(rawHpp);
+          const hpps = cleanHppVariants(
+            hanParenM && hppParenM
+              ? rawHppNoBr.replace(/(?:^|\s)[（(][^）)]+[）)]/g, '')
+              : rawHpp
+          );
           for (const h of hans) {
             const hLen = Array.from(h).length;
             for (const item of hpps) {
               if (item.hpp.split(' ').length === hLen) {
                 const lbl = item.note ? `${srcName}·${item.note}` : srcName;
                 this._addCandidate(h, item.hpp, 'official', lbl, seen, srcName, item.note);
+              }
+            }
+          }
+          if (hanParenM && hppParenM) {
+            const pHans = cleanHanVariants(hanParenM[1]);
+            const pHpps = cleanHppVariants(hppParenM[1]);
+            for (const h of pHans) {
+              const hLen = Array.from(h).length;
+              for (const item of pHpps) {
+                if (item.hpp.split(' ').length === hLen) {
+                  const lbl = item.note ? `${srcName}·${item.note}` : srcName;
+                  this._addCandidate(h, item.hpp, 'official', lbl, seen, srcName, item.note);
+                }
               }
             }
           }
@@ -661,7 +687,10 @@
           for (const r of rows) {
             const hMatch = (r.han || '').match(/【([^】]+)】/);
             const pMatch = (r.hpp || '').match(/【([^】]+)】/);
-            const nanHans = hMatch ? cleanHanVariants(hMatch[1]) : cleanHanVariants(r.han);
+            const hanParenM = !hMatch && (r.han || '').replace(/【.*?】/g, '').match(/[（(]([^）)]+)[）)]/);
+            const nanHans = hMatch
+              ? cleanHanVariants(hMatch[1])
+              : [...cleanHanVariants(r.han), ...(hanParenM ? cleanHanVariants(hanParenM[1]) : [])];
             const nanHpps = pMatch ? cleanHppVariants(pMatch[1]) : [];
             for (const nh of nanHans) {
               const nLen = Array.from(nh).length;
