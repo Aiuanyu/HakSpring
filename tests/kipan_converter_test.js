@@ -69,6 +69,26 @@ test('各種標點與括號雙向轉換：中文全形 ⟷ 羅馬字半形', () 
   assert.equal(res1.bottomText, 'Cii-ngiàm: hò! [Ngin-ziin]...');
 });
 
+test('擴充全形標點與符號雙向轉換：波浪號、破折號、中點、斜線、書名號等', () => {
+  assert.equal(
+    convertPunctToRomance('—～〜·‧・‥／＼＋＝＜＞＆％＃＠＊＿｜｀＄＾'),
+    '-~~...../\\+=<>&%#@*_|`$^',
+  );
+  assert.equal(
+    convertPunctToRomance('《客話》〈四縣〉〔註〕〖補〗〝引〞．﹗﹖﹔﹕︰'),
+    '"客話"\'四縣\'[註][補]"引".!?;::',
+  );
+  assert.equal(
+    convertPunctToHan('~/\\+=&%#@*_|$^'),
+    '～／＼＋＝＆％＃＠＊＿｜＄＾',
+  );
+
+  const input = '《客話 (Hakfa)》 ～ 〈四縣 (Sixian)〉 — 試驗 (Cii-ngiàm)／對照 (Dui-zàu)·註 (Zi)';
+  const res = convertKipanText(input);
+  assert.equal(res.topText, '《客話》～〈四縣〉—試驗／對照·註');
+  assert.equal(res.bottomText, '"Hakfa"~\'Sixian\'-Cii-ngiàm/Dui-zàu. Zi');
+});
+
 test('反向案例：第一字為羅馬字時，自動判定羅馬字在頂高，且標點雙向轉換', () => {
   const input =
     'Ngǎi (𠊎) mǒ (無) gì oi (幾愛) Hàg-Ví-Fi (客委會)！';

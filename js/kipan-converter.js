@@ -31,26 +31,45 @@
   function convertPunctToRomance(p) {
     if (!p) return '';
     return p
-      .replace(/、/g, ',')
-      .replace(/，/g, ',')
-      .replace(/。/g, '.')
-      .replace(/！/g, '!')
-      .replace(/？/g, '?')
-      .replace(/；/g, ';')
-      .replace(/：/g, ':')
       .replace(/……/g, '...')
       .replace(/…/g, '...')
-      .replace(/（/g, '(')
-      .replace(/）/g, ')')
-      .replace(/[【〔［]/g, '[')
-      .replace(/[】〕］]/g, ']')
-      .replace(/｛/g, '{')
-      .replace(/｝/g, '}')
-      .replace(/[「“《]/g, '"')
-      .replace(/[」”》]/g, '"')
-      .replace(/[『‘〈]/g, "'")
-      .replace(/[』’〉]/g, "'")
-      .replace(/——/g, '--');
+      .replace(/‥/g, '..')
+      .replace(/——/g, '--')
+      .replace(/[—–―－]/g, '-')
+      .replace(/[～〜]/g, '~')
+      .replace(/[·‧・]/g, '.')
+      .replace(/[、,、﹑､，﹐]/g, ',')
+      .replace(/[。．﹒｡]/g, '.')
+      .replace(/[！﹗]/g, '!')
+      .replace(/[？﹖]/g, '?')
+      .replace(/[；﹔]/g, ';')
+      .replace(/[：﹕︰]/g, ':')
+      .replace(/[（﹙]/g, '(')
+      .replace(/[）﹚]/g, ')')
+      .replace(/[【〔［〖〘〚]/g, '[')
+      .replace(/[】〕］〗〙〛]/g, ']')
+      .replace(/[｛﹛]/g, '{')
+      .replace(/[｝﹜]/g, '}')
+      .replace(/[「“《〝＂﹁]/g, '"')
+      .replace(/[」”》〞﹂]/g, '"')
+      .replace(/[『‘〈＇﹃]/g, "'")
+      .replace(/[』’〉﹄]/g, "'")
+      .replace(/／/g, '/')
+      .replace(/＼/g, '\\')
+      .replace(/＋/g, '+')
+      .replace(/＝/g, '=')
+      .replace(/＜/g, '<')
+      .replace(/＞/g, '>')
+      .replace(/＆/g, '&')
+      .replace(/％/g, '%')
+      .replace(/＃/g, '#')
+      .replace(/＠/g, '@')
+      .replace(/＊/g, '*')
+      .replace(/＿/g, '_')
+      .replace(/｜/g, '|')
+      .replace(/｀/g, '`')
+      .replace(/＄/g, '$')
+      .replace(/＾/g, '^');
   }
 
   /**
@@ -62,6 +81,7 @@
     return p
       .replace(/\.\.\./g, '……')
       .replace(/--/g, '——')
+      .replace(/~/g, '～')
       .replace(/,/g, '，')
       .replace(/\./g, '。')
       .replace(/!/g, '！')
@@ -73,11 +93,24 @@
       .replace(/\[/g, '［')
       .replace(/\]/g, '］')
       .replace(/\{/g, '｛')
-      .replace(/\}/g, '｝');
+      .replace(/\}/g, '｝')
+      .replace(/\//g, '／')
+      .replace(/\\/g, '＼')
+      .replace(/\+/g, '＋')
+      .replace(/=/g, '＝')
+      .replace(/&/g, '＆')
+      .replace(/%/g, '％')
+      .replace(/#/g, '＃')
+      .replace(/@/g, '＠')
+      .replace(/\*/g, '＊')
+      .replace(/_/g, '＿')
+      .replace(/\|/g, '｜')
+      .replace(/\$/g, '＄')
+      .replace(/\^/g, '＾');
   }
 
-  const OPEN_PUNCT = new Set(['「', '『', '“', '‘', '《', '〈', '（', '〔', '【', '［', '｛', '(', '[', '{']);
-  const CLOSE_PUNCT = new Set(['」', '』', '”', '’', '》', '〉', '）', '〕', '】', '］', '｝', ')', ']', '}']);
+  const OPEN_PUNCT = new Set(['「', '『', '“', '‘', '《', '〈', '（', '〔', '【', '［', '｛', '〖', '〘', '〚', '〝', '﹁', '﹃', '﹙', '﹛', '(', '[', '{']);
+  const CLOSE_PUNCT = new Set(['」', '』', '”', '’', '》', '〉', '）', '〕', '】', '］', '｝', '〗', '〙', '〛', '〞', '﹂', '﹄', '﹚', '﹜', ')', ']', '}']);
 
   /**
    * 拆分詞與詞之間的字串（between），精細分離出：
@@ -88,7 +121,7 @@
    * 5. 尾隨空白（trailingSpace）
    */
   function splitBetween(between) {
-    const punctChars = /[，。、；：？！…—～「」『』“”‘’《》〈〉（）〔〕【】［］｛｝,\.\?!;:"'\(\)\[\]\{\}]/;
+    const punctChars = /[，。、；：？！…‥—–―～〜·‧・／＼＋＝＜＞＆％＃＠＊＿｜｀＄＾＇＂－「」『』“”‘’《》〈〉（）〔〕【】［］｛｝〖〗〘〙〚〛〝〞﹁﹂﹃﹄﹒﹑﹐﹗﹖﹔﹕︰﹙﹚﹛﹜．｡､,\.\?!;:"'\(\)\[\]\{\}~\/\\+&%#@*_|$^]/;
 
     let start = 0;
     while (start < between.length && (punctChars.test(between[start]) || /\s/.test(between[start]))) {
@@ -215,7 +248,7 @@
 
       // 處理前詞標點 (prevPunct) 與空格
       if (prevPunct) {
-        const p = prevPunct.trim();
+        const p = prevPunct.replace(/\s+/g, '');
         if (p) {
           hanLine += convertPunctToHan(p);
           const romP = convertPunctToRomance(p);

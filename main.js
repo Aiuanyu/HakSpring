@@ -7004,14 +7004,14 @@ function initializeAppUI() {
 
   function getFilterPrefix(filter) {
     if (filter === 'hard-only') return '[難詞] ';
-    if (filter === 'exclude-easy') return '[簡單詞外] ';
+    if (filter === 'exclude-easy') return '[熟詞外] ';
     if (filter === 'fav-only') return '[收囥詞] ';
     return '';
   }
 
   function getFilterSuffix(filter) {
-    if (filter === 'hard-only') return '（單淨難詞）';
-    if (filter === 'exclude-easy') return '（無顯示簡單詞）';
+    if (filter === 'hard-only') return '（難詞加強）';
+    if (filter === 'exclude-easy') return '（加強無熟）';
     if (filter === 'fav-only') return '（收囥詞）';
     return '';
   }
@@ -7026,8 +7026,8 @@ function initializeAppUI() {
         <div class="fam-filter-controls" id="famFilterControls">
           <select id="famFilterSelect" class="fam-filter-select" aria-label="詞彙過濾">
             <option value="all">全部</option>
-            <option value="hard-only">單淨難詞 🔴</option>
-            <option value="exclude-easy">無顯示簡單詞</option>
+            <option value="hard-only">難詞加強 🔴</option>
+            <option value="exclude-easy">加強無熟</option>
             <option value="fav-only">收囥詞 ❤️</option>
           </select>
         </div>
@@ -7122,7 +7122,7 @@ function initializeAppUI() {
     if (currentFamiliarityFilter === 'hard-only') {
       emptyMsg = '本類別目前無你設定个難詞，故所全部無顯示';
     } else if (currentFamiliarityFilter === 'exclude-easy') {
-      emptyMsg = '本類別目前全部都係你設定个簡單詞，故所全部無顯示';
+      emptyMsg = '本類別目前全部都係你設定个熟詞，故所全部無顯示';
     } else if (currentFamiliarityFilter === 'fav-only') {
       emptyMsg = '本類別目前你無收藏任何詞，故所全部無顯示';
     }
@@ -7466,22 +7466,22 @@ function initializeAppUI() {
     // 易 按鈕
     if (currentGrade === 1) {
       if (suggestion === 'cancel-easy') {
-        easyBtn.innerHTML = '簡？';
-        easyBtn.title = '這隻詞對你像形過難，敢愛取消「簡單」標記？';
+        easyBtn.innerHTML = '熟？';
+        easyBtn.title = '這隻詞對你像形過難，敢愛取消「熟」標記？';
         easyBtn.className = 'fam-btn easy-btn active suggest-cancel';
       } else {
         easyBtn.innerHTML = '🟢';
-        easyBtn.title = '已標記為簡單（點擊取消）';
+        easyBtn.title = '已標記做熟（點擊取消）';
         easyBtn.className = 'fam-btn easy-btn active';
       }
     } else {
       if (suggestion === 'easy') {
-        easyBtn.innerHTML = '簡？';
-        easyBtn.title = '你像形對這隻詞有熟，敢愛標簡單？';
+        easyBtn.innerHTML = '熟？';
+        easyBtn.title = '你像形對這隻詞有熟，敢愛標熟？';
         easyBtn.className = 'fam-btn easy-btn suggest-easy';
       } else {
         easyBtn.innerHTML = '🟢';
-        easyBtn.title = '標記為簡單（已熟）';
+        easyBtn.title = '標記做熟';
         easyBtn.className = 'fam-btn easy-btn';
       }
     }
@@ -7494,7 +7494,7 @@ function initializeAppUI() {
         hardBtn.className = 'fam-btn hard-btn active suggest-cancel';
       } else {
         hardBtn.innerHTML = '🔴';
-        hardBtn.title = '已標記為困難（點擊取消）';
+        hardBtn.title = '已標記做困難（點擊取消）';
         hardBtn.className = 'fam-btn hard-btn active';
       }
     } else {
@@ -7504,7 +7504,7 @@ function initializeAppUI() {
         hardBtn.className = 'fam-btn hard-btn suggest-hard';
       } else {
         hardBtn.innerHTML = '🔴';
-        hardBtn.title = '標記為困難';
+        hardBtn.title = '標記做困難';
         hardBtn.className = 'fam-btn hard-btn';
       }
     }
