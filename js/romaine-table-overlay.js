@@ -600,7 +600,8 @@
         <label class="wb-raoping-chip"><input type="checkbox" value="zhuolan" /><span class="variant-label variant-label-卓">卓</span>卓蘭</label>
         <label class="wb-raoping-chip"><input type="checkbox" value="taoyuan" /><span class="variant-label variant-label-桃">桃</span>桃園</label>
       `;
-      generated.insertAdjacentElement('beforebegin', bar);
+      const anchorTarget = generated.closest('.main-workspace-layout') || generated;
+      anchorTarget.insertAdjacentElement('beforebegin', bar);
       const chks = Array.from(bar.querySelectorAll('input[type="checkbox"]'));
       chks.forEach((c) => {
         c.addEventListener('change', () => {
@@ -781,53 +782,51 @@
         hppTextSpan.innerHTML = tk === 'zhuk' ? applyHppVariantColors(hppLineHtml, dialect) : hppLineHtml;
         hppDiv.appendChild(hppTextSpan);
 
-        if (tIdx === 0) {
-          const statusIcon = document.createElement('button');
-          statusIcon.type = 'button';
-          statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
-          statusIcon.textContent = 'i';
-          statusIcon.title = statusTitle;
-          statusIcon.setAttribute('aria-label', statusTitle);
-          const stopIconEvent = (e) => {
-            e.stopPropagation();
-          };
-          statusIcon.addEventListener('mousedown', stopIconEvent);
-          statusIcon.addEventListener('mouseup', stopIconEvent);
-          statusIcon.addEventListener('click', (e) => {
+        const statusIcon = document.createElement('button');
+        statusIcon.type = 'button';
+        statusIcon.className = 'romaine-status-icon ' + (isVerified ? 'verified' : 'auto');
+        statusIcon.textContent = 'i';
+        statusIcon.title = statusTitle;
+        statusIcon.setAttribute('aria-label', statusTitle);
+        const stopIconEvent = (e) => {
+          e.stopPropagation();
+        };
+        statusIcon.addEventListener('mousedown', stopIconEvent);
+        statusIcon.addEventListener('mouseup', stopIconEvent);
+        statusIcon.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          showStatusTip(statusIcon, statusTitle);
+        });
+        hppDiv.appendChild(statusIcon);
+
+        if (tIdx === 0 && i === 0) {
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'romaine-edit-btn';
+          editBtn.textContent = '✎';
+          editBtn.title = '在工作台校對這句';
+          editBtn.setAttribute('aria-label', '在工作台校對這句');
+          editBtn.addEventListener('mousedown', stopIconEvent);
+          editBtn.addEventListener('mouseup', stopIconEvent);
+          editBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            showStatusTip(statusIcon, statusTitle);
+            if (window.romaineWorkbench && typeof window.romaineWorkbench.loadRow === 'function') {
+              const td2 = row.querySelector('td[data-label="詞彙"]');
+              const wordEl = td2 ? td2.querySelector('.word-text, strong, b') : null;
+              window.romaineWorkbench.loadRow({
+                han: sentText,
+                dialect,
+                level,
+                rowId,
+                word: wordEl ? wordEl.textContent.trim() : '',
+                rowEl: row,
+                openBookMap,
+              });
+            }
           });
-          hppDiv.appendChild(statusIcon);
-
-          if (i === 0) {
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'romaine-edit-btn';
-            editBtn.textContent = '✎';
-            editBtn.title = '在工作台校對這句';
-            editBtn.setAttribute('aria-label', '在工作台校對這句');
-            editBtn.addEventListener('mousedown', stopIconEvent);
-            editBtn.addEventListener('mouseup', stopIconEvent);
-            editBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (window.romaineWorkbench && typeof window.romaineWorkbench.loadRow === 'function') {
-                const td2 = row.querySelector('td[data-label="詞彙"]');
-                const wordEl = td2 ? td2.querySelector('.word-text, strong, b') : null;
-                window.romaineWorkbench.loadRow({
-                  han: sentText,
-                  dialect,
-                  level,
-                  rowId,
-                  word: wordEl ? wordEl.textContent.trim() : '',
-                  rowEl: row,
-                  openBookMap,
-                });
-              }
-            });
-            hppDiv.appendChild(editBtn);
-          }
+          hppDiv.appendChild(editBtn);
         }
 
         if (tIdx === activeTracks.length - 1 && i === pairCount - 1 && isVerified && verifiedItem.note) {
@@ -879,9 +878,13 @@
 
     sentSpan.style.display = 'none';
     sentSpan.insertAdjacentElement('afterend', container);
-    if (container.nextElementSibling && container.nextElementSibling.tagName === 'BR') {
-      container.nextElementSibling.style.display = 'none';
-      container.nextElementSibling.dataset.romaineHiddenBr = '1';
+    let after = container.nextElementSibling;
+    while (after && after.tagName === 'AUDIO' && (after.style.display === 'none' || after.dataset.skip === 'true')) {
+      after = after.nextElementSibling;
+    }
+    if (after && after.tagName === 'BR') {
+      after.style.display = 'none';
+      after.dataset.romaineHiddenBr = '1';
     }
   }
 
@@ -892,9 +895,12 @@
     if (!enabled) {
       ensureRaopingMainBar(generated, false);
       for (const el of generated.querySelectorAll('.romaine-interleaved')) {
-        if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
-          el.nextElementSibling.style.display = '';
-          delete el.nextElementSibling.dataset.romaineHiddenBr;
+        const td3 = el.closest('td[data-label="例句"]');
+        if (td3) {
+          for (const br of td3.querySelectorAll('br[data-romaine-hidden-br="1"]')) {
+            br.style.display = '';
+            delete br.dataset.romaineHiddenBr;
+          }
         }
         el.remove();
       }
@@ -990,9 +996,12 @@
     window.addEventListener('storage', (e) => {
       if (e && e.key === 'romaineAutoVerifiedCorpus') {
         for (const el of document.querySelectorAll('#generated .romaine-interleaved')) {
-          if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
-            el.nextElementSibling.style.display = '';
-            delete el.nextElementSibling.dataset.romaineHiddenBr;
+          const td3 = el.closest('td[data-label="例句"]');
+          if (td3) {
+            for (const br of td3.querySelectorAll('br[data-romaine-hidden-br="1"]')) {
+              br.style.display = '';
+              delete br.dataset.romaineHiddenBr;
+            }
           }
           el.remove();
         }
@@ -1035,9 +1044,12 @@
   function resetRowOverlay(row) {
     if (!row) return;
     for (const el of row.querySelectorAll('.romaine-interleaved')) {
-      if (el.nextElementSibling && el.nextElementSibling.dataset.romaineHiddenBr === '1') {
-        el.nextElementSibling.style.display = '';
-        delete el.nextElementSibling.dataset.romaineHiddenBr;
+      const td3 = el.closest('td[data-label="例句"]');
+      if (td3) {
+        for (const br of td3.querySelectorAll('br[data-romaine-hidden-br="1"]')) {
+          br.style.display = '';
+          delete br.dataset.romaineHiddenBr;
+        }
       }
       el.remove();
     }

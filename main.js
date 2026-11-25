@@ -904,6 +904,50 @@ let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨�
 let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
 let preprocessedDataCache = {};
 let indexedDataCache = {}; // <-- 新增此索引快取物件
+
+window.getRomaineCandidateMeaning = function (han, hpp, dialectKey) {
+  if (!han || !indexedDataCache) return '';
+  const list = indexedDataCache[han];
+  if (!Array.isArray(list) || list.length === 0) return '';
+
+  const dialectNameMap = {
+    xiien: '四縣',
+    namxiian: '南四縣',
+    hoiliug: '海陸',
+    taibu: '大埔',
+    ngiaupin: '饒平',
+    zhioon: '詔安',
+  };
+  const dName = dialectNameMap[dialectKey] || dialectKey || '';
+  const scoped = dName
+    ? list.filter((e) => typeof isSourceMatchingDialect === 'function' && isSourceMatchingDialect(e.source, dName))
+    : list;
+  const pool = scoped.length > 0 ? scoped : list;
+
+  const norm = (s) => String(s || '').toLowerCase().replace(/[\s'-]+/g, ' ').trim();
+  const target = norm(hpp);
+
+  const matchReadingStr = (raw) => {
+    if (!raw || !target) return false;
+    const parts = String(raw).split(/[／/、,，或]/);
+    return parts.some((p) => {
+      const cleaned = p.replace(/\([^)]*\)/g, '').trim();
+      return norm(cleaned) === target || norm(p) === target;
+    });
+  };
+
+  for (const e of pool) {
+    if (!e.mandarinMeaning) continue;
+    if (
+      matchReadingStr(e.pronunciation) ||
+      matchReadingStr(e.rawPhonetic) ||
+      (Array.isArray(e.variants) && e.variants.some((v) => matchReadingStr(v.phonetic) || matchReadingStr(v.rawPhonetic)))
+    ) {
+      return String(e.mandarinMeaning).replace(/"/g, '').replace(/\s+/g, ' ').trim();
+    }
+  }
+  return '';
+};
 let crossDialectMap = null; // GIP 跨腔對照表 (from cross_dialect_map.json)
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡

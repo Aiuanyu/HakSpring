@@ -377,27 +377,30 @@
       const chars = Array.from(tok.han || '').filter((c) => CJK_CHAR_TEST_RE.test(c));
       const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
       let changed = false;
+      let anyUncertain = false;
       for (let k = 0; k < chars.length; k++) {
         const ov = ovMap.get(cjkIdx + k);
-        if (ov && ov.ch === chars[k] && syls[k]) {
-          if (ov.syl) {
+        if (ov && ov.ch === chars[k]) {
+          if (ov.syl && syls[k]) {
             syls[k] = ov.syl;
             changed = true;
           }
-          if (typeof ov.isUpper === 'boolean') {
+          if (typeof ov.isUpper === 'boolean' && syls[k]) {
             syls[k] = ov.isUpper
               ? syls[k].charAt(0).toUpperCase() + syls[k].slice(1)
               : syls[k].charAt(0).toLowerCase() + syls[k].slice(1);
             changed = true;
           }
+          if (ov.uncertain) anyUncertain = true;
         }
       }
+      if (anyUncertain) tok.uncertain = true;
       if (changed) tok.hpp = syls.join(' ');
       cjkIdx += chars.length;
     }
   }
 
-  function recordTokenManualOverride(tokIdx, saveSyl, saveCase) {
+  function recordTokenManualOverride(tokIdx, saveSyl, saveCase, saveUncertain) {
     let cjkIdx = 0;
     for (let t = 0; t < currentTokens.length; t++) {
       const tok = currentTokens[t];
@@ -412,6 +415,7 @@
             const first = syls[k].charAt(0);
             prev.isUpper = Boolean(first && first !== first.toLowerCase());
           }
+          if (saveUncertain) prev.uncertain = Boolean(tok.uncertain);
           manualCharOverrides.set(cjkIdx + k, prev);
         }
         break;
@@ -434,6 +438,7 @@
             ch: chars[k],
             syl: syls[k],
             isUpper: Boolean(first && first !== first.toLowerCase()),
+            uncertain: Boolean(tok.uncertain),
           });
         }
       }
@@ -496,6 +501,38 @@
     render();
   }
 
+  function lookupCandidateMeaning(han, hpp) {
+    if (typeof window.getRomaineCandidateMeaning !== 'function') return '';
+    return window.getRomaineCandidateMeaning(han, hpp, engineDialect) || '';
+  }
+
+  function makeCandidateButton(han, c, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+
+    const hppSpan = document.createElement('span');
+    hppSpan.className = 'wb-cand-hpp';
+    hppSpan.textContent = c.hpp;
+    btn.appendChild(hppSpan);
+
+    const gloss = lookupCandidateMeaning(han, c.hpp);
+    if (gloss) {
+      const glossSpan = document.createElement('span');
+      glossSpan.className = 'wb-cand-gloss';
+      glossSpan.textContent = gloss;
+      glossSpan.title = gloss;
+      btn.appendChild(glossSpan);
+    }
+
+    const tagSpan = document.createElement('span');
+    tagSpan.className = 'wb-cand-tag';
+    tagSpan.textContent = c.label || '';
+    btn.appendChild(tagSpan);
+
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
   function openCandidatePopup(tokIdx, anchorEl) {
     const tok = currentTokens[tokIdx];
     if (!tok || tok.punct || tok.nonCjk || tok.comment || !candPopupEl) return;
@@ -504,7 +541,7 @@
     const head = document.createElement('div');
     head.className = 'wb-cand-head';
     const title = document.createElement('strong');
-    title.textContent = tok.han;
+    title.textContent = tok.displayHan || tok.han;
     head.appendChild(title);
 
     const ext = document.createElement('a');
@@ -517,6 +554,26 @@
     head.appendChild(ext);
     candPopupEl.appendChild(head);
 
+    if (tok.candidates && tok.candidates.length > 0) {
+      for (const c of tok.candidates) {
+        const btn = makeCandidateButton(tok.han, c, () => {
+          const oldFirst = (tok.hpp || '').trim().charAt(0);
+          const wasUpper = oldFirst && oldFirst !== oldFirst.toLowerCase();
+          tok.hpp = wasUpper ? c.hpp.charAt(0).toUpperCase() + c.hpp.slice(1) : c.hpp;
+          tok.trust = c.trust;
+          tok.label = c.label;
+          tok.oov = false;
+          recordTokenManualOverride(tokIdx, true, false);
+          if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+            engine.populateRaopingSubTokens([tok]);
+          }
+          candPopupEl.style.display = 'none';
+          render();
+        });
+        candPopupEl.appendChild(btn);
+      }
+    }
+
     if (tok.partsMeta && tok.partsMeta.length > 0) {
       for (const pm of tok.partsMeta) {
         if (!pm.candidates || !pm.candidates.length) continue;
@@ -525,10 +582,7 @@
         subLbl.textContent = pm.han;
         candPopupEl.appendChild(subLbl);
         for (const c of pm.candidates) {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.innerHTML = `<span>${c.hpp}</span><span class="wb-cand-tag">${c.label || ''}</span>`;
-          btn.addEventListener('click', () => {
+          const btn = makeCandidateButton(pm.han, c, () => {
             const offset = tok.partsMeta
               .slice(0, tok.partsMeta.indexOf(pm))
               .reduce((s, item) => s + item.sylCount, 0);
@@ -552,33 +606,112 @@
           candPopupEl.appendChild(btn);
         }
       }
-    } else if (tok.candidates && tok.candidates.length > 0) {
-      for (const c of tok.candidates) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.innerHTML = `<span>${c.hpp}</span><span class="wb-cand-tag">${c.label || ''}</span>`;
-        btn.addEventListener('click', () => {
-          const oldFirst = (tok.hpp || '').trim().charAt(0);
-          const wasUpper = oldFirst && oldFirst !== oldFirst.toLowerCase();
-          tok.hpp = wasUpper ? c.hpp.charAt(0).toUpperCase() + c.hpp.slice(1) : c.hpp;
-          tok.trust = c.trust;
-          tok.label = c.label;
-          tok.oov = false;
-          recordTokenManualOverride(tokIdx, true, false);
-          if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
-            engine.populateRaopingSubTokens([tok]);
-          }
-          candPopupEl.style.display = 'none';
-          render();
-        });
-        candPopupEl.appendChild(btn);
-      }
-    } else {
+    }
+
+    if ((!tok.candidates || !tok.candidates.length) && (!tok.partsMeta || !tok.partsMeta.length)) {
       const empty = document.createElement('div');
       empty.className = 'wb-cand-sub';
       empty.textContent = '無其他候選讀音';
       candPopupEl.appendChild(empty);
     }
+
+    const capBtn = document.createElement('button');
+    capBtn.type = 'button';
+    capBtn.textContent = '切換首字母大寫 (Aa)';
+    capBtn.addEventListener('click', () => {
+      toggleTokenCase(tokIdx);
+      candPopupEl.style.display = 'none';
+    });
+    candPopupEl.appendChild(capBtn);
+
+    const uncertainBtn = document.createElement('button');
+    uncertainBtn.type = 'button';
+    uncertainBtn.textContent = tok.uncertain ? '✓ 取消「不確定」標記' : '？ 標記為「不確定」';
+    uncertainBtn.addEventListener('click', () => {
+      tok.uncertain = !tok.uncertain;
+      recordTokenManualOverride(tokIdx, false, false, true);
+      candPopupEl.style.display = 'none';
+      render();
+    });
+    candPopupEl.appendChild(uncertainBtn);
+
+    const customBtn = document.createElement('button');
+    customBtn.type = 'button';
+    customBtn.textContent = '自訂讀音…';
+    customBtn.addEventListener('click', () => {
+      const curSyls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
+      let defaultInput = curSyls[0] || '';
+      for (let i = 1; i < curSyls.length; i++) {
+        const isEq = tok.sylBoundaries && tok.sylBoundaries[i - 1] === 'hyphen';
+        defaultInput += (isEq ? '=' : ' ') + curSyls[i];
+      }
+
+      const val = prompt(
+        `輸入「${tok.displayHan || tok.han}」的 HPP 讀音（空格/-/' 分隔音節；= 強制 hyphen；+ 強制空格拆詞）：`,
+        defaultInput
+      );
+      if (val !== null && val.trim()) {
+        const rawParts = val.trim().split(/(\s*=\s*|\s*\+\s*|[\s'-]+)/).filter((p) => p && !/^\s+$/.test(p));
+        const newSyls = [];
+        const newOps = [];
+        for (const part of rawParts) {
+          if (/^[\s'-]+$/.test(part)) continue;
+          if (part.includes('=')) {
+            newOps.push('=');
+          } else if (part.includes('+')) {
+            newOps.push('+');
+          } else {
+            if (newSyls.length > newOps.length) newOps.push('normal');
+            newSyls.push(part.normalize('NFC'));
+          }
+        }
+
+        const chars = Array.from(tok.han || '');
+        const hadEq = tok.sylBoundaries && tok.sylBoundaries.includes('hyphen');
+        const hasNewStruct = newOps.includes('=') || newOps.includes('+') || hadEq;
+
+        if (newSyls.length > 0) {
+          tok.hpp = newSyls.join(' ');
+          tok.oov = false;
+          tok.trust = 'official';
+          tok.label = '人工自訂';
+          recordTokenManualOverride(tokIdx, true, true);
+          if (engineDialect === 'ngiaupin' && typeof engine.populateRaopingSubTokens === 'function') {
+            engine.populateRaopingSubTokens([tok]);
+          }
+
+          if (
+            hasNewStruct &&
+            inputEl &&
+            newSyls.length === chars.length &&
+            tok.srcStart !== undefined &&
+            tok.srcEnd !== undefined
+          ) {
+            const oldDisp = tok.displayHan || tok.han;
+            let rebuilt = chars[0];
+            for (let k = 1; k < chars.length; k++) {
+              const op = newOps[k - 1];
+              if (op === '=' || op === '+') {
+                rebuilt += op;
+              } else if (oldDisp.includes('-')) {
+                rebuilt += '-';
+              }
+              rebuilt += chars[k];
+            }
+            if (rebuilt !== oldDisp) {
+              const txt = inputEl.value;
+              inputEl.value = txt.slice(0, tok.srcStart) + rebuilt + txt.slice(tok.srcEnd);
+              candPopupEl.style.display = 'none';
+              runConvert();
+              return;
+            }
+          }
+          render();
+        }
+      }
+      candPopupEl.style.display = 'none';
+    });
+    candPopupEl.appendChild(customBtn);
 
     candPopupEl.style.display = 'block';
     const rect = anchorEl.getBoundingClientRect();
@@ -803,12 +936,31 @@
     btn.setAttribute('aria-pressed', String(isOpen));
   }
 
+  function updateStickyTop() {
+    if (!paneEl || !isOpen) return;
+    const headerEl = document.getElementById('header');
+    const summaryEl = document.getElementById('results-summary');
+    let bottom = 12;
+    if (headerEl) {
+      const hStyle = getComputedStyle(headerEl);
+      const hTop = parseFloat(hStyle.top) || 10;
+      bottom = Math.max(bottom, hTop + headerEl.offsetHeight);
+    }
+    if (summaryEl && summaryEl.offsetParent !== null && getComputedStyle(summaryEl).display !== 'none') {
+      const sStyle = getComputedStyle(summaryEl);
+      const sTop = parseFloat(sStyle.top) || 80;
+      bottom = Math.max(bottom, sTop + summaryEl.offsetHeight);
+    }
+    paneEl.style.setProperty('--wb-sticky-top', `${Math.max(12, Math.ceil(bottom + 8))}px`);
+  }
+
   function open() {
     if (!paneEl && !buildDom()) return;
     isOpen = true;
     paneEl.hidden = false;
     document.body.classList.add('romaine-workbench-open');
     updateHeaderToggleBtn();
+    updateStickyTop();
     const d = dialectSel ? dialectSel.value : 'xiien';
     ensureEngine(d).then(() => {
       if (inputEl && inputEl.value.trim() && currentTokens.length === 0) {
@@ -908,6 +1060,8 @@
       btn.addEventListener('click', toggle);
       updateHeaderToggleBtn();
     }
+    window.addEventListener('resize', updateStickyTop, { passive: true });
+    window.addEventListener('scroll', updateStickyTop, { passive: true });
   }
 
   if (document.readyState === 'loading') {

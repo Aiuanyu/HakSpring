@@ -7339,10 +7339,11 @@ tr.romaine-row-editing td[data-label="例句"] {
   }
   body.romaine-workbench-open .romaine-workbench-pane {
     position: sticky;
-    top: 12px;
-    max-height: calc(100vh - 24px);
+    top: var(--wb-sticky-top, 130px);
+    max-height: calc(100vh - var(--wb-sticky-top, 130px) - 12px);
     overflow-y: auto;
     overscroll-behavior: contain;
+    z-index: 1001;
   }
   .wb-expand-btn {
     display: none;
@@ -7590,8 +7591,8 @@ tr.romaine-row-editing td[data-label="例句"] {
   position: fixed;
   z-index: 1200;
   display: none;
-  min-width: 210px;
-  max-width: 90vw;
+  min-width: 220px;
+  max-width: min(320px, 90vw);
   max-height: 300px;
   overflow-y: auto;
   padding: 8px;
@@ -7626,8 +7627,9 @@ tr.romaine-row-editing td[data-label="例句"] {
 }
 .wb-cand-popup button {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   margin-top: 4px;
   padding: 5px 8px;
@@ -7637,8 +7639,23 @@ tr.romaine-row-editing td[data-label="例句"] {
   color: inherit;
   cursor: pointer;
   font-size: 0.88rem;
+  text-align: left;
+}
+.wb-cand-hpp {
+  flex-shrink: 0;
+}
+.wb-cand-gloss {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+  color: #64748b;
+  text-align: left;
 }
 .wb-cand-tag {
+  flex-shrink: 0;
   font-size: 0.75rem;
   color: #64748b;
 }
