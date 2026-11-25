@@ -5537,7 +5537,7 @@ function initializeAppUI() {
           const contextBtn = document.createElement('button');
           contextBtn.type = 'button';
           contextBtn.className = 'cert-context-btn';
-          contextBtn.textContent = '去看認證詞表上下文';
+          contextBtn.textContent = '看上下文';
           contextBtn.title = `跳轉至 ${fullSourceName}「${categoryName}」第 ${line.編號} 筆`;
           contextBtn.addEventListener('click', (event) => {
             event.stopPropagation();

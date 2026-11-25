@@ -70,7 +70,6 @@
 ## 與 Obsidian 筆記庫个關係 (Obsidian Vault Rules)
 - 開發筆記放在 Obsidian vault：`/Users/gjrobert/NAS/Obsidian/Main/創作/程式/HakSpring/`（總覽 `HakSpring.md`，各功能一篇，如 `PFS.md`）。
 - **【鐵律】有做事就要寫 Obsidian**：只要做了事（改程式、改文件、改設定、做研究、下決定），都愛在對應个筆記裡肚留下紀錄，寫清楚做了甚麼、為甚麼、動著哪兜檔案、哪兜驗證過吔、哪兜還無驗證。沿用該筆記既有个分段慣例（R／G／C 系列 h3），毋好淨在對話裡肚講煞。Commit message 係例外（見下背）。
-- **【Obsidian 渲染避坑】反引號後背毋好緊接點號**：凡係反引號開頭、後背緊接 dot（例如單獨表示副檔名），兩者中間愛插 1 個全形空格，寫做 `　.md`、`　.json`。完整檔名或路徑（如 `pages/pfs.md`）毋受影響。這條適用全部軟體專案，包含文件、筆記、commit message 摎程式碼註解。
 
 ## Development board (Obsidian vault)
 
@@ -100,7 +99,7 @@ Work status for HakSpring (website) and Kipan lives on a kanban in the Obsidian 
 - **Commit Message 審核與提交流程**：
     1. 先分析專案 Git 目前 staged 的 diff，歸納此次更新內容。
     2. 依對話記憶提及不同 AI 模型，分別列出每個 AI 模型的分工及貢獻。
-    3. 先寫在專案根目錄的臨時 `commit_msg.txt` 中，供平哥審閱、直接編輯。
+    3. 先寫在專案根目錄的臨時 `commit_msg.txt` 中，供平哥審閱、直接編輯；**嚴禁在對話中再輸出一次完整內容，以節省 token**（僅提供檔案連結即可）。
     4. Commit message **毋使寫來 Obsidian 筆記裡肚**（避免筆記內容過度冗長繁雜、重複堆疊已存在於 git log 或專案檔案的內容）。
     5. 平哥審核完成告知定稿後，再根據 `commit_msg.txt` 執行 commit。
         - 絕對要小心避免那種會卡住終端機狀態的指令。
