@@ -99,7 +99,7 @@
 
 
 :root {
-  --title-font: 'PT Sans', /*'jf蘭陽黑體 1.0', */'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --title-font: 'PT Sans', /*'jf蘭陽黑體 1.0', */'Heiti TC', 'HeitiTC-HakSupplement', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
   --roman-font: 'jf金萱那提2.0', tauhu-oo, Iansui, sans-serif;
   --main-text-color: #245d48;
   --iMazinGrace-1: #aa96b7;
@@ -3519,9 +3519,40 @@ tr.ios-autoplay-instruction td::before {
   color: #666;
 }
 
+.cert-context-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 7px;
+  font-size: 0.78em;
+  line-height: 1.35;
+  color: #274212;
+  background-color: #eef4e6;
+  border: 1px solid #5f8737;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cert-context-btn:hover {
+  background-color: #35581b;
+  color: #ffffff;
+}
+
 @media (prefers-color-scheme: dark) {
   .source-tag {
     color: #aaa;
+  }
+
+  .cert-context-btn {
+    color: #d8f0c8;
+    background-color: #2f3b2a;
+    border-color: #6b8e4e;
+  }
+
+  .cert-context-btn:hover {
+    background-color: #3d5235;
+    color: #ffffff;
   }
 }
 

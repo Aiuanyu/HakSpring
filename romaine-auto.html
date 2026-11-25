@@ -346,7 +346,10 @@
     }
     .cert-sent-text { flex: 1; min-width: 0; }
     .cert-sent-main { font-size: 16px; font-weight: 600; line-height: 1.5; }
+    .cert-sent-row.unverified-italic:not(.verified) .cert-sent-main { font-style: italic; }
     .cert-sent-hpp { font-size: 15px; color: var(--accent); font-weight: 600; margin-top: 4px; line-height: 1.85; word-break: break-word; }
+    .radio-group { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); }
+    .radio-group label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600; }
     .cert-sent-sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
     .cert-audio-btn { padding: 4px 8px; font-size: 13px; line-height: 1.2; }
     .cert-audio-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -397,8 +400,12 @@
       <h2 style="margin:0 0 8px">Romaine Auto PoC（多腔詞典／例句測試）</h2>
       <div class="toolbar">
         <select id="dialectSelect" title="選擇腔調">
-          <option value="sixian">四縣</option>
-          <option value="zhaoan">詔安</option>
+          <option value="xiien">四縣</option>
+          <option value="namxiian">南四縣</option>
+          <option value="hoiliug">海陸</option>
+          <option value="taibu">大埔</option>
+          <option value="ngiaupin">饒平</option>
+          <option value="zhioon">詔安</option>
         </select>
         <label class="switch">
           <input type="checkbox" id="autoToggle" checked />
@@ -414,8 +421,23 @@
         <button id="evalP0Btn">跑 P0 基準分</button>
       </div>
       <div class="status-line" id="statusLine" style="margin-top:8px">詞庫（教典＋認證＋補字典）載入中…</div>
+      <div class="toolbar" style="margin-top:8px; gap:14px;">
+        <div class="radio-group" role="radiogroup" aria-label="無愛變調个標示字元">
+          <span>無愛變調个標示字元：</span>
+          <label><input type="radio" name="noSandhiMarker" value="#" /> <code>#</code></label>
+          <label><input type="radio" name="noSandhiMarker" value="~" checked /> <code>~</code></label>
+        </div>
+        <label class="switch" style="font-size:13px; font-weight:500;">
+          <input type="checkbox" id="unverifiedItalicToggle" checked />
+          毋曾有人審查過个句仔用竵體／斜體
+        </label>
+        <label class="switch" style="font-size:13px; font-weight:500;">
+          <input type="checkbox" id="trustUnderlineToggle" />
+          用底線表示例句羅馬字个可信度
+        </label>
+      </div>
       <div class="hint-line">
-        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>頭那+毛</code> 輸出加空格（不改斷詞）｜ <code>恁 早</code> 空格拆詞 ｜ <code>字#</code> 前音節不變調
+        即時造詞控制符：<code>輕-井-澤</code> 強制連詞 ｜ <code>美=臺</code> 強制連字號（<code>-</code>）｜ <code>頭那+毛</code> 輸出加空格（不改斷詞）｜ <code>恁 早</code> 空格拆詞 ｜ <code>字~</code>／<code>字#</code> 前音節不變調
       </div>
     </div>
 
@@ -444,6 +466,8 @@
           <button class="primary" id="verifyBtn">✓ 確認校正並入庫（localStorage）</button>
           <button id="saveAsNewBtn" style="display:none">另存別筆</button>
           <button id="toggleVerifiedBtn">檢視黃金語料 (<span id="verifiedCount">0</span>)</button>
+          <button id="importBtn" type="button">匯入 JSON</button>
+          <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" />
           <button id="exportBtn">匯出 JSON</button>
         </div>
       </div>
@@ -484,8 +508,17 @@
   <script src="NAmedias.js"></script>
   <script src="js/gip-converter.js"></script>
   <script src="js/romaine-join.js"></script>
-  <script src="js/romaine-auto.js?v=12"></script>
+  <script src="js/romaine-auto.js?v=14"></script>
   <script>
+    const DIALECT_LABELS = {
+      xiien: '四縣',
+      namxiian: '南四縣',
+      hoiliug: '海陸',
+      taibu: '大埔',
+      ngiaupin: '饒平',
+      zhioon: '詔安',
+    };
+    const normDialect = (d) => (RomaineAutoEngine.normalizeDialect ? RomaineAutoEngine.normalizeDialect(d) : d);
     const STORAGE_KEY = 'romaineAutoVerifiedCorpus';
     const CJK_CHAR_TEST_RE = /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/u;
     const engine = new RomaineAutoEngine();
@@ -498,6 +531,49 @@
     const autoToggle = document.getElementById('autoToggle');
     const sandhiToggle = document.getElementById('sandhiToggle');
     const joiningMode = document.getElementById('joiningMode');
+    const unverifiedItalicToggle = document.getElementById('unverifiedItalicToggle');
+    const trustUnderlineToggle = document.getElementById('trustUnderlineToggle');
+    const noSandhiMarkerRadios = Array.from(document.querySelectorAll('input[name="noSandhiMarker"]'));
+
+    function syncRomainePrefsUI() {
+      const marker = RomaineAutoEngine.getNoSandhiMarker();
+      for (const r of noSandhiMarkerRadios) {
+        r.checked = r.value === marker;
+      }
+      if (unverifiedItalicToggle) {
+        unverifiedItalicToggle.checked = RomaineAutoEngine.getUnverifiedItalic();
+      }
+      if (trustUnderlineToggle) {
+        trustUnderlineToggle.checked = RomaineAutoEngine.getTrustUnderline();
+      }
+    }
+    syncRomainePrefsUI();
+
+    for (const r of noSandhiMarkerRadios) {
+      r.addEventListener('change', () => {
+        if (r.checked) {
+          RomaineAutoEngine.setNoSandhiMarker(r.value);
+          render();
+          refreshCertVerifiedHighlights();
+        }
+      });
+    }
+    if (unverifiedItalicToggle) {
+      unverifiedItalicToggle.addEventListener('change', () => {
+        RomaineAutoEngine.setUnverifiedItalic(unverifiedItalicToggle.checked);
+        refreshCertVerifiedHighlights();
+      });
+    }
+    if (trustUnderlineToggle) {
+      trustUnderlineToggle.addEventListener('change', () => {
+        RomaineAutoEngine.setTrustUnderline(trustUnderlineToggle.checked);
+      });
+    }
+    window.addEventListener('romainePrefsChanged', () => {
+      syncRomainePrefsUI();
+      render();
+      refreshCertVerifiedHighlights();
+    });
     const inputHan = document.getElementById('inputHan');
     const noteInput = document.getElementById('noteInput');
     const tokensWrap = document.getElementById('tokensWrap');
@@ -1162,7 +1238,7 @@
     }
 
     async function loadVerifiedItemIntoEditor(item, origIdx, { scrollToTop = true } = {}) {
-      const targetDialect = item.dialect || 'sixian';
+      const targetDialect = normDialect(item.dialect || 'xiien');
       if (targetDialect !== engine.dialect) {
         dialectSelect.value = targetDialect;
         await loadDialect(targetDialect, false);
@@ -1220,7 +1296,7 @@
         const head = document.createElement('div');
         head.className = 'verified-item-head';
         const timeStr = item.updated_at ? item.updated_at.slice(0, 19).replace('T', ' ') : '';
-        const dTag = item.dialect === 'zhaoan' ? '詔安' : '四縣';
+        const dTag = DIALECT_LABELS[normDialect(item.dialect)] || '四縣';
         const certTag = item.cert_ref ? ` · CERT ${item.cert_ref.level} ${item.cert_ref.id}` : '';
         head.innerHTML = `<span class="status-line">#${origIdx + 1} · ${dTag}${certTag} · ${timeStr}</span>`;
 
@@ -1345,6 +1421,47 @@
       a.click();
     });
 
+    const importBtn = document.getElementById('importBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    if (importBtn && importFileInput) {
+      importBtn.addEventListener('click', () => importFileInput.click());
+      importFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed.items || []);
+          if (!Array.isArray(incoming)) throw new Error('JSON 格式不符');
+          const cur = loadVerified();
+          const byId = new Map(cur.map((it, idx) => [it.id, idx]));
+          let added = 0;
+          let updated = 0;
+          for (const it of incoming) {
+            if (!it || !it.id) continue;
+            if (byId.has(it.id)) {
+              cur[byId.get(it.id)] = it;
+              updated++;
+            } else {
+              byId.set(it.id, cur.length);
+              cur.push(it);
+              added++;
+            }
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cur));
+          engine.applyVerifiedLearning(cur);
+          updateVerifiedBadge();
+          if (verifiedPanel.style.display !== 'none') renderVerifiedPanel();
+          refreshCertVerifiedHighlights();
+          statusLine.textContent = `已匯入黃金語料：新增 ${added} 筆、更新 ${updated} 筆（共 ${cur.length} 筆）。`;
+        } catch (err) {
+          alert(`匯入失敗：${err.message}`);
+        } finally {
+          importFileInput.value = '';
+        }
+      });
+    }
+
     // --- CERT 認證例句載入器 ---
     const certLevelSelect = document.getElementById('certLevelSelect');
     const certCategorySelect = document.getElementById('certCategorySelect');
@@ -1373,17 +1490,27 @@
 
     function applyCertAudioProxy(url) {
       if (!url || !url.startsWith('https://elearning.hakka.gov.tw/')) return url;
-      const isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port !== '8788';
+      const isLocal = (location.protocol === 'http:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port !== '8788';
       const prefix = isLocal ? 'https://hakspring.pages.dev/audio-proxy?url=' : '/audio-proxy?url=';
       return prefix + encodeURIComponent(url);
     }
+
+    const CERT_AUDIO_MAP = {
+      xiien: { 檔腔: 'si', 腔名: '四縣' },
+      namxiian: { 檔腔: 'si', 腔名: '四縣' },
+      hoiliug: { 檔腔: 'ha', 腔名: '海陸' },
+      taibu: { 檔腔: 'da', 腔名: '大埔' },
+      ngiaupin: { 檔腔: 'rh', 腔名: '饒平' },
+      zhioon: { 檔腔: 'zh', 腔名: '詔安' },
+    };
 
     function buildCertSentenceAudioUrl(row, dialectKey, levelName) {
       if (!row || !row.id || levelName === '高級') return null;
       const lvl = CERT_LEVEL_INFO[levelName];
       if (!lvl) return null;
-      const 檔腔 = dialectKey === 'zhaoan' ? 'zh' : 'si';
-      const 腔名 = dialectKey === 'zhaoan' ? '詔安' : '四縣';
+      const info = CERT_AUDIO_MAP[normDialect(dialectKey)] || CERT_AUDIO_MAP.xiien;
+      const 檔腔 = info.檔腔;
+      const 腔名 = info.腔名;
       const fullLvlName = 腔名 + levelName;
       if (typeof getMissingAudioInfo === 'function') {
         const miss = getMissingAudioInfo(fullLvlName, row.category, row.id);
@@ -1449,7 +1576,7 @@
         const ref = verifiedList[i].cert_ref;
         if (
           ref &&
-          (ref.dialect || 'sixian') === engine.dialect &&
+          normDialect(ref.dialect || 'xiien') === engine.dialect &&
           ref.level === levelName &&
           ref.id === (row.id || '')
         ) {
@@ -1520,7 +1647,7 @@
       const map = new Map();
       for (const it of loadVerified()) {
         if (it.cert_ref && it.cert_ref.id) {
-          map.set(`${it.cert_ref.dialect || 'sixian'}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`, it);
+          map.set(`${normDialect(it.cert_ref.dialect || 'xiien')}\t${it.cert_ref.level || ''}\t${it.cert_ref.id}`, it);
         }
       }
       return map;
@@ -1542,6 +1669,22 @@
       return ops;
     }
 
+    function extractInlineNoSandhiSet(rawHan) {
+      const set = new Set();
+      const cleaned = (rawHan || '').replace(/%%[\s\S]*?%%/g, '');
+      const chars = Array.from(cleaned);
+      let cjkIdx = -1;
+      for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
+        if (CJK_CHAR_TEST_RE.test(ch)) {
+          cjkIdx++;
+        } else if ((ch === '#' || ch === '~') && cjkIdx >= 0) {
+          set.add(cjkIdx);
+        }
+      }
+      return set;
+    }
+
     function renderCertHppLine(hppEl, verifiedItem) {
       if (!hppEl) return;
       if (!verifiedItem || (!verifiedItem.joined_hpp && !(verifiedItem.tokens && verifiedItem.tokens.length))) {
@@ -1551,6 +1694,7 @@
       }
       if (verifiedItem.tokens && verifiedItem.tokens.length) {
         const inlineOps = extractInlineBoundaryOps(verifiedItem.han);
+        const inlineNoSandhi = extractInlineNoSandhiSet(verifiedItem.han);
         let pureIdx = 0;
         const toks = verifiedItem.tokens.map((t) => {
           if (t.punct || t.nonCjk || t.comment) return t;
@@ -1568,10 +1712,18 @@
             }
             if (hasOp) sb = derived;
           }
+          let ns = t.noSandhi || t.no_sandhi;
+          if (!ns && inlineNoSandhi.size > 0) {
+            const flags = [];
+            for (let k = 0; k < cLen; k++) {
+              flags.push(inlineNoSandhi.has(pureIdx + k));
+            }
+            if (flags.some(Boolean)) ns = flags;
+          }
           pureIdx += cLen;
           return {
             ...t,
-            noSandhi: t.noSandhi || t.no_sandhi,
+            noSandhi: ns,
             sylBoundaries: sb,
           };
         });
@@ -1588,6 +1740,7 @@
 
     function refreshCertVerifiedHighlights() {
       const vMap = getVerifiedCertMap();
+      const useItalic = RomaineAutoEngine.getUnverifiedItalic();
       let doneCount = 0;
       for (const el of certSentList.querySelectorAll('.cert-sent-row')) {
         const key = el.dataset.certKey || '';
@@ -1595,6 +1748,7 @@
         const isDone = Boolean(item);
         if (isDone) doneCount++;
         el.classList.toggle('verified', isDone);
+        el.classList.toggle('unverified-italic', !isDone && useItalic);
         const badge = el.querySelector('.cert-verified-badge');
         if (badge) badge.style.display = isDone ? 'inline-block' : 'none';
         renderCertHppLine(el.querySelector('.cert-sent-hpp'), item);
@@ -1613,6 +1767,7 @@
       certActiveMeta.style.display = 'none';
       certSentList.innerHTML = '';
       const verifiedMap = getVerifiedCertMap();
+      const useItalic = RomaineAutoEngine.getUnverifiedItalic();
       let doneCount = 0;
 
       certFilteredRows.forEach((row, idx) => {
@@ -1621,7 +1776,7 @@
         const isDone = Boolean(verifiedItem);
         if (isDone) doneCount++;
         const div = document.createElement('div');
-        div.className = 'cert-sent-row' + (isDone ? ' verified' : '');
+        div.className = 'cert-sent-row' + (isDone ? ' verified' : useItalic ? ' unverified-italic' : '');
         div.dataset.idx = String(idx);
         div.dataset.certKey = certKey;
 
@@ -1717,7 +1872,7 @@
     });
 
     async function loadDialect(dialect, shouldConvert = true) {
-      statusLine.textContent = `載入 ${dialect === 'zhaoan' ? '詔安' : '四縣'} 詞庫中…`;
+      statusLine.textContent = `載入 ${DIALECT_LABELS[dialect] || '四縣'} 詞庫中…`;
       await engine.init('.', dialect);
       initCertLoader();
       const learnMsg = engine.learnedCount ? `、已即時學習 ${engine.learnedCount} 筆黃金語料` : '';
@@ -1730,8 +1885,8 @@
     }
 
     const DIALECT_STORAGE_KEY = 'romaineAutoDialect';
-    const savedDialect = localStorage.getItem(DIALECT_STORAGE_KEY);
-    if (savedDialect === 'sixian' || savedDialect === 'zhaoan') {
+    const savedDialect = normDialect(localStorage.getItem(DIALECT_STORAGE_KEY));
+    if (savedDialect && DIALECT_LABELS[savedDialect]) {
       dialectSelect.value = savedDialect;
     }
 

@@ -24,14 +24,46 @@ from collections import Counter, defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DIALECT_SOURCES = {
-    "sixian": {
+    "xiien": {
+        "cdm_key": "四",
         "gip": "data/gip/20261020-四.json",
         "cert_glob": "data/cert/115四*.json",
     },
-    "zhaoan": {
+    "namxiian": {
+        "cdm_key": "南",
+        "gip": "data/gip/20261020-南.json",
+        "cert_glob": "data/cert/115四*.json",
+        "extract_nan_bracket": True,
+    },
+    "hoiliug": {
+        "cdm_key": "海",
+        "gip": "data/gip/20261020-海.json",
+        "cert_glob": "data/cert/115海*.json",
+    },
+    "taibu": {
+        "cdm_key": "大",
+        "gip": "data/gip/20261020-大.json",
+        "cert_glob": "data/cert/115大*.json",
+    },
+    "ngiaupin": {
+        "cdm_key": "平",
+        "gip": "data/gip/20261020-平.json",
+        "cert_glob": "data/cert/115平*.json",
+    },
+    "zhioon": {
+        "cdm_key": "安",
         "gip": "data/gip/20261020-安.json",
         "cert_glob": "data/cert/115安*.json",
     },
+}
+
+DIALECT_ALIASES = {
+    "sixian": "xiien",
+    "nansixian": "namxiian",
+    "hailu": "hoiliug",
+    "dapu": "taibu",
+    "raoping": "ngiaupin",
+    "zhaoan": "zhioon",
 }
 
 CJK_RE = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf\U00020000-\U0002ebef]")
@@ -110,34 +142,93 @@ def split_sentences(text: str) -> list[str]:
     return chunks
 
 
-def build_lexicon(dialect: str):
+def load_cross_dialect_index() -> dict[str, dict[int, str]]:
+    """載入 cross_dialect_map.json，建立 {腔字: {gip_idx: group_id}} 反查表。"""
+    cdm_path = os.path.join(ROOT, "data", "gip", "cross_dialect_map.json")
+    idx_to_group: dict[str, dict[int, str]] = defaultdict(dict)
+    if not os.path.exists(cdm_path):
+        return idx_to_group
+    with open(cdm_path, "r", encoding="utf-8") as f:
+        groups = json.load(f).get("groups", {})
+    for gid, gobj in groups.items():
+        for d_char, members in (gobj.get("members") or {}).items():
+            for m in members:
+                idx = m.get("idx")
+                if idx is not None:
+                    idx_to_group[d_char][int(idx)] = gid
+    return idx_to_group
+
+
+def cert_level_weight(filename: str) -> int:
+    if "基" in filename:
+        return 5
+    if "初" in filename:
+        return 4
+    if "中." in filename:
+        return 3
+    if "中高" in filename:
+        return 2
+    return 1
+
+
+def build_lexicon(dialect: str, cdm_index: dict[str, dict[int, str]] | None = None):
     cfg = DIALECT_SOURCES[dialect]
-    rows = []
+    cdm_key = cfg["cdm_key"]
+    gip_idx_map = (cdm_index or {}).get(cdm_key, {})
+
+    gip_rows = []
     gip_path = os.path.join(ROOT, cfg["gip"])
     if os.path.exists(gip_path):
-        rows.extend(load_csv_json(gip_path))
-    for p in sorted(glob.glob(os.path.join(ROOT, cfg["cert_glob"]))):
-        rows.extend(load_csv_json(p))
+        gip_rows.extend(load_csv_json(gip_path))
+
+    cert_files = sorted(glob.glob(os.path.join(ROOT, cfg["cert_glob"])))
+    cert_rows_with_meta: list[tuple[str, dict]] = []
+    for p in cert_files:
+        lvl_tag = re.sub(r"^115[四海大平安]", "", os.path.basename(p)).replace(".json", "")
+        lvl_w = cert_level_weight(os.path.basename(p))
+        for r in load_csv_json(p):
+            cert_rows_with_meta.append((f"{lvl_tag}:{r.get('編號', '')}", lvl_w, r))
 
     lexicon: dict[str, list[str]] = defaultdict(list)
     seen_pairs: set[tuple[str, str]] = set()
+    cert_scores: dict[tuple[str, str], int] = defaultdict(int)
+    # 記錄每筆 (han, hpp) 連結的同源群組 ID（Gxxxx 或 cert:級:編號）
+    pair_links: dict[tuple[str, str], set[str]] = defaultdict(set)
     sentences: list[str] = []
 
-    for r in rows:
-        hans = clean_han_variants(r.get("客家語", ""))
-        hpps = clean_hpp_variants(r.get("客語標音_顯示", ""))
+    def add_row(r: dict, prefer_nan_bracket: bool = False, link_id: str | None = None, cert_w: int = 0):
+        raw_han = r.get("客家語", "")
+        raw_hpp = r.get("客語標音_顯示", "")
+        if prefer_nan_bracket:
+            h_m = re.search(r"【([^】]+)】", raw_han)
+            p_m = re.search(r"【([^】]+)】", raw_hpp)
+            hans = clean_han_variants(h_m.group(1) if h_m else raw_han)
+            hpps = clean_hpp_variants(p_m.group(1) if p_m else raw_hpp)
+        else:
+            hans = clean_han_variants(raw_han)
+            hpps = clean_hpp_variants(raw_hpp)
         if hans and hpps:
             for h in hans:
                 for p in hpps:
-                    # 過濾掉明顯音節數與字數不合的雜訊
-                    if len(p.split()) == len(h) and (h, p) not in seen_pairs:
-                        seen_pairs.add((h, p))
-                        lexicon[h].append(p)
+                    if len(p.split()) == len(h):
+                        if (h, p) not in seen_pairs:
+                            seen_pairs.add((h, p))
+                            lexicon[h].append(p)
+                        if cert_w > 0:
+                            cert_scores[(h, p)] += cert_w
+                        if link_id:
+                            pair_links[(h, p)].add(link_id)
         ex = r.get("例句", "")
         if ex:
             sentences.append(ex)
 
-    return lexicon, sentences, len(rows)
+    for idx, r in enumerate(gip_rows):
+        gid = gip_idx_map.get(idx)
+        add_row(r, False, link_id=f"gip:{gid}" if gid else None, cert_w=0)
+    for cert_key, lvl_w, r in cert_rows_with_meta:
+        add_row(r, bool(cfg.get("extract_nan_bracket")), link_id=f"cert:{cert_key}", cert_w=lvl_w)
+
+    return lexicon, sentences, len(gip_rows) + len(cert_rows_with_meta), cert_scores, pair_links
 
 
 def viterbi_segment(
@@ -217,26 +308,84 @@ def run_em(lexicon: dict[str, list[str]], sentences: list[str], rounds: int = 2)
     return unigram, bigram, len(all_chunks)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dialect", default="sixian", choices=list(DIALECT_SOURCES.keys()))
-    parser.add_argument("--min-bigram", type=int, default=2, help="只保留出現 >= N 次的 bigram")
-    args = parser.parse_args()
+def collect_seed_preferences(cdm_index: dict[str, dict[int, str]]):
+    """從已校對腔調（xiien overrides + verified_sentences.json）抽出：
+    1. seed_links: {(han, link_id): score} — 跨腔同形同義詞的預設選擇權重
+    2. seed_unigram: {link_id: (han, freq)} — 供欠語料腔調互學的詞頻
+    """
+    seed_links: dict[tuple[str, str], float] = defaultdict(float)
 
-    lexicon, sentences, raw_rows = build_lexicon(args.dialect)
+    # 1. 四縣 xiien_prefs_overrides.json
+    xiien_ov_path = os.path.join(ROOT, "data", "romaine", "xiien_prefs_overrides.json")
+    xiien_overrides = {}
+    if os.path.exists(xiien_ov_path):
+        with open(xiien_ov_path, "r", encoding="utf-8") as f:
+            xiien_overrides = json.load(f).get("overrides", {})
+
+    # 2. 黃金語料 verified_sentences.json（統計實際人工選用的 (han, hpp)）
+    gold_counts: dict[str, dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
+    gold_path = os.path.join(ROOT, "data", "romaine", "verified_sentences.json")
+    if os.path.exists(gold_path):
+        with open(gold_path, "r", encoding="utf-8") as f:
+            for item in json.load(f).get("items", []):
+                d = item.get("dialect", "xiien")
+                d = DIALECT_ALIASES.get(d, d)
+                for tok in item.get("tokens", []):
+                    if tok.get("punct") or tok.get("nonCjk") or tok.get("comment") or tok.get("uncertain"):
+                        continue
+                    han = (tok.get("han") or "").strip()
+                    hpp = (tok.get("hpp") or "").strip().lower()
+                    if han and hpp:
+                        gold_counts[d][han][hpp] += 1
+
+    # 將四縣 overrides 與各腔黃金語料對回各自的 link_id（gip:Gxxxx / cert:級:編號）
+    for src_d in ("xiien", "zhioon"):
+        if src_d not in DIALECT_SOURCES:
+            continue
+        _, _, _, _, src_links, = build_lexicon(src_d, cdm_index)
+        for (han, hpp), links in src_links.items():
+            score = 0.0
+            if src_d == "xiien" and han in xiien_overrides:
+                if xiien_overrides[han].get("default", "").lower() == hpp.lower():
+                    score += 100.0
+            if han in gold_counts.get(src_d, {}):
+                score += 20.0 * gold_counts[src_d][han].get(hpp.lower(), 0)
+            if score > 0:
+                for lid in links:
+                    seed_links[(han, lid)] += score
+
+    return seed_links
+
+
+def build_for_dialect(
+    dialect: str,
+    min_bigram: int,
+    cdm_index: dict[str, dict[int, str]],
+    seed_links: dict[tuple[str, str], float],
+    xiien_transfer_freq: dict[str, int],
+):
+    lexicon, sentences, raw_rows, cert_scores, pair_links = build_lexicon(dialect, cdm_index)
     unigram, bigram, chunk_count = run_em(lexicon, sentences, rounds=2)
+
+    # 跨腔同形同義詞頻遷移（僅補入目標腔詞典確有收錄的同形詞）
+    if dialect != "xiien" and xiien_transfer_freq:
+        for han, x_freq in xiien_transfer_freq.items():
+            if han in lexicon:
+                bonus = int(round(0.25 * x_freq))
+                if bonus > 0:
+                    unigram[han] = max(unigram.get(han, 0), bonus)
 
     out_dir = os.path.join(ROOT, "data", "romaine")
     os.makedirs(out_dir, exist_ok=True)
 
     pruned_uni = {k: v for k, v in unigram.items() if v >= 1}
-    pruned_bi = {k: v for k, v in bigram.items() if v >= args.min_bigram}
+    pruned_bi = {k: v for k, v in bigram.items() if v >= min_bigram}
 
-    stats_path = os.path.join(out_dir, f"{args.dialect}_stats.json")
+    stats_path = os.path.join(out_dir, f"{dialect}_stats.json")
     with open(stats_path, "w", encoding="utf-8") as f:
         json.dump(
             {
-                "dialect": args.dialect,
+                "dialect": dialect,
                 "meta": {
                     "raw_rows": raw_rows,
                     "sentences": len(sentences),
@@ -253,19 +402,38 @@ def main():
             ensure_ascii=False,
         )
 
-    # 載入人工校對覆寫表（若有）
-    overrides_path = os.path.join(out_dir, f"{args.dialect}_prefs_overrides.json")
+    # 載入本腔人工校對覆寫表（若有）
+    overrides_path = os.path.join(out_dir, f"{dialect}_prefs_overrides.json")
     overrides = {}
     if os.path.exists(overrides_path):
         with open(overrides_path, "r", encoding="utf-8") as f:
             overrides = json.load(f).get("overrides", {})
 
-    # 多讀音詞條（按語料出現頻率排序，供設定偏好讀音表）
+    # 多讀音詞條：1) 本腔人工 override > 2) 跨腔同形同義詞偏好遷移 > 3) 認證詞庫優先 > 4) 原序
     polyphones = []
+    transferred_count = 0
     for han, readings in lexicon.items():
         if len(readings) > 1:
             ov = overrides.get(han, {})
-            default_hpp = ov.get("default", readings[0])
+            if ov.get("default"):
+                default_hpp = ov["default"]
+            else:
+                best_hpp = readings[0]
+                best_score = (-1.0, -1, -999)
+                has_seed = False
+                for idx_r, r_hpp in enumerate(readings):
+                    links = pair_links.get((han, r_hpp), set())
+                    s_score = sum(seed_links.get((han, lid), 0.0) for lid in links)
+                    if s_score > 0:
+                        has_seed = True
+                    c_score = cert_scores.get((han, r_hpp), 0)
+                    cand_tuple = (s_score, c_score, -idx_r)
+                    if cand_tuple > best_score:
+                        best_score = cand_tuple
+                        best_hpp = r_hpp
+                default_hpp = best_hpp
+                if has_seed:
+                    transferred_count += 1
             entry = {
                 "han": han,
                 "freq": unigram.get(han, 0),
@@ -277,11 +445,11 @@ def main():
             polyphones.append(entry)
     polyphones.sort(key=lambda x: (-x["freq"], -len(x["candidates"]), x["han"]))
 
-    prefs_path = os.path.join(out_dir, f"{args.dialect}_prefs.json")
+    prefs_path = os.path.join(out_dir, f"{dialect}_prefs.json")
     with open(prefs_path, "w", encoding="utf-8") as f:
         json.dump(
             {
-                "dialect": args.dialect,
+                "dialect": dialect,
                 "total_polyphones": len(polyphones),
                 "items": polyphones,
             },
@@ -291,12 +459,32 @@ def main():
         )
 
     print(
-        f"[{args.dialect}] rows={raw_rows}, sentences={len(sentences)}, "
-        f"lexicon={len(lexicon)}, polyphones={len(polyphones)}, "
-        f"unigrams={len(pruned_uni)}, bigrams(>={args.min_bigram})={len(pruned_bi)}"
+        f"[{dialect}] rows={raw_rows}, sentences={len(sentences)}, "
+        f"lexicon={len(lexicon)}, polyphones={len(polyphones)} (seed_transferred={transferred_count}), "
+        f"unigrams={len(pruned_uni)}, bigrams(>={min_bigram})={len(pruned_bi)}"
     )
     print(f"Wrote: {stats_path}")
     print(f"Wrote: {prefs_path}")
+    return unigram
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dialect", default="xiien", choices=list(DIALECT_SOURCES.keys()) + ["all"])
+    parser.add_argument("--min-bigram", type=int, default=2, help="只保留出現 >= N 次的 bigram")
+    args = parser.parse_args()
+
+    cdm_index = load_cross_dialect_index()
+    seed_links = collect_seed_preferences(cdm_index)
+
+    # 先算四縣 xiien 詞頻作為同形詞頻遷移基底
+    xiien_lex, xiien_sents, _, _, _ = build_lexicon("xiien", cdm_index)
+    xiien_uni, _, _ = run_em(xiien_lex, xiien_sents, rounds=2)
+    xiien_transfer_freq = {k: v for k, v in xiien_uni.items() if v >= 3}
+
+    targets = list(DIALECT_SOURCES.keys()) if args.dialect == "all" else [args.dialect]
+    for d in targets:
+        build_for_dialect(d, args.min_bigram, cdm_index, seed_links, xiien_transfer_freq)
 
 
 if __name__ == "__main__":

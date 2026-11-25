@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
 
 :root {
-  --page-font: 'PT Sans', 'Heiti TC', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
+  --page-font: 'PT Sans', 'Heiti TC', 'HeitiTC-HakSupplement', 'Heiti SC', '源石黑體', 'jf open 粉圓 2.0', tauhu-oo, Iansui, sans-serif;
   --page-bg: #fdfdfd;
   --page-text: #2c3e35;
   --page-heading: #1e4a38;
