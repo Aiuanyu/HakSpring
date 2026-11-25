@@ -1,5 +1,6 @@
 // tests/audio_profiles_test.js
 // 驗證腔級播放設定：mergeAudioProfiles（逐 key LWW＋tombstone）摎同步接線
+// 另外也涵蓋 triggerCloudSync({ immediate: true }) 立即同步，摎 autoRecordAudioProfile 毋依賴本機基準个行為
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
