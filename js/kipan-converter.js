@@ -33,6 +33,8 @@
     return p
       .replace(/……/g, '...')
       .replace(/…/g, '...')
+      .replace(/⋯⋯/g, '...')
+      .replace(/⋯/g, '...')
       .replace(/‥/g, '..')
       .replace(/——/g, '--')
       .replace(/[—–―－]/g, '-')
@@ -121,7 +123,7 @@
    * 5. 尾隨空白（trailingSpace）
    */
   function splitBetween(between) {
-    const punctChars = /[，。、；：？！…‥—–―～〜·‧・／＼＋＝＜＞＆％＃＠＊＿｜｀＄＾＇＂－「」『』“”‘’《》〈〉（）〔〕【】［］｛｝〖〗〘〙〚〛〝〞﹁﹂﹃﹄﹒﹑﹐﹗﹖﹔﹕︰﹙﹚﹛﹜．｡､,\.\?!;:"'\(\)\[\]\{\}~\/\\+&%#@*_|$^]/;
+    const punctChars = /[，。、；：？！…⋯‥—–―～〜·‧・／＼＋＝＜＞＆％＃＠＊＿｜｀＄＾＇＂－「」『』“”‘’《》〈〉（）〔〕【】［］｛｝〖〗〘〙〚〛〝〞﹁﹂﹃﹄﹒﹑﹐﹗﹖﹔﹕︰﹙﹚﹛﹜．｡､,\.\?!;:"'\(\)\[\]\{\}~\/\\+&%#@*_|$^]/;
 
     let start = 0;
     while (start < between.length && (punctChars.test(between[start]) || /\s/.test(between[start]))) {
