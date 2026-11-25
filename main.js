@@ -3899,14 +3899,14 @@ function readAudioProfiles() {
   }
 }
 
-function writeAudioProfiles(obj) {
+function writeAudioProfiles(obj, immediate = false) {
   try {
     localStorage.setItem(AUDIO_PROFILES_KEY, JSON.stringify(obj));
   } catch (e) {
     console.warn('儲存腔級播放設定失敗:', e);
   }
   if (typeof window !== 'undefined' && typeof window.triggerCloudSync === 'function') {
-    window.triggerCloudSync();
+    window.triggerCloudSync({ immediate });
   }
 }
 
@@ -3921,23 +3921,23 @@ function getAudioProfile(key) {
   return { speed, repeat };
 }
 
-function saveAudioProfile(key, speed, repeat) {
+function saveAudioProfile(key, speed, repeat, immediate = false) {
   if (!key) return false;
   const sp = parseFloat(speed);
   const rp = parseInt(repeat, 10);
   if (isNaN(sp) || sp < 0.5 || sp > 3.0 || isNaN(rp) || rp < 1 || rp > 3) return false;
   const all = readAudioProfiles();
   all[key] = [sp, rp, Date.now(), 0];
-  writeAudioProfiles(all);
+  writeAudioProfiles(all, immediate);
   return true;
 }
 
 // 刪除用 tombstone，雲端同步時別台正會跟到刪除
-function deleteAudioProfile(key) {
+function deleteAudioProfile(key, immediate = false) {
   const all = readAudioProfiles();
   if (!all[key]) return;
   all[key] = [1, 1, Date.now(), 1];
-  writeAudioProfiles(all);
+  writeAudioProfiles(all, immediate);
 }
 
 function getCurrentAudioProfileKey() {
@@ -4108,7 +4108,7 @@ function setupAudioProfilesUI() {
       delBtn.className = 'audio-profile-btn audio-profile-btn-danger';
       delBtn.textContent = '刪除';
       delBtn.addEventListener('click', () => {
-        deleteAudioProfile(k);
+        deleteAudioProfile(k, true);
         render();
         refreshAudioProfileInPlayer();
       });
@@ -4126,7 +4126,7 @@ function setupAudioProfilesUI() {
 
   saveBtn.addEventListener('click', () => {
     const key = accentSel.value + levelSel.value;
-    if (saveAudioProfile(key, speedSel.value, repeatSel.value)) {
+    if (saveAudioProfile(key, speedSel.value, repeatSel.value, true)) {
       saveBtn.textContent = '新增';
       render();
       refreshAudioProfileInPlayer();
@@ -4202,21 +4202,13 @@ function getGlobalRepeatCount() {
   return profile ? profile.repeat : getBaseRepeatCount();
 }
 
-// 使用者在播放面板改速度／擺數：摎基準無共樣就自動記入這個腔級个設定，共樣就移掉（維持清單單淨）
+// 使用者在播放面板改速度／擺數：直接明確記入這個腔級个設定並立即觸發雲端同步，
+// 毋再拿各裝置不同步个基準值（certAdvancedRepeatCount／playbackSpeed／globalRepeatCount）去判定冗餘或刪除，
+// 避免 A 裝置選 1.0x／2 擺（或 1.0x／1 擺）時無寫入或發送 tombstone，害 B 裝置退回自家舊本機設定。
 function autoRecordAudioProfile(speed, repeat) {
   const key = getCurrentAudioProfileKey();
   if (!key) return;
-  // 預設值：速度 1x；擺數高級用設定頁滑桿、其他 1 擺。舊版播放面板會直接改「基準」記憶值（playbackSpeed 等），
-  // 所以毋好單淨摎基準比——基準若已經被舊版改過，選一樣个值就會漏記。愛摎預設、基準兩邊都共樣，正算「無必要記」。
-  const defaultRepeat = isAdvancedLevel() ? getCertAdvancedRepeatCount() : 1;
-  const redundant =
-    speed === 1.0 && repeat === defaultRepeat &&
-    speed === getBasePlaybackSpeed() && repeat === getBaseRepeatCount();
-  if (!redundant) {
-    saveAudioProfile(key, speed, repeat);
-  } else if (getAudioProfile(key)) {
-    deleteAudioProfile(key);
-  }
+  saveAudioProfile(key, speed, repeat, true);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('hakkaAudioProfilesChanged'));
 }
 
