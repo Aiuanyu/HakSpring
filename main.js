@@ -5663,6 +5663,18 @@ function initializeAppUI() {
         sentenceSpan.innerHTML = rawSentence;
         td3.appendChild(sentenceSpan);
 
+        td3.appendChild(document.createElement('br'));
+        const translationText = document.createElement('span');
+        translationText.className = 'sentence-translation';
+        translationText.innerHTML = (
+          highlight.translation
+            ? translationSource.replace(highlightRegex, '<mark>$1</mark>')
+            : translationSource
+        )
+          .replace(/"/g, '')
+          .replace(/\n/g, '<br>');
+        td3.appendChild(translationText);
+
         if (sentenceAudioUrl) {
           td3.appendChild(document.createElement('br'));
           const audio2 = document.createElement('audio');
@@ -5673,17 +5685,6 @@ function initializeAppUI() {
           td3.appendChild(audio2);
           sentenceAudioElem = audio2;
         }
-
-        td3.appendChild(document.createElement('br'));
-        const translationText = document.createElement('span');
-        translationText.innerHTML = (
-          highlight.translation
-            ? translationSource.replace(highlightRegex, '<mark>$1</mark>')
-            : translationSource
-        )
-          .replace(/"/g, '')
-          .replace(/\n/g, '<br>');
-        td3.appendChild(translationText);
       } else {
         td3.classList.add('empty-sentence-cell');
       }
@@ -7936,6 +7937,14 @@ function initializeAppUI() {
           ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
           : rawSentence;
         td3.appendChild(sentenceSpan);
+        td3.appendChild(document.createElement('br'));
+        const translationText = document.createElement('span');
+        translationText.className = 'sentence-translation';
+        translationText.innerHTML = line.翻譯
+          .replace(/"/g, '')
+          .replace(/\n/g, '<br>');
+        td3.appendChild(translationText);
+
         if (
           dialectInfo.級名 === '高級' ||
           (missingAudioInfo && missingAudioInfo.sentence === false)
@@ -7992,12 +8001,6 @@ function initializeAppUI() {
 
           td3.appendChild(audio2);
         }
-        td3.appendChild(document.createElement('br'));
-        const translationText = document.createElement('span');
-        translationText.innerHTML = line.翻譯
-          .replace(/"/g, '')
-          .replace(/\n/g, '<br>');
-        td3.appendChild(translationText);
       } else {
         td3.classList.add('empty-sentence-cell');
         const dummyAudio = document.createElement('audio');
@@ -9581,6 +9584,119 @@ function initializeAppUI() {
   handleUrlChange();
   window.addEventListener('popstate', handleUrlChange);
 
+  window.jumpToHakSpringEntry = function (ref) {
+    if (!ref) return false;
+    const DIALECT_KEY_TO_NAME = {
+      xiien: '四縣',
+      namxiian: '南四縣',
+      hoiliug: '海陸',
+      taibu: '大埔',
+      ngiaupin: '饒平',
+      zhioon: '詔安',
+    };
+    const dialectName = DIALECT_KEY_TO_NAME[ref.dialect] || ref.dialect || '四縣';
+    const isCert = ref.sourceType === 'cert' || (!ref.sourceType && Boolean(ref.level));
+
+    if (isCert && ref.level) {
+      const certDialect = dialectName === '南四縣' ? '四縣' : dialectName;
+      const targetTableName = certDialect + ref.level;
+      const dataVarName = mapTableNameToDataVar(targetTableName);
+      const dataObject = dataVarName ? window[dataVarName] : null;
+      if (!dataObject || !Array.isArray(dataObject.content)) return false;
+
+      const refId = String(ref.id || '').trim();
+      const shortRefId = refId.includes('-') ? refId.split('-')[1] : refId;
+      const toCjk = (s) =>
+        String(s || '')
+          .replace(/%%.*?%%/g, '')
+          .replace(/[^\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}]/gu, '');
+      const targetHanCjk = toCjk(ref.han);
+      let found = dataObject.content.find((it) => it.編號 === refId);
+      if (!found && shortRefId) {
+        const sameNum = dataObject.content.filter(
+          (it) => it.編號 && it.編號.split('-')[1] === shortRefId,
+        );
+        if (targetHanCjk) {
+          found = sameNum.find((it) => {
+            const sCjk = toCjk(it.例句);
+            return sCjk && (sCjk === targetHanCjk || sCjk.includes(targetHanCjk) || targetHanCjk.includes(sCjk));
+          });
+        }
+        if (!found && ref.word) {
+          found = sameNum.find((it) => it.客家語 === ref.word);
+        }
+        if (!found && sameNum.length === 1) {
+          found = sameNum[0];
+        }
+      }
+      if (!found && targetHanCjk) {
+        found = dataObject.content.find((it) => {
+          const sCjk = toCjk(it.例句);
+          return sCjk && (sCjk === targetHanCjk || sCjk.includes(targetHanCjk));
+        });
+      }
+      if (!found && ref.word) {
+        found = dataObject.content.find((it) => it.客家語 === ref.word);
+      }
+      if (!found || !found.分類) return false;
+
+      const categoryName = found.分類.replace(/^\d+/, '');
+      const focusRowId = found.編號.includes('-') ? found.編號.split('-')[1] : found.編號;
+
+      if (typeof currentFamiliarityFilter !== 'undefined' && currentFamiliarityFilter !== 'all') {
+        currentFamiliarityFilter = 'all';
+        const filterSelect = document.getElementById('famFilterSelect');
+        if (filterSelect) filterSelect.value = 'all';
+      }
+      document.querySelectorAll('span[data-varname]').forEach((span) => {
+        span.classList.remove('active-dialect-level');
+      });
+      const activeDialectSpan = document.querySelector(`.dialect > span[data-varname="${dataVarName}"]`);
+      if (activeDialectSpan) activeDialectSpan.classList.add('active-dialect-level');
+
+      const codes = extractDialectLevelCodes(targetTableName);
+      if (codes) {
+        const url = getBaseUrlWithoutIndex();
+        ['row', 'musiid', 'ca', 'bidsu', 'iab', 'kiong', 'filter'].forEach((k) =>
+          url.searchParams.delete(k),
+        );
+        url.searchParams.set('dialect', codes.dialect);
+        url.searchParams.set('level', codes.level);
+        url.searchParams.set('category', categoryName);
+        url.searchParams.set('focus', focusRowId);
+        history.pushState({}, '', url);
+      }
+      generate(dataObject, categoryName, null, focusRowId);
+      return true;
+    }
+
+    // GIP 跳轉（不重整頁面，維持工作台開啟）
+    let word = String(ref.word || '').trim();
+    if (!word && ref.id && indexedDataCache) {
+      for (const list of Object.values(indexedDataCache)) {
+        if (!Array.isArray(list)) continue;
+        const hit = list.find((e) => e.sourceType === 'gip' && e.編號 === ref.id);
+        if (hit && hit.客家語) {
+          word = hit.客家語;
+          break;
+        }
+      }
+    }
+    if (!word) return false;
+
+    const hakRadio = Array.from(
+      document.querySelectorAll('#search-popup input[name="search-mode"]'),
+    ).find((r) => r.value === '客話');
+    if (hakRadio) hakRadio.checked = true;
+    updateSearchDialect(dialectName);
+    if (searchInput) searchInput.value = word;
+    performSearch(1, 50, {
+      focusId: ref.id || undefined,
+      pageExplicit: false,
+    });
+    return true;
+  };
+
   // --- Stats Modal Logic ---
   if (statsModalBtn && statsModal && statsModalCloseBtn) {
     const closeStatsModal = () => {
@@ -11024,7 +11140,19 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
       ? formatSentenceVariants(rawSentence, line.腔調 || dialectInfo.腔名 || dialectInfo.腔)
       : rawSentence;
     td3.appendChild(sentenceSpan);
-    
+
+    // Some GIP entries might not have a translation field. Use empty string if missing.
+    const translationStr = line.翻譯 || '';
+    if (translationStr) {
+      td3.appendChild(document.createElement('br'));
+      const translationText = document.createElement('span');
+      translationText.className = 'sentence-translation';
+      translationText.innerHTML = translationStr
+        .replace(/"/g, '')
+        .replace(/\n/g, '<br>');
+      td3.appendChild(translationText);
+    }
+
     if (sentenceAudioSrc) {
       td3.appendChild(document.createElement('br'));
       const audio2 = document.createElement('audio');
@@ -11034,17 +11162,6 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
       audio2.src = sentenceAudioSrc;
       td3.appendChild(audio2);
       sentenceAudioElem = audio2;
-    }
-    td3.appendChild(document.createElement('br'));
-    
-    // Some GIP entries might not have a translation field. Use empty string if missing.
-    const translationStr = line.翻譯 || '';
-    if (translationStr) {
-      const translationText = document.createElement('span');
-      translationText.innerHTML = translationStr
-        .replace(/"/g, '')
-        .replace(/\n/g, '<br>');
-      td3.appendChild(translationText);
     }
   } else {
     td3.classList.add('empty-sentence-cell');

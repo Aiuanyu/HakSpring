@@ -988,18 +988,40 @@
     }
 
     _pickDefault(han, useNan = false, openBookMap = null, prevHan = '', nextHan = '') {
-      if (openBookMap && openBookMap.has(han)) {
-        const obHpp = openBookMap.get(han);
-        return {
-          hpp: obHpp,
-          trust: 'official',
-          label: useNan ? '南四縣(本詞)' : '本詞',
-          candidates: [{ hpp: obHpp, trust: 'official', label: useNan ? '南四縣(本詞)' : '本詞' }],
-          oov: false,
-        };
-      }
       const nanCands = useNan ? (this.nanLexicon.get(han) || []) : [];
-      const cands = nanCands.length ? nanCands : (this.lexicon.get(han) || []);
+      const baseCands = nanCands.length ? nanCands : (this.lexicon.get(han) || []);
+
+      if (openBookMap && openBookMap.has(han)) {
+        const rawOb = openBookMap.get(han);
+        const obList = (Array.isArray(rawOb) ? rawOb : [rawOb]).filter(Boolean);
+        if (obList.length > 0) {
+          const obLabel = useNan ? '南四縣(本詞)' : '本詞';
+          const merged = [];
+          const seenLower = new Set();
+          for (const obHpp of obList) {
+            const key = obHpp.toLowerCase();
+            if (!seenLower.has(key)) {
+              seenLower.add(key);
+              merged.push({ hpp: obHpp, trust: 'official', label: obLabel });
+            }
+          }
+          for (const c of baseCands) {
+            const key = (c.hpp || '').toLowerCase();
+            if (key && !seenLower.has(key)) {
+              seenLower.add(key);
+              merged.push(c);
+            }
+          }
+          return {
+            hpp: merged[0].hpp,
+            trust: merged[0].trust,
+            label: merged[0].label,
+            candidates: merged,
+            oov: false,
+          };
+        }
+      }
+      const cands = baseCands;
       if (!cands.length) {
         const chars = Array.from(han);
         const synKind = this._classifySyntheticWord(han, chars);

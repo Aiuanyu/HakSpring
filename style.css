@@ -401,6 +401,17 @@ a {
   text-decoration: none;
 }
 
+.sentence-translation {
+  font-size: 0.9em;
+  color: rgba(36, 93, 72, 0.72);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sentence-translation {
+    color: rgba(224, 224, 224, 0.68);
+  }
+}
+
 #header {
   position: sticky;
   top: 10px;
@@ -7087,8 +7098,8 @@ ruby.ruby-multi-reading .phonetic-note-label {
 .romaine-interleaved {
   display: block;
 }
-.romaine-pair + .romaine-pair {
-  margin-top: 6px;
+.romaine-pair:not(:last-child) {
+  margin-bottom: 0.85em;
 }
 .romaine-auto-hpp {
   line-height: 1.85;
@@ -7326,6 +7337,11 @@ tr.romaine-row-editing td[data-label="例句"] {
   flex-direction: column;
   gap: 10px;
   box-sizing: border-box;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.romaine-workbench-pane.is-saved {
+  background: #edf5e4;
+  border-color: #84a95c;
 }
 .romaine-workbench-pane[hidden] {
   display: none;
@@ -7585,15 +7601,81 @@ tr.romaine-row-editing td[data-label="例句"] {
 .wb-local-badge {
   margin-left: auto;
   font-size: 0.78rem;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 999px;
+  border: 1px solid transparent;
   background: #e2e8f0;
   color: #334155;
   font-weight: 600;
+  cursor: default;
 }
 .wb-local-badge.has-pending {
   background: #fef3c7;
+  border-color: #f59e0b;
   color: #78350f;
+  cursor: pointer;
+}
+.wb-local-badge.has-pending:hover {
+  background: #fde68a;
+}
+.wb-pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: rgba(248, 250, 252, 0.9);
+}
+.wb-pending-list[hidden] {
+  display: none;
+}
+.wb-pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+.wb-pending-item:hover:not(:disabled) {
+  background: #f0fdf4;
+  border-color: #678d3f;
+}
+.wb-pending-item:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+.wb-pending-meta {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #1e293b;
+}
+.wb-pending-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-pending-jump {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #0f766e;
+  font-weight: 700;
 }
 .wb-cand-popup {
   position: fixed;
@@ -7690,6 +7772,10 @@ tr.romaine-row-editing td[data-label="例句"] {
     color: #f1f5f9;
     border-color: #334155;
   }
+  .romaine-workbench-pane.is-saved {
+    background: #1f2e1c;
+    border-color: #678d3f;
+  }
   .wb-cert-badge {
     background: #334155;
     color: #f1f5f9;
@@ -7728,7 +7814,31 @@ tr.romaine-row-editing td[data-label="例句"] {
   }
   .wb-local-badge.has-pending {
     background: #78350f;
+    border-color: #d97706;
     color: #fef3c7;
+  }
+  .wb-local-badge.has-pending:hover {
+    background: #92400e;
+  }
+  .wb-pending-list {
+    background: #0f172a;
+    border-color: #334155;
+  }
+  .wb-pending-item {
+    background: #1e293b;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+  .wb-pending-item:hover:not(:disabled) {
+    background: #233322;
+    border-color: #678d3f;
+  }
+  .wb-pending-meta {
+    background: #334155;
+    color: #f1f5f9;
+  }
+  .wb-pending-jump {
+    color: #5eead4;
   }
   .wb-cand-popup {
     background: #1e293b;

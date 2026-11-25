@@ -87,6 +87,8 @@
   let certBadgeEl = null;
   let statusEl = null;
   let localCountEl = null;
+  let pendingListEl = null;
+  let isPendingListOpen = false;
   let importFileEl = null;
   let raopingBarEl = null;
   let raopingTracks = loadRaopingTracks();
@@ -117,11 +119,101 @@
     updateLocalCount(list.length);
   }
 
+  function renderPendingList() {
+    if (!pendingListEl) return;
+    const list = loadVerifiedList();
+    pendingListEl.innerHTML = '';
+    if (!list.length) {
+      pendingListEl.hidden = true;
+      isPendingListOpen = false;
+      return;
+    }
+    const items = [...list].reverse();
+    items.forEach((it) => {
+      const ref = it.cert_ref || null;
+      const dk = normDialect((ref && ref.dialect) || it.dialect || 'xiien');
+      const dLabel = DIALECT_OPTIONS.find((x) => x.key === dk)?.label || dk;
+      const isCert = Boolean(ref && (ref.sourceType === 'cert' || (!ref.sourceType && ref.level)));
+      const isGip = Boolean(ref && (ref.sourceType === 'gip' || (!ref.level && (ref.id || ref.word))));
+      const canJump = isCert || isGip;
+
+      let metaLabel = `${dLabel} 自由輸入`;
+      if (isCert) {
+        metaLabel = [dLabel, ref.level, ref.id].filter(Boolean).join(' ');
+      } else if (isGip) {
+        metaLabel = [dLabel, '教典', ref.id].filter(Boolean).join(' ');
+      }
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wb-pending-item';
+      btn.disabled = !canJump;
+      btn.title = canJump ? `跳轉至 ${metaLabel}` : '自由輸入項目（無 CERT／GIP 對應連結）';
+
+      const metaSpan = document.createElement('span');
+      metaSpan.className = 'wb-pending-meta';
+      metaSpan.textContent = metaLabel;
+      btn.appendChild(metaSpan);
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'wb-pending-text';
+      const wordPrefix = ref && ref.word ? `${ref.word}｜` : '';
+      textSpan.textContent = `${wordPrefix}${it.han || ''}`;
+      btn.appendChild(textSpan);
+
+      if (canJump) {
+        const jumpSpan = document.createElement('span');
+        jumpSpan.className = 'wb-pending-jump';
+        jumpSpan.textContent = '↗';
+        btn.appendChild(jumpSpan);
+        btn.addEventListener('click', () => {
+          if (typeof window.jumpToHakSpringEntry === 'function') {
+            const ok = window.jumpToHakSpringEntry({
+              ...ref,
+              dialect: dk,
+              han: it.han || '',
+            });
+            if (ok) {
+              setStatus(`已跳轉至 ${metaLabel}`);
+            } else {
+              setStatus(`找不到對應條目（${metaLabel}）`);
+            }
+          }
+        });
+      }
+      pendingListEl.appendChild(btn);
+    });
+  }
+
+  function togglePendingList() {
+    if (!localCountEl || !pendingListEl) return;
+    const list = loadVerifiedList();
+    if (!list.length) {
+      isPendingListOpen = false;
+      pendingListEl.hidden = true;
+      localCountEl.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    isPendingListOpen = !isPendingListOpen;
+    pendingListEl.hidden = !isPendingListOpen;
+    localCountEl.setAttribute('aria-expanded', String(isPendingListOpen));
+    if (isPendingListOpen) renderPendingList();
+    updateLocalCount(list.length);
+  }
+
   function updateLocalCount(count) {
     if (!localCountEl) return;
     const n = typeof count === 'number' ? count : loadVerifiedList().length;
-    localCountEl.textContent = n > 0 ? `未整合 ${n} 筆` : '無本機暫存';
+    localCountEl.textContent = n > 0 ? `未整合 ${n} 筆 ${isPendingListOpen ? '▴' : '▾'}` : '無本機暫存';
     localCountEl.classList.toggle('has-pending', n > 0);
+    localCountEl.disabled = n === 0;
+    if (n === 0 && pendingListEl) {
+      isPendingListOpen = false;
+      pendingListEl.hidden = true;
+      localCountEl.setAttribute('aria-expanded', 'false');
+    } else if (isPendingListOpen) {
+      renderPendingList();
+    }
   }
 
   function buildDom() {
@@ -190,8 +282,9 @@
         <button type="button" id="wbExportBtn" class="wb-btn">匯出 JSON</button>
         <button type="button" id="wbImportBtn" class="wb-btn">匯入 JSON</button>
         <input type="file" id="wbImportFile" accept=".json,application/json" style="display:none" />
-        <span class="wb-local-badge" id="wbLocalCountBadge">無本機暫存</span>
+        <button type="button" class="wb-local-badge" id="wbLocalCountBadge" aria-expanded="false" disabled>無本機暫存</button>
       </div>
+      <div class="wb-pending-list" id="wbPendingList" hidden></div>
     `;
 
     candPopupEl = document.createElement('div');
@@ -210,6 +303,7 @@
     certBadgeEl = document.getElementById('wbCertBadge');
     statusEl = document.getElementById('wbStatusLine');
     localCountEl = document.getElementById('wbLocalCountBadge');
+    pendingListEl = document.getElementById('wbPendingList');
     importFileEl = document.getElementById('wbImportFile');
     raopingBarEl = document.getElementById('wbRaopingBar');
 
@@ -303,6 +397,7 @@
     document.getElementById('wbExportBtn').addEventListener('click', exportJson);
     document.getElementById('wbImportBtn').addEventListener('click', () => importFileEl.click());
     importFileEl.addEventListener('change', handleImportFile);
+    if (localCountEl) localCountEl.addEventListener('click', togglePendingList);
 
     document.addEventListener('click', (e) => {
       if (candPopupEl && candPopupEl.style.display === 'block') {
@@ -863,7 +958,7 @@
       note: noteEl ? noteEl.value.trim() : '',
       updated_at: new Date().toISOString(),
     };
-    if (activeCertRef && activeCertRef.id) {
+    if (activeCertRef && (activeCertRef.id || activeCertRef.sourceType)) {
       item.cert_ref = { ...activeCertRef, dialect };
     }
 
@@ -877,6 +972,7 @@
     if (window.romaineTableOverlay && typeof window.romaineTableOverlay.upsertVerifiedItem === 'function') {
       window.romaineTableOverlay.upsertVerifiedItem(item, activeRowEl);
     }
+    if (paneEl) paneEl.classList.add('is-saved');
     setStatus('已儲存至本機並更新左表 ✓');
   }
 
@@ -1004,6 +1100,7 @@
 
   async function openWithText(text, dialectNameOrKey) {
     open();
+    if (paneEl) paneEl.classList.remove('is-saved');
     const dk = normDialect(dialectNameOrKey || (dialectSel ? dialectSel.value : 'xiien'));
     activeCertRef = null;
     activeOpenBookMap = null;
@@ -1018,10 +1115,12 @@
     if (inputEl) inputEl.value = text || '';
     manualCharOverrides.clear();
     runConvert();
+    setStatus('已載入自由輸入');
   }
 
   async function loadRow(meta) {
     open();
+    if (paneEl) paneEl.classList.remove('is-saved');
     const dk = normDialect(meta.dialect || 'xiien');
     if (activeRowEl && activeRowEl !== meta.rowEl) {
       activeRowEl.classList.remove('romaine-row-editing');
@@ -1030,8 +1129,14 @@
     if (activeRowEl) activeRowEl.classList.add('romaine-row-editing');
 
     activeOpenBookMap = meta.openBookMap || null;
-    activeCertRef = meta.rowId
-      ? { dialect: dk, level: meta.level || '', id: meta.rowId, word: meta.word || '' }
+    activeCertRef = (meta.rowId || meta.sourceType)
+      ? {
+          dialect: dk,
+          level: meta.level || '',
+          id: meta.rowId || '',
+          word: meta.word || '',
+          sourceType: meta.sourceType || (meta.level ? 'cert' : ''),
+        }
       : null;
 
     if (certBadgeEl) {
@@ -1066,6 +1171,7 @@
       if (noteEl) noteEl.value = '';
       manualCharOverrides.clear();
       runConvert();
+      setStatus('已載入例句，待校對');
     }
   }
 
