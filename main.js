@@ -904,6 +904,50 @@ let lastAnchorElementForPopup = null; // <-- 修改：儲存 popup 定位的錨�
 let lastRectForPopupPositioning = null; // <-- 新增：儲存 popup 定位的 DOMRect (主要分手機版)
 let preprocessedDataCache = {};
 let indexedDataCache = {}; // <-- 新增此索引快取物件
+
+window.getRomaineCandidateMeaning = function (han, hpp, dialectKey) {
+  if (!han || !indexedDataCache) return '';
+  const list = indexedDataCache[han];
+  if (!Array.isArray(list) || list.length === 0) return '';
+
+  const dialectNameMap = {
+    xiien: '四縣',
+    namxiian: '南四縣',
+    hoiliug: '海陸',
+    taibu: '大埔',
+    ngiaupin: '饒平',
+    zhioon: '詔安',
+  };
+  const dName = dialectNameMap[dialectKey] || dialectKey || '';
+  const scoped = dName
+    ? list.filter((e) => typeof isSourceMatchingDialect === 'function' && isSourceMatchingDialect(e.source, dName))
+    : list;
+  const pool = scoped.length > 0 ? scoped : list;
+
+  const norm = (s) => String(s || '').toLowerCase().replace(/[\s'-]+/g, ' ').trim();
+  const target = norm(hpp);
+
+  const matchReadingStr = (raw) => {
+    if (!raw || !target) return false;
+    const parts = String(raw).split(/[／/、,，或]/);
+    return parts.some((p) => {
+      const cleaned = p.replace(/\([^)]*\)/g, '').trim();
+      return norm(cleaned) === target || norm(p) === target;
+    });
+  };
+
+  for (const e of pool) {
+    if (!e.mandarinMeaning) continue;
+    if (
+      matchReadingStr(e.pronunciation) ||
+      matchReadingStr(e.rawPhonetic) ||
+      (Array.isArray(e.variants) && e.variants.some((v) => matchReadingStr(v.phonetic) || matchReadingStr(v.rawPhonetic)))
+    ) {
+      return String(e.mandarinMeaning).replace(/"/g, '').replace(/\s+/g, ' ').trim();
+    }
+  }
+  return '';
+};
 let crossDialectMap = null; // GIP 跨腔對照表 (from cross_dialect_map.json)
 let mobileLookupButton = null; // <-- 新增：手機版查詞按鈕
 let lastContextualDialectForMobile = null; // <-- 新增：手機版查詞按鈕个腔調脈絡
@@ -997,9 +1041,9 @@ function applyAudioProxy(url) {
   // 預設的 proxy 路徑，適用於上線環境或 wrangler 開發環境
   let proxyPath = '/audio-proxy?url=';
 
-  // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
-  // 則強制導向正式環境的 Proxy API，解決 local Apache 找不到 Endpoint 的問題。
-  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8788') {
+  // 若在本機或區網／Tailscale HTTP 預覽伺服器（非 wrangler 預設 port 8788），
+  // 則強制導向正式環境的 Proxy API，解決本機靜態伺服器找不到 Endpoint 的問題。
+  if ((window.location.protocol === 'http:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8788') {
     proxyPath = 'https://hakspring.pages.dev/audio-proxy?url=';
   }
 
@@ -2874,18 +2918,9 @@ function showPronunciationPopup(
   if (romanizerBtn) {
     romanizerBtn.onclick = (e) => {
       e.stopPropagation();
-      const mainRomanizerBtn = document.getElementById('showRomanizerBtn');
-      const romanizerInput = document.getElementById('romanizer-input');
-      if (mainRomanizerBtn && romanizerInput) {
-        if (contextualDialect) {
-          // The romanizer uses this global variable to set its initial dialect.
-          currentActiveMainDialectName = contextualDialect;
-          console.log(
-            `Setting Romanizer dialect context to: ${contextualDialect}`,
-          );
-        }
-        romanizerInput.value = selectedText;
-        mainRomanizerBtn.click();
+      if (window.romaineWorkbench && typeof window.romaineWorkbench.openWithText === 'function') {
+        const dialectCtx = contextualDialect || currentActiveMainDialectName || '四縣';
+        window.romaineWorkbench.openWithText(selectedText, dialectCtx);
         hidePronunciationPopup(popupEl, backdropEl);
       }
     };
@@ -9521,28 +9556,24 @@ function initializeAppUI() {
         );
       }
     } else if (romParam) {
-      const romanizerInput = document.getElementById('romanizer-input');
-      const showRomanizerBtn = document.getElementById('showRomanizerBtn');
+      const dialectParam = urlParams.get('kiong');
+      if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
+        currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
+      } else {
+        const lastUsedDialect = localStorage.getItem('lastSearchDialect');
+        currentActiveMainDialectName =
+          lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]
+            ? lastUsedDialect
+            : '四縣';
+      }
 
-      if (romanizerInput && showRomanizerBtn) {
-        const dialectParam = urlParams.get('kiong');
-        if (dialectParam && DIALECT_CODE_TO_NAME[dialectParam]) {
-          currentActiveMainDialectName = DIALECT_CODE_TO_NAME[dialectParam];
-        } else {
-          const lastUsedDialect = localStorage.getItem('lastSearchDialect');
-          currentActiveMainDialectName =
-            lastUsedDialect && DIALECT_NAME_TO_CODE[lastUsedDialect]
-              ? lastUsedDialect
-              : '四縣';
-        }
+      if (window.romaineWorkbench && typeof window.romaineWorkbench.openWithText === 'function') {
+        window.romaineWorkbench.openWithText(decodeURIComponent(romParam), currentActiveMainDialectName);
+      }
 
-        showRomanizerBtn.click();
-        romanizerInput.value = decodeURIComponent(romParam);
-
-        const learningPanel = document.getElementById('learningSelectionPanel');
-        if (learningPanel) {
-          learningPanel.open = false;
-        }
+      const learningPanel = document.getElementById('learningSelectionPanel');
+      if (learningPanel) {
+        learningPanel.open = false;
       }
     }
   }

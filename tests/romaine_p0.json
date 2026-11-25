@@ -26,7 +26,7 @@
         { "han": "行行仔", "hpp": "hǎng hǎng è" },
         { "han": "吹吹風", "hpp": "cói cói fúng" },
         { "han": "，", "punct": true, "hpp": ", " },
-        { "han": "當", "hpp": "dong" },
+        { "han": "當", "hpp": "dóng" },
         { "han": "自然", "hpp": "cii iǎn" },
         { "han": "就", "hpp": "qiu" },
         { "han": "行", "hpp": "hǎng" },
@@ -49,7 +49,7 @@
         { "han": "涼", "hpp": "liǒng" },
         { "han": "。", "punct": true, "hpp": "." }
       ],
-      "joined_hpp": "Qìdngiad tién'gúng siidcai iú ngiad, ià ngìd ka zò siidbàu ia, qiu cùdlǒi ngoiboi hǎnghǎng'è cóicóifúng, dong cii'iǎn qiu hǎng do gàgbiàg lǐnsa ge tiěn iàvi lǒi, ínvi iàvi gàu fàd'iá, tincog voi ka liǒng.",
+      "joined_hpp": "Qìdngiad tién'gúng siidcai iú ngiad, ià ngìd ka zò siidbàu ia, qiu cùdlǒi ngoiboi hǎnghǎng'è cóicóifúng, dóng cii'iǎn qiu hǎng do gàgbiàg lǐnsa ge tiěn iàvi lǒi, ínvi iàvi gàu fàd'iá, tincog voi ka liǒng.",
       "status": "verified",
       "source": "Tjaagraan2HagPinPlus-20250805",
       "updated_at": "2026-11-21T18:11:00+08:00"
@@ -80,7 +80,7 @@
         { "han": "有", "hpp": "iú" },
         { "han": "看", "hpp": "kon" },
         { "han": "著", "hpp": "dò" },
-        { "han": "當", "hpp": "dong" },
+        { "han": "當", "hpp": "dóng" },
         { "han": "多", "hpp": "dó" },
         { "han": "燕仔", "hpp": "ian è" },
         { "han": "，", "punct": true, "hpp": ", " },
@@ -121,7 +121,7 @@
         { "han": "生趣", "hpp": "sén qi" },
         { "han": "。", "punct": true, "hpp": "." }
       ],
-      "joined_hpp": "Iàsǐi ìgín mǒ ngìdtěu, fúng cói lǒi kògsiid zàmmǎn'è liǒngsòng, m̌go tiéndàng hǎnmǎng ziin'gín am, iú kon dò dong dó ian'è, tége bí song bí ha tòsiid nau'ngiad jiénjién, habàé voi bí do diamtǐn hálǒi, habàé iu voi bí do tienxien dàng hi, gigigaga qiong tége gòngfa iong, siidcai qiu vǎn sénqi.",
+      "joined_hpp": "Iàsǐi ìgín mǒ ngìdtěu, fúng cói lǒi kògsiid zàmmǎn'è liǒngsòng, m̌go tiéndàng hǎnmǎng ziin'gín am, iú kon dò dóng dó ian'è, tége bí song bí ha tòsiid nau'ngiad jiénjién, habàé voi bí do diamtǐn hálǒi, habàé iu voi bí do tienxien dàng hi, gigigaga qiong tége gòngfa iong, siidcai qiu vǎn sénqi.",
       "status": "verified",
       "source": "Tjaagraan2HagPinPlus-20250805",
       "updated_at": "2026-11-21T18:11:00+08:00"

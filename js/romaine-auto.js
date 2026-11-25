@@ -40,6 +40,8 @@
   const NO_SANDHI_MARKER_KEY = 'romaineNoSandhiMarker';
   const UNVERIFIED_ITALIC_KEY = 'romaineUnverifiedItalic';
   const TRUST_UNDERLINE_KEY = 'romaineTrustUnderline';
+  const RAOPING_TRACKS_KEY = 'romaineRaopingTracks';
+  const DEFAULT_RAOPING_TRACKS = ['zhuk', 'zhuolan', 'taoyuan'];
 
   if (typeof root.addEventListener === 'function') {
     if (!root.__romainePrefsStorageBound) {
@@ -49,7 +51,8 @@
         if (
           e.key === NO_SANDHI_MARKER_KEY ||
           e.key === UNVERIFIED_ITALIC_KEY ||
-          e.key === TRUST_UNDERLINE_KEY
+          e.key === TRUST_UNDERLINE_KEY ||
+          e.key === RAOPING_TRACKS_KEY
         ) {
           root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: e.key } }));
         }
@@ -115,6 +118,137 @@
       root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: TRUST_UNDERLINE_KEY, value: b } }));
     }
     return b;
+  }
+
+  function getRaopingTracks() {
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    const valid = new Set(order);
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(RAOPING_TRACKS_KEY) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const filtered = order.filter((k) => valid.has(k) && parsed.includes(k));
+          if (filtered.length > 0) return filtered;
+        }
+      }
+    } catch {}
+    return DEFAULT_RAOPING_TRACKS.slice();
+  }
+
+  function setRaopingTracks(tracks) {
+    const order = ['zhuk', 'zhuolan', 'taoyuan'];
+    const list = Array.isArray(tracks) ? order.filter((k) => tracks.includes(k)) : [];
+    const finalTracks = list.length > 0 ? list : ['zhuk'];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(RAOPING_TRACKS_KEY, JSON.stringify(finalTracks));
+      }
+    } catch {}
+    if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      root.dispatchEvent(new CustomEvent('romainePrefsChanged', { detail: { key: RAOPING_TRACKS_KEY, value: finalTracks } }));
+    }
+    return finalTracks;
+  }
+
+  /**
+   * 將饒平例句中的「（卓／桃）」或「（卓桃）」括號變體，分別展開成竹、卓、桃三條純淨漢字句。
+   * 語體標記如（諺）、（山）等保留不動。
+   */
+  function expandRaopingSentenceVariants(text) {
+    if (!text || (!text.includes('（') && !text.includes('('))) {
+      return { hasVariant: false, zhuk: text, zhuolan: text, taoyuan: text };
+    }
+    const GENRE_RE = /^(?:諺|山|歇|俗|童|謠)$/;
+    const PAREN_RE = /[（(]([^（）()]+)[）)]/g;
+    let hasVariant = false;
+    let zhukOut = '';
+    let zhuoOut = '';
+    let taoOut = '';
+    let lastIdx = 0;
+
+    const findReplaceLen = (prefixStr, zPart, tPart) => {
+      const pChars = Array.from(prefixStr);
+      // 僅看緊接在括號前的連續諸夏字
+      let cjkCount = 0;
+      for (let i = pChars.length - 1; i >= 0; i--) {
+        if (CJK_CHAR_RE.test(pChars[i])) cjkCount++;
+        else break;
+      }
+      if (cjkCount === 0) return 0;
+      const tailChars = pChars.slice(pChars.length - cjkCount);
+      const tailStr = tailChars.join('');
+
+      // 1. 優先比對精確後綴（最常見：發子（病子／發子）、刀仔（刀／刀仔）、斷忒（撇／忒））
+      const candidates = [tPart, zPart].filter(Boolean).sort((a, b) => Array.from(b).length - Array.from(a).length);
+      for (const cand of candidates) {
+        if (tailStr.endsWith(cand)) {
+          return Array.from(cand).length;
+        }
+      }
+
+      // 2. 次之比對共用首字（如 好點點（好恬恬）、後枕額（後腦殼／腦後背））
+      for (const cand of candidates) {
+        const cChars = Array.from(cand);
+        const firstCh = cChars[0];
+        if (!firstCh) continue;
+        // 往回找長度相近位置的共用首字
+        const targetPos = cjkCount - cChars.length;
+        if (targetPos >= 0 && tailChars[targetPos] === firstCh) {
+          return cChars.length;
+        }
+      }
+
+      // 3. 預設取兩邊最大長度（不超過前面連續漢字數）
+      const maxLen = Math.max(Array.from(zPart).length, Array.from(tPart).length);
+      return Math.min(cjkCount, maxLen);
+    };
+
+    const replaceTail = (buf, len, replacement) => {
+      if (len <= 0) return buf + replacement;
+      const arr = Array.from(buf);
+      return arr.slice(0, arr.length - len).join('') + replacement;
+    };
+
+    let m;
+    while ((m = PAREN_RE.exec(text)) !== null) {
+      const between = text.slice(lastIdx, m.index);
+      zhukOut += between;
+      zhuoOut += between;
+      taoOut += between;
+
+      const inner = m[1].trim();
+      if (GENRE_RE.test(inner) || !CJK_CHAR_RE.test(inner)) {
+        zhukOut += m[0];
+        zhuoOut += m[0];
+        taoOut += m[0];
+      } else {
+        hasVariant = true;
+        let zPart = inner;
+        let tPart = inner;
+        if (inner.includes('／')) {
+          const sp = inner.split('／');
+          zPart = (sp[0] || '').trim();
+          tPart = sp.slice(1).join('／').trim();
+        } else if (inner.includes('/')) {
+          const sp = inner.split('/');
+          zPart = (sp[0] || '').trim();
+          tPart = sp.slice(1).join('/').trim();
+        }
+        const repLen = findReplaceLen(zhukOut, zPart, tPart);
+        // 竹軌：直接移除括號，保留原漢字
+        zhuoOut = replaceTail(zhuoOut, repLen, zPart);
+        taoOut = replaceTail(taoOut, repLen, tPart);
+      }
+      lastIdx = m.index + m[0].length;
+    }
+
+    const rest = text.slice(lastIdx);
+    zhukOut += rest;
+    zhuoOut += rest;
+    taoOut += rest;
+
+    return { hasVariant, zhuk: zhukOut, zhuolan: zhuoOut, taoyuan: taoOut };
   }
 
   function isNoSandhiChar(ch) {
@@ -278,6 +412,7 @@
     const idIdx = header.indexOf('編號');
     const sentIdx = header.indexOf('例句');
     const transIdx = header.indexOf('翻譯');
+    const noteIdx = header.indexOf('備註');
     if (hanIdx < 0 || hppIdx < 0) return [];
     const out = [];
     for (let i = 1; i < rows.length; i++) {
@@ -289,6 +424,7 @@
           id: idIdx >= 0 ? rows[i][idIdx] : '',
           sentence: sentIdx >= 0 ? rows[i][sentIdx] : '',
           translation: transIdx >= 0 ? rows[i][transIdx] : '',
+          note: noteIdx >= 0 ? rows[i][noteIdx] : '',
         });
       }
     }
@@ -306,13 +442,27 @@
 
   function cleanHppVariants(raw) {
     if (!raw) return [];
-    // 先移除【】變體與括號同義詞
-    const s = raw.replace(/【.*?】/g, '').replace(/[（）()]/g, '');
+    // 先移除【】變體、序號前綴（如 2.）與教典變調說明文字
+    // 括號：緊接音節後的 (alt) 視為同位替代（如 ngiong(ngióng) → ngiong/ngióng）；
+    // 獨立括號片語（如 àn ngiǒng (àn ě)）以 " / " 分隔，避免與主片語黏成一串
+    const DROP_NOTES_RE = /(?:小稱變調讀本調為|小稱變調讀|後字變調又讀|後字變調讀|為後字變調|後字變調為|後字變調|為新調值|之合音|合音讀|合音|本調為|詞目刪除|七層|分佢|為)/g;
+    const s = raw
+      .replace(/【.*?】/g, '')
+      .replace(/[（]/g, '(')
+      .replace(/[）]/g, ')')
+      .replace(/([^\s(]+)\(([^()\s]+)\)/g, '$1/$2')
+      .replace(/[()]/g, ' / ')
+      .replace(DROP_NOTES_RE, ' ')
+      .replace(/(?:^|\s)\d+\.\s*/g, ' ');
     const results = [];
 
     // 展開單音節內斜線（如 "hím/hiún sòng" -> ["hím sòng", "hiún sòng"]）
     const expandPhrase = (phrase, tag) => {
-      const words = phrase.trim().split(/\s+/).filter(Boolean);
+      const words = phrase
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w && !CJK_CHAR_RE.test(w));
+      if (!words.length) return;
       let combos = [[]];
       for (const w of words) {
         const alts = w.split('/').filter(Boolean);
@@ -330,9 +480,9 @@
       }
     };
 
-    const NOTE_SPLIT_RE = /(又俗音|又讀|又音|俗音|特殊音|特)/g;
+    const NOTE_SPLIT_RE = /(又俗音|又讀|又音|俗音|特殊音|特|又|文|白)/g;
 
-    // 先依 " / " 拆開並列片語，再依教典別讀註記（又讀／俗音／特…）切出各層讀音
+    // 先依 " / " 拆開並列片語，再依教典別讀註記（又讀／俗音／文／白／特…）切出各層讀音
     for (const slashChunk of s.split(/\s+\/\s+/)) {
       const pieces = slashChunk.split(NOTE_SPLIT_RE);
       let currentNote = '';
@@ -360,10 +510,22 @@
     constructor() {
       // Map<han, Array<{hpp: string, trust: string, label: string}>>
       this.lexicon = new Map();
+      this.nanLexicon = new Map();
+      this.zhuolanLexicon = new Map();
+      this.taoyuanLexicon = new Map();
+      this.zhuolanCharMap = new Map();
+      this.taoyuanCharMap = new Map();
       this.unigram = Object.create(null);
       this.bigram = Object.create(null);
+      this.ctxPrev = Object.create(null);
+      this.ctxNext = Object.create(null);
+      this.noMergeSet = new Set();
+      this.commonWordSet = new Set();
       this.learnedUnigram = Object.create(null);
+      this.learnedBigram = Object.create(null);
       this.learnedReadingCounts = new Map();
+      this.learnedCtxPrev = new Map();
+      this.learnedCtxNext = new Map();
       this.learnedCount = 0;
       this.totalTokens = 0;
       this.prefs = new Map();
@@ -415,26 +577,61 @@
       this.kiong = cfg.kiong;
       this.sandhiCode = cfg.sandhiCode || cfg.kiong;
       this.lexicon = new Map();
+      this.nanLexicon = new Map();
+      this.zhuolanLexicon = new Map();
+      this.taoyuanLexicon = new Map();
+      this.zhuolanCharMap = new Map();
+      this.taoyuanCharMap = new Map();
       this.prefs = new Map();
       this.certLevels = [];
 
       const gipFile = `${basePath}/${cfg.gip}`;
       const certFiles = cfg.cert.map((c) => `${basePath}/${c.file}`);
       const suppFile = `${basePath}/${cfg.supp}`;
+      const curatedFile = `${basePath}/${cfg.supp.replace('data/supp/補字典-', 'data/curated/加詞-')}`;
+      const isSixian = targetDialect === 'xiien';
+      const isRaoping = targetDialect === 'ngiaupin';
 
-      const [gipJson, certJsons, suppJson, statsJson, prefsJson, sandhiJson, rtmJson] = await Promise.all([
+      const [gipJson, certJsons, suppJson, curatedJson, statsJson, prefsJson, sandhiJson, rtmJson, nanGipJson, nanSuppJson] = await Promise.all([
         fetch(gipFile).then((r) => r.json()),
         Promise.all(certFiles.map((f) => fetch(f).then((r) => r.json()))),
         fetch(suppFile).then((r) => r.json()),
-        fetch(`${basePath}/${cfg.stats}`).then((r) => r.json()),
-        fetch(`${basePath}/${cfg.prefs}`).then((r) => r.json()),
+        fetch(curatedFile).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch(`${basePath}/${cfg.stats}`, { cache: 'no-cache' }).then((r) => r.json()),
+        fetch(`${basePath}/${cfg.prefs}`, { cache: 'no-cache' }).then((r) => r.json()),
         this.sandhiRules ? Promise.resolve(this.sandhiRules) : fetch(`${basePath}/sandhi_rules.json`).then((r) => r.json()),
         this.reverseToneMap ? Promise.resolve(this.reverseToneMap) : fetch(`${basePath}/reverse_tone_mapping.json`).then((r) => r.json()),
+        isSixian ? fetch(`${basePath}/data/gip/20261020-南.json`).then((r) => (r.ok ? r.json() : null)) : Promise.resolve(null),
+        isSixian ? fetch(`${basePath}/data/supp/補字典-南.json`).then((r) => (r.ok ? r.json() : null)) : Promise.resolve(null),
       ]);
       this.sandhiRules = sandhiJson;
       this.reverseToneMap = (rtmJson && rtmJson.dialect_reverse_map) || rtmJson;
 
       const seen = new Map();
+      const zhuolanCharStats = new Map();
+      const taoyuanCharStats = new Map();
+      const addSubLex = (map, han, hpp, trust, label) => {
+        if (!han || !hpp) return;
+        if (!map.has(han)) map.set(han, []);
+        const list = map.get(han);
+        if (!list.some((c) => c.hpp.toLowerCase() === hpp.toLowerCase())) {
+          list.push({ hpp, trust, label });
+        }
+      };
+      const recordSubCharStats = (statsMap, mainHan, mainHpp, subHan, subHpp) => {
+        if (mainHan !== subHan) return;
+        const chars = Array.from(mainHan);
+        const mSyls = (mainHpp || '').trim().split(/\s+/).filter(Boolean);
+        const sSyls = (subHpp || '').trim().split(/\s+/).filter(Boolean);
+        if (chars.length !== mSyls.length || chars.length !== sSyls.length) return;
+        for (let k = 0; k < chars.length; k++) {
+          const key = `${chars[k]}\t${mSyls[k].toLowerCase()}`;
+          if (!statsMap.has(key)) statsMap.set(key, new Map());
+          const m = statsMap.get(key);
+          const sv = sSyls[k];
+          m.set(sv, (m.get(sv) || 0) + 1);
+        }
+      };
 
       // 1. 先收官方詞庫（教典、認證分開標記；兩邊皆有才顯示「教典/認證」）
       const addOfficial = (obj, srcName, preferNanBracket = false) => {
@@ -448,8 +645,16 @@
             if (hMatch) rawHan = hMatch[1];
             if (pMatch) rawHpp = pMatch[1];
           }
+          const rawHanNoBr = (rawHan || '').replace(/【.*?】/g, '');
+          const rawHppNoBr = (rawHpp || '').replace(/【.*?】/g, '');
+          const hanParenM = rawHanNoBr.match(/[（(]([^）)]+)[）)]/);
+          const hppParenM = rawHppNoBr.match(/(?:^|\s)[（(]([^）)]+)[）)]/);
           const hans = cleanHanVariants(rawHan);
-          const hpps = cleanHppVariants(rawHpp);
+          const hpps = cleanHppVariants(
+            hanParenM && hppParenM
+              ? rawHppNoBr.replace(/(?:^|\s)[（(][^）)]+[）)]/g, '')
+              : rawHpp
+          );
           for (const h of hans) {
             const hLen = Array.from(h).length;
             for (const item of hpps) {
@@ -459,17 +664,156 @@
               }
             }
           }
+          if (hanParenM && hppParenM) {
+            const pHans = cleanHanVariants(hanParenM[1]);
+            const pHpps = cleanHppVariants(hppParenM[1]);
+            for (const h of pHans) {
+              const hLen = Array.from(h).length;
+              for (const item of pHpps) {
+                if (item.hpp.split(' ').length === hLen) {
+                  const lbl = item.note ? `${srcName}·${item.note}` : srcName;
+                  this._addCandidate(h, item.hpp, 'official', lbl, seen, srcName, item.note);
+                }
+              }
+            }
+          }
         }
         return rows;
       };
       addOfficial(gipJson, '教典');
       certJsons.forEach((obj, i) => {
         const rows = addOfficial(obj, '認證', Boolean(cfg.extractNanBracket));
+        if (isSixian) {
+          for (const r of rows) {
+            const hMatch = (r.han || '').match(/【([^】]+)】/);
+            const pMatch = (r.hpp || '').match(/【([^】]+)】/);
+            const hanParenM = !hMatch && (r.han || '').replace(/【.*?】/g, '').match(/[（(]([^）)]+)[）)]/);
+            const nanHans = hMatch
+              ? cleanHanVariants(hMatch[1])
+              : [...cleanHanVariants(r.han), ...(hanParenM ? cleanHanVariants(hanParenM[1]) : [])];
+            const nanHpps = pMatch ? cleanHppVariants(pMatch[1]) : [];
+            for (const nh of nanHans) {
+              const nLen = Array.from(nh).length;
+              for (const item of nanHpps) {
+                if (item.hpp.split(' ').length === nLen) {
+                  if (!this.nanLexicon.has(nh)) this.nanLexicon.set(nh, []);
+                  if (!this.nanLexicon.get(nh).some((c) => c.hpp === item.hpp)) {
+                    this.nanLexicon.get(nh).push({ hpp: item.hpp, trust: 'official', label: '認證·南' });
+                  }
+                }
+              }
+            }
+          }
+        }
+        if (isRaoping) {
+          for (const r of rows) {
+            const pMatch = (r.hpp || '').match(/【([^】]+)】/);
+            if (!pMatch) continue;
+            const mainHans = cleanHanVariants(r.han);
+            const mainHpps = cleanHppVariants(r.hpp);
+            const primaryMainHan = mainHans[0] || '';
+            const primaryMainHpp = mainHpps[0] ? mainHpps[0].hpp : '';
+
+            const hMatch = (r.han || '').match(/【([^】]+)】/);
+            const hInner = hMatch ? hMatch[1].trim() : '';
+            const pInner = pMatch[1].trim();
+
+            let zHanRaw = hInner || primaryMainHan;
+            let tHanRaw = hInner || primaryMainHan;
+            if (hInner.includes('／')) {
+              const hp = hInner.split('／');
+              zHanRaw = (hp[0] || '').trim();
+              tHanRaw = (hp[1] || '').trim();
+            }
+
+            let zHppRaw = pInner;
+            let tHppRaw = pInner;
+            if (pInner.includes('/')) {
+              const parts = pInner.split('/').map((s) => s.trim()).filter(Boolean);
+              const zHanLen = Array.from((cleanHanVariants(zHanRaw)[0] || primaryMainHan)).length;
+              const tHanLen = Array.from((cleanHanVariants(tHanRaw)[0] || primaryMainHan)).length;
+              if (
+                parts.length === 2 &&
+                parts[0].split(/\s+/).length === zHanLen &&
+                parts[1].split(/\s+/).length === tHanLen
+              ) {
+                zHppRaw = parts[0];
+                tHppRaw = parts[1];
+              }
+            }
+
+            const zHans = cleanHanVariants(zHanRaw);
+            const tHans = cleanHanVariants(tHanRaw);
+            const zHpps = cleanHppVariants(zHppRaw);
+            const tHpps = cleanHppVariants(tHppRaw);
+
+            for (const zh of zHans) {
+              const zLen = Array.from(zh).length;
+              for (const item of zHpps) {
+                if (item.hpp.split(' ').length === zLen) {
+                  addSubLex(this.zhuolanLexicon, zh, item.hpp, 'official', '認證·卓蘭');
+                  recordSubCharStats(zhuolanCharStats, primaryMainHan, primaryMainHpp, zh, item.hpp);
+                }
+              }
+            }
+            for (const th of tHans) {
+              const tLen = Array.from(th).length;
+              for (const item of tHpps) {
+                if (item.hpp.split(' ').length === tLen) {
+                  addSubLex(this.taoyuanLexicon, th, item.hpp, 'official', '認證·桃園');
+                  recordSubCharStats(taoyuanCharStats, primaryMainHan, primaryMainHpp, th, item.hpp);
+                }
+              }
+            }
+          }
+        }
         this.certLevels.push({
           level: cfg.cert[i].level,
           rows: rows.filter((r) => r.sentence && r.sentence.trim()),
         });
       });
+
+      // 若為四縣，額外建置南四縣詞庫（教典南＋認證【南】＋補字典南）
+      if (isSixian && nanGipJson) {
+        const nanSeen = new Set();
+        const addNanRows = (rawRows, trust, label) => {
+          for (const r of rawRows) {
+            const hans = cleanHanVariants(r.han);
+            const hpps = cleanHppVariants(r.hpp);
+            for (const h of hans) {
+              const hLen = Array.from(h).length;
+              for (const item of hpps) {
+                if (item.hpp.split(' ').length === hLen) {
+                  const key = `${h}\t${item.hpp}`;
+                  if (nanSeen.has(key)) continue;
+                  nanSeen.add(key);
+                  if (!this.nanLexicon.has(h)) this.nanLexicon.set(h, []);
+                  this.nanLexicon.get(h).push({ hpp: item.hpp, trust, label });
+                }
+              }
+            }
+          }
+        };
+        addNanRows(parseCsv(nanGipJson.content || ''), 'official', '教典·南');
+        if (nanSuppJson) addNanRows(parseCsv(nanSuppJson.content || ''), 'supp-derived', '補字典·南');
+      }
+
+      // 1b. 愛灣語人工加詞（data/curated/加詞-{腔}.json，優先於補字典與擬音）
+      if (curatedJson && curatedJson.content) {
+        const curatedRows = parseCsv(curatedJson.content || '');
+        for (const r of curatedRows) {
+          const hans = cleanHanVariants(r.han);
+          const hpps = cleanHppVariants((r.hpp || '').replace(/^--/, ''));
+          for (const h of hans) {
+            const hLen = Array.from(h).length;
+            for (const item of hpps) {
+              if (item.hpp.split(' ').length === hLen) {
+                this._addCandidate(h, item.hpp, 'official', '愛灣語加詞', seen, '愛灣語加詞');
+              }
+            }
+          }
+        }
+      }
 
       // 2. 再收補字典（先拆音/沿襲，再廣韻擬音）
       const suppRows = parseCsv(suppJson.content || '');
@@ -487,13 +831,47 @@
           for (const item of hpps) {
             if (item.hpp.split(' ').length === hLen) {
               this._addCandidate(h, item.hpp, trust, label, seen);
+              if (isRaoping && r.note) {
+                const areaMatch = r.note.match(/腔內：([^；]+)/);
+                if (areaMatch) {
+                  const areas = areaMatch[1];
+                  if (areas.includes('卓蘭')) {
+                    addSubLex(this.zhuolanLexicon, h, item.hpp, 'supp-derived', '補字典·卓蘭');
+                  }
+                  if (areas.includes('桃園')) {
+                    addSubLex(this.taoyuanLexicon, h, item.hpp, 'supp-derived', '補字典·桃園');
+                  }
+                }
+              }
             }
           }
         }
       }
 
+      if (isRaoping) {
+        const buildBestCharMap = (statsMap, outMap) => {
+          for (const [key, counts] of statsMap.entries()) {
+            let bestSyl = '';
+            let bestCnt = -1;
+            for (const [syl, cnt] of counts.entries()) {
+              if (cnt > bestCnt) {
+                bestCnt = cnt;
+                bestSyl = syl;
+              }
+            }
+            if (bestSyl) outMap.set(key, bestSyl);
+          }
+        };
+        buildBestCharMap(zhuolanCharStats, this.zhuolanCharMap);
+        buildBestCharMap(taoyuanCharStats, this.taoyuanCharMap);
+      }
+
       this.unigram = statsJson.unigram || Object.create(null);
       this.bigram = statsJson.bigram || Object.create(null);
+      this.ctxPrev = statsJson.ctx_prev || Object.create(null);
+      this.ctxNext = statsJson.ctx_next || Object.create(null);
+      this.noMergeSet = new Set(statsJson.no_merge || []);
+      this.commonWordSet = new Set(statsJson.common_words || []);
       this.totalTokens = (statsJson.meta && statsJson.meta.total_tokens) || 1;
       for (const item of prefsJson.items || []) {
         this.prefs.set(item.han, item.default);
@@ -502,10 +880,13 @@
       this.ready = true;
     }
 
-    /** 從 localStorage 黃金語料即時學習斷詞權重、偏好讀音與自訂詞條 */
+    /** 從 localStorage / repo 黃金語料即時學習斷詞權重、Bigram 與上下文偏好讀音（區分 verified 初校 vs confirmed 專家確認） */
     applyVerifiedLearning(itemsOverride) {
       this.learnedUnigram = Object.create(null);
+      this.learnedBigram = Object.create(null);
       this.learnedReadingCounts = new Map();
+      this.learnedCtxPrev = new Map();
+      this.learnedCtxNext = new Map();
       this.learnedCount = 0;
 
       let list = itemsOverride;
@@ -518,6 +899,12 @@
       }
       if (!Array.isArray(list)) return;
 
+      const addCtxCount = (ctxMap, key, hppLower, w) => {
+        if (!ctxMap.has(key)) ctxMap.set(key, new Map());
+        const m = ctxMap.get(key);
+        m.set(hppLower, (m.get(hppLower) || 0) + w);
+      };
+
       const seenEntryKeys = new Set();
       const learnFromEntry = (entry) => {
         if (!entry || normalizeDialect(entry.dialect || 'xiien') !== this.dialect) return;
@@ -527,20 +914,40 @@
         if (seenEntryKeys.has(eKey)) return;
         seenEntryKeys.add(eKey);
         this.learnedCount++;
+
+        const tierWeight = entry.status === 'confirmed' ? 5 : 1;
+        let prevHan = '';
+        let prevHppLower = '';
+
         for (const tok of entry.tokens || []) {
-          if (tok.punct || tok.nonCjk || tok.comment || tok.uncertain) continue;
+          if (tok.punct || tok.nonCjk || tok.comment || tok.uncertain) {
+            prevHan = '';
+            prevHppLower = '';
+            continue;
+          }
           const han = (tok.han || '').trim();
           const hppLower = (tok.hpp || '').trim().toLowerCase();
-          if (!han || !hppLower || !CJK_CHAR_RE.test(han)) continue;
+          if (!han || !hppLower || !CJK_CHAR_RE.test(han)) {
+            prevHan = '';
+            prevHppLower = '';
+            continue;
+          }
 
           // 提升已校正詞條在 Viterbi 斷詞的權重
-          this.learnedUnigram[han] = (this.learnedUnigram[han] || 0) + 50;
+          this.learnedUnigram[han] = (this.learnedUnigram[han] || 0) + 50 * tierWeight;
 
           if (!this.learnedReadingCounts.has(han)) {
             this.learnedReadingCounts.set(han, new Map());
           }
           const rMap = this.learnedReadingCounts.get(han);
-          rMap.set(hppLower, (rMap.get(hppLower) || 0) + 1);
+          rMap.set(hppLower, (rMap.get(hppLower) || 0) + tierWeight);
+
+          if (prevHan) {
+            const biKey = `${prevHan}\t${han}`;
+            this.learnedBigram[biKey] = (this.learnedBigram[biKey] || 0) + 20 * tierWeight;
+            addCtxCount(this.learnedCtxPrev, biKey, hppLower, tierWeight);
+            addCtxCount(this.learnedCtxNext, biKey, prevHppLower, tierWeight);
+          }
 
           // 若原詞庫無此詞或無此讀音（例如自訂讀音／強制詞組），補入詞庫候選
           const existingCands = this.lexicon.get(han) || [];
@@ -548,6 +955,9 @@
             if (!this.lexicon.has(han)) this.lexicon.set(han, []);
             this.lexicon.get(han).push({ hpp: hppLower, trust: 'official', label: '黃金語料' });
           }
+
+          prevHan = han;
+          prevHppLower = hppLower;
         }
       };
 
@@ -556,39 +966,157 @@
       for (const entry of this.repoVerifiedItems || []) learnFromEntry(entry);
     }
 
-    _pickDefault(han) {
-      const cands = this.lexicon.get(han) || [];
-      if (!cands.length) return { hpp: han, trust: 'oov', label: '未收錄', candidates: [], oov: true };
-
-      const learnedMap = this.learnedReadingCounts.get(han);
-      if (learnedMap && learnedMap.size > 0) {
-        let bestHpp = null;
-        let bestCnt = -1;
-        for (const [hLower, cnt] of learnedMap.entries()) {
-          if (cnt > bestCnt) {
-            bestCnt = cnt;
-            bestHpp = hLower;
+    _pickContextRule(han, prevHan, nextHan, cands) {
+      const findCand = (hppTarget) => cands.find((c) => c.hpp.toLowerCase() === hppTarget.toLowerCase());
+      if (this.dialect === 'xiien') {
+        if (han === '著') {
+          if (/^[衫褲鞋帽裙襪被]/.test(nextHan)) {
+            const m = findCand('zòg');
+            if (m) return m;
           }
-        }
-        if (bestHpp) {
-          const learnedMatch = cands.find((c) => c.hpp.toLowerCase() === bestHpp);
-          if (learnedMatch) {
-            return {
-              hpp: learnedMatch.hpp,
-              trust: learnedMatch.trust,
-              label: learnedMatch.label,
-              candidates: cands,
-              oov: false,
-            };
+          if (/^(毋|無|寫|講|算|聽|猜|估)$/.test(prevHan) || /^(火|獎|驚|傷|緊)$/.test(nextHan)) {
+            const m = findCand('cog');
+            if (m) return m;
+          }
+          if (/^(看|睡|想|尋|買|食|行|企|坐|拿|抓|捉|聽|問|講|寫|等|寒|冷|熱|傷|打|撞|碰|跌|落|開|關|點|燒|對|摎)$/.test(prevHan)) {
+            const m = findCand('dò');
+            if (m) return m;
           }
         }
       }
+      return null;
+    }
 
-      const pref = this.prefs.get(han);
-      if (pref) {
-        const match = cands.find((c) => c.hpp === pref);
-        if (match) {
-          return { hpp: match.hpp, trust: match.trust, label: match.label, candidates: cands, oov: false };
+    _pickDefault(han, useNan = false, openBookMap = null, prevHan = '', nextHan = '') {
+      if (openBookMap && openBookMap.has(han)) {
+        const obHpp = openBookMap.get(han);
+        return {
+          hpp: obHpp,
+          trust: 'official',
+          label: useNan ? '南四縣(本詞)' : '本詞',
+          candidates: [{ hpp: obHpp, trust: 'official', label: useNan ? '南四縣(本詞)' : '本詞' }],
+          oov: false,
+        };
+      }
+      const nanCands = useNan ? (this.nanLexicon.get(han) || []) : [];
+      const cands = nanCands.length ? nanCands : (this.lexicon.get(han) || []);
+      if (!cands.length) {
+        const chars = Array.from(han);
+        const synKind = this._classifySyntheticWord(han, chars);
+        if (synKind) {
+          const syls = [];
+          let worstTrust = 'supp-derived';
+          for (let ci = 0; ci < chars.length; ci++) {
+            const pChar = ci > 0 ? chars[ci - 1] : prevHan;
+            const nChar = ci + 1 < chars.length ? chars[ci + 1] : nextHan;
+            const sub = this._pickDefault(chars[ci], useNan, openBookMap, pChar, nChar);
+            if (sub.oov) worstTrust = 'oov';
+            syls.push(sub.hpp);
+          }
+          const joined = syls.join(' ');
+          return {
+            hpp: joined,
+            trust: worstTrust,
+            label: synKind,
+            candidates: [{ hpp: joined, trust: worstTrust, label: synKind }],
+            oov: false,
+          };
+        }
+        return { hpp: han, trust: 'oov', label: '未收錄', candidates: [], oov: true };
+      }
+
+      if (!useNan && cands.length > 1) {
+        // 1. 黃金語料／專家上下文選音（Contextual Reading Bigram）
+        if (prevHan || nextHan) {
+          const ctxScores = new Map();
+          if (prevHan) {
+            const mPrev = this.learnedCtxPrev.get(`${prevHan}\t${han}`);
+            if (mPrev) {
+              for (const [hLower, w] of mPrev.entries()) {
+                ctxScores.set(hLower, (ctxScores.get(hLower) || 0) + w);
+              }
+            }
+          }
+          if (nextHan) {
+            const mNext = this.learnedCtxNext.get(`${han}\t${nextHan}`);
+            if (mNext) {
+              for (const [hLower, w] of mNext.entries()) {
+                ctxScores.set(hLower, (ctxScores.get(hLower) || 0) + w);
+              }
+            }
+          }
+          let bestCtxHpp = null;
+          let bestCtxScore = 0;
+          for (const [hLower, w] of ctxScores.entries()) {
+            if (w > bestCtxScore) {
+              bestCtxScore = w;
+              bestCtxHpp = hLower;
+            }
+          }
+          if (bestCtxHpp) {
+            const ctxMatch = cands.find((c) => c.hpp.toLowerCase() === bestCtxHpp);
+            if (ctxMatch) {
+              return { hpp: ctxMatch.hpp, trust: ctxMatch.trust, label: ctxMatch.label, candidates: cands, oov: false };
+            }
+          }
+        }
+
+        // 2. 高頻多音字語境規則
+        const ruleMatch = this._pickContextRule(han, prevHan, nextHan, cands);
+        if (ruleMatch) {
+          return { hpp: ruleMatch.hpp, trust: ruleMatch.trust, label: ruleMatch.label, candidates: cands, oov: false };
+        }
+
+        // 3. 詞典合成詞萃取之單字共現上下文
+        if (prevHan) {
+          const pChars = Array.from(prevHan);
+          const pLast = pChars[pChars.length - 1];
+          const dictPrevHpp = this.ctxPrev[`${pLast}\t${han}`];
+          if (dictPrevHpp) {
+            const m = cands.find((c) => c.hpp.toLowerCase() === dictPrevHpp.toLowerCase());
+            if (m) return { hpp: m.hpp, trust: m.trust, label: m.label, candidates: cands, oov: false };
+          }
+        }
+        if (nextHan) {
+          const nFirst = Array.from(nextHan)[0];
+          const dictNextHpp = this.ctxNext[`${han}\t${nFirst}`];
+          if (dictNextHpp) {
+            const m = cands.find((c) => c.hpp.toLowerCase() === dictNextHpp.toLowerCase());
+            if (m) return { hpp: m.hpp, trust: m.trust, label: m.label, candidates: cands, oov: false };
+          }
+        }
+
+        // 4. 黃金語料單詞最高頻讀音
+        const learnedMap = this.learnedReadingCounts.get(han);
+        if (learnedMap && learnedMap.size > 0) {
+          let bestHpp = null;
+          let bestCnt = -1;
+          for (const [hLower, cnt] of learnedMap.entries()) {
+            if (cnt > bestCnt) {
+              bestCnt = cnt;
+              bestHpp = hLower;
+            }
+          }
+          if (bestHpp) {
+            const learnedMatch = cands.find((c) => c.hpp.toLowerCase() === bestHpp);
+            if (learnedMatch) {
+              return {
+                hpp: learnedMatch.hpp,
+                trust: learnedMatch.trust,
+                label: learnedMatch.label,
+                candidates: cands,
+                oov: false,
+              };
+            }
+          }
+        }
+        // 5. 各腔人工／互學偏好讀音表
+        const pref = this.prefs.get(han);
+        if (pref) {
+          const match = cands.find((c) => c.hpp === pref);
+          if (match) {
+            return { hpp: match.hpp, trust: match.trust, label: match.label, candidates: cands, oov: false };
+          }
         }
       }
       return {
@@ -600,7 +1128,24 @@
       };
     }
 
-    viterbiSegment(chunk) {
+    _classifySyntheticWord(w, chars) {
+      if (this.commonWordSet.has(w)) {
+        if (chars.every((c) => this.lexicon.has(c))) return '共通詞';
+      }
+      if (chars.length === 3 && chars[0] === chars[1] && chars[0] !== chars[2]) {
+        if (chars[2] === '仔' && this.lexicon.has(chars[0]) && this.lexicon.has('仔')) return '重疊構詞';
+        // 排除結構虛詞（个、的、了、啊、呢、嗎、無），避免把「硬硬个」合併
+        if (!/^[个的了啊呢嗎無]$/.test(chars[2]) && this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) {
+          return '重疊構詞';
+        }
+      }
+      if (chars.length === 4 && chars[0] === chars[1] && chars[2] === chars[3] && chars[0] !== chars[2]) {
+        if (this.lexicon.has(chars[0]) && this.lexicon.has(chars[2])) return '重疊構詞';
+      }
+      return null;
+    }
+
+    viterbiSegment(chunk, useNan = false, openBookMap = null) {
       const chars = Array.from(chunk);
       const n = chars.length;
       const dp = new Array(n + 1).fill(Infinity);
@@ -615,14 +1160,21 @@
         const limit = Math.min(this.maxWordLen, n - i);
         const prevWord = bestWord[i];
         for (let len = 1; len <= limit; len++) {
-          const w = chars.slice(i, i + len).join('');
-          const cands = this.lexicon.get(w);
-          if (cands && cands.length) {
+          const sliceChars = chars.slice(i, i + len);
+          const w = sliceChars.join('');
+          if (this.noMergeSet.has(w)) continue;
+          const hasOpenBook = Boolean(openBookMap && openBookMap.has(w));
+          const cands = hasOpenBook
+            ? [{ trust: 'official' }]
+            : (useNan && this.nanLexicon.get(w)) || this.lexicon.get(w);
+          const synKind = (!cands || !cands.length) && len >= 2 ? this._classifySyntheticWord(w, sliceChars) : null;
+          if ((cands && cands.length) || synKind) {
             matched = true;
-            const topTrust = TRUST_RANK[cands[0].trust] || 1;
-            const trustPenalty = topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5;
-            const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + 0.5;
-            const bi = prevWord ? (this.bigram[`${prevWord}\t${w}`] || 0) : 0;
+            const topTrust = cands && cands.length ? (TRUST_RANK[cands[0].trust] || 1) : 2;
+            const trustPenalty = synKind ? 0.2 : (topTrust === 3 ? 0 : topTrust === 2 ? 0.8 : 2.5);
+            const freq = (this.unigram[w] || 0) + (this.learnedUnigram[w] || 0) + (hasOpenBook ? 500 : synKind ? 5 : 0) + 0.5;
+            const biKey = prevWord ? `${prevWord}\t${w}` : '';
+            const bi = biKey ? ((this.bigram[biKey] || 0) + (this.learnedBigram[biKey] || 0)) : 0;
             const biBonus = bi > 0 ? 0.45 * mathLog(1 + bi) : 0;
             const cost =
               -mathLog(freq / (this.totalTokens + 0.5 * vocabSize)) - 1.6 * (len - 1) + trustPenalty - biBonus;
@@ -634,7 +1186,8 @@
           }
         }
         const single = chars[i];
-        if (!matched || !this.lexicon.has(single)) {
+        const hasSingle = this.lexicon.has(single) || (useNan && this.nanLexicon.has(single));
+        if (!matched || !hasSingle) {
           if (dp[i] + 14 < dp[i + 1]) {
             dp[i + 1] = dp[i] + 14;
             back[i + 1] = i;
@@ -746,7 +1299,7 @@
       };
     }
 
-    segmentAndConvert(text) {
+    segmentAndConvert(text, openBookMap = null) {
       const chars = Array.from(text);
       const cpToUtf16 = new Array(chars.length + 1);
       let utf16Pos = 0;
@@ -764,6 +1317,7 @@
       let cjkBufPureCount = 0;
       let nonCjkBuf = '';
       let needCap = true;
+      let inParen = false;
 
       const COMPOUND_RE = /([\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}](?:[-=][\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}])+)/gu;
 
@@ -808,19 +1362,37 @@
             tokens.push(tok);
           } else {
             let wordCpOffset = segCpOffset;
-            for (const w of this.viterbiSegment(seg)) {
+            const useNan = inParen && this.dialect === 'xiien';
+            const segWords = this.viterbiSegment(seg, useNan, openBookMap);
+            for (let wi = 0; wi < segWords.length; wi++) {
+              const w = segWords[wi];
+              const prevHan = wi > 0 ? segWords[wi - 1] : '';
+              const nextHan = wi + 1 < segWords.length ? segWords[wi + 1] : '';
               const wCpLen = Array.from(w).length;
-              const picked = this._pickDefault(w);
+              const picked = this._pickDefault(w, useNan, openBookMap, prevHan, nextHan);
               let hpp = picked.hpp;
-              if (!picked.oov && needCap) {
+              const wasCap = !picked.oov && needCap;
+              if (wasCap) {
                 hpp = hpp.charAt(0).toUpperCase() + hpp.slice(1);
                 needCap = false;
               } else if (!picked.oov) {
                 needCap = false;
               }
+              let nanHpp = null;
+              if (!inParen && !picked.oov && this.dialect === 'xiien' && this.nanLexicon.size > 0) {
+                const nanCands = this.nanLexicon.get(w);
+                if (nanCands && nanCands.length > 0) {
+                  const baseLower = hpp.toLowerCase();
+                  if (!nanCands.some((c) => c.hpp.toLowerCase() === baseLower)) {
+                    nanHpp = nanCands[0].hpp;
+                    if (wasCap) nanHpp = nanHpp.charAt(0).toUpperCase() + nanHpp.slice(1);
+                  }
+                }
+              }
               const tok = {
                 han: w,
                 hpp,
+                nanHpp,
                 srcStart: cpToUtf16[wordCpOffset],
                 srcEnd: cpToUtf16[wordCpOffset + wCpLen],
                 candidates: picked.candidates,
@@ -895,6 +1467,8 @@
           flushNonCjk();
           const mapped = PUNCT_MAP[ch];
           tokens.push({ han: ch, hpp: mapped, punct: true });
+          if (ch === '（') inParen = true;
+          else if (ch === '）') inParen = false;
           if (/[.!?]/.test(mapped) || ((ch === '「' || ch === '『') && prev === '：')) {
             needCap = true;
           }
@@ -902,6 +1476,8 @@
           flushCjk();
           flushNonCjk();
           tokens.push({ han: ch, hpp: ch, punct: true });
+          if (ch === '(') inParen = true;
+          else if (ch === ')') inParen = false;
           if (/[.!?]/.test(ch)) needCap = true;
         } else {
           // 保留英數字等非諸夏字（組成連續 token，如 Hakfa、100）
@@ -911,7 +1487,179 @@
       }
       flushCjk();
       flushNonCjk();
+      if (this.dialect === 'ngiaupin') {
+        this.populateRaopingSubTokens(tokens);
+      }
       return tokens;
+    }
+
+    _deriveRaopingSubSyl(zhukSyl, targetSub) {
+      if (!zhukSyl) return zhukSyl;
+      const first = zhukSyl.charAt(0);
+      const isCap = first !== first.toLowerCase();
+      let s = zhukSyl.toLowerCase().normalize('NFC');
+
+      if (s === 'èr') {
+        const res = 'ê';
+        return isCap ? res.charAt(0).toUpperCase() + res.slice(1) : res;
+      }
+
+      // 聲母轉換
+      if (s.startsWith('zh') || s.startsWith('ch') || s.startsWith('sh')) {
+        s = s.charAt(0) + s.slice(2);
+      } else if (targetSub === 'taoyuan') {
+        if (s.startsWith('rh')) {
+          s = s.slice(2);
+        } else if (s.startsWith('v') && s.length > 1) {
+          s = s.slice(1);
+        }
+      }
+
+      // 舒聲調號轉換（非入聲尾）
+      const isStop = /[bdpt]$/i.test(s) || (/[gk]$/i.test(s) && !s.endsWith('ng'));
+      if (!isStop) {
+        const nfd = s.normalize('NFD');
+        const m = nfd.match(/[\u0301\u0300\u030C\u0302\u0304]/);
+        if (!m) {
+          // 55 (無符號) -> 53 (\u0300)
+          const chars = Array.from(s);
+          let vIdx = chars.findIndex((c) => /[aeo]/.test(c));
+          if (vIdx < 0) {
+            for (let i = chars.length - 1; i >= 0; i--) {
+              if (/[iu]/.test(chars[i])) {
+                vIdx = i;
+                break;
+              }
+            }
+          }
+          if (vIdx >= 0) {
+            chars[vIdx] = (chars[vIdx] + '\u0300').normalize('NFC');
+            s = chars.join('');
+          }
+        } else if (m[0] === '\u0300') {
+          // 53 (\u0300) -> 31 (\u0302)
+          s = nfd.replace('\u0300', '\u0302').normalize('NFC');
+        } else if (m[0] === '\u0301') {
+          // 24 (\u0301) -> 55 (無符號)
+          s = nfd.replace('\u0301', '').normalize('NFC');
+        }
+      }
+
+      return isCap && s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    }
+
+    _stripToneMarks(syl) {
+      return String(syl || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .normalize('NFC');
+    }
+
+    _isRaopingSylCompatible(zhukSyl, subSyl, targetSub) {
+      if (!zhukSyl || !subSyl) return false;
+      const derivedBase = this._stripToneMarks(this._deriveRaopingSubSyl(zhukSyl, targetSub));
+      const subBase = this._stripToneMarks(subSyl);
+      if (derivedBase === subBase) return true;
+      // 容許部分韻母微調（如 rh->零、i->ii、er->e 等），但至少入聲屬性與主要聲母不能完全無關
+      const zStop = /[bdpt]$/.test(derivedBase) || (/[gk]$/.test(derivedBase) && !derivedBase.endsWith('ng'));
+      const sStop = /[bdpt]$/.test(subBase) || (/[gk]$/.test(subBase) && !subBase.endsWith('ng'));
+      if (zStop !== sStop) return false;
+      return derivedBase.charAt(0) === subBase.charAt(0);
+    }
+
+    _resolveRaopingSubHpp(han, zhukHpp, targetSub) {
+      if (!han || !zhukHpp) return { hpp: zhukHpp, trust: 'official' };
+      const first = zhukHpp.charAt(0);
+      const isCap = first !== first.toLowerCase();
+      const applyCap = (str) => {
+        if (!str) return str;
+        return isCap ? str.charAt(0).toUpperCase() + str.slice(1) : str;
+      };
+
+      const subLex = targetSub === 'zhuolan' ? this.zhuolanLexicon : this.taoyuanLexicon;
+      const charMap = targetSub === 'zhuolan' ? this.zhuolanCharMap : this.taoyuanCharMap;
+      const chars = Array.from(han).filter((c) => CJK_CHAR_RE.test(c));
+      const syls = zhukHpp.trim().split(/\s+/).filter(Boolean);
+
+      // 單字詞優先以 (字, 新竹音節) 精準對照，避免多音字（如 毒 tug / téu）被別音覆蓋
+      if (chars.length === 1 && syls.length === 1) {
+        const mapKey = `${chars[0]}\t${syls[0].toLowerCase()}`;
+        const mapped = charMap && charMap.get(mapKey);
+        if (mapped) {
+          return { hpp: applyCap(mapped), trust: 'official' };
+        }
+        const cands = (subLex && subLex.get(han)) || [];
+        const compat = cands.filter((c) => this._isRaopingSylCompatible(syls[0], c.hpp, targetSub));
+        if (compat.length > 0) {
+          const off = compat.find((c) => c.trust === 'official') || compat[0];
+          return { hpp: applyCap(off.hpp), trust: off.trust };
+        }
+        return { hpp: applyCap(this._deriveRaopingSubSyl(syls[0], targetSub)), trust: 'supp-derived' };
+      }
+
+      const cands = subLex && subLex.get(han);
+      if (cands && cands.length > 0 && syls.length > 0) {
+        // 多字詞挑選與當前新竹音節最相容的候選
+        let bestCand = null;
+        let bestScore = 0;
+        for (const c of cands) {
+          const cSyls = (c.hpp || '').trim().split(/\s+/).filter(Boolean);
+          if (cSyls.length !== syls.length) continue;
+          let score = 0;
+          for (let k = 0; k < syls.length; k++) {
+            if (this._isRaopingSylCompatible(syls[k], cSyls[k], targetSub)) score++;
+          }
+          if (c.trust === 'official') score += 0.1;
+          if (score > bestScore) {
+            bestScore = score;
+            bestCand = c;
+          }
+        }
+        if (bestCand && bestScore >= 1) {
+          return { hpp: applyCap(bestCand.hpp), trust: bestCand.trust };
+        }
+      }
+
+      if (chars.length !== syls.length) {
+        return {
+          hpp: applyCap(syls.map((sy) => this._deriveRaopingSubSyl(sy, targetSub)).join(' ')),
+          trust: 'supp-derived',
+        };
+      }
+
+      const outSyls = [];
+      for (let k = 0; k < chars.length; k++) {
+        const ch = chars[k];
+        const sy = syls[k];
+        const mapKey = `${ch}\t${sy.toLowerCase()}`;
+        let mapped = charMap && charMap.get(mapKey);
+        if (!mapped) {
+          const singleCands = (subLex && subLex.get(ch)) || [];
+          const compat = singleCands.find((c) => this._isRaopingSylCompatible(sy, c.hpp, targetSub));
+          if (compat) mapped = compat.hpp;
+        }
+        if (mapped) {
+          const wasUpper = sy.charAt(0) !== sy.charAt(0).toLowerCase();
+          outSyls.push(wasUpper ? mapped.charAt(0).toUpperCase() + mapped.slice(1) : mapped);
+        } else {
+          outSyls.push(this._deriveRaopingSubSyl(sy, targetSub));
+        }
+      }
+      return { hpp: applyCap(outSyls.join(' ')), trust: 'supp-derived' };
+    }
+
+    populateRaopingSubTokens(tokens) {
+      if (this.dialect !== 'ngiaupin' || !Array.isArray(tokens)) return;
+      for (const tok of tokens) {
+        if (!tok || tok.punct || tok.nonCjk || tok.isComment || !tok.hpp) continue;
+        const z = this._resolveRaopingSubHpp(tok.han, tok.hpp, 'zhuolan');
+        const t = this._resolveRaopingSubHpp(tok.han, tok.hpp, 'taoyuan');
+        tok.zhuolanHpp = z.hpp;
+        tok.zhuolanTrust = z.trust;
+        tok.taoyuanHpp = t.hpp;
+        tok.taoyuanTrust = t.trust;
+      }
     }
 
     /** 依目前連詞模式格式化單一詞條或候選讀音 */
@@ -953,8 +1701,17 @@
             prevWasWord = false;
           } else {
             const p = tok.hpp !== undefined ? tok.hpp : tok.han;
-            out = out.replace(/[ ]+$/, '') + p;
-            prevWasWord = false;
+            if (p === '(') {
+              if (prevWasWord) out += ' ';
+              out += '(';
+              prevWasWord = false;
+            } else if (p === ')') {
+              out = out.replace(/[ ]+$/, '') + ')';
+              prevWasWord = true;
+            } else {
+              out = out.replace(/[ ]+$/, '') + p;
+              prevWasWord = false;
+            }
           }
           continue;
         }
@@ -963,6 +1720,79 @@
           out += tok.hpp;
         } else {
           out += this.formatWordHpp(tok.hpp, joiningMode, tok.sylBoundaries);
+          if (tok.nanHpp) {
+            out += ' (' + this.formatWordHpp(tok.nanHpp, joiningMode, tok.sylBoundaries) + ')';
+          }
+        }
+        prevWasWord = true;
+      }
+      return out.trim();
+    }
+
+    formatTokensToHppForVariant(tokens, joiningMode = 'none', variant = 'zhuk') {
+      if (variant === 'zhuk' || this.dialect !== 'ngiaupin') {
+        return this.formatTokensToHpp(tokens, joiningMode);
+      }
+      const field = variant === 'zhuolan' ? 'zhuolanHpp' : 'taoyuanHpp';
+      const mapped = tokens.map((tok) => {
+        if (!tok || tok.punct || tok.nonCjk || tok.isComment) return tok;
+        return { ...tok, hpp: tok[field] || tok.hpp, nanHpp: null };
+      });
+      return this.formatTokensToHpp(mapped, joiningMode);
+    }
+
+    formatTokensToVariantHtml(tokens, joiningMode = 'none', variant = 'zhuk', italicUnverified = false) {
+      if (variant === 'zhuk' || this.dialect !== 'ngiaupin') {
+        return this.formatTokensToHpp(tokens, joiningMode);
+      }
+      const esc = (s) =>
+        String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      const hppField = variant === 'zhuolan' ? 'zhuolanHpp' : 'taoyuanHpp';
+      const trustField = variant === 'zhuolan' ? 'zhuolanTrust' : 'taoyuanTrust';
+      let out = '';
+      let prevWasWord = false;
+
+      for (const tok of tokens) {
+        if (tok.isComment) continue;
+        if (tok.punct) {
+          if (tok.han === '\n') {
+            out = out.replace(/[ \t]+$/, '') + '\n';
+            prevWasWord = false;
+          } else if (tok.isSpace) {
+            if (!out.endsWith(' ') && !out.endsWith('\n')) out += ' ';
+            prevWasWord = false;
+          } else {
+            const p = tok.hpp !== undefined ? tok.hpp : tok.han;
+            if (p === '(') {
+              if (prevWasWord) out += ' ';
+              out += '(';
+              prevWasWord = false;
+            } else if (p === ')') {
+              out = out.replace(/[ ]+$/, '') + ')';
+              prevWasWord = true;
+            } else {
+              out = out.replace(/[ ]+$/, '') + esc(p);
+              prevWasWord = false;
+            }
+          }
+          continue;
+        }
+        if (prevWasWord) out += ' ';
+        if (tok.nonCjk) {
+          out += esc(tok.hpp);
+        } else {
+          const wordText = this.formatWordHpp(tok[hppField] || tok.hpp, joiningMode, tok.sylBoundaries);
+          const isDerived = tok[trustField] !== 'official';
+          if (isDerived) {
+            const cls = italicUnverified ? 'wb-derived-word is-italic' : 'wb-derived-word';
+            out += `<span class="${cls}" title="字級／規則推導（尚待人工審定）">${esc(wordText)}</span>`;
+          } else {
+            out += esc(wordText);
+          }
         }
         prevWasWord = true;
       }
@@ -1051,8 +1881,17 @@
             prevWasWord = false;
           } else {
             const p = tok.hpp !== undefined ? tok.hpp : tok.han;
-            stream.push({ type: BLOCK_PUNCT_RE.test(p) ? 'block' : 'punct', text: p });
-            prevWasWord = false;
+            if (p === '(') {
+              if (prevWasWord) stream.push({ type: 'word-space' });
+              stream.push({ type: 'open-paren', text: '(' });
+              prevWasWord = false;
+            } else if (p === ')') {
+              stream.push({ type: 'punct', text: ')' });
+              prevWasWord = true;
+            } else {
+              stream.push({ type: 'block', text: p });
+              prevWasWord = false;
+            }
           }
           continue;
         }
@@ -1076,6 +1915,12 @@
             if (sepBefore) stream.push({ type: 'sep', text: sepBefore });
             stream.push({ type: 'syl', text: syls[i], noSandhi: Boolean(tok.noSandhi && tok.noSandhi[i]) });
           }
+          if (tok.nanHpp) {
+            stream.push({ type: 'word-space' });
+            stream.push({ type: 'open-paren', text: '(' });
+            stream.push({ type: 'block', text: this.formatWordHpp(tok.nanHpp, joiningMode, tok.sylBoundaries) });
+            stream.push({ type: 'punct', text: ')' });
+          }
         }
         prevWasWord = true;
       }
@@ -1092,6 +1937,8 @@
         } else if (item.type === 'word-space') {
           out += ' ';
         } else if (item.type === 'sep') {
+          out += esc(item.text);
+        } else if (item.type === 'open-paren') {
           out += esc(item.text);
         } else if (item.type === 'block' || item.type === 'punct') {
           if (item.type === 'block') prevSyl = '';
@@ -1138,11 +1985,15 @@
   RomaineAutoEngine.NO_SANDHI_MARKER_KEY = NO_SANDHI_MARKER_KEY;
   RomaineAutoEngine.UNVERIFIED_ITALIC_KEY = UNVERIFIED_ITALIC_KEY;
   RomaineAutoEngine.TRUST_UNDERLINE_KEY = TRUST_UNDERLINE_KEY;
+  RomaineAutoEngine.RAOPING_TRACKS_KEY = RAOPING_TRACKS_KEY;
   RomaineAutoEngine.getNoSandhiMarker = getNoSandhiMarker;
   RomaineAutoEngine.setNoSandhiMarker = setNoSandhiMarker;
   RomaineAutoEngine.getUnverifiedItalic = getUnverifiedItalic;
   RomaineAutoEngine.setUnverifiedItalic = setUnverifiedItalic;
   RomaineAutoEngine.getTrustUnderline = getTrustUnderline;
   RomaineAutoEngine.setTrustUnderline = setTrustUnderline;
+  RomaineAutoEngine.getRaopingTracks = getRaopingTracks;
+  RomaineAutoEngine.setRaopingTracks = setRaopingTracks;
+  RomaineAutoEngine.expandRaopingSentenceVariants = expandRaopingSentenceVariants;
   root.RomaineAutoEngine = RomaineAutoEngine;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

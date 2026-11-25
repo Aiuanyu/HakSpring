@@ -49,7 +49,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.77" />
+    <link rel="stylesheet" href="style.css?v=4.7.89" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -81,8 +81,11 @@
       src="js/gip-superscript.js?v=1.0.1"
       defer
     ></script>
-    <script type="text/javascript" src="js/romaine-join.js?v=1.0.0" defer></script>
-    <script type="text/javascript" src="js/romanizer.js?v=1.0.8" defer></script>
+    <script type="text/javascript" src="js/romaine-join.js?v=1.0.1" defer></script>
+    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.15" defer></script>
+    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.19" defer></script>
+    <script type="text/javascript" src="js/romaine-workbench.js?v=1.0.6" defer></script>
+    <script type="text/javascript" src="js/romanizer.js?v=1.0.9" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
       type="text/javascript"
@@ -208,9 +211,16 @@
         <button id="infoButton" title="看說明文件">
           <i class="fas fa-info-circle"></i>
         </button>
-        <button id="showRomanizerBtn" title="客語羅馬字轉換工具">
+        <button id="showRomanizerBtn" type="button" title="蘿蔓生菜工作台（客話羅馬字轉換／主表即時校對）" aria-pressed="false">
           <i class="fas fa-pen-to-square"></i>
         </button>
+        <button
+          id="autoSentenceHppBtn"
+          type="button"
+          class="header-pill-btn is-active"
+          title="切換主表例句羅馬字＋Sandhi 顯示"
+          aria-pressed="true"
+        >句 Lo</button>
         <span id="progressDetails"></span>
         <!-- <--- 在這裡加入這個 span -->
         <div id="search-container">
@@ -1233,7 +1243,10 @@
         </span>
       </div>
 
-      <div id="generated"></div>
+      <div id="mainWorkspaceLayout" class="main-workspace-layout">
+        <div id="generated"></div>
+        <aside id="romaineWorkbenchPane" class="romaine-workbench-pane" aria-label="蘿蔓生菜工作台" hidden></aside>
+      </div>
 
       <button id="backToTopBtn" title="歸頂高">
         <i class="fas fa-arrow-up"></i>
@@ -1482,6 +1495,69 @@
               <input type="checkbox" id="meinungFillToggle" />
               <span class="toggle-slider"></span>
             </label>
+          </div>
+          <!-- 例句羅馬字（句 Lo）：無愛變調个標示字元 & 未審查句竵體／斜體 -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label>無愛變調个標示字元</label>
+              <span class="setting-description"
+                >語料裡肚輸入 <code>~</code> 抑係 <code>#</code> 都做得，這位切換畫面上背顯示个標示字元（同工作台設定連動）</span
+              >
+            </div>
+            <div class="romaine-marker-radios" role="radiogroup" aria-label="無愛變調个標示字元">
+              <label class="romaine-radio-option">
+                <input type="radio" name="romaineNoSandhiMarker" value="#" />
+                <code>#</code>
+              </label>
+              <label class="romaine-radio-option">
+                <input type="radio" name="romaineNoSandhiMarker" value="~" checked />
+                <code>~</code>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="romaineUnverifiedItalicToggle">毋曾有人審查過个句仔用竵體／斜體</label>
+              <span class="setting-description"
+                >勾擇時，程式自動推導、還毋曾人工審查過个例句羅馬字會用竵體／斜體顯示（同工作台設定連動）</span
+              >
+            </div>
+            <label style="display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;">
+              <input
+                type="checkbox"
+                id="romaineUnverifiedItalicToggle"
+                checked
+                style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color, #2d6a4f);"
+              />
+            </label>
+          </div>
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="romaineTrustUnderlineToggle">用底線表示例句羅馬字个可信度</label>
+              <span class="setting-description"
+                >預設關（用空心圓圈 <code>i</code> 圖示：紫紅＝未校對、黃＝作者初校、綠＝社群確認）；勾擇時改用底線（虛線＝未校對、點線＝作者初校、實線＝社群確認，同工作台設定連動）</span
+              >
+            </div>
+            <label style="display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;">
+              <input
+                type="checkbox"
+                id="romaineTrustUnderlineToggle"
+                style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color, #2d6a4f);"
+              />
+            </label>
+          </div>
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label>饒平例句地區顯示（竹／卓／桃）</label>
+              <span class="setting-description"
+                >開啟「句 Lo」或工作台顯示饒平例句時，可自由切換要顯示哪幾隻地區音（新竹含 6 條連讀變調；卓蘭、桃園目前顯示本調，同工作台設定連動）</span
+              >
+            </div>
+            <div class="romaine-raoping-setting-checks" role="group" aria-label="饒平例句地區顯示">
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="zhuk" checked /><span class="variant-label variant-label-竹">竹</span>新竹</label>
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="zhuolan" checked /><span class="variant-label variant-label-卓">卓</span>卓蘭</label>
+              <label class="wb-raoping-chip"><input type="checkbox" name="romaineRaopingTrackSetting" value="taoyuan" checked /><span class="variant-label variant-label-桃">桃</span>桃園</label>
+            </div>
           </div>
           <!-- 從舊摺疊面板 #infoSettingsPanel 搬過來，統一由這個設定 modal 管理 -->
           <div class="setting-item" style="margin-bottom: 20px">

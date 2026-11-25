@@ -62,9 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (showRomanizerBtn) {
-    showRomanizerBtn.addEventListener('click', showRomanizer);
-  }
+  // #showRomanizerBtn 已改由 js/romaine-workbench.js 接管；舊版彈窗介面保留備用
+  window.legacyShowRomanizer = showRomanizer;
   if (romanizerCloseBtn) {
     romanizerCloseBtn.addEventListener('click', hideRomanizer);
   }
