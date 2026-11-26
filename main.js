@@ -334,10 +334,13 @@ function appendMultiReadingLayers(ruby, readings, dialectCode, wrap) {
  *
  * @param {string} baseHtml - ruby 基礎文字（漢字/詞彙 HTML）
  * @param {string} rtHtml - ruby rt 標音 HTML
+ * @param {{ dunAtTopLevel?: boolean }} [options] - dunAtTopLevel：頂層（無括號）个頓號也算斷點。
+ *   南四縣等地區變體个【】內容（例：【大番薯、大戇霸】）剝掉【】後頓號就在頂層，愛開這个才斷得。
  * @returns {{ baseSegs: string[], rtSegs: string[] } | null} 切分後的段落，若無斷點則回傳 null
  */
-function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
+function splitRubyByBaseBreakpoints(baseHtml, rtHtml, options) {
   if (!baseHtml) return null;
+  const dunAtTopLevel = !!(options && options.dunAtTopLevel);
 
   function tokenize(html) {
     const tokens = [];
@@ -362,7 +365,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
         if (ch === '（' || ch === '(') { baseHasParen = true; depth++; }
         else if (ch === '）' || ch === ')') depth = Math.max(0, depth - 1);
         else if (ch === '／' || ch === '/') baseHasSlash = true;
-        else if (ch === '、' && depth > 0) baseHasDun = true;
+        else if (ch === '、' && (depth > 0 || dunAtTopLevel)) baseHasDun = true;
       }
     }
   }
@@ -443,7 +446,7 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
             }
             // 括號裡肚个頓號：異體詞分隔，像括號共樣斷行（頓號留佇頭前該行尾）
             if (baseHasDun) {
-              if (char === '、' && parenDepth > 0) {
+              if (char === '、' && (parenDepth > 0 || dunAtTopLevel)) {
                 doSplitAfter = true;
                 afterKind = 'dun';
               }
@@ -619,7 +622,9 @@ function adjustRubyFontSize(targetElement) {
       baseHtml = rubyElement.innerHTML;
     }
 
-    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml);
+    // 副音變體（南／美／卓／桃）个【】內容已經剝掉【】，頓號在頂層，也愛當斷點
+    const isSubVariant = !!(rubyElement.closest && rubyElement.closest('.variant-sub'));
+    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml, { dunAtTopLevel: isSubVariant });
     if (splitRes && splitRes.baseSegs && splitRes.baseSegs.length > 1) {
       // 依斷點重繪為不同行 ruby
       const group = document.createElement('span');

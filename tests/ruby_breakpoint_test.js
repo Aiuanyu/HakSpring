@@ -103,6 +103,19 @@ runTest('Word with multiple items in parentheses', () => {
 
 console.log(`🎉 All ${passedTests} ruby breakpoint unit tests passed successfully!\n`);
 
+// 6b. 南四縣等副音變體个【】內容（剝掉【】後頓號在頂層）：愛開 dunAtTopLevel 正會斷
+runTest('Top-level dun breaks only when dunAtTopLevel is on (sub-variant 【】 content)', () => {
+  const base = '大番薯、大戇霸';
+  const rt = 'tai fán sǔ、tai ngong ba';
+  // 預設（無開）：頂層頓號毋算斷點，維持原本行為
+  assert.strictEqual(splitRubyByBaseBreakpoints(base, rt), null);
+  const res = splitRubyByBaseBreakpoints(base, rt, { dunAtTopLevel: true });
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['大番薯、', '大戇霸']);
+  assert.deepStrictEqual(res.rtSegs, ['tai fán sǔ、', 'tai ngong ba']);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+});
+
 // 7. RT mismatch falls back
 runTest('Mismatched segments fallback to null', () => {
   const base = '沙壩（沙埔、沙灘）';
