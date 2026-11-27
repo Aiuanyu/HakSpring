@@ -30,6 +30,24 @@ LEVEL_MAP = {
 
 # --- Data Cleaning and Transformation Functions ---
 
+def clean_display_whitespace(text):
+    """認證「客語標音」顯示欄个空白雜訊：不換行空白（\\xa0）、全形空白、換行，一律當一般空白，
+    連續空白併做一格，頭尾拿忒（C3，20261127）。
+    原本个問題：\\xa0 兩爿無空白个詞（ǐn\\xa0ióng）斷毋開，換行符會變字面空白，雙空白害版面空一格。
+    只動空白，毋動任何字母、調符、標點。"""
+    if not text:
+        return text
+    return re.sub(r'[ \t\r\n\u00a0\u3000]+', ' ', text).strip()
+
+
+def clean_word_whitespace(text):
+    """詞目欄个空白雜訊：換行符拿忒（例：幼稚園⏎（幼兒園）→ 幼稚園（幼兒園）），
+    頭尾个空白、不換行空白、全形空白拿忒（教典有 18 條詞目尾巴有全形空白或 \\xa0）。"""
+    if not text:
+        return text
+    return re.sub(r'[\r\n]+', '', text).strip()
+
+
 def comprehensive_clean_spacing(text):
     if not text: return ""
     all_hakka_vowels = "áàăâāǎéèĕêēěíìĭîīǐóòŏôōǒúùŭûūǔńňǹm̄ḿm̌m̂m̀n̄ńňn̂ǹ"
@@ -353,12 +371,12 @@ def parse_cert_csv(file_path, dialect_reverse_map, vowel_map, vowel_priority):
         dict_reader = csv.DictReader(f, fieldnames=header)
         for row in dict_reader:
             standard_item = {h: "" for h in UNIFIED_SCHEMA_HEADERS}
-            display_phonetic = row.get(f'{dialect_prefix}客語標音', '')
+            display_phonetic = clean_display_whitespace(row.get(f'{dialect_prefix}客語標音', ''))
             numeric_phonetic = convert_diacritic_to_numeric(display_phonetic, specific_dialect_map, vowel_map, vowel_priority)
 
             standard_item.update({
                 '編號': row.get('編號', ''),
-                '客家語': row.get(f'{dialect_prefix}客家語', ''),
+                '客家語': clean_word_whitespace(row.get(f'{dialect_prefix}客家語', '')),
                 '華語詞義': row.get(f'{dialect_prefix}華語詞義', ''),
                 '例句': clean_example_sentence(row.get(f'{dialect_prefix}例句', row.get('例句', ''))),
                 '翻譯': clean_translation(row.get(f'{dialect_prefix}翻譯', row.get('翻譯', ''))),
@@ -556,7 +574,7 @@ def parse_gip_csv(file_path, tone_map_data, dialect_char, tracker=None):
             phonetic_display, phonetic_query = split_gip_phonetic(cleaned_phonetic, current_tone_map)
             standard_item.update({
                 '編號': gip_id,
-                '客家語': hanji,
+                '客家語': clean_word_whitespace(hanji),
                 '華語詞義': re.sub(r'(\d+\.)\s*', r'\1 ', row.get('釋義', '').replace('　', '<br>')),
                 '詞目音檔名': row.get('對應音檔名稱', '').strip(),
                 '例句': cleaned_example,
