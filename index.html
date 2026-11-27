@@ -49,7 +49,7 @@
       href="android-chrome-512x512.png"
     />
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="style.css?v=4.7.92" />
+    <link rel="stylesheet" href="style.css?v=4.7.93" />
     <link href="https://tauhu.tw/tauhu-oo.css" rel="stylesheet" />
 
     <!-- 先載入外部 SDK -->
@@ -74,7 +74,7 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.117" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.118" defer></script>
     <script type="text/javascript" src="js/sync-survey.js?v=1.1.1" defer></script>
     <script
       type="text/javascript"
@@ -82,9 +82,9 @@
       defer
     ></script>
     <script type="text/javascript" src="js/romaine-join.js?v=1.0.1" defer></script>
-    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.16" defer></script>
-    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.22" defer></script>
-    <script type="text/javascript" src="js/romaine-workbench.js?v=1.0.8" defer></script>
+    <script type="text/javascript" src="js/romaine-auto.js?v=1.0.18" defer></script>
+    <script type="text/javascript" src="js/romaine-table-overlay.js?v=1.0.25" defer></script>
+    <script type="text/javascript" src="js/romaine-workbench.js?v=1.0.12" defer></script>
     <script type="text/javascript" src="js/romanizer.js?v=1.0.9" defer></script>
     <script type="text/javascript" src="js/supabase-config.js" defer></script>
     <script
@@ -1493,6 +1493,19 @@
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="meinungFillToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <!-- 變調字有色目（預設開；關忒時變調字維持原字色，仍保留上標變調數字） -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="sandhiColorToggle">變調字有色目</label>
+              <span class="setting-description"
+                >預設開，依變調調值顯示無共樣个色目；關忒時變調字維持原字色（上標變調數字仍保留）</span
+              >
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="sandhiColorToggle" checked />
               <span class="toggle-slider"></span>
             </label>
           </div>

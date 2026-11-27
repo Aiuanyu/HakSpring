@@ -3,7 +3,7 @@
   "items": [
     {
       "id": "v-1795309091904",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "略略仔#發燒。",
       "tokens": [
         {
@@ -30,7 +30,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T20:35:48.074Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-1",
         "category": "1人體與醫療",
@@ -39,7 +39,7 @@
     },
     {
       "id": "v-1795309152306",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "做護理師，愛有耐心。",
       "tokens": [
         {
@@ -78,7 +78,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:05:55.410Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-2",
         "category": "1人體與醫療",
@@ -87,7 +87,7 @@
     },
     {
       "id": "v-1795310301134",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "病院在車頭#就近。",
       "tokens": [
         {
@@ -121,7 +121,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T01:18:21.135Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-3",
         "category": "1人體與醫療",
@@ -130,7 +130,7 @@
     },
     {
       "id": "v-1795311782046",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "先生開个藥，愛記得照時間食。\n這#菜#無射藥，會用#安心食。",
       "tokens": [
         {
@@ -238,7 +238,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T01:43:02.046Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-4",
         "category": "1人體與醫療",
@@ -247,7 +247,7 @@
     },
     {
       "id": "v-1795329836837",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "今日先生無拁人䀴病。",
       "tokens": [
         {
@@ -281,7 +281,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T06:43:56.837Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-5",
         "category": "1人體與醫療",
@@ -290,7 +290,7 @@
     },
     {
       "id": "v-1795330128889",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "洗好膴身，感覺真+快活。\n佢#+人#無快活，今日討#請假。",
       "tokens": [
         {
@@ -385,7 +385,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T06:48:48.889Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-6",
         "category": "1人體與醫療",
@@ -394,7 +394,7 @@
     },
     {
       "id": "v-1795330495491",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "阿弟想討屙尿，直直+尋便所。",
       "tokens": [
         {
@@ -437,7 +437,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T06:54:55.492Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-7",
         "category": "1人體與醫療",
@@ -446,7 +446,7 @@
     },
     {
       "id": "v-1795330892867",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#去便所屙屎，你#討#等#+一下無？",
       "tokens": [
         {
@@ -517,7 +517,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:01:32.868Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-8",
         "category": "1人體與醫療",
@@ -527,7 +527,7 @@
     },
     {
       "id": "v-1795331454733",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#毋知食+著麼个，屙个屁#真臭。",
       "tokens": [
         {
@@ -588,7 +588,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:11:35.227Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-9",
         "category": "1人體與醫療",
@@ -597,7 +597,7 @@
     },
     {
       "id": "v-1795331993986",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "歸日頭那#疾。",
       "tokens": [
         {
@@ -627,7 +627,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:19:53.987Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-10",
         "category": "1人體與醫療",
@@ -636,7 +636,7 @@
     },
     {
       "id": "v-1795332438720",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "剃頭那毛。\n佢#个頭那毛#烏金烏金，足靚个！",
       "tokens": [
         {
@@ -706,7 +706,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:27:18.722Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-11",
         "category": "1人體與醫療",
@@ -716,7 +716,7 @@
     },
     {
       "id": "v-1795332728287",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "老#啊！目珠+花花。",
       "tokens": [
         {
@@ -750,7 +750,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:32:08.287Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-13",
         "category": "1人體與醫療",
@@ -760,7 +760,7 @@
     },
     {
       "id": "v-1795332758304",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "講佢兩句，即目汁直直流。",
       "tokens": [
         {
@@ -811,7 +811,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:32:38.304Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-14",
         "category": "1人體與醫療",
@@ -820,7 +820,7 @@
     },
     {
       "id": "v-1795332789461",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "鼻#+塞塞。",
       "tokens": [
         {
@@ -843,7 +843,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:33:09.461Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-15",
         "category": "1人體與醫療",
@@ -852,7 +852,7 @@
     },
     {
       "id": "v-1795332894122",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#耳子#無利，你#講事#愛#較大聲兜。",
       "tokens": [
         {
@@ -931,7 +931,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:34:54.122Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-16",
         "category": "1人體與醫療",
@@ -940,7 +940,7 @@
     },
     {
       "id": "v-1795333726616",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#个嘴真+大，會用#一口食半碗飯。\n佢#食墨斗魚，食到#嘴#烏烏。",
       "tokens": [
         {
@@ -1067,7 +1067,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:48:46.617Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-17",
         "category": "1人體與醫療",
@@ -1077,7 +1077,7 @@
     },
     {
       "id": "v-1795333871036",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "牙#+疾，愛去得先生䀴。\n阿嬰#正發牙。",
       "tokens": [
         {
@@ -1154,7 +1154,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:51:11.037Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-18",
         "category": "1人體與醫療",
@@ -1163,7 +1163,7 @@
     },
     {
       "id": "v-1795334176717",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "晨早#起來愛洗牙#洗面。",
       "tokens": [
         {
@@ -1205,7 +1205,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:56:16.717Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-19",
         "category": "1人體與醫療",
@@ -1215,7 +1215,7 @@
     },
     {
       "id": "v-1795334234352",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "感覺肩頭#硬硬#个款。",
       "tokens": [
         {
@@ -1257,7 +1257,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:57:14.352Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-20",
         "category": "1人體與醫療",
@@ -1266,7 +1266,7 @@
     },
     {
       "id": "v-1795334260183",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "阿怙#牽著𠊎#个手。",
       "tokens": [
         {
@@ -1304,7 +1304,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:57:40.183Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-21",
         "category": "1人體與醫療",
@@ -1313,7 +1313,7 @@
     },
     {
       "id": "v-1795334322500",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "阿弟个手指頭#得門#夾+著，疾到直直+唩。",
       "tokens": [
         {
@@ -1383,7 +1383,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:58:42.500Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-22",
         "category": "1人體與醫療",
@@ -1392,7 +1392,7 @@
     },
     {
       "id": "v-1795334393554",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "食+著無淨俐#个物件，食肚#+疾#直直+走便所。",
       "tokens": [
         {
@@ -1463,7 +1463,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T07:59:53.554Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-23",
         "category": "1人體與醫療",
@@ -1472,7 +1472,7 @@
     },
     {
       "id": "v-1795334678257",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "洗+膴身遐#下#腳#愛#洗淨俐。",
       "tokens": [
         {
@@ -1524,7 +1524,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T08:04:38.257Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-24",
         "category": "1人體與醫療",
@@ -1534,7 +1534,7 @@
     },
     {
       "id": "v-1795334757477",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "阿依#企傷久，身體#拄+毋會+核#啊！",
       "tokens": [
         {
@@ -1600,7 +1600,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T08:05:57.477Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-25",
         "category": "1人體與醫療",
@@ -1609,7 +1609,7 @@
     },
     {
       "id": "v-1795334799443",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#跌倒，骨頭#斷去。",
       "tokens": [
         {
@@ -1655,7 +1655,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T08:06:39.443Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-26",
         "category": "1人體與醫療",
@@ -1664,7 +1664,7 @@
     },
     {
       "id": "v-1795334832980",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "厥#屋下有五個 人。",
       "tokens": [
         {
@@ -1710,7 +1710,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T08:07:12.980Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-27",
         "category": "1人體與醫療",
@@ -1719,7 +1719,7 @@
     },
     {
       "id": "v-1795334879732",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#个聲真軟柔，聽著心情#即真+好。",
       "tokens": [
         {
@@ -1785,7 +1785,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T08:07:59.732Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "1-28",
         "category": "1人體與醫療",
@@ -1794,7 +1794,7 @@
     },
     {
       "id": "v-1795361032891",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "食+飽+夜#來去#散步#好無？",
       "tokens": [
         {
@@ -1845,7 +1845,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T15:23:52.892Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-1",
         "category": "2心理活動與感覺",
@@ -1854,7 +1854,7 @@
     },
     {
       "id": "v-1795362672518",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "罐-子插一蕊花。",
       "tokens": [
         {
@@ -1888,7 +1888,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T15:51:12.518Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-2",
         "category": "2心理活動與感覺",
@@ -1897,7 +1897,7 @@
     },
     {
       "id": "v-1795363025423",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "後禮拜#愛考試，你#知無？\n逐擺#攏按，賞#到毋#+知好轉。",
       "tokens": [
         {
@@ -2014,7 +2014,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T15:57:05.423Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-3",
         "category": "2心理活動與感覺",
@@ -2024,7 +2024,7 @@
     },
     {
       "id": "v-1795363105176",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "買個#等路#送佢，得+佢#歡喜一下。",
       "tokens": [
         {
@@ -2093,7 +2093,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T15:58:25.176Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-4",
         "category": "2心理活動與感覺",
@@ -2102,7 +2102,7 @@
     },
     {
       "id": "v-1795391115201",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "你#講佢#怪怪？𠊎#即感覺毋會出。\n轉+寒#啊！你#無感覺係#無？",
       "tokens": [
         {
@@ -2223,7 +2223,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T23:45:15.201Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-5",
         "category": "2心理活動與感覺",
@@ -2232,7 +2232,7 @@
     },
     {
       "id": "v-1795391154776",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "恁久#無來，你#猶記得路#無？",
       "tokens": [
         {
@@ -2293,7 +2293,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T23:45:54.776Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-6",
         "category": "2心理活動與感覺",
@@ -2302,7 +2302,7 @@
     },
     {
       "id": "v-1795391172790",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "佢#頭+驚蛇。",
       "tokens": [
         {
@@ -2334,7 +2334,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T23:46:12.790Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-7",
         "category": "2心理活動與感覺",
@@ -2343,7 +2343,7 @@
     },
     {
       "id": "v-1795391224350",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "毋#使#恁#緊張。\n緊張到舌打結。",
       "tokens": [
         {
@@ -2402,7 +2402,7 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T23:47:04.351Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-8",
         "category": "2心理活動與感覺",
@@ -2411,7 +2411,7 @@
     },
     {
       "id": "v-1795391275904",
-      "dialect": "zhaoan",
+      "dialect": "zhioon",
       "han": "阿公頭愛食腹內。\n愛食、愛+聽、愛賞。",
       "tokens": [
         {
@@ -2488,12 +2488,2148 @@
       "source": "romaine-auto-poc",
       "updated_at": "2026-11-22T23:47:55.905Z",
       "cert_ref": {
-        "dialect": "zhaoan",
+        "dialect": "zhioon",
         "level": "基礎級",
         "id": "2-9",
         "category": "2心理活動與感覺",
         "han": "愛"
       }
+    },
+    {
+      "dialect": "xiien",
+      "han": "佢在 這位做事十過 年，堵著事情就像伯公+生+鬚，毋會緊張。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gǐ"
+        },
+        {
+          "han": "在",
+          "hpp": "di"
+        },
+        {
+          "han": " ",
+          "hpp": " ",
+          "punct": true
+        },
+        {
+          "han": "這位",
+          "hpp": "ià vi"
+        },
+        {
+          "han": "做事",
+          "hpp": "zo se"
+        },
+        {
+          "han": "十",
+          "hpp": "siib"
+        },
+        {
+          "han": "過",
+          "hpp": "go"
+        },
+        {
+          "han": " ",
+          "hpp": " ",
+          "punct": true
+        },
+        {
+          "han": "年",
+          "hpp": "ngiěn"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "堵著",
+          "hpp": "dǔ dò"
+        },
+        {
+          "han": "事情",
+          "hpp": "sii qǐn"
+        },
+        {
+          "han": "就像",
+          "hpp": "qiu qiong"
+        },
+        {
+          "han": "伯公生鬚",
+          "hpp": "bàg gúng sáng xí",
+          "sylBoundaries": [
+            "normal",
+            "space",
+            "space"
+          ]
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "毋會",
+          "hpp": "m̌ voi"
+        },
+        {
+          "han": "緊張",
+          "hpp": "gìn zóng"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Gǐ di (té) iàvi zose siib go ngiěn (ngiǎn), dǔdò siiqǐn qiuqiong bàggúng sáng xí, m̌voi gìnzóng.",
+      "note": "",
+      "updated_at": "2026-11-25T03:59:28.299Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-15",
+        "word": "伯公生鬚"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "毋好恁仔有也講無也講，恁半憨痴會分人笑。",
+      "tokens": [
+        {
+          "han": "毋好",
+          "hpp": "M̌ hò"
+        },
+        {
+          "han": "恁仔",
+          "hpp": "àn ě"
+        },
+        {
+          "han": "有",
+          "hpp": "iú"
+        },
+        {
+          "han": "也",
+          "hpp": "ia"
+        },
+        {
+          "han": "講",
+          "hpp": "gòng"
+        },
+        {
+          "han": "無",
+          "hpp": "mǒ"
+        },
+        {
+          "han": "也",
+          "hpp": "ia"
+        },
+        {
+          "han": "講",
+          "hpp": "gòng"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "恁",
+          "hpp": "àn"
+        },
+        {
+          "han": "半憨痴",
+          "hpp": "ban hám cé"
+        },
+        {
+          "han": "會",
+          "hpp": "voi"
+        },
+        {
+          "han": "分",
+          "hpp": "bún"
+        },
+        {
+          "han": "人",
+          "hpp": "ngǐn"
+        },
+        {
+          "han": "笑",
+          "hpp": "seu"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "M̌hò àn'ě (àn'é) iú ia gòng mǒ ia gòng, àn banhámcé voi bún ngǐn seu.",
+      "note": "",
+      "updated_at": "2026-11-25T04:33:09.220Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-16",
+        "word": "半憨痴"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "自家恁好做，這下背囊+背+砧枋斯莫怨怪別人！",
+      "tokens": [
+        {
+          "han": "自家",
+          "hpp": "Cii gá"
+        },
+        {
+          "han": "恁",
+          "hpp": "àn"
+        },
+        {
+          "han": "好",
+          "hpp": "hò"
+        },
+        {
+          "han": "做",
+          "hpp": "zo"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "這下",
+          "hpp": "ià ha"
+        },
+        {
+          "han": "背囊背砧枋",
+          "hpp": "boi nǒng bǎ zém bióng",
+          "sylBoundaries": [
+            "normal",
+            "space",
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "斯",
+          "hpp": "sǐi"
+        },
+        {
+          "han": "莫",
+          "hpp": "mog"
+        },
+        {
+          "han": "怨怪",
+          "hpp": "ien guai"
+        },
+        {
+          "han": "別人",
+          "hpp": "ped ngǐn"
+        },
+        {
+          "han": "！",
+          "hpp": "! ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ciigá àn hò zo, iàha boinǒng bǎ zémbióng sǐi mog ien'guai (ian'guai) pedngǐn!",
+      "note": "",
+      "updated_at": "2026-11-25T04:33:43.460Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-20",
+        "word": "背囊背砧枋"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "這後生人動啊著就砰砰滾，面臭臭看+起來實在當得=人=惱。",
+      "tokens": [
+        {
+          "han": "這",
+          "hpp": "Ià"
+        },
+        {
+          "han": "後生人",
+          "hpp": "heu sáng ngǐn"
+        },
+        {
+          "han": "動啊著",
+          "hpp": "túng a dò"
+        },
+        {
+          "han": "就",
+          "hpp": "qiu"
+        },
+        {
+          "han": "砰砰滾",
+          "hpp": "bang bang gùn"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "面臭臭",
+          "hpp": "mien cu cu"
+        },
+        {
+          "han": "看起來",
+          "hpp": "kon hì lǒi",
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "實在",
+          "hpp": "siid cai"
+        },
+        {
+          "han": "當",
+          "hpp": "dóng"
+        },
+        {
+          "han": "得人惱",
+          "hpp": "dèd ngǐn náu",
+          "sylBoundaries": [
+            "hyphen",
+            "hyphen"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ià heusángngǐn túng'adò qiu bangbanggùn, miencucu kon hìlǒi siidcai dóng dèd-ngǐn-náu.",
+      "note": "",
+      "updated_at": "2026-11-25T04:34:31.181Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-21",
+        "word": "砰砰滾（拚拚滾）"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "阿=明屋下當苦，愛用著錢該下輒輒挷+東籬+補+西壁。",
+      "tokens": [
+        {
+          "han": "阿明",
+          "hpp": "Á Mǐn",
+          "sylBoundaries": [
+            "hyphen"
+          ]
+        },
+        {
+          "han": "屋下",
+          "hpp": "vùg ká"
+        },
+        {
+          "han": "當",
+          "hpp": "dóng"
+        },
+        {
+          "han": "苦",
+          "hpp": "kù"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "愛",
+          "hpp": "oi"
+        },
+        {
+          "han": "用",
+          "hpp": "iung"
+        },
+        {
+          "han": "著",
+          "hpp": "dò"
+        },
+        {
+          "han": "錢",
+          "hpp": "qiěn"
+        },
+        {
+          "han": "該下",
+          "hpp": "ge ha"
+        },
+        {
+          "han": "輒輒",
+          "hpp": "jiab jiab"
+        },
+        {
+          "han": "挷東籬補西壁",
+          "hpp": "báng dúng lǐ bù xí biàg",
+          "sylBoundaries": [
+            "space",
+            "normal",
+            "space",
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Á-Mǐn vùgká (lùgká) dóng kù, oi iung dò qiěn geha jiabjiab báng dúnglǐ bù xíbiàg.",
+      "note": "",
+      "updated_at": "2026-11-25T04:36:49.819Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-22",
+        "word": "挷東籬補西壁"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "厥店項生理恁好，愛挷縫來食一下飯都無+恁+該。",
+      "tokens": [
+        {
+          "han": "厥",
+          "hpp": "Giá"
+        },
+        {
+          "han": "店",
+          "hpp": "diam"
+        },
+        {
+          "han": "項",
+          "hpp": "hong"
+        },
+        {
+          "han": "生理",
+          "hpp": "sén lí"
+        },
+        {
+          "han": "恁",
+          "hpp": "àn"
+        },
+        {
+          "han": "好",
+          "hpp": "hò"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "愛",
+          "hpp": "oi"
+        },
+        {
+          "han": "挷縫",
+          "hpp": "báng pung"
+        },
+        {
+          "han": "來",
+          "hpp": "lǒi"
+        },
+        {
+          "han": "食",
+          "hpp": "siid"
+        },
+        {
+          "han": "一",
+          "hpp": "ìd"
+        },
+        {
+          "han": "下",
+          "hpp": "ha"
+        },
+        {
+          "han": "飯",
+          "hpp": "fan"
+        },
+        {
+          "han": "都",
+          "hpp": "du"
+        },
+        {
+          "han": "無恁該",
+          "hpp": "mǒ àn gói",
+          "sylBoundaries": [
+            "space",
+            "space"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Giá diam hong sénlí àn hò, oi bángpung lǒi siid ìd ha fan du (dú) mǒ àn gói.",
+      "note": "",
+      "updated_at": "2026-11-25T06:17:08.176Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-23",
+        "word": "挷縫抽空。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "你去臺-北，做得分𠊎挷+衫尾無？",
+      "tokens": [
+        {
+          "han": "你",
+          "hpp": "Ň"
+        },
+        {
+          "han": "去",
+          "hpp": "hi"
+        },
+        {
+          "han": "臺北",
+          "hpp": "Tǒi bèd",
+          "sylBoundaries": [
+            "normal"
+          ]
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "做得",
+          "hpp": "zo dèd"
+        },
+        {
+          "han": "分",
+          "hpp": "bún"
+        },
+        {
+          "han": "𠊎",
+          "hpp": "ngǎi"
+        },
+        {
+          "han": "挷衫尾",
+          "hpp": "báng sám mí",
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "無",
+          "hpp": "mǒ"
+        },
+        {
+          "han": "？",
+          "hpp": "? ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ň hi Tǒibèd, zodèd bún ngǎi báng sámmí mǒ?",
+      "note": "",
+      "updated_at": "2026-11-25T06:19:30.779Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-24",
+        "word": "挷衫尾喻跟隨人後。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "佢斯無分人 講个，動啊著就變面。",
+      "tokens": [
+        {
+          "han": "佢",
+          "hpp": "Gǐ"
+        },
+        {
+          "han": "斯",
+          "hpp": "sǐi"
+        },
+        {
+          "han": "無",
+          "hpp": "mǒ"
+        },
+        {
+          "han": "分",
+          "hpp": "bún"
+        },
+        {
+          "han": "人",
+          "hpp": "ngǐn"
+        },
+        {
+          "han": " ",
+          "hpp": " ",
+          "punct": true
+        },
+        {
+          "han": "講",
+          "hpp": "gòng"
+        },
+        {
+          "han": "个",
+          "hpp": "ge"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "動啊著",
+          "hpp": "túng a dò"
+        },
+        {
+          "han": "就",
+          "hpp": "qiu"
+        },
+        {
+          "han": "變面",
+          "hpp": "bien mien"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Gǐ sǐi mǒ bún ngǐn gòng ge, túng'adò qiu bienmien.",
+      "note": "",
+      "updated_at": "2026-11-25T06:20:14.178Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-27",
+        "word": "變面翻臉。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "還發冷，好好个面爪到流血。",
+      "tokens": [
+        {
+          "han": "還",
+          "hpp": "Hǎn"
+        },
+        {
+          "han": "發冷",
+          "hpp": "bòd láng"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "好好",
+          "hpp": "hò hò"
+        },
+        {
+          "han": "个",
+          "hpp": "ge"
+        },
+        {
+          "han": "面",
+          "hpp": "mien"
+        },
+        {
+          "han": "爪",
+          "hpp": "zàu"
+        },
+        {
+          "han": "到",
+          "hpp": "do"
+        },
+        {
+          "han": "流血",
+          "hpp": "liǔ hièd"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Hǎn bòdláng, hòhò ge mien zàu do liǔhièd (liǔhiàd).",
+      "note": "",
+      "updated_at": "2026-11-25T06:20:25.527Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-30",
+        "word": "發冷發冷無聊，責備人沒有做得完善的話。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "發大冷个，自家个爺哀發病仔毋照顧，還敢去花-天-酒-地。",
+      "tokens": [
+        {
+          "han": "發大冷个",
+          "hpp": "Bòd tai láng ge"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "自家",
+          "hpp": "cii gá"
+        },
+        {
+          "han": "个",
+          "hpp": "ge"
+        },
+        {
+          "han": "爺哀",
+          "hpp": "iǎ ói"
+        },
+        {
+          "han": "發病仔",
+          "hpp": "bòd piang è"
+        },
+        {
+          "han": "毋",
+          "hpp": "m̌"
+        },
+        {
+          "han": "照顧",
+          "hpp": "zeu gu"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "還",
+          "hpp": "hǎn"
+        },
+        {
+          "han": "敢",
+          "hpp": "gàm"
+        },
+        {
+          "han": "去",
+          "hpp": "hi"
+        },
+        {
+          "han": "花天酒地",
+          "hpp": "fá tién jiù ti",
+          "sylBoundaries": [
+            "normal",
+            "normal",
+            "normal"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Bòdtailángge, ciigá ge iǎói bòdpiang'è m̌ zeugu, hǎn gàm hi fátiénjiùti.",
+      "note": "",
+      "updated_at": "2026-11-25T06:20:58.015Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-31",
+        "word": "發大冷个發大冷个罵人沒擔當。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "你係愛講就遽啊講，毋好阿阿膩膩。",
+      "tokens": [
+        {
+          "han": "你",
+          "hpp": "Ň"
+        },
+        {
+          "han": "係",
+          "hpp": "he"
+        },
+        {
+          "han": "愛",
+          "hpp": "oi"
+        },
+        {
+          "han": "講",
+          "hpp": "gòng"
+        },
+        {
+          "han": "就",
+          "hpp": "qiu"
+        },
+        {
+          "han": "遽",
+          "hpp": "giàg"
+        },
+        {
+          "han": "啊",
+          "hpp": "a"
+        },
+        {
+          "han": "講",
+          "hpp": "gòng"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "毋好",
+          "hpp": "m̌ hò"
+        },
+        {
+          "han": "阿阿膩膩",
+          "hpp": "a a ne ne"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ň he oi gòng qiu giàg a gòng, m̌hò aanene.",
+      "note": "",
+      "updated_at": "2026-11-25T06:24:54.164Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-2",
+        "word": "阿阿膩膩指講話不乾脆、不果決，欲言又止的樣子，常用於答話應對之情境。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "阿鵲+教+烏鷯，教到跳啊跳。",
+      "tokens": [
+        {
+          "han": "阿鵲教烏鷯",
+          "hpp": "Á xiàg gáu vú liau",
+          "sylBoundaries": [
+            "normal",
+            "space",
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "教",
+          "hpp": "gáu"
+        },
+        {
+          "han": "到",
+          "hpp": "do"
+        },
+        {
+          "han": "跳",
+          "hpp": "tiǎu"
+        },
+        {
+          "han": "啊",
+          "hpp": "a"
+        },
+        {
+          "han": "跳",
+          "hpp": "tiǎu"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Áxiàg gáu vúliau, gáu do tiǎu a tiǎu.",
+      "note": "",
+      "updated_at": "2026-11-25T06:25:47.309Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-3",
+        "word": "阿鵲教烏鷯諷刺學無專精而開業授徒的人；亦說求學不循正道，反受其害。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "該隻人盡生毛面，可能隨時會變面。",
+      "tokens": [
+        {
+          "han": "該隻",
+          "hpp": "Ge zàg"
+        },
+        {
+          "han": "人",
+          "hpp": "ngǐn"
+        },
+        {
+          "han": "盡",
+          "hpp": "qin"
+        },
+        {
+          "han": "生毛面",
+          "hpp": "sáng mó mien"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "可能",
+          "hpp": "kò něn"
+        },
+        {
+          "han": "隨時",
+          "hpp": "sǔi sǐi"
+        },
+        {
+          "han": "會",
+          "hpp": "voi"
+        },
+        {
+          "han": "變面",
+          "hpp": "bien mien"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Gezàg ngǐn qin sángmómien, kòněn sǔisǐi voi bienmien.",
+      "note": "",
+      "updated_at": "2026-11-25T06:26:11.979Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-6",
+        "word": "生毛面容易翻臉的人。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "毋識+看+過恁+豺个人，講+著食就走第一。",
+      "tokens": [
+        {
+          "han": "毋識看過",
+          "hpp": "M̌ sìid kon go",
+          "sylBoundaries": [
+            "normal",
+            "space",
+            "space"
+          ]
+        },
+        {
+          "han": "恁豺",
+          "hpp": "àn sǎi",
+          "sylBoundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "个",
+          "hpp": "ge"
+        },
+        {
+          "han": "人",
+          "hpp": "ngǐn"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "講著",
+          "hpp": "gòng dò",
+          "sylBoundaries": [
+            "space"
+          ]
+        },
+        {
+          "han": "食",
+          "hpp": "siid"
+        },
+        {
+          "han": "就",
+          "hpp": "qiu"
+        },
+        {
+          "han": "走",
+          "hpp": "zèu"
+        },
+        {
+          "han": "第一",
+          "hpp": "ti ìd"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "M̌sìid kon go àn sǎi ge ngǐn, gòng dò siid qiu zèu ti'ìd.",
+      "note": "",
+      "updated_at": "2026-11-25T06:27:49.052Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-7",
+        "word": "恁豺像豺狼一般貪吃，指稱一個人非常嘴饞。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "喊佢苦瓜毋好刨皮，偏偏 又刨皮，實在還盎零。",
+      "tokens": [
+        {
+          "han": "喊",
+          "hpp": "Hém"
+        },
+        {
+          "han": "佢",
+          "hpp": "gǐ"
+        },
+        {
+          "han": "苦瓜",
+          "hpp": "fù guá"
+        },
+        {
+          "han": "毋好",
+          "hpp": "m̌ hò"
+        },
+        {
+          "han": "刨",
+          "hpp": "pǎu"
+        },
+        {
+          "han": "皮",
+          "hpp": "pǐ"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "偏偏",
+          "hpp": "pién pién"
+        },
+        {
+          "han": " ",
+          "hpp": " ",
+          "punct": true
+        },
+        {
+          "han": "又",
+          "hpp": "iu"
+        },
+        {
+          "han": "刨",
+          "hpp": "pǎu"
+        },
+        {
+          "han": "皮",
+          "hpp": "pǐ"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "實在",
+          "hpp": "siid cai"
+        },
+        {
+          "han": "還",
+          "hpp": "hǎn"
+        },
+        {
+          "han": "盎零",
+          "hpp": "ǎng láng"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Hém gǐ fùguá m̌hò pǎu pǐ, piénpién iu pǎu pǐ, siidcai hǎn ǎngláng (ánglǎng).",
+      "note": "",
+      "updated_at": "2026-11-25T06:46:06.311Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-8",
+        "word": "盎零盎零盎零形容人固執，屢勸不聽，不知變通。罵人不知變通則可說「死盎零」。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "這個人性體當硬，不管著毋著佢都愛詏+到+贏。",
+      "tokens": [
+        {
+          "han": "這個",
+          "hpp": "Ià ge"
+        },
+        {
+          "han": "人",
+          "hpp": "ngǐn"
+        },
+        {
+          "han": "性體",
+          "hpp": "xin tì"
+        },
+        {
+          "han": "當",
+          "hpp": "dóng"
+        },
+        {
+          "han": "硬",
+          "hpp": "ngang"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "不管",
+          "hpp": "bùd gòn"
+        },
+        {
+          "han": "著",
+          "hpp": "cog"
+        },
+        {
+          "han": "毋著",
+          "hpp": "m̌ cog"
+        },
+        {
+          "han": "佢",
+          "hpp": "gǐ"
+        },
+        {
+          "han": "都",
+          "hpp": "du"
+        },
+        {
+          "han": "愛",
+          "hpp": "oi"
+        },
+        {
+          "han": "詏到贏",
+          "hpp": "au do iǎng",
+          "sylBoundaries": [
+            "space",
+            "space"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Iàge ngǐn xintì dóng ngang, bùdgòn cog m̌cog gǐ du (dú) oi au do iǎng.",
+      "note": "",
+      "updated_at": "2026-11-25T06:47:47.603Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-9",
+        "word": "詏到贏爭辯到贏。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "xiien",
+      "han": "你莫看佢背+家濟仔个形投，佢名下有幾下間樓-屋。",
+      "tokens": [
+        {
+          "han": "你",
+          "hpp": "Ň"
+        },
+        {
+          "han": "莫",
+          "hpp": "mog"
+        },
+        {
+          "han": "看",
+          "hpp": "kon"
+        },
+        {
+          "han": "佢",
+          "hpp": "gǐ"
+        },
+        {
+          "han": "背家濟仔",
+          "hpp": "bǎ gá ji è",
+          "sylBoundaries": [
+            "space",
+            "normal",
+            "normal"
+          ]
+        },
+        {
+          "han": "个",
+          "hpp": "ge"
+        },
+        {
+          "han": "形投",
+          "hpp": "hǐn dǎu"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "佢",
+          "hpp": "gǐ"
+        },
+        {
+          "han": "名",
+          "hpp": "miǎng"
+        },
+        {
+          "han": "下",
+          "hpp": "ha"
+        },
+        {
+          "han": "有",
+          "hpp": "iú"
+        },
+        {
+          "han": "幾下",
+          "hpp": "gì há"
+        },
+        {
+          "han": "間",
+          "hpp": "gién"
+        },
+        {
+          "han": "樓屋",
+          "hpp": "lěu vùg",
+          "sylBoundaries": [
+            "normal"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ň mog kon gǐ bǎ gáji'è ge hǐndǎu, gǐ miǎng ha iú gìhá gién (gián) lěuvùg.",
+      "note": "",
+      "updated_at": "2026-11-25T06:49:07.153Z",
+      "cert_ref": {
+        "dialect": "xiien",
+        "level": "高級",
+        "id": "10-12",
+        "word": "背家濟仔乞丐，指靠討飯、要錢過活的人。",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "梳頭那毛。",
+      "tokens": [
+        {
+          "han": "梳",
+          "hpp": "Sǔ"
+        },
+        {
+          "han": "頭那毛",
+          "hpp": "tèu nà hm̌"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Sǔ tèunàhm̌.",
+      "note": "",
+      "updated_at": "2026-11-25T06:49:56.290Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-39",
+        "word": "梳梳",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "恁多定，你恁多儕即分个食。\n這果子進口个，真貴食。",
+      "tokens": [
+        {
+          "han": "恁多",
+          "hpp": "Ngîn dǒo"
+        },
+        {
+          "han": "定",
+          "hpp": "těn"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "你",
+          "hpp": "hèn"
+        },
+        {
+          "han": "恁多",
+          "hpp": "ngîn dǒo"
+        },
+        {
+          "han": "儕",
+          "hpp": "sà"
+        },
+        {
+          "han": "即",
+          "hpp": "cìd"
+        },
+        {
+          "han": "分",
+          "hpp": "bǔn"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "這",
+          "hpp": "Lí"
+        },
+        {
+          "han": "果子",
+          "hpp": "gôo zû"
+        },
+        {
+          "han": "進口",
+          "hpp": "zîn kêu"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "真",
+          "hpp": "zhǐn"
+        },
+        {
+          "han": "貴",
+          "hpp": "gûi"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Ngîndǒo těn, hèn ngîndǒo sà cìd bǔn e shièd.\nLí gôozû zînkêu e, zhǐn gûi shièd.",
+      "note": "",
+      "updated_at": "2026-11-25T06:52:45.202Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-40",
+        "word": "食吃",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "衫恁短，腹臍#走#+出來啊。\n文章猶寫#毋#會#出來。",
+      "tokens": [
+        {
+          "han": "衫",
+          "hpp": "Sǎm"
+        },
+        {
+          "han": "恁",
+          "hpp": "ngîn"
+        },
+        {
+          "han": "短",
+          "hpp": "dôn"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "腹臍",
+          "hpp": "búd cì",
+          "noSandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "走出來",
+          "hpp": "zêu chíd lòi",
+          "noSandhi": [
+            true,
+            false,
+            false
+          ],
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "文章",
+          "hpp": "Bbùn zhǒng"
+        },
+        {
+          "han": "猶",
+          "hpp": "ià"
+        },
+        {
+          "han": "寫",
+          "hpp": "siâ",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "毋會",
+          "hpp": "m̌ bboi",
+          "noSandhi": [
+            true,
+            true
+          ]
+        },
+        {
+          "han": "出來",
+          "hpp": "chíd lòi"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Sǎm ngîn dôn, búdcì zêu chídlòi ǎ.\nBbùnzhǒng ià siâ m̌bboi chídlòi.",
+      "note": "",
+      "updated_at": "2026-11-25T07:26:18.196Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-6",
+        "word": "出來出來",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "打球。",
+      "tokens": [
+        {
+          "han": "打",
+          "hpp": "Dâ"
+        },
+        {
+          "han": "球",
+          "hpp": "kiù"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Dâ kiù.",
+      "note": "",
+      "updated_at": "2026-11-25T07:27:17.810Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-8",
+        "word": "打打",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "背+細子#去#散步。\n天氣#恁熱，你#背恁多衫做+麼个？\n背書包去上課。",
+      "tokens": [
+        {
+          "han": "背細子",
+          "hpp": "Bà sê zû",
+          "noSandhi": [
+            false,
+            false,
+            true
+          ],
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "去",
+          "hpp": "kûi",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "散步",
+          "hpp": "sân pu"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "天氣",
+          "hpp": "Těen kî",
+          "noSandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "恁",
+          "hpp": "ngîn"
+        },
+        {
+          "han": "熱",
+          "hpp": "ngièd"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "背",
+          "hpp": "bà"
+        },
+        {
+          "han": "恁多",
+          "hpp": "ngîn dǒo"
+        },
+        {
+          "han": "衫",
+          "hpp": "sǎm"
+        },
+        {
+          "han": "做麼个",
+          "hpp": "zôo bbóo gâi",
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "？",
+          "hpp": "? ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "背",
+          "hpp": "Bà"
+        },
+        {
+          "han": "書包",
+          "hpp": "shǐ bǎu"
+        },
+        {
+          "han": "去",
+          "hpp": "kûi"
+        },
+        {
+          "han": "上課",
+          "hpp": "shǒng kôo"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Bà sêzû kûi sânpu.\nTěenkî ngîn ngièd, hèn bà ngîndǒo sǎm zôo bbóogâi?\nBà shǐbǎu kûi shǒngkôo.",
+      "note": "",
+      "updated_at": "2026-11-25T11:56:01.062Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-1",
+        "word": "背以背承物",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "鳥-子#飛入屋，攔毋會出去。",
+      "tokens": [
+        {
+          "han": "鳥子",
+          "hpp": "Dêeu zû",
+          "noSandhi": [
+            false,
+            true
+          ],
+          "sylBoundaries": [
+            "normal"
+          ]
+        },
+        {
+          "han": "飛",
+          "hpp": "bǔi"
+        },
+        {
+          "han": "入屋",
+          "hpp": "ngìb bbú"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "攔",
+          "hpp": "làn"
+        },
+        {
+          "han": "毋會",
+          "hpp": "m̌ bboi"
+        },
+        {
+          "han": "出去",
+          "hpp": "chíd kûi"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Dêeuzû bǔi ngìbbbú, làn m̌bboi chídkûi.",
+      "note": "",
+      "updated_at": "2026-11-25T08:48:38.693Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-2",
+        "word": "飛飛翔",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "來#啊！坐落來食飯。\n坐愛有坐个樣。",
+      "tokens": [
+        {
+          "han": "來",
+          "hpp": "Lòi",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "！",
+          "hpp": "! ",
+          "punct": true
+        },
+        {
+          "han": "坐",
+          "hpp": "Cǒo"
+        },
+        {
+          "han": "落來",
+          "hpp": "loo lòi"
+        },
+        {
+          "han": "食飯",
+          "hpp": "shièd pon"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "坐",
+          "hpp": "Cǒo"
+        },
+        {
+          "han": "愛",
+          "hpp": "ôi"
+        },
+        {
+          "han": "有",
+          "hpp": "rhiǔ"
+        },
+        {
+          "han": "坐",
+          "hpp": "cǒo"
+        },
+        {
+          "han": "个",
+          "hpp": "e"
+        },
+        {
+          "han": "樣",
+          "hpp": "rhiong"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Lòi ǎ! Cǒo loolòi shièdpon.\nCǒo ôi rhiǔ cǒo e rhiong.",
+      "note": "",
+      "updated_at": "2026-11-27T14:05:23.824Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-4",
+        "word": "坐坐",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "錢#囥在桌崠，你#自家提。",
+      "tokens": [
+        {
+          "han": "錢",
+          "hpp": "Cièn",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "囥",
+          "hpp": "kông"
+        },
+        {
+          "han": "在",
+          "hpp": "da"
+        },
+        {
+          "han": "桌崠",
+          "hpp": "zóo dûng"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "你",
+          "hpp": "hèn",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "自家",
+          "hpp": "zǐ gǎ"
+        },
+        {
+          "han": "提",
+          "hpp": "te"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Cièn kông da zóodûng, hèn zǐgǎ te.",
+      "note": "",
+      "updated_at": "2026-11-27T14:13:53.278Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-3",
+        "word": "囥放置",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "一行#+出去即毋+記得#啊！\n日頭#恁猛，毋好出去炙+日頭。",
+      "tokens": [
+        {
+          "han": "一",
+          "hpp": "Rhíd"
+        },
+        {
+          "han": "行出去",
+          "hpp": "hàng chíd kûi",
+          "noSandhi": [
+            true,
+            false,
+            false
+          ],
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "即",
+          "hpp": "cìd"
+        },
+        {
+          "han": "毋記得",
+          "hpp": "m̀ kî déd",
+          "noSandhi": [
+            false,
+            false,
+            true
+          ],
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "啊",
+          "hpp": "ǎ"
+        },
+        {
+          "han": "！",
+          "hpp": "! ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "日頭",
+          "hpp": "Ngíd tèu",
+          "noSandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "恁",
+          "hpp": "ngîn"
+        },
+        {
+          "han": "猛",
+          "hpp": "mâng"
+        },
+        {
+          "han": "，",
+          "hpp": ", ",
+          "punct": true
+        },
+        {
+          "han": "毋好",
+          "hpp": "m̀ hôo"
+        },
+        {
+          "han": "出去",
+          "hpp": "chíd kûi"
+        },
+        {
+          "han": "炙日頭",
+          "hpp": "zhá ngíd tèu",
+          "sylBoundaries": [
+            "space",
+            "normal"
+          ]
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Rhíd hàng chídkûi cìd m̀ kîdéd ǎ!\nNgídtèu ngîn mâng, m̀hôo chídkûi zhá ngídtèu.",
+      "note": "",
+      "updated_at": "2026-11-27T14:16:52.704Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-5",
+        "word": "出去出去",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "手#伸較長#兜。\n佢#伸手#去提物件。",
+      "tokens": [
+        {
+          "han": "手",
+          "hpp": "Shiû",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "伸",
+          "hpp": "chǐn"
+        },
+        {
+          "han": "較",
+          "hpp": "kâ"
+        },
+        {
+          "han": "長",
+          "hpp": "chòng",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "兜",
+          "hpp": "děu"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        },
+        {
+          "han": "\n",
+          "hpp": "\n",
+          "punct": true
+        },
+        {
+          "han": "佢",
+          "hpp": "Gùi",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "伸手",
+          "hpp": "chǐn shiû",
+          "noSandhi": [
+            false,
+            true
+          ]
+        },
+        {
+          "han": "去",
+          "hpp": "kûi"
+        },
+        {
+          "han": "提",
+          "hpp": "te"
+        },
+        {
+          "han": "物件",
+          "hpp": "mi kien"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Shiû chǐn kâ chòng děu.\nGùi chǐnshiû kûi te mikien.",
+      "note": "",
+      "updated_at": "2026-11-27T14:18:07.111Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-7",
+        "word": "伸伸展",
+        "sourceType": "cert"
+      },
+      "status": "verified"
+    },
+    {
+      "dialect": "zhioon",
+      "han": "拁這包餅#打開來食。",
+      "tokens": [
+        {
+          "han": "拁",
+          "hpp": "Gǎ"
+        },
+        {
+          "han": "這",
+          "hpp": "lí"
+        },
+        {
+          "han": "包",
+          "hpp": "bǎu"
+        },
+        {
+          "han": "餅",
+          "hpp": "biâng",
+          "noSandhi": [
+            true
+          ]
+        },
+        {
+          "han": "打開",
+          "hpp": "dâ kǒi"
+        },
+        {
+          "han": "來",
+          "hpp": "lòi"
+        },
+        {
+          "han": "食",
+          "hpp": "shièd"
+        },
+        {
+          "han": "。",
+          "hpp": ". ",
+          "punct": true
+        }
+      ],
+      "joined_hpp": "Gǎ lí bǎu biâng dâkǒi lòi shièd.",
+      "note": "",
+      "updated_at": "2026-11-27T14:19:52.617Z",
+      "cert_ref": {
+        "dialect": "zhioon",
+        "level": "基礎級",
+        "id": "3-9",
+        "word": "打開打開",
+        "sourceType": "cert"
+      },
+      "status": "verified"
     }
   ]
 }

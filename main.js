@@ -10083,6 +10083,38 @@ function initializeAppUI() {
     }
     window.applyMeinungFillSetting = applyMeinungFillSetting;
 
+    // --- 變調字有色目（預設開；關忒時變調字維持原字色） ---
+    const SANDHI_COLOR_STORAGE_KEY = 'hakspringSandhiColor';
+    function isSandhiColorEnabled() {
+      try {
+        return localStorage.getItem(SANDHI_COLOR_STORAGE_KEY) !== 'false';
+      } catch (e) {
+        return true;
+      }
+    }
+    function applySandhiColorSetting(enabled) {
+      if (document.body) {
+        document.body.classList.toggle('no-sandhi-color', !enabled);
+      }
+      const toggle = document.getElementById('sandhiColorToggle');
+      if (toggle) toggle.checked = !!enabled;
+    }
+    window.applySandhiColorSetting = applySandhiColorSetting;
+
+    applySandhiColorSetting(isSandhiColorEnabled());
+    const sandhiColorToggle = document.getElementById('sandhiColorToggle');
+    if (sandhiColorToggle) {
+      sandhiColorToggle.addEventListener('change', (event) => {
+        const enabled = !!event.target.checked;
+        try {
+          localStorage.setItem(SANDHI_COLOR_STORAGE_KEY, String(enabled));
+        } catch (e) {
+          // 無痕視窗等存毋著，淨這擺有效
+        }
+        applySandhiColorSetting(enabled);
+      });
+    }
+
     window.setHakfaDisplayScript = setHakfaDisplayScript;
     window.applyHakfaDisplayScript = applyHakfaDisplayScript;
     window.getHakfaDisplayScript = getHakfaDisplayScript;

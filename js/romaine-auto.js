@@ -1335,13 +1335,13 @@
       let cjkBuf = '';
       let cjkStartCp = -1;
       let cjkBufNoSandhi = new Set();
-      let cjkBufSpaceAfter = new Set();
+      let cjkBufBoundaryAfter = new Map();
       let cjkBufPureCount = 0;
       let nonCjkBuf = '';
       let needCap = true;
       let inParen = false;
 
-      const COMPOUND_RE = /([\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}](?:[-=][\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}])+)/gu;
+      const COMPOUND_RE = /([\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}](?:-[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2ebef}])+)/gu;
 
       const flushNonCjk = () => {
         if (!nonCjkBuf) return;
@@ -1356,16 +1356,50 @@
         if (flags.some(Boolean)) tok.noSandhi = flags;
         if (chars.length > 1) {
           const bounds = tok.sylBoundaries ? tok.sylBoundaries.slice() : new Array(chars.length - 1).fill('normal');
-          let hasSpace = false;
+          let hasForced = false;
           for (let k = 0; k < chars.length - 1; k++) {
-            if (cjkBufSpaceAfter.has(startPureIdx + k)) {
-              bounds[k] = 'space';
-              hasSpace = true;
+            const op = cjkBufBoundaryAfter.get(startPureIdx + k);
+            if (op) {
+              bounds[k] = op;
+              hasForced = true;
             }
           }
-          if (hasSpace || tok.sylBoundaries) tok.sylBoundaries = bounds;
+          if (hasForced || tok.sylBoundaries) tok.sylBoundaries = bounds;
         }
         return chars.length;
+      };
+
+      const mergeHyphenToken = (prevTok, nextTok) => {
+        const prevLen = Array.from(prevTok.han || '').filter((c) => CJK_CHAR_RE.test(c)).length;
+        const nextLen = Array.from(nextTok.han || '').filter((c) => CJK_CHAR_RE.test(c)).length;
+        const prevBounds = prevTok.sylBoundaries ? prevTok.sylBoundaries.slice() : new Array(Math.max(0, prevLen - 1)).fill('normal');
+        const nextBounds = nextTok.sylBoundaries ? nextTok.sylBoundaries.slice() : new Array(Math.max(0, nextLen - 1)).fill('normal');
+        const prevMeta = prevTok.partsMeta || [{ han: prevTok.han, sylCount: prevLen, candidates: prevTok.candidates || [] }];
+        const nextMeta = nextTok.partsMeta || [{ han: nextTok.han, sylCount: nextLen, candidates: nextTok.candidates || [] }];
+        const mergedNoSandhi =
+          prevTok.noSandhi || nextTok.noSandhi
+            ? [
+                ...(prevTok.noSandhi || new Array(prevLen).fill(false)),
+                ...(nextTok.noSandhi || new Array(nextLen).fill(false)),
+              ]
+            : undefined;
+        const mergedNanHpp =
+          prevTok.nanHpp || nextTok.nanHpp
+            ? `${prevTok.nanHpp || prevTok.hpp} ${nextTok.nanHpp || nextTok.hpp}`.trim()
+            : null;
+        prevTok.han = prevTok.han + nextTok.han;
+        prevTok.hpp = `${prevTok.hpp} ${nextTok.hpp}`.trim();
+        prevTok.nanHpp = mergedNanHpp;
+        prevTok.srcEnd = nextTok.srcEnd;
+        prevTok.sylBoundaries = [...prevBounds, 'hyphen', ...nextBounds];
+        if (mergedNoSandhi) prevTok.noSandhi = mergedNoSandhi;
+        prevTok.partsMeta = [...prevMeta, ...nextMeta];
+        prevTok.candidates = [];
+        prevTok.isPolyphone = prevTok.isPolyphone || nextTok.isPolyphone;
+        prevTok.oov = prevTok.oov || nextTok.oov;
+        if (TRUST_RANK[nextTok.trust] && (!TRUST_RANK[prevTok.trust] || TRUST_RANK[nextTok.trust] < TRUST_RANK[prevTok.trust])) {
+          prevTok.trust = nextTok.trust;
+        }
       };
 
       const flushCjk = () => {
@@ -1373,15 +1407,25 @@
         const segments = cjkBuf.split(COMPOUND_RE).filter(Boolean);
         let segCpOffset = cjkStartCp;
         let pureIdx = 0;
+        let lastBufToken = null;
+        const pushBufToken = (tok, startPureIdx, pureLen) => {
+          if (lastBufToken && startPureIdx > 0 && cjkBufBoundaryAfter.get(startPureIdx - 1) === 'hyphen') {
+            mergeHyphenToken(lastBufToken, tok);
+          } else {
+            tokens.push(tok);
+            lastBufToken = tok;
+          }
+          return startPureIdx + pureLen;
+        };
         for (const seg of segments) {
           const segCpLen = Array.from(seg).length;
-          if (seg.includes('-') || seg.includes('=')) {
+          if (seg.includes('-')) {
             const tok = this._resolveForcedCompound(seg, needCap);
             tok.srcStart = cpToUtf16[segCpOffset];
             tok.srcEnd = cpToUtf16[segCpOffset + segCpLen];
             if (!tok.oov) needCap = false;
-            pureIdx += applyTokenMarkers(tok, pureIdx);
-            tokens.push(tok);
+            const pLen = applyTokenMarkers(tok, pureIdx);
+            pureIdx = pushBufToken(tok, pureIdx, pLen);
           } else {
             let wordCpOffset = segCpOffset;
             const useNan = inParen && this.dialect === 'xiien';
@@ -1424,8 +1468,8 @@
                 label: picked.label,
                 punct: false,
               };
-              pureIdx += applyTokenMarkers(tok, pureIdx);
-              tokens.push(tok);
+              const pLen = applyTokenMarkers(tok, pureIdx);
+              pureIdx = pushBufToken(tok, pureIdx, pLen);
               wordCpOffset += wCpLen;
             }
           }
@@ -1434,7 +1478,7 @@
         cjkBuf = '';
         cjkStartCp = -1;
         cjkBufNoSandhi = new Set();
-        cjkBufSpaceAfter = new Set();
+        cjkBufBoundaryAfter = new Map();
         cjkBufPureCount = 0;
       };
 
@@ -1470,11 +1514,11 @@
         } else if (isNoSandhiChar(ch) && CJK_CHAR_RE.test(prev) && cjkBufPureCount > 0) {
           // `#` 或 `~` 標記前一個音節不變調（若後面緊接漢字仍維持同詞，不拆詞）
           cjkBufNoSandhi.add(cjkBufPureCount - 1);
-        } else if ((ch === '-' || ch === '=') && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
+        } else if (ch === '-' && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
           cjkBuf += ch;
-        } else if (ch === '+' && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
-          // `+` 強制在輸出中加空格，但查讀音與斷詞單位維持不變
-          if (cjkBufPureCount > 0) cjkBufSpaceAfter.add(cjkBufPureCount - 1);
+        } else if ((ch === '+' || ch === '=') && (CJK_CHAR_RE.test(prev) || isNoSandhiChar(prev)) && CJK_CHAR_RE.test(next)) {
+          // `+` 強制加空格、`=` 強制加連字號；兩者皆不改變原本斷詞與查讀音
+          if (cjkBufPureCount > 0) cjkBufBoundaryAfter.set(cjkBufPureCount - 1, ch === '+' ? 'space' : 'hyphen');
         } else if (ch === '\n') {
           flushCjk();
           flushNonCjk();
@@ -1681,6 +1725,22 @@
         tok.zhuolanTrust = z.trust;
         tok.taoyuanHpp = t.hpp;
         tok.taoyuanTrust = t.trust;
+      }
+    }
+
+    populateNanSubTokens(tokens) {
+      if (this.dialect !== 'xiien' || this.nanLexicon.size === 0 || !Array.isArray(tokens)) return;
+      for (const tok of tokens) {
+        if (!tok || tok.punct || tok.nonCjk || tok.isComment || !tok.hpp || tok.nanHpp !== undefined) continue;
+        const nanCands = this.nanLexicon.get(tok.han);
+        if (!nanCands || nanCands.length === 0) continue;
+        const baseLower = tok.hpp.toLowerCase();
+        if (nanCands.some((c) => c.hpp.toLowerCase() === baseLower)) continue;
+        const firstCh = tok.hpp.charAt(0);
+        const wasCap = Boolean(firstCh && firstCh !== firstCh.toLowerCase());
+        let nh = nanCands[0].hpp;
+        if (wasCap) nh = nh.charAt(0).toUpperCase() + nh.slice(1);
+        tok.nanHpp = nh;
       }
     }
 

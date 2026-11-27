@@ -103,8 +103,34 @@
 
   function loadVerifiedList() {
     try {
-      const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(list) ? list : [];
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (!Array.isArray(raw)) return [];
+      let changed = false;
+      const byKey = new Map();
+      for (const it of raw) {
+        if (!it) continue;
+        const ref = it.cert_ref;
+        const isCert = Boolean(ref && (ref.sourceType === 'cert' || (!ref.sourceType && ref.level)));
+        if (isCert && normDialect(ref.dialect || it.dialect) === 'namxiian') {
+          it.dialect = 'xiien';
+          ref.dialect = 'xiien';
+          changed = true;
+        }
+        const k = buildItemIdentity(it);
+        const prev = byKey.get(k);
+        if (!prev || (Date.parse(it.updated_at || 0) || 0) >= (Date.parse(prev.updated_at || 0) || 0)) {
+          byKey.set(k, it);
+        } else {
+          changed = true;
+        }
+      }
+      const list = Array.from(byKey.values());
+      if (changed) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch {}
+      }
+      return list;
     } catch {
       return [];
     }
@@ -242,7 +268,7 @@
           <option value="space">分音節（空格）</option>
         </select>
         <label class="wb-check"><input type="checkbox" id="wbAutoToggle" checked /> 自動斷詞</label>
-        <label class="wb-check"><input type="checkbox" id="wbSandhiToggle" checked /> 變調色</label>
+        <label class="wb-check"><input type="checkbox" id="wbSandhiToggle" checked /> 變調標示</label>
       </div>
 
       <div class="wb-raoping-bar" id="wbRaopingBar" style="display:none;">
@@ -489,6 +515,7 @@
       const syls = (tok.hpp || '').trim().split(/\s+/).filter(Boolean);
       let changed = false;
       let anyUncertain = false;
+      let anyClearNan = false;
       for (let k = 0; k < chars.length; k++) {
         const ov = ovMap.get(cjkIdx + k);
         if (ov && ov.ch === chars[k]) {
@@ -503,10 +530,14 @@
             changed = true;
           }
           if (ov.uncertain) anyUncertain = true;
+          if (ov.clearNan) anyClearNan = true;
         }
       }
       if (anyUncertain) tok.uncertain = true;
       if (changed) tok.hpp = syls.join(' ');
+      if (anyClearNan || (tok.nanHpp && tok.hpp && tok.hpp.toLowerCase() === tok.nanHpp.toLowerCase())) {
+        tok.nanHpp = null;
+      }
       cjkIdx += chars.length;
     }
   }
@@ -521,7 +552,10 @@
       if (t === tokIdx) {
         for (let k = 0; k < chars.length; k++) {
           const prev = manualCharOverrides.get(cjkIdx + k) || { ch: chars[k] };
-          if (saveSyl && syls[k]) prev.syl = syls[k];
+          if (saveSyl && syls[k]) {
+            prev.syl = syls[k];
+            if (engineDialect === 'namxiian') prev.clearNan = true;
+          }
           if (saveCase && syls[k]) {
             const first = syls[k].charAt(0);
             prev.isUpper = Boolean(first && first !== first.toLowerCase());
@@ -783,6 +817,9 @@
 
         if (newSyls.length > 0) {
           tok.hpp = newSyls.join(' ');
+          if (tok.nanHpp && tok.hpp.toLowerCase() === tok.nanHpp.toLowerCase()) {
+            tok.nanHpp = null;
+          }
           tok.oov = false;
           tok.trust = 'official';
           tok.label = '人工自訂';
@@ -941,25 +978,39 @@
       return;
     }
     const dialect = dialectSel ? dialectSel.value : 'xiien';
-    const cleanTokens = currentTokens.map((t) => {
+    const isCertRow = activeCertRef && (activeCertRef.sourceType === 'cert' || (!activeCertRef.sourceType && activeCertRef.level));
+    const certDialect =
+      activeCertRef && activeCertRef.dialect
+        ? (isCertRow && activeCertRef.dialect === 'namxiian' ? 'xiien' : activeCertRef.dialect)
+        : null;
+    const saveDialect = certDialect || dialect;
+    const xiienEng = saveDialect === 'xiien' && dialect === 'namxiian' ? engines.get('xiien') : null;
+    let tokensToSave = currentTokens;
+    if (xiienEng) {
+      tokensToSave = xiienEng.segmentAndConvert(han, activeOpenBookMap);
+      applyOverridesToTokens(tokensToSave, manualCharOverrides);
+    }
+    const cleanTokens = tokensToSave.map((t) => {
       const out = { han: t.han, hpp: t.hpp || '' };
       if (t.punct) out.punct = true;
       if (t.nonCjk) out.nonCjk = true;
       if (t.comment) out.comment = true;
       if (t.noSandhi) out.noSandhi = t.noSandhi;
       if (t.sylBoundaries) out.sylBoundaries = t.sylBoundaries;
+      if (t.nanHpp) out.nanHpp = t.nanHpp;
+      else if (t.nanHpp === null) out.nanHpp = null;
       return out;
     });
     const item = {
-      dialect,
+      dialect: saveDialect,
       han,
       tokens: cleanTokens,
-      joined_hpp: engine.formatTokensToHpp(currentTokens, 'none'),
+      joined_hpp: (xiienEng || engine).formatTokensToHpp(tokensToSave, 'none'),
       note: noteEl ? noteEl.value.trim() : '',
       updated_at: new Date().toISOString(),
     };
     if (activeCertRef && (activeCertRef.id || activeCertRef.sourceType)) {
-      item.cert_ref = { ...activeCertRef, dialect };
+      item.cert_ref = { ...activeCertRef, dialect: saveDialect };
     }
 
     const list = loadVerifiedList();
@@ -1121,7 +1172,9 @@
   async function loadRow(meta) {
     open();
     if (paneEl) paneEl.classList.remove('is-saved');
-    const dk = normDialect(meta.dialect || 'xiien');
+    const isCertMeta = meta.sourceType === 'cert' || (!meta.sourceType && Boolean(meta.level));
+    const rawDk = normDialect(meta.dialect || 'xiien');
+    const dk = isCertMeta && rawDk === 'namxiian' ? 'xiien' : rawDk;
     if (activeRowEl && activeRowEl !== meta.rowEl) {
       activeRowEl.classList.remove('romaine-row-editing');
     }

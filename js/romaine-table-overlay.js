@@ -95,8 +95,16 @@
       const localList = JSON.parse(localStorage.getItem('romaineAutoVerifiedCorpus') || '[]');
       if (Array.isArray(localList)) {
         const kept = [];
+        let migrated = false;
         for (const it of localList) {
           if (!it || !it.han) continue;
+          const ref = it.cert_ref;
+          const isCert = Boolean(ref && (ref.sourceType === 'cert' || (!ref.sourceType && ref.level)));
+          if (isCert && normDialect(ref.dialect || it.dialect) === 'namxiian') {
+            it.dialect = 'xiien';
+            ref.dialect = 'xiien';
+            migrated = true;
+          }
           const d = normDialect((it.cert_ref && it.cert_ref.dialect) || it.dialect || 'xiien');
           const lvl = (it.cert_ref && it.cert_ref.level) || '';
           const id = (it.cert_ref && it.cert_ref.id) || '';
@@ -112,7 +120,7 @@
           registerVerifiedItem(it, false);
         }
         keptCount = kept.length;
-        if (kept.length !== localList.length) {
+        if (migrated || kept.length !== localList.length) {
           localStorage.setItem('romaineAutoVerifiedCorpus', JSON.stringify(kept));
         }
       }
@@ -124,7 +132,7 @@
 
   async function ensureVerifiedLoaded() {
     if (!verifiedPromise) {
-      verifiedPromise = fetch('data/romaine/verified_sentences.json?v=20261123')
+      verifiedPromise = fetch('data/romaine/verified_sentences.json?v=20261127')
         .then((r) => (r.ok ? r.json() : { items: [] }))
         .then((data) => {
           for (const it of data.items || []) registerVerifiedItem(it, true);
@@ -713,7 +721,7 @@
     const sentSpan = td3.querySelector('.sentence');
     if (!sentSpan) return;
 
-    const { dialect, level, rowId } = detectContextInfo(row);
+    const { dialect, level, rowId, sourceType } = detectContextInfo(row);
     if (!dialect) return;
 
     const hanLines = splitSentenceHtmlLines(sentSpan.innerHTML);
@@ -729,7 +737,12 @@
 
     const cjkKey = `${dialect}|${pureCjk(sentText)}`;
     const fullKey = rowId && level ? `${dialect}|${level}|${rowId}` : '';
-    const verifiedItem = (fullKey && verifiedByKey.get(fullKey)) || verifiedByCjk.get(cjkKey);
+    let verifiedItem = (fullKey && verifiedByKey.get(fullKey)) || verifiedByCjk.get(cjkKey);
+    if (!verifiedItem && dialect === 'namxiian' && (sourceType === 'cert' || level)) {
+      const xiienFull = rowId && level ? `xiien|${level}|${rowId}` : '';
+      const xiienCjk = `xiien|${pureCjk(sentText)}`;
+      verifiedItem = (xiienFull && verifiedByKey.get(xiienFull)) || verifiedByCjk.get(xiienCjk);
+    }
 
     const eng = await getEngine(dialect);
     if (!eng || !enabled) return;
@@ -755,6 +768,9 @@
       rowTokens = verifiedItem.tokens && eng ? renderVerifiedTokens(verifiedItem) : null;
       if (rowTokens && dialect === 'ngiaupin' && typeof eng.populateRaopingSubTokens === 'function') {
         eng.populateRaopingSubTokens(rowTokens);
+      }
+      if (rowTokens && dialect === 'xiien' && typeof eng.populateNanSubTokens === 'function') {
+        eng.populateNanSubTokens(rowTokens);
       }
       rawHppHtml = rowTokens ? eng.formatTokensToSandhiHtml(rowTokens, 'none') : (verifiedItem.joined_hpp || '');
       if (useMultiRaoping && rowTokens) {
@@ -1191,17 +1207,20 @@
 
   function getVerifiedItem(dialect, level, rowId, han) {
     const d = normDialect(dialect || 'xiien');
-    if (rowId && level) {
-      const byKey = verifiedByKey.get(`${d}|${level}|${rowId}`);
-      if (byKey) return byKey;
-      if (String(rowId).includes('-')) {
-        const shortId = String(rowId).split('-')[1];
-        const byShort = shortId ? verifiedByKey.get(`${d}|${level}|${shortId}`) : null;
-        if (byShort) return byShort;
-      }
-    }
     const cjk = pureCjk(han);
-    return cjk ? verifiedByCjk.get(`${d}|${cjk}`) || null : null;
+    const lookup = (dk) => {
+      if (rowId && level) {
+        const byKey = verifiedByKey.get(`${dk}|${level}|${rowId}`);
+        if (byKey) return byKey;
+        if (String(rowId).includes('-')) {
+          const shortId = String(rowId).split('-')[1];
+          const byShort = shortId ? verifiedByKey.get(`${dk}|${level}|${shortId}`) : null;
+          if (byShort && (!cjk || pureCjk(byShort.han) === cjk)) return byShort;
+        }
+      }
+      return cjk ? verifiedByCjk.get(`${dk}|${cjk}`) || null : null;
+    };
+    return lookup(d) || (d === 'namxiian' && level ? lookup('xiien') : null);
   }
 
   window.romaineTableOverlay = {

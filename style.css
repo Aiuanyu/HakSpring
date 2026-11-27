@@ -7981,3 +7981,10 @@ tr.romaine-row-editing td[data-label="例句"] {
     border-color: #475569;
   }
 }
+
+/* 關閉「變調字有色目」時，所有變調字回復原字色（保留上標變調數字） */
+body.no-sandhi-color ruby[class*="sandhi-t"],
+body.no-sandhi-color ruby[class*="sandhi-t"] rt,
+body.no-sandhi-color .sandhi-sup[class*="sandhi-t"] {
+  color: inherit !important;
+}
