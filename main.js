@@ -351,6 +351,92 @@ function isDashRunEnd(text, i, isRt) {
 }
 
 /**
+ * 標音側無分句標點時，照各分句个漢字字數對應音節數，切標音（顯示端對齊，毋改資料）。
+ * 例：教典「人老三件歪，行路頭犁犁；…」个標音 `ngǐn lò sám kien vái hǎng lu…` 無逗號，
+ * 漢字分句 5＋5＋5＋5 字，就每 5 隻音節切一段。
+ * - 音節係空白抑連字號（PFS）隔開个詞；巢狀 <rt>（變調數字）毋算；純標點詞毋算。
+ * - 漢字字數摎音節數總數對毋著（缺字、標音含註記等），就回傳 null，維持縮字。
+ * - 連字號个接縫（PFS 全詞連字號）切斷時拿忒連字號，空白保留（後背 trimStart）。
+ *
+ * @param {string[]} baseSegs - 漢字分句（HTML）
+ * @param {string} rtHtml - 標音 HTML
+ * @param {function} tokenize - 將 HTML 切成 tag／文字 token 个函式
+ * @returns {string[] | null} 切好个標音段落，毋適用就 null
+ */
+function alignRtBySyllableCounts(baseSegs, rtHtml, tokenize) {
+  if (!rtHtml || !baseSegs || baseSegs.length < 2) return null;
+  const SYLLABLE_CHAR = /[\p{L}\p{N}□]/u;
+  const counts = baseSegs.map((seg) =>
+    Array.from(seg.replace(/<[^>]+>/g, '')).filter((c) => SYLLABLE_CHAR.test(c)).length);
+  if (counts.some((n) => n < 1)) return null;
+
+  const segs = [];
+  let cur = '';
+  const openTags = [];
+  const closeAll = () => openTags.slice().reverse().map((t) => `</${t.tag}>`).join('');
+  const reopenAll = () => openTags.map((t) => t.full).join('');
+  let nestedRt = 0; // 巢狀 <rt>（sandhi 變調數字）裡肚毋算音節
+  let inWord = false;
+  let wordHasLetter = false;
+  let done = 0; // 目前這段已經完成个音節數
+  let segIdx = 0;
+
+  const endWord = () => {
+    if (inWord && wordHasLetter) done++;
+    inWord = false;
+    wordHasLetter = false;
+  };
+  // 這段个音節到齊，就在目前（音節摎音節中央）斷。傳回係毋係斷著
+  const cutIfComplete = () => {
+    if (segIdx < counts.length - 1 && done === counts[segIdx]) {
+      segs.push(cur + closeAll());
+      cur = reopenAll();
+      segIdx++;
+      done = 0;
+      return true;
+    }
+    return false;
+  };
+
+  for (const t of tokenize(rtHtml)) {
+    if (t.isTag) {
+      const m = t.text.match(/^<(\/?)([a-zA-Z0-9\-]+)[^>]*>/);
+      if (m) {
+        const name = m[2].toLowerCase();
+        const isClose = m[1] === '/';
+        const isSelf = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(name);
+        if (name === 'rt') nestedRt += isClose ? -1 : 1;
+        if (!isClose && !isSelf) {
+          openTags.push({ tag: name, full: t.text });
+        } else if (isClose) {
+          for (let j = openTags.length - 1; j >= 0; j--) {
+            if (openTags[j].tag === name) { openTags.splice(j, 1); break; }
+          }
+        }
+      }
+      cur += t.text;
+      continue;
+    }
+    if (nestedRt > 0) { cur += t.text; continue; }
+    for (const ch of t.text) {
+      if (/[\s\-]/.test(ch)) {
+        endWord();
+        const cut = cutIfComplete();
+        if (!(cut && ch === '-')) cur += ch; // 斷佇連字號个接縫：連字號拿忒
+      } else {
+        inWord = true;
+        if (SYLLABLE_CHAR.test(ch)) wordHasLetter = true;
+        cur += ch;
+      }
+    }
+  }
+  endWord();
+  if (segIdx !== counts.length - 1 || done !== counts[segIdx]) return null;
+  segs.push(cur + closeAll());
+  return segs.map((seg, i) => (i > 0 ? seg.trimStart() : seg));
+}
+
+/**
  * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
  * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
  *
@@ -515,10 +601,18 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
 
   // 頓號斷行對毋著（標音摎漢字个頓號數無共樣，例：標音用「/」）：退回淨用括號斷行
   if (baseHasDun && baseSegs.length !== rtSegs.length) {
+    const clauseSplit = baseSplit; // 漢字分句斷點：標音無標點時，改用音節數對齊
     baseHasDun = false;
     baseSplit = splitTokens(baseTokens, false);
     baseSegs = baseSplit.segs;
-    if (baseSegs.length <= 1) return null;
+    if (baseSegs.length <= 1) {
+      // 無括號、斜線可退：標音若淨係缺標點（教典有兜諺語、歇後語會恁樣），
+      // 照各分句个漢字字數對應音節數，切標音
+      const aligned = alignRtBySyllableCounts(clauseSplit.segs, rtHtml, tokenize);
+      return aligned
+        ? { baseSegs: clauseSplit.segs, rtSegs: aligned, breakKinds: clauseSplit.breakKinds }
+        : null;
+    }
     rtSegs = splitTokens(rtTokens, true, baseSegs.length).segs;
   }
 
@@ -11214,6 +11308,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getRomanizerModeInfo,
     resolveReadingForMode,
     splitRubyByBaseBreakpoints,
+    alignRtBySyllableCounts,
     adjustRubyFontSize,
     adjustAllRubyFontSizes,
     convertPinyinQueryToNumeric,

@@ -147,8 +147,51 @@ runTest('Single hyphen (PFS syllable joiner) and single dash are not break point
   assert.strictEqual(splitRubyByBaseBreakpoints('阿－婆', 'á - pǒ'), null);
 });
 
-runTest('Clause break falls back (no split) when phonetic lacks matching punctuation', () => {
-  assert.strictEqual(splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn ngi'), null);
+runTest('Phonetic lacking punctuation: aligns when syllable counts match, otherwise no split', () => {
+  const ok = splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn ngi');
+  assert.deepStrictEqual(ok.baseSegs, ['一還一，', '二還二']);
+  assert.deepStrictEqual(ok.rtSegs, ['ìd vǎn ìd', 'ngi vǎn ngi']);
+  assert.strictEqual(splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn'), null);
+});
+
+// 6d2. 標音無標點（教典資料缺漏）：照各分句漢字字數對應音節數，切標音
+runTest('Clause punctuation missing in phonetic: align by syllable counts', () => {
+  const res = splitRubyByBaseBreakpoints(
+    '人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋',
+    'ngǐn lò sám11 kien vái hǎng lu těu lǎi lǎi dà pi dà cùd sìi ó11 ngiau lǐm sìib hǎi',
+  );
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['人老三件歪，', '行路頭犁犁；', '打屁打出屎，', '屙尿淋溼鞋']);
+  assert.deepStrictEqual(res.rtSegs, [
+    'ngǐn lò sám11 kien vái', 'hǎng lu těu lǎi lǎi', 'dà pi dà cùd sìi', 'ó11 ngiau lǐm sìib hǎi',
+  ]);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun', 'dun']);
+  // 歇後語：破折號前後各一段
+  const x = splitRubyByBaseBreakpoints('番豆掊殼－－還有醫', 'fán teu bói hòg vǎn iú í');
+  assert.deepStrictEqual(x.baseSegs, ['番豆掊殼－－', '還有醫']);
+  assert.deepStrictEqual(x.rtSegs, ['fán teu bói hòg', 'vǎn iú í']);
+});
+
+runTest('Syllable alignment: hyphen-joined (PFS) words are cut at the seam, hyphen dropped', () => {
+  const res = splitRubyByBaseBreakpoints('人老三件歪，行路頭犁犁', 'ngǐn-lò-sám-kien-vái-hǎng-lu-těu-lǎi-lǎi');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.rtSegs, ['ngǐn-lò-sám-kien-vái', 'hǎng-lu-těu-lǎi-lǎi']);
+});
+
+runTest('Syllable alignment: sandhi <ruby> counts as one syllable and nested <rt> digits are ignored', () => {
+  const res = splitRubyByBaseBreakpoints('甲乙，丙丁', 'a <ruby class="sandhi-t33">bà<rt>33</rt></ruby> c d');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.rtSegs, ['a <ruby class="sandhi-t33">bà<rt>33</rt></ruby>', 'c d']);
+});
+
+runTest('Syllable alignment gives up (null) when syllable total differs from character total', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c d e'), null);
+  // 標音夾註記（【又讀】多一組讀音）音節數對毋著
+  assert.strictEqual(
+    splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c d 【又讀】e f g h'),
+    null,
+  );
 });
 
 // 6e. 羅馬字標點轉半形：、，→ `, `、；→ `; `；漢字側毋動
