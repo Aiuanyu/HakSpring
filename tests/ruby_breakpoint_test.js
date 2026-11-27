@@ -279,18 +279,38 @@ runTest('Mismatched segments fallback to null', () => {
 });
 
 // 8. 整詞並列斜線（音節數與漢字字數相同）→ 斷行，漢字兩行都顯示
-runTest('Whole-word slash alternatives (equal syllables) split into lines', () => {
-  const res = splitRubyByBaseBreakpoints('溜走', 'tiu zèu/liu zèu');
-  assert.notStrictEqual(res, null);
-  assert.deepStrictEqual(res.baseSegs, ['溜走', '溜走']);
-  assert.deepStrictEqual(res.rtSegs, ['tiu zèu/', 'liu zèu']);
+// P3（20261127）：整詞並列斜線不再用「斷成兩行」，認證、教典統一疊成多層讀音（expandReadingsForDisplay）
+runTest('Whole-word slash is no longer a line-break point (stacked as layers instead)', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('溜走', 'tiu zèu/liu zèu'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('溜走', 'tiu-zèu/liu-zèu'), null);
 });
 
-runTest('Whole-word slash with 4 syllables and sandhi ruby tags', () => {
-  const res = splitRubyByBaseBreakpoints('咚咚咚咚', 'dǔng dǔng <ruby class="x">dung<rt>33</rt></ruby> dung/dǔng dúng dùng dùng');
+runTest('expandReadingsForDisplay: cert slash and GIP spaced slash both stack; GIP notes still work', () => {
+  const { expandReadingsForDisplay: ex } = require('../main.js');
+  // 認證 `/`
+  assert.deepStrictEqual(ex('溜走', 'tiu zèu/liu zèu', false), ['tiu zèu', 'liu zèu']);
+  // 教典 ` / `（無註記个第二讀音）：摎認證共樣疊層
+  assert.deepStrictEqual(ex('白果', 'ped gò / pag gò', true), ['ped gò', 'pag gò']);
+  // 教典註記照舊
+  const note = ex('墳堂', '【文】fùn tǒng 【白】pǔn tǒng', true);
+  assert.deepStrictEqual(note.map((l) => l.label), ['文', '白']);
+  // 音節數對毋著就 null（走原本顯示）
+  assert.strictEqual(ex('因由', 'rhǐn / rhiù', true), null);
+  assert.strictEqual(ex('四個字詞', 'a/b c/d e/f g/h', false), null);
+});
+
+runTest('GIP spaced-slash proverb: stacked layers also split per clause', () => {
+  const { expandReadingsForDisplay: ex, splitRubyMultiReading: sm } = require('../main.js');
+  const layers = ex(
+    '水鬼升城隍，心臼管家娘',
+    'shûi gûi shīn shǎng fǒng, sīm kiū guân gā ngiǒng / shûi gûi shīn shǎng vǒng, sīm kiū guân gā ngiǒng',
+    true,
+  );
+  assert.strictEqual(layers.length, 2);
+  const res = sm('水鬼升城隍，心臼管家娘', layers);
   assert.notStrictEqual(res, null);
-  assert.strictEqual(res.rtSegs.length, 2);
-  assert.strictEqual(res.rtSegs[1], 'dǔng dúng dùng dùng');
+  assert.deepStrictEqual(res.baseSegs, ['水鬼升城隍，', '心臼管家娘']);
+  assert.deepStrictEqual(res.layerSegs[1], ['shûi gûi shīn shǎng vǒng,', 'sīm kiū guân gā ngiǒng']);
 });
 
 // 9. 單一音節異讀 → 跳過
@@ -384,11 +404,8 @@ runTest('expandSlashReadings returns null when combinations exceed the limit (>8
   assert.strictEqual(expandSlashReadings('四個字詞', 'a/b c/d e/f g/h'), null);
 });
 
-runTest('splitRubyByWholeWordSlash counts hyphen-joined syllables like expandSlashReadings', () => {
-  const res = splitRubyByBaseBreakpoints('溜走', 'tiu-zèu/liu-zèu');
-  assert.notStrictEqual(res, null);
-  assert.deepStrictEqual(res.rtSegs, ['tiu-zèu/', 'liu-zèu']);
-  assert.deepStrictEqual(res.breakKinds, ['primary']);
+runTest('expandSlashReadings counts hyphen-joined (PFS) syllables', () => {
+  assert.deepStrictEqual(expandSlashReadings('溜走', 'tiu-zèu/liu-zèu'), ['tiu-zèu', 'liu-zèu']);
 });
 
 // 15. 頓號漸進斷行（空間毋夠正對最尾一個 segment 斷行，空間夠就毋斷）

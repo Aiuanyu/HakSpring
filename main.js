@@ -120,84 +120,6 @@ function isFirefox() {
 }
 
 /**
- * 認證詞彙標音有斜線時，判斷係「整詞並列」抑係「單一音節異讀」。
- * - 整詞並列：斜線兩爿（逐段）个音節數攏摎漢字字數相同，且字數 ≥ 2
- *   （例：溜走 tiu zèu/liu zèu）→ 斷做兩行，漢字兩行都顯示，各配一段標音。
- * - 單一音節異讀（例：欣賞 hím/hiún sòng、拔 bad/pad）→ 毋斷，回傳 null。
- * 標音含括號、【】註記者保守毋處理。此邏輯淨 Firefox 个 adjustRubyFontSize 會用著。
- *
- * @param {string} baseHtml - ruby 基礎文字（漢字 HTML）
- * @param {string} rtHtml - ruby rt 標音 HTML
- * @param {function} tokenize - 將 HTML 切成 tag／文字 token 个函式
- * @returns {{ baseSegs: string[], rtSegs: string[] } | null}
- */
-function splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize) {
-  if (!rtHtml) return null;
-
-  // 抽出純文字（連 sandhi ruby 裡肚个 <rt>變調數字</rt> 一齊拿忒）
-  const plain = (html) => html.replace(/<rt(?:\s[^>]*)?>.*?<\/rt>/gis, '').replace(/<[^>]+>/g, '');
-  const rtPlain = plain(rtHtml);
-  if (!rtPlain.includes('/')) return null;
-  if (/[（）()【】\[\]]/.test(rtPlain) || /phonetic-paren|phonetic-note/i.test(rtHtml)) return null;
-  const basePlain = plain(baseHtml);
-  if (/[（）()【】\[\]／/]/.test(basePlain)) return null;
-
-  // 漢字字數（含擴充區的代理對字，毋算空白摎標點）
-  const hanCount = Array.from(basePlain).filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
-  if (hanCount < 2) return null;
-
-  const parts = rtPlain.split('/');
-  if (parts.length < 2) return null;
-  const syllableCount = (s) => s.split(/[\s\-]+/).filter(Boolean).length; // 摎 expandSlashReadings 計法一致（連字號也算分隔）
-  if (!parts.every((p) => syllableCount(p) === hanCount)) return null;
-
-  // 依斜線切分 rt HTML（保留並補齊 <ruby> 等標籤）
-  const rtSegs = [];
-  let cur = '';
-  const openTags = [];
-  const closeAll = () => openTags.slice().reverse().map((t) => `</${t.tag}>`).join('');
-  const reopenAll = () => openTags.map((t) => t.full).join('');
-  for (const t of tokenize(rtHtml)) {
-    if (t.isTag) {
-      const m = t.text.match(/^<\/?([a-zA-Z0-9\-]+)[^>]*>/);
-      if (m) {
-        const tagName = m[1].toLowerCase();
-        const isClose = t.text.startsWith('</');
-        const isSelf = t.text.endsWith('/>') || ['br', 'img', 'hr', 'input'].includes(tagName);
-        if (!isClose && !isSelf) {
-          openTags.push({ tag: tagName, full: t.text });
-        } else if (isClose) {
-          for (let j = openTags.length - 1; j >= 0; j--) {
-            if (openTags[j].tag === tagName) { openTags.splice(j, 1); break; }
-          }
-        }
-      }
-      cur += t.text;
-    } else {
-      // <rt> 內部（sandhi 數字）毋會有斜線，直接逐字處理
-      for (const ch of t.text) {
-        if (ch === '/') {
-          cur += ch;
-          rtSegs.push(cur + closeAll());
-          cur = reopenAll();
-        } else {
-          cur += ch;
-        }
-      }
-    }
-  }
-  if (plain(cur).trim().length > 0) rtSegs.push(cur + closeAll());
-
-  if (rtSegs.length !== parts.length) return null;
-
-  return {
-    baseSegs: rtSegs.map(() => baseHtml),
-    rtSegs: rtSegs.map((seg, i) => (i > 0 ? seg.trimStart() : seg)),
-    breakKinds: rtSegs.slice(1).map(() => 'primary'),
-  };
-}
-
-/**
  * 認證詞彙標音有斜線時，展開成「完整个多隻讀音」，供 Firefox 用 <rtc> 多層 <rt> 顯示
  * （漢字淨留一份，每種讀音一層，第一層 rt 在漢字上背，後背个 rtc 層往下排）。
  * - 整詞並列：斜線兩爿（逐段）音節數攏摎漢字字數相同（例：溜走 tiu zèu/liu zèu）
@@ -278,6 +200,24 @@ function expandNoteReadings(rawWord, phoneticText) {
   if (layers.length < 2) return null;
   if (!layers.every((l) => count(l.text) === han)) return null;
   return layers;
+}
+
+/**
+ * 渲染時，將標音展開成多層讀音（Firefox 用 <rtc> 疊層），認證、教典共用（P3，20261127）。
+ * - 教典：先試讀音註記（又讀、俗音、文、白…，expandNoteReadings）；無註記、用 ` / ` 隔開个
+ *   第二讀音（split_gip_phonetic 產生）改走「整詞並列」（expandSlashReadings），摎認證个 `/` 共樣疊層。
+ * - 認證：expandSlashReadings。
+ * 展開後每層音節數愛摎漢字字數相同，毋然就回傳 null（走原本个顯示）。
+ * @param {string} rawWord - 漢字詞目
+ * @param {string} phoneticText - 已經 formatPhoneticForDisplay 个標音（尚未變調）
+ * @param {boolean} isGip - 係毋係教典資料
+ * @returns {Array<string|{label:(string|null), text:string}>|null}
+ */
+function expandReadingsForDisplay(rawWord, phoneticText, isGip) {
+  if (isGip) {
+    return expandNoteReadings(rawWord, phoneticText) || expandSlashReadings(rawWord, phoneticText);
+  }
+  return expandSlashReadings(rawWord, phoneticText);
 }
 
 /**
@@ -482,8 +422,8 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   }
 
   if (!baseHasParen && !baseHasSlash && !baseHasDun) {
-    // 漢字無斷點時，看標音是否係「整詞並列」（例：tiu zèu/liu zèu）个斜線
-    return splitRubyByWholeWordSlash(baseHtml, rtHtml, tokenize);
+    // 漢字無斷點：毋斷（標音有斜線者，渲染時已經疊成多層讀音，見 expandReadingsForDisplay）
+    return null;
   }
 
   function splitTokens(tokens, isRt, targetCount) {
@@ -1940,9 +1880,7 @@ function createVariantBlock(entry, dialectName, isGipData, isMain, highlightOpti
   const multiWord = entry.phoneticOnly ? fallbackWord : entry.word;
   const multiReadings = !isFirefox()
     ? null
-    : (isGipData
-      ? expandNoteReadings(multiWord, phoneticText)
-      : expandSlashReadings(multiWord, phoneticText));
+    : expandReadingsForDisplay(multiWord, phoneticText, isGipData);
   if (!multiReadings && shouldApplySandhi) {
     phoneticText = getSandhiHtml(phoneticText, dialectCode);
   }
@@ -2410,9 +2348,7 @@ function renderVocabWithVariants(td, line, dialectInfo, isGipData, highlightOpti
   if (dialectCode) setSandhiCodeData(ruby, dialectCode); // 斷行後重新展開標音要用
   // Firefox 系：認證詞彙標音有斜線，漢字留一份，各讀音用 <rtc> 多層 <rt> 完整展開（rt 在上、rtc 往下排）
   if (isFirefox()) {
-    const readings = isGip
-      ? expandNoteReadings(rawWord, phoneticText)
-      : expandSlashReadings(rawWord, phoneticText);
+    const readings = expandReadingsForDisplay(rawWord, phoneticText, isGip);
     if (readings) {
       appendMultiReadingLayers(ruby, readings, dialectCode);
       td.appendChild(ruby);
@@ -11411,6 +11347,7 @@ if (typeof module !== 'undefined' && module.exports) {
     alignRtBySyllableCounts,
     splitRubyMultiReading,
     joinRtSegs,
+    expandReadingsForDisplay,
     adjustRubyFontSize,
     adjustAllRubyFontSizes,
     convertPinyinQueryToNumeric,
