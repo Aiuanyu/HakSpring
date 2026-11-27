@@ -3,24 +3,26 @@
 > 本文件由客源翠（HakSpring）資料前置清洗管線於處理教育部教典原始 CSV 時自動彙整產出。
 > 目的在於提供官方編審小組作為後續更新辭典資料庫之具體勘誤依據。
 
-- 總計檢核並修正筆數：**333 筆**
+- 總計檢核並修正筆數：**347 筆**
 
 ## 一、問題分類統計
 
 | 腔別 | 筆數 |
 | :--- | :---: |
-| 四縣腔 | 13 |
-| 南四縣腔 | 43 |
-| 海陸腔 | 9 |
-| 大埔腔 | 88 |
-| 饒平腔 | 54 |
-| 詔安腔 | 126 |
+| 四縣腔 | 16 |
+| 南四縣腔 | 45 |
+| 海陸腔 | 10 |
+| 大埔腔 | 92 |
+| 饒平腔 | 56 |
+| 詔安腔 | 128 |
 
 | 勘誤類型 | 筆數 |
 | :--- | :---: |
 | 標點缺漏 | 301 |
 | 序號標籤殘留 | 16 |
 | 音節調號分離 | 15 |
+| 少音節 | 12 |
+| 缺聲調數字 | 2 |
 | 符號混用 | 1 |
 
 ## 二、勘誤條目清單
@@ -28,6 +30,7 @@
 | 腔別 | 編號 | 詞目 | 教典原始標音 | 客源翠修正標音 | 問題類型 | 勘誤建議說明 |
 | :---: | :---: | :--- | :--- | :--- | :--- | :--- |
 | 海 | gip-9785 | 酒漏仔 | `ziu24 leu 33 er55 ` | `ziu24 leu33 er55 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
+| 海 | gip-10676 | 六月牛眼－－白咈（核） | `liug5 ngied2 ngiu55 ngan24－－pag2 fud2 ` | `liug5 ngied2 ngiu55 ngan24－－pag2 fud2 (fud2) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 海 | gip-10765 | 老虎也會啄目睡－－難免 | `lo24 fu24 rha33 voi33 dug5 mug5 shoi33 nan55 mien53 ` | `lo24 fu24 rha33 voi33 dug5 mug5 shoi33－－nan55 mien53 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 海 | gip-10947 | 麻布做衫－－看現現 | `ma55 bu11 zo11 sam53 kon11 hien33 hien33 ` | `ma55 bu11 zo11 sam53－－kon11 hien33 hien33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 海 | gip-11968 | 人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋 | `ngin55 lo24 sam53 kien33 vai53 hang55 lu33 teu55 lai55 lai55 da24 pi11 da24 chud5 shi24 o53 ngiau33 lim55 shib5 hai55 ` | `ngin55 lo24 sam53 kien33 vai53，hang55 lu33 teu55 lai55 lai55；da24 pi11 da24 chud5 shi24，o53 ngiau33 lim55 shib5 hai55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -43,6 +46,7 @@
 | 南 | gip-4044 | 大頭确 | `特tai55 teu11 kog5 又俗音1.tai55 teu11 gog5` | `特tai55 teu11 kog5 又俗音tai55 teu11 gog5` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 南 | gip-6891 | 番豆掊殼－－還有醫 | `fan24 teu55 boi24 hog2 van11 iu24 i24 ` | `fan24 teu55 boi24 hog2－－van11 iu24 i24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 南 | gip-9306 | 有錢親阿哥，無錢死孤盲 | `iu24 qien11 qin24 a24 go24 mo11 qien11 xi31 go24 mo24 ` | `iu24 qien11 qin24 a24 go24，mo11 qien11 xi31 go24 mo24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
+| 南 | gip-10437 | 六月牛眼－－白咈（核） | `liug2 ngiad5 ngiu11 ngian31－－pag5 fud5 ` | `liug2 ngiad5 ngiu11 ngian31－－pag5 fud5 (fud5) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 南 | gip-10525 | 老虎也會啄目睡－－難免 | `lo55 fu31 ia55 voi55 dug2 mug2 soi55 nan11 mien24 ` | `lo55 fu31 ia55 voi55 dug2 mug2 soi55－－nan11 mien24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 南 | gip-10702 | 麻布做衫－－看現現 | `ma11 bu55 zo55 sam24 kon55 hian55 hian55 ` | `ma11 bu55 zo55 sam24－－kon55 hian55 hian55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 南 | gip-11624 | 人平不語，水平不流 | `ngin11 pin11 bud2 ngi24 sui31 pin11 bud2 liu11 ` | `ngin11 pin11 bud2 ngi24，sui31 pin11 bud2 liu11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -79,13 +83,16 @@
 | 南 | gip-16679 | 田螺取肚飽，毋知屎胐生溜苔 | `tien11 lo11 qi31 du31 bau31 m11 di24 sii55 fud2 sang24 liu24 toi11 ` | `tien11 lo11 qi31 du31 bau31，m11 di24 sii55 fud2 sang24 liu24 toi11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 南 | gip-16742 | 朝朝三片薑，餓死賣藥郎 | `zeu24 zeu24 sam24 pien31 giong24 ngo55 xi31 mai55 iog5 long11 ` | `zeu24 zeu24 sam24 pien31 giong24，ngo55 xi31 mai55 iog5 long11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 南 | gip-16762 | 做無一調羹，愛食一碗公－－恁好空 | `zo55 mo11 id2 tiau11 gang24 oi55 siid5 id2 von31 gung24 an31 ho31 kang24 ` | `zo55 mo11 id2 tiau11 gang24，oi55 siid5 id2 von31 gung24－－an31 ho31 kang24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
+| 南 | gip-17962 | 瓦析仔 | `nga31 sag2 ` | `nga31 sag2 e31 ` | 少音節 | 詞目尾「仔」音讀漏標（3 字只有 2 音節）；補上「仔」小稱 e31（教典四縣同詞目音讀 nga31 sag2 e31）。 |
 | 平 | gip-302 | 垃圾 | `特la53 sab2 又俗音3.leb2 seb2` | `特la53 sab2 又俗音leb2 seb2` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
+| 平 | gip-607 | 十字路口 | `shib5 sii24 lu24 ` | `shib5 sii24 lu24 kieu53 ` | 少音節 | 詞目尾「口」音讀漏標（4 字只有 3 音節）；補上饒平（新竹）「口」个音 kieu53（認證 115 平中「路口」lu24 kieu53）。 |
 | 平 | gip-763 | 分數 | `fun11 su53 又讀1.fun11 sii53` | `fun11 su53 又讀fun11 sii53` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 平 | gip-2309 | 伯公 | `bag2 gung11 俗音1.bag2 gung55` | `bag2 gung11 俗音bag2 gung55` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 平 | gip-3192 | 排列 | `pe55 lied5 俗音2.be55 lied5` | `pe55 lied5 俗音be55 lied5` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 平 | gip-3404 | 幾下 | `gi53 ha24 合音1.gia24` | `gi53 ha24 合音gia24` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 平 | gip-4508 | 學員 | `hog5 vien 55 ` | `hog5 vien55 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
 | 平 | gip-6867 | 棟梁 | `dung53 liong 55 ` | `dung53 liong55 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
+| 平 | gip-10564 | 六月牛眼－－白咈（核） | `liug2 ngied5 ngiu55 ngan53－－pag5 fud5 ` | `liug2 ngied5 ngiu55 ngan53－－pag5 fud5 (fud5) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 平 | gip-10654 | 老虎也會啄目睡－－難免 | `lo53 fu53 rhia24 voi24 dug2 mug2 fe24 nan55 mien11 ` | `lo53 fu53 rhia24 voi24 dug2 mug2 fe24－－nan55 mien11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 平 | gip-11835 | 人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋 | `ngin55 lo53 sam11 kien24 vai11 hang55 lu24 teu55 le55 le55 da53 pi53 da53 chud2 shi53 o11 ngiau24 lim55 shib2 he55 ` | `ngin55 lo53 sam11 kien24 vai11，hang55 lu24 teu55 le55 le55；da53 pi53 da53 chud2 shi53，o11 ngiau24 lim55 shib2 he55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 平 | gip-12891 | 三十暗晡个飯甑－－無閒 | `sam11 shib5 am53 bu11 gai53 pon24 zen53 mo55 han55 ` | `sam11 shib5 am53 bu11 gai53 pon24 zen53－－mo55 han55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -138,6 +145,7 @@
 | 四 | gip-3261 | 排列 | `pai11 lied5 俗音2.bai11 lied5` | `pai11 lied5 俗音bai11 lied5` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 四 | gip-6992 | 番豆掊殼－－還有醫 | `fan24 teu55 boi24 hog2 han11 iu24 i55 ` | `fan24 teu55 boi24 hog2－－han11 iu24 i55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 四 | gip-10627 | 溜上溜下 | `liu55 song24 liu55 ha24 又讀2.liu24 song24 liu24 ha24` | `liu55 song24 liu55 ha24 又讀liu24 song24 liu24 ha24` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
+| 四 | gip-10633 | 六月牛眼－－白咈（核） | `liug2 ngied5 ngiu11 ngien31－－pag5 fud5 ` | `liug2 ngied5 ngiu11 ngien31－－pag5 fud5 (fud5) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 四 | gip-10727 | 老虎也會啄目睡－－難免 | `lo55 fu31 ia55 voi55 dug2 mug2 soi55 nan11 mien24 ` | `lo55 fu31 ia55 voi55 dug2 mug2 soi55－－nan11 mien24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 四 | gip-10913 | 麻布做衫－－看現現 | `ma11 bu55 zo55 sam24 kon55 hien55 hien55 ` | `ma11 bu55 zo55 sam24－－kon55 hien55 hien55 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 四 | gip-11910 | 人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋 | `ngin11 lo31 sam24 kien55 vai24 hang11 lu55 teu11 lai11 lai11 da31 pi55 da31 cud2 sii31 o24 ngiau55 lim11 siib2 hai11 ` | `ngin11 lo31 sam24 kien55 vai24，hang11 lu55 teu11 lai11 lai11；da31 pi55 da31 cud2 sii31，o24 ngiau55 lim11 siib2 hai11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -146,8 +154,12 @@
 | 四 | gip-12961 | 三十暗晡个飯甑－－無閒 | `sam24 siib5 am55 bu24 ge55 fan55 zen55 mo11 han11 ` | `sam24 siib5 am55 bu24 ge55 fan55 zen55－－mo11 han11 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 四 | gip-13818 | 水牛相打－－各打各 | `sui31 ngiu11 xiong24 da31 gog2 da31 gog2 ` | `sui31 ngiu11 xiong24 da31－－gog2 da31 gog2 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 四 | gip-14774 | 烏鴉無隔夜卵－－性急 | `vu24 a24 mo11 gag2 ia55 lon31 xin55 gib2 ` | `vu24 a24 mo11 gag2 ia55 lon31－－xin55 gib2 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
+| 四 | gip-16515 | 秤梗 | `ciin guang31 ` | `ciin55 guang31 ` | 缺聲調數字 | 第一個音節漏標聲調數字；補上 55（教典南四縣同詞目 ciin55 guang31，教典四縣單字「秤」ciin55）。 |
+| 四 | gip-17967 | 後生條仔 | `heu sang24 tiau11 e31 ` | `heu55 sang24 tiau11 e31 ` | 缺聲調數字 | 第一個音節漏標聲調數字；補上 55（認證 115 四高同詞目 heu55 sang24 tiau11 e31，教典南四縣亦同）。 |
 | 安 | gip-2395 | 思想 | `su11 siong31 俗音3.su11 siong55` | `su11 siong31 俗音su11 siong55` | 序號標籤殘留 | 官方音讀標籤後殘留內部編號序號（如「又讀1.」「俗音2.」）。 |
 | 安 | gip-7314 | 鋼筋 | `gong31 gun11 又讀 gong11 gun 11` | `gong31 gun11 又讀 gong11 gun11` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
+| 安 | gip-8145 | 因由 | `rhin11 rhiu53 ` | `rhin11 rhiu53 ` | 少音節 | 兩个音節中央誤用全形空白（讀音分隔符號）隔開，變成兩組單音節讀音；改成一般空白，合成一組讀音。 |
+| 安 | gip-9101 | 六月牛眼－－白咈（核） | `liu24 ngied43 ngiu53 ngien31－－pa55 fud43 ` | `liu24 ngied43 ngiu53 ngien31－－pa55 fud43 (fud43) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 安 | gip-9947 | 日求三餐，夜求一宿 | `ngid24 kiu53 sam11 con11 rhia55 kiu53 rhid24 siu24 ` | `ngid24 kiu53 sam11 con11，rhia55 kiu53 rhid24 siu24 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 安 | gip-13349 | 阿公毋做，做人个孫子 | `a11 gung11 m55 zoo31 zoo31 ngin53 e55 sun11 zu31 ` | `a11 gung11 m55 zoo31，zoo31 ngin53 e55 sun11 zu31 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 安 | gip-13350 | 阿媽嫁孫女－－無主無意 | `a11 ma53 ga31 sun11 m31 mo53 zhi31 mo53 rhi31 ` | `a11 ma53 ga31 sun11 m31－－mo53 zhi31 mo53 rhi31 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -278,6 +290,7 @@
 | 大 | gip-4444 | 學會 | `hog54 fui 53 ` | `hog54 fui53 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
 | 大 | gip-4742 | 證照 | `zhin 53 zheu53 ` | `zhin53 zheu53 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
 | 大 | gip-8060 | 講天缺 | `gong31 tien33 kied 21 ` | `gong31 tien33 kied21 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
+| 大 | gip-10295 | 六月牛眼－－白咈（核） | `liug21 ngied54 ngiu113 ngien31－－pag54 fud54 ` | `liug21 ngied54 ngiu113 ngien31－－pag54 fud54 (fud54) ` | 少音節 | 歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。 |
 | 大 | gip-10382 | 老虎也會啄目睡－－難免 | `lo53 fu31 rha33 voi53 dug21 mug21 shoi53 nan113 mien33 ` | `lo53 fu31 rha33 voi53 dug21 mug21 shoi53－－nan113 mien33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-10556 | 麻布做衫－－看現現 | `ma113 bu53 zo53 sam33 kon53 hien53 hien53 ` | `ma113 bu53 zo53 sam33－－kon53 hien53 hien53 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-11514 | 人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋 | `ngin113 lo31 sam33 kien53 vai33 hang113 lu53 teu113 le113 le113 da31 pi53 da31 chud21 shi31 o33 ngiau53 lim113 shib21 he113 ` | `ngin113 lo31 sam33 kien53 vai33，hang113 lu53 teu113 le113 le113；da31 pi53 da31 chud21 shi31，o33 ngiau53 lim113 shib21 he113 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -291,6 +304,7 @@
 | 大 | gip-15655 | 茶葉翻渣－－淡撇咧 | `ca113 rhab54 fan33 za33 tam33 ped21 le33 ` | `ca113 rhab54 fan33 za33－－tam33 ped21 le33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-15682 | 草索䌈豆腐－－擐毋得 | `co31 sog21 tag21 teu53 fu53 kuan53 m113 ded21 ` | `co31 sog21 tag21 teu53 fu53－－kuan53 m113 ded21 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-15683 | 醎草䌈豆腐－－擐毋得 | `ham113 co31 tag21 teu53 fu53 kuan53 m113 ded21 ` | `ham113 co31 tag21 teu53 fu53－－kuan53 m113 ded21 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
+| 大 | gip-15696 | 怙杖顛倒怙撐 | `gu53 chong31 dien33 do53 cang53 ` | `gu53 chong31 dien33 do53 gu53 cang53 ` | 少音節 | 詞目第二个「怙」音讀漏標（6 字只有 5 音節）；「怙杖」摎「怙撐」對舉，補上摎第一个「怙」共樣个 gu53（大埔「怙」教典讀音 gu53）。 |
 | 大 | gip-15731 | 釘礱無㓾雞，三個人罅挨 | `den33 lung113 mo113 chi113 gie33 sam33 gai53 ngin113 la53 e33 ` | `den33 lung113 mo113 chi113 gie33，sam33 gai53 ngin113 la53 e33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-15768 | 花缽種菜－－無緣 | `fa33 bad21 zhung53 coi53 mo113 rhen113 ` | `fa33 bad21 zhung53 coi53－－mo113 rhen113 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-15775 | 地豆剝殼──還有醫 | `ti53 teu53 bog21 kog21──han113 rhiu33 rhi33 ` | `ti53 teu53 bog21 kog21－－han113 rhiu33 rhi33 ` | 符號混用 | 歇後語分隔「──」（U+2500）緊貼聲調數字，管線無法切開音節，聲調數字毋會轉調符；改成其他歇後語通用个「－－」。 |
@@ -328,6 +342,7 @@
 | 大 | gip-16073 | 青瞑个看戲－－聽聲無見影 | `ciang33 miang33 gai33 kon53 hi53 ten33 shang33 mo113 gien53 rhang31 ` | `ciang33 miang33 gai33 kon53 hi53－－ten33 shang33 mo113 gien53 rhang31 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-16088 | 木匠擎枷－－自作自受 | `mug21 siong53 kia113 ga33 cii53 zog21 cii53 shiu53 ` | `mug21 siong53 kia113 ga33－－cii53 zog21 cii53 shiu53 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-16092 | 目珠花花，瓠看做菜瓜 | `mug21 zhu33 fa33 fa33 pu113 kon53 zo53 coi53 gua33 ` | `mug21 zhu33 fa33 fa33，pu113 kon53 zo53 coi53 gua33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
+| 大 | gip-16094 | 蚊腳－－無髀﹝比﹞ | `mun35 giog21－－mo113 bi31 ` | `mun35 giog21－－mo113 bi31 (bi31) ` | 少音節 | 詞目括號內个諧音字「比」音讀漏標；補上（比，大埔 bi31，認證 115 大初、教典攏係 bi31，摎「髀」同音）。 |
 | 大 | gip-16099 | 草巴蛇歸畚箕，毋當一尾青竹絲 | `co31 ba33 sha113 gui33 bun53 gi33 m113 dong53 rhid21 mui33 ciang33 zhug21 si33 ` | `co31 ba33 sha113 gui33 bun53 gi33，m113 dong53 rhid21 mui33 ciang33 zhug21 si33 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-16101 | 南蛇鑽壁籬，毋死也脫層皮 | `nam113 sha113 zon33 biag21 li113 m113 si31 rha33 tod21 cen113 pi113 ` | `nam113 sha113 zon33 biag21 li113，m113 si31 rha33 tod21 cen113 pi113 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-16130 | 閻羅王嫁妹－－無人愛 | `rham113 lo113 vong113 ga53 moi53 mo113 ngin113 oi53 ` | `rham113 lo113 vong113 ga53 moi53－－mo113 ngin113 oi53 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
@@ -360,6 +375,7 @@
 | 大 | gip-16414 | 左目掣財，右目掣食 | `zo31 mug21 ched21 cai113 rhiu53 mug21 ched21 shid54 ` | `zo31 mug21 ched21 cai113，rhiu53 mug21 ched21 shid54 ` | 標點缺漏 | 詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。 |
 | 大 | gip-16728 | 呵呵呷呷 | `特ho113 ho113 gab54 gab 54 ` | `特ho113 ho113 gab54 gab54 ` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
 | 大 | gip-17461 | 寬寬 | `kuan33 kuan33 小稱變調讀kuan33 kuan 35` | `kuan33 kuan33 小稱變調讀kuan33 kuan35` | 音節調號分離 | 音節字母與調值數字間誤夾空白或不換行空格（NBSP）。 |
+| 大 | gip-17869 | 搣衰人 | `soi33 ngin113 ` | `med21 soi33 ngin113 ` | 少音節 | 音讀漏標「搣」（3 字只有 2 音節）；補上大埔「搣」个官方讀音 med21（認證 115 大中、教典）。 |
 
 ---
 *（本報告於每次執行 `python3 process_all_data.py` 時自動同步更新）*

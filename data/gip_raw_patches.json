@@ -151,5 +151,131 @@
     "replace_raw": "kog21－－han113",
     "category": "符號混用",
     "reason": "歇後語分隔「──」（U+2500）緊貼聲調數字，管線無法切開音節，聲調數字毋會轉調符；改成其他歇後語通用个「－－」。"
+  },
+  {
+    "dialect": "南",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "10694",
+    "match_raw": "pag5 fud5",
+    "replace_raw": "pag5 fud5 (fud5)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "四",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "10633",
+    "match_raw": "pag5 fud5",
+    "replace_raw": "pag5 fud5 (fud5)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "大",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "10295",
+    "match_raw": "pag54 fud54",
+    "replace_raw": "pag54 fud54 (fud54)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "安",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "9101",
+    "match_raw": "pa55 fud43",
+    "replace_raw": "pa55 fud43 (fud43)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "平",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "10564",
+    "match_raw": "pag5 fud5",
+    "replace_raw": "pag5 fud5 (fud5)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "海",
+    "hanji": "六月牛眼－－白咈（核）",
+    "gip_id": "10676",
+    "match_raw": "pag2 fud2",
+    "replace_raw": "pag2 fud2 (fud2)",
+    "category": "少音節",
+    "reason": "歇後語「白核」與「白咈」同音（教典釋義明載），詞目括號內个諧音字「核」音讀漏標；補上摎「咈」共樣个音（核个教典讀音六腔都係 fud）。"
+  },
+  {
+    "dialect": "大",
+    "hanji": "蚊腳－－無髀﹝比﹞",
+    "gip_id": "16094",
+    "match_raw": "mo113 bi31",
+    "replace_raw": "mo113 bi31 (bi31)",
+    "category": "少音節",
+    "reason": "詞目括號內个諧音字「比」音讀漏標；補上（比，大埔 bi31，認證 115 大初、教典攏係 bi31，摎「髀」同音）。"
+  },
+  {
+    "dialect": "大",
+    "hanji": "搣衰人",
+    "gip_id": "17869",
+    "match_raw": "soi33 ngin113",
+    "replace_raw": "med21 soi33 ngin113",
+    "category": "少音節",
+    "reason": "音讀漏標「搣」（3 字只有 2 音節）；補上大埔「搣」个官方讀音 med21（認證 115 大中、教典）。"
+  },
+  {
+    "dialect": "大",
+    "hanji": "怙杖顛倒怙撐",
+    "gip_id": "15696",
+    "match_raw": "dien33 do53 cang53",
+    "replace_raw": "dien33 do53 gu53 cang53",
+    "category": "少音節",
+    "reason": "詞目第二个「怙」音讀漏標（6 字只有 5 音節）；「怙杖」摎「怙撐」對舉，補上摎第一个「怙」共樣个 gu53（大埔「怙」教典讀音 gu53）。"
+  },
+  {
+    "dialect": "南",
+    "hanji": "瓦析仔",
+    "gip_id": "17962",
+    "match_raw": "nga31 sag2",
+    "replace_raw": "nga31 sag2 e31",
+    "category": "少音節",
+    "reason": "詞目尾「仔」音讀漏標（3 字只有 2 音節）；補上「仔」小稱 e31（教典四縣同詞目音讀 nga31 sag2 e31）。"
+  },
+  {
+    "dialect": "平",
+    "hanji": "十字路口",
+    "gip_id": "607",
+    "match_raw": "shib5 sii24 lu24",
+    "replace_raw": "shib5 sii24 lu24 kieu53",
+    "category": "少音節",
+    "reason": "詞目尾「口」音讀漏標（4 字只有 3 音節）；補上饒平（新竹）「口」个音 kieu53（認證 115 平中「路口」lu24 kieu53）。"
+  },
+  {
+    "dialect": "安",
+    "hanji": "因由",
+    "gip_id": "8145",
+    "match_raw": "rhin11　rhiu53",
+    "replace_raw": "rhin11 rhiu53",
+    "category": "少音節",
+    "reason": "兩个音節中央誤用全形空白（讀音分隔符號）隔開，變成兩組單音節讀音；改成一般空白，合成一組讀音。"
+  },
+  {
+    "dialect": "四",
+    "hanji": "秤梗",
+    "gip_id": "16515",
+    "match_raw": "ciin guang31",
+    "replace_raw": "ciin55 guang31",
+    "category": "缺聲調數字",
+    "reason": "第一個音節漏標聲調數字；補上 55（教典南四縣同詞目 ciin55 guang31，教典四縣單字「秤」ciin55）。"
+  },
+  {
+    "dialect": "四",
+    "hanji": "後生條仔",
+    "gip_id": "17967",
+    "match_raw": "heu sang24 tiau11 e31",
+    "replace_raw": "heu55 sang24 tiau11 e31",
+    "category": "缺聲調數字",
+    "reason": "第一個音節漏標聲調數字；補上 55（認證 115 四高同詞目 heu55 sang24 tiau11 e31，教典南四縣亦同）。"
   }
 ]
