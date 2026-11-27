@@ -342,7 +342,7 @@
 
   <div class="toast" id="toast">已複製到剪貼簿！</div>
 
-  <script src="js/kipan-converter.js"></script>
+  <script src="js/kipan-converter.js?v=2.0.0"></script>
   <script>
     const sampleText = "𠊎 (Ngǎi) 無 (mǒ) 幾愛 (gì oi) 客委會 (Hàg-Ví-Fi) 認 (ngin) 證辭彙 (ziin cǐifi)裡肚 (dídù)有兜仔 (iúdéu'è)个 (ge)例 (li) 句 (gi)會 (voi)講 (gòng)體 (tì) 罰 (fad)、權 (kiǎn) 威 (ví)教育 (gau'iùg)个 (ge)感覺 (gàmgòg)";
 
@@ -361,6 +361,7 @@
     }
 
     function doConvert() {
+      if (!KipanConverter.isWasmReady()) return;
       const text = inputEl.value;
       const orderRadio = document.querySelector('input[name="orderMode"]:checked');
       const forceOrder = orderRadio ? orderRadio.value : 'auto';
@@ -426,9 +427,14 @@
       copyToClipboard(all, '已複製兩行全文！');
     });
 
-    // 初始預設載入範例
+    // 初始預設載入範例並初始化 WASM 核心
     inputEl.value = sampleText;
-    doConvert();
+    KipanConverter.initWasm('wasm/two_line_wasm.wasm')
+      .then(() => doConvert())
+      .catch(err => {
+        console.error('WASM 載入失敗', err);
+        showToast('轉換引擎載入失敗，請確認以 HTTP 伺服器開啟本頁');
+      });
   </script>
 </body>
 </html>

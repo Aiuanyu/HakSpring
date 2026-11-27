@@ -2,362 +2,124 @@
  * kipan-converter.js
  * 客源翠企盤（HakSpring-Kipan）輸入法並列格式轉換器
  *
- * 將企盤輸出的「字詞 (拼音)」或「拼音 (字詞)」混排文字，
- * 自動分離轉換為整齊的兩行（諸夏字行與羅馬字行）。
- * 頂層行依第一個有效字詞自動判定（漢字在先則諸夏字在頂，羅馬字在先則羅馬字在頂）。
+ * 透過輕量 WebAssembly（`wasm/two_line_wasm.wasm`，編譯自 HakSpring-Kipan
+ * Rust `engine/two-line` 核心）執行雙行轉換，確保網頁版與 macOS／Android
+ * 共用同一套音韻、英文單字保留與雙向標點對齊規則。
  */
 
 (function (global) {
   'use strict';
 
-  /**
-   * 判斷是否包含漢字
-   */
-  function hasHan(str) {
-    return /\p{Script=Han}/u.test(str);
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder('utf-8');
+
+  let wasmExports = null;
+  let wasmInitPromise = null;
+
+  function writeUtf8(str) {
+    const bytes = encoder.encode(str || '');
+    const ptr = wasmExports.alloc(bytes.length);
+    if (bytes.length > 0) {
+      new Uint8Array(wasmExports.memory.buffer, ptr, bytes.length).set(bytes);
+    }
+    return { ptr, len: bytes.length };
+  }
+
+  function readAndFreePacked(packed) {
+    const big = typeof packed === 'bigint' ? packed : BigInt(packed);
+    const ptr = Number(big >> 32n);
+    const len = Number(big & 0xffffffffn);
+    try {
+      if (len === 0) return '';
+      const slice = new Uint8Array(wasmExports.memory.buffer, ptr, len);
+      return decoder.decode(slice);
+    } finally {
+      if (ptr !== 0 && len > 0) {
+        wasmExports.dealloc(ptr, len);
+      }
+    }
   }
 
   /**
-   * 判斷是否包含拉丁字母/羅馬字
+   * 載入並初始化 Rust `two_line_wasm.wasm`。
+   * @param {string|ArrayBuffer|Uint8Array} [source='wasm/two_line_wasm.wasm']
    */
-  function hasLatin(str) {
-    return /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/u.test(str);
+  async function initWasm(source) {
+    if (wasmExports) return wasmExports;
+    if (wasmInitPromise && !source) return wasmInitPromise;
+
+    const loader = (async () => {
+      let instance;
+      if (source instanceof ArrayBuffer || ArrayBuffer.isView(source)) {
+        const result = await WebAssembly.instantiate(source, {});
+        instance = result.instance;
+      } else {
+        const url = source || 'wasm/two_line_wasm.wasm';
+        if (typeof fetch === 'function') {
+          const resp = await fetch(url);
+          if (!resp.ok) {
+            throw new Error(`Failed to fetch WASM (${resp.status}): ${url}`);
+          }
+          if (typeof WebAssembly.instantiateStreaming === 'function') {
+            try {
+              const result = await WebAssembly.instantiateStreaming(resp.clone(), {});
+              instance = result.instance;
+            } catch (_e) {
+              const buf = await resp.arrayBuffer();
+              const result = await WebAssembly.instantiate(buf, {});
+              instance = result.instance;
+            }
+          } else {
+            const buf = await resp.arrayBuffer();
+            const result = await WebAssembly.instantiate(buf, {});
+            instance = result.instance;
+          }
+        } else {
+          throw new Error('No fetch() available; pass WASM bytes to initWasm(bytes)');
+        }
+      }
+      wasmExports = instance.exports;
+      return wasmExports;
+    })();
+
+    if (!source) {
+      wasmInitPromise = loader;
+    }
+    return loader;
   }
 
-  /**
-   * 中文全形標點轉羅馬字半形標點
-   * 特別處理：頓號「、」轉「,」，句號「。」轉「.」，各類括號「（）【】」轉「()[]」，刪節號轉「...」等
-   */
+  function isWasmReady() {
+    return wasmExports !== null;
+  }
+
+  function ensureWasm() {
+    if (!wasmExports) {
+      throw new Error('KipanConverter WASM is not initialized. Call await KipanConverter.initWasm() first.');
+    }
+  }
+
   function convertPunctToRomance(p) {
     if (!p) return '';
-    return p
-      .replace(/……/g, '...')
-      .replace(/…/g, '...')
-      .replace(/⋯⋯/g, '...')
-      .replace(/⋯/g, '...')
-      .replace(/‥/g, '..')
-      .replace(/——/g, '--')
-      .replace(/[—–―－]/g, '-')
-      .replace(/[～〜]/g, '~')
-      .replace(/[·‧・]/g, '.')
-      .replace(/[、,、﹑､，﹐]/g, ',')
-      .replace(/[。．﹒｡]/g, '.')
-      .replace(/[！﹗]/g, '!')
-      .replace(/[？﹖]/g, '?')
-      .replace(/[；﹔]/g, ';')
-      .replace(/[：﹕︰]/g, ':')
-      .replace(/[（﹙]/g, '(')
-      .replace(/[）﹚]/g, ')')
-      .replace(/[【〔［〖〘〚]/g, '[')
-      .replace(/[】〕］〗〙〛]/g, ']')
-      .replace(/[｛﹛]/g, '{')
-      .replace(/[｝﹜]/g, '}')
-      .replace(/[「“《〝＂﹁]/g, '"')
-      .replace(/[」”》〞﹂]/g, '"')
-      .replace(/[『‘〈＇﹃]/g, "'")
-      .replace(/[』’〉﹄]/g, "'")
-      .replace(/／/g, '/')
-      .replace(/＼/g, '\\')
-      .replace(/＋/g, '+')
-      .replace(/＝/g, '=')
-      .replace(/＜/g, '<')
-      .replace(/＞/g, '>')
-      .replace(/＆/g, '&')
-      .replace(/％/g, '%')
-      .replace(/＃/g, '#')
-      .replace(/＠/g, '@')
-      .replace(/＊/g, '*')
-      .replace(/＿/g, '_')
-      .replace(/｜/g, '|')
-      .replace(/｀/g, '`')
-      .replace(/＄/g, '$')
-      .replace(/＾/g, '^');
+    ensureWasm();
+    const { ptr, len } = writeUtf8(p);
+    try {
+      return readAndFreePacked(wasmExports.convert_punct_to_romance_utf8(ptr, len));
+    } finally {
+      if (len > 0) wasmExports.dealloc(ptr, len);
+    }
   }
 
-  /**
-   * 羅馬字半形標點轉中文全形標點
-   * 包含逗號轉「，」、句號轉「。」、問驚號、各類半形括號轉全形括號等雙向轉換
-   */
   function convertPunctToHan(p) {
     if (!p) return '';
-    return p
-      .replace(/\.\.\./g, '……')
-      .replace(/--/g, '——')
-      .replace(/~/g, '～')
-      .replace(/,/g, '，')
-      .replace(/\./g, '。')
-      .replace(/!/g, '！')
-      .replace(/\?/g, '？')
-      .replace(/;/g, '；')
-      .replace(/:/g, '：')
-      .replace(/\(/g, '（')
-      .replace(/\)/g, '）')
-      .replace(/\[/g, '［')
-      .replace(/\]/g, '］')
-      .replace(/\{/g, '｛')
-      .replace(/\}/g, '｝')
-      .replace(/\//g, '／')
-      .replace(/\\/g, '＼')
-      .replace(/\+/g, '＋')
-      .replace(/=/g, '＝')
-      .replace(/&/g, '＆')
-      .replace(/%/g, '％')
-      .replace(/#/g, '＃')
-      .replace(/@/g, '＠')
-      .replace(/\*/g, '＊')
-      .replace(/_/g, '＿')
-      .replace(/\|/g, '｜')
-      .replace(/\$/g, '＄')
-      .replace(/\^/g, '＾');
+    ensureWasm();
+    const { ptr, len } = writeUtf8(p);
+    try {
+      return readAndFreePacked(wasmExports.convert_punct_to_han_utf8(ptr, len));
+    } finally {
+      if (len > 0) wasmExports.dealloc(ptr, len);
+    }
   }
 
-  const OPEN_PUNCT = new Set(['「', '『', '“', '‘', '《', '〈', '（', '〔', '【', '［', '｛', '〖', '〘', '〚', '〝', '﹁', '﹃', '﹙', '﹛', '(', '[', '{']);
-  const CLOSE_PUNCT = new Set(['」', '』', '”', '’', '》', '〉', '）', '〕', '】', '］', '｝', '〗', '〙', '〛', '〞', '﹂', '﹄', '﹚', '﹜', ')', ']', '}']);
-
-  /**
-   * 拆分詞與詞之間的字串（between），精細分離出：
-   * 1. 前詞結尾標點（prevPunct，如句號、驚嘆號、逗號）
-   * 2. 當前詞開頭標點/括號（currOpen，如「、【）
-   * 3. 當前詞核心字詞（core，非標點非空白字元）
-   * 4. 當前詞結尾標點/括號（currClose，如」、】）
-   * 5. 尾隨空白（trailingSpace）
-   */
-  function splitBetween(between) {
-    const punctChars = /[，。、；：？！…⋯‥—–―～〜·‧・／＼＋＝＜＞＆％＃＠＊＿｜｀＄＾＇＂－「」『』“”‘’《》〈〉（）〔〕【】［］｛｝〖〗〘〙〚〛〝〞﹁﹂﹃﹄﹒﹑﹐﹗﹖﹔﹕︰﹙﹚﹛﹜．｡､,\.\?!;:"'\(\)\[\]\{\}~\/\\+&%#@*_|$^]/;
-
-    let start = 0;
-    while (start < between.length && (punctChars.test(between[start]) || /\s/.test(between[start]))) {
-      start++;
-    }
-
-    let end = between.length;
-    while (end > start && (punctChars.test(between[end - 1]) || /\s/.test(between[end - 1]))) {
-      end--;
-    }
-
-    const leading = between.slice(0, start);
-    const core = between.slice(start, end);
-    const trailing = between.slice(end);
-
-    let openIdx = leading.length;
-    while (openIdx > 0 && OPEN_PUNCT.has(leading[openIdx - 1])) {
-      openIdx--;
-    }
-    const prevPunct = leading.slice(0, openIdx);
-    const currOpen = leading.slice(openIdx);
-
-    let closeIdx = 0;
-    while (closeIdx < trailing.length && CLOSE_PUNCT.has(trailing[closeIdx])) {
-      closeIdx++;
-    }
-    const currClose = trailing.slice(0, closeIdx);
-    const trailingSpace = trailing.slice(closeIdx);
-
-    return { prevPunct, currOpen, core, currClose, trailingSpace };
-  }
-
-  /**
-   * 將 HTML ruby 標註（<ruby>...<rt>...</rt></ruby> 或 ...<rt>...</rt>）正規化為括號標註格式
-   */
-  function normalizeRuby(text) {
-    if (!text || (!text.includes('<rt') && !text.includes('<ruby'))) {
-      return text;
-    }
-    let result = text;
-    // 1. 標準 <ruby> 標籤模式：<ruby>漢<rt>han</rt></ruby> 或含 <rp>、<rb>
-    result = result.replace(
-      /<ruby[^>]*>(?:<rb>)?([^<]+?)(?:<\/rb>)?(?:\s*<rp>[^<]*<\/rp>\s*)?<rt[^>]*>([^<]+?)<\/rt>(?:\s*<rp>[^<]*<\/rp>\s*)?<\/ruby>/gi,
-      '$1 ($2)',
-    );
-    // 2. 簡寫模式：字詞<rt>拼音</rt>
-    result = result.replace(/([^<>\s]+)<rt[^>]*>([^<]+?)<\/rt>/gi, '$1 ($2)');
-    // 3. 清除殘留的 ruby 相關標籤
-    result = result.replace(/<\/?(?:ruby|rb|rt|rp)[^>]*>/gi, '');
-    return result;
-  }
-
-  /**
-   * 解析單行企盤格式文字
-   * @param {string} rawLine - 輸入字串
-   * @param {object} options - 轉換選項
-   * @param {boolean} [options.autoSpaceRomance=false] - 羅馬字詞間是否自動補空格（預設依照原文縫隙）
-   * @param {string} [options.forceOrder='auto'] - 強制排版順序：'auto' | 'han-top' | 'rom-top'
-   */
-  function parseKipanLine(rawLine, options = {}) {
-    const line = normalizeRuby(rawLine);
-    const autoSpaceRomance = options.autoSpaceRomance ?? false;
-
-    // 1. 找出所有括號區塊 (支援圓括號 ()、（）、方括號 []、［］ 與花括號 {}、｛｝)
-    const bracketRegex = /[\(（\[［\{｛]([^\(\)（）\[\]［］\{\}｛\}\r\n]+?)[\)）\]］\}｝]/g;
-    const matches = [];
-    let match;
-    while ((match = bracketRegex.exec(line)) !== null) {
-      matches.push({
-        start: match.index,
-        end: bracketRegex.lastIndex,
-        inside: match[1],
-      });
-    }
-
-    // 若無括號結構，直接原樣回傳
-    if (matches.length === 0) {
-      return {
-        top: line,
-        bottom: line,
-        order: 'han-top',
-        hanLine: line,
-        romLine: line,
-        pairs: [],
-      };
-    }
-
-    // 2. 切分各個 segment
-    const tokens = [];
-    let lastEnd = 0;
-
-    for (let i = 0; i < matches.length; i++) {
-      const m = matches[i];
-      const between = line.slice(lastEnd, m.start);
-      tokens.push({
-        between,
-        inside: m.inside,
-      });
-      lastEnd = m.end;
-    }
-    const trailing = line.slice(lastEnd);
-
-    // 3. 判斷輸入文字的本體結構：是漢字在括號外、羅馬字在括號內（漢外羅內），還是反之
-    let isHanOutside = true;
-    for (const tok of tokens) {
-      if (hasHan(tok.between)) {
-        isHanOutside = true;
-        break;
-      }
-      if (hasLatin(tok.between) && hasHan(tok.inside)) {
-        isHanOutside = false;
-        break;
-      }
-    }
-
-    let hanLine = '';
-    let romLine = '';
-    const pairs = [];
-
-    for (let i = 0; i < tokens.length; i++) {
-      const tok = tokens[i];
-      const { prevPunct, currOpen, core, currClose } = splitBetween(tok.between);
-      const inside = tok.inside;
-
-      // 處理前詞標點 (prevPunct) 與空格
-      if (prevPunct) {
-        const p = prevPunct.replace(/\s+/g, '');
-        if (p) {
-          hanLine += convertPunctToHan(p);
-          const romP = convertPunctToRomance(p);
-          romLine += romP;
-          if (!romLine.endsWith(' ') && /[,.!?;:]/.test(romP)) {
-            romLine += ' ';
-          }
-        } else if (i > 0 && !romLine.endsWith(' ')) {
-          romLine += ' ';
-        }
-      } else if (i > 0 && !romLine.endsWith(' ')) {
-        romLine += ' ';
-      }
-
-      // 處理本詞開頭標點/括號 (currOpen)
-      if (currOpen) {
-        hanLine += convertPunctToHan(currOpen);
-        romLine += convertPunctToRomance(currOpen);
-      }
-
-      let hanWord = '';
-      let romWord = '';
-
-      // 檢查 core 中是否包含未標註的中立字詞（如英數字、版本號 v0.0.5、ASCII 等）
-      let neutral = '';
-      let effectiveCore = core;
-
-      if (isHanOutside) {
-        // 漢字在括號外：核心詞是漢字（[\p{Script=Han}]+），前面若夾帶英數字/符號（如 v0.0.5、100）則為 neutral
-        const match = core.match(/^([\s\S]*?[^\p{Script=Han}\s])\s*([\p{Script=Han}]+)$/u);
-        if (match && match[1].trim()) {
-          neutral = match[1].trim();
-          effectiveCore = match[2];
-        }
-      } else {
-        // 羅馬字在括號外：只有當開頭為純數字或版本號時才分離 neutral，避免拆散有縫仔拼音（如 gì oi）
-        const match = core.match(/^([0-9\.\-vV]+)\s+([a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s'’\-]+)$/u);
-        if (match && match[1].trim()) {
-          neutral = match[1].trim();
-          effectiveCore = match[2];
-        }
-      }
-
-      // 若有中立字詞（如 v0.0.5），兩行並列保留
-      if (neutral) {
-        if (hanLine && !hanLine.endsWith(' ')) hanLine += ' ';
-        hanLine += neutral + ' ';
-        if (romLine && !romLine.endsWith(' ')) romLine += ' ';
-        romLine += neutral + ' ';
-      }
-
-      if (isHanOutside) {
-        hanWord = effectiveCore;
-        romWord = inside;
-      } else {
-        hanWord = inside;
-        romWord = effectiveCore;
-      }
-
-      hanLine += hanWord;
-      romLine += romWord;
-
-      // 處理本詞結尾標點/括號 (currClose)
-      if (currClose) {
-        hanLine += convertPunctToHan(currClose);
-        romLine += convertPunctToRomance(currClose);
-      }
-
-      pairs.push({
-        han: hanWord,
-        rom: romWord,
-      });
-    }
-
-    // 處理尾隨標點與字串
-    if (trailing) {
-      const tTrim = trailing.trim();
-      if (tTrim) {
-        hanLine += convertPunctToHan(tTrim);
-        romLine += convertPunctToRomance(tTrim);
-      }
-    }
-
-    // 判定最終頂層與底層的排版位置
-    let finalOrder = options.forceOrder || 'auto';
-    if (finalOrder === 'auto') {
-      finalOrder = isHanOutside ? 'han-top' : 'rom-top';
-    }
-
-    const top = (finalOrder === 'han-top' ? hanLine : romLine).trim();
-    const bottom = (finalOrder === 'han-top' ? romLine : hanLine).trim();
-
-    return {
-      order: finalOrder,
-      hanLine: hanLine.trim(),
-      romLine: romLine.trim(),
-      top,
-      bottom,
-      pairs,
-    };
-  }
-
-  /**
-   * 轉換整段企盤文字（支援多行段落）
-   * @param {string} text - 輸入完整文字
-   * @param {object} options - 轉換選項
-   */
   function convertKipanText(text, options = {}) {
     if (!text || typeof text !== 'string') {
       return {
@@ -370,55 +132,37 @@
         detectedOrder: 'han-top',
       };
     }
+    ensureWasm();
+    const autoSpaceRomance = options.autoSpaceRomance ? 1 : 0;
+    const forceOrder = options.forceOrder || 'auto';
 
-    const lines = text.split(/\r?\n/);
-    const topLines = [];
-    const bottomLines = [];
-    let detectedOrder = 'han-top';
-    const allPairs = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) {
-        topLines.push('');
-        bottomLines.push('');
-        continue;
-      }
-
-      const res = parseKipanLine(line, options);
-      if (i === 0) {
-        detectedOrder = res.order;
-      }
-      topLines.push(res.top);
-      bottomLines.push(res.bottom);
-      if (res.pairs) {
-        allPairs.push(...res.pairs);
-      }
+    const t = writeUtf8(text);
+    const o = writeUtf8(forceOrder);
+    try {
+      const jsonStr = readAndFreePacked(
+        wasmExports.convert_kipan_text_json(t.ptr, t.len, autoSpaceRomance, o.ptr, o.len),
+      );
+      const raw = JSON.parse(jsonStr);
+      return {
+        topText: raw.top_text,
+        bottomText: raw.bottom_text,
+        combinedText: raw.combined_text,
+        topLines: raw.top_lines,
+        bottomLines: raw.bottom_lines,
+        pairs: raw.pairs,
+        detectedOrder: raw.detected_order,
+      };
+    } finally {
+      if (t.len > 0) wasmExports.dealloc(t.ptr, t.len);
+      if (o.len > 0) wasmExports.dealloc(o.ptr, o.len);
     }
-
-    const topText = topLines.join('\n');
-    const bottomText = bottomLines.join('\n');
-    const combinedText = `${topText}\n${bottomText}`;
-
-    return {
-      topText,
-      bottomText,
-      combinedText,
-      topLines,
-      bottomLines,
-      pairs: allPairs,
-      detectedOrder,
-    };
   }
 
-  // 匯出模組
   const exported = {
-    hasHan,
-    hasLatin,
+    initWasm,
+    isWasmReady,
     convertPunctToRomance,
     convertPunctToHan,
-    normalizeRuby,
-    parseKipanLine,
     convertKipanText,
   };
 
