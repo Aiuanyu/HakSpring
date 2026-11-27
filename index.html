@@ -74,7 +74,7 @@
     ></script>
     <script type="text/javascript" src="js/md-dynamic.js?v=1.0.0" defer></script>
     <script type="text/javascript" src="js/audio-breaker.js?v=1.1.0" defer></script>
-    <script type="text/javascript" src="main.js?v=4.5.114" defer></script>
+    <script type="text/javascript" src="main.js?v=4.5.119" defer></script>
     <script type="text/javascript" src="js/sync-survey.js?v=1.1.1" defer></script>
     <script
       type="text/javascript"
@@ -766,6 +766,14 @@
               <span data-varname="安中高"><a href="#">中高</a></span>
               <span data-varname="安高"><a href="#">高級</a></span>
             </span>
+          </p>
+          <p id="lwDialectRow" class="lw-dialect-row" style="display: none">
+            客委會外來語：
+            <span class="dialect 四縣"><span data-varname="四外"><a href="#">四縣</a></span></span>
+            <span class="dialect 海陸"><span data-varname="海外"><a href="#">海陸</a></span></span>
+            <span class="dialect 大埔"><span data-varname="大外"><a href="#">大埔</a></span></span>
+            <span class="dialect 饒平"><span data-varname="平外"><a href="#">饒平</a></span></span>
+            <span class="dialect 詔安"><span data-varname="安外"><a href="#">詔安</a></span></span>
           </p>
           <!-- 類別面板由 main.js 的 renderCategoryPanel() 動態渲染 -->
           <div id="cat-panel">再擇類別：</div>
@@ -1480,6 +1488,19 @@
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="meinungFillToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <!-- 客委會外來語（LW）資料開關，預設關閉不顯示 -->
+          <div class="setting-item" style="margin-bottom: 20px">
+            <div class="setting-info">
+              <label for="showLoanwordsToggle">顯示客委會外來語資料</label>
+              <span class="setting-description"
+                >開啟後，於主控板顯示「客委會外來語」五腔詞庫入口，並將外來語詞庫納入查詞結果</span
+              >
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="showLoanwordsToggle" />
               <span class="toggle-slider"></span>
             </label>
           </div>

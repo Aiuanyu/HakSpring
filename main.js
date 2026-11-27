@@ -873,6 +873,12 @@ const DATA_FILES_TO_CACHE = [
   'data/curated/加詞-大.json',
   'data/curated/加詞-平.json',
   'data/curated/加詞-安.json',
+  // 客委會《客語外來語》（LW）
+  'data/loanwords/外來語-四.json',
+  'data/loanwords/外來語-海.json',
+  'data/loanwords/外來語-大.json',
+  'data/loanwords/外來語-平.json',
+  'data/loanwords/外來語-安.json',
   // 其他資料
   'tone_mapping.json',
   'reverse_tone_mapping.json',
@@ -1007,8 +1013,22 @@ function applyAudioProxy(url) {
 }
 
 function getDialectInfo(腔, 級) {
-  const selected例外音檔 = window[LEVEL_TO_EXCEPTION_FILE[級]] || [];
   const { 檔腔, 腔名 } = ACCENT_INFO[腔] || { 檔腔: '', 腔名: '' };
+  if (級 === '外') {
+    return {
+      腔,
+      級,
+      例外音檔: [],
+      fullLvlName: 腔名 ? `${腔名}外來語` : '外來語',
+      generalMediaYr: '',
+      目錄級: '',
+      目錄另級: undefined,
+      檔級: '',
+      腔名,
+      級名: '外來語',
+    };
+  }
+  const selected例外音檔 = window[LEVEL_TO_EXCEPTION_FILE[級]] || [];
   const { 目錄級, 目錄另級, 檔級, 級名 } = LEVEL_INFO[級] || {
     目錄級: '',
     目錄另級: undefined,
@@ -1464,6 +1484,8 @@ function constructWordAudioUrl(lineData, fullSourceName) {
   if (fullSourceName.startsWith('supp') || fullSourceName.includes('補字典')) return null;
   // 愛灣語加詞係人工加个字詞，嗄無音檔
   if (fullSourceName.startsWith('curated') || fullSourceName.includes('愛灣語加詞')) return null;
+  // 客委會外來語（LW）無認證音檔
+  if (fullSourceName.startsWith('loanwords') || fullSourceName.includes('外來語')) return null;
   const isGip = fullSourceName.startsWith('gip') || fullSourceName.includes('教典');
   const isCert = fullSourceName.startsWith('cert') || (!isGip && typeof getDialectInfo === 'function'); // Fallback
 
@@ -1482,6 +1504,7 @@ function constructWordAudioUrl(lineData, fullSourceName) {
     let sourceName = fullSourceName.replace(/^cert/, '');
     const 腔 = sourceName.substring(0, 1);
     const 級 = sourceName.substring(1);
+    if (級 === '外') return null;
     const dialectInfo = getDialectInfo(腔, 級);
 
     const missingAudioInfo =
@@ -3342,6 +3365,12 @@ function getKeyNameFromPath(filePath) {
     return '愛灣語' + fileName.replace('-', '');
   }
 
+  if (filePath.includes('/loanwords/')) {
+    // 外來語檔：'外來語-四' → '四外'
+    const lwChar = fileName.split('-')[1];
+    return `${lwChar}外`;
+  }
+
   // 3. 處理其餘的特殊檔案
   const otherMap = {
     tone_mapping: 'toneMappingData',
@@ -3412,6 +3441,9 @@ function getFullLevelName(varName) {
       break;
     case '高':
       full級別 = '高級';
+      break;
+    case '外':
+      full級別 = '外來語';
       break;
     default:
       full級別 = '級別';
@@ -4705,6 +4737,36 @@ function initializeAppUI() {
     南四縣: window['愛灣語加詞南'],
   };
 
+  // --- 客委會《客語外來語》（LW） ---
+  const LOANWORDS_STORAGE_KEY = 'showLoanwordsData';
+  function isLoanwordsEnabled() {
+    try {
+      return localStorage.getItem(LOANWORDS_STORAGE_KEY) === 'true';
+    } catch (e) {
+      return false;
+    }
+  }
+  function applyLoanwordsVisibility(enabled) {
+    const lwRow = document.getElementById('lwDialectRow');
+    if (lwRow) {
+      lwRow.style.display = enabled ? '' : 'none';
+    }
+    const toggle = document.getElementById('showLoanwordsToggle');
+    if (toggle) {
+      toggle.checked = !!enabled;
+    }
+  }
+  window.isLoanwordsEnabled = isLoanwordsEnabled;
+  window.applyLoanwordsVisibility = applyLoanwordsVisibility;
+
+  const lwData = {
+    四縣: window['四外'],
+    海陸: window['海外'],
+    大埔: window['大外'],
+    饒平: window['平外'],
+    詔安: window['安外'],
+  };
+
   function updateProgressDropdown() {
     const progressDropdown = document.getElementById('progressDropdown');
     const progressDetailsSpan = document.getElementById('progressDetails');
@@ -5123,6 +5185,22 @@ function initializeAppUI() {
       combinedData = combinedData.concat(curatedParsedData);
     }
 
+    // 客委會《客語外來語》（LW）：需於設定開啟「顯示客委會外來語資料」才納入查詞
+    const lwDialectData = lwData[selectedDialect];
+    if (
+      isLoanwordsEnabled() &&
+      lwDialectData &&
+      lwDialectData.content &&
+      Array.isArray(lwDialectData.content)
+    ) {
+      const lwParsedData = lwDialectData.content;
+      lwParsedData.forEach((item) => {
+        item.sourceName = lwDialectData.name;
+        item.sourceType = 'loanwords';
+      });
+      combinedData = combinedData.concat(lwParsedData);
+    }
+
     let results;
     let isToneFallback = false;
     if (searchMode === '客話') {
@@ -5521,7 +5599,7 @@ function initializeAppUI() {
         td1.appendChild(copyGipLinkBtn);
       }
 
-      if (line.sourceType === 'cert' && line.編號 && line.分類) {
+      if ((line.sourceType === 'cert' || line.sourceType === 'loanwords') && line.編號 && line.分類) {
         const dataObject = window[line.sourceName];
         const categoryName = line.分類.replace(/^\d+/, '');
         const rowId = line.編號.includes('-') ? line.編號.split('-')[1] : line.編號;
@@ -5571,14 +5649,8 @@ function initializeAppUI() {
         audio.preload = 'none';
         audio.src = audioSrc;
         td2.appendChild(audio);
-        wordAudioElem = audio;
-      }
-
-      if (
-        (line.sourceType !== 'gip' && !isSupp) ||
-        (line.sourceType === 'gip' && line['詞目音檔名'])
-      ) {
         td2.appendChild(document.createElement('br'));
+        wordAudioElem = audio;
       }
       const meaningText = document.createElement('span');
       const processedMeaning = ((borrowed && borrowed.meaning) || line['華語詞義'])
@@ -6373,7 +6445,7 @@ function initializeAppUI() {
   function preprocessAllData() {
     console.log('開始根據快取資料建立搜尋索引...');
     const startTime = performance.now();
-    const allDataSourceVars = [...allKnownDataVars, ...allKnownGipDataVars];
+    const allDataSourceVars = [...allKnownDataVars, ...allKnownGipDataVars, ...allKnownLwDataVars];
 
     // 清空舊的快取，確保索引是最新的
     preprocessedDataCache = {};
@@ -6398,6 +6470,7 @@ function initializeAppUI() {
     for (const dataVarName in preprocessedDataCache) {
       const vocabularyArray = preprocessedDataCache[dataVarName];
       const isGipData = dataVarName.startsWith('教典');
+      const isLwData = dataVarName.endsWith('外');
       let sourceName;
 
       if (isGipData) {
@@ -6418,7 +6491,7 @@ function initializeAppUI() {
         const rawTerm = line.客家語 ? line.客家語.trim() : null;
         if (!rawTerm || rawTerm.length === 0) return;
         const v = typeof getLineVariants === 'function'
-          ? getLineVariants({ ...line, sourceName, sourceType: isGipData ? 'gip' : 'cert' })
+          ? getLineVariants({ ...line, sourceName, sourceType: isGipData ? 'gip' : (isLwData ? 'loanwords' : 'cert') })
           : null;
         const hasV = v && v.hasVariants;
         const entryDialect = hasV ? v.dialectType : (line.腔調 || sourceName);
@@ -6437,7 +6510,7 @@ function initializeAppUI() {
           mandarinMeaning: line.華語詞義,
           audioDetails: {
             lineData: { ...line },
-            fullSourceName: isGipData ? 'gip' : 'cert' + dataVarName,
+            fullSourceName: isGipData ? 'gip' : (isLwData ? 'loanwords' : 'cert' + dataVarName),
           },
           variantType: hasV ? v.dialectType : null,
           mainVariant: hasV
@@ -6655,6 +6728,9 @@ function initializeAppUI() {
     '教典安',
     '教典南',
   ];
+
+  // --- 客委會外來語（LW）資料變數名稱 ---
+  const allKnownLwDataVars = ['四外', '海外', '大外', '平外', '安外'];
 
   // 新增：腔調代碼與腔調名稱的對應
   const DIALECT_CODE_TO_NAME = {
@@ -7367,7 +7443,7 @@ function initializeAppUI() {
     if (!autoPlayTargetRowId && focusRowId) {
       const normalizedFocusId = normalizeRowId(focusRowId);
       focusIndex = activeCategoryData.findIndex(
-        (item) => item.編號.split('-')[1] === normalizedFocusId,
+        (item) => normalizeRowId(item.編號.split('-')[1]) === normalizedFocusId,
       );
       if (focusIndex !== -1) {
         start = Math.max(0, focusIndex - ITEMS_PER_LOAD);
@@ -7675,6 +7751,7 @@ function initializeAppUI() {
     const isGipData = Boolean(
       dialectInfo && dialectInfo.fullLvlName && dialectInfo.fullLvlName.includes('教典')
     );
+    const isLoanwords = Boolean(dialectInfo && dialectInfo.級 === '外');
     const fragment = document.createDocumentFragment();
 
     for (const line of itemsToRender) {
@@ -7739,19 +7816,21 @@ function initializeAppUI() {
         td1.appendChild(crossDialectBtn);
       }
 
-      const playBtn = document.createElement('button');
-      playBtn.className = 'playFromThisRow';
-      playBtn.dataset.rowId = originalRowId;
-      playBtn.title = '從此列播放';
-      playBtn.innerHTML = '<i class="fas fa-play"></i>';
-      td1.appendChild(playBtn);
+      if (!isLoanwords) {
+        const playBtn = document.createElement('button');
+        playBtn.className = 'playFromThisRow';
+        playBtn.dataset.rowId = originalRowId;
+        playBtn.title = '從此列播放';
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        td1.appendChild(playBtn);
 
-      const loopOneBtn = document.createElement('button');
-      loopOneBtn.className = 'loop-one-btn';
-      loopOneBtn.dataset.rowId = originalRowId;
-      loopOneBtn.title = '循環播放此行';
-      loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
-      td1.appendChild(loopOneBtn);
+        const loopOneBtn = document.createElement('button');
+        loopOneBtn.className = 'loop-one-btn';
+        loopOneBtn.dataset.rowId = originalRowId;
+        loopOneBtn.title = '循環播放此行';
+        loopOneBtn.innerHTML = '<i class="fas fa-repeat"></i>';
+        td1.appendChild(loopOneBtn);
+      }
 
       // 複製此詞專屬連結（載入前後 20 行，但毋自動播放）
       const copyWordLinkBtn = document.createElement('button');
@@ -7815,7 +7894,7 @@ function initializeAppUI() {
       td2.dataset.label = '詞彙';
       renderVocabWithVariants(td2, line, dialectInfo, isGipData);
       td2.appendChild(document.createElement('br'));
-      if (missingAudioInfo && missingAudioInfo.word === false) {
+      if (isLoanwords || (missingAudioInfo && missingAudioInfo.word === false)) {
         const dummyAudio = document.createElement('audio');
         dummyAudio.className = 'media';
         dummyAudio.dataset.skip = 'true';
@@ -7866,8 +7945,8 @@ function initializeAppUI() {
         // --- End of Auto Bookmark Mode ---
 
         td2.appendChild(audio1);
+        td2.appendChild(document.createElement('br'));
       }
-      td2.appendChild(document.createElement('br'));
       const meaningSpan = document.createElement('span');
       meaningSpan.innerHTML = line.華語詞義
         .replace(/"/g, '')
@@ -7894,6 +7973,7 @@ function initializeAppUI() {
           : rawSentence;
         td3.appendChild(sentenceSpan);
         if (
+          isLoanwords ||
           dialectInfo.級名 === '高級' ||
           (missingAudioInfo && missingAudioInfo.sentence === false)
         ) {
@@ -9911,6 +9991,21 @@ function initializeAppUI() {
       });
     }
 
+    // 顯示客委會外來語資料（LW）開關，預設關閉
+    applyLoanwordsVisibility(isLoanwordsEnabled());
+    const showLoanwordsToggle = document.getElementById('showLoanwordsToggle');
+    if (showLoanwordsToggle) {
+      showLoanwordsToggle.checked = isLoanwordsEnabled();
+      showLoanwordsToggle.addEventListener('change', (event) => {
+        try {
+          localStorage.setItem(LOANWORDS_STORAGE_KEY, String(event.target.checked));
+        } catch (e) {
+          // 無痕視窗等存毋著，淨這擺有效
+        }
+        applyLoanwordsVisibility(event.target.checked);
+      });
+    }
+
     /**
      * 把美濃腔套用到畫面（開關、已算繪个標音）。不寫 localStorage、不觸發同步，
      * 所以雲端拉下別台裝置个偏好時也做得直接呼叫。
@@ -10892,8 +10987,11 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
   item.className = dialectInfo.腔名; // Add dialect class for styling
 
   // Audio setup using unified helpers
+  const isLoanwords = Boolean(dialectInfo && dialectInfo.級 === '外') || line.sourceType === 'loanwords';
   let fullSourceName = '';
-  if (isGip) {
+  if (isLoanwords) {
+    fullSourceName = 'loanwords';
+  } else if (isGip) {
     fullSourceName = 'gip' + dialectInfo.fullLvlName;
   } else {
     fullSourceName = 'cert' + dialectInfo.腔 + dialectInfo.級;
@@ -10958,9 +11056,9 @@ function createComparisonRow(line, dialectInfo, isGip, isDiffWord = false) {
     audio1.preload = 'none';
     audio1.src = wordAudioSrc;
     td2.appendChild(audio1);
+    td2.appendChild(document.createElement('br'));
     wordAudioElem = audio1;
   }
-  td2.appendChild(document.createElement('br'));
   const meaningSpan = document.createElement('span');
   meaningSpan.innerHTML = line.華語詞義
     .replace(/"/g, '')
