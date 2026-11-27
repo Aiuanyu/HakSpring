@@ -1,0 +1,2702 @@
+[
+ {
+  "dialect": "南",
+  "hanji": "番豆掊殼－－還有醫",
+  "gip_id": "gip-6891",
+  "match_raw": "fan24 teu55 boi24 hog2 van11 iu24 i24",
+  "replace_raw": "fan24 teu55 boi24 hog2－－van11 iu24 i24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "有錢親阿哥，無錢死孤盲",
+  "gip_id": "gip-9306",
+  "match_raw": "iu24 qien11 qin24 a24 go24 mo11 qien11 xi31 go24 mo24",
+  "replace_raw": "iu24 qien11 qin24 a24 go24，mo11 qien11 xi31 go24 mo24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "老虎也會啄目睡－－難免",
+  "gip_id": "gip-10525",
+  "match_raw": "lo55 fu31 ia55 voi55 dug2 mug2 soi55 nan11 mien24",
+  "replace_raw": "lo55 fu31 ia55 voi55 dug2 mug2 soi55－－nan11 mien24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "麻布做衫－－看現現",
+  "gip_id": "gip-10702",
+  "match_raw": "ma11 bu55 zo55 sam24 kon55 hian55 hian55",
+  "replace_raw": "ma11 bu55 zo55 sam24－－kon55 hian55 hian55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "人平不語，水平不流",
+  "gip_id": "gip-11624",
+  "match_raw": "ngin11 pin11 bud2 ngi24 sui31 pin11 bud2 liu11",
+  "replace_raw": "ngin11 pin11 bud2 ngi24，sui31 pin11 bud2 liu11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋",
+  "gip_id": "gip-11641",
+  "match_raw": "ngin11 lo31 sam24 kian55 vai24 hang11 lu55 teu11 lai11 lai11 da31 pi55 da31 cud2 sii31 o24 ngiau55 lim11 siib2 hai11",
+  "replace_raw": "ngin11 lo31 sam24 kian55 vai24，hang11 lu55 teu11 lai11 lai11；da31 pi55 da31 cud2 sii31，o24 ngiau55 lim11 siib2 hai11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "牛眼核摒屎胐－－看各人个本等",
+  "gip_id": "gip-11684",
+  "match_raw": "ngiu11 ngian31 fud5 bin31 sii55 fud2 kon55 gog2 ngin11 ge55 bun31 den31",
+  "replace_raw": "ngiu11 ngian31 fud5 bin31 sii55 fud2－－kon55 gog2 ngin11 ge55 bun31 den31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "棚頂高睡目－－高明",
+  "gip_id": "gip-11940",
+  "match_raw": "pang11 dang31 go24 soi55 mug2 go24 min11",
+  "replace_raw": "pang11 dang31 go24 soi55 mug2－－go24 min11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "三十暗晡个飯甑－－無閒",
+  "gip_id": "gip-12666",
+  "match_raw": "sam24 siib5 am55 bu24 ge55 fan55 zen55 mo11 han11",
+  "replace_raw": "sam24 siib5 am55 bu24 ge55 fan55 zen55－－mo11 han11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "水牛相打－－各打各",
+  "gip_id": "gip-13518",
+  "match_raw": "sui31 ngiu11 xiong24 da31 gog2 da31 gog2",
+  "replace_raw": "sui31 ngiu11 xiong24 da31－－gog2 da31 gog2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "烏鴉無隔夜卵－－性急",
+  "gip_id": "gip-14436",
+  "match_raw": "vu24 a24 mo11 gag2 ia55 lon31 xin55 gib2",
+  "replace_raw": "vu24 a24 mo11 gag2 ia55 lon31－－xin55 gib2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "伯公生鬚──老神",
+  "gip_id": "gip-15831",
+  "match_raw": "bag2 gung24 sang24 xi24 lo31 siin11",
+  "replace_raw": "bag2 gung24 sang24 xi24－－lo31 siin11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "茶葉翻渣－－淡核吔",
+  "gip_id": "gip-15885",
+  "match_raw": "ca11 iab5 fan24 za24 tam24 hed2 e24",
+  "replace_raw": "ca11 iab5 fan24 za24－－tam24 hed2 e24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "大新莊个番薯──自家說",
+  "gip_id": "gip-15907",
+  "match_raw": "tai55 xin24 zong24 ge55 fan24 su11 qid2 ga24 sod2",
+  "replace_raw": "tai55 xin24 zong24 ge55 fan24 su11－－qid2 ga24 sod2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "東片出天弓會晴，西片出天弓會落雨",
+  "gip_id": "gip-16042",
+  "match_raw": "dung24 pien31 cud2 tien24 giung24 voi55 qiang11 xi24 pien31 cud2 tien24 giung24 voi55 log5 i31",
+  "replace_raw": "dung24 pien31 cud2 tien24 giung24 voi55 qiang11，xi24 pien31 cud2 tien24 giung24 voi55 log5 i31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "狐狸莫話貓，話吔貓來牙牙叫",
+  "gip_id": "gip-16080",
+  "match_raw": "fu11 li11 mog5 va55 meu55 va55 e11 meu55 loi11 nga11 nga11 gieu55",
+  "replace_raw": "fu11 li11 mog5 va55 meu55，va55 e11 meu55 loi11 nga11 nga11 gieu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "湖鰍仔搵沙──緊搵緊大條",
+  "gip_id": "gip-16083",
+  "match_raw": "fu11 qiu24 e31 vun55 sa24 gin31 vun55 gin31 tai55 tiau11",
+  "replace_raw": "fu11 qiu24 e31 vun55 sa24－－gin31 vun55 gin31 tai55 tiau11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "過時个月曆仔──無效吔",
+  "gip_id": "gip-16176",
+  "match_raw": "go55 sii11 ge55 ngiad5 lag5 e31 mo11 hau31 e11",
+  "replace_raw": "go55 sii11 ge55 ngiad5 lag5 e31－－mo11 hau31 e11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "棺材項打紙炮仔──嚇死人",
+  "gip_id": "gip-16179",
+  "match_raw": "gon24 coi11 hong55 da31 zii31 pau55 e31 hag2 xi31 ngin11",
+  "replace_raw": "gon24 coi11 hong55 da31 zii31 pau55 e31－－hag2 xi31 ngin11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "客來掃地，賊走閂門",
+  "gip_id": "gip-16200",
+  "match_raw": "kied2 loi11 so55 ti55 ced5 zeu31 con24 mun11",
+  "replace_raw": "kied2 loi11 so55 ti55，ced5 zeu31 con24 mun11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "夜路行多吔，總會堵著鬼",
+  "gip_id": "gip-16223",
+  "match_raw": "ia55 lu55 hang11 do24 e11 zung31 voi55 du11 do31 gui31",
+  "replace_raw": "ia55 lu55 hang11 do24 e11，zung31 voi55 du11 do31 gui31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "河壩跑馬－－壞蹄吔",
+  "gip_id": "gip-16240",
+  "match_raw": "ho11 ba55 pau24 ma24 fai55 tai11 le24",
+  "replace_raw": "ho11 ba55 pau24 ma24－－fai55 tai11 le24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "一代親、二代表，三代閒了了",
+  "gip_id": "gip-16267",
+  "match_raw": "id2 toi55 qin24 ngi55 toi55 beu31 sam24 toi55 han11 liau31 liau31",
+  "replace_raw": "id2 toi55 qin24、ngi55 toi55 beu31，sam24 toi55 han11 liau31 liau31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "冷湯冷飯好食，冷言冷語難聽",
+  "gip_id": "gip-16329",
+  "match_raw": "lang24 tong24 lang24 fan55 ho31 siid5 lang24 ngian11 lang24 ngi24 nan11 tang24",
+  "replace_raw": "lang24 tong24 lang24 fan55 ho31 siid5，lang24 ngian11 lang24 ngi24 nan11 tang24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "老鼠仔舐貓鼻公──毋知死",
+  "gip_id": "gip-16354",
+  "match_raw": "no55 cu31 e31 se24 meu55 pi55 gung24 m11 di24 xi31",
+  "replace_raw": "no55 cu31 e31 se24 meu55 pi55 gung24－－m11 di24 xi31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "無食肚飢，食飽懶尸",
+  "gip_id": "gip-16399",
+  "match_raw": "mo11 siid5 du31 gi24 siid5 bau31 lan24 sii24",
+  "replace_raw": "mo11 siid5 du31 gi24，siid5 bau31 lan24 sii24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "毋曾六十六，毋好笑人大腳目",
+  "gip_id": "gip-16400",
+  "match_raw": "m11 qien11 liug2 siib5 liug2 m11 ho31 seu55 ngin11 tai55 giog2 mug2",
+  "replace_raw": "m11 qien11 liug2 siib5 liug2，m11 ho31 seu55 ngin11 tai55 giog2 mug2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "目瞎仔看戲，聽聲不見影",
+  "gip_id": "gip-16416",
+  "match_raw": "mug2 had2 e31 kon55 hi55 tang24 sang24 bud2 gian55 iang31",
+  "replace_raw": "mug2 had2 e31 kon55 hi55，tang24 sang24 bud2 gian55 iang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "人靚毋當命靚，跛腳仔嫁先生",
+  "gip_id": "gip-16491",
+  "match_raw": "ngin11 jiang24 m11 dong55 miang55 jiang24 bai24 giog2 e31 ga55 xin24 sang24",
+  "replace_raw": "ngin11 jiang24 m11 dong55 miang55 jiang24，bai24 giog2 e31 ga55 xin24 sang24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "人毋曾到，聲先到",
+  "gip_id": "gip-16492",
+  "match_raw": "ngin11 m11 qien11 do55 sang24 xien24 do55",
+  "replace_raw": "ngin11 m11 qien11 do55，sang24 xien24 do55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "棚頂項睡目──高明",
+  "gip_id": "gip-16518",
+  "match_raw": "pang11 dang31 hong55 soi55 mug2 go24 min11",
+  "replace_raw": "pang11 dang31 hong55 soi55 mug2－－go24 min11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "七坐、八爬、九生牙，十月蹀蹀",
+  "gip_id": "gip-16542",
+  "match_raw": "qid2 co24 bad2 pa11 giu31 sang24 nga11 siib5 ngiad5 dia11 dia55",
+  "replace_raw": "qid2 co24、bad2 pa11、giu31 sang24 nga11，siib5 ngiad5 dia11 dia55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "三隻鼻公空－－閒管",
+  "gip_id": "gip-16593",
+  "match_raw": "sam24 zag2 pi55 gung24 kang24 han11 gon31",
+  "replace_raw": "sam24 zag2 pi55 gung24 kang24－－han11 gon31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "小人報仇三日，君子報仇三年",
+  "gip_id": "gip-16620",
+  "match_raw": "seu31 ngin11 bo55 su11 sam24 ngid2 giun24 zii31 bo55 su11 sam24 ngian11",
+  "replace_raw": "seu31 ngin11 bo55 su11 sam24 ngid2，giun24 zii31 bo55 su11 sam24 ngian11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "田螺取肚飽，毋知屎胐生溜苔",
+  "gip_id": "gip-16679",
+  "match_raw": "tien11 lo11 qi31 du31 bau31 m11 di24 sii55 fud2 sang24 liu24 toi11",
+  "replace_raw": "tien11 lo11 qi31 du31 bau31，m11 di24 sii55 fud2 sang24 liu24 toi11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "朝朝三片薑，餓死賣藥郎",
+  "gip_id": "gip-16742",
+  "match_raw": "zeu24 zeu24 sam24 pien31 giong24 ngo55 xi31 mai55 iog5 long11",
+  "replace_raw": "zeu24 zeu24 sam24 pien31 giong24，ngo55 xi31 mai55 iog5 long11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "南",
+  "hanji": "做無一調羹，愛食一碗公－－恁好空",
+  "gip_id": "gip-16762",
+  "match_raw": "zo55 mo11 id2 tiau11 gang24 oi55 siid5 id2 von31 gung24 an31 ho31 kang24",
+  "replace_raw": "zo55 mo11 id2 tiau11 gang24，oi55 siid5 id2 von31 gung24－－an31 ho31 kang24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "番豆掊殼－－還有醫",
+  "gip_id": "gip-6992",
+  "match_raw": "fan24 teu55 boi24 hog2 han11 iu24 i55",
+  "replace_raw": "fan24 teu55 boi24 hog2－－han11 iu24 i55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "老虎也會啄目睡－－難免",
+  "gip_id": "gip-10727",
+  "match_raw": "lo55 fu31 ia55 voi55 dug2 mug2 soi55 nan11 mien24",
+  "replace_raw": "lo55 fu31 ia55 voi55 dug2 mug2 soi55－－nan11 mien24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "麻布做衫－－看現現",
+  "gip_id": "gip-10913",
+  "match_raw": "ma11 bu55 zo55 sam24 kon55 hien55 hien55",
+  "replace_raw": "ma11 bu55 zo55 sam24－－kon55 hien55 hien55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋",
+  "gip_id": "gip-11910",
+  "match_raw": "ngin11 lo31 sam24 kien55 vai24 hang11 lu55 teu11 lai11 lai11 da31 pi55 da31 cud2 sii31 o24 ngiau55 lim11 siib2 hai11",
+  "replace_raw": "ngin11 lo31 sam24 kien55 vai24，hang11 lu55 teu11 lai11 lai11；da31 pi55 da31 cud2 sii31，o24 ngiau55 lim11 siib2 hai11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "牛眼核摒屎胐－－看各人个本等",
+  "gip_id": "gip-11954",
+  "match_raw": "ngiu11 ngien31 fud5 bin31 sii55 vud2 kon55 gog2 ngin11 ge55 bun31 den31",
+  "replace_raw": "ngiu11 ngien31 fud5 bin31 sii55 vud2－－kon55 gog2 ngin11 ge55 bun31 den31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "棚頂高睡目－－高明",
+  "gip_id": "gip-12226",
+  "match_raw": "pang11 dang31 go24 soi55 mug2 go24 min11",
+  "replace_raw": "pang11 dang31 go24 soi55 mug2－－go24 min11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "三十暗晡个飯甑－－無閒",
+  "gip_id": "gip-12961",
+  "match_raw": "sam24 siib5 am55 bu24 ge55 fan55 zen55 mo11 han11",
+  "replace_raw": "sam24 siib5 am55 bu24 ge55 fan55 zen55－－mo11 han11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "水牛相打－－各打各",
+  "gip_id": "gip-13818",
+  "match_raw": "sui31 ngiu11 xiong24 da31 gog2 da31 gog2",
+  "replace_raw": "sui31 ngiu11 xiong24 da31－－gog2 da31 gog2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "四",
+  "hanji": "烏鴉無隔夜卵－－性急",
+  "gip_id": "gip-14774",
+  "match_raw": "vu24 a24 mo11 gag2 ia55 lon31 xin55 gib2",
+  "replace_raw": "vu24 a24 mo11 gag2 ia55 lon31－－xin55 gib2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "老虎也會啄目睡－－難免",
+  "gip_id": "gip-10382",
+  "match_raw": "lo53 fu31 rha33 voi53 dug21 mug21 shoi53 nan113 mien33",
+  "replace_raw": "lo53 fu31 rha33 voi53 dug21 mug21 shoi53－－nan113 mien33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "麻布做衫－－看現現",
+  "gip_id": "gip-10556",
+  "match_raw": "ma113 bu53 zo53 sam33 kon53 hien53 hien53",
+  "replace_raw": "ma113 bu53 zo53 sam33－－kon53 hien53 hien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋",
+  "gip_id": "gip-11514",
+  "match_raw": "ngin113 lo31 sam33 kien53 vai33 hang113 lu53 teu113 le113 le113 da31 pi53 da31 chud21 shi31 o33 ngiau53 lim113 shib21 he113",
+  "replace_raw": "ngin113 lo31 sam33 kien53 vai33，hang113 lu53 teu113 le113 le113；da31 pi53 da31 chud21 shi31，o33 ngiau53 lim113 shib21 he113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "牛眼核摒屎胐－－看各人个本等",
+  "gip_id": "gip-11553",
+  "match_raw": "ngiu113 ngien31 fud54 bin31 shi53 vud21 kon53 gog21 ngin113 gai33 bun31 den31",
+  "replace_raw": "ngiu113 ngien31 fud54 bin31 shi53 vud21－－kon53 gog21 ngin113 gai33 bun31 den31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三十暗晡个飯甑－－無閒",
+  "gip_id": "gip-12523",
+  "match_raw": "sam33 shib54 am53 bu33 gai33 pon53 zen53 mo113 han113",
+  "replace_raw": "sam33 shib54 am53 bu33 gai33 pon53 zen53－－mo113 han113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "水牛相打－－各打各",
+  "gip_id": "gip-13324",
+  "match_raw": "shui31 ngiu113 siong33 da31 gog21 da31 gog21",
+  "replace_raw": "shui31 ngiu113 siong33 da31－－gog21 da31 gog21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "烏鴉無隔夜卵－－性急",
+  "gip_id": "gip-14241",
+  "match_raw": "vu33 a33 mo113 gag21 rha53 lon31 sin53 gib21",
+  "replace_raw": "vu33 a33 mo113 gag21 rha53 lon31－－sin53 gib21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "阿公毋做，做人个孫",
+  "gip_id": "gip-15606",
+  "match_raw": "a33 gung33 m113 zo53 zo53 ngin113 gai33 sun35",
+  "replace_raw": "a33 gung33 m113 zo53，zo53 ngin113 gai33 sun35",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "矮牯看戲－－跈人笑",
+  "gip_id": "gip-15613",
+  "match_raw": "e31 gu31 kon53 hi53 ten113 ngin113 siau53",
+  "replace_raw": "e31 gu31 kon53 hi53－－ten113 ngin113 siau53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "茶葉翻渣－－淡撇咧",
+  "gip_id": "gip-15655",
+  "match_raw": "ca113 rhab54 fan33 za33 tam33 ped21 le33",
+  "replace_raw": "ca113 rhab54 fan33 za33－－tam33 ped21 le33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "草索䌈豆腐－－擐毋得",
+  "gip_id": "gip-15682",
+  "match_raw": "co31 sog21 tag21 teu53 fu53 kuan53 m113 ded21",
+  "replace_raw": "co31 sog21 tag21 teu53 fu53－－kuan53 m113 ded21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "醎草䌈豆腐－－擐毋得",
+  "gip_id": "gip-15683",
+  "match_raw": "ham113 co31 tag21 teu53 fu53 kuan53 m113 ded21",
+  "replace_raw": "ham113 co31 tag21 teu53 fu53－－kuan53 m113 ded21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "釘礱無㓾雞，三個人罅挨",
+  "gip_id": "gip-15731",
+  "match_raw": "den33 lung113 mo113 chi113 gie33 sam33 gai53 ngin113 la53 e33",
+  "replace_raw": "den33 lung113 mo113 chi113 gie33，sam33 gai53 ngin113 la53 e33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "花缽種菜－－無緣",
+  "gip_id": "gip-15768",
+  "match_raw": "fa33 bad21 zhung53 coi53 mo113 rhen113",
+  "replace_raw": "fa33 bad21 zhung53 coi53－－mo113 rhen113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "火燒豬頭皮－－熟面",
+  "gip_id": "gip-15783",
+  "match_raw": "fo31 sheu33 zhu33 teu113 pi113 shug54 mien53",
+  "replace_raw": "fo31 sheu33 zhu33 teu113 pi113－－shug54 mien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "湖鰍搵泥沙－－緊搵緊大條",
+  "gip_id": "gip-15788",
+  "match_raw": "fu113 ciu33 vun53 ne113 sa33 gin31 vun53 gin31 tai53 tiau113",
+  "replace_raw": "fu113 ciu33 vun53 ne113 sa33－－gin31 vun53 gin31 tai53 tiau113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "隔山打鑼－－聽毋著",
+  "gip_id": "gip-15800",
+  "match_raw": "gag21 san33 da31 lo113 ten33 m113 do31",
+  "replace_raw": "gag21 san33 da31 lo113－－ten33 m113 do31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "敢拿獅頭，愛曉得弄",
+  "gip_id": "gip-15804",
+  "match_raw": "gam31 na33 sii33 teu113 oi53 hiau31 ded21 nung53",
+  "replace_raw": "gam31 na33 sii33 teu113，oi53 hiau31 ded21 nung53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "狗吠火車－－枉然",
+  "gip_id": "gip-15834",
+  "match_raw": "gieu31 poi53 fo31 cha33 vong31 rhen113",
+  "replace_raw": "gieu31 poi53 fo31 cha33－－vong31 rhen113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "官司好打，狗屎好食",
+  "gip_id": "gip-15851",
+  "match_raw": "guan33 sii33 ho31 da31 gieu31 shi31 ho31 shid54",
+  "replace_raw": "guan33 sii33 ho31 da31，gieu31 shi31 ho31 shid54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "棺樵肚伸手－－死愛錢",
+  "gip_id": "gip-15854",
+  "match_raw": "guan33 ciau113 du31 chun33 shiu31 si31 oi53 cien113",
+  "replace_raw": "guan33 ciau113 du31 chun33 shiu31－－si31 oi53 cien113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "棺樵脣唸經－－吵死人",
+  "gip_id": "gip-15855",
+  "match_raw": "guan33 ciau113 shun113 ngiam53 gin33 cau113 si31 ngin113",
+  "replace_raw": "guan33 ciau113 shun113 ngiam53 gin33－－cau113 si31 ngin113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "講一個影，生一個頸",
+  "gip_id": "gip-15860",
+  "match_raw": "gong31 rhid21 gai53 rhang31 sang33 rhid21 gai53 giang31",
+  "replace_raw": "gong31 rhid21 gai53 rhang31，sang33 rhid21 gai53 giang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "講著有好食，尾走都直",
+  "gip_id": "gip-15861",
+  "match_raw": "gong31 do31 rhiu33 ho31 shid54 mui33 zeu31 do33 chid54",
+  "replace_raw": "gong31 do31 rhiu33 ho31 shid54，mui33 zeu31 do33 chid54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "講斯一溜水，做事無半撇",
+  "gip_id": "gip-15862",
+  "match_raw": "gong31 sii33 rhid21 liu53 shui31 zo53 she53 mo113 ban53 pied54",
+  "replace_raw": "gong31 sii33 rhid21 liu53 shui31，zo53 she53 mo113 ban53 pied54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "學老覡公做齋－－丟丟滴滴",
+  "gip_id": "gip-15912",
+  "match_raw": "hog54 lo31 shang53 gung33 zo53 zai35 diu33 diu33 did21 did21",
+  "replace_raw": "hog54 lo31 shang53 gung33 zo53 zai35－－diu33 diu33 did21 did21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "一餐省一口，一年斯有一斗",
+  "gip_id": "gip-15931",
+  "match_raw": "rhid21 con33 sang31 rhid21 heu31 rhid21 ngien113 sii33 rhiu33 rhid21 deu31",
+  "replace_raw": "rhid21 con33 sang31 rhid21 heu31，rhid21 ngien113 sii33 rhiu33 rhid21 deu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "一代姑、二代表，三代閒了了",
+  "gip_id": "gip-15932",
+  "match_raw": "rhid21 toi53 gu33 ngi53 toi53 biau31 sam33 toi53 han113 liau31 liau31",
+  "replace_raw": "rhid21 toi53 gu33、ngi53 toi53 biau31，sam33 toi53 han113 liau31 liau31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "又驚又好，細人打紙炮",
+  "gip_id": "gip-15946",
+  "match_raw": "rhiu53 giang33 rhiu53 hau53 se53 ngin113 da31 zhi31 pau53",
+  "replace_raw": "rhiu53 giang33 rhiu53 hau53，se53 ngin113 da31 zhi31 pau53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "用笊簍戽水－－無採工",
+  "gip_id": "gip-15947",
+  "match_raw": "rhung53 zau53 leu113 fu53 shui31 mo113 cai31 gung33",
+  "replace_raw": "rhung53 zau53 leu113 fu53 shui31－－mo113 cai31 gung33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "缺嘴歕火－－漏風",
+  "gip_id": "gip-15970",
+  "match_raw": "kied21 zhoi53 pun113 fo31 leu53 fung33",
+  "replace_raw": "kied21 zhoi53 pun113 fo31－－leu53 fung33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "吊菜開黃花－－反種",
+  "gip_id": "gip-15982",
+  "match_raw": "diau53 coi53 koi33 vong113 fa33 fan31 zhung31",
+  "replace_raw": "diau53 coi53 koi33 vong113 fa33－－fan31 zhung31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "開花竹－－短命",
+  "gip_id": "gip-15990",
+  "match_raw": "koi33 fa33 zhug21 don31 miang53",
+  "replace_raw": "koi33 fa33 zhug21－－don31 miang53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "倈有毋當老公有，老公有毋當自家有",
+  "gip_id": "gip-16000",
+  "match_raw": "lai53 rhiu33 m113 dong53 lo31 gung33 rhiu33 lo31 gung33 rhiu33 m113 dong53 cii33 ga33 rhiu33",
+  "replace_raw": "lai53 rhiu33 m113 dong53 lo31 gung33 rhiu33，lo31 gung33 rhiu33 m113 dong53 cii33 ga33 rhiu33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "倈打屁，消痰化氣；心臼打屁，屙膿滑痢",
+  "gip_id": "gip-16001",
+  "match_raw": "lai53 da31 pi53 siau33 tam113 fa53 ki53 sim33 kiu33 da31 pi53 o33 nung113 vad54 li53",
+  "replace_raw": "lai53 da31 pi53，siau33 tam113 fa53 ki53；sim33 kiu33 da31 pi53，o33 nung113 vad54 li53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "六月老蟹－－無歌",
+  "gip_id": "gip-16032",
+  "match_raw": "liug21 ngied54 lo53 hai31 mo113 go33",
+  "replace_raw": "liug21 ngied54 lo53 hai31－－mo113 go33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "六月个大菜－－假有心",
+  "gip_id": "gip-16033",
+  "match_raw": "liug21 ngied54 gai33 tai53 coi53 ga31 rhiu33 sim33",
+  "replace_raw": "liug21 ngied54 gai33 tai53 coi53－－ga31 rhiu33 sim33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "老來學吹笛，學得來氣都絕",
+  "gip_id": "gip-16038",
+  "match_raw": "lo31 loi113 hog54 choi33 ted54 hog54 ded21 loi113 ki53 do33 cied54",
+  "replace_raw": "lo31 loi113 hog54 choi33 ted54，hog54 ded21 loi113 ki53 do33 cied54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "毋怕萬事難，斯驚怕麻煩",
+  "gip_id": "gip-16049",
+  "match_raw": "m113 pa53 van53 sii53 nan113 sii33 giang33 pa53 ma113 fan113",
+  "replace_raw": "m113 pa53 van53 sii53 nan113，sii33 giang33 pa53 ma113 fan113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "毋聲斯毋聲，開聲打爛盎",
+  "gip_id": "gip-16050",
+  "match_raw": "m113 shang33 sii33 m113 shang33 koi33 shang33 da31 lan53 ang33",
+  "replace_raw": "m113 shang33 sii33 m113 shang33，koi33 shang33 da31 lan53 ang33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "賣醢說醢香，賣瓜說瓜甜",
+  "gip_id": "gip-16054",
+  "match_raw": "mai53 gie113 shod21 gie113 hiong33 mai53 gua33 shod21 gua33 tiam113",
+  "replace_raw": "mai53 gie113 shod21 gie113 hiong33，mai53 gua33 shod21 gua33 tiam113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "吂種豆先搭棚，吂降倈先安名",
+  "gip_id": "gip-16056",
+  "match_raw": "mang113 zhung53 teu53 sien33 dab21 pang113 mang113 giung53 lai53 sien33 on33 miang113",
+  "replace_raw": "mang113 zhung53 teu53 sien33 dab21 pang113，mang113 giung53 lai53 sien33 on33 miang113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "貓躁飯甑－－縱成狗",
+  "gip_id": "gip-16059",
+  "match_raw": "ngiau53 cau53 pon53 zen53 ziung31 shin113 gieu31",
+  "replace_raw": "ngiau53 cau53 pon53 zen53－－ziung31 shin113 gieu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "貓死吊樹頭，狗死放水流",
+  "gip_id": "gip-16060",
+  "match_raw": "ngiau53 si31 diau53 shu53 teu113 gieu31 si31 biong53 shui31 liu113",
+  "replace_raw": "ngiau53 si31 diau53 shu53 teu113，gieu31 si31 biong53 shui31 liu113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "老蟹吊頸－－尋無頭䌈",
+  "gip_id": "gip-16070",
+  "match_raw": "lo53 hai31 diau53 giang31 cim113 mo113 teu113 tag21",
+  "replace_raw": "lo53 hai31 diau53 giang31－－cim113 mo113 teu113 tag21",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "青瞑个看戲－－聽聲無見影",
+  "gip_id": "gip-16073",
+  "match_raw": "ciang33 miang33 gai33 kon53 hi53 ten33 shang33 mo113 gien53 rhang31",
+  "replace_raw": "ciang33 miang33 gai33 kon53 hi53－－ten33 shang33 mo113 gien53 rhang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "木匠擎枷－－自作自受",
+  "gip_id": "gip-16088",
+  "match_raw": "mug21 siong53 kia113 ga33 cii53 zog21 cii53 shiu53",
+  "replace_raw": "mug21 siong53 kia113 ga33－－cii53 zog21 cii53 shiu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "目珠花花，瓠看做菜瓜",
+  "gip_id": "gip-16092",
+  "match_raw": "mug21 zhu33 fa33 fa33 pu113 kon53 zo53 coi53 gua33",
+  "replace_raw": "mug21 zhu33 fa33 fa33，pu113 kon53 zo53 coi53 gua33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "草巴蛇歸畚箕，毋當一尾青竹絲",
+  "gip_id": "gip-16099",
+  "match_raw": "co31 ba33 sha113 gui33 bun53 gi33 m113 dong53 rhid21 mui33 ciang33 zhug21 si33",
+  "replace_raw": "co31 ba33 sha113 gui33 bun53 gi33，m113 dong53 rhid21 mui33 ciang33 zhug21 si33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "南蛇鑽壁籬，毋死也脫層皮",
+  "gip_id": "gip-16101",
+  "match_raw": "nam113 sha113 zon33 biag21 li113 m113 si31 rha33 tod21 cen113 pi113",
+  "replace_raw": "nam113 sha113 zon33 biag21 li113，m113 si31 rha33 tod21 cen113 pi113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "閻羅王嫁妹－－無人愛",
+  "gip_id": "gip-16130",
+  "match_raw": "rham113 lo113 vong113 ga53 moi53 mo113 ngin113 oi53",
+  "replace_raw": "rham113 lo113 vong113 ga53 moi53－－mo113 ngin113 oi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "日吂到，毋係天公毋報",
+  "gip_id": "gip-16139",
+  "match_raw": "ngid21 mang113 do53 m113 he53 tien33 gung33 m113 bo53",
+  "replace_raw": "ngid21 mang113 do53，m113 he53 tien33 gung33 m113 bo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "人愛人打落，火愛人點著",
+  "gip_id": "gip-16146",
+  "match_raw": "ngin113 oi53 ngin113 da31 log54 fo31 oi53 ngin113 diam31 chog54",
+  "replace_raw": "ngin113 oi53 ngin113 da31 log54，fo31 oi53 ngin113 diam31 chog54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "人怕老來窮，不怕寒露風",
+  "gip_id": "gip-16147",
+  "match_raw": "ngin113 pa53 lo31 loi113 kiung113 bud21 pa53 hon113 lu53 fung33",
+  "replace_raw": "ngin113 pa53 lo31 loi113 kiung113，bud21 pa53 hon113 lu53 fung33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "牛吂桊鼻－－毋知厲害",
+  "gip_id": "gip-16157",
+  "match_raw": "ngiu113 mang113 kien53 pi53 m113 di33 li53 hoi53",
+  "replace_raw": "ngiu113 mang113 kien53 pi53－－m113 di33 li53 hoi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "棚頂項睡目－－高明",
+  "gip_id": "gip-16182",
+  "match_raw": "pang113 den31 hong33 shoi53 mug21 go33 min113",
+  "replace_raw": "pang113 den31 hong33 shoi53 mug21－－go33 min113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "七月半个鴨－－毋知死",
+  "gip_id": "gip-16218",
+  "match_raw": "cid21 ngied54 ban53 gai33 ab21 m113 di33 si31",
+  "replace_raw": "cid21 ngied54 ban53 gai33 ab21－－m113 di33 si31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "七後生，八後生，毋多知斯轉長山",
+  "gip_id": "gip-16219",
+  "match_raw": "cid21 heu53 sang33 bad21 heu53 sang33 m113 do33 di33 sii33 zhon31 chong113 san33",
+  "replace_raw": "cid21 heu53 sang33，bad21 heu53 sang33，m113 do33 di33 sii33 zhon31 chong113 san33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "前世無修，倈準心臼",
+  "gip_id": "gip-16222",
+  "match_raw": "cien113 she53 mo113 siu33 lai53 zhun31 sim33 kiu33",
+  "replace_raw": "cien113 she53 mo113 siu33，lai53 zhun31 sim33 kiu33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三個鼻公笐－－閒管",
+  "gip_id": "gip-16240",
+  "match_raw": "sam33 gai53 pi53 gung33 gung113 han113 guan31",
+  "replace_raw": "sam33 gai53 pi53 gung33 gung113－－han113 guan31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三擇四擇，擇個爛瓠勺",
+  "gip_id": "gip-16241",
+  "match_raw": "sam33 tog54 si53 tog54 tog54 gai53 lan53 pu113 shog54",
+  "replace_raw": "sam33 tog54 si53 tog54，tog54 gai53 lan53 pu113 shog54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三人同一心，濫泥變成金",
+  "gip_id": "gip-16242",
+  "match_raw": "sam33 ngin113 tung113 rhid21 sim33 lam53 ne113 bien53 shin113 gim33",
+  "replace_raw": "sam33 ngin113 tung113 rhid21 sim33，lam53 ne113 bien53 shin113 gim33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三年無洗身－－慢（㿸）恁多",
+  "gip_id": "gip-16243",
+  "match_raw": "sam33 ngien113 mo113 se31 shin33 man53 man53 an31 do33",
+  "replace_raw": "sam33 ngien113 mo113 se31 shin33－－man53 man53 an31 do33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三十暗晡打鑼鼓－－毋知匱人苦",
+  "gip_id": "gip-16244",
+  "match_raw": "sam33 shib54 am53 bu33 da31 lo113 gu31 m113 di33 kuai113 ngin113 ku31",
+  "replace_raw": "sam33 shib54 am53 bu33 da31 lo113 gu31－－m113 di33 kuai113 ngin113 ku31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "三張紙畫一粒人頭－－面子拗蠻大",
+  "gip_id": "gip-16245",
+  "match_raw": "sam33 zhong33 zhi31 fa53 rhid21 liab54 ngin113 teu113 mien53 zii31 au33 man113 tai53",
+  "replace_raw": "sam33 zhong33 zhi31 fa53 rhid21 liab54 ngin113 teu113－－mien53 zii31 au33 man113 tai53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "山中無老虎，猴哥升大王",
+  "gip_id": "gip-16252",
+  "match_raw": "san33 zhung33 mo113 lo53 fu31 heu113 go33 shin33 tai53 vong113",
+  "replace_raw": "san33 zhung33 mo113 lo53 fu31，heu113 go33 shin33 tai53 vong113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "十二月个大菜－－傷心",
+  "gip_id": "gip-16287",
+  "match_raw": "shib54 ngi53 ngied54 gai33 tai53 coi53 shong33 sim33",
+  "replace_raw": "shib54 ngi53 ngied54 gai33 tai53 coi53－－shong33 sim33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "十步留一步，免得師打師傅",
+  "gip_id": "gip-16288",
+  "match_raw": "shib54 pu53 liu113 rhid21 pu53 mien33 ded21 sii35 da31 sii33 fu53",
+  "replace_raw": "shib54 pu53 liu113 rhid21 pu53，mien33 ded21 sii35 da31 sii33 fu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "食生芋－－扡胲",
+  "gip_id": "gip-16295",
+  "match_raw": "shid54 sang33 vu53 rha31 goi33",
+  "replace_raw": "shid54 sang33 vu53－－rha31 goi33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "食紅柿傍酒－－尋死",
+  "gip_id": "gip-16296",
+  "match_raw": "shid54 fung113 cii53 bong31 ziu31 cim113 si31",
+  "replace_raw": "shid54 fung113 cii53 bong31 ziu31－－cim113 si31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "手疾好過家，腳疾好繡花",
+  "gip_id": "gip-16323",
+  "match_raw": "shiu31 cid54 ho31 go53 ga33 giog21 cid54 ho31 siu53 fa33",
+  "replace_raw": "shiu31 cid54 ho31 go53 ga33，giog21 cid54 ho31 siu53 fa33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "樹頭生得在，毋驚樹尾做風搓",
+  "gip_id": "gip-16324",
+  "match_raw": "shu53 teu113 sang33 ded21 cai53 m113 giang33 shu53 mui33 zo53 fung33 cai33",
+  "replace_raw": "shu53 teu113 sang33 ded21 cai53，m113 giang33 shu53 mui33 zo53 fung33 cai33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "大鑊吂滾，細鑊拋拋滾",
+  "gip_id": "gip-16341",
+  "match_raw": "tai53 vog54 mang113 gun31 se53 vog54 pau33 pau33 gun31",
+  "replace_raw": "tai53 vog54 mang113 gun31，se53 vog54 pau33 pau33 gun31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "田螺取嘴飽，毋知屎胐生溜苔",
+  "gip_id": "gip-16348",
+  "match_raw": "tien113 lo113 ci31 zhoi53 bau31 m113 di33 shi53 vud21 sang33 liu33 toi113",
+  "replace_raw": "tien113 lo113 ci31 zhoi53 bau31，m113 di33 shi53 vud21 sang33 liu33 toi113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "圍牆背綻个竹筍－－外甥",
+  "gip_id": "gip-16369",
+  "match_raw": "vui113 ciong113 boi53 can53 gai33 zhug21 sun31 nguai53 sen33",
+  "replace_raw": "vui113 ciong113 boi53 can53 gai33 zhug21 sun31－－nguai53 sen33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "禾田肚个稗－－雜種",
+  "gip_id": "gip-16372",
+  "match_raw": "vo113 tien113 du31 gai33 pe53 cab54 zhung31",
+  "replace_raw": "vo113 tien113 du31 gai33 pe53－－cab54 zhung31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "禾鷝學阿鵲屙屎－－胗肝都會洩出來",
+  "gip_id": "gip-16373",
+  "match_raw": "vo113 bid21 hog54 a33 siag21 o33 shi31 kin33 gon33 do33 voi53 sied54 chud21 loi113",
+  "replace_raw": "vo113 bid21 hog54 a33 siag21 o33 shi31－－kin33 gon33 do33 voi53 sied54 chud21 loi113",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "大",
+  "hanji": "左目掣財，右目掣食",
+  "gip_id": "gip-16414",
+  "match_raw": "zo31 mug21 ched21 cai113 rhiu53 mug21 ched21 shid54",
+  "replace_raw": "zo31 mug21 ched21 cai113，rhiu53 mug21 ched21 shid54",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "日求三餐，夜求一宿",
+  "gip_id": "gip-9947",
+  "match_raw": "ngid24 kiu53 sam11 con11 rhia55 kiu53 rhid24 siu24",
+  "replace_raw": "ngid24 kiu53 sam11 con11，rhia55 kiu53 rhid24 siu24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "阿公毋做，做人个孫子",
+  "gip_id": "gip-13349",
+  "match_raw": "a11 gung11 m55 zoo31 zoo31 ngin53 e55 sun11 zu31",
+  "replace_raw": "a11 gung11 m55 zoo31，zoo31 ngin53 e55 sun11 zu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "阿媽嫁孫女－－無主無意",
+  "gip_id": "gip-13350",
+  "match_raw": "a11 ma53 ga31 sun11 m31 mo53 zhi31 mo53 rhi31",
+  "replace_raw": "a11 ma53 ga31 sun11 m31－－mo53 zhi31 mo53 rhi31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "矮牯䀴戲－－跈人笑",
+  "gip_id": "gip-13361",
+  "match_raw": "e31 gu31 ngiang31 hi31 ten53 ngin53 sioo31",
+  "replace_raw": "e31 gu31 ngiang31 hi31－－ten53 ngin53 sioo31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "茶葉翻渣－－淡去",
+  "gip_id": "gip-13502",
+  "match_raw": "ca53 rhiab43 fan11 za11 tam11 kui31",
+  "replace_raw": "ca53 rhiab43 fan11 za11－－tam11 kui31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "自家講，自家回",
+  "gip_id": "gip-13549",
+  "match_raw": "zi11 ga11 gong31 zi11 ga11 fue53",
+  "replace_raw": "zi11 ga11 gong31，zi11 ga11 fue53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "草索䌈豆腐－－擐毋會核",
+  "gip_id": "gip-13582",
+  "match_raw": "coo31 soo24 ta24 teu55 fu55 kuan55 m11 bboi55 hed43",
+  "replace_raw": "coo31 soo24 ta24 teu55 fu55－－kuan55 m11 bboi55 hed43",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "草猴弄雞公－－自家尋死路",
+  "gip_id": "gip-13583",
+  "match_raw": "coo31 heu53 nung55 ge11 gung11 zi11 ga11 cim53 si31 lu55",
+  "replace_raw": "coo31 heu53 nung55 ge11 gung11－－zi11 ga11 cim53 si31 lu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "燈盞無油火難光，魚塘無水魚難養",
+  "gip_id": "gip-13723",
+  "match_raw": "den11 zan31 mo53 rhiu53 foo31 nan53 gong11 m53 tong53 mo53 fi31 m53 nan53 rhiong31",
+  "replace_raw": "den11 zan31 mo53 rhiu53 foo31 nan53 gong11，m53 tong53 mo53 fi31 m53 nan53 rhiong31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "等車時間長，攔車時間急",
+  "gip_id": "gip-13724",
+  "match_raw": "den31 cha11 shi53 geen11 chong53 lan53 cha11 shi53 geen11 gib24",
+  "replace_raw": "den31 cha11 shi53 geen11 chong53，lan53 cha11 shi53 geen11 gib24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "跌罪君子，毋好跌罪小人",
+  "gip_id": "gip-13748",
+  "match_raw": "ded24 cui55 gun11 zu31 m55 hoo31 ded24 cui55 sioo31 ngin53",
+  "replace_raw": "ded24 cui55 gun11 zu31，m55 hoo31 ded24 cui55 sioo31 ngin53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "刀切蕹菜－－雙頭空",
+  "gip_id": "gip-13754",
+  "match_raw": "doo11 cied24 bbung31 coi31 sung11 teu53 kung11",
+  "replace_raw": "doo11 cied24 bbung31 coi31－－sung11 teu53 kung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "多牛蹬無糞，多人難平分",
+  "gip_id": "gip-13760",
+  "match_raw": "doo11 ngiu53 dem55 mo53 bun31 doo11 ngin53 nan53 piang53 bun11",
+  "replace_raw": "doo11 ngiu53 dem55 mo53 bun31，doo11 ngin53 nan53 piang53 bun11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "東虹晴，西虹雨",
+  "gip_id": "gip-13843",
+  "match_raw": "dung11 kiung55 cin53 se11 kiung55 bbu31",
+  "replace_raw": "dung11 kiung55 cin53，se11 kiung55 bbu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "事係風，字係蹤",
+  "gip_id": "gip-13859",
+  "match_raw": "su55 he55 fung11 cu55 he55 zung11",
+  "replace_raw": "su55 he55 fung11，cu55 he55 zung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "事毋好講死，事毋好做絕",
+  "gip_id": "gip-13860",
+  "match_raw": "su55 m55 hoo31 gong31 si31 she55 m55 hoo31 zoo31 cied43",
+  "replace_raw": "su55 m55 hoo31 gong31 si31，she55 m55 hoo31 zoo31 cied43",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "湖鰡搵泥沙－－越搵越大條",
+  "gip_id": "gip-13912",
+  "match_raw": "bbu53 liu11 bbun31 ni53 sa11 bbad43 bbun31 bbad43 tai55 teeu53",
+  "replace_raw": "bbu53 liu11 bbun31 ni53 sa11－－bbad43 bbun31 bbad43 tai55 teeu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "隔山打銅鑼－－聽毋會著",
+  "gip_id": "gip-13944",
+  "match_raw": "ga24 san11 da31 tung53 loo53 ten11 m11 bboi55 choo55",
+  "replace_raw": "ga24 san11 da31 tung53 loo53－－ten11 m11 bboi55 choo55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "敢擎獅頭，愛會弄",
+  "gip_id": "gip-13954",
+  "match_raw": "gam31 kia53 sai11 teu53 oi31 bbue55 nung55",
+  "replace_raw": "gam31 kia53 sai11 teu53，oi31 bbue55 nung55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "膏多毋會黏，事多毋會甜",
+  "gip_id": "gip-13961",
+  "match_raw": "goo53 doo11 m11 bboi55 neem53 su55 doo11 m11 bboi55 teem53",
+  "replace_raw": "goo53 doo11 m11 bboi55 neem53，su55 doo11 m11 bboi55 teem53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "狗吠火車－－多怪奇",
+  "gip_id": "gip-14037",
+  "match_raw": "geu31 pui55 foo31 cha11 doo11 guai31 ki53",
+  "replace_raw": "geu31 pui55 foo31 cha11－－doo11 guai31 ki53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "今日有官今日做，韶日無官賣雜貨",
+  "gip_id": "gip-14041",
+  "match_raw": "gin11 ngid24 rhiu11 guan11 gin11 ngid24 zoo31 shioo53 ngid24 mo53 guan11 mi11 cab43 foo31",
+  "replace_raw": "gin11 ngid24 rhiu11 guan11 gin11 ngid24 zoo31，shioo53 ngid24 mo53 guan11 mi11 cab43 foo31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "腳䌈石頭－－進退兩難",
+  "gip_id": "gip-14070",
+  "match_raw": "gioo24 ta24 sha55 teu53 zin31 toi31 liong31 nan53",
+  "replace_raw": "gioo24 ta24 sha55 teu53－－zin31 toi31 liong31 nan53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "腳底打脈－－尋無症頭",
+  "gip_id": "gip-14071",
+  "match_raw": "gioo24 de31 da31 ma24 cim55 mo53 zhin31 teu53",
+  "replace_raw": "gioo24 de31 da31 ma24－－cim55 mo53 zhin31 teu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "腳蹬雙隻船，心肝亂紛紛",
+  "gip_id": "gip-14072",
+  "match_raw": "gioo24 dem55 sung11 zha24 fien53 sim11 gon11 lon55 fun11 fun11",
+  "replace_raw": "gioo24 dem55 sung11 zha24 fien53，sim11 gon11 lon55 fun11 fun11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "過時个月曆－－無路用",
+  "gip_id": "gip-14084",
+  "match_raw": "goo31 shi53 e55 ngied43 led43 mo53 lu55 rhung55",
+  "replace_raw": "goo31 shi53 e55 ngied43 led43－－mo53 lu55 rhung55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "官司會打，狗屎會食",
+  "gip_id": "gip-14105",
+  "match_raw": "guan11 su11 bbue55 da31 geu31 shi31 bbue55 shied43",
+  "replace_raw": "guan11 su11 bbue55 da31，geu31 shi31 bbue55 shied43",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "棺樵底伸手－－死愛錢",
+  "gip_id": "gip-14107",
+  "match_raw": "guan11 cioo53 de31 chin11 shiu31 si31 oi31 cien53",
+  "replace_raw": "guan11 cioo53 de31 chin11 shiu31－－si31 oi31 cien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "公姐總係公姐，床頭罵床尾和",
+  "gip_id": "gip-14152",
+  "match_raw": "gung11 zia31 zhung31 he55 gung11 zia31 song53 teu53 ma31 song53 mui11 foo53",
+  "replace_raw": "gung11 zia31 zhung31 he55 gung11 zia31，song53 teu53 ma31 song53 mui11 foo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "客來無寒酸，客走鹹菜湯",
+  "gip_id": "gip-14169",
+  "match_raw": "ka24 loi53 mo53 hon53 son11 ka24 zeu31 heem53 coi31 tong11",
+  "replace_raw": "ka24 loi53 mo53 hon53 son11，ka24 zeu31 heem53 coi31 tong11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "閒事歸大墩，正經無半撇",
+  "gip_id": "gip-14179",
+  "match_raw": "heen53 su55 gui11 tai55 dun11 zhin31 gen11 mo53 ban31 pied24",
+  "replace_raw": "heen53 su55 gui11 tai55 dun11，zhin31 gen11 mo53 ban31 pied24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "在生食四兩，較贏死後食豬羊",
+  "gip_id": "gip-14193",
+  "match_raw": "cai55 sang11 shied43 si31 liong11 ka31 rhiang53 si31 heu55 shied43 zhi11 rhiong53",
+  "replace_raw": "cai55 sang11 shied43 si31 liong11，ka31 rhiang53 si31 heu55 shied43 zhi11 rhiong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "喊天天毋應，喊地地毋靈",
+  "gip_id": "gip-14221",
+  "match_raw": "heem31 teen11 teen11 m55 en31 heem31 ti55 ti55 m55 len53",
+  "replace_raw": "heem31 teen11 teen11 m55 en31，heem31 ti55 ti55 m55 len53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "少年毋肯學，老來無安樂",
+  "gip_id": "gip-14227",
+  "match_raw": "shioo31 neen53 m55 ken31 hoo55 loo31 loi53 mo53 on11 loo55",
+  "replace_raw": "shioo31 neen53 m55 ken31 hoo55，loo31 loi53 mo53 on11 loo55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "戲棚崠个皇帝－－威風無久",
+  "gip_id": "gip-14237",
+  "match_raw": "hi31 pang53 dung31 e55 fong53 di31 bbui11 fung11 mo53 giu31",
+  "replace_raw": "hi31 pang53 dung31 e55 fong53 di31－－bbui11 fung11 mo53 giu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "知偷食，毋知捽嘴",
+  "gip_id": "gip-14241",
+  "match_raw": "di11 teu11 shied43 m11 di11 cud43 zhe31",
+  "replace_raw": "di11 teu11 shied43，m11 di11 cud43 zhe31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "好嘛一句，䆀嘛一句",
+  "gip_id": "gip-14271",
+  "match_raw": "hoo31 ma11 rhid24 gui31 bbai11 ma11 rhid24 gui31",
+  "replace_raw": "hoo31 ma11 rhid24 gui31，bbai11 ma11 rhid24 gui31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "好種毋傳，否種毋斷",
+  "gip_id": "gip-14272",
+  "match_raw": "hoo31 zhung31 m55 chen53 painn31 zhung31 m55 ton11",
+  "replace_raw": "hoo31 zhung31 m55 chen53，painn31 zhung31 m55 ton11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "好事毋出門，否事傳千里",
+  "gip_id": "gip-14273",
+  "match_raw": "hoo31 su55 m55 chid24 mun53 painn31 su55 chen53 cien11 li31",
+  "replace_raw": "hoo31 su55 m55 chid24 mun53，painn31 su55 chen53 cien11 li31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "學否三日，學好三年",
+  "gip_id": "gip-14279",
+  "match_raw": "hoo55 painn31 sam11 ngid24 hoo55 hoo31 sam11 neen53",
+  "replace_raw": "hoo55 painn31 sam11 ngid24，hoo55 hoo31 sam11 neen53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "爺母想子長江水，子想爺母擔竿長",
+  "gip_id": "gip-14298",
+  "match_raw": "rhia53 bbu11 siong55 zu31 chong53 gong11 fi31 zu31 siong55 rhia53 bbu11 dam11 gon11 chong53",
+  "replace_raw": "rhia53 bbu11 siong55 zu31 chong53 gong11 fi31，zu31 siong55 rhia53 bbu11 dam11 gon11 chong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "這隻耳子入，遐隻耳子出",
+  "gip_id": "gip-14312",
+  "match_raw": "li24 zha24 ngi31 zu31 ngib43 ga24 zha24 ngi31 zu31 chid24",
+  "replace_raw": "li24 zha24 ngi31 zu31 ngib43，ga24 zha24 ngi31 zu31 chid24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "一頓省一口，一年即有一斗",
+  "gip_id": "gip-14313",
+  "match_raw": "rhid24 dun31 sang31 rhid24 keu31 rhid24 neen53 cid43 rhiu11 rhid24 deu31",
+  "replace_raw": "rhid24 dun31 sang31 rhid24 keu31，rhid24 neen53 cid43 rhiu11 rhid24 deu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "一代姑、兩代表，三代無了了",
+  "gip_id": "gip-14314",
+  "match_raw": "rhid24 toi55 gu11 liong31 toi55 bio31 sam11 toi55 mo53 leeu31 leeu31",
+  "replace_raw": "rhid24 toi55 gu11、liong31 toi55 bio31，sam11 toi55 mo53 leeu31 leeu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "一支嘴兩緣皮，講好講䆀由在佢",
+  "gip_id": "gip-14315",
+  "match_raw": "rhid24 gi11 zhe31 liong31 rhen53 pi53 gong31 hoo31 gong31 bbai11 rhiu53 cai55 gui53",
+  "replace_raw": "rhid24 gi11 zhe31 liong31 rhen53 pi53，gong31 hoo31 gong31 bbai11 rhiu53 cai55 gui53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "一暗夜想千條頭路，天一光，嘛係賣豆腐",
+  "gip_id": "gip-14316",
+  "match_raw": "rhid24 am31 rhia55 siong55 cien11 teeu53 teu53 lu55 teen11 rhid24 gong11 ma11 he55 mi11 teu55 fu55",
+  "replace_raw": "rhid24 am31 rhia55 siong55 cien11 teeu53 teu53 lu55，teen11 rhid24 gong11，ma11 he55 mi11 teu55 fu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "有病醫病，無病救命",
+  "gip_id": "gip-14357",
+  "match_raw": "rhiu11 piang55 rhi11 piang55 mo53 piang55 giu31 miang55",
+  "replace_raw": "rhiu11 piang55 rhi11 piang55，mo53 piang55 giu31 miang55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "有樣學樣，無樣自家想",
+  "gip_id": "gip-14359",
+  "match_raw": "rhiu11 rhiong55 hoo55 rhiong55 mo53 rhiong55 zi11 ga11 siong55",
+  "replace_raw": "rhiu11 rhiong55 hoo55 rhiong55，mo53 rhiong55 zi11 ga11 siong55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "用笊籬戽水－－無採工",
+  "gip_id": "gip-14369",
+  "match_raw": "rhung55 zau31 li53 fu31 fi31 mo53 cai31 gung11",
+  "replace_raw": "rhung55 zau31 li53 fu31 fi31－－mo53 cai31 gung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "借錢笑噳噳，討錢假毋知",
+  "gip_id": "gip-14375",
+  "match_raw": "zia31 cien53 sioo55 ngi11 ngi11 too31 cien53 ga31 m11 di11",
+  "replace_raw": "zia31 cien53 sioo55 ngi11 ngi11，too31 cien53 ga31 m11 di11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "歌不離口，拳不離手",
+  "gip_id": "gip-14447",
+  "match_raw": "goo11 bud24 li53 keu31 kun53 bud24 li53 shiu31",
+  "replace_raw": "goo11 bud24 li53 keu31，kun53 bud24 li53 shiu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "好額無三代，散嘛無三代",
+  "gip_id": "gip-14451",
+  "match_raw": "hoo31 ngia24 mo53 sam11 toi55 san31 ma11 mo53 sam11 toi55",
+  "replace_raw": "hoo31 ngia24 mo53 sam11 toi55，san31 ma11 mo53 sam11 toi55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "䀴人擔擔－－毋使出力",
+  "gip_id": "gip-14479",
+  "match_raw": "ngiang31 ngin53 dam11 dam11 m55 su31 chid24 lid43",
+  "replace_raw": "ngiang31 ngin53 dam11 dam11－－m55 su31 chid24 lid43",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "好事無嫌少，朋友無嫌多",
+  "gip_id": "gip-14541",
+  "match_raw": "hoo31 su55 mo53 heem53 shioo31 pen53 rhiu31 mo53 heem53 doo11",
+  "replace_raw": "hoo31 su55 mo53 heem53 shioo31，pen53 rhiu31 mo53 heem53 doo11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "老鼠㐁貓鼻－－尋死",
+  "gip_id": "gip-14564",
+  "match_raw": "loo31 chi31 leeb24 ngiau31 pinn55 cim53 si31",
+  "replace_raw": "loo31 chi31 leeb24 ngiau31 pinn55－－cim53 si31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "老虎也會啄睡－－難免",
+  "gip_id": "gip-14565",
+  "match_raw": "loo31 fu31 rhia31 bbue55 du24 fe55 nan53 mien31",
+  "replace_raw": "loo31 fu31 rhia31 bbue55 du24 fe55－－nan53 mien31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "毋驚萬事難，即驚驚麻煩",
+  "gip_id": "gip-14599",
+  "match_raw": "m55 giang11 bban55 su55 nan53 cid43 giang11 giang11 ma53 fan53",
+  "replace_raw": "m55 giang11 bban55 su55 nan53，cid43 giang11 giang11 ma53 fan53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "毋識字，怨爺母；毋會趁錢，怨屋場",
+  "gip_id": "gip-14601",
+  "match_raw": "m11 shid24 cu55 bbien31 rhia53 bbu11 m11 bboi55 tan31 cien53 bbien31 bbu24 chong53",
+  "replace_raw": "m11 shid24 cu55，bbien31 rhia53 bbu11；m11 bboi55 tan31 cien53，bbien31 bbu24 chong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "毋做中人毋做保，一世人無煩無惱",
+  "gip_id": "gip-14602",
+  "match_raw": "m55 zoo31 zhung11 ngin53 m55 zoo31 boo31 rhid24 she31 ngin53 mo53 fan53 mo53 nau31",
+  "replace_raw": "m55 zoo31 zhung11 ngin53 m55 zoo31 boo31，rhid24 she31 ngin53 mo53 fan53 mo53 nau31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "毋係遐個人，毋驚你會講；係遐個人，毋使講，佢會想",
+  "gip_id": "gip-14603",
+  "match_raw": "m11 he55 ga24 gai31 ngin53 m55 giang11 hen53 bbue55 gong31 he55 ga24 gai31 ngin53 m55 su31 gong31 gui53 bbue55 siong55",
+  "replace_raw": "m11 he55 ga24 gai31 ngin53，m55 giang11 hen53 bbue55 gong31；he55 ga24 gai31 ngin53，m55 su31 gong31，gui53 bbue55 siong55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "麼个藤結麼个瓜，麼个人講麼个事",
+  "gip_id": "gip-14608",
+  "match_raw": "bboo24 gai31 ten53 gied24 bboo24 gai31 gua11 bboo24 gai31 ngin53 gong31 bboo24 gai31 su55",
+  "replace_raw": "bboo24 gai31 ten53 gied24 bboo24 gai31 gua11，bboo24 gai31 ngin53 gong31 bboo24 gai31 su55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "瞞會過人，瞞毋會過天",
+  "gip_id": "gip-14617",
+  "match_raw": "man53 bbue55 goo31 ngin53 man53 m11 bboi55 goo31 teen11",
+  "replace_raw": "man53 bbue55 goo31 ngin53，man53 m11 bboi55 goo31 teen11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "吂到冬節先搓圓，年三十夜喝無錢",
+  "gip_id": "gip-14623",
+  "match_raw": "mang11 doo31 dung11 zied24 sien11 soo11 bbien53 neen53 sam11 shib43 rhia55 hod24 mo53 cien53",
+  "replace_raw": "mang11 doo31 dung11 zied24 sien11 soo11 bbien53，neen53 sam11 shib43 rhia55 hod24 mo53 cien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "吂種瓜豆先搭棚，吂降細子先號名",
+  "gip_id": "gip-14624",
+  "match_raw": "mang11 zhung31 gua11 teu55 sien11 dab24 pang53 mang11 giung11 se31 zu31 sien11 hoo55 miang53",
+  "replace_raw": "mang11 zhung31 gua11 teu55 sien11 dab24 pang53，mang11 giung11 se31 zu31 sien11 hoo55 miang53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "貓跋樹－－毋成猴",
+  "gip_id": "gip-14635",
+  "match_raw": "ngiau31 ba24 shi55 m55 shang53 heu53",
+  "replace_raw": "ngiau31 ba24 shi55－－m55 shang53 heu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "命䆀愛算命，人䆀愛照鏡",
+  "gip_id": "gip-14644",
+  "match_raw": "miang55 bbai11 oi31 son31 miang55 ngin53 bbai11 oi31 zhioo31 giang31",
+  "replace_raw": "miang55 bbai11 oi31 son31 miang55，ngin53 bbai11 oi31 zhioo31 giang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "青瞑䀴戲－－有聲無影",
+  "gip_id": "gip-14661",
+  "match_raw": "ciang11 miang11 ngiang31 hi31 rhiu11 shang11 mo53 rhiang31",
+  "replace_raw": "ciang11 miang11 ngiang31 hi31－－rhiu11 shang11 mo53 rhiang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "莫罵酉時妻，一夜受孤棲",
+  "gip_id": "gip-14696",
+  "match_raw": "mo55 ma31 rhiu31 shi53 ci11 rhid24 rhia55 shiu55 gu11 ci11",
+  "replace_raw": "mo55 ma31 rhiu31 shi53 ci11，rhid24 rhia55 shiu55 gu11 ci11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "莫怨天，莫怨地，愛怨怨自家",
+  "gip_id": "gip-14697",
+  "match_raw": "mo55 bbien31 teen11 mo55 bbien31 ti55 oi31 bbien31 bbien31 zi11 ga11",
+  "replace_raw": "mo55 bbien31 teen11，mo55 bbien31 ti55，oi31 bbien31 bbien31 zi11 ga11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "陰鴆狗，咬死人",
+  "gip_id": "gip-14706",
+  "match_raw": "rhim11 tim11 geu31 ngau11 si31 ngin53",
+  "replace_raw": "rhim11 tim11 geu31，ngau11 si31 ngin53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "木匠揪大鋸－－有來有去",
+  "gip_id": "gip-14712",
+  "match_raw": "hm24 ciong55 kiu31 tai55 gi31 rhiu11 loi53 rhiu11 kui31",
+  "replace_raw": "hm24 ciong55 kiu31 tai55 gi31－－rhiu11 loi53 rhiu11 kui31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "男驚入毋著行，女驚嫁毋著郎",
+  "gip_id": "gip-14735",
+  "match_raw": "nam53 giang11 ngib43 m55 choo55 hong53 m31 giang11 ga31 m55 choo55 long53",
+  "replace_raw": "nam53 giang11 ngib43 m55 choo55 hong53，m31 giang11 ga31 m55 choo55 long53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "男子斷掌有官做，妹子斷掌守空房",
+  "gip_id": "gip-14736",
+  "match_raw": "nam53 zu31 ton11 zhong31 rhiu11 guan11 zoo31 moi31 zu31 ton11 zhong31 shiu31 kung11 fong53",
+  "replace_raw": "nam53 zu31 ton11 zhong31 rhiu11 guan11 zoo31，moi31 zu31 ton11 zhong31 shiu31 kung11 fong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "南蛇鑽壁籬，無死嘛㪐緣皮",
+  "gip_id": "gip-14738",
+  "match_raw": "nam53 sha53 zon31 bia24 li53 mo53 si31 ma11 lud24 rhen53 pi53",
+  "replace_raw": "nam53 sha53 zon31 bia24 li53，mo53 si31 ma11 lud24 rhen53 pi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "日時毋好講人，夜時毋好講鬼",
+  "gip_id": "gip-14808",
+  "match_raw": "ngid24 shi53 m55 hoo31 gong31 ngin53 rhia55 shi53 m55 hoo31 gong31 gui31",
+  "replace_raw": "ngid24 shi53 m55 hoo31 gong31 ngin53，rhia55 shi53 m55 hoo31 gong31 gui31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人係生成，鬼係講成",
+  "gip_id": "gip-14827",
+  "match_raw": "ngin53 he55 sang11 shin53 gui31 he55 gong31 shin53",
+  "replace_raw": "ngin53 he55 sang11 shin53，gui31 he55 gong31 shin53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人和人好，鬼和鬼好",
+  "gip_id": "gip-14828",
+  "match_raw": "ngin53 ham55 ngin53 hoo31 gui31 ham55 gui31 hoo31",
+  "replace_raw": "ngin53 ham55 ngin53 hoo31，gui31 ham55 gui31 hoo31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人多好作田，人少好過年",
+  "gip_id": "gip-14829",
+  "match_raw": "ngin53 doo11 hoo31 zoo24 teen53 ngin53 shioo31 hoo31 goo31 neen53",
+  "replace_raw": "ngin53 doo11 hoo31 zoo24 teen53，ngin53 shioo31 hoo31 goo31 neen53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人心節節高，料字寫做科",
+  "gip_id": "gip-14830",
+  "match_raw": "ngin53 sim11 zied24 zied24 goo11 leeu55 cu55 sia31 zoo31 koo11",
+  "replace_raw": "ngin53 sim11 zied24 zied24 goo11，leeu55 cu55 sia31 zoo31 koo11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人惡人驚天毋驚，人善人欺天不欺",
+  "gip_id": "gip-14831",
+  "match_raw": "ngin53 oo24 ngin53 giang11 teen11 m55 giang11 ngin53 shen55 ngin53 ki11 teen11 bud24 ki11",
+  "replace_raw": "ngin53 oo24 ngin53 giang11 teen11 m55 giang11，ngin53 shen55 ngin53 ki11 teen11 bud24 ki11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "人老三件䆀，行路頭犁犁；屙屁屎嗄疶，屙尿涿溼鞋",
+  "gip_id": "gip-14832",
+  "match_raw": "ngin53 loo31 sam11 kien55 bbai11 hang53 lu55 teu53 le55 le55 oo11 pi31 shi31 sa31 cheed24 oo11 neeu55 du24 shib24 he53",
+  "replace_raw": "ngin53 loo31 sam11 kien55 bbai11，hang53 lu55 teu53 le55 le55；oo11 pi31 shi31 sa31 cheed24，oo11 neeu55 du24 shib24 he53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "牛眼核摒屎胐－－䀴各人个本等",
+  "gip_id": "gip-14848",
+  "match_raw": "ngiu53 ngien31 fud43 bin31 shi31 fud24 ngiang31 goo24 ngin53 e55 bun31 den31",
+  "replace_raw": "ngiu53 ngien31 fud43 bin31 shi31 fud24－－ngiang31 goo24 ngin53 e55 bun31 den31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "討死，氣毋斷",
+  "gip_id": "gip-14880",
+  "match_raw": "too31 si31 ki31 m55 ton11",
+  "replace_raw": "too31 si31，ki31 m55 ton11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "七月半鴨－－毋知死活",
+  "gip_id": "gip-14949",
+  "match_raw": "cid24 ngied43 ban31 ab24 m11 di11 si31 ua55",
+  "replace_raw": "cid24 ngied43 ban31 ab24－－m11 di11 si31 ua55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "千跪萬拜一爐香，較輸在生一碗湯",
+  "gip_id": "gip-14951",
+  "match_raw": "cien11 kui55 bban55 bai31 rhid24 lu53 hiong11 ka31 shi11 cai55 sang11 rhid24 bban31 tong11",
+  "replace_raw": "cien11 kui55 bban55 bai31 rhid24 lu53 hiong11，ka31 shi11 cai55 sang11 rhid24 bban31 tong11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "前人種竹，後人遮涼",
+  "gip_id": "gip-14955",
+  "match_raw": "cien53 ngin53 zhung31 zhu24 heu55 ngin53 zha11 liong53",
+  "replace_raw": "cien53 ngin53 zhung31 zhu24，heu55 ngin53 zha11 liong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "石灰委路－－白行",
+  "gip_id": "gip-15026",
+  "match_raw": "sha55 fue11 bbe55 lu55 pa55 hang53",
+  "replace_raw": "sha55 fue11 bbe55 lu55－－pa55 hang53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "三月櫻花－－紅毋會久",
+  "gip_id": "gip-15034",
+  "match_raw": "sam11 ngied43 en11 fa11 fung53 m11 bboi55 giu31",
+  "replace_raw": "sam11 ngied43 en11 fa11－－fung53 m11 bboi55 giu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "三兩人講四斤事－－膨風",
+  "gip_id": "gip-15035",
+  "match_raw": "sam11 liong31 ngin53 gong31 si31 gun11 su55 pong31 fung11",
+  "replace_raw": "sam11 liong31 ngin53 gong31 si31 gun11 su55－－pong31 fung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "三人共一心，黃泥變黃金",
+  "gip_id": "gip-15036",
+  "match_raw": "sam11 ngin53 kung55 rhid24 sim11 bbong53 ni53 bien31 bbong53 gim11",
+  "replace_raw": "sam11 ngin53 kung55 rhid24 sim11，bbong53 ni53 bien31 bbong53 gim11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "三歲細子貼春聯－－毋知上下",
+  "gip_id": "gip-15037",
+  "match_raw": "sam11 se31 se31 zu31 dab24 chin11 lien53 m11 di11 shong55 ha11",
+  "replace_raw": "sam11 se31 se31 zu31 dab24 chin11 lien53－－m11 di11 shong55 ha11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "三張紙畫一粒人頭－－面子嶄然大",
+  "gip_id": "gip-15038",
+  "match_raw": "sam11 zhong11 zhi31 fa55 rhid24 liab43 ngin53 teu53 mien31 zu31 zham31 rhen53 tai55",
+  "replace_raw": "sam11 zhong11 zhi31 fa55 rhid24 liab43 ngin53 teu53－－mien31 zu31 zham31 rhen53 tai55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "山內無老虎，猴做大王",
+  "gip_id": "gip-15048",
+  "match_raw": "san11 nui55 mo53 loo31 fu31 heu53 zoo31 tai55 ong53",
+  "replace_raw": "san11 nui55 mo53 loo31 fu31，heu53 zoo31 tai55 ong53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "省食頓頓飽，省著日日新",
+  "gip_id": "gip-15059",
+  "match_raw": "sang31 shied43 dun31 dun31 bau31 sang31 zhoo24 ngid24 ngid24 sin11",
+  "replace_raw": "sang31 shied43 dun31 dun31 bau31，sang31 zhoo24 ngid24 ngid24 sin11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "細漢偷針，大漢偷金",
+  "gip_id": "gip-15082",
+  "match_raw": "se31 hon31 teu11 zhim11 tai55 hon31 teu11 gim11",
+  "replace_raw": "se31 hon31 teu11 zhim11，tai55 hon31 teu11 gim11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "細新婦吂來，毋知大新婦好惜",
+  "gip_id": "gip-15083",
+  "match_raw": "se31 sim11 pe11 mang11 loi53 m11 di11 tai55 sim11 pe11 hoo31 sia24",
+  "replace_raw": "se31 sim11 pe11 mang11 loi53，m11 di11 tai55 sim11 pe11 hoo31 sia24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "少食多香氣，多食無氣味",
+  "gip_id": "gip-15098",
+  "match_raw": "shio31 shied43 doo11 hiong11 ki31 doo11 shied43 mo53 ki31 bbi55",
+  "replace_raw": "shio31 shied43 doo11 hiong11 ki31，doo11 shied43 mo53 ki31 bbi55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "喊豬喊狗，歸氣自家走",
+  "gip_id": "gip-15109",
+  "match_raw": "heem31 zhi11 heem31 geu31 gui11 ki31 zi11 ga11 zeu31",
+  "replace_raw": "heem31 zhi11 heem31 geu31，gui11 ki31 zi11 ga11 zeu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "屎急褲帶打死結－－急死人",
+  "gip_id": "gip-15112",
+  "match_raw": "shi31 gib24 ku31 dai31 da31 si31 gied24 gib24 si31 ngin53",
+  "replace_raw": "shi31 gib24 ku31 dai31 da31 si31 gied24－－gib24 si31 ngin53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "屎缸底个石頭－－又硬又臭",
+  "gip_id": "gip-15113",
+  "match_raw": "shi31 gong11 de31 e55 sha55 teu53 rhiu55 ngang55 rhiu55 chiu31",
+  "replace_raw": "shi31 gong11 de31 e55 sha55 teu53－－rhiu55 ngang55 rhiu55 chiu31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "十步留一步，毋驚師子打師傅",
+  "gip_id": "gip-15119",
+  "match_raw": "shib43 pu55 liu53 rhid24 pu55 m55 giang11 su11 zu31 da31 su11 fu55",
+  "replace_raw": "shib43 pu55 liu53 rhid24 pu55，m55 giang11 su11 zu31 da31 su11 fu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "食人歡喜酒，趁人甘願錢",
+  "gip_id": "gip-15139",
+  "match_raw": "shied43 ngin53 fan11 hi31 ziu31 tan31 ngin53 gam11 ngien55 cien53",
+  "replace_raw": "shied43 ngin53 fan11 hi31 ziu31，tan31 ngin53 gam11 ngien55 cien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "食三粒黃豆，即想上西天",
+  "gip_id": "gip-15140",
+  "match_raw": "shied43 sam11 liab43 bbong53 teu55 cid43 siong55 shong11 se11 teen11",
+  "replace_raw": "shied43 sam11 liab43 bbong53 teu55，cid43 siong55 shong11 se11 teen11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "神仙打鼓有時錯，腳步踏差麼儕無",
+  "gip_id": "gip-15145",
+  "match_raw": "shin53 sien11 da31 gu31 rhiu11 shi53 coo31 gioo24 pu55 tab43 ca11 bboo24 sa53 mo53",
+  "replace_raw": "shin53 sien11 da31 gu31 rhiu11 shi53 coo31，gioo24 pu55 tab43 ca11 bboo24 sa53 mo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "算命先生半路死，做木先生無眠床",
+  "gip_id": "gip-15163",
+  "match_raw": "son31 miang55 sien11 sen11 ban31 lu55 si31 zoo31 hm24 sien11 sen11 mo53 min53 song53",
+  "replace_raw": "son31 miang55 sien11 sen11 ban31 lu55 si31，zoo31 hm24 sien11 sen11 mo53 min53 song53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "樹大分椏，子大分家",
+  "gip_id": "gip-15195",
+  "match_raw": "shi55 tai55 bun11 bba11 zu31 tai55 bun11 ga11",
+  "replace_raw": "shi55 tai55 bun11 bba11，zu31 tai55 bun11 ga11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "水牛相鬥－－各打各",
+  "gip_id": "gip-15204",
+  "match_raw": "fi31 ngiu53 siong11 deu31 goo24 da31 goo24",
+  "replace_raw": "fi31 ngiu53 siong11 deu31－－goo24 da31 goo24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "田愛逐日到，屋愛逐日掃",
+  "gip_id": "gip-15267",
+  "match_raw": "teen53 oi31 tu55 ngid24 doo31 bbu24 oi31 tu55 ngid24 soo31",
+  "replace_raw": "teen53 oi31 tu55 ngid24 doo31，bbu24 oi31 tu55 ngid24 soo31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "食老不尊，教壞子孫",
+  "gip_id": "gip-15328",
+  "match_raw": "shied43 loo31 bud24 zun11 gau11 fai55 zu31 sun11",
+  "replace_raw": "shied43 loo31 bud24 zun11，gau11 fai55 zu31 sun11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "禾田底个稗子－－雜種",
+  "gip_id": "gip-15335",
+  "match_raw": "bboo53 teen53 de31 e55 pe55 zu31 cab43 zhung31",
+  "replace_raw": "bboo53 teen53 de31 e55 pe55 zu31－－cab43 zhung31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "擔米換番薯，會算毋會除",
+  "gip_id": "gip-15337",
+  "match_raw": "dam11 mi31 bban55 han11 shi53 bbue55 son31 m11 bboi55 chi53",
+  "replace_raw": "dam11 mi31 bban55 han11 shi53，bbue55 son31 m11 bboi55 chi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "烏鴉無隔夜卵－－急性",
+  "gip_id": "gip-15348",
+  "match_raw": "bbu11 a11 mo53 ga24 rhia55 lon31 gib24 sin31",
+  "replace_raw": "bbu11 a11 mo53 ga24 rhia55 lon31－－gib24 sin31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "死一擺，總無死兩擺－－無麼个好驚",
+  "gip_id": "gip-15363",
+  "match_raw": "si31 rhid24 bai31 zung31 mo53 si31 liong31 bai31 mo53 bboo24 gai31 hoo31 giang11",
+  "replace_raw": "si31 rhid24 bai31，zung31 mo53 si31 liong31 bai31－－mo53 bboo24 gai31 hoo31 giang11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "四兩人，講半斤事－－膨風",
+  "gip_id": "gip-15364",
+  "match_raw": "si31 liong31 ngin53 gong31 ban31 gun11 su55 pong31 fung11",
+  "replace_raw": "si31 liong31 ngin53，gong31 ban31 gun11 su55－－pong31 fung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "新起屎缸－－三日新",
+  "gip_id": "gip-15379",
+  "match_raw": "sin11 ki31 shi31 gong11 sam11 ngid24 sin11",
+  "replace_raw": "sin11 ki31 shi31 gong11－－sam11 ngid24 sin11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "相打望人揪，相告望人和",
+  "gip_id": "gip-15386",
+  "match_raw": "siong11 da31 mong55 ngin53 kiu31 siong11 goo31 mong55 ngin53 foo53",
+  "replace_raw": "siong11 da31 mong55 ngin53 kiu31，siong11 goo31 mong55 ngin53 foo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "相罵無好事，相打無好拳",
+  "gip_id": "gip-15387",
+  "match_raw": "siong11 ma31 mo53 hoo31 su55 siong11 da31 mo53 hoo31 kun53",
+  "replace_raw": "siong11 ma31 mo53 hoo31 su55，siong11 da31 mo53 hoo31 kun53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "正有錢毋好買田，正有穀毋好買屋",
+  "gip_id": "gip-15431",
+  "match_raw": "zhang31 rhiu11 cien53 m55 hoo31 mi11 teen53 zhang31 rhiu11 gu24 m55 hoo31 mi11 bbu24",
+  "replace_raw": "zhang31 rhiu11 cien53 m55 hoo31 mi11 teen53，zhang31 rhiu11 gu24 m55 hoo31 mi11 bbu24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "做賊一更，守賊一夜",
+  "gip_id": "gip-15481",
+  "match_raw": "zoo31 ced43 rhid24 gang11 siu31 ced43 rhid24 rhia55",
+  "replace_raw": "zoo31 ced43 rhid24 gang11，siu31 ced43 rhid24 rhia55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "做無一湯匙，食愛一碗公－－恁好空",
+  "gip_id": "gip-15482",
+  "match_raw": "zoo31 mo53 rhid24 tong11 shi53 shied43 oi31 rhid24 bban31 gung11 ngin31 hoo31 kung11",
+  "replace_raw": "zoo31 mo53 rhid24 tong11 shi53，shied43 oi31 rhid24 bban31 gung11－－ngin31 hoo31 kung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "捉貓么，䀴貓嫲",
+  "gip_id": "gip-15488",
+  "match_raw": "zoo24 ngiau31 iaunn55 ngiang31 ngiau31 ma53",
+  "replace_raw": "zoo24 ngiau31 iaunn55，ngiang31 ngiau31 ma53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "桌崠食飯，桌下屙屎",
+  "gip_id": "gip-15492",
+  "match_raw": "zoo24 dung31 shied43 pon55 zoo24 ha11 oo11 shi31",
+  "replace_raw": "zoo24 dung31 shied43 pon55，zoo24 ha11 oo11 shi31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "嘴脣兩兜皮－－好䆀由在人",
+  "gip_id": "gip-15498",
+  "match_raw": "zhe31 fin53 liong31 deu11 pi53 hoo31 bbai11 rhiu53 cai55 ngin53",
+  "replace_raw": "zhe31 fin53 liong31 deu11 pi53－－hoo31 bbai11 rhiu53 cai55 ngin53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "安",
+  "hanji": "豬八戒嫁阿妹－－毋使䀴",
+  "gip_id": "gip-15520",
+  "match_raw": "zhi11 beed24 goi31 ga31 a11 moi31 m55 su31 ngiang31",
+  "replace_raw": "zhi11 beed24 goi31 ga31 a11 moi31－－m55 su31 ngiang31",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "老虎也會啄目睡－－難免",
+  "gip_id": "gip-10654",
+  "match_raw": "lo53 fu53 rhia24 voi24 dug2 mug2 fe24 nan55 mien11",
+  "replace_raw": "lo53 fu53 rhia24 voi24 dug2 mug2 fe24－－nan55 mien11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋",
+  "gip_id": "gip-11835",
+  "match_raw": "ngin55 lo53 sam11 kien24 vai11 hang55 lu24 teu55 le55 le55 da53 pi53 da53 chud2 shi53 o11 ngiau24 lim55 shib2 he55",
+  "replace_raw": "ngin55 lo53 sam11 kien24 vai11，hang55 lu24 teu55 le55 le55；da53 pi53 da53 chud2 shi53，o11 ngiau24 lim55 shib2 he55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "三十暗晡个飯甑－－無閒",
+  "gip_id": "gip-12891",
+  "match_raw": "sam11 shib5 am53 bu11 gai53 pon24 zen53 mo55 han55",
+  "replace_raw": "sam11 shib5 am53 bu11 gai53 pon24 zen53－－mo55 han55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "水牛相打－－各打各",
+  "gip_id": "gip-13748",
+  "match_raw": "fi53 ngiu55 siong11 da53 gog2 da53 gog2",
+  "replace_raw": "fi53 ngiu55 siong11 da53－－gog2 da53 gog2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "烏鴉無隔夜卵－－性急",
+  "gip_id": "gip-14707",
+  "match_raw": "vu11 a11 mo55 gag2 rhia24 lon53 sin53 gib2",
+  "replace_raw": "vu11 a11 mo55 gag2 rhia24 lon53－－sin53 gib2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "阿嬤嫁孫女－－無主無意",
+  "gip_id": "gip-16113",
+  "match_raw": "a11 ma24 ga53 sun11 ng53 mo55 zhu53 mo55 rhi53",
+  "replace_raw": "a11 ma24 ga53 sun11 ng53－－mo55 zhu53 mo55 rhi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "鴨嫲多，懶生卵；心婦多，懶洗碗",
+  "gip_id": "gip-16115",
+  "match_raw": "ab2 ma55 do11 nan11 sang11 lon53 sim11 pe11 do11 nan11 se53 van53",
+  "replace_raw": "ab2 ma55 do11，nan11 sang11 lon53；sim11 pe11 do11，nan11 se53 van53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "矮牯仔䀴戲－－跈人笑",
+  "gip_id": "gip-16119",
+  "match_raw": "e53 gu53 er53 ngiang53 hi53 ten55 ngin55 siau53",
+  "replace_raw": "e53 gu53 er53 ngiang53 hi53－－ten55 ngin55 siau53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "出門䀴天色，入門䀴面色",
+  "gip_id": "gip-16165",
+  "match_raw": "chud2 mun55 ngiang53 tien11 sed2 ngib5 mun55 ngiang53 mien53 sed2",
+  "replace_raw": "chud2 mun55 ngiang53 tien11 sed2，ngib5 mun55 ngiang53 mien53 sed2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "地豆掊殼－－還有醫",
+  "gip_id": "gip-16206",
+  "match_raw": "ti24 teu24 boi11 kog2 han55 rhiu11 rhi11",
+  "replace_raw": "ti24 teu24 boi11 kog2－－han55 rhiu11 rhi11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "戲棚崠个皇帝－－威風毋久",
+  "gip_id": "gip-16256",
+  "match_raw": "hi53 pang55 dung53 gai53 fong55 di53 vui11 fung11 m55 giu53",
+  "replace_raw": "hi53 pang55 dung53 gai53 fong55 di53－－vui11 fung11 m55 giu53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "溪壩跑馬－－壞蹄",
+  "gip_id": "gip-16265",
+  "match_raw": "kie11 ba53 pau11 ma11 fai24 te55",
+  "replace_raw": "kie11 ba53 pau11 ma11－－fai24 te55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "茄開黃花－－反種",
+  "gip_id": "gip-16297",
+  "match_raw": "kio55 koi11 vong55 fa11 fan53 zhung53",
+  "replace_raw": "kio55 koi11 vong55 fa11－－fan53 zhung53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "䀴戲愛知戲文大意，做人愛識人情義理",
+  "gip_id": "gip-16327",
+  "match_raw": "ngiang53 hi53 oi53 di11 hi53 vun55 tai24 rhi53 zo53 ngin55 oi53 shid2 ngin55 cin55 ngi24 li11",
+  "replace_raw": "ngiang53 hi53 oi53 di11 hi53 vun55 tai24 rhi53，zo53 ngin55 oi53 shid2 ngin55 cin55 ngi24 li11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "倈仔打屁，消痰化氣；心婦打屁，屙膿滑痢",
+  "gip_id": "gip-16330",
+  "match_raw": "lai53 er53 da53 pi53 siau11 tam55 fa53 hi53 sim11 pe11 da53 pi53 o11 nung55 vad5 li24",
+  "replace_raw": "lai53 er53 da53 pi53，siau11 tam55 fa53 hi53；sim11 pe11 da53 pi53，o11 nung55 vad5 li24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "兩公婆懸頸－－死對頭",
+  "gip_id": "gip-16342",
+  "match_raw": "liong53 gung11 po55 vien53 giang53 si53 dui53 teu55",
+  "replace_raw": "liong53 gung11 po55 vien53 giang53－－si53 dui53 teu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "老咧學吹笛，學咧會來鬚就白",
+  "gip_id": "gip-16345",
+  "match_raw": "lo53 le53 hog5 che11 ted5 hog5 le53 voi24 loi55 si11 ciu24 pag5",
+  "replace_raw": "lo53 le53 hog5 che11 ted5，hog5 le53 voi24 loi55 si11 ciu24 pag5",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "麻布做衫－－䀴現現",
+  "gip_id": "gip-16350",
+  "match_raw": "ma55 bu53 zo53 sam11 ngiang53 hien24 hien24",
+  "replace_raw": "ma55 bu53 zo53 sam11－－ngiang53 hien24 hien24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "吂種瓜豆先搭棚，吂降倈子先安名",
+  "gip_id": "gip-16352",
+  "match_raw": "mang11 zhung53 gua11 teu24 sien11 dab2 pang55 mang11 giung53 lai53 zii53 sien11 on11 miang55",
+  "replace_raw": "mang11 zhung53 gua11 teu24 sien11 dab2 pang55，mang11 giung53 lai53 zii53 sien11 on11 miang55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "貓死懸樹頭，狗死放水漂",
+  "gip_id": "gip-16356",
+  "match_raw": "ngiau53 si53 vien53 shu24 teu55 gieu53 si53 biong53 fi53 piau11",
+  "replace_raw": "ngiau53 si53 vien53 shu24 teu55，gieu53 si53 biong53 fi53 piau11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "老蟹懸頸－－尋無頭䌈",
+  "gip_id": "gip-16363",
+  "match_raw": "lo53 he53 vien53 giang53 cim55 mo55 teu55 tag2",
+  "replace_raw": "lo53 he53 vien53 giang53－－cim55 mo55 teu55 tag2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "青瞑仔䀴戲－－聽聲無見影",
+  "gip_id": "gip-16364",
+  "match_raw": "ciang11 miang11 er53 ngiang53 hi53 ten11 shang11 mo55 gien53 rhiang53",
+  "replace_raw": "ciang11 miang11 er53 ngiang53 hi53－－ten11 shang11 mo55 gien53 rhiang53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "目珠花花，瓠仔䀴做菜瓜",
+  "gip_id": "gip-16367",
+  "match_raw": "mug2 zhu11 fa11 fa11 pu55 er53 ngiang53 zo53 coi53 gua11",
+  "replace_raw": "mug2 zhu11 fa11 fa11，pu55 er53 ngiang53 zo53 coi53 gua11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "泥伯公過溪－－自身難保",
+  "gip_id": "gip-16373",
+  "match_raw": "ni55 bag2 gung11 go53 kie11 cii24 shin11 nan55 bo53",
+  "replace_raw": "ni55 bag2 gung11 go53 kie11－－cii24 shin11 nan55 bo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "泥菩薩過溪－－自身難保",
+  "gip_id": "gip-16374",
+  "match_raw": "ni55 pu55 sad2 go53 kie11 cii24 shin11 nan55 bo53",
+  "replace_raw": "ni55 pu55 sad2 go53 kie11－－cii24 shin11 nan55 bo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "南蛇鑽壁籬，毋死乜脫層皮",
+  "gip_id": "gip-16377",
+  "match_raw": "nam55 sha55 zon53 biag2 li55 m55 si53 me11 tod2 cen55 pi55",
+  "replace_raw": "nam55 sha55 zon53 biag2 li55，m55 si53 me11 tod2 cen55 pi55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "閻羅王嫁妹仔－－鬼愛",
+  "gip_id": "gip-16396",
+  "match_raw": "rhiam24 lo55 vong55 ga53 moi11 er53 gui53 oi53",
+  "replace_raw": "rhiam24 lo55 vong55 ga53 moi11 er53－－gui53 oi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "日子吂到，毋係天公毋報",
+  "gip_id": "gip-16400",
+  "match_raw": "ngid2 zii53 mang11 do53 m55 he24 tien11 gung11 m55 bo53",
+  "replace_raw": "ngid2 zii53 mang11 do53，m55 he24 tien11 gung11 m55 bo53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "人求𠊎，三春風；𠊎求人，六月雪",
+  "gip_id": "gip-16409",
+  "match_raw": "ngin55 kiu55 ngai55 sam11 chun11 fung11 ngai55 kiu55 ngin55 liug2 ngied5 sied2",
+  "replace_raw": "ngin55 kiu55 ngai55，sam11 chun11 fung11；ngai55 kiu55 ngin55，liug2 ngied5 sied2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "牛眼核摒屎窟－－䀴各人个本等",
+  "gip_id": "gip-16415",
+  "match_raw": "ngiu55 ngan53 fud5 bin53 shi55 vud2 ngiang53 gog2 ngin55 gai53 bun53 den53",
+  "replace_raw": "ngiu55 ngan53 fud5 bin53 shi55 vud2－－ngiang53 gog2 ngin55 gai53 bun53 den53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "棚頂高睡－－高明",
+  "gip_id": "gip-16422",
+  "match_raw": "pang55 den53 go11 fe24 go11 min55",
+  "replace_raw": "pang55 den53 go11 fe24－－go11 min55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "七後生，八後生，毋多知轉長山",
+  "gip_id": "gip-16435",
+  "match_raw": "cid2 heu24 sang11 bad2 heu24 sang11 m55 do11 di11 zhan53 cong55 san11",
+  "replace_raw": "cid2 heu24 sang11，bad2 heu24 sang11，m55 do11 di11 zhan53 cong55 san11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "前世無修，倈仔準心婦",
+  "gip_id": "gip-16436",
+  "match_raw": "cien55 she53 mo55 siu11 lai53 er53 zhun53 sim11 pe11",
+  "replace_raw": "cien55 she53 mo55 siu11，lai53 er53 zhun53 sim11 pe11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "三年無洗浴－－慢盡多",
+  "gip_id": "gip-16444",
+  "match_raw": "sam11 ngien55 mo55 se53 rhiug5 man24 cin24 do11",
+  "replace_raw": "sam11 ngien55 mo55 se53 rhiug5－－man24 cin24 do11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "細心婦吂來，毋知大心婦好惜",
+  "gip_id": "gip-16457",
+  "match_raw": "se53 sim11 pe11 mang11 loi55 m55 di11 tai24 sim11 pe11 ho53 siag2",
+  "replace_raw": "se53 sim11 pe11 mang11 loi55，m55 di11 tai24 sim11 pe11 ho53 siag2",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "水鬼升城隍，心婦管家娘",
+  "gip_id": "gip-16479",
+  "match_raw": "fi53 gui53 shin11 shang55 fong55 sim11 pe11 guan53 ga11 ngiong55",
+  "replace_raw": "fi53 gui53 shin11 shang55 fong55，sim11 pe11 guan53 ga11 ngiong55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "禾黃雨落，飯熟火著－－忒慢咧",
+  "gip_id": "gip-16497",
+  "match_raw": "vo55 vong55 vu53 log5 pon24 shug5 fo53 chog5 ted2 man24 le53",
+  "replace_raw": "vo55 vong55 vu53 log5，pon24 shug5 fo53 chog5－－ted2 man24 le53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "會算毋會除，糶米換番薯",
+  "gip_id": "gip-16499",
+  "match_raw": "voi24 son53 m55 voi24 chu55 tiau53 mi53 van24 fan11 shu55",
+  "replace_raw": "voi24 son53 m55 voi24 chu55，tiau53 mi53 van24 fan11 shu55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "黃蜂腰，鯽魚嘴，十人䀴著九人愛",
+  "gip_id": "gip-16502",
+  "match_raw": "vong55 pung11 rhiau11 zid2 ng55 zhe53 shib5 ngin55 ngiang53 do53 giu53 ngin55 oi53",
+  "replace_raw": "vong55 pung11 rhiau11，zid2 ng55 zhe53，shib5 ngin55 ngiang53 do53 giu53 ngin55 oi53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "心婦唩家娘，屙膿滑痢",
+  "gip_id": "gip-16508",
+  "match_raw": "sim11 pe11 vo53 ga11 ngiong55 o11 nung55 vad5 li24",
+  "replace_raw": "sim11 pe11 vo53 ga11 ngiong55，o11 nung55 vad5 li24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "朝朝早跆四垤薑，毋用街項尋藥方",
+  "gip_id": "gip-16515",
+  "match_raw": "zhau11 zhau11 zo53 tai55 si55 de11 giong11 m55 rhiung24 gie11 hong24 cim55 rhiog5 fong11",
+  "replace_raw": "zhau11 zhau11 zo53 tai55 si55 de11 giong11，m55 rhiung24 gie11 hong24 cim55 rhiog5 fong11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "早跆三朝當一工，早跆三年當一冬",
+  "gip_id": "gip-16522",
+  "match_raw": "zo53 tai55 sam11 zhau11 dong53 rhid2 gung11 zo53 tai55 sam11 ngien55 dong53 rhid2 dung11",
+  "replace_raw": "zo53 tai55 sam11 zhau11 dong53 rhid2 gung11，zo53 tai55 sam11 ngien55 dong53 rhid2 dung11",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "捉貓子，䀴貓嫲",
+  "gip_id": "gip-16524",
+  "match_raw": "zug2 ngiau53 zii53 ngiang53 ngiau53 ma55",
+  "replace_raw": "zug2 ngiau53 zii53，ngiang53 ngiau53 ma55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "平",
+  "hanji": "豬八戒嫁老妹－－毋使䀴",
+  "gip_id": "gip-16528",
+  "match_raw": "zhu11 bad2 gai53 ga53 lo53 moi53 m55 sii53 ngiang53",
+  "replace_raw": "zhu11 bad2 gai53 ga53 lo53 moi53－－m55 sii53 ngiang53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "老虎也會啄目睡－－難免",
+  "gip_id": "gip-10765",
+  "match_raw": "lo24 fu24 rha33 voi33 dug5 mug5 shoi33 nan55 mien53",
+  "replace_raw": "lo24 fu24 rha33 voi33 dug5 mug5 shoi33－－nan55 mien53",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "麻布做衫－－看現現",
+  "gip_id": "gip-10947",
+  "match_raw": "ma55 bu11 zo11 sam53 kon11 hien33 hien33",
+  "replace_raw": "ma55 bu11 zo11 sam53－－kon11 hien33 hien33",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋",
+  "gip_id": "gip-11968",
+  "match_raw": "ngin55 lo24 sam53 kien33 vai53 hang55 lu33 teu55 lai55 lai55 da24 pi11 da24 chud5 shi24 o53 ngiau33 lim55 shib5 hai55",
+  "replace_raw": "ngin55 lo24 sam53 kien33 vai53，hang55 lu33 teu55 lai55 lai55；da24 pi11 da24 chud5 shi24，o53 ngiau33 lim55 shib5 hai55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "牛眼核摒屎胐－－看各人个本等",
+  "gip_id": "gip-12016",
+  "match_raw": "ngiu55 ngan24 fud2 bin24 shi24 vud5 kon11 gog5 ngin55 gai11 bun24 den24",
+  "replace_raw": "ngiu55 ngan24 fud2 bin24 shi24 vud5－－kon11 gog5 ngin55 gai11 bun24 den24",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "棚頂高睡目－－高明",
+  "gip_id": "gip-12289",
+  "match_raw": "pang55 dang24 go53 shoi33 mug5 go53 min55",
+  "replace_raw": "pang55 dang24 go53 shoi33 mug5－－go53 min55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "三十暗晡个飯甑－－無閒",
+  "gip_id": "gip-13039",
+  "match_raw": "sam53 shib2 am11 bu53 gai11 pon33 zen11 mo55 han55",
+  "replace_raw": "sam53 shib2 am11 bu53 gai11 pon33 zen11－－mo55 han55",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "水牛相打－－各打各",
+  "gip_id": "gip-13920",
+  "match_raw": "shui24 ngiu55 siong53 da24 gog5 da24 gog5",
+  "replace_raw": "shui24 ngiu55 siong53 da24－－gog5 da24 gog5",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ },
+ {
+  "dialect": "海",
+  "hanji": "烏鴉無隔夜卵－－性急",
+  "gip_id": "gip-14891",
+  "match_raw": "vu53 a53 mo55 gag5 rha33 lon24 sin11 gib5",
+  "replace_raw": "vu53 a53 mo55 gag5 rha33 lon24－－sin11 gib5",
+  "category": "標點缺漏",
+  "reason": "詞目有分句標點（，；、－－），音讀卻無對應標點；依各分句字數摎音節數對應補上。"
+ }
+]

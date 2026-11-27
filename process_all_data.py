@@ -406,20 +406,22 @@ def split_gip_phonetic(original_phonetic, tone_map):
 # --- 教典原始音讀清洗、補丁表與回饋上游追蹤 ---
 
 GIP_PATCHES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'gip_raw_patches.json')
+# 程式產生个補丁（overlay）：標點缺漏，由 scripts/build_gip_punct_patches.py 產出，毋好手改
+GIP_PUNCT_PATCHES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'patches', 'gip-punct-fill.json')
 _gip_patches_cache = None
 
 def get_gip_raw_patches():
     global _gip_patches_cache
     if _gip_patches_cache is None:
-        if os.path.exists(GIP_PATCHES_FILE):
+        _gip_patches_cache = []
+        for patch_file in (GIP_PATCHES_FILE, GIP_PUNCT_PATCHES_FILE):
+            if not os.path.exists(patch_file):
+                continue
             try:
-                with open(GIP_PATCHES_FILE, 'r', encoding='utf-8') as f:
-                    _gip_patches_cache = json.load(f)
+                with open(patch_file, 'r', encoding='utf-8') as f:
+                    _gip_patches_cache.extend(json.load(f))
             except Exception as e:
-                print(f"  ✗ 警告：載入 gip_raw_patches.json 失敗: {e}")
-                _gip_patches_cache = []
-        else:
-            _gip_patches_cache = []
+                print(f"  ✗ 警告：載入 {os.path.basename(patch_file)} 失敗: {e}")
     return _gip_patches_cache
 
 GIP_ERRATA_RECORDS = []
