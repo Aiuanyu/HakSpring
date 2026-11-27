@@ -276,6 +276,7 @@ function snapshotAfterPush() {
       romanizerJoiningMode: localStorage.getItem('romanizerJoiningMode') || 'none',
       hakfaDisplayScript: normalizeDisplayScript(localStorage.getItem('hakfaDisplayScript')),
       showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+      showLoanwordsData: localStorage.getItem('showLoanwordsData') === 'true',
       gameLastDataVarName: localStorage.getItem('hakkaGameLastDataVarName') || '',
       userName: localStorage.getItem('hakkaUserName') || '',
       userLocation: localStorage.getItem('hakkaUserLocation') || '',
@@ -398,6 +399,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
       localStorage.getItem('hakfaDisplayScript'),
     ),
     showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+    showLoanwordsData: localStorage.getItem('showLoanwordsData') === 'true',
     gameLastDataVarName:
       localStorage.getItem('hakkaGameLastDataVarName') || '',
     userName: localStorage.getItem('hakkaUserName') || '',
@@ -501,6 +503,19 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
     window.applyMeinungFillSetting(finalShowMeinungFill);
   }
 
+  const finalShowLoanwordsData = mergeBoolPref(
+    localPrefs.showLoanwordsData,
+    syncedPrefs.showLoanwordsData,
+    incomingPrefs.showLoanwordsData,
+  );
+  localStorage.setItem('showLoanwordsData', String(finalShowLoanwordsData));
+  if (
+    finalShowLoanwordsData !== localPrefs.showLoanwordsData &&
+    typeof window.applyLoanwordsVisibility === 'function'
+  ) {
+    window.applyLoanwordsVisibility(finalShowLoanwordsData);
+  }
+
   let finalGameLastDataVarName = localPrefs.gameLastDataVarName;
   if (localPrefs.gameLastDataVarName === (syncedPrefs.gameLastDataVarName || '')) {
     if (incomingPrefs.gameLastDataVarName) {
@@ -535,6 +550,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
         romanizerJoiningMode: finalRomanizerJoiningMode,
         hakfaDisplayScript: finalHakfaDisplayScript,
         showMeinungFill: finalShowMeinungFill,
+        showLoanwordsData: finalShowLoanwordsData,
         gameLastDataVarName: finalGameLastDataVarName,
         userName: finalUserName,
         userLocation: finalUserLocation,
@@ -548,6 +564,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
       finalRomanizerJoiningMode !== (incomingPrefs.romanizerJoiningMode || 'none') ||
       finalHakfaDisplayScript !== normalizeDisplayScript(incomingPrefs.hakfaDisplayScript) ||
       finalShowMeinungFill !== (incomingPrefs.showMeinungFill === true) ||
+      finalShowLoanwordsData !== (incomingPrefs.showLoanwordsData === true) ||
       finalGameLastDataVarName !== (incomingPrefs.gameLastDataVarName || '') ||
       finalUserName !== (incomingPrefs.userName || '') ||
       finalUserLocation !== (incomingPrefs.userLocation || '');
@@ -579,6 +596,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
         romanizerJoiningMode: finalRomanizerJoiningMode,
         hakfaDisplayScript: finalHakfaDisplayScript,
         showMeinungFill: finalShowMeinungFill,
+        showLoanwordsData: finalShowLoanwordsData,
         gameLastDataVarName: finalGameLastDataVarName,
         userName: finalUserName,
         userLocation: finalUserLocation,
@@ -763,6 +781,7 @@ function exportCurrentSyncData() {
       localStorage.getItem('hakfaDisplayScript'),
     ),
     showMeinungFill: localStorage.getItem('showMeinungFill') === 'true',
+    showLoanwordsData: localStorage.getItem('showLoanwordsData') === 'true',
     gameLastDataVarName:
       localStorage.getItem('hakkaGameLastDataVarName') || '',
     userName: localStorage.getItem('hakkaUserName') || '',

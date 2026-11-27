@@ -885,6 +885,10 @@ if __name__ == '__main__':
     import build_curated
     build_curated.main()
 
+    # 客委會《客語外來語》（LW）：由 data/loanwords/外來語-*.csv 產出 .json
+    import build_loanwords
+    build_loanwords.main()
+
     # 補字典係對認證、教典 JSON 推出來个，認證、教典一更新就愛重建（見 data/supp/README.md）
     import build_supp_dict
     build_supp_dict.main()
