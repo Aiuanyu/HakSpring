@@ -103,6 +103,173 @@ runTest('Word with multiple items in parentheses', () => {
 
 console.log(`🎉 All ${passedTests} ruby breakpoint unit tests passed successfully!\n`);
 
+// 6b. 南四縣等副音變體个【】內容（剝掉【】後頓號在最外層）也斷行；標音側係半形 `,`（見 normalizeRomanPunctuation）
+runTest('Top-level dun breaks (sub-variant 【】 content, half-width comma in rt)', () => {
+  const res = splitRubyByBaseBreakpoints('大番薯、大戇霸', 'tai fán sǔ, tai ngong ba');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['大番薯、', '大戇霸']);
+  assert.deepStrictEqual(res.rtSegs, ['tai fán sǔ,', 'tai ngong ba']);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+  // 舊式全形標點也認
+  const legacy = splitRubyByBaseBreakpoints('大番薯、大戇霸', 'tai fán sǔ、tai ngong ba');
+  assert.deepStrictEqual(legacy.baseSegs, ['大番薯、', '大戇霸']);
+});
+
+// 6c. 教典諺語：，；後斷
+runTest('Proverb clauses split after ， and ；', () => {
+  const res = splitRubyByBaseBreakpoints(
+    '鴨嫲多，懶生卵；心臼多，懶洗碗',
+    'àb mǎ dó, lán sáng lòn; xím kiú dó, lán sè vòn',
+  );
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['鴨嫲多，', '懶生卵；', '心臼多，', '懶洗碗']);
+  assert.deepStrictEqual(res.rtSegs, ['àb mǎ dó,', 'lán sáng lòn;', 'xím kiú dó,', 'lán sè vòn']);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun', 'dun']);
+});
+
+// 6d. 歇後語：破折號後斷（漢字 －－／──，標音 --）
+runTest('Xiehouyu splits after the double dash', () => {
+  const res = splitRubyByBaseBreakpoints('阿婆嫁孫女－－無主無意', 'á pǒ ga sún ǹg -- mǒ zù mǒ i');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['阿婆嫁孫女－－', '無主無意']);
+  assert.deepStrictEqual(res.rtSegs, ['á pǒ ga sún ǹg --', 'mǒ zù mǒ i']);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+  const box = splitRubyByBaseBreakpoints('伯公生鬚──老神', 'bag gùng sàng xì -- lo sên');
+  assert.deepStrictEqual(box.baseSegs, ['伯公生鬚──', '老神']);
+  // 歇後語前面還有逗號：三段
+  const three = splitRubyByBaseBreakpoints('風車尾，二槽冇－－毋精', 'fúng cá mí, ngi cǒ pang -- m̌ jín');
+  assert.deepStrictEqual(three.baseSegs, ['風車尾，', '二槽冇－－', '毋精']);
+  assert.deepStrictEqual(three.rtSegs, ['fúng cá mí,', 'ngi cǒ pang --', 'm̌ jín']);
+});
+
+runTest('Single hyphen (PFS syllable joiner) and single dash are not break points', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('阿婆', 'á-pǒ'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('阿－婆', 'á - pǒ'), null);
+});
+
+runTest('Phonetic lacking punctuation: aligns when syllable counts match, otherwise no split', () => {
+  const ok = splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn ngi');
+  assert.deepStrictEqual(ok.baseSegs, ['一還一，', '二還二']);
+  assert.deepStrictEqual(ok.rtSegs, ['ìd vǎn ìd', 'ngi vǎn ngi']);
+  assert.strictEqual(splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn'), null);
+});
+
+// 6d2. 標音無標點（教典資料缺漏）：照各分句漢字字數對應音節數，切標音
+runTest('Clause punctuation missing in phonetic: align by syllable counts', () => {
+  const res = splitRubyByBaseBreakpoints(
+    '人老三件歪，行路頭犁犁；打屁打出屎，屙尿淋溼鞋',
+    'ngǐn lò sám11 kien vái hǎng lu těu lǎi lǎi dà pi dà cùd sìi ó11 ngiau lǐm sìib hǎi',
+  );
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['人老三件歪，', '行路頭犁犁；', '打屁打出屎，', '屙尿淋溼鞋']);
+  assert.deepStrictEqual(res.rtSegs, [
+    'ngǐn lò sám11 kien vái', 'hǎng lu těu lǎi lǎi', 'dà pi dà cùd sìi', 'ó11 ngiau lǐm sìib hǎi',
+  ]);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun', 'dun']);
+  // 歇後語：破折號前後各一段
+  const x = splitRubyByBaseBreakpoints('番豆掊殼－－還有醫', 'fán teu bói hòg vǎn iú í');
+  assert.deepStrictEqual(x.baseSegs, ['番豆掊殼－－', '還有醫']);
+  assert.deepStrictEqual(x.rtSegs, ['fán teu bói hòg', 'vǎn iú í']);
+});
+
+runTest('Syllable alignment: hyphen-joined (PFS) words are cut at the seam, hyphen dropped', () => {
+  const res = splitRubyByBaseBreakpoints('人老三件歪，行路頭犁犁', 'ngǐn-lò-sám-kien-vái-hǎng-lu-těu-lǎi-lǎi');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.rtSegs, ['ngǐn-lò-sám-kien-vái', 'hǎng-lu-těu-lǎi-lǎi']);
+});
+
+runTest('Syllable alignment: sandhi <ruby> counts as one syllable and nested <rt> digits are ignored', () => {
+  const res = splitRubyByBaseBreakpoints('甲乙，丙丁', 'a <ruby class="sandhi-t33">bà<rt>33</rt></ruby> c d');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.rtSegs, ['a <ruby class="sandhi-t33">bà<rt>33</rt></ruby>', 'c d']);
+});
+
+runTest('Syllable alignment gives up (null) when syllable total differs from character total', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c d e'), null);
+  // 標音夾註記（【又讀】多一組讀音）音節數對毋著
+  assert.strictEqual(
+    splitRubyByBaseBreakpoints('甲乙，丙丁', 'a b c d 【又讀】e f g h'),
+    null,
+  );
+});
+
+// 6d3. 多層讀音（又讀、文、白）：每層讀音各自照分句切，一句一個斷行單位，label 補回每一段
+runTest('Multi-reading layers split per clause (rtc layers follow each clause)', () => {
+  const { splitRubyMultiReading: sm } = require('../main.js');
+  const res = sm('耕田又耕埔，做到兩頭烏', [
+    '<span class="phonetic-note-label">白</span>gǎng tèen rhiu gǎng bǔ, zôo dôo liông tèu bbǔ',
+    '<span class="phonetic-note-label">文</span>giěn tèn rhiu giěn bǔ, zô dô liông tèu bbǔ',
+  ]);
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['耕田又耕埔，', '做到兩頭烏']);
+  assert.deepStrictEqual(res.layerSegs, [
+    [
+      '<span class="phonetic-note-label">白</span>gǎng tèen rhiu gǎng bǔ,',
+      '<span class="phonetic-note-label">白</span>zôo dôo liông tèu bbǔ',
+    ],
+    [
+      '<span class="phonetic-note-label">文</span>giěn tèn rhiu giěn bǔ,',
+      '<span class="phonetic-note-label">文</span>zô dô liông tèu bbǔ',
+    ],
+  ]);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+  // 第一層無 label：只補有 label 个層
+  const plain = sm('喊天天毋應，喊地地毋聲', [
+    'hém tién tién m̌ en, hém ti ti m̌ sáng',
+    '<span class="phonetic-note-label">又讀</span>ham tién tién m̌ en, ham ti ti m̌ sáng',
+  ]);
+  assert.deepStrictEqual(plain.layerSegs[0], ['hém tién tién m̌ en,', 'hém ti ti m̌ sáng']);
+  assert.strictEqual(plain.layerSegs[1][1], '<span class="phonetic-note-label">又讀</span>ham ti ti m̌ sáng');
+  // 歇後語：破折號斷
+  const xh = sm('三十暗晡个飯甑－－自家愛用', [
+    'sàm shìb ǎm bù gǎi fān zěn -- cid gà ǒi rhūng',
+    '<span class="phonetic-note-label">白</span>sàm shìb ǎm bù gǎi pōn zěn -- cid gà ǒi rhūng',
+  ]);
+  assert.deepStrictEqual(xh.baseSegs, ['三十暗晡个飯甑－－', '自家愛用']);
+  assert.strictEqual(xh.layerSegs[1][0], '<span class="phonetic-note-label">白</span>sàm shìb ǎm bù gǎi pōn zěn --');
+});
+
+runTest('Multi-reading split gives up (null) when any layer cannot be split or only one layer', () => {
+  const { splitRubyMultiReading: sm } = require('../main.js');
+  assert.strictEqual(sm('甲乙，丙丁', ['a b, c d']), null);
+  // 第二層音節數對毋著
+  assert.strictEqual(sm('甲乙，丙丁', ['a b, c d', 'a b c']), null);
+  // 無分句標點
+  assert.strictEqual(sm('甲乙丙丁', ['a b c d', 'e f g h']), null);
+});
+
+runTest('joinRtSegs adds a single space between segments only when needed', () => {
+  const { joinRtSegs: j } = require('../main.js');
+  assert.strictEqual(j(['pú,', 'zo do']), 'pú, zo do');
+  assert.strictEqual(j(['sá ba ', '(sá pú,']), 'sá ba (sá pú,');
+  assert.strictEqual(j(['a']), 'a');
+  assert.strictEqual(j([]), '');
+});
+
+// 6e. 羅馬字標點轉半形：、，→ `, `、；→ `; `；漢字側毋動
+runTest('normalizeRomanPunctuation: half-width punctuation with Western spacing', () => {
+  const { normalizeRomanPunctuation: n } = require('../main.js');
+  assert.strictEqual(n('á gúng m̌ zo ， zo ngǐn ge sún è'), 'á gúng m̌ zo, zo ngǐn ge sún è');
+  assert.strictEqual(n('ìd vǎn ìd，ngi vǎn ngi'), 'ìd vǎn ìd, ngi vǎn ngi');
+  assert.strictEqual(n('sài (bán、bán sài)'), 'sài (bán, bán sài)');
+  assert.strictEqual(n('qìd có 、 bàd pǎ 、 giù sáng ngǎ'), 'qìd có, bàd pǎ, giù sáng ngǎ');
+  assert.strictEqual(n('àb mǎ dó ， lán sáng lòn ； xím kiú dó'), 'àb mǎ dó, lán sáng lòn; xím kiú dó');
+  assert.strictEqual(n('a ，'), 'a,'); // 結尾毋留空白
+  assert.strictEqual(n('(a 、)'), '(a,)'); // 右括號頭前毋留空白
+  assert.strictEqual(n('bòd kǒng'), 'bòd kǒng'); // 無標點原樣
+  assert.strictEqual(n(''), '');
+});
+
+runTest('formatPhoneticForDisplay converts full-width romanization punctuation and parentheses', () => {
+  const { formatPhoneticForDisplay: f } = require('../main.js');
+  assert.strictEqual(f('sài (bán、bán sài)', false, '四縣'), 'sài (bán, bán sài)');
+  assert.strictEqual(f('á gúng m̌ zo ， zo ngǐn', true, '四縣'), 'á gúng m̌ zo, zo ngǐn');
+  assert.strictEqual(f('dīn dīn zhôn（dīn dīn fūi）', false, '詔安'), 'dīn dīn zhôn (dīn dīn fūi)');
+  // `--`（歇後語分隔）毋動
+  assert.strictEqual(f('á pǒ ga sún ǹg -- mǒ zù', true, '四縣'), 'á pǒ ga sún ǹg -- mǒ zù');
+});
+
 // 7. RT mismatch falls back
 runTest('Mismatched segments fallback to null', () => {
   const base = '沙壩（沙埔、沙灘）';
@@ -112,18 +279,38 @@ runTest('Mismatched segments fallback to null', () => {
 });
 
 // 8. 整詞並列斜線（音節數與漢字字數相同）→ 斷行，漢字兩行都顯示
-runTest('Whole-word slash alternatives (equal syllables) split into lines', () => {
-  const res = splitRubyByBaseBreakpoints('溜走', 'tiu zèu/liu zèu');
-  assert.notStrictEqual(res, null);
-  assert.deepStrictEqual(res.baseSegs, ['溜走', '溜走']);
-  assert.deepStrictEqual(res.rtSegs, ['tiu zèu/', 'liu zèu']);
+// P3（20261127）：整詞並列斜線不再用「斷成兩行」，認證、教典統一疊成多層讀音（expandReadingsForDisplay）
+runTest('Whole-word slash is no longer a line-break point (stacked as layers instead)', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('溜走', 'tiu zèu/liu zèu'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('溜走', 'tiu-zèu/liu-zèu'), null);
 });
 
-runTest('Whole-word slash with 4 syllables and sandhi ruby tags', () => {
-  const res = splitRubyByBaseBreakpoints('咚咚咚咚', 'dǔng dǔng <ruby class="x">dung<rt>33</rt></ruby> dung/dǔng dúng dùng dùng');
+runTest('expandReadingsForDisplay: cert slash and GIP spaced slash both stack; GIP notes still work', () => {
+  const { expandReadingsForDisplay: ex } = require('../main.js');
+  // 認證 `/`
+  assert.deepStrictEqual(ex('溜走', 'tiu zèu/liu zèu', false), ['tiu zèu', 'liu zèu']);
+  // 教典 ` / `（無註記个第二讀音）：摎認證共樣疊層
+  assert.deepStrictEqual(ex('白果', 'ped gò / pag gò', true), ['ped gò', 'pag gò']);
+  // 教典註記照舊
+  const note = ex('墳堂', '【文】fùn tǒng 【白】pǔn tǒng', true);
+  assert.deepStrictEqual(note.map((l) => l.label), ['文', '白']);
+  // 音節數對毋著就 null（走原本顯示）
+  assert.strictEqual(ex('因由', 'rhǐn / rhiù', true), null);
+  assert.strictEqual(ex('四個字詞', 'a/b c/d e/f g/h', false), null);
+});
+
+runTest('GIP spaced-slash proverb: stacked layers also split per clause', () => {
+  const { expandReadingsForDisplay: ex, splitRubyMultiReading: sm } = require('../main.js');
+  const layers = ex(
+    '水鬼升城隍，心臼管家娘',
+    'shûi gûi shīn shǎng fǒng, sīm kiū guân gā ngiǒng / shûi gûi shīn shǎng vǒng, sīm kiū guân gā ngiǒng',
+    true,
+  );
+  assert.strictEqual(layers.length, 2);
+  const res = sm('水鬼升城隍，心臼管家娘', layers);
   assert.notStrictEqual(res, null);
-  assert.strictEqual(res.rtSegs.length, 2);
-  assert.strictEqual(res.rtSegs[1], 'dǔng dúng dùng dùng');
+  assert.deepStrictEqual(res.baseSegs, ['水鬼升城隍，', '心臼管家娘']);
+  assert.deepStrictEqual(res.layerSegs[1], ['shûi gûi shīn shǎng vǒng,', 'sīm kiū guân gā ngiǒng']);
 });
 
 // 9. 單一音節異讀 → 跳過
@@ -182,8 +369,12 @@ runTest('Dun-separated variants inside parentheses split after each 、', () => 
   assert.deepStrictEqual(res.rtSegs, ['sá ba ', '(sá pú、', 'sá tán)']);
 });
 
-runTest('Dun outside parentheses is not a break point', () => {
-  assert.strictEqual(splitRubyByBaseBreakpoints('七坐、八爬', 'qìd có 、 bàd pǎ'), null);
+// 20261127 P1：最外層頓號也斷（原本淨括號裡肚斷）
+runTest('Dun outside parentheses is now a break point (P1)', () => {
+  const res = splitRubyByBaseBreakpoints('七坐、八爬、九生牙', 'qìd có, bàd pǎ, giù sáng ngǎ');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['七坐、', '八爬、', '九生牙']);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun']);
 });
 
 runTest('Dun split falls back to paren-only split when phonetic lacks matching 、', () => {
@@ -213,11 +404,8 @@ runTest('expandSlashReadings returns null when combinations exceed the limit (>8
   assert.strictEqual(expandSlashReadings('四個字詞', 'a/b c/d e/f g/h'), null);
 });
 
-runTest('splitRubyByWholeWordSlash counts hyphen-joined syllables like expandSlashReadings', () => {
-  const res = splitRubyByBaseBreakpoints('溜走', 'tiu-zèu/liu-zèu');
-  assert.notStrictEqual(res, null);
-  assert.deepStrictEqual(res.rtSegs, ['tiu-zèu/', 'liu-zèu']);
-  assert.deepStrictEqual(res.breakKinds, ['primary']);
+runTest('expandSlashReadings counts hyphen-joined (PFS) syllables', () => {
+  assert.deepStrictEqual(expandSlashReadings('溜走', 'tiu-zèu/liu-zèu'), ['tiu-zèu', 'liu-zèu']);
 });
 
 // 15. 頓號漸進斷行（空間毋夠正對最尾一個 segment 斷行，空間夠就毋斷）
