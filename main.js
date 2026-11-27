@@ -328,19 +328,44 @@ function appendMultiReadingLayers(ruby, readings, dialectCode, wrap) {
   });
 }
 
+// 分句斷點用个字元（見 splitRubyByBaseBreakpoints）
+const BASE_CLAUSE_PUNCT = '、，；'; // 漢字側
+const RT_CLAUSE_PUNCT = ',;、，；'; // 標音側：顯示用半形 , ;，舊式全形也認
+const BASE_DASH_CHARS = '－─—'; // 歇後語破折號（漢字側）
+
+/**
+ * 判斷 text[i] 係毋係「連續兩个以上破折號」个最後一个（歇後語「－－」「──」，標音側係 `--`）。
+ * 單獨一个 `-`（PFS 个音節連字號）毋算。
+ * @param {string} text - 文字節點內容
+ * @param {number} i - 目前字元位置
+ * @param {boolean} isRt - 係標音側（破折號用 `-`）抑係漢字側
+ * @returns {boolean}
+ */
+function isDashRunEnd(text, i, isRt) {
+  const dashes = isRt ? '-' : BASE_DASH_CHARS;
+  if (!dashes.includes(text[i])) return false;
+  if (i + 1 < text.length && dashes.includes(text[i + 1])) return false;
+  let run = 0;
+  for (let j = i; j >= 0 && dashes.includes(text[j]); j--) run++;
+  return run >= 2;
+}
+
 /**
  * 依據漢字／主詞斷點（（）同義詞項前、／或 / 處）切分 ruby HTML 內容
  * 安全處理 HTML 標籤（如 <mark>、<ruby>、<span class="phonetic-paren">），不破壞標籤結構。
  *
  * @param {string} baseHtml - ruby 基礎文字（漢字/詞彙 HTML）
  * @param {string} rtHtml - ruby rt 標音 HTML
- * @param {{ dunAtTopLevel?: boolean }} [options] - dunAtTopLevel：頂層（無括號）个頓號也算斷點。
- *   南四縣等地區變體个【】內容（例：【大番薯、大戇霸】）剝掉【】後頓號就在頂層，愛開這个才斷得。
  * @returns {{ baseSegs: string[], rtSegs: string[] } | null} 切分後的段落，若無斷點則回傳 null
+ *
+ * 斷點種類（20261127 P1 擴充）：
+ * - 主斷點（primary）：`（` 前、`／`／`/` 後。
+ * - 分句斷點（dun，空間毋夠正逐隻拆）：漢字个 `、` `，` `；`（括號內外都算）、連續兩个以上个破折號（`－－`、`──`，歇後語）後背。
+ *   標音側對應 `,` `;`（顯示時 `、` `，` 攏轉做半形 `, `，見 normalizeRomanPunctuation）、`--`；舊式全形標點也認。
+ *   南四縣等地區變體个【】內容剝掉【】後，頓號就在最外層，也係靠這條斷。
  */
-function splitRubyByBaseBreakpoints(baseHtml, rtHtml, options) {
+function splitRubyByBaseBreakpoints(baseHtml, rtHtml) {
   if (!baseHtml) return null;
-  const dunAtTopLevel = !!(options && options.dunAtTopLevel);
 
   function tokenize(html) {
     const tokens = [];
@@ -355,17 +380,17 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml, options) {
   const baseTokens = tokenize(baseHtml || '');
   let baseHasParen = false;
   let baseHasSlash = false;
-  let baseHasDun = false; // 括號裡肚个頓號（異體詞分隔，例：沙壩（沙埔、沙灘））
+  let baseHasDun = false; // 分句標點：、，；摎連續破折號（異體詞分隔，例：沙壩（沙埔、沙灘）；諺語、歇後語）
 
   {
-    let depth = 0;
     for (const t of baseTokens) {
       if (t.isTag) continue;
+      let dashRun = 0;
       for (const ch of t.text) {
-        if (ch === '（' || ch === '(') { baseHasParen = true; depth++; }
-        else if (ch === '）' || ch === ')') depth = Math.max(0, depth - 1);
+        dashRun = BASE_DASH_CHARS.includes(ch) ? dashRun + 1 : 0;
+        if (ch === '（' || ch === '(') baseHasParen = true;
         else if (ch === '／' || ch === '/') baseHasSlash = true;
-        else if (ch === '、' && (depth > 0 || dunAtTopLevel)) baseHasDun = true;
+        else if (BASE_CLAUSE_PUNCT.includes(ch) || dashRun >= 2) baseHasDun = true;
       }
     }
   }
@@ -381,7 +406,6 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml, options) {
     let nextBreakKind = null;
     let curSeg = '';
     const openTags = [];
-    let parenDepth = 0; // 目前个括號深度（頓號淨在括號裡肚斷）
 
     function pushSegment(kindForNext) {
       if (curSeg.trim().length > 0) {
@@ -444,16 +468,18 @@ function splitRubyByBaseBreakpoints(baseHtml, rtHtml, options) {
             if (!isRt || (isRt && baseHasSlash)) {
               if (char === '／' || char === '/') doSplitAfter = true;
             }
-            // 括號裡肚个頓號：異體詞分隔，像括號共樣斷行（頓號留佇頭前該行尾）
+            // 分句標點（、，；摎破折號）：像括號共樣斷行（標點留佇頭前該行尾），空間毋夠正逐隻拆
             if (baseHasDun) {
-              if (char === '、' && (parenDepth > 0 || dunAtTopLevel)) {
+              const clausePunct = isRt ? RT_CLAUSE_PUNCT : BASE_CLAUSE_PUNCT;
+              if (clausePunct.includes(char)) {
+                doSplitAfter = true;
+                afterKind = 'dun';
+              } else if (isDashRunEnd(text, iPos, isRt)) {
                 doSplitAfter = true;
                 afterKind = 'dun';
               }
             }
           }
-          if (char === '（' || char === '(') parenDepth++;
-          else if (char === '）' || char === ')') parenDepth = Math.max(0, parenDepth - 1);
 
           if (doSplitBefore) {
             if (curSeg.trim().length > 0) pushSegment('primary');
@@ -535,8 +561,8 @@ function buildSplitLineRuby(bSeg, rSeg, isPhoneticOnly, sandhiCode) {
     const plainRt = rSeg
       .replace(/<ruby class="sandhi-[^"]*"[^>]*>([^<]*)<rt>[^<]*<\/rt><\/ruby>/g, '$1')
       .replace(/<[^>]+>/g, '');
-    const m = plainRt.match(/^([\s（(]*)([\s\S]*?)([\s）)、]*)$/);
-    const plainBase = bSeg.replace(/<[^>]+>/g, '').replace(/[（）()、\s]/g, '');
+    const m = plainRt.match(/^([\s（(]*)([\s\S]*?)([\s）),;、，；]*)$/);
+    const plainBase = bSeg.replace(/<[^>]+>/g, '').replace(/[（）()、，；\s]/g, '');
     if (m && m[2].includes('/')) {
       const readings = expandSlashReadings(plainBase, m[2].replace(/\u00a0/g, ' ').trim());
       if (readings) {
@@ -622,9 +648,7 @@ function adjustRubyFontSize(targetElement) {
       baseHtml = rubyElement.innerHTML;
     }
 
-    // 副音變體（南／美／卓／桃）个【】內容已經剝掉【】，頓號在頂層，也愛當斷點
-    const isSubVariant = !!(rubyElement.closest && rubyElement.closest('.variant-sub'));
-    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml, { dunAtTopLevel: isSubVariant });
+    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml);
     if (splitRes && splitRes.baseSegs && splitRes.baseSegs.length > 1) {
       // 依斷點重繪為不同行 ruby
       const group = document.createElement('span');
@@ -1198,6 +1222,23 @@ function collapseIdenticalSlashAlternatives(text) {
 }
 
 /**
+ * 羅馬字（標音）側个標點轉半形、依西文寫法排空白（20261127 平哥定）：
+ * 「、」「，」→ `, `（標點貼前背，後背一格空白）、「；」→ `; `，頭尾毋留空白。
+ * 漢字側个全形標點（，、；）毋在這處理：漢字統一用全形、毋加空白。
+ * 純函式；只處理文字，毋會動著 HTML 標籤內部（呼叫个人愛傳「標籤外」个文字抑係無標籤个標音）。
+ * @param {string} text - 標音字串
+ * @returns {string}
+ */
+function normalizeRomanPunctuation(text) {
+  if (!text) return text;
+  return text
+    .replace(/\s*[，、]\s*/g, ', ')
+    .replace(/\s*；\s*/g, '; ')
+    // 標點後背係結尾、右括號：拿忒多餘空白
+    .replace(/([,;]) +(?=[)\]】]|$)/g, '$1');
+}
+
+/**
  * 格式化愛顯示个標音字串，拿忒為著搜尋加个多餘空白。
  * @param {string} text - 從資料庫讀出來个「客語標音_顯示」欄位內容。
  * @param {string} text - 原始標音字串。
@@ -1209,6 +1250,9 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
   if (!text) return '';
   // 1. 拿忒全形括號【】（）前後个所有空白
   let result = text.replace(/\s*([【（】）])\s*/g, '$1');
+  // 1b. 羅馬字側全形括號轉半形，後背 2～4 就照半形括號處理。
+  //     括號內有漢字个（例：教典註記（後字變調））係說明文字，毋轉。
+  result = result.replace(/（([^（）\u3400-\u9fff]*)）/g, '($1)');
   // 2. 處理半形括號 (：淨拿忒佢「後背」个空白
   result = result.replace(/\(\s+/g, '(');
   // 3. 處理半形括號 )：淨拿忒佢「頭前」个空白
@@ -1236,7 +1280,8 @@ function formatPhoneticForDisplay(text, isGip = false, dialect = '') {
       if (gip) result = gip.toGIP(result);
     }
   }
-  return result;
+  // 7. 標點轉半形（、，→ `, `；→ `; `）：放最尾，轉調符程式正毋會看著新標點
+  return normalizeRomanPunctuation(result);
 }
 
 /**
@@ -11145,6 +11190,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getSandhiPronunciation,
     borrowMissingGipFields,
     formatPhoneticForDisplay,
+    normalizeRomanPunctuation,
     renderPhoneticNoteLabels,
     getCertAdvancedRepeatCount,
     shouldRepeatWord,

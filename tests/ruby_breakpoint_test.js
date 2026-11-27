@@ -103,17 +103,75 @@ runTest('Word with multiple items in parentheses', () => {
 
 console.log(`🎉 All ${passedTests} ruby breakpoint unit tests passed successfully!\n`);
 
-// 6b. 南四縣等副音變體个【】內容（剝掉【】後頓號在頂層）：愛開 dunAtTopLevel 正會斷
-runTest('Top-level dun breaks only when dunAtTopLevel is on (sub-variant 【】 content)', () => {
-  const base = '大番薯、大戇霸';
-  const rt = 'tai fán sǔ、tai ngong ba';
-  // 預設（無開）：頂層頓號毋算斷點，維持原本行為
-  assert.strictEqual(splitRubyByBaseBreakpoints(base, rt), null);
-  const res = splitRubyByBaseBreakpoints(base, rt, { dunAtTopLevel: true });
+// 6b. 南四縣等副音變體个【】內容（剝掉【】後頓號在最外層）也斷行；標音側係半形 `,`（見 normalizeRomanPunctuation）
+runTest('Top-level dun breaks (sub-variant 【】 content, half-width comma in rt)', () => {
+  const res = splitRubyByBaseBreakpoints('大番薯、大戇霸', 'tai fán sǔ, tai ngong ba');
   assert.notStrictEqual(res, null);
   assert.deepStrictEqual(res.baseSegs, ['大番薯、', '大戇霸']);
-  assert.deepStrictEqual(res.rtSegs, ['tai fán sǔ、', 'tai ngong ba']);
+  assert.deepStrictEqual(res.rtSegs, ['tai fán sǔ,', 'tai ngong ba']);
   assert.deepStrictEqual(res.breakKinds, ['dun']);
+  // 舊式全形標點也認
+  const legacy = splitRubyByBaseBreakpoints('大番薯、大戇霸', 'tai fán sǔ、tai ngong ba');
+  assert.deepStrictEqual(legacy.baseSegs, ['大番薯、', '大戇霸']);
+});
+
+// 6c. 教典諺語：，；後斷
+runTest('Proverb clauses split after ， and ；', () => {
+  const res = splitRubyByBaseBreakpoints(
+    '鴨嫲多，懶生卵；心臼多，懶洗碗',
+    'àb mǎ dó, lán sáng lòn; xím kiú dó, lán sè vòn',
+  );
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['鴨嫲多，', '懶生卵；', '心臼多，', '懶洗碗']);
+  assert.deepStrictEqual(res.rtSegs, ['àb mǎ dó,', 'lán sáng lòn;', 'xím kiú dó,', 'lán sè vòn']);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun', 'dun']);
+});
+
+// 6d. 歇後語：破折號後斷（漢字 －－／──，標音 --）
+runTest('Xiehouyu splits after the double dash', () => {
+  const res = splitRubyByBaseBreakpoints('阿婆嫁孫女－－無主無意', 'á pǒ ga sún ǹg -- mǒ zù mǒ i');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['阿婆嫁孫女－－', '無主無意']);
+  assert.deepStrictEqual(res.rtSegs, ['á pǒ ga sún ǹg --', 'mǒ zù mǒ i']);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+  const box = splitRubyByBaseBreakpoints('伯公生鬚──老神', 'bag gùng sàng xì -- lo sên');
+  assert.deepStrictEqual(box.baseSegs, ['伯公生鬚──', '老神']);
+  // 歇後語前面還有逗號：三段
+  const three = splitRubyByBaseBreakpoints('風車尾，二槽冇－－毋精', 'fúng cá mí, ngi cǒ pang -- m̌ jín');
+  assert.deepStrictEqual(three.baseSegs, ['風車尾，', '二槽冇－－', '毋精']);
+  assert.deepStrictEqual(three.rtSegs, ['fúng cá mí,', 'ngi cǒ pang --', 'm̌ jín']);
+});
+
+runTest('Single hyphen (PFS syllable joiner) and single dash are not break points', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('阿婆', 'á-pǒ'), null);
+  assert.strictEqual(splitRubyByBaseBreakpoints('阿－婆', 'á - pǒ'), null);
+});
+
+runTest('Clause break falls back (no split) when phonetic lacks matching punctuation', () => {
+  assert.strictEqual(splitRubyByBaseBreakpoints('一還一，二還二', 'ìd vǎn ìd ngi vǎn ngi'), null);
+});
+
+// 6e. 羅馬字標點轉半形：、，→ `, `、；→ `; `；漢字側毋動
+runTest('normalizeRomanPunctuation: half-width punctuation with Western spacing', () => {
+  const { normalizeRomanPunctuation: n } = require('../main.js');
+  assert.strictEqual(n('á gúng m̌ zo ， zo ngǐn ge sún è'), 'á gúng m̌ zo, zo ngǐn ge sún è');
+  assert.strictEqual(n('ìd vǎn ìd，ngi vǎn ngi'), 'ìd vǎn ìd, ngi vǎn ngi');
+  assert.strictEqual(n('sài (bán、bán sài)'), 'sài (bán, bán sài)');
+  assert.strictEqual(n('qìd có 、 bàd pǎ 、 giù sáng ngǎ'), 'qìd có, bàd pǎ, giù sáng ngǎ');
+  assert.strictEqual(n('àb mǎ dó ， lán sáng lòn ； xím kiú dó'), 'àb mǎ dó, lán sáng lòn; xím kiú dó');
+  assert.strictEqual(n('a ，'), 'a,'); // 結尾毋留空白
+  assert.strictEqual(n('(a 、)'), '(a,)'); // 右括號頭前毋留空白
+  assert.strictEqual(n('bòd kǒng'), 'bòd kǒng'); // 無標點原樣
+  assert.strictEqual(n(''), '');
+});
+
+runTest('formatPhoneticForDisplay converts full-width romanization punctuation and parentheses', () => {
+  const { formatPhoneticForDisplay: f } = require('../main.js');
+  assert.strictEqual(f('sài (bán、bán sài)', false, '四縣'), 'sài (bán, bán sài)');
+  assert.strictEqual(f('á gúng m̌ zo ， zo ngǐn', true, '四縣'), 'á gúng m̌ zo, zo ngǐn');
+  assert.strictEqual(f('dīn dīn zhôn（dīn dīn fūi）', false, '詔安'), 'dīn dīn zhôn (dīn dīn fūi)');
+  // `--`（歇後語分隔）毋動
+  assert.strictEqual(f('á pǒ ga sún ǹg -- mǒ zù', true, '四縣'), 'á pǒ ga sún ǹg -- mǒ zù');
 });
 
 // 7. RT mismatch falls back
@@ -195,8 +253,12 @@ runTest('Dun-separated variants inside parentheses split after each 、', () => 
   assert.deepStrictEqual(res.rtSegs, ['sá ba ', '(sá pú、', 'sá tán)']);
 });
 
-runTest('Dun outside parentheses is not a break point', () => {
-  assert.strictEqual(splitRubyByBaseBreakpoints('七坐、八爬', 'qìd có 、 bàd pǎ'), null);
+// 20261127 P1：最外層頓號也斷（原本淨括號裡肚斷）
+runTest('Dun outside parentheses is now a break point (P1)', () => {
+  const res = splitRubyByBaseBreakpoints('七坐、八爬、九生牙', 'qìd có, bàd pǎ, giù sáng ngǎ');
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['七坐、', '八爬、', '九生牙']);
+  assert.deepStrictEqual(res.breakKinds, ['dun', 'dun']);
 });
 
 runTest('Dun split falls back to paren-only split when phonetic lacks matching 、', () => {
