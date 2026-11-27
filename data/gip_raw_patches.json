@@ -133,5 +133,23 @@
     "replace_raw": "mien11 she53",
     "category": "漏空格黏音",
     "reason": "音節間遺漏空格。"
+  },
+  {
+    "dialect": "南",
+    "hanji": "還生食四兩，當過死後祭豬羊",
+    "gip_id": "16338",
+    "match_raw": "van11 sang24 siid5 xi55 liong24 dong55 go55 xi31 heu55 ji55 zu24 iong11　又讀han11 sang24 siid5 xi55 liong24 dong55 go55 xi31 heu55 ji55 zu24 iong11",
+    "replace_raw": "van11 sang24 siid5 xi55 liong24，dong55 go55 xi31 heu55 ji55 zu24 iong11　又讀han11 sang24 siid5 xi55 liong24，dong55 go55 xi31 heu55 ji55 zu24 iong11",
+    "category": "標點缺漏",
+    "reason": "詞目有「，」，本調、又讀兩組音讀卻都無對應逗號；依前 5 字、後 6 字補上（自動補丁產生器淨處理單一讀音，這筆有又讀，故手動補）。"
+  },
+  {
+    "dialect": "大",
+    "hanji": "地豆剝殼──還有醫",
+    "gip_id": "15905",
+    "match_raw": "kog21──han113",
+    "replace_raw": "kog21－－han113",
+    "category": "符號混用",
+    "reason": "歇後語分隔「──」（U+2500）緊貼聲調數字，管線無法切開音節，聲調數字毋會轉調符；改成其他歇後語通用个「－－」。"
   }
 ]

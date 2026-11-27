@@ -194,6 +194,59 @@ runTest('Syllable alignment gives up (null) when syllable total differs from cha
   );
 });
 
+// 6d3. 多層讀音（又讀、文、白）：每層讀音各自照分句切，一句一個斷行單位，label 補回每一段
+runTest('Multi-reading layers split per clause (rtc layers follow each clause)', () => {
+  const { splitRubyMultiReading: sm } = require('../main.js');
+  const res = sm('耕田又耕埔，做到兩頭烏', [
+    '<span class="phonetic-note-label">白</span>gǎng tèen rhiu gǎng bǔ, zôo dôo liông tèu bbǔ',
+    '<span class="phonetic-note-label">文</span>giěn tèn rhiu giěn bǔ, zô dô liông tèu bbǔ',
+  ]);
+  assert.notStrictEqual(res, null);
+  assert.deepStrictEqual(res.baseSegs, ['耕田又耕埔，', '做到兩頭烏']);
+  assert.deepStrictEqual(res.layerSegs, [
+    [
+      '<span class="phonetic-note-label">白</span>gǎng tèen rhiu gǎng bǔ,',
+      '<span class="phonetic-note-label">白</span>zôo dôo liông tèu bbǔ',
+    ],
+    [
+      '<span class="phonetic-note-label">文</span>giěn tèn rhiu giěn bǔ,',
+      '<span class="phonetic-note-label">文</span>zô dô liông tèu bbǔ',
+    ],
+  ]);
+  assert.deepStrictEqual(res.breakKinds, ['dun']);
+  // 第一層無 label：只補有 label 个層
+  const plain = sm('喊天天毋應，喊地地毋聲', [
+    'hém tién tién m̌ en, hém ti ti m̌ sáng',
+    '<span class="phonetic-note-label">又讀</span>ham tién tién m̌ en, ham ti ti m̌ sáng',
+  ]);
+  assert.deepStrictEqual(plain.layerSegs[0], ['hém tién tién m̌ en,', 'hém ti ti m̌ sáng']);
+  assert.strictEqual(plain.layerSegs[1][1], '<span class="phonetic-note-label">又讀</span>ham ti ti m̌ sáng');
+  // 歇後語：破折號斷
+  const xh = sm('三十暗晡个飯甑－－自家愛用', [
+    'sàm shìb ǎm bù gǎi fān zěn -- cid gà ǒi rhūng',
+    '<span class="phonetic-note-label">白</span>sàm shìb ǎm bù gǎi pōn zěn -- cid gà ǒi rhūng',
+  ]);
+  assert.deepStrictEqual(xh.baseSegs, ['三十暗晡个飯甑－－', '自家愛用']);
+  assert.strictEqual(xh.layerSegs[1][0], '<span class="phonetic-note-label">白</span>sàm shìb ǎm bù gǎi pōn zěn --');
+});
+
+runTest('Multi-reading split gives up (null) when any layer cannot be split or only one layer', () => {
+  const { splitRubyMultiReading: sm } = require('../main.js');
+  assert.strictEqual(sm('甲乙，丙丁', ['a b, c d']), null);
+  // 第二層音節數對毋著
+  assert.strictEqual(sm('甲乙，丙丁', ['a b, c d', 'a b c']), null);
+  // 無分句標點
+  assert.strictEqual(sm('甲乙丙丁', ['a b c d', 'e f g h']), null);
+});
+
+runTest('joinRtSegs adds a single space between segments only when needed', () => {
+  const { joinRtSegs: j } = require('../main.js');
+  assert.strictEqual(j(['pú,', 'zo do']), 'pú, zo do');
+  assert.strictEqual(j(['sá ba ', '(sá pú,']), 'sá ba (sá pú,');
+  assert.strictEqual(j(['a']), 'a');
+  assert.strictEqual(j([]), '');
+});
+
 // 6e. 羅馬字標點轉半形：、，→ `, `、；→ `; `；漢字側毋動
 runTest('normalizeRomanPunctuation: half-width punctuation with Western spacing', () => {
   const { normalizeRomanPunctuation: n } = require('../main.js');

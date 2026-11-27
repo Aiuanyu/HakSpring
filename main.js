@@ -675,6 +675,69 @@ function buildSplitLineRuby(bSeg, rSeg, isPhoneticOnly, sandhiCode) {
   return lineRuby;
 }
 
+/**
+ * 合併相鄰个標音段落：段落頭尾無空白，就補一格（切分時後段个前導空白已拿忒，
+ * 毋補會變「pú,zo」）；已經有空白就毋重複補。
+ * @param {string[]} parts
+ * @returns {string}
+ */
+function joinRtSegs(parts) {
+  return parts.reduce((acc, seg) => {
+    if (!acc) return seg;
+    const needSpace = !/\s$/.test(acc) && !/^\s/.test(seg);
+    return acc + (needSpace ? ' ' : '') + seg;
+  }, '');
+}
+
+/**
+ * 多層讀音（又讀、文、白…，漢字留一份、各讀音疊成 rt／rtc 多層）个詞，愛照分句斷行時，
+ * 每一層讀音都照同款斷點切開，同一句各層讀音疊佇該句漢字下背（一句一個斷行單位）。
+ * 例：「耕田又耕埔，做到兩頭烏」本調＋【文】兩層 → 「耕田又耕埔，」配兩層第一句、「做到兩頭烏」配兩層第二句。
+ * - 每層个讀音註記 label（<span class="phonetic-note-label">）會補回每一段，免第二段看毋出係麼个讀音。
+ * - 任何一層切毋開（段數對毋著），或各層斷出來个漢字段數無共樣，就回傳 null（維持縮字）。
+ *
+ * @param {string} baseHtml - 漢字 HTML（毋含 rt、rtc）
+ * @param {string[]} layerHtmls - 各層讀音 HTML（第一層係 rt，後背係 rtc 裡肚个 rt）
+ * @returns {{ baseSegs: string[], rtSegs: string[], layerSegs: string[][], breakKinds: string[] } | null}
+ */
+function splitRubyMultiReading(baseHtml, layerHtmls) {
+  if (!baseHtml || !layerHtmls || layerHtmls.length < 2) return null;
+  const LABEL = /^\s*(<span class="phonetic-note-label">[^<]*<\/span>)/;
+  let baseSegs = null;
+  let breakKinds = null;
+  const layerSegs = [];
+  for (const html of layerHtmls) {
+    const m = html.match(LABEL);
+    const label = m ? m[1] : '';
+    const body = m ? html.slice(m[0].length) : html;
+    const res = splitRubyByBaseBreakpoints(baseHtml, body);
+    if (!res || !res.baseSegs || res.baseSegs.length < 2) return null;
+    if (baseSegs && res.baseSegs.length !== baseSegs.length) return null;
+    if (!baseSegs) { baseSegs = res.baseSegs; breakKinds = res.breakKinds; }
+    layerSegs.push(res.rtSegs.map((seg) => label + seg));
+  }
+  return { baseSegs, rtSegs: layerSegs[0], layerSegs, breakKinds };
+}
+
+/**
+ * 斷行後，替每一段（行）建「多層讀音」ruby：漢字 ＋ 第一層 <rt> ＋ 後背每層一隻 <rtc><rt>
+ * （摎 appendMultiReadingLayers 个結構共樣）。
+ * @param {string} bSeg - 該段漢字 HTML
+ * @param {string[]} layers - 該段各層讀音 HTML（已含 label、上標變調）
+ * @param {boolean} isPhoneticOnly
+ * @param {string} sandhiCode - 變調腔碼（空字串＝毋算變調）
+ * @returns {HTMLElement}
+ */
+function buildMultiSplitLineRuby(bSeg, layers, isPhoneticOnly, sandhiCode) {
+  const lineRuby = document.createElement('ruby');
+  lineRuby.classList.add('ruby-multi-reading');
+  if (isPhoneticOnly) lineRuby.classList.add('variant-ruby-phonetic-only');
+  if (sandhiCode) setSandhiCodeData(lineRuby, sandhiCode);
+  const rtc = layers.slice(1).map((l) => `<rtc><rt>${l}</rt></rtc>`).join('');
+  lineRuby.innerHTML = `${bSeg}<rt>${layers[0] || ''}</rt>${rtc}`;
+  return lineRuby;
+}
+
 function adjustRubyFontSize(targetElement) {
   if (!isFirefox() || !targetElement) return;
 
@@ -685,15 +748,26 @@ function adjustRubyFontSize(targetElement) {
     if (!splitGroup.parentNode) return; // Prevent TypeError if group is detached
     const unsplitBase = splitGroup.dataset.unsplitBase;
     const unsplitRt = splitGroup.dataset.unsplitRt;
-    const restoredRuby = document.createElement('ruby');
-    if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
-      restoredRuby.classList.add('variant-ruby-phonetic-only');
-    }
-    if (splitGroup.dataset.sandhiCode) restoredRuby.dataset.sandhiCode = splitGroup.dataset.sandhiCode;
-    if (unsplitRt) {
-      restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
+    let restoredRuby;
+    if (splitGroup.dataset.unsplitLayers) {
+      // 多層讀音（rt＋rtc）：照存起來个各層還原
+      restoredRuby = buildMultiSplitLineRuby(
+        unsplitBase,
+        JSON.parse(splitGroup.dataset.unsplitLayers),
+        splitGroup.classList.contains('variant-ruby-phonetic-only'),
+        splitGroup.dataset.sandhiCode || '',
+      );
     } else {
-      restoredRuby.innerHTML = unsplitBase;
+      restoredRuby = document.createElement('ruby');
+      if (splitGroup.classList.contains('variant-ruby-phonetic-only')) {
+        restoredRuby.classList.add('variant-ruby-phonetic-only');
+      }
+      if (splitGroup.dataset.sandhiCode) restoredRuby.dataset.sandhiCode = splitGroup.dataset.sandhiCode;
+      if (unsplitRt) {
+        restoredRuby.innerHTML = `${unsplitBase}<rt>${unsplitRt}</rt>`;
+      } else {
+        restoredRuby.innerHTML = unsplitBase;
+      }
     }
     splitGroup.parentNode.replaceChild(restoredRuby, splitGroup);
     rubyElement = restoredRuby;
@@ -730,9 +804,19 @@ function adjustRubyFontSize(targetElement) {
   // 要不要斷都以該行有沒有要縮小文字（rubyWidth > availableWidth）而定
   if (rubyWidth > availableWidth) {
     const rtElement = rubyElement.querySelector('rt');
+    // 多層讀音（rt＋rtc，又讀、文、白…）：每層讀音各自照分句切，一句一個斷行單位
+    const isMulti = !!(rubyElement.classList && rubyElement.classList.contains('ruby-multi-reading'));
     let baseHtml = '';
     let rtHtml = '';
-    if (rtElement) {
+    let layerHtmls = null;
+    if (isMulti) {
+      layerHtmls = Array.from(rubyElement.querySelectorAll('rt')).map((el) => el.innerHTML);
+      const clone = rubyElement.cloneNode(true);
+      clone.querySelectorAll('rtc').forEach((el) => el.remove());
+      clone.querySelectorAll('rt').forEach((el) => el.remove());
+      baseHtml = clone.innerHTML;
+      rtHtml = layerHtmls[0] || '';
+    } else if (rtElement) {
       rtHtml = rtElement.innerHTML;
       const clone = rubyElement.cloneNode(true);
       const cloneRt = clone.querySelector('rt');
@@ -742,7 +826,9 @@ function adjustRubyFontSize(targetElement) {
       baseHtml = rubyElement.innerHTML;
     }
 
-    const splitRes = splitRubyByBaseBreakpoints(baseHtml, rtHtml);
+    const splitRes = isMulti
+      ? splitRubyMultiReading(baseHtml, layerHtmls)
+      : splitRubyByBaseBreakpoints(baseHtml, rtHtml);
     if (splitRes && splitRes.baseSegs && splitRes.baseSegs.length > 1) {
       // 依斷點重繪為不同行 ruby
       const group = document.createElement('span');
@@ -760,15 +846,21 @@ function adjustRubyFontSize(targetElement) {
 
       group.dataset.unsplitBase = baseHtml;
       group.dataset.unsplitRt = rtHtml;
+      if (isMulti) group.dataset.unsplitLayers = JSON.stringify(layerHtmls);
 
       const sandhiCode = rubyElement.dataset ? rubyElement.dataset.sandhiCode || '' : '';
       if (sandhiCode) group.dataset.sandhiCode = sandhiCode;
 
       // 依主斷點（括號、斜線）先分組；組內若有頓號分隔个異體詞，先整行放落去，
       // 空間毋夠正對最尾一個 segment 開始逐隻斷行，空間夠就毋使全斷。
-      const primaryGroups = [[{ b: splitRes.baseSegs[0], r: splitRes.rtSegs[0] || '' }]];
+      const makeSeg = (i) => ({
+        b: splitRes.baseSegs[i],
+        r: splitRes.rtSegs[i] || '',
+        layers: isMulti ? splitRes.layerSegs.map((l) => l[i] || '') : null,
+      });
+      const primaryGroups = [[makeSeg(0)]];
       for (let i = 1; i < splitRes.baseSegs.length; i++) {
-        const seg = { b: splitRes.baseSegs[i], r: splitRes.rtSegs[i] || '' };
+        const seg = makeSeg(i);
         if (splitRes.breakKinds && splitRes.breakKinds[i - 1] === 'dun') {
           primaryGroups[primaryGroups.length - 1].push(seg);
         } else {
@@ -778,15 +870,23 @@ function adjustRubyFontSize(targetElement) {
 
       rubyElement.parentNode.replaceChild(group, rubyElement);
 
+      // 單段、合併段共用：多層讀音就每層各自合併
+      const buildLine = (b, r, layers) => (layers
+        ? buildMultiSplitLineRuby(b, layers, isPhoneticOnly, sandhiCode)
+        : buildSplitLineRuby(b, r, isPhoneticOnly, sandhiCode));
       primaryGroups.forEach((segGroup) => {
         if (segGroup.length === 1) {
-          group.appendChild(buildSplitLineRuby(segGroup[0].b, segGroup[0].r, isPhoneticOnly, sandhiCode));
+          group.appendChild(buildLine(segGroup[0].b, segGroup[0].r, segGroup[0].layers));
           return;
         }
         const buildCombinedHead = (count) => {
-          const b = segGroup.slice(0, count).map((s) => s.b).join('');
-          const r = segGroup.slice(0, count).map((s) => s.r).join('');
-          return buildSplitLineRuby(b, r, isPhoneticOnly, sandhiCode);
+          const part = segGroup.slice(0, count);
+          const b = part.map((s) => s.b).join('');
+          const r = joinRtSegs(part.map((s) => s.r));
+          const layers = isMulti
+            ? part[0].layers.map((_, li) => joinRtSegs(part.map((s) => s.layers[li])))
+            : null;
+          return buildLine(b, r, layers);
         };
         let keepCount = segGroup.length;
         let headRuby = buildCombinedHead(keepCount);
@@ -798,7 +898,7 @@ function adjustRubyFontSize(targetElement) {
           const nextHeadRuby = buildCombinedHead(keepCount);
           group.replaceChild(nextHeadRuby, headRuby);
           headRuby = nextHeadRuby;
-          tailRubies.unshift(buildSplitLineRuby(detachedSeg.b, detachedSeg.r, isPhoneticOnly, sandhiCode));
+          tailRubies.unshift(buildLine(detachedSeg.b, detachedSeg.r, detachedSeg.layers));
         }
         tailRubies.forEach((tailRuby) => group.appendChild(tailRuby));
       });
@@ -11309,6 +11409,8 @@ if (typeof module !== 'undefined' && module.exports) {
     resolveReadingForMode,
     splitRubyByBaseBreakpoints,
     alignRtBySyllableCounts,
+    splitRubyMultiReading,
+    joinRtSegs,
     adjustRubyFontSize,
     adjustAllRubyFontSizes,
     convertPinyinQueryToNumeric,
