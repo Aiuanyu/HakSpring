@@ -10003,6 +10003,10 @@ function initializeAppUI() {
           // 無痕視窗等存毋著，淨這擺有效
         }
         applyLoanwordsVisibility(event.target.checked);
+        // 觸發雲端同步偏好更新
+        if (typeof window.triggerCloudSync === 'function') {
+          window.triggerCloudSync();
+        }
       });
     }
 
