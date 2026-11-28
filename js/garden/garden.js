@@ -1,12 +1,12 @@
 // 客源翠庭院：一粒種子、一欉樹、淨有水滴。
-// 水滴「推算」自既有的 hakkaDailyStats（唯讀）：今日到期復習／新詞題數 → 滴數，一日有上限。
+// 水滴「推算」自既有的 hakkaDailyStats（唯讀）：今日到期復習／新詞題數 → 滴數，入帳無上限；澆水一日有上限，賸个存水缸。
 // 本模組淨存 localStorage['hakfaGarden']：{ bank, poured, day, credited, demo }。
 // 無肥料；幾日無來樹毋會枯。尚未接雲端同步（Phase 2）。
 (function () {
   'use strict';
 
   var KEY = 'hakfaGarden';
-  var DAILY_CAP = 8;
+  var DAILY_POUR_CAP = 8; // 一日上濟澆幾滴（入帳無上限，澆水有日限，賸个存在水缸）
   var REVIEW_PER_DROP = 3; // 到期復習：全站最有學習效果，獎勵最高
   var NEW_PER_DROP = 5;
   var AUDIO_PER_DROP = 10; // 任何音檔播放（主表、日日一詞、遊戲）每 10 次 1 滴
@@ -29,7 +29,7 @@
     s = s || {};
     // baseR／baseN：開發者「重設今日入帳」時記下个復習／新詞題數基準，今日淨計基準後背个新增量
     return { bank: s.bank | 0, poured: s.poured | 0, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0,
-      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0 };
+      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0, pouredToday: s.pouredToday | 0 };
   }
   function save(s) {
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ }
@@ -55,8 +55,8 @@
   // 重算今日入帳，回傳這次新增个滴數（冪等：重複呼叫毋會重複給）
   function sync() {
     var t = todayStr();
-    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; }
-    var earned = Math.min(DAILY_CAP, earnedFromStats() + Math.floor(state.audio / AUDIO_PER_DROP) + state.demo);
+    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; state.pouredToday = 0; }
+    var earned = earnedFromStats() + Math.floor(state.audio / AUDIO_PER_DROP) + state.demo; // 入帳無上限
     var gained = 0;
     if (earned > state.credited) {
       gained = earned - state.credited;
@@ -74,9 +74,10 @@
   }
 
   function pour() {
-    if (state.bank < 1) return null;
+    sync(); // 先處理換日
+    if (state.bank < 1 || state.pouredToday >= DAILY_POUR_CAP) return null;
     var before = stageIndex(state.poured);
-    state.bank--; state.poured++;
+    state.bank--; state.poured++; state.pouredToday++;
     save(state);
     var after = stageIndex(state.poured);
     return { grew: after > before, stage: after };
@@ -103,14 +104,14 @@
     // 今日入帳歸零，並以「現在」為新基準：今日已答个題數、已播个音檔毋再算，淨計往後新增个
     resetToday: function () {
       var c = statsCounts();
-      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1];
+      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1]; state.pouredToday = 0;
       state.day = todayStr();
       save(state);
     },
     setStage: function (i) { state.poured = STAGES[i].at; save(state); },
     resetAll: function () {
       var c = statsCounts();
-      state = { bank: 0, poured: 0, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1] };
+      state = { bank: 0, poured: 0, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1], pouredToday: 0 };
       save(state);
     }
   };
@@ -234,11 +235,12 @@
             '<g class="hg-tree' + (popped ? ' pop' : '') + '">' + treeSvg(idx) + '</g>' +
             '<g class="hg-drops"></g></svg></div>' +
           '<div class="hg-msg" aria-live="polite">' + msg + '</div>' +
-          '<div class="hg-row"><div>💧 <b>' + state.bank + '</b>　<small>' + STAGES[idx].name + '（已澆 ' + state.poured + ' 滴）</small></div>' +
-            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 ? ' disabled' : '') + '>澆水</button></div>' +
-          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + '／' + DAILY_CAP + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
-            (opts.demo ? '<button class="hg-btn ghost" data-hg="demo"' + (state.credited >= DAILY_CAP ? ' disabled' : '') + '>＋1 測試水滴</button>' : '') + '</div>' +
-          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔 1 滴，一日上濟 ' + DAILY_CAP + ' 滴。無肥料；幾日無來樹也毋會枯。</div>' +
+          '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + STAGES[idx].name + '（已澆 ' + state.poured + ' 滴）</small></div>' +
+            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || state.pouredToday >= DAILY_POUR_CAP ? ' disabled' : '') + '>' +
+            (state.pouredToday >= DAILY_POUR_CAP ? '今晡日澆夠了' : '澆水') + '</button></div>' +
+          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）・已澆 ' + state.pouredToday + '／' + DAILY_POUR_CAP + '</small>' +
+            (opts.demo ? '<button class="hg-btn ghost" data-hg="demo">＋1 測試水滴</button>' : '') + '</div>' +
+          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸、無上限，一日上濟澆 ' + DAILY_POUR_CAP + ' 滴。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
     }
@@ -281,6 +283,11 @@
 
   // ---- 音檔播放計滴：任何 audio（主表、日日一詞、遊戲）每 AUDIO_PER_DROP 擺 1 滴 ----
   var AUDIO_IGNORE_RE = /(^|\/)(endOfPlay|empty_category)\.mp3(\?|$)/; // 提示音效毋算
+  // 遊戲視窗開等時，播个音檔毋算（愛答題正有意義，毋係淨按音檔刷擺數）
+  function inGame() {
+    var gm = document.getElementById('gameModal');
+    return !!gm && window.getComputedStyle(gm).display !== 'none';
+  }
   function onAudioPlayed() {
     var gained = sync(); // 先處理換日
     state.audio++;
@@ -300,7 +307,7 @@
     HTMLMediaElement.prototype.play = function () {
       var src = this.currentSrc || this.src || '';
       var ret = orig.apply(this, arguments);
-      if (!AUDIO_IGNORE_RE.test(src) && ret && typeof ret.then === 'function') {
+      if (!AUDIO_IGNORE_RE.test(src) && !inGame() && ret && typeof ret.then === 'function') {
         ret.then(function () { try { onAudioPlayed(); } catch (e) { /* 計數失敗毋影響播放 */ } }, function () {});
       }
       return ret;
@@ -362,7 +369,7 @@
       if (!b) return;
       b.textContent = String(state.bank);
       b.hidden = state.bank < 1;
-      btn.title = '庭院：有 ' + state.bank + ' 滴水可以澆';
+      btn.title = '庭院：水缸有 ' + state.bank + ' 滴水';
     }
     function setOpen(open) {
       pane.hidden = !open;
