@@ -86,4 +86,38 @@ console.log('  ✅ 旋轉換邊（被擋著个樹轉得出來）PASS');
   console.log('  ✅ 地塊平台（中心不變、平台外不變、攤平、平滑、射線一致）PASS');
 }
 
+// 8. 時間光影：日出日落方向、夜裡月亮、暗色主題永遠夜
+{
+  const noon = G3.sunState(12, false), morning = G3.sunState(7, false), evening = G3.sunState(17.5, false), night = G3.sunState(23, false), dk = G3.sunState(12, true);
+  assert.ok(noon.elev > 0.95 && noon.sky === 'day' && !noon.night, '正午太陽高');
+  assert.ok(morning.dir[0] > 0.5 && evening.dir[0] < -0.5, '東升西落');
+  assert.ok(morning.warm > 0.3 && evening.warm > 0.3 && noon.warm < 0.1, '晨昏偏暖');
+  assert.ok(night.night && night.sky === 'night' && night.light < noon.light, '夜裡光較弱');
+  assert.ok(dk.night && dk.dir[2] > 0, '暗色主題：夜晚个月亮在天上');
+  for (let h = 0; h < 24; h += 0.5) { const s = G3.sunState(h, false); assert.ok(Math.abs(Math.hypot(...s.dir) - 1) < 1e-9 && s.light > 0.5 && s.light <= 1.2); }
+  assert.ok(G3.sunState(24, false).dir.every((v, i) => Math.abs(v - G3.sunState(0, false).dir[i]) < 1e-9), '24 點等於 0 點');
+  console.log('  ✅ 時間光影（東升西落、晨昏暖色、夜月亮、暗色主題）PASS');
+}
+// 9. 茶園梯田、地面裝飾
+{
+  let tea = 0, total = 0;
+  for (let x = -900; x <= 900; x += 30) for (let y = -900; y <= 900; y += 30) { total++; if (G3.teaPatch(S, x, y, G3.valleyMask(x, y)) > 0.5) tea++; }
+  assert.ok(tea > 20 && tea < total * 0.5, '丘陵有成塊茶園（' + tea + '／' + total + '）');
+  assert.strictEqual(G3.teaPatch(S, 0, 0, 0), 0, '山谷中央毋係茶園');
+  let ones = 0; for (let h = 0; h < 5.5; h += 0.1) if (G3.terraceBand(h) > 0.99) ones++;
+  assert.ok(ones > 10 && G3.terraceBand(5.4) < 0.5 || G3.terraceBand(2.9) < 0.5, '梯田有茶欉列摎田埂');
+  const types = {}; let overWater = 0, n = 0;
+  for (let i = -20; i <= 20; i++) for (let j = -20; j <= 20; j++) {
+    const d = G3.decorAt(S, i, j, 60); n++;
+    if (!d) continue;
+    types[d.type] = (types[d.type] || 0) + 1;
+    if (G3.isWater(S, d.x, d.y)) overWater++;
+    assert.deepStrictEqual(d, G3.decorAt(S, i, j, 60), '確定性');
+    if (d.type === 'reed') { const sd = G3.streamD(S, d.x, d.y); assert.ok(sd > 13 && sd < 42, '水草在溪邊'); }
+  }
+  assert.strictEqual(overWater, 0, '水裡毋會有裝飾');
+  ['rock', 'tuft', 'flower', 'reed'].forEach((k) => assert.ok(types[k] > 3, k + ' 有出現（' + types[k] + '）'));
+  console.log('  ✅ 茶園梯田摎地面裝飾（確定性、毋在水裡、水草在溪邊、各種類都有）PASS');
+}
+
 console.log('✅ garden_3d_test 全部通過');

@@ -431,8 +431,8 @@
   }
   function isDark() { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
   var THEME3 = {
-    light: { dark: false, skyTop: [207, 230, 242], skyBot: [251, 241, 217], grass: [138, 196, 106], grassHi: [176, 222, 128], hill: [102, 162, 96], rock: [150, 160, 150], water: [120, 190, 225], sun: [255, 243, 191], fog: [251, 241, 217], ring: [31, 111, 181] },
-    dark: { dark: true, skyTop: [20, 34, 58], skyBot: [39, 66, 90], grass: [66, 146, 104], grassHi: [92, 176, 122], hill: [48, 108, 84], rock: [104, 118, 136], water: [64, 124, 168], sun: [233, 238, 251], fog: [39, 66, 90], ring: [124, 196, 255] }
+    light: { dark: false, skyTop: [207, 230, 242], skyBot: [251, 241, 217], grass: [138, 196, 106], grassHi: [176, 222, 128], hill: [102, 162, 96], rock: [150, 160, 150], water: [120, 190, 225], sun: [255, 243, 191], fog: [251, 241, 217], ring: [31, 111, 181], tea: [92, 150, 72], soil: [196, 166, 112] },
+    dark: { dark: true, skyTop: [20, 34, 58], skyBot: [39, 66, 90], grass: [66, 146, 104], grassHi: [92, 176, 122], hill: [48, 108, 84], rock: [104, 118, 136], water: [64, 124, 168], sun: [233, 238, 251], fog: [39, 66, 90], ring: [124, 196, 255], tea: [48, 108, 78], soil: [104, 88, 66] }
   };
   // 樹个貼圖：把 treeSvg 个 CSS 變數換成實際顏色，做成獨立 SVG 圖片，快取起來（毋使每擺重畫）
   function spriteFor(stage, lod, cardEl, onReady) {
@@ -632,6 +632,7 @@
         plots: function () { return state.plots.map(function (q) { return { id: q.id, x: q.x === undefined ? 5000 : q.x, y: q.y === undefined ? 5000 : q.y, stage: stageIndex(q.n) }; }); },
         sel: function () { return (selPlot() || {}).id; },
         theme: function () { return isDark() ? THEME3.dark : THEME3.light; },
+        now: function () { return window.__hakfaGardenNow ? new Date(window.__hakfaGardenNow) : new Date(); }, // 測試可指定時間；平常用當地時間
         sprite: function (st, lod) { return spriteFor(st, lod, card); },
         onSprite: function (cb) { spriteWaiters.push(cb); }
       });

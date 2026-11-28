@@ -57,6 +57,56 @@
   }
   function isWater(seed, wx, wy) { return valleyMask(wx, wy) < 0.7 && streamD(seed, wx, wy) < 15; }
 
+
+  // ---------- 時間光影：太陽（或月亮）位置、光色、天色，隨一天个時間變化 ----------
+  // hours：當地時間 0~24（小數）。dark＝暗色主題（永遠係夜晚，月亮隨時間走過天空）。
+  // 回傳 { dir:[x,y,z]（光來个方向，單位向量）, elev（-1~1，高度）, warm（0~1，晨昏暖色程度）, light（0~1，光強度）, night, sky: 'day'|'golden'|'night' }
+  function sunState(hours, dark) {
+    var h = ((hours % 24) + 24) % 24, theta, elev, night = false, dir;
+    if (dark) { // 暗色主題：月亮一整天由東往西走
+      theta = (h / 24) * Math.PI * 2;
+      dir = [Math.cos(theta) * 0.9, 0.3, 0.38 + 0.5 * Math.sin(theta * 0.5 + 0.8)];
+      night = true; elev = 0.3;
+    } else if (h >= 6 && h <= 18) { // 白天：東升西落，偏南
+      theta = (h - 6) / 12 * Math.PI;
+      dir = [Math.cos(theta), -0.35, Math.sin(theta)];
+      elev = Math.sin(theta);
+    } else { // 夜裡：月亮
+      var hh = h < 6 ? h + 6 : h - 18;
+      theta = hh / 12 * Math.PI;
+      dir = [Math.cos(theta), 0.3, Math.sin(theta) * 0.8 + 0.05];
+      elev = -Math.sin(theta) * 0.6; night = true;
+    }
+    var l = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]); dir = [dir[0] / l, dir[1] / l, dir[2] / l];
+    var warm = night ? 0 : Math.max(0, Math.min(1, 1 - elev * 2.6)); // 太陽低个時節偏暖色
+    var light = night ? 0.62 : 0.72 + 0.4 * Math.max(0, elev);
+    return { dir: dir, elev: elev, warm: warm, light: light, night: night, sky: night ? 'night' : (warm > 0.25 ? 'golden' : 'day') };
+  }
+
+  // 茶園梯田：丘陵坡地上一塊一塊个茶園，等高線方向一排一排
+  function teaPatch(seed, cx, cy, m) { // 0~1：這一格係茶園个程度
+    var p = fbm(cx / 240 + 5, cy / 240 + 5, seed + 17);
+    var a = Math.max(0, Math.min(1, (p - 0.5) / 0.1)); a = a * a * (3 - 2 * a);
+    return a * sstep(0.18, 0.34, m) * (1 - sstep(0.8, 0.95, m));
+  }
+  function terraceBand(h) { // 1＝茶欉那一排，0＝田埂；每 5.5 個高度單位一階
+    var f = h / 5.5 - Math.floor(h / 5.5);
+    return sstep(0, 0.18, f) * (1 - sstep(0.5, 0.68, f));
+  }
+
+  // 地面裝飾：石頭、草叢、野花、小溪邊个水草。用固定个世界格線（間距 L）確定性擺放，旋轉縮放毋會閃爍。
+  // 回傳 null 或 { type:'rock'|'tuft'|'flower'|'reed', x, y, size, v（0~1 變化） }
+  function decorAt(seed, i, j, L) {
+    var r = hash2(i, j, seed + 500), x = (i + 0.5 + (hash2(i, j, seed + 501) - 0.5) * 0.9) * L, y = (j + 0.5 + (hash2(i, j, seed + 502) - 0.5) * 0.9) * L;
+    if (isWater(seed, x, y)) return null;
+    var m = valleyMask(x, y), sd = streamD(seed, x, y), v = hash2(i, j, seed + 503);
+    if (m < 0.75 && sd > 13 && sd < 42 && r < 0.6) return { type: 'reed', x: x, y: y, size: 14 + v * 10, v: v };
+    if (r < 0.05 + 0.2 * m) return { type: 'rock', x: x, y: y, size: 5 + v * 13 * (0.6 + m), v: v };
+    if (m < 0.55 && r < 0.2) return { type: 'flower', x: x, y: y, size: 6 + v * 4, v: v };
+    if (r < 0.5) return { type: 'tuft', x: x, y: y, size: 8 + v * 7, v: v };
+    return null;
+  }
+
   // 加上「地塊平台」个高度：每塊地腳下半徑 R 內，高度逐漸攤平到該地塊中心个高度（平滑過渡），樹毋會被起伏埋著
   function heightWithPads(seed, pads, wx, wy, R) {
     var h = heightAt(seed, wx, wy);
@@ -159,29 +209,108 @@
       return cache;
     }
 
+    // 石頭、草叢、野花、水草：幾筆向量，大小隨遠近
+    function drawDecor(dr, th, fogS, fogE, tint, light) {
+      var dc = dr.dc, p = dr.p, k = p.k, fg = Math.max(0, Math.min(1, (p.zc - fogS) / (fogE - fogS))), a = 1 - fg * 0.85, v = dc.v;
+      ctx.globalAlpha = a;
+      var sh = Math.min(1.1, 0.5 + light * 0.55);
+      if (dc.type === 'rock') {
+        var w = dc.size * k, h = w * 0.62, base = mix(th.rock, [90, 90, 90], 0.25);
+        ctx.fillStyle = rgb([base[0] * sh * tint[0], base[1] * sh * tint[1], base[2] * sh * tint[2]]); ctx.strokeStyle = 'rgba(40,40,40,.45)'; ctx.lineWidth = Math.max(0.6, w * 0.05);
+        ctx.beginPath(); ctx.moveTo(p.x - w * 0.6, p.y); ctx.lineTo(p.x - w * 0.4, p.y - h * 0.8); ctx.lineTo(p.x + w * (0.05 + v * 0.1), p.y - h); ctx.lineTo(p.x + w * 0.55, p.y - h * 0.5); ctx.lineTo(p.x + w * 0.62, p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.beginPath(); ctx.moveTo(p.x - w * 0.4, p.y - h * 0.8); ctx.lineTo(p.x + w * (0.05 + v * 0.1), p.y - h); ctx.lineTo(p.x + w * 0.1, p.y - h * 0.55); ctx.closePath(); ctx.fill();
+      } else if (dc.type === 'tuft') {
+        var hh = dc.size * k, gcol = mix(th.grass, [20, 60, 20], 0.35);
+        ctx.strokeStyle = rgb([gcol[0] * sh * tint[0], gcol[1] * sh * tint[1], gcol[2] * sh * tint[2]]); ctx.lineWidth = Math.max(0.9, hh * 0.16); ctx.lineCap = 'round';
+        for (var b = -2; b <= 2; b++) { ctx.beginPath(); ctx.moveTo(p.x + b * hh * 0.12, p.y); ctx.quadraticCurveTo(p.x + b * hh * 0.2, p.y - hh * 0.6, p.x + b * hh * 0.34 + (v - 0.5) * hh * 0.2, p.y - hh * (0.8 + 0.1 * Math.abs(b))); ctx.stroke(); }
+      } else if (dc.type === 'flower') {
+        var fs = dc.size * k, pal = [[255, 255, 255], [255, 214, 64], [255, 158, 188], [196, 176, 255]], fc = pal[Math.floor(v * 4) % 4];
+        ctx.strokeStyle = rgb(mix(th.grass, [20, 70, 20], 0.4)); ctx.lineWidth = Math.max(0.8, fs * 0.12);
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - fs * 0.9); ctx.stroke();
+        ctx.fillStyle = rgb(fc); ctx.beginPath(); ctx.arc(p.x, p.y - fs, Math.max(1.3, fs * 0.28), 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(255,200,60,.9)'; ctx.beginPath(); ctx.arc(p.x, p.y - fs, Math.max(0.6, fs * 0.1), 0, 7); ctx.fill();
+      } else { // reed 水草
+        var rh = dc.size * k;
+        ctx.lineCap = 'round';
+        for (var r = 0; r < 4; r++) {
+          var ox = (r - 1.5) * rh * 0.12, lean = (v - 0.5) * rh * 0.3 + (r - 1.5) * rh * 0.05;
+          ctx.strokeStyle = rgb(mix(th.grass, [50, 90, 40], 0.5)); ctx.lineWidth = Math.max(0.9, rh * 0.07);
+          ctx.beginPath(); ctx.moveTo(p.x + ox, p.y); ctx.quadraticCurveTo(p.x + ox + lean * 0.3, p.y - rh * 0.6, p.x + ox + lean, p.y - rh); ctx.stroke();
+          if (r === 1 || r === 2) { ctx.strokeStyle = '#7a5230'; ctx.lineWidth = Math.max(1.4, rh * 0.12); ctx.beginPath(); ctx.moveTo(p.x + ox + lean, p.y - rh); ctx.lineTo(p.x + ox + lean + lean * 0.05, p.y - rh * 1.18); ctx.stroke(); }
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+    // 紙紋：小塊隨機雜點，鋪滿整張圖，像手繪水彩紙（靜態，毋用濾鏡）
+    var grain = null;
+    function grainPattern() {
+      if (grain) return grain;
+      try {
+        var c = document.createElement('canvas'); c.width = c.height = 96;
+        var g2 = c.getContext('2d'), im = g2.createImageData(96, 96);
+        for (var k = 0; k < 96 * 96; k++) { var v = 128 + (hash2(k, 7, 11) - 0.5) * 70; im.data[k * 4] = im.data[k * 4 + 1] = im.data[k * 4 + 2] = v; im.data[k * 4 + 3] = 20; }
+        g2.putImageData(im, 0, 0); grain = ctx.createPattern(c, 'repeat');
+      } catch (e) { grain = null; }
+      return grain;
+    }
+    var SKY_GOLD = { top: [140, 160, 205], bot: [255, 190, 135] };
+    function nowHours() { var d = opts.now ? opts.now() : new Date(); return d.getHours() + d.getMinutes() / 60; }
+    // 遠山剪影：好幾層越遠越淡，填補地平線，讓大地看起來真个無邊
+    function farRidges(cam, th, seed, fogMix, coarse) {
+      var step = coarse ? 14 : 6, horizon = H / 2 - cam.fpx * Math.tan(cam3.pitch);
+      var layers = [{ D: 4200, amp: 1500, c: 0.5 }, { D: 6800, amp: 2200, c: 0.68 }, { D: 10500, amp: 3200, c: 0.82 }];
+      layers.forEach(function (ly, li) {
+        ctx.beginPath(); ctx.moveTo(-10, H + 10);
+        for (var x = -10; x <= W + 10; x += step) {
+          var bearing = cam3.yaw + Math.atan((x - W / 2) / cam.fpx), n = fbm(bearing * 1.6 + li * 9.3, li * 3.1, seed + 41);
+          var e = Math.atan((120 + n * ly.amp) / ly.D), y = H / 2 - cam.fpx * Math.tan(cam3.pitch + e);
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W + 10, H + 10); ctx.closePath();
+        ctx.fillStyle = rgb(mix(mix(th.hill, th.rock, 0.5), fogMix, ly.c)); ctx.fill();
+      });
+      return horizon;
+    }
     function render(coarse) {
       if (!W) resize();
-      var th = opts.theme(), seed = opts.seed(), cam = curCam();
-      // 天空
+      var th = opts.theme(), seed = opts.seed(), cam = curCam(), ss = sunState(nowHours(), th.dark);
+      // ---- 天空：隨時間變色（白晝／晨昏金黃／夜）。晨昏天色混入暖色 ----
+      var top = th.skyTop, bot = th.skyBot;
+      if (!th.dark) { if (ss.sky === 'golden') { top = mix(th.skyTop, SKY_GOLD.top, ss.warm); bot = mix(th.skyBot, SKY_GOLD.bot, ss.warm); } else if (ss.sky === 'night') { top = mix(th.skyTop, [60, 74, 125], 0.85); bot = mix(th.skyBot, [196, 150, 150], 0.7); } }
       var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, rgb(th.skyTop)); g.addColorStop(1, rgb(th.skyBot));
+      g.addColorStop(0, rgb(top)); g.addColorStop(1, rgb(bot));
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      if (th.dark) { ctx.fillStyle = 'rgba(255,244,214,.85)'; stars.forEach(function (s) { ctx.fillRect(s[0] * W, s[1] * H, s[2], s[2]); }); }
-      var hy = H / 2 - Math.tan(cam3.pitch) * cam.fpx * 0; // 地平線大約位置（僅供日月放置）
-      var sunX = W * 0.8 - ((cam3.yaw % 6.283) / 6.283) * W * 0.6, sunY = H * 0.16;
-      ctx.fillStyle = rgb(th.sun); ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(sunX, sunY, 34, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(sunX, sunY, 15, 0, 7); ctx.fill();
+      var fogC = bot;
+      var night = th.dark || ss.sky === 'night';
+      if (night) { ctx.fillStyle = 'rgba(255,244,214,.85)'; stars.forEach(function (s) { ctx.fillRect(s[0] * W, s[1] * H, s[2], s[2]); }); }
+      // 日／月：由光來个方向投影到畫面，旋轉鏡頭就會移動、轉到後背就看無
+      var sp = project(cam, cam.pos.x + ss.dir[0] * 9000, cam.pos.y + ss.dir[1] * 9000, cam.pos.z + ss.dir[2] * 9000);
+      if (sp && sp.x > -80 && sp.x < W + 80 && sp.y > -80 && sp.y < H * 0.9) {
+        var sc2 = night ? [233, 238, 251] : mix([255, 243, 191], [255, 190, 110], ss.warm);
+        var rg = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, night ? 70 : 120);
+        rg.addColorStop(0, 'rgba(' + (sc2[0] | 0) + ',' + (sc2[1] | 0) + ',' + (sc2[2] | 0) + ',' + (night ? 0.45 : 0.6) + ')'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = rg; ctx.fillRect(sp.x - 130, sp.y - 130, 260, 260);
+        ctx.fillStyle = rgb(sc2); ctx.beginPath(); ctx.arc(sp.x, sp.y, night ? 13 : 17, 0, 7); ctx.fill();
+      }
+      farRidges(cam, th, seed, fogC, coarse);
 
-      var N = coarse ? 36 : 76, E = Math.max(480, Math.min(2200, cam3.dist * 1.55));
-      var gr = grid(N, E, seed), cs = gr.cs, N1 = N + 1;
+      var N = coarse ? 40 : 90, E = Math.max(480, Math.min(2200, cam3.dist * 1.55));
+      var gr = grid(N, E, seed), cs = gr.cs, N1 = N + 1, hs = gr.hs;
       // 頂點投影
       var vx = new Float32Array(N1 * N1), vy = new Float32Array(N1 * N1), vz = new Float32Array(N1 * N1);
       for (var j = 0; j < N1; j++) for (var i = 0; i < N1; i++) {
-        var p = project(cam, gr.ox + i * cs, gr.oy + j * cs, gr.hs[j * N1 + i]), id = j * N1 + i;
+        var p = project(cam, gr.ox + i * cs, gr.oy + j * cs, hs[j * N1 + i]), id = j * N1 + i;
         if (p) { vx[id] = p.x; vy[id] = p.y; vz[id] = p.zc; } else vz[id] = -1;
       }
+      // 頂點法向量（相鄰格平均）→ 明暗柔和，毋會一格一格亮暗跳
+      var nxv = new Float32Array(N1 * N1), nyv = new Float32Array(N1 * N1);
+      for (j = 0; j < N1; j++) for (i = 0; i < N1; i++) {
+        var i0 = Math.max(0, i - 1), i1 = Math.min(N, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(N, j + 1);
+        nxv[j * N1 + i] = -(hs[j * N1 + i1] - hs[j * N1 + i0]) / ((i1 - i0) * cs);
+        nyv[j * N1 + i] = -(hs[j1 * N1 + i] - hs[j0 * N1 + i]) / ((j1 - j0) * cs);
+      }
       var fogS = E * 0.5, fogE = E * 1.2, drawables = [];
-      var lx = -0.45, ly = -0.35, lz = 0.82; // 光從西南偏上來
+      var L = ss.dir, lightTint = ss.warm > 0 ? [1, 1 - 0.18 * ss.warm, 1 - 0.38 * ss.warm] : [1, 1, 1], amb = night ? 0.5 : 0.46;
       for (j = 0; j < N; j++) for (i = 0; i < N; i++) {
         var a = j * N1 + i, b = a + 1, c = a + N1, d = c + 1;
         if (vz[a] < 0 || vz[b] < 0 || vz[c] < 0 || vz[d] < 0) continue;
@@ -190,33 +319,61 @@
         if (maxX < -4 || minX > W + 4 || maxY < -4 || minY > H + 4) continue;
         drawables.push({ z: (vz[a] + vz[b] + vz[c] + vz[d]) / 4, t: 0, i: i, j: j });
       }
-      // 樹
+      // 地面裝飾：石頭、草叢、野花、水草（固定世界格線擺放；拖曳中略過）
       var plots = opts.plots(), lod = plots.length >= 8, selId = opts.sel();
+      if (!coarse) {
+        var DL = 60, Rd = Math.min(E * 0.8, 820), i0d = Math.floor((cam3.tx - Rd) / DL), i1d = Math.ceil((cam3.tx + Rd) / DL), j0d = Math.floor((cam3.ty - Rd) / DL), j1d = Math.ceil((cam3.ty + Rd) / DL);
+        for (var jj = j0d; jj <= j1d; jj++) for (var ii = i0d; ii <= i1d; ii++) {
+          var dc = decorAt(seed, ii, jj, DL);
+          if (!dc) continue;
+          var near = false;
+          for (var pk = 0; pk < pads.length; pk++) { var ddx = dc.x - pads[pk].x, ddy = dc.y - pads[pk].y; if (ddx * ddx + ddy * ddy < PAD_R * PAD_R * 0.8) { near = true; break; } }
+          if (near) continue;
+          var dz = hf(dc.x, dc.y), dp = project(cam, dc.x, dc.y, dz);
+          if (dp && dp.zc < E * 0.85 && (dp.zc < E * 0.5 || dc.v < 0.6) && dp.x > -20 && dp.x < W + 20 && dp.y > -20 && dp.y < H + 40) drawables.push({ z: dp.zc - cs * 0.3, t: 2, dc: dc, p: dp });
+        }
+      }
+      // 樹
       plots.forEach(function (q) {
         var w = plotToWorld(q.x, q.y), z = hf(w.x, w.y) + 1.2, p = project(cam, w.x, w.y, z);
         if (p) drawables.push({ z: p.zc - cs * 1.6, t: 1, q: q, w: w, gz: z, p: p }); // 往鏡頭偏一點：正前方个格子毋會蓋著腳下个土堆
       });
       drawables.sort(function (u, v) { return v.z - u.z; });
-      var sprites = {}, pending = false;
+      var sprites = {}, pending = false, teaCol = th.tea || mix(th.hill, [70, 120, 60], 0.4), soilCol = th.soil || [188, 160, 110];
+      var waterCol = mix(th.water, fogC, 0.18);
       drawables.forEach(function (dr) {
         if (dr.t === 0) {
           var i2 = dr.i, j2 = dr.j, a2 = j2 * N1 + i2, b2 = a2 + 1, c2 = a2 + N1, d2 = c2 + 1;
-          var h00 = gr.hs[a2], h10 = gr.hs[b2], h01 = gr.hs[c2], h11 = gr.hs[d2];
-          var nx = -((h10 + h11) - (h00 + h01)) / (2 * cs), ny = -((h01 + h11) - (h00 + h10)) / (2 * cs), nl = Math.sqrt(nx * nx + ny * ny + 1);
-          var lam = Math.max(0.5, Math.min(1.1, 0.42 + 0.7 * (nx * lx + ny * ly + lz) / nl)), hm = (h00 + h10 + h01 + h11) / 4;
+          // 柔和明暗：四個頂點法向量平均
+          var nx = (nxv[a2] + nxv[b2] + nxv[c2] + nxv[d2]) / 4, ny = (nyv[a2] + nyv[b2] + nyv[c2] + nyv[d2]) / 4, nl = Math.sqrt(nx * nx + ny * ny + 1);
+          var ndl = (nx * L[0] + ny * L[1] + L[2]) / nl, lam = Math.max(0.45, Math.min(1.12, ss.light * 0.95 * (1 + 0.8 * (ndl - L[2])))), hm = (hs[a2] + hs[b2] + hs[c2] + hs[d2]) / 4;
           var cx = gr.ox + (i2 + 0.5) * cs, cyy = gr.oy + (j2 + 0.5) * cs, m = valleyMask(cx, cyy), col;
-          if (isWater(seed, cx, cyy)) col = mix(th.water, [255, 255, 255], 0.06 * Math.sin(cx * 0.05 + cyy * 0.04) + 0.04);
-          else {
+          if (isWater(seed, cx, cyy)) {
+            col = mix(waterCol, [255, 255, 255], 0.05 * Math.sin(cx * 0.05 + cyy * 0.04) + 0.05);
+          } else {
             col = mix(th.grass, th.hill, Math.min(1, m * 1.3));
             col = mix(col, th.grassHi, Math.max(0, 0.5 - Math.abs(fbm(cx / 90, cyy / 90, seed + 3) - 0.5) * 3) * (1 - m) * 0.45);
+            var tp = teaPatch(seed, cx, cyy, m); // 茶園梯田
+            if (tp > 0.02) {
+              var slope = Math.sqrt(nx * nx + ny * ny), band = slope > 0.03 ? terraceBand(hm) : 1;
+              col = mix(col, mix(soilCol, teaCol, 0.35 + 0.65 * band), tp * 0.6);
+            }
             if (hm > 150) col = mix(col, th.rock, Math.min(1, (hm - 150) / 120));
+            col = mix(col, [col[0] + 6 * (hash2(i2, j2, seed) - 0.5) * 2, col[1] + 6 * (hash2(i2, j2, seed + 1) - 0.5) * 2, col[2]], 0.6); // 一點點手繪色塊个變化
           }
-          col = [col[0] * lam, col[1] * lam, col[2] * lam];
+          col = [col[0] * lam * lightTint[0], col[1] * lam * lightTint[1], col[2] * lam * lightTint[2]];
           var fg = Math.max(0, Math.min(1, (dr.z - fogS) / (fogE - fogS)));
-          if (fg > 0) col = mix(col, th.fog, fg);
+          if (fg > 0) col = mix(col, fogC, fg);
           var s2 = rgb(col);
-          ctx.fillStyle = s2; ctx.strokeStyle = s2; ctx.lineWidth = 0.8;
+          ctx.fillStyle = s2; ctx.strokeStyle = s2; ctx.lineWidth = 0.9;
           ctx.beginPath(); ctx.moveTo(vx[a2], vy[a2]); ctx.lineTo(vx[b2], vy[b2]); ctx.lineTo(vx[d2], vy[d2]); ctx.lineTo(vx[c2], vy[c2]); ctx.closePath(); ctx.fill(); ctx.stroke();
+          if (!coarse && isWater(seed, cx, cyy) && hash2(i2, j2, seed + 9) < 0.22) { // 水面波光
+            var mxp = (vx[a2] + vx[d2]) / 2, myp = (vy[a2] + vy[d2]) / 2, wl = Math.abs(vx[b2] - vx[a2]) * 0.4;
+            ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 * (1 - fg)) + ')'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.moveTo(mxp - wl, myp); ctx.lineTo(mxp + wl, myp - 0.6); ctx.stroke();
+          }
+        } else if (dr.t === 2) {
+          drawDecor(dr, th, fogS, fogE, lightTint, ss.light);
         } else {
           var key = dr.q.stage + (lod ? 'l' : 'f'), img = sprites[key] || (sprites[key] = opts.sprite(dr.q.stage, lod));
           if (!img) { pending = true; return; }
@@ -226,6 +383,8 @@
           ctx.globalAlpha = 1;
         }
       });
+      var gp = grainPattern();
+      if (gp) { ctx.fillStyle = gp; ctx.fillRect(0, 0, W, H); } // 紙紋
       lastCam = cam;
       overlay();
       return pending;
@@ -382,7 +541,7 @@
 
   return {
     VALLEY: VALLEY, TREE_H: TREE_H, FOV: FOV,
-    heightAt: heightAt, heightWithPads: heightWithPads, isWater: isWater, streamD: streamD, valleyMask: valleyMask,
+    heightAt: heightAt, heightWithPads: heightWithPads, isWater: isWater, sunState: sunState, teaPatch: teaPatch, terraceBand: terraceBand, decorAt: decorAt, streamD: streamD, valleyMask: valleyMask,
     plotToWorld: plotToWorld, worldToPlot: worldToPlot,
     camera: camera, project: project, groundHit: groundHit, create: create
   };
