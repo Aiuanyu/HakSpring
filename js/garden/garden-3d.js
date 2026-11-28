@@ -83,6 +83,15 @@
     return { dir: dir, elev: elev, warm: warm, light: light, night: night, sky: night ? 'night' : (warm > 0.25 ? 'golden' : 'day') };
   }
 
+  // 樹个影子：腳下一圈柔和个接地影（隨階段大小），加一條順著光線反方向拉長个投影（日頭低就拉長、夜裡月光就淡）。
+  // sun＝sunState() 个結果；stage＝0~5。回傳 { rContact, len, dx, dy（影子倒向，水平單位向量）, aContact, aCast }
+  function shadowParams(sun, stage) {
+    var rC = [9, 11, 17, 25, 27, 27][stage] || 20, hl = Math.sqrt(sun.dir[0] * sun.dir[0] + sun.dir[1] * sun.dir[1]);
+    var dx = hl > 0.001 ? -sun.dir[0] / hl : 0, dy = hl > 0.001 ? -sun.dir[1] / hl : 0;
+    var len = Math.max(12, Math.min(150, TREE_H * 0.75 * (hl / Math.max(sun.dir[2], 0.18)))) * (stage >= 2 ? [0, 0, 0.5, 0.9, 1, 1][stage] : 0);
+    return { rContact: rC, len: len, dx: dx, dy: dy, aContact: sun.night ? 0.2 : 0.3, aCast: stage >= 2 ? (sun.night ? 0.1 : 0.19 + 0.09 * sun.warm) : 0 };
+  }
+
   // 茶園梯田：丘陵坡地上一塊一塊个茶園，等高線方向一排一排
   function teaPatch(seed, cx, cy, m) { // 0~1：這一格係茶園个程度
     var p = fbm(cx / 240 + 5, cy / 240 + 5, seed + 17);
@@ -209,12 +218,39 @@
       return cache;
     }
 
+    // 地面上个橢圓（世界座標）投影成多邊形並填色
+    function fillWorldEllipse(cam, cx, cy, rx, ry, ang, color) {
+      var ca = Math.cos(ang), sa = Math.sin(ang), first = true;
+      ctx.beginPath();
+      for (var k = 0; k < 24; k++) {
+        var a = k / 24 * 6.2832, ex = Math.cos(a) * rx, ey = Math.sin(a) * ry, x = cx + ex * ca - ey * sa, y = cy + ex * sa + ey * ca, p = project(cam, x, y, hf(x, y) + 0.8);
+        if (!p) return;
+        if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+    }
+    // 樹个影子：先畫投影（順光線反方向拉長），再畫腳下接地影；都係多層疊起來，邊緣柔和
+    function drawTreeShadow(cam, w, stage, ss, fog) {
+      var sp = shadowParams(ss, stage), a = 1 - fog * 0.85;
+      if (sp.len > 1 && sp.aCast > 0) {
+        var ang = Math.atan2(sp.dy, sp.dx), L = sp.len, r = sp.rContact * 0.85;
+        for (var s = 0; s < 3; s++) {
+          var sc = [1, 0.78, 0.56][s];
+          fillWorldEllipse(cam, w.x + sp.dx * L * 0.5, w.y + sp.dy * L * 0.5, (L * 0.5 + r) * sc, r * 0.9 * sc, ang, 'rgba(18,28,20,' + (sp.aCast * a * [0.4, 0.4, 0.5][s]) + ')');
+        }
+      }
+      for (var c = 0; c < 3; c++) {
+        var cs2 = [1, 0.74, 0.5][c];
+        fillWorldEllipse(cam, w.x, w.y, sp.rContact * cs2 * 1.15, sp.rContact * cs2 * 0.85, 0, 'rgba(18,24,14,' + (sp.aContact * a * [0.38, 0.4, 0.55][c]) + ')');
+      }
+    }
     // 石頭、草叢、野花、水草：幾筆向量，大小隨遠近
     function drawDecor(dr, th, fogS, fogE, tint, light) {
       var dc = dr.dc, p = dr.p, k = p.k, fg = Math.max(0, Math.min(1, (p.zc - fogS) / (fogE - fogS))), a = 1 - fg * 0.85, v = dc.v;
       ctx.globalAlpha = a;
       var sh = Math.min(1.1, 0.5 + light * 0.55);
       if (dc.type === 'rock') {
+        ctx.fillStyle = 'rgba(18,24,14,' + (0.25 * a) + ')'; ctx.beginPath(); ctx.ellipse(p.x + dc.size * k * 0.15, p.y, dc.size * k * 0.75, dc.size * k * 0.22, 0, 0, 7); ctx.fill();
         var w = dc.size * k, h = w * 0.62, base = mix(th.rock, [90, 90, 90], 0.25);
         ctx.fillStyle = rgb([base[0] * sh * tint[0], base[1] * sh * tint[1], base[2] * sh * tint[2]]); ctx.strokeStyle = 'rgba(40,40,40,.45)'; ctx.lineWidth = Math.max(0.6, w * 0.05);
         ctx.beginPath(); ctx.moveTo(p.x - w * 0.6, p.y); ctx.lineTo(p.x - w * 0.4, p.y - h * 0.8); ctx.lineTo(p.x + w * (0.05 + v * 0.1), p.y - h); ctx.lineTo(p.x + w * 0.55, p.y - h * 0.5); ctx.lineTo(p.x + w * 0.62, p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -376,8 +412,10 @@
           drawDecor(dr, th, fogS, fogE, lightTint, ss.light);
         } else {
           var key = dr.q.stage + (lod ? 'l' : 'f'), img = sprites[key] || (sprites[key] = opts.sprite(dr.q.stage, lod));
+          var fgt = Math.max(0, Math.min(1, (dr.p.zc - fogS) / (fogE - fogS)));
+          drawTreeShadow(cam, dr.w, dr.q.stage, ss, fgt);
           if (!img) { pending = true; return; }
-          var sc = TREE_H * dr.p.k / 207, fgt = Math.max(0, Math.min(1, (dr.p.zc - fogS) / (fogE - fogS)));
+          var sc = TREE_H * dr.p.k / 207;
           ctx.globalAlpha = 1 - fgt * 0.8;
           ctx.drawImage(img, dr.p.x - 100 * sc, dr.p.y - 207 * sc, 200 * sc, 240 * sc);
           ctx.globalAlpha = 1;
@@ -574,7 +612,7 @@
 
   return {
     VALLEY: VALLEY, TREE_H: TREE_H, FOV: FOV,
-    heightAt: heightAt, heightWithPads: heightWithPads, isWater: isWater, sunState: sunState, teaPatch: teaPatch, terraceBand: terraceBand, decorAt: decorAt, streamD: streamD, valleyMask: valleyMask,
+    heightAt: heightAt, heightWithPads: heightWithPads, isWater: isWater, sunState: sunState, shadowParams: shadowParams, teaPatch: teaPatch, terraceBand: terraceBand, decorAt: decorAt, streamD: streamD, valleyMask: valleyMask,
     plotToWorld: plotToWorld, worldToPlot: worldToPlot,
     camera: camera, project: project, groundHit: groundHit, create: create
   };

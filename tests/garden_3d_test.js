@@ -120,4 +120,19 @@ console.log('  ✅ 旋轉換邊（被擋著个樹轉得出來）PASS');
   console.log('  ✅ 茶園梯田摎地面裝飾（確定性、毋在水裡、水草在溪邊、各種類都有）PASS');
 }
 
+// 10. 樹个影子：倒向光線反方向、日頭低拉長、夜裡較淡、種子無投影、階段愈大腳下影愈大
+{
+  const noon = G3.sunState(12, false), gold = G3.sunState(17.5, false), morning = G3.sunState(7, false), night = G3.sunState(23, false);
+  const sNoon = G3.shadowParams(noon, 4), sGold = G3.shadowParams(gold, 4), sMorn = G3.shadowParams(morning, 4), sNight = G3.shadowParams(night, 4);
+  assert.ok(sGold.len > sNoon.len * 2, '黃昏影子拉長（' + sGold.len.toFixed(0) + ' vs 正午 ' + sNoon.len.toFixed(0) + '）');
+  assert.ok(sGold.dx > 0.5 && sMorn.dx < -0.5, '傍晚太陽在西、影子倒向東；早上相反');
+  assert.ok(Math.abs(Math.hypot(sGold.dx, sGold.dy) - 1) < 1e-9, '方向係單位向量');
+  assert.ok(sNight.aCast < sNoon.aCast && sNight.aContact < sNoon.aContact, '夜裡較淡');
+  assert.strictEqual(G3.shadowParams(noon, 0).len, 0, '種子無投影');
+  assert.strictEqual(G3.shadowParams(noon, 1).aCast, 0);
+  assert.ok(G3.shadowParams(noon, 5).rContact > G3.shadowParams(noon, 0).rContact, '大樹腳下影較大');
+  for (let h = 0; h < 24; h += 0.5) for (let st = 0; st < 6; st++) { const sp = G3.shadowParams(G3.sunState(h, false), st); assert.ok(Number.isFinite(sp.len) && sp.len >= 0 && sp.len <= 150 && sp.aContact > 0 && sp.aCast >= 0 && sp.aCast < 0.5); }
+  console.log('  ✅ 樹个影子（方向、長短、夜裡、階段）PASS');
+}
+
 console.log('✅ garden_3d_test 全部通過');
