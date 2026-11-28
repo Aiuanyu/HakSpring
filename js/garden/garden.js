@@ -97,6 +97,20 @@
     resetAll: function () { state = { bank: 0, poured: 0, day: '', credited: 0, demo: 0 }; save(state); sync(); }
   };
 
+  // 庭院標題：「<名>个客源翠丹墀坪／庭院」；無設定名仔就淨「客源翠丹墀坪／庭院」
+  function userName() {
+    try { return (localStorage.getItem('hakkaUserName') || '').trim(); } catch (e) { return ''; }
+  }
+  function gardenTitle() {
+    var n = userName();
+    return (n ? n + '个' : '') + '客源翠丹墀坪／庭院';
+  }
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   function treeSvg(idx) {
     var g = '';
     if (idx === 0) {
@@ -195,8 +209,8 @@
       var idx = stageIndex(state.poured);
       el.innerHTML =
         '<div class="hg-card">' +
-          '<h6>🌱 客源翠庭院</h6>' +
-          '<div class="hg-yard"><svg viewBox="0 0 320 280" role="img" aria-label="庭院裡的一欉樹">' +
+          '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
+          '<div class="hg-yard"><svg viewBox="0 0 320 280" role="img" aria-label="' + esc(gardenTitle()) + '，庭院裡的一欉樹">' +
             '<rect x="0" y="238" width="320" height="42" fill="var(--hg-grass)"/>' +
             '<ellipse cx="160" cy="250" rx="70" ry="12" fill="var(--hg-ground)"/>' +
             '<g class="hg-tree' + (popped ? ' pop' : '') + '">' + treeSvg(idx) + '</g>' +
@@ -250,6 +264,8 @@
   window.hakfaGarden = {
     mount: mount,
     sync: sync,
+    // 使用者名仔改了、抑係共步下來新名仔，重畫標題
+    refresh: function () { if (dock.refresh) dock.refresh(); },
     dev: dev, // 開發者面板用，亦可在 Console 直接呼叫（例：hakfaGarden.dev.addBank(3)）
     pour: pour,
     getState: function () { return JSON.parse(JSON.stringify(state)); },
@@ -275,13 +291,13 @@
     btn.id = 'gardenDockBtn';
     btn.type = 'button';
     btn.className = 'hg-dock-btn';
-    btn.setAttribute('aria-label', '庭院');
+    btn.setAttribute('aria-label', gardenTitle());
     btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = '<span aria-hidden="true">💧</span><span class="hg-badge" id="gardenDockBadge" hidden>0</span>';
     var pane = document.createElement('aside');
     pane.id = 'gardenDockPane';
     pane.className = 'hg-dock-pane';
-    pane.setAttribute('aria-label', '客源翠庭院');
+    pane.setAttribute('aria-label', gardenTitle());
     pane.hidden = true;
     var closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -307,7 +323,12 @@
       if (open) mount(body);
       try { localStorage.setItem(DOCK_OPEN_KEY, open ? '1' : '0'); } catch (e) { /* 無法存就算 */ }
     }
-    dock.refresh = function () { updateBadge(); if (!pane.hidden) mount(body); };
+    dock.refresh = function () {
+      btn.setAttribute('aria-label', gardenTitle());
+      pane.setAttribute('aria-label', gardenTitle());
+      updateBadge();
+      if (!pane.hidden) mount(body);
+    };
 
     btn.addEventListener('click', function () { setOpen(pane.hidden); });
     closeBtn.addEventListener('click', function () { setOpen(false); });

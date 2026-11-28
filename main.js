@@ -4347,6 +4347,10 @@ function initializeAppUI() {
       const statsModalTitle = document.getElementById('statsModalTitle');
       if (statsModalTitle) statsModalTitle.textContent = '學習戰績面板';
     }
+    // 庭院標題摎使用者名仔連動
+    if (window.hakfaGarden && typeof window.hakfaGarden.refresh === 'function') {
+      window.hakfaGarden.refresh();
+    }
   }
 
   // 暴露給全域以便設定視窗儲存後呼叫

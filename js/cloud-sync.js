@@ -539,6 +539,8 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
     }
   }
   localStorage.setItem('hakkaUserLocation', finalUserLocation);
+  // 共步下來个名仔、地點馬上反映到標題（含庭院）
+  if (typeof window.updateAppTitles === 'function') window.updateAppTitles();
 
   // 4. 推進快照（手動匯入直接推進；雲端同步則在 Smart Push 後推進）
   if (isFromManual) {
@@ -1494,11 +1496,16 @@ function bindCloudKeyUI() {
   const els = cloudKeyEls();
   if (!els.EnableBtn) return;
 
-  const runSync = async (doneText) => {
+  // welcomeByName＝true：共步成功、而且（雲端拉下來／本機）有使用者名仔，就改用名仔歡迎
+  const runSync = async (doneText, welcomeByName) => {
     setCloudKeyStatus('共步中…');
     await syncFromCloud();
     const failed = document.getElementById('manualSyncBtn')?.classList.contains('sync-error');
-    setCloudKeyStatus(failed ? '共步失敗，請稍後再試。' : doneText, failed);
+    const name = (localStorage.getItem('hakkaUserName') || '').trim();
+    const text = !failed && welcomeByName && name
+      ? `既經共步「${name}」个設定同進度。歡迎轉來！`
+      : doneText;
+    setCloudKeyStatus(failed ? '共步失敗，請稍後再試。' : text, failed);
   };
 
   els.EnableBtn.onclick = async () => {
@@ -1521,7 +1528,7 @@ function bindCloudKeyUI() {
     setSyncKey(raw);
     els.Input.value = '';
     renderCloudKeyUI();
-    await runSync('已連結，資料已合併。');
+    await runSync('已連結，資料已合併。', true);
   };
 
   els.ToggleBtn.onclick = () => {
@@ -1545,7 +1552,7 @@ function bindCloudKeyUI() {
     }
   };
 
-  els.SyncNowBtn.onclick = () => runSync('已共步。');
+  els.SyncNowBtn.onclick = () => runSync('已共步。', true);
 
   els.DisableBtn.onclick = () => {
     if (!confirm('停用這台裝置个雲端同步？（淨清掉這台裝置个金鑰；雲端資料摎本機資料都毋會刪）\n請先確定金鑰有存好，毋然會拿毋轉。')) return;
