@@ -514,13 +514,31 @@
       return out;
     }
 
+    // ---- 點中樹自動聚焦：鏡頭柔和移到該欉、稍微拉近（約 0.5 秒；減少動態就直接到位） ----
+    var tween = null, tweenRaf = 0;
+    function stopTween() { tween = null; if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = 0; } }
+    function stepTween() {
+      tweenRaf = 0;
+      if (!tween) return;
+      var u = Math.min(1, (performance.now() - tween.t0) / tween.dur), e = 1 - Math.pow(1 - u, 3);
+      cam3.tx = tween.from.tx + (tween.to.tx - tween.from.tx) * e; cam3.ty = tween.from.ty + (tween.to.ty - tween.from.ty) * e; cam3.dist = tween.from.dist + (tween.to.dist - tween.from.dist) * e;
+      if (u < 1) { render(true); tweenRaf = requestAnimationFrame(stepTween); } else { tween = null; schedule(false); }
+    }
+    function focusPlot(plot, dist) {
+      var w = plotToWorld(plot.x, plot.y), to = { tx: w.x, ty: w.y, dist: Math.min(cam3.dist, dist || 470) };
+      stopTween();
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { cam3.tx = to.tx; cam3.ty = to.ty; cam3.dist = to.dist; schedule(false); return; }
+      tween = { t0: performance.now(), dur: 520, from: { tx: cam3.tx, ty: cam3.ty, dist: cam3.dist }, to: to };
+      stepTween();
+    }
+
     return {
-      cam: cam3, HOME: HOME,
+      cam: cam3, HOME: HOME, focusPlot: focusPlot, stopTween: stopTween,
       resize: function () { resize(); schedule(false); },
       render: function (coarse) { schedule(!!coarse); },
-      rotate: function (dyaw, dpitch) { cam3.yaw += dyaw; cam3.pitch = Math.max(0.22, Math.min(1.38, cam3.pitch + dpitch)); schedule(true); },
-      zoom: function (f) { cam3.dist = Math.max(220, Math.min(1700, cam3.dist * f)); schedule(true); },
-      reset: function () { cam3.yaw = HOME.yaw; cam3.pitch = HOME.pitch; cam3.dist = HOME.dist; cam3.tx = 0; cam3.ty = 0; schedule(false); },
+      rotate: function (dyaw, dpitch) { stopTween(); cam3.yaw += dyaw; cam3.pitch = Math.max(0.22, Math.min(1.38, cam3.pitch + dpitch)); schedule(true); },
+      zoom: function (f) { stopTween(); cam3.dist = Math.max(220, Math.min(1700, cam3.dist * f)); schedule(true); },
+      reset: function () { stopTween(); cam3.yaw = HOME.yaw; cam3.pitch = HOME.pitch; cam3.dist = HOME.dist; cam3.tx = 0; cam3.ty = 0; schedule(false); },
       focus: function (wx, wy) { cam3.tx = wx; cam3.ty = wy; schedule(false); },
       setGhost: function (gh) { ghost = gh; overlay(); },
       playDrop: playDrop,

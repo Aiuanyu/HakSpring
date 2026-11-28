@@ -729,6 +729,7 @@
         selectPlot(((state.sel + step) % np + np) % np);
         msg = '選著第 ' + (state.sel + 1) + ' 塊地';
         draw(false);
+        if (use3d) focusSel();
       } else if (b.getAttribute('data-hg') === 'sel') {
         if (justDragged || placing) return; // 拖曳放手、或種植模式中，毋當作選樹
         selectPlot(parseInt(b.getAttribute('data-i'), 10) || 0);
@@ -776,6 +777,7 @@
       if (!canPlaceAt(g.px, g.py)) return { ok: false, why: '忒近別欉樹矣，挑較遠个位' };
       return { ok: true, x: g.px, y: g.py, g: g };
     }
+    function focusSel() { if (v3 && selPlot()) v3.focusPlot(selPlot()); } // 選著一欉，鏡頭柔和移過去
     function tapSelect3(ev) {
       var c = v3 ? v3.pick(ev.clientX, ev.clientY) : [];
       if (!c.length) { lastPick3 = null; return false; }
@@ -841,11 +843,11 @@
         var d = drag; drag = null;
         if (!(wasTap && d && host && ev.type === 'pointerup')) return;
         if (three) {
-          if (!placing) { if (tapSelect3(ev)) draw(false); }
+          if (!placing) { if (tapSelect3(ev)) { draw(false); focusSel(); } }
           else {
             var sp = plantSpot3(ev);
             if (!sp.ok) { msg = sp.why; draw(false); }
-            else if (plant(placing, { x: sp.x, y: sp.y })) { var k3 = placing; placing = null; msg = '種下去矣！第 ' + state.plots.length + ' 塊地（' + SEEDS[k3].name + '）'; draw(true); }
+            else if (plant(placing, { x: sp.x, y: sp.y })) { var k3 = placing; placing = null; msg = '種下去矣！第 ' + state.plots.length + ' 塊地（' + SEEDS[k3].name + '）'; draw(true); focusSel(); }
             else { msg = '毋做得種'; placing = null; draw(false); }
           }
         } else if (!placing && svg) { // 點一下：選樹
