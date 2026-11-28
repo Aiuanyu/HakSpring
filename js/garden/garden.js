@@ -1,7 +1,7 @@
 // 客源翠庭院：樹、水缸、樹仁（種子）。
 // 資料結構見 js/garden/garden-data.js（版本化、只增不減个帳本，跨裝置合併毋會互相蓋掉，改版有升級路徑摎備份）。
 // 本檔：把帳本接到畫面、答題摎音檔入帳、雲端同步介面（mergeIncoming／exportForSync）、開發者面板。
-// 水滴「推算」自既有个 hakkaDailyStats（唯讀）摎完整播完个音檔擺數；入帳無上限、澆水無日限；無肥料；幾日無來樹毋會枯。
+// 水滴「推算」自既有个 hakkaDailyStats（唯讀）摎完整播完个音檔擺數；入帳無上限、淋水無日限；無肥料；幾日無來樹毋會枯。
 (function () {
   'use strict';
 
@@ -18,7 +18,7 @@
   // 種子種類：price＝幾滴水換 1 粒。往後新種類（性質／等級）加在這，價錢無共樣
   var SEEDS = { common: { name: '🌰 樹仁', price: 10 } };
   var MAX_PLOTS = GD.MAX_PLOTS; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
-  // 階段：落泥、生筍、樹秧、大樹、開花、打子（結出種莢，預埋往後會有產物个伏筆）。at＝累積澆幾滴到這階段（暫定）
+  // 階段：落泥、生筍、樹秧、大樹、開花、打子（結出種莢，預埋往後會有產物个伏筆）。at＝累積淋幾滴到這階段（暫定）
   var STAGES = [
     { at: 0, name: '🌰 落泥' },
     { at: 1, name: '🌱 生筍' },
@@ -147,7 +147,7 @@
     if (!q) return null;
     if (stageIndex(q.n) >= STAGES.length - 1) return null; // 打子矣，毋使再過淋水
     var before = stageIndex(q.n);
-    if (!GD.pour(G, q.id, local.dev)) return null; // 澆水無日限：一日就看著一欉樹開花也做得
+    if (!GD.pour(G, q.id, local.dev)) return null; // 淋水無日限：一日就看著一欉樹開花也做得
     persist(true);
     return { grew: stageIndex(selPlot().n) > before, stage: stageIndex(selPlot().n) };
   }
@@ -669,12 +669,12 @@
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
           yardHtml(popped) +
           '<div class="hg-msg" aria-live="polite">' + shown + '</div>' +
-          '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '<button type="button" class="hg-step" data-hg="prev" aria-label="上一欉">‹</button> 第 ' + (state.sel + 1) + '／' + state.plots.length + ' 塊 <button type="button" class="hg-step" data-hg="next" aria-label="下一欉">›</button>：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
-            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '澆水') + '</button></div>' +
+          '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '<button type="button" class="hg-step" data-hg="prev" aria-label="上一欉">‹</button> 第 ' + (state.sel + 1) + '／' + state.plots.length + ' 塊 <button type="button" class="hg-step" data-hg="next" aria-label="下一欉">›</button>：' : '') + STAGES[idx].name + '（已淋 ' + q.n + ' 滴）</small></div>' +
+            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '淋水') + '</button></div>' +
           seedRows +
           '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播完音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo">＋1 測試水滴</button>' : '') + '</div>' +
-          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每完整播完 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，澆水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
+          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每完整播完 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，淋水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
       if (use3d) init3d();
@@ -692,13 +692,14 @@
         if (!r) return;
         msg = r.grew ? '長大了！' + STAGES[r.stage].name : '咕嚕咕嚕～';
         draw(r.grew);
+        if (v3) v3.playDrop((selPlot() || {}).id, r.grew); // 類 3D：一大滴水落下、濺開
         var g = el.querySelector('.hg-drops');
         if (g) {
           // 外包一層 <g> 放位置：CSS 動畫个 transform 會蓋掉元素自家个 transform 屬性
           var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           wrap.setAttribute('transform', selTransform());
           var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          p.setAttribute('d', 'M100 44 q-8 14 0 18 q8 -4 0 -18z');
+          p.setAttribute('d', 'M100 18 q-20 34 0 42 q20 -8 0 -42z');
           p.setAttribute('class', 'hg-drop');
           wrap.appendChild(p);
           g.appendChild(wrap);

@@ -43,7 +43,7 @@ assert.ok(r.state.plots.p0 && !r.state.plots['../evil']);
 assert.deepStrictEqual(r.state.buys, { common: {} });
 console.log('  ✅ 壞資料清洗 PASS');
 
-// 5. 操作：入帳、澆水、買種子、種下
+// 5. 操作：入帳、淋水、買種子、種下
 s = G.emptyState('2026-11-28');
 G.setEarned(s, '2026-11-28', 25);
 assert.strictEqual(D(s).bank, 25);
@@ -72,7 +72,7 @@ assert.ok(G.equal(AB, BA), '交換律');
 assert.ok(G.equal(G.merge(AB, AB), AB), '冪等');
 assert.ok(G.equal(G.merge(G.merge(A, B), A), AB), '重複合併毋會變');
 d = D(AB);
-assert.strictEqual(d.plots.find((p) => p.id === 'p0').n, 3, '兩邊澆水加起來');
+assert.strictEqual(d.plots.find((p) => p.id === 'p0').n, 3, '兩邊淋水加起來');
 assert.deepStrictEqual(d.plots.map((p) => p.id).sort(), ['A1', 'B1', 'p0']);
 assert.strictEqual(d.bank, 30 - 3 - 20);
 assert.strictEqual(G.audioTotal(AB, '2026-11-28'), 2);

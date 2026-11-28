@@ -243,6 +243,72 @@
       for (i = 1; i < pts.length; i++) octx.lineTo(pts[i].x, pts[i].y);
       octx.closePath(); octx.lineWidth = lw || 3; octx.strokeStyle = color; octx.setLineDash(dashed ? [7, 5] : []); octx.stroke(); octx.setLineDash([]);
     }
+    // ---- 淋水特效：一大滴水從樹冠上方落下，落到樹冠濺開，腳下盪出水波；長大个時節多幾顆星光。淨動 1.1 秒，結束就停 ----
+    var fx = null, fxRaf = 0;
+    function easeIn(u) { return u * u; }
+    function drawDrop(x, y, r, th, squash) { // 水滴形狀（尖頭向上）
+      octx.save(); octx.translate(x, y); octx.scale(1 - squash, 1 + squash);
+      octx.beginPath(); octx.moveTo(0, -r * 1.9);
+      octx.bezierCurveTo(r * 0.2, -r * 1.2, r * 1.0, -r * 0.5, r * 1.0, r * 0.15);
+      octx.arc(0, r * 0.15, r * 1.0, 0, Math.PI, false);
+      octx.bezierCurveTo(-r * 1.0, -r * 0.5, -r * 0.2, -r * 1.2, 0, -r * 1.9);
+      octx.closePath();
+      octx.fillStyle = rgb(th.ring); octx.fill();
+      octx.lineWidth = Math.max(1.5, r * 0.18); octx.strokeStyle = 'rgba(255,255,255,.9)'; octx.stroke();
+      octx.beginPath(); octx.ellipse(-r * 0.38, -r * 0.05, r * 0.2, r * 0.38, 0.3, 0, 7); octx.fillStyle = 'rgba(255,255,255,.75)'; octx.fill();
+      octx.restore();
+    }
+    function drawFx() {
+      if (!fx || !lastCam) return;
+      var th = opts.theme(), seed = opts.seed(), plot = null;
+      opts.plots().forEach(function (q) { if (q.id === fx.id) plot = q; });
+      if (!plot) return;
+      var w = plotToWorld(plot.x, plot.y), p = project(lastCam, w.x, w.y, hf(w.x, w.y) + 1.2);
+      if (!p) return;
+      var sc = TREE_H * p.k / 207, u = (performance.now() - fx.t0) / 1000, cxp = p.x, cyp = p.y - 100 * sc, topY = p.y - 215 * sc;
+      var R = Math.max(17, 36 * sc); // 一大滴：隨遠近縮放，最小也有 17px（毋會遠遠看無）
+      if (fx.still) { // 「減少動態」：不動，淨閃一圈水波
+        ring(lastCam, w.x, w.y, 46, rgb(th.ring), false, 5); drawDrop(cxp, cyp - R * 2, R, th, 0); return;
+      }
+      if (u < 0.55) { // 落下
+        var k = easeIn(u / 0.55), y = topY + (cyp - topY) * k;
+        drawDrop(cxp, y, R * (0.9 + 0.2 * k), th, 0.1 * Math.sin(u * 30));
+      } else if (u < 1.1) { // 濺開
+        var s = (u - 0.55) / 0.55;
+        octx.globalAlpha = Math.max(0, 0.45 * (1 - s)); // 樹冠被淋著，閃一下水光
+        var gl = octx.createRadialGradient(cxp, cyp, 0, cxp, cyp, R * 5);
+        gl.addColorStop(0, rgb(th.ring)); gl.addColorStop(1, 'rgba(255,255,255,0)');
+        octx.fillStyle = gl; octx.beginPath(); octx.arc(cxp, cyp, R * 5, 0, 7); octx.fill();
+        octx.globalAlpha = Math.max(0, 1 - s);
+        ring(lastCam, w.x, w.y, 20 + 46 * s, rgb(th.ring), false, 4.5 * (1 - s) + 1);
+        ring(lastCam, w.x, w.y, 10 + 30 * s, rgb(th.ring), false, 3 * (1 - s) + 1);
+        for (var i = 0; i < 9; i++) { // 水珠
+          var a = i / 9 * 6.2832, d = R * (0.8 + 2.6 * s), px = cxp + Math.cos(a) * d * 1.3, py = cyp + Math.sin(a) * d * 0.6 - Math.sin(s * 3.14) * R * 1.8 + s * s * R * 2.2;
+          octx.beginPath(); octx.arc(px, py, Math.max(1.5, R * 0.22 * (1 - s * 0.5)), 0, 7); octx.fillStyle = rgb(th.ring); octx.fill();
+        }
+        if (fx.grew) { // 長大：星光往上飄
+          for (var j = 0; j < 6; j++) {
+            var sa = j / 6 * 6.2832 + 0.4, sd = R * (1.2 + 2.4 * s), sx = cxp + Math.cos(sa) * sd, sy = cyp - 10 * sc - s * R * 3 + Math.sin(sa) * sd * 0.4;
+            octx.fillStyle = '#ffd23f'; octx.beginPath();
+            octx.moveTo(sx, sy - R * 0.7); octx.lineTo(sx + R * 0.2, sy - R * 0.2); octx.lineTo(sx + R * 0.7, sy); octx.lineTo(sx + R * 0.2, sy + R * 0.2);
+            octx.lineTo(sx, sy + R * 0.7); octx.lineTo(sx - R * 0.2, sy + R * 0.2); octx.lineTo(sx - R * 0.7, sy); octx.lineTo(sx - R * 0.2, sy - R * 0.2); octx.closePath(); octx.fill();
+          }
+        }
+        octx.globalAlpha = 1;
+      }
+    }
+    function tickFx() {
+      fxRaf = 0;
+      if (!fx) return;
+      overlay();
+      if (fx.still ? performance.now() - fx.t0 < 700 : performance.now() - fx.t0 < 1100) fxRaf = requestAnimationFrame(tickFx);
+      else { fx = null; overlay(); }
+    }
+    function playDrop(id, grew) {
+      fx = { id: id, t0: performance.now(), grew: !!grew, still: !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) };
+      if (fxRaf) cancelAnimationFrame(fxRaf);
+      tickFx();
+    }
     function overlay() {
       octx.clearRect(0, 0, W, H);
       if (!lastCam) return;
@@ -255,6 +321,7 @@
           ring(lastCam, ghost.wx, ghost.wy, 34, ghost.ok ? rgb(th.ring) : '#c62828', !ghost.ok, 3.5);
         }
       }
+      drawFx();
     }
     function schedule(coarse) {
       if (!raf) raf = requestAnimationFrame(function () {
@@ -297,6 +364,7 @@
       reset: function () { cam3.yaw = HOME.yaw; cam3.pitch = HOME.pitch; cam3.dist = HOME.dist; cam3.tx = 0; cam3.ty = 0; schedule(false); },
       focus: function (wx, wy) { cam3.tx = wx; cam3.ty = wy; schedule(false); },
       setGhost: function (gh) { ghost = gh; overlay(); },
+      playDrop: playDrop,
       overlay: overlay, groundAt: groundAt, pick: pick,
       // 測試用：某塊地樹冠中心个螢幕座標（clientX/Y），看無（鏡頭後背）回 null
       screenOf: function (plot) {

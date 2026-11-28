@@ -877,7 +877,7 @@ function showGardenDropHint(n) {
   const el = document.createElement('div');
   el.id = 'garden-drop-hint';
   el.setAttribute('role', 'status');
-  el.textContent = '💧 庭院多 ' + n + ' 滴水，去「戰績」澆水';
+  el.textContent = '💧 庭院多 ' + n + ' 滴水，去「戰績」淋水';
   el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;' +
     'padding:8px 14px;border-radius:999px;background:#1f5f99;color:#fff;font-size:.9rem;box-shadow:0 2px 8px rgba(0,0,0,.3);';
   document.body.appendChild(el);

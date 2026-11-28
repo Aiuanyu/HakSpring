@@ -155,8 +155,8 @@ function makeDevice(label) {
     console.log('  ✅ 2. 兩台裝置同步（水缸、地塊、種子；統計毋重複入帳）PASS');
   }
   {
-    // 並行：各自離線澆水，再同步，兩邊个努力都留等
-    // 兩台都改成澆起始地（選取地塊係各裝置自家个私人狀態），重載模組讀入
+    // 並行：各自離線淋水，再同步，兩邊个努力都留等
+    // 兩台都改成淋起始地（選取地塊係各裝置自家个私人狀態），重載模組讀入
     for (const g of [A, B]) {
       const l = JSON.parse(g.store.get('hakfaGardenLocal')); l.sel = 'p0'; g.store.set('hakfaGardenLocal', JSON.stringify(l));
       vm.runInContext(fs.readFileSync(path.join(root, 'js/garden/garden.js'), 'utf8'), g);
@@ -167,10 +167,10 @@ function makeDevice(label) {
     await A.syncToCloud(); await B.syncFromCloud(); await A.syncFromCloud();
     const a = A.G().getState(), b = B.G().getState();
     assert.deepStrictEqual(a.plots.map((p) => [p.id, p.n]), b.plots.map((p) => [p.id, p.n]), '兩台最後一模共樣');
-    assert.strictEqual(a.plots.find((p) => p.id === 'p0').n, 6, 'A 澆 2 ＋ B 澆 4，毋會互相蓋掉');
+    assert.strictEqual(a.plots.find((p) => p.id === 'p0').n, 6, 'A 淋 2 ＋ B 淋 4，毋會互相蓋掉');
     assert.strictEqual(a.bank, 17 - 6);
     assert.strictEqual(b.bank, 17 - 6);
-    console.log('  ✅ 3. 並行澆水（各自離線、再同步，努力都留等）PASS');
+    console.log('  ✅ 3. 並行淋水（各自離線、再同步，努力都留等）PASS');
   }
 
   // ===== 4. 紀元重設：新紀元取代舊裝置个舊資料 =====
