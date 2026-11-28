@@ -9,7 +9,7 @@
   var KEY = 'hakfaGarden';
   var REVIEW_PER_DROP = 3; // 到期復習：全站最有學習效果，獎勵最高
   var NEW_PER_DROP = 5;
-  var AUDIO_PER_DROP = 10; // 任何音檔播放（主表、日日一詞、遊戲）每 10 次 1 滴
+  var AUDIO_PER_DROP = 10; // 任何音檔（主表、日日一詞）完整播完，每 10 擺 1 滴
   // 種子種類：price＝幾滴水換 1 顆。往後新種類（性質／等級）加在這，價錢無共樣
   var SEEDS = { common: { name: '🌰 樹仁', price: 10 } };
   var MAX_PLOTS = 30; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
@@ -313,9 +313,9 @@
           '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '第 ' + (state.sel + 1) + ' 塊：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
             '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 ? ' disabled' : '') + '>澆水</button></div>' +
           seedRows +
-          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
+          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播完音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo">＋1 測試水滴</button>' : '') + '</div>' +
-          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，澆水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
+          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每完整播完 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，澆水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
     }
@@ -373,7 +373,7 @@
     draw(false);
   }
 
-  // ---- 音檔播放計滴：任何 audio（主表、日日一詞、遊戲）每 AUDIO_PER_DROP 擺 1 滴 ----
+  // ---- 音檔播放計滴：任何 audio（主表、日日一詞；遊戲裡肚毋算）完整播完，每 AUDIO_PER_DROP 擺 1 滴 ----
   var AUDIO_IGNORE_RE = /(^|\/)(endOfPlay|empty_category)\.mp3(\?|$)/; // 提示音效毋算
   // 遊戲視窗開等時，播个音檔毋算（愛答題正有意義，毋係淨按音檔刷擺數）
   function inGame() {
@@ -392,17 +392,25 @@
       if (typeof window.showGardenDropHint === 'function') window.showGardenDropHint(gained);
     }
   }
-  // 包一層 HTMLMediaElement.prototype.play：淨有真正開始播（promise 成功）正算，毋影響原本回傳值
+  // 包一層 HTMLMediaElement.prototype.play：淨有「完整播完」（ended 事件）正算 1 擺，像皮克敏走一步。
+  // 播一半就停、切走毋算；同一支音檔重複 play() 淨掛一個 ended 監聽，毋會一擺算兩擺。不設刷次數上限，愛刷个人隨佢去。
   (function patchAudioPlay() {
     if (typeof HTMLMediaElement === 'undefined' || HTMLMediaElement.prototype.__hakfaGardenPatched) return;
     var orig = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       var src = this.currentSrc || this.src || '';
-      var ret = orig.apply(this, arguments);
-      if (!AUDIO_IGNORE_RE.test(src) && !inGame() && ret && typeof ret.then === 'function') {
-        ret.then(function () { try { onAudioPlayed(); } catch (e) { /* 計數失敗毋影響播放 */ } }, function () {});
+      // 每擺 play 都重判：提示音效、遊戲視窗裡肚个音檔毋算
+      this.__hgCountable = !AUDIO_IGNORE_RE.test(src) && !inGame();
+      if (!this.__hgPending) {
+        this.__hgPending = true;
+        var el = this;
+        el.addEventListener('ended', function () {
+          el.__hgPending = false;
+          if (!el.__hgCountable) return;
+          try { onAudioPlayed(); } catch (e) { /* 計數失敗毋影響播放 */ }
+        }, { once: true });
       }
-      return ret;
+      return orig.apply(this, arguments);
     };
     HTMLMediaElement.prototype.__hakfaGardenPatched = true;
   })();
