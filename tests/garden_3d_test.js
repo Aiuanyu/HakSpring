@@ -62,4 +62,28 @@ assert.ok(zOf(0, front) < zOf(0, back), 'yaw=0：front 較近');
 assert.ok(zOf(Math.PI, front) > zOf(Math.PI, back), 'yaw=π：front 變較遠，後面个樹轉出來');
 console.log('  ✅ 旋轉換邊（被擋著个樹轉得出來）PASS');
 
+// 7. 地塊平台：樹腳下攤平，毋會被起伏埋著；平台外毋受影響；過渡連續
+{
+  const R = 46, c = { x: 380, y: 250 }; // 山谷外緣、起伏較大
+  const pad = { x: c.x, y: c.y, z: G3.heightAt(S, c.x, c.y) };
+  assert.strictEqual(G3.heightWithPads(S, [pad], c.x, c.y, R), pad.z, '中心不變');
+  assert.strictEqual(G3.heightWithPads(S, [pad], c.x + R + 1, c.y, R), G3.heightAt(S, c.x + R + 1, c.y), '平台外不變');
+  // 平台內最大高低差 ≤ 原地形
+  let rawSpan = 0, padSpan = 0, rawMin = 1e9, rawMax = -1e9, pMin = 1e9, pMax = -1e9;
+  for (let a = 0; a < 6.28; a += 0.2) for (let r = 0; r <= R * 0.7; r += 6) {
+    const x = c.x + Math.cos(a) * r, y = c.y + Math.sin(a) * r, h0 = G3.heightAt(S, x, y), h1 = G3.heightWithPads(S, [pad], x, y, R);
+    rawMin = Math.min(rawMin, h0); rawMax = Math.max(rawMax, h0); pMin = Math.min(pMin, h1); pMax = Math.max(pMax, h1);
+  }
+  assert.ok(pMax - pMin <= rawMax - rawMin + 1e-9, '攤平後起伏較小');
+  // 連續：相鄰點高度差有限
+  let prev = G3.heightWithPads(S, [pad], c.x - R - 10, c.y, R), maxStep = 0;
+  for (let x = c.x - R - 10; x <= c.x + R + 10; x += 1) { const h = G3.heightWithPads(S, [pad], x, c.y, R); maxStep = Math.max(maxStep, Math.abs(h - prev)); prev = h; }
+  assert.ok(maxStep < 4, '過渡平滑（最大單步 ' + maxStep.toFixed(2) + '）');
+  // 射線找地面：用平台高度函式也一致
+  const hfn = (x, y) => G3.heightWithPads(S, [pad], x, y, R), cm = G3.camera(Object.assign({}, base, { yaw: 1.1, pitch: 0.4, tx: c.x, ty: c.y }));
+  const p = G3.project(cm, c.x + 20, c.y - 15, hfn(c.x + 20, c.y - 15)), hit = G3.groundHit(cm, hfn, p.x, p.y, 4000);
+  assert.ok(Math.hypot(hit.x - (c.x + 20), hit.y - (c.y - 15)) < 4);
+  console.log('  ✅ 地塊平台（中心不變、平台外不變、攤平、平滑、射線一致）PASS');
+}
+
 console.log('✅ garden_3d_test 全部通過');

@@ -57,6 +57,18 @@
   }
   function isWater(seed, wx, wy) { return valleyMask(wx, wy) < 0.7 && streamD(seed, wx, wy) < 15; }
 
+  // 加上「地塊平台」个高度：每塊地腳下半徑 R 內，高度逐漸攤平到該地塊中心个高度（平滑過渡），樹毋會被起伏埋著
+  function heightWithPads(seed, pads, wx, wy, R) {
+    var h = heightAt(seed, wx, wy);
+    for (var i = 0; i < pads.length; i++) {
+      var p = pads[i], dx = wx - p.x, dy = wy - p.y;
+      if (dx > R || dx < -R || dy > R || dy < -R) continue;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < R) { var k = 1 - d / R; k = k * k * (3 - 2 * k); h = h * (1 - k) + p.z * k; }
+    }
+    return h;
+  }
+
   // ---------- 地塊座標 ↔ 世界座標 ----------
   function plotToWorld(px, py) { return { x: (px - 5000) / 10000 * VALLEY, y: (5000 - py) / 10000 * VALLEY }; }
   function worldToPlot(wx, wy) { return { x: 5000 + wx / VALLEY * 10000, y: 5000 - wy / VALLEY * 10000 }; }
@@ -83,24 +95,25 @@
     return { x: cam.w / 2 + xc / zc * cam.fpx, y: cam.h / 2 - yc / zc * cam.fpx, zc: zc, k: cam.fpx / zc };
   }
   // 螢幕點 → 射線 → 地面交點（逐步前進，再二分逼近）
-  function groundHit(cam, seed, sx, sy, maxDist) {
+  function groundHit(cam, seedOrFn, sx, sy, maxDist) {
+    var hf = typeof seedOrFn === 'function' ? seedOrFn : function (x, y) { return heightAt(seedOrFn, x, y); };
     var dx = (sx - cam.w / 2) / cam.fpx, dy = (sy - cam.h / 2) / cam.fpx;
     var d = { x: cam.f.x + dx * cam.r.x - dy * cam.u.x, y: cam.f.y + dx * cam.r.y - dy * cam.u.y, z: cam.f.z + dx * cam.r.z - dy * cam.u.z };
     var dl = Math.sqrt(d.x * d.x + d.y * d.y + d.z * d.z); d.x /= dl; d.y /= dl; d.z /= dl;
     var far = maxDist || 4000, step = Math.max(6, far / 360), t = NEAR, prev = t, hit = false;
     for (; t < far; t += step) {
       var px = cam.pos.x + d.x * t, py = cam.pos.y + d.y * t, pz = cam.pos.z + d.z * t;
-      if (pz <= heightAt(seed, px, py)) { hit = true; break; }
+      if (pz <= hf(px, py)) { hit = true; break; }
       prev = t;
     }
     if (!hit) return null;
     var lo = prev, hi = t;
     for (var i = 0; i < 12; i++) {
       var mid = (lo + hi) / 2, mx = cam.pos.x + d.x * mid, my = cam.pos.y + d.y * mid, mz = cam.pos.z + d.z * mid;
-      if (mz <= heightAt(seed, mx, my)) hi = mid; else lo = mid;
+      if (mz <= hf(mx, my)) hi = mid; else lo = mid;
     }
     var gx = cam.pos.x + d.x * hi, gy = cam.pos.y + d.y * hi;
-    return { x: gx, y: gy, z: heightAt(seed, gx, gy), t: hi };
+    return { x: gx, y: gy, z: hf(gx, gy), t: hi };
   }
 
   // ---------- 2. 渲染器（瀏覽器） ----------
@@ -125,7 +138,15 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); octx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cache = null;
     }
-    function curCam() { return camera({ yaw: cam3.yaw, pitch: cam3.pitch, dist: cam3.dist, tx: cam3.tx, ty: cam3.ty, w: W, h: H, seed: opts.seed() }); }
+    // 地塊个高度場：基礎地形，加上每塊地腳下一小塊攤平个平台（半徑 PAD_R），樹毋會被地形埋著、剛落泥个土堆也看得完整
+    var PAD_R = 46, pads = [], padSig = '';
+    function refreshPads() {
+      var seed = opts.seed(), list = opts.plots(), sig = seed + ':';
+      pads = list.map(function (q) { var w = plotToWorld(q.x, q.y); sig += q.x + ',' + q.y + ';'; return { x: w.x, y: w.y, z: heightAt(seed, w.x, w.y) }; });
+      if (sig !== padSig) { padSig = sig; cache = null; }
+    }
+    function hf(wx, wy) { return heightWithPads(opts.seed(), pads, wx, wy, PAD_R); }
+    function curCam() { refreshPads(); return camera({ yaw: cam3.yaw, pitch: cam3.pitch, dist: cam3.dist, tx: cam3.tx, ty: cam3.ty, w: W, h: H, seed: opts.seed() }); }
 
     // 地面格點：以目標為中心、對齊格線（平移時毋會閃爍）；旋轉毋影響，故做得快取
     function grid(N, E, seed) {
@@ -133,7 +154,7 @@
       var key = N + '|' + seed + '|' + cs.toFixed(2) + '|' + ox + '|' + oy;
       if (cache && cache.key === key) return cache;
       var hs = new Float32Array((N + 1) * (N + 1));
-      for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) hs[j * (N + 1) + i] = heightAt(seed, ox + i * cs, oy + j * cs);
+      for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) hs[j * (N + 1) + i] = hf(ox + i * cs, oy + j * cs);
       cache = { key: key, N: N, cs: cs, ox: ox, oy: oy, hs: hs };
       return cache;
     }
@@ -172,8 +193,8 @@
       // 樹
       var plots = opts.plots(), lod = plots.length >= 8, selId = opts.sel();
       plots.forEach(function (q) {
-        var w = plotToWorld(q.x, q.y), z = heightAt(seed, w.x, w.y), p = project(cam, w.x, w.y, z);
-        if (p) drawables.push({ z: p.zc - 1, t: 1, q: q, w: w, gz: z, p: p });
+        var w = plotToWorld(q.x, q.y), z = hf(w.x, w.y) + 1.2, p = project(cam, w.x, w.y, z);
+        if (p) drawables.push({ z: p.zc - cs * 1.6, t: 1, q: q, w: w, gz: z, p: p }); // 往鏡頭偏一點：正前方个格子毋會蓋著腳下个土堆
       });
       drawables.sort(function (u, v) { return v.z - u.z; });
       var sprites = {}, pending = false;
@@ -214,7 +235,7 @@
     function ring(cam, wx, wy, r, color, dashed, lw) {
       var seed = opts.seed(), pts = [], i;
       for (i = 0; i < 28; i++) {
-        var a = i / 28 * 6.2832, x = wx + Math.cos(a) * r, y = wy + Math.sin(a) * r, p = project(cam, x, y, heightAt(seed, x, y) + 1.5);
+        var a = i / 28 * 6.2832, x = wx + Math.cos(a) * r, y = wy + Math.sin(a) * r, p = project(cam, x, y, hf(x, y) + 1.8);
         if (!p) return;
         pts.push(p);
       }
@@ -228,7 +249,7 @@
       var th = opts.theme(), selId = opts.sel(), plots = opts.plots();
       if (plots.length > 1) plots.forEach(function (q) { if (q.id === selId) { var w = plotToWorld(q.x, q.y); ring(lastCam, w.x, w.y, 34, rgb(th.ring), false, 3.5); } });
       if (ghost) {
-        var img = opts.sprite(1, true), z = heightAt(opts.seed(), ghost.wx, ghost.wy), p = project(lastCam, ghost.wx, ghost.wy, z);
+        var img = opts.sprite(1, true), z = hf(ghost.wx, ghost.wy), p = project(lastCam, ghost.wx, ghost.wy, z);
         if (p) {
           if (img) { var sc = TREE_H * p.k / 207; octx.globalAlpha = ghost.ok ? 0.8 : 0.4; octx.drawImage(img, p.x - 100 * sc, p.y - 207 * sc, 200 * sc, 240 * sc); octx.globalAlpha = 1; }
           ring(lastCam, ghost.wx, ghost.wy, 34, ghost.ok ? rgb(th.ring) : '#c62828', !ghost.ok, 3.5);
@@ -248,7 +269,7 @@
     // 世界 → 地塊座標，及可種性判斷
     function groundAt(clientX, clientY) {
       var r = opts.base.getBoundingClientRect(), cam = lastCam || curCam();
-      var hit = groundHit(cam, opts.seed(), clientX - r.left, clientY - r.top, Math.max(2500, cam3.dist * 5));
+      var hit = groundHit(cam, hf, clientX - r.left, clientY - r.top, Math.max(2500, cam3.dist * 5));
       if (!hit) return null;
       var pp = worldToPlot(hit.x, hit.y);
       return { wx: hit.x, wy: hit.y, px: Math.round(pp.x), py: Math.round(pp.y), water: isWater(opts.seed(), hit.x, hit.y) || streamD(opts.seed(), hit.x, hit.y) < 24 };
@@ -257,7 +278,7 @@
     function pick(clientX, clientY) {
       var r = opts.base.getBoundingClientRect(), x = clientX - r.left, y = clientY - r.top, cam = lastCam || curCam(), seed = opts.seed(), out = [];
       opts.plots().forEach(function (q, i) {
-        var w = plotToWorld(q.x, q.y), p = project(cam, w.x, w.y, heightAt(seed, w.x, w.y));
+        var w = plotToWorld(q.x, q.y), p = project(cam, w.x, w.y, hf(w.x, w.y) + 1.2);
         if (!p) return;
         var sc = TREE_H * p.k / 207, cx = p.x, cy = p.y - 95 * sc, rx = 62 * sc, ry = 100 * sc;
         var d = Math.pow((x - cx) / rx, 2) + Math.pow((y - cy) / ry, 2);
@@ -279,7 +300,7 @@
       overlay: overlay, groundAt: groundAt, pick: pick,
       // 測試用：某塊地樹冠中心个螢幕座標（clientX/Y），看無（鏡頭後背）回 null
       screenOf: function (plot) {
-        var r = opts.base.getBoundingClientRect(), cam = lastCam || curCam(), w = plotToWorld(plot.x, plot.y), p = project(cam, w.x, w.y, heightAt(opts.seed(), w.x, w.y));
+        var r = opts.base.getBoundingClientRect(), cam = lastCam || curCam(), w = plotToWorld(plot.x, plot.y), p = project(cam, w.x, w.y, hf(w.x, w.y) + 1.2);
         if (!p) return null;
         var sc = TREE_H * p.k / 207;
         return { x: r.left + p.x, y: r.top + p.y - 95 * sc, zc: p.zc };
@@ -293,7 +314,7 @@
 
   return {
     VALLEY: VALLEY, TREE_H: TREE_H, FOV: FOV,
-    heightAt: heightAt, isWater: isWater, streamD: streamD, valleyMask: valleyMask,
+    heightAt: heightAt, heightWithPads: heightWithPads, isWater: isWater, streamD: streamD, valleyMask: valleyMask,
     plotToWorld: plotToWorld, worldToPlot: worldToPlot,
     camera: camera, project: project, groundHit: groundHit, create: create
   };
