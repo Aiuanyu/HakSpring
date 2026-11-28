@@ -231,5 +231,43 @@ function makeDevice(label) {
     console.log('  ✅ 7. v1→v2 升級（等值、備份原始資料）PASS');
   }
 
+  // ===== 8. 本機測試覆寫：?sync-api= 只准官方網域，淨在 localhost／127.0.0.1 生效 =====
+  {
+    const make = (hostname, port, search) => {
+      const store = new Map();
+      const c = vm.createContext({ console: { log() {}, warn() {}, error() {} }, setInterval() {}, clearInterval() {}, setTimeout() {}, clearTimeout() {}, URL, URLSearchParams, TextEncoder, crypto, Date, JSON, AbortController, Math });
+      c.window = c;
+      c.window.location = { hostname, port, search };
+      c.document = { addEventListener() {}, getElementById() { return null; }, visibilityState: 'visible' };
+      c.navigator = {}; c.CustomEvent = function () {}; c.window.dispatchEvent = () => {};
+      c.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+      vm.runInContext(fs.readFileSync(path.join(root, 'js/cloud-sync.js'), 'utf8'), c);
+      c.store = store;
+      return c;
+    };
+    assert.strictEqual(make('localhost', '8731', '').getSyncApiEndpoint(), 'https://hakspring.pages.dev/api/sync', '本機預設打正式站');
+    assert.strictEqual(make('127.0.0.1', '8731', '?sync-api=feat-garden-poc').getSyncApiEndpoint(), 'https://feat-garden-poc.hakspring.pages.dev/api/sync', '簡寫');
+    assert.strictEqual(make('localhost', '8731', '?sync-api=https%3A%2F%2Ffeat-garden-poc.hakspring.pages.dev%2F').getSyncApiEndpoint(), 'https://feat-garden-poc.hakspring.pages.dev/api/sync', '完整來源');
+    // 記在 localStorage，之後免再加參數；off 取消
+    const c = make('localhost', '8731', '?sync-api=feat-garden-poc');
+    c.getSyncApiEndpoint();
+    c.window.location.search = '';
+    assert.strictEqual(c.getSyncApiEndpoint(), 'https://feat-garden-poc.hakspring.pages.dev/api/sync', '記住覆寫');
+    c.window.location.search = '?sync-api=off';
+    assert.strictEqual(c.getSyncApiEndpoint(), 'https://hakspring.pages.dev/api/sync', 'off 取消');
+    // 安全：金鑰會送出去，毋准許非官方網域（含長得像个網域）
+    for (const bad of ['https://evil.example.com', 'evil.example.com', 'https://hakspring.pages.dev.evil.com', 'http://hakspring.pages.dev', 'https://evilhakspring.pages.dev.attacker.io']) {
+      const b = make('localhost', '8731', '?sync-api=' + encodeURIComponent(bad));
+      assert.strictEqual(b.getSyncApiEndpoint(), 'https://hakspring.pages.dev/api/sync', '拒絕：' + bad);
+      assert.strictEqual(b.store.get('hakkaSyncApiBase'), undefined, '毋存：' + bad);
+    }
+    // 正式站／預覽站本身：淨用同源，覆寫參數無效
+    assert.strictEqual(make('hakspring.pages.dev', '', '?sync-api=feat-garden-poc').getSyncApiEndpoint(), '/api/sync');
+    assert.strictEqual(make('feat-x.hakspring.pages.dev', '', '?sync-api=other').getSyncApiEndpoint(), '/api/sync');
+    // wrangler 預設 port 8788：照舊用同源
+    assert.strictEqual(make('localhost', '8788', '?sync-api=feat-garden-poc').getSyncApiEndpoint(), '/api/sync');
+    console.log('  ✅ 8. 本機測試覆寫（?sync-api=，淨官方網域、淨本機生效）PASS');
+  }
+
   console.log('✅ garden_sync_test 全部通過');
 })().catch((e) => { console.error(e); process.exit(1); });

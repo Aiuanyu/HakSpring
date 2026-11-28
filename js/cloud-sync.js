@@ -5,16 +5,53 @@
  * 並發：推送帶 base_updated_at，版本對毋著伺服器回 409，用戶端重新合併再推（合併函式在本檔下半部）。
  */
 
+const SYNC_API_OVERRIDE_STORAGE = 'hakkaSyncApiBase'; // 開發用：本機測試時改打哪個站个 API（淨存本機，毋同步）
+// 金鑰會放在請求標頭送出去，所以覆寫个目標淨准許官方網域（正式站摎各分支預覽站），毋准許任意網址
+const SYNC_API_OVERRIDE_RE = /^https:\/\/([a-z0-9-]+\.)?hakspring\.pages\.dev$/;
+
+/**
+ * 開發用覆寫：本機（localhost／127.0.0.1）測試新功能个雲端同步時，正式站伺服器還毋認得新欄位，
+ * 會把新欄位洗掉。網址加 ?sync-api=<分支預覽站> 就改打該站个 API，並記在 localStorage：
+ *   ?sync-api=feat-garden-poc                          （簡寫：分支預覽站个子網域）
+ *   ?sync-api=https://feat-garden-poc.hakspring.pages.dev （完整來源）
+ *   ?sync-api=off                                       （取消，回復打正式站）
+ * 回傳來源（origin）抑係 ''（無覆寫）。淨在本機環境生效。
+ */
+function getSyncApiOverride() {
+  try {
+    if (typeof window === 'undefined' || !window.location) return '';
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') return '';
+    const m = /[?&]sync-api=([^&#]*)/.exec(window.location.search || '');
+    if (m) {
+      const raw = decodeURIComponent(m[1]).trim().replace(/\/+$/, '');
+      if (raw === 'off' || raw === '') {
+        localStorage.removeItem(SYNC_API_OVERRIDE_STORAGE);
+      } else {
+        const origin = /^https:\/\//.test(raw) ? raw : 'https://' + raw + '.hakspring.pages.dev';
+        if (SYNC_API_OVERRIDE_RE.test(origin)) localStorage.setItem(SYNC_API_OVERRIDE_STORAGE, origin);
+        else console.warn('[CloudSync] sync-api 淨准許 hakspring.pages.dev 个網域，已忽略：', raw);
+      }
+    }
+    const saved = localStorage.getItem(SYNC_API_OVERRIDE_STORAGE) || '';
+    return SYNC_API_OVERRIDE_RE.test(saved) ? saved : '';
+  } catch (_) {
+    return '';
+  }
+}
+
 function getSyncApiEndpoint() {
   // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
   // 則強制導向正式環境的 API，解決 local Apache 找不到 Endpoint 的問題（同 main.js 音檔代理機制）。
+  // 有開發用覆寫（?sync-api=）就改打覆寫个站。
   if (
     typeof window !== 'undefined' &&
     window.location &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
     window.location.port !== '8788'
   ) {
-    return 'https://hakspring.pages.dev/api/sync';
+    const override = getSyncApiOverride();
+    return (override || 'https://hakspring.pages.dev') + '/api/sync';
   }
   return '/api/sync';
 }
