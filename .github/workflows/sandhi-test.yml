@@ -22,6 +22,10 @@ on:
       - 'tests/meinung_tone_test.js'
       - 'tests/sync_survey_test.js'
       - 'tests/cloudflare_d1_sync_test.js'
+      - 'tests/garden_data_test.js'
+      - 'tests/garden_sync_test.js'
+      - 'tests/garden_3d_test.js'
+      - 'js/garden/**'
       - 'tests/backup_import_test.js'
       - 'functions/api/sync.js'
       - 'migrations/**'
@@ -70,6 +74,10 @@ on:
       - 'tests/meinung_tone_test.js'
       - 'tests/sync_survey_test.js'
       - 'tests/cloudflare_d1_sync_test.js'
+      - 'tests/garden_data_test.js'
+      - 'tests/garden_sync_test.js'
+      - 'tests/garden_3d_test.js'
+      - 'js/garden/**'
       - 'tests/backup_import_test.js'
       - 'functions/api/sync.js'
       - 'migrations/**'
@@ -126,6 +134,11 @@ jobs:
         run: node tests/pfs_to_hpp_test.js
       - name: Cloud sync (D1, sync key) tests
         run: node tests/cloudflare_d1_sync_test.js
+      - name: Garden data and sync tests
+        run: |
+          node tests/garden_data_test.js
+          node tests/garden_sync_test.js
+          node tests/garden_3d_test.js
       - name: Backup import tests
         run: node tests/backup_import_test.js
       - name: Sync survey tests

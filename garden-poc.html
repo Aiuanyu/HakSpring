@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客源翠庭院 PoC：一粒種子、一棵樹</title>
+<style>
+  :root { --bg-top: #d9f0ff; --bg-bot: #f3fbf0; --ink: #1f3a2a; }
+  @media (prefers-color-scheme: dark) { :root { --bg-top: #14243a; --bg-bot: #1d3326; --ink: #e6f3e8; } }
+  body { margin: 0; min-height: 100vh; font-family: 'Noto Sans TC', -apple-system, sans-serif; color: var(--ink);
+    background: linear-gradient(var(--bg-top), var(--bg-bot)); }
+  main { max-width: 480px; margin: 0 auto; padding: 16px; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <div id="garden"></div>
+  <p><a href="./">← 轉去客源翠，答題、復習就會有水滴</a></p>
+</main>
+<script src="js/garden/garden-data.js"></script>
+<script src="js/garden/garden-3d.js"></script>
+<script src="js/garden/garden.js"></script>
+<script>hakfaGarden.mount(document.getElementById('garden'), { demo: true, dev: true });</script>
+</body>
+</html>

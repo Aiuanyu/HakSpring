@@ -24,7 +24,11 @@ const OBJECT_FIELDS = [
   'daily_favs',
   'familiarity',
   'audio_profiles',
+  'garden', // 庭院帳本（js/garden/garden-data.js）；伺服器毋解讀，原樣存
 ];
+// 用戶端這擺無送、但雲端已經有个欄位：保留雲端原本个。避免舊版網頁（還無這欄位）推上來，
+// 就把較新版本寫入个資料整欄洗掉。（目前淨 garden；其他欄位沿用既有行為）
+const PRESERVE_IF_ABSENT = ['garden'];
 
 function corsHeaders(request) {
   if (!request || !request.headers) return {};
@@ -169,6 +173,18 @@ export async function onRequestPost({ request, env }) {
   const base = body.base_updated_at === undefined ? 0 : body.base_updated_at;
   if (!data || !Number.isSafeInteger(base) || base < 0) {
     return reply({ error: 'bad_request' }, 400);
+  }
+  try {
+    if (PRESERVE_IF_ABSENT.some((f) => data[f] === undefined)) {
+      const existing = await currentRow(env.DB, userId);
+      if (existing && existing.exists && isPlainObject(existing.data)) {
+        for (const f of PRESERVE_IF_ABSENT) {
+          if (data[f] === undefined && isPlainObject(existing.data[f])) data[f] = existing.data[f];
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[sync] preserve failed:', err); // 讀毋著就照原本行為存，毋阻擋同步
   }
   const dataString = JSON.stringify(data);
   if (new TextEncoder().encode(dataString).length > MAX_BODY_BYTES) {

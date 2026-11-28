@@ -37,7 +37,7 @@ console.log('  ✅ mergeAudioProfiles PASS');
 // 接線：匯出、套用、伺服器白名單、手動匯入欄位白名單
 assert.ok(/audio_profiles:\s*audioProfiles/.test(src), 'exportCurrentSyncData 愛匯出 audio_profiles');
 assert.ok(/localStorage\.setItem\('hakkaAudioProfiles'/.test(src), '合併後愛寫回 localStorage');
-assert.ok(/'audio_profiles',\n\];/.test(src), 'SYNC_PACKAGE_OBJECT_FIELDS 愛有 audio_profiles');
+assert.ok(/'audio_profiles',\n(?:\s*'garden',\n)?\];/.test(src), 'SYNC_PACKAGE_OBJECT_FIELDS 愛有 audio_profiles');
 const server = fs.readFileSync(path.join(__dirname, '../functions/api/sync.js'), 'utf8');
 assert.ok(/OBJECT_FIELDS = \[[\s\S]*'audio_profiles'[\s\S]*\];/.test(server), '伺服器白名單愛有 audio_profiles');
 console.log('  ✅ audio profiles wiring PASS');

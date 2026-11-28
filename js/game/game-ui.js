@@ -870,6 +870,20 @@ function highlightDiff(wrongStr, correctStr) {
   return result;
 }
 
+// 庭院水滴提示：短暫浮現在畫面下方，毋擋操作
+function showGardenDropHint(n) {
+  const old = document.getElementById('garden-drop-hint');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'garden-drop-hint';
+  el.setAttribute('role', 'status');
+  el.textContent = '💧 庭院多 ' + n + ' 滴水，去「戰績」淋水';
+  el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;' +
+    'padding:8px 14px;border-radius:999px;background:#1f5f99;color:#fff;font-size:.9rem;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  document.body.appendChild(el);
+  setTimeout(function () { el.remove(); }, 2500);
+}
+
 function bumpDailyStat(isCorrect, isNew, qType, dataVarName) {
   try {
     const today = new Date();
@@ -948,6 +962,13 @@ async function handleAnswer(selectedOption, btnElement) {
   }
   
   bumpDailyStat(isCorrect, question.isNew, question.type, getQuestionDataVarName(question));
+  // 庭院：答題換水滴（由 hakkaDailyStats 推算，冪等）；有新水滴就在回饋區提示
+  if (window.hakfaGarden) {
+    try {
+      const gainedDrops = window.hakfaGarden.onStatsChanged();
+      if (gainedDrops > 0) showGardenDropHint(gainedDrops);
+    } catch (e) { console.warn('garden sync failed', e); }
+  }
   
   const options = document.querySelectorAll('.game-option-btn');
   options.forEach(btn => btn.disabled = true); // Disable all options
@@ -1655,7 +1676,7 @@ window.renderStatsModal = function() {
   const todayStr = getLocalYMD();
   
   const todayData = aggregateStats(todayStr, todayStr);
-  document.getElementById('stats-tab-today').innerHTML = '<div id="srs-forecast" style="margin-bottom: 20px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 15px;"></div>' + generateStatsHTML('今晡日个戰績', todayData);
+  document.getElementById('stats-tab-today').innerHTML = '<div id="hakfa-garden"></div><div id="srs-forecast" style="margin-bottom: 20px; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 15px;"></div>' + generateStatsHTML('今晡日个戰績', todayData);
   
   const d = new Date();
   d.setDate(d.getDate() - 6);
@@ -1681,6 +1702,7 @@ window.renderStatsModal = function() {
     '<div id="srs-accuracy-trend" style="margin-bottom:20px; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:15px;"></div>' +
     generateStatsHTML('各腔總覽（所有紀錄）', allTimeData);
 
+  if (window.hakfaGarden) window.hakfaGarden.mount(document.getElementById('hakfa-garden'));
   if (typeof renderForecast === 'function') {
     renderForecast();
   }

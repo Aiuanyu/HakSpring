@@ -5,16 +5,53 @@
  * 並發：推送帶 base_updated_at，版本對毋著伺服器回 409，用戶端重新合併再推（合併函式在本檔下半部）。
  */
 
+const SYNC_API_OVERRIDE_STORAGE = 'hakkaSyncApiBase'; // 開發用：本機測試時改打哪個站个 API（淨存本機，毋同步）
+// 金鑰會放在請求標頭送出去，所以覆寫个目標淨准許官方網域（正式站摎各分支預覽站），毋准許任意網址
+const SYNC_API_OVERRIDE_RE = /^https:\/\/([a-z0-9-]+\.)?hakspring\.pages\.dev$/;
+
+/**
+ * 開發用覆寫：本機（localhost／127.0.0.1）測試新功能个雲端同步時，正式站伺服器還毋認得新欄位，
+ * 會把新欄位洗掉。網址加 ?sync-api=<分支預覽站> 就改打該站个 API，並記在 localStorage：
+ *   ?sync-api=feat-garden-poc                          （簡寫：分支預覽站个子網域）
+ *   ?sync-api=https://feat-garden-poc.hakspring.pages.dev （完整來源）
+ *   ?sync-api=off                                       （取消，回復打正式站）
+ * 回傳來源（origin）抑係 ''（無覆寫）。淨在本機環境生效。
+ */
+function getSyncApiOverride() {
+  try {
+    if (typeof window === 'undefined' || !window.location) return '';
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') return '';
+    const m = /[?&]sync-api=([^&#]*)/.exec(window.location.search || '');
+    if (m) {
+      const raw = decodeURIComponent(m[1]).trim().replace(/\/+$/, '');
+      if (raw === 'off' || raw === '') {
+        localStorage.removeItem(SYNC_API_OVERRIDE_STORAGE);
+      } else {
+        const origin = /^https:\/\//.test(raw) ? raw : 'https://' + raw + '.hakspring.pages.dev';
+        if (SYNC_API_OVERRIDE_RE.test(origin)) localStorage.setItem(SYNC_API_OVERRIDE_STORAGE, origin);
+        else console.warn('[CloudSync] sync-api 淨准許 hakspring.pages.dev 个網域，已忽略：', raw);
+      }
+    }
+    const saved = localStorage.getItem(SYNC_API_OVERRIDE_STORAGE) || '';
+    return SYNC_API_OVERRIDE_RE.test(saved) ? saved : '';
+  } catch (_) {
+    return '';
+  }
+}
+
 function getSyncApiEndpoint() {
   // 若在本機 (localhost/127.0.0.1) 且非 wrangler 預設 port (8788)，
   // 則強制導向正式環境的 API，解決 local Apache 找不到 Endpoint 的問題（同 main.js 音檔代理機制）。
+  // 有開發用覆寫（?sync-api=）就改打覆寫个站。
   if (
     typeof window !== 'undefined' &&
     window.location &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
     window.location.port !== '8788'
   ) {
-    return 'https://hakspring.pages.dev/api/sync';
+    const override = getSyncApiOverride();
+    return (override || 'https://hakspring.pages.dev') + '/api/sync';
   }
   return '/api/sync';
 }
@@ -467,6 +504,19 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
   localStorage.setItem('hakkaAudioProfiles', JSON.stringify(mergedAudioProfiles));
 
+  // 庭院帳本：只增不減个帳本，合併＝聯集／同格取大，毋會互相蓋掉；較新版本个資料會被略過、毋覆蓋
+  let gardenPushNeeded = false;
+  if (data.garden && window.hakfaGarden && typeof window.hakfaGarden.mergeIncoming === 'function') {
+    try {
+      gardenPushNeeded = window.hakfaGarden.mergeIncoming(data.garden).pushNeeded === true;
+    } catch (e) {
+      console.warn('[CloudSync] 庭院資料合併失敗，已略過：', e);
+    }
+  } else if (!data.garden && window.hakfaGarden && typeof window.hakfaGarden.exportForSync === 'function') {
+    // 雲端還無庭院資料：本機有就推上去
+    gardenPushNeeded = window.hakfaGarden.exportForSync() !== null;
+  }
+
   // 合併偏好設定
   let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
   if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
@@ -539,6 +589,8 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
     }
   }
   localStorage.setItem('hakkaUserLocation', finalUserLocation);
+  // 共步下來个名仔、地點馬上反映到標題（含庭院）
+  if (typeof window.updateAppTitles === 'function') window.updateAppTitles();
 
   // 4. 推進快照（手動匯入直接推進；雲端同步則在 Smart Push 後推進）
   if (isFromManual) {
@@ -582,7 +634,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
 
     if (options.skipPush) {
       // 衝突重試：由呼叫端（syncToCloud）自家再推，這裡毋重複推
-    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged || audioProfilesChanged) {
+    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged || audioProfilesChanged || gardenPushNeeded) {
       console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
       await syncToCloud();
     } else {
@@ -641,6 +693,7 @@ const SYNC_PACKAGE_OBJECT_FIELDS = [
   'daily_favs',
   'familiarity',
   'audio_profiles',
+  'garden',
 ];
 
 function decodeBase64Utf8(base64) {
@@ -805,6 +858,11 @@ function exportCurrentSyncData() {
   const audioProfiles = JSON.parse(
     localStorage.getItem('hakkaAudioProfiles') || '{}'
   );
+  // 庭院帳本（js/garden）；模組無載入、抑係資料來自較新版本（毋碰）就毋放，伺服器會保留雲端原本个
+  const gardenExport =
+    window.hakfaGarden && typeof window.hakfaGarden.exportForSync === 'function'
+      ? window.hakfaGarden.exportForSync()
+      : null;
 
   return {
     version: 1,
@@ -817,6 +875,7 @@ function exportCurrentSyncData() {
     daily_favs: dailyFavs,
     familiarity,
     audio_profiles: audioProfiles,
+    ...(gardenExport ? { garden: gardenExport } : {}),
   };
 }
 
@@ -1487,6 +1546,12 @@ function renderCloudKeyUI() {
     els.Display.type = 'password';
   }
   if (els.ToggleBtn) els.ToggleBtn.textContent = '顯示金鑰';
+  // 有使用者名仔就顯示「你（<名>）个金鑰」
+  const owner = document.getElementById('cloudKeyOwner');
+  if (owner) {
+    const name = (localStorage.getItem('hakkaUserName') || '').trim();
+    owner.textContent = name ? `（${name}）` : '';
+  }
   setCloudKeyStatus('');
 }
 
@@ -1494,11 +1559,16 @@ function bindCloudKeyUI() {
   const els = cloudKeyEls();
   if (!els.EnableBtn) return;
 
-  const runSync = async (doneText) => {
+  // welcomeByName＝true：共步成功、而且（雲端拉下來／本機）有使用者名仔，就改用名仔歡迎
+  const runSync = async (doneText, welcomeByName) => {
     setCloudKeyStatus('共步中…');
     await syncFromCloud();
     const failed = document.getElementById('manualSyncBtn')?.classList.contains('sync-error');
-    setCloudKeyStatus(failed ? '共步失敗，請稍後再試。' : doneText, failed);
+    const name = (localStorage.getItem('hakkaUserName') || '').trim();
+    const text = !failed && welcomeByName && name
+      ? `既經共步「${name}」个設定同進度。歡迎轉來！`
+      : doneText;
+    setCloudKeyStatus(failed ? '共步失敗，請稍後再試。' : text, failed);
   };
 
   els.EnableBtn.onclick = async () => {
@@ -1521,7 +1591,7 @@ function bindCloudKeyUI() {
     setSyncKey(raw);
     els.Input.value = '';
     renderCloudKeyUI();
-    await runSync('已連結，資料已合併。');
+    await runSync('已連結，資料已合併。', true);
   };
 
   els.ToggleBtn.onclick = () => {
@@ -1545,7 +1615,7 @@ function bindCloudKeyUI() {
     }
   };
 
-  els.SyncNowBtn.onclick = () => runSync('已共步。');
+  els.SyncNowBtn.onclick = () => runSync('已共步。', true);
 
   els.DisableBtn.onclick = () => {
     if (!confirm('停用這台裝置个雲端同步？（淨清掉這台裝置个金鑰；雲端資料摎本機資料都毋會刪）\n請先確定金鑰有存好，毋然會拿毋轉。')) return;
@@ -1601,7 +1671,7 @@ function showManualSyncModal() {
             </div>
           </div>
           <div id="cloudKeyOn" hidden>
-            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你个金鑰：</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你<span id="cloudKeyOwner"></span>个金鑰：</div>
             <input id="cloudKeyDisplay" type="password" readonly aria-label="你个同步金鑰" style="width: 100%; box-sizing: border-box; padding: 8px; font-size: 13px; font-family: monospace; border-radius: 6px;" />
             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
               <button id="cloudKeyToggleBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">顯示金鑰</button>
