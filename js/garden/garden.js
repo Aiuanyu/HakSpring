@@ -7,13 +7,12 @@
   'use strict';
 
   var KEY = 'hakfaGarden';
-  var DAILY_POUR_CAP = 8; // 一日上濟澆幾滴（入帳無上限，澆水有日限，賸个存在水缸）
   var REVIEW_PER_DROP = 3; // 到期復習：全站最有學習效果，獎勵最高
   var NEW_PER_DROP = 5;
   var AUDIO_PER_DROP = 10; // 任何音檔播放（主表、日日一詞、遊戲）每 10 次 1 滴
   // 種子種類：price＝幾滴水換 1 顆。往後新種類（性質／等級）加在這，價錢無共樣
-  var SEEDS = { common: { name: '🌰 普通種子', price: 10 } };
-  var MAX_PLOTS = 3; // 庭院最多幾塊地（暫定，美術摎版面做出來再調）
+  var SEEDS = { common: { name: '🌰 樹仁', price: 10 } };
+  var MAX_PLOTS = 30; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
   var STAGES = [
     { at: 0, name: '🌰 落泥' },
     { at: 1, name: '🌱 發芽' },
@@ -39,7 +38,7 @@
     var seeds = {};
     Object.keys(SEEDS).forEach(function (k) { seeds[k] = (s.seeds && s.seeds[k]) | 0; });
     return { bank: s.bank | 0, plots: plots.slice(0, MAX_PLOTS), sel: Math.min(s.sel | 0, plots.length - 1), seeds: seeds, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0,
-      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0, pouredToday: s.pouredToday | 0 };
+      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0 };
   }
   function save(s) {
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ }
@@ -65,7 +64,7 @@
   // 重算今日入帳，回傳這次新增个滴數（冪等：重複呼叫毋會重複給）
   function sync() {
     var t = todayStr();
-    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; state.pouredToday = 0; }
+    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; }
     var earned = earnedFromStats() + Math.floor(state.audio / AUDIO_PER_DROP) + state.demo; // 入帳無上限
     var gained = 0;
     if (earned > state.credited) {
@@ -88,10 +87,10 @@
 
   function pour() {
     sync(); // 先處理換日
-    if (state.bank < 1 || state.pouredToday >= DAILY_POUR_CAP) return null;
+    if (state.bank < 1) return null; // 澆水無日限：一日就看著一欉樹開花也做得
     var q = selPlot();
     var before = stageIndex(q.n);
-    state.bank--; q.n++; state.pouredToday++;
+    state.bank--; q.n++;
     save(state);
     var after = stageIndex(q.n);
     return { grew: after > before, stage: after };
@@ -138,7 +137,7 @@
     // 今日入帳歸零，並以「現在」為新基準：今日已答个題數、已播个音檔毋再算，淨計往後新增个
     resetToday: function () {
       var c = statsCounts();
-      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1]; state.pouredToday = 0;
+      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1];
       state.day = todayStr();
       save(state);
     },
@@ -146,7 +145,7 @@
     addSeed: function (kind) { if (SEEDS[kind]) { state.seeds[kind]++; save(state); } },
     resetAll: function () {
       var c = statsCounts();
-      state = { bank: 0, plots: [{ k: 'common', n: 0 }], sel: 0, seeds: { common: 0 }, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1], pouredToday: 0 };
+      state = { bank: 0, plots: [{ k: 'common', n: 0 }], sel: 0, seeds: { common: 0 }, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1] };
       save(state);
     }
   };
@@ -201,7 +200,7 @@
       '@media (prefers-color-scheme: dark){.hg-card{--hg-sky:#14243a;--hg-grass:#3f7a46;--hg-ground:#5a4430;--hg-water:#7cc4ff;--hg-soft:#a9c4b0}}' +
       '.hg-card h6{margin:0 0 6px}' +
       '.hg-yard{border-radius:12px;overflow:hidden;background:var(--hg-sky)}' +
-      '.hg-yard svg{display:block;width:100%;max-height:200px;height:auto}' +
+      '.hg-yard svg{display:block;width:100%;height:auto}' +
       '.hg-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}' +
       '.hg-row b{color:var(--hg-water);font-size:1.15rem}' +
       '.hg-btn{border:0;border-radius:10px;padding:8px 14px;background:var(--hg-water);color:#fff;cursor:pointer;font:inherit}' +
@@ -260,49 +259,63 @@
         '<div class="hg-note">只改 hakfaGarden，毋會動學習進度摎統計。</div></details>';
     }
 
-    // 畫所有地：n 塊地並排縮放；選著个地底下有框，點著就切換
-    function plotsSvg(popped) {
-      var n = state.plots.length, sc = [1, 0.7, 0.55][n - 1] || 0.55, out = '';
+    // 地多就排格狀：欄數隨塊數增加，每塊地等比縮小；選著个地底下有框，點著就切換
+    function layout() {
+      var n = state.plots.length;
+      var cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 9 ? 3 : 4;
+      var sc = 1 / cols;
+      var rows = Math.ceil(n / cols);
+      return { n: n, cols: cols, rows: rows, sc: sc, cw: 320 * sc, ch: 280 * sc, H: rows * 280 * sc };
+    }
+    function plotXY(L, i) { return { x: (i % L.cols) * L.cw, y: Math.floor(i / L.cols) * L.ch }; }
+    function plotsSvg(L, popped) {
+      var out = '';
+      for (var r = 0; r < L.rows; r++) { // 每列一條草地
+        out += '<rect x="0" y="' + (r * L.ch + 238 * L.sc) + '" width="320" height="' + (42 * L.sc) + '" fill="var(--hg-grass)"/>';
+      }
       state.plots.forEach(function (q, i) {
-        var cx = 320 * (i + 0.5) / n;
-        var on = i === state.sel;
-        out += '<g transform="translate(' + (cx - 160 * sc) + ' ' + (250 - 250 * sc) + ') scale(' + sc + ')">' +
-          '<ellipse cx="160" cy="250" rx="70" ry="12" fill="var(--hg-ground)"' + (on && n > 1 ? ' stroke="var(--hg-water)" stroke-width="3"' : '') + '/>' +
+        var xy = plotXY(L, i), on = i === state.sel;
+        out += '<g transform="translate(' + xy.x + ' ' + xy.y + ') scale(' + L.sc + ')">' +
+          '<ellipse cx="160" cy="250" rx="70" ry="12" fill="var(--hg-ground)"' + (on && L.n > 1 ? ' stroke="var(--hg-water)" stroke-width="3"' : '') + '/>' +
           '<g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(q.n)) + '</g></g>';
       });
-      if (n > 1) {
+      if (L.n > 1) {
         state.plots.forEach(function (q, i) {
-          out += '<rect x="' + (320 * i / n) + '" y="0" width="' + (320 / n) + '" height="280" fill="transparent" style="cursor:pointer" data-hg="sel" data-i="' + i + '"><title>第 ' + (i + 1) + ' 塊地</title></rect>';
+          var xy = plotXY(L, i);
+          out += '<rect x="' + xy.x + '" y="' + xy.y + '" width="' + L.cw + '" height="' + L.ch + '" fill="transparent" style="cursor:pointer" data-hg="sel" data-i="' + i + '"><title>第 ' + (i + 1) + ' 塊地</title></rect>';
         });
       }
       return out;
     }
-    function selCx() { return 320 * (state.sel + 0.5) / state.plots.length; }
+    // 選著个地个座標變換（水滴動畫愛對得著該欉）
+    function selTransform() {
+      var L = layout(), xy = plotXY(L, state.sel);
+      return 'translate(' + xy.x + ' ' + xy.y + ') scale(' + L.sc + ')';
+    }
 
     function draw(popped) {
       var q = selPlot();
       var idx = stageIndex(q.n);
+      var L = layout();
       var seedRows = Object.keys(SEEDS).map(function (k) {
         var d = SEEDS[k], full = state.plots.length >= MAX_PLOTS;
         return '<div class="hg-row"><div>' + d.name + ' ×<b>' + state.seeds[k] + '</b></div><div>' +
-          '<button class="hg-btn ghost" data-hg="buy" data-k="' + k + '"' + (state.bank < d.price ? ' disabled' : '') + '>' + d.price + ' 滴換 1 顆</button> ' +
+          '<button class="hg-btn ghost" data-hg="buy" data-k="' + k + '"' + (state.bank < d.price ? ' disabled' : '') + '>' + d.price + ' 💧 換 1 粒</button> ' +
           '<button class="hg-btn" data-hg="plant" data-k="' + k + '"' + (state.seeds[k] < 1 || full ? ' disabled' : '') + '>' + (full ? '地滿矣' : '種下去') + '</button></div></div>';
       }).join('');
       el.innerHTML =
         '<div class="hg-card">' +
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
-          '<div class="hg-yard"><svg viewBox="0 0 320 280" role="img" aria-label="' + esc(gardenTitle()) + '，庭院裡的一欉樹">' +
-            '<rect x="0" y="238" width="320" height="42" fill="var(--hg-grass)"/>' +
-            plotsSvg(popped) +
+          '<div class="hg-yard"><svg viewBox="0 0 320 ' + L.H + '" role="img" aria-label="' + esc(gardenTitle()) + '，庭院裡的一欉樹">' +
+            plotsSvg(L, popped) +
             '<g class="hg-drops"></g></svg></div>' +
           '<div class="hg-msg" aria-live="polite">' + msg + '</div>' +
           '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '第 ' + (state.sel + 1) + ' 塊：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
-            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || state.pouredToday >= DAILY_POUR_CAP ? ' disabled' : '') + '>' +
-            (state.pouredToday >= DAILY_POUR_CAP ? '今晡日澆夠了' : '澆水') + '</button></div>' +
+            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 ? ' disabled' : '') + '>澆水</button></div>' +
           seedRows +
-          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）・已澆 ' + state.pouredToday + '／' + DAILY_POUR_CAP + '</small>' +
+          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo">＋1 測試水滴</button>' : '') + '</div>' +
-          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸、無上限，一日上濟澆 ' + DAILY_POUR_CAP + ' 滴。' + SEEDS.common.price + ' 滴水做得換 1 顆普通種子，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
+          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，澆水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
     }
@@ -317,11 +330,14 @@
         draw(r.grew);
         var g = el.querySelector('.hg-drops');
         if (g) {
+          // 外包一層 <g> 放位置：CSS 動畫个 transform 會蓋掉元素自家个 transform 屬性
+          var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          wrap.setAttribute('transform', selTransform());
           var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
           p.setAttribute('d', 'M160 150 q-8 14 0 18 q8 -4 0 -18z');
-          p.setAttribute('transform', 'translate(' + (selCx() - 160) + ' 0)');
           p.setAttribute('class', 'hg-drop');
-          g.appendChild(p);
+          wrap.appendChild(p);
+          g.appendChild(wrap);
         }
       } else if (b.getAttribute('data-hg') === 'sel') {
         selectPlot(parseInt(b.getAttribute('data-i'), 10) || 0);
@@ -329,7 +345,7 @@
         draw(false);
       } else if (b.getAttribute('data-hg') === 'buy') {
         var bk = b.getAttribute('data-k');
-        msg = buySeed(bk) ? '換著 1 顆' + SEEDS[bk].name : '水滴毋夠';
+        msg = buySeed(bk) ? '換著 1 粒' + SEEDS[bk].name : '水滴毋夠';
         draw(false);
       } else if (b.getAttribute('data-hg') === 'plant') {
         var pk = b.getAttribute('data-k');
