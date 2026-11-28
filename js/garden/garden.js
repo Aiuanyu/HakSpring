@@ -28,7 +28,10 @@
     s = s || {};
     return { bank: s.bank | 0, poured: s.poured | 0, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0 };
   }
-  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ } }
+  function save(s) {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ }
+    try { window.dispatchEvent(new CustomEvent('hakfa-garden-change')); } catch (e) { /* 舊瀏覽器就算 */ }
+  }
 
   var state = load();
 
@@ -139,6 +142,22 @@
       '.hg-dev{margin-top:10px;padding:8px;border:1px dashed var(--hg-soft);border-radius:10px;font-size:.85rem}' +
       '.hg-dev summary{cursor:pointer}.hg-dev-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}' +
       '.hg-dev .hg-btn{padding:5px 10px;font-size:.8rem}' +
+      '.hg-dock-btn{position:fixed;right:20px;top:calc(50% + 140px);transform:translateY(calc(-50% - 120px));' +
+        'width:50px;height:50px;border-radius:50%;border:1px solid var(--border-color,#ccc);' +
+        'background:var(--primary-btn-bg,#2f7fc4);color:var(--primary-btn-text,#fff);font-size:1.4rem;cursor:pointer;' +
+        'box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:1000;display:flex;align-items:center;justify-content:center;' +
+        'transition:transform .2s,box-shadow .2s}' +
+      '.hg-dock-btn:hover{transform:translateY(calc(-50% - 120px)) scale(1.1)}' +
+      '.hg-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;' +
+        'background:#c62828;color:#fff;font-size:.75rem;line-height:20px;text-align:center;font-weight:700}' +
+      '.hg-dock-pane{position:fixed;right:80px;top:80px;width:min(340px,calc(100vw - 100px));max-height:calc(100vh - 100px);' +
+        'overflow-y:auto;overscroll-behavior:contain;z-index:1100;border-radius:14px;padding:6px;' +
+        'background:var(--card-bg-color,#fff);color:var(--main-text-color,#1e293b);border:1px solid var(--border-color,#cbd5e1);' +
+        'box-shadow:0 8px 24px rgba(0,0,0,.25)}' +
+      '.hg-dock-pane[hidden]{display:none}' +
+      '.hg-dock-pane .hg-card{margin:0}' +
+      '.hg-dock-close{position:absolute;top:6px;right:8px;border:0;background:transparent;color:inherit;font-size:1rem;cursor:pointer;z-index:1}' +
+      '@media (max-width:768px){.hg-dock-pane{left:0;right:0;top:auto;bottom:0;width:auto;max-height:60vh;border-radius:14px 14px 0 0}}' +
       '.hg-note{font-size:.78rem;color:var(--hg-soft);margin-top:6px}' +
       '.hg-msg{min-height:1.3em;font-size:.9rem;margin-top:4px}' +
       '.hg-tree{transform-origin:160px 250px;transition:transform .5s ease}.hg-tree.pop{transform:scale(1.06)}' +
@@ -235,6 +254,72 @@
     pour: pour,
     getState: function () { return JSON.parse(JSON.stringify(state)); },
     // 答題後呼叫：入帳新水滴，有新增就回傳滴數，供畫面提示
-    onStatsChanged: function () { return sync(); }
+    onStatsChanged: function () {
+      var gained = sync();
+      if (gained > 0 && dock.refresh) dock.refresh();
+      return gained;
+    }
   };
+
+  // ---- 浮動「庭院」鈕摎面板：主站任何頁面都做得開，答題時繼續開著，看水滴累積 ----
+  // 按鈕疊在「日日一詞」鈕上背；寬螢幕係右側面板，窄螢幕係底部抽屜。
+  var dock = {};
+  var DOCK_OPEN_KEY = 'hakfaGardenDockOpen';
+
+  function initDock() {
+    // 淨有主站（有浮動遊戲鈕）正掛；garden-poc.html 等獨立頁毋掛
+    if (!document.getElementById('floatingStartGameBtn') || document.getElementById('gardenDockBtn')) return;
+    injectStyle();
+
+    var btn = document.createElement('button');
+    btn.id = 'gardenDockBtn';
+    btn.type = 'button';
+    btn.className = 'hg-dock-btn';
+    btn.setAttribute('aria-label', '庭院');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span aria-hidden="true">💧</span><span class="hg-badge" id="gardenDockBadge" hidden>0</span>';
+    var pane = document.createElement('aside');
+    pane.id = 'gardenDockPane';
+    pane.className = 'hg-dock-pane';
+    pane.setAttribute('aria-label', '客源翠庭院');
+    pane.hidden = true;
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'hg-dock-close';
+    closeBtn.setAttribute('aria-label', '關閉庭院');
+    closeBtn.textContent = '✕';
+    var body = document.createElement('div');
+    pane.appendChild(closeBtn);
+    pane.appendChild(body);
+    document.body.appendChild(btn);
+    document.body.appendChild(pane);
+
+    function updateBadge() {
+      var b = document.getElementById('gardenDockBadge');
+      if (!b) return;
+      b.textContent = String(state.bank);
+      b.hidden = state.bank < 1;
+      btn.title = '庭院：有 ' + state.bank + ' 滴水可以澆';
+    }
+    function setOpen(open) {
+      pane.hidden = !open;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) mount(body);
+      try { localStorage.setItem(DOCK_OPEN_KEY, open ? '1' : '0'); } catch (e) { /* 無法存就算 */ }
+    }
+    dock.refresh = function () { updateBadge(); if (!pane.hidden) mount(body); };
+
+    btn.addEventListener('click', function () { setOpen(pane.hidden); });
+    closeBtn.addEventListener('click', function () { setOpen(false); });
+    window.addEventListener('hakfa-garden-change', updateBadge);
+
+    sync();
+    updateBadge();
+    var wasOpen = false;
+    try { wasOpen = localStorage.getItem(DOCK_OPEN_KEY) === '1'; } catch (e) { /* 無法讀就當關 */ }
+    if (wasOpen) setOpen(true);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDock);
+  else initDock();
 })();
