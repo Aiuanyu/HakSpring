@@ -24,6 +24,7 @@ on:
       - 'tests/cloudflare_d1_sync_test.js'
       - 'tests/garden_data_test.js'
       - 'tests/garden_sync_test.js'
+      - 'tests/garden_3d_test.js'
       - 'js/garden/**'
       - 'tests/backup_import_test.js'
       - 'functions/api/sync.js'
@@ -75,6 +76,7 @@ on:
       - 'tests/cloudflare_d1_sync_test.js'
       - 'tests/garden_data_test.js'
       - 'tests/garden_sync_test.js'
+      - 'tests/garden_3d_test.js'
       - 'js/garden/**'
       - 'tests/backup_import_test.js'
       - 'functions/api/sync.js'
@@ -136,6 +138,7 @@ jobs:
         run: |
           node tests/garden_data_test.js
           node tests/garden_sync_test.js
+          node tests/garden_3d_test.js
       - name: Backup import tests
         run: node tests/backup_import_test.js
       - name: Sync survey tests

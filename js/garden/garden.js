@@ -373,7 +373,12 @@
       '.hg-yard svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-height:50vh}' +
       '.hg-yard{position:relative}.hg-yard svg{touch-action:none;cursor:grab}.hg-yard.hg-placing svg{cursor:crosshair}' +
       '@media (max-width:768px){.hg-yard svg{touch-action:pan-y}.hg-yard.hg-zoomed svg,.hg-yard.hg-placing svg{touch-action:none}}' +
-      '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}' +
+      '.hg-yard.hg-3d{aspect-ratio:16/10;max-height:52vh;background:var(--hg-sky-bot)}' +
+      '.hg-3d canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}' +
+      '.hg-3d canvas.hg-base{pointer-events:none}.hg-3d.hg-placing canvas.hg-ov{cursor:crosshair}' +
+      '@media (max-width:768px){.hg-3d:not(.hg-placing) canvas.hg-ov{touch-action:pan-y}}' +
+      '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 16px)}' +
+      '.hg-zoom button[data-hg=mode-toggle]{width:auto;padding:0 10px;border-radius:15px;font-size:.78rem;white-space:nowrap}' +
       '.hg-zoom button{width:30px;height:30px;border-radius:50%;border:1px solid var(--hg-pane-border);background:var(--hg-pane-bg);color:var(--hg-pane-text);font-size:1rem;line-height:1;cursor:pointer;opacity:.9}' +
       '.hg-btn.on{outline:3px solid var(--hg-soft);outline-offset:2px}' +
       '.hg-step{border:1px solid var(--hg-soft);background:transparent;color:inherit;border-radius:50%;width:24px;height:24px;line-height:1;cursor:pointer;font-size:1rem;padding:0}' +
@@ -415,6 +420,42 @@
   }
 
   // 把庭院卡畫進 el。opts.demo = true 時顯示「＋1 測試水滴」鈕（PoC 頁用）
+  // ---- 類 3D 地形（js/garden/garden-3d.js）：模式、貼圖、色票 ----
+  var GD3 = window.hakfaGarden3D;
+  var allViews = [];        // 所有還活著个 3D 渲染器（面板、戰績頁各一個；每次重畫會重建，鏡頭狀態共用 saved3）
+  var saved3 = null;        // 鏡頭 { yaw, pitch, dist, tx, ty }：淨在本機、毋同步、毋存
+  var spriteCache = {}, spriteLoading = {}, spriteWaiters = [];
+  function mode3d() {
+    if (!GD3) return false;
+    try { return localStorage.getItem('hakfaGardenMode') !== 'simple'; } catch (e) { return true; }
+  }
+  function isDark() { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
+  var THEME3 = {
+    light: { dark: false, skyTop: [207, 230, 242], skyBot: [251, 241, 217], grass: [138, 196, 106], grassHi: [176, 222, 128], hill: [102, 162, 96], rock: [150, 160, 150], water: [120, 190, 225], sun: [255, 243, 191], fog: [251, 241, 217], ring: [31, 111, 181] },
+    dark: { dark: true, skyTop: [20, 34, 58], skyBot: [39, 66, 90], grass: [66, 146, 104], grassHi: [92, 176, 122], hill: [48, 108, 84], rock: [104, 118, 136], water: [64, 124, 168], sun: [233, 238, 251], fog: [39, 66, 90], ring: [124, 196, 255] }
+  };
+  // 樹个貼圖：把 treeSvg 个 CSS 變數換成實際顏色，做成獨立 SVG 圖片，快取起來（毋使每擺重畫）
+  function spriteFor(stage, lod, cardEl, onReady) {
+    var key = (isDark() ? 'd' : 'l') + stage + (lod ? 'l' : 'f');
+    if (spriteCache[key]) return spriteCache[key];
+    if (!spriteLoading[key]) {
+      spriteLoading[key] = true;
+      var cs = window.getComputedStyle(cardEl || document.documentElement);
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">' +
+        treeSvg(stage, lod).replace(/var\(--hg-([a-z-]+)\)/g, function (m, n) { return cs.getPropertyValue('--hg-' + n).trim() || '#888'; }) + '</svg>';
+      var img = new Image();
+      img.onload = function () { spriteCache[key] = img; var w = spriteWaiters; spriteWaiters = []; w.forEach(function (f) { try { f(); } catch (e) { /* 重繪失敗毋影響 */ } }); };
+      img.onerror = function () { spriteLoading[key] = false; };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+    return null;
+  }
+  if (window.matchMedia) { // 系統主題切換：貼圖重做、重繪
+    try {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { spriteCache = {}; spriteLoading = {}; allViews = allViews.filter(function (v) { return v.alive(); }); allViews.forEach(function (v) { v.render(false); }); });
+    } catch (e) { /* 舊瀏覽器就算 */ }
+  }
+
   function mount(el, opts) {
     if (!el) return;
     opts = opts || {};
@@ -423,6 +464,8 @@
     sync();
     var msg = totalPoured() === 0 ? '種子在等第一滴水。' : '轉來啦，樹一直都在。';
     var placing = null;       // 種植模式：目前愛種哪一種種子（null＝無）
+    var use3d = mode3d();     // 目前係類 3D 模式抑係簡易平面
+    var v3 = null, ro3 = null; // 這個面板个 3D 渲染器摎 ResizeObserver
     var justDragged = false;  // 剛剛有拖曳（放手後个 click 毋當作選樹）
 
     function devPanelHtml() {
@@ -565,7 +608,43 @@
       g.style.display = '';
     }
 
+    // 地形區：類 3D（兩層 canvas＋旋轉俯仰縮放鈕）或簡易平面（SVG）；可切換，預設類 3D
+    function yardHtml(popped) {
+      var tog = '<button type="button" data-hg="mode-toggle" title="切換簡易平面／類 3D" aria-label="切換簡易平面／類 3D">' + (use3d ? '簡易' : '立體') + '</button>';
+      if (use3d) {
+        return '<div class="hg-yard hg-3d' + (placing ? ' hg-placing' : '') + '"><canvas class="hg-base" aria-hidden="true"></canvas><canvas class="hg-ov" role="img" aria-label="' + esc(gardenTitle()) + '，立體个臺灣北部丘陵，拖曳可旋轉"></canvas>' +
+          '<div class="hg-zoom"><button type="button" data-hg="rot-l" aria-label="向左轉">↺</button><button type="button" data-hg="rot-r" aria-label="向右轉">↻</button>' +
+          '<button type="button" data-hg="tilt-up" aria-label="抬高視角">▲</button><button type="button" data-hg="tilt-down" aria-label="壓低視角">▼</button>' +
+          '<button type="button" data-hg="zoom-in" aria-label="拉近">＋</button><button type="button" data-hg="zoom-out" aria-label="拉遠">－</button><button type="button" data-hg="view-reset" aria-label="還原視角">⌂</button>' + tog + '</div></div>';
+      }
+      return '<div class="hg-yard' + (placing ? ' hg-placing' : '') + (view.z > 1 ? ' hg-zoomed' : '') + '"><svg class="hg-svg" viewBox="' + viewBoxAttr() + '" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
+        plotsSvg(popped) + '<g class="hg-drops"></g><g class="hg-ghost" style="display:none"></g></svg>' +
+        '<div class="hg-zoom"><button type="button" data-hg="zoom-in" aria-label="放大">＋</button><button type="button" data-hg="zoom-out" aria-label="縮小">－</button><button type="button" data-hg="zoom-reset" aria-label="還原">⌂</button>' + tog + '</div></div>';
+    }
+    // 建立 3D 渲染器並馬上畫一擺
+    function init3d() {
+      var base = el.querySelector('canvas.hg-base'), ov = el.querySelector('canvas.hg-ov'), card = el.querySelector('.hg-card');
+      if (!base || !ov) return;
+      try { base.getContext('2d'); } catch (e) { return; }
+      var v = GD3.create({
+        base: base, overlay: ov,
+        seed: function () { return G.seed || 1; },
+        plots: function () { return state.plots.map(function (q) { return { id: q.id, x: q.x === undefined ? 5000 : q.x, y: q.y === undefined ? 5000 : q.y, stage: stageIndex(q.n) }; }); },
+        sel: function () { return (selPlot() || {}).id; },
+        theme: function () { return isDark() ? THEME3.dark : THEME3.light; },
+        sprite: function (st, lod) { return spriteFor(st, lod, card); },
+        onSprite: function (cb) { spriteWaiters.push(cb); }
+      });
+      if (saved3) { v.cam.yaw = saved3.yaw; v.cam.pitch = saved3.pitch; v.cam.dist = saved3.dist; v.cam.tx = saved3.tx; v.cam.ty = saved3.ty; }
+      saved3 = v.cam; v3 = v; allViews = allViews.filter(function (x) { return x.alive(); }); allViews.push(v);
+      if (ro3) { try { ro3.disconnect(); } catch (e) { /* 無 */ } ro3 = null; }
+      if (window.ResizeObserver) { ro3 = new ResizeObserver(function () { if (v3 === v) v.resize(); }); ro3.observe(base); }
+      v.now();
+    }
+
     function draw(popped) {
+      use3d = mode3d();
+      if (!use3d) v3 = null;
       if (newerFlag) {
         el.innerHTML = '<div class="hg-card"><h6>🌱 ' + esc(gardenTitle()) + '</h6><div class="hg-note">庭院資料來自比這個網頁更新个版本，為著毋弄壞你个進度，這個版本先毋讀、毋改、毋同步。請重新整理網頁（抑係等網站更新）再試。</div></div>';
         return;
@@ -588,10 +667,7 @@
       el.innerHTML =
         '<div class="hg-card">' +
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
-          '<div class="hg-yard' + (placing ? ' hg-placing' : '') + (view.z > 1 ? ' hg-zoomed' : '') + '"><svg class="hg-svg" viewBox="' + viewBoxAttr() + '" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
-            plotsSvg(popped) +
-            '<g class="hg-drops"></g><g class="hg-ghost" style="display:none"></g></svg>' +
-            '<div class="hg-zoom"><button type="button" data-hg="zoom-in" aria-label="放大">＋</button><button type="button" data-hg="zoom-out" aria-label="縮小">－</button><button type="button" data-hg="zoom-reset" aria-label="還原">⌂</button></div></div>' +
+          yardHtml(popped) +
           '<div class="hg-msg" aria-live="polite">' + shown + '</div>' +
           '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '<button type="button" class="hg-step" data-hg="prev" aria-label="上一欉">‹</button> 第 ' + (state.sel + 1) + '／' + state.plots.length + ' 塊 <button type="button" class="hg-step" data-hg="next" aria-label="下一欉">›</button>：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
             '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '澆水') + '</button></div>' +
@@ -601,6 +677,7 @@
           '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每完整播完 ' + AUDIO_PER_DROP + ' 擺音檔（遊戲裡肚毋算）1 滴。水滴存入水缸，澆水無日限。' + SEEDS.common.price + ' 💧 換 1 粒樹仁，種下去多一塊地。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
+      if (use3d) init3d();
     }
 
     el.onclick = function (ev) {
@@ -625,6 +702,18 @@
           p.setAttribute('class', 'hg-drop');
           wrap.appendChild(p);
           g.appendChild(wrap);
+        }
+      } else if (b.getAttribute('data-hg') === 'mode-toggle') {
+        try { localStorage.setItem('hakfaGardenMode', use3d ? 'simple' : '3d'); } catch (e) { /* 無法存就算 */ }
+        msg = use3d ? '換成簡易平面（較省電）' : '換成立體';
+        draw(false);
+      } else if (use3d && /^(rot-l|rot-r|tilt-up|tilt-down|zoom-in|zoom-out|view-reset)$/.test(b.getAttribute('data-hg'))) {
+        var act3 = b.getAttribute('data-hg');
+        if (v3) {
+          if (act3 === 'rot-l') v3.rotate(0.3, 0); else if (act3 === 'rot-r') v3.rotate(-0.3, 0);
+          else if (act3 === 'tilt-up') v3.rotate(0, 0.14); else if (act3 === 'tilt-down') v3.rotate(0, -0.14);
+          else if (act3 === 'zoom-in') v3.zoom(1 / 1.25); else if (act3 === 'zoom-out') v3.zoom(1.25);
+          else v3.reset();
         }
       } else if (b.getAttribute('data-hg') === 'zoom-in' || b.getAttribute('data-hg') === 'zoom-out' || b.getAttribute('data-hg') === 'zoom-reset') {
         var zs = svgEl();
@@ -671,54 +760,96 @@
         draw(act === 'dev-stage');
       }
     };
-    // 指標事件：拖曳平移、兩指縮放、點選位置種樹。用屬性指派（el.onxxx），重複 mount 毋會疊加
-    var ptrs = {}, drag = null, pinch = null;
+    // 指標事件：簡易平面（SVG）係拖曳平移、兩指縮放；類 3D 係拖曳旋轉、兩指拉遠拉近。兩種都做得點選樹、點地形種樹。
+    // 用屬性指派（el.onxxx），重複 mount 毋會疊加
+    var ptrs = {}, drag = null, pinch = null, lastPick3 = null;
+    function hostOf(ev) { return ev.target.closest && ev.target.closest('canvas.hg-ov, svg.hg-svg'); }
+    function is3(host) { return host && host.tagName && host.tagName.toLowerCase() === 'canvas'; }
+    // 3D：點到个位置係毋係做得種（水裡、出界、離別欉太近）
+    function plantSpot3(ev) {
+      var g = v3 && v3.groundAt(ev.clientX, ev.clientY);
+      if (!g) return { ok: false, why: '這位看無地面' };
+      if (g.water) return { ok: false, why: '這位係小溪，毋好種' };
+      if (g.px < 300 || g.px > 9700 || g.py < 300 || g.py > 9700) return { ok: false, why: '忒遠矣，先種佇家鄉山谷裡肚' };
+      if (!canPlaceAt(g.px, g.py)) return { ok: false, why: '忒近別欉樹矣，挑較遠个位' };
+      return { ok: true, x: g.px, y: g.py, g: g };
+    }
+    function tapSelect3(ev) {
+      var c = v3 ? v3.pick(ev.clientX, ev.clientY) : [];
+      if (!c.length) { lastPick3 = null; return false; }
+      var idx = 0;
+      if (c.length > 1 && lastPick3 && Math.hypot(ev.clientX - lastPick3.x, ev.clientY - lastPick3.y) < 10 && lastPick3.n === c.length) idx = (lastPick3.idx + 1) % c.length;
+      lastPick3 = { x: ev.clientX, y: ev.clientY, idx: idx, n: c.length };
+      selectPlot(c[idx].index);
+      msg = '選著第 ' + (state.sel + 1) + ' 塊地' + (c.length > 1 ? '（這位疊著 ' + c.length + ' 欉，再點一下換下一欉）' : '');
+      return true;
+    }
     el.onpointerdown = function (ev) {
-      var svg = ev.target.closest && ev.target.closest('svg.hg-svg');
-      if (!svg) return;
+      var host = hostOf(ev);
+      if (!host) return;
       ptrs[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
       justDragged = false;
       // 毋在按下去个當下捕捉指標：捕捉會把後續个 click 改送給 svg，樹上个選取就失效（Zen／Firefox 會中）
       var ids = Object.keys(ptrs);
-      if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, vx: view.x, vy: view.y, moved: false };
+      if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, lx: ev.clientX, ly: ev.clientY, vx: view.x, vy: view.y, moved: false };
       else if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]];
-        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z };
+        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z, last: Math.hypot(a.x - b.x, a.y - b.y) || 1 };
         if (drag) drag.moved = true;
       }
     };
     el.onpointermove = function (ev) {
-      var svg = svgEl();
-      if (!svg) return;
-      if (placing && !ptrs[ev.pointerId] && !(drag && drag.moved)) updateGhost(svg, ev.clientX, ev.clientY);
+      var host = el.querySelector('canvas.hg-ov, svg.hg-svg');
+      if (!host) return;
+      var three = is3(host), svg = three ? null : host;
+      if (placing && !ptrs[ev.pointerId] && !(drag && drag.moved)) { // 種植預覽
+        if (three) { var sp = plantSpot3(ev); if (v3) v3.setGhost(sp.g ? { wx: sp.g.wx, wy: sp.g.wy, ok: sp.ok } : null); }
+        else updateGhost(svg, ev.clientX, ev.clientY);
+      }
       if (!ptrs[ev.pointerId]) return;
       ptrs[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
       var ids = Object.keys(ptrs);
       if (ids.length === 2 && pinch) {
-        var a = ptrs[ids[0]], b = ptrs[ids[1]];
-        zoomAt(svg, (a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z0 * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0));
+        var a = ptrs[ids[0]], b = ptrs[ids[1]], dd = Math.hypot(a.x - b.x, a.y - b.y);
+        if (three) { if (v3) v3.zoom(pinch.last / (dd || 1)); pinch.last = dd || 1; }
+        else zoomAt(svg, (a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z0 * (dd / pinch.d0));
         justDragged = true;
       } else if (ids.length === 1 && drag) {
         if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 6) drag.moved = true;
-        if (drag.moved && view.z > 1) { // 放大後才做得平移；開始拖曳正捕捉指標，拖出畫面也繼續跟
+        if (drag.moved && three && v3) { // 旋轉：左右拖＝水平轉；上下拖＝俯仰（觸控淨轉水平，上下留給捲動）
+          if (!drag.captured) { drag.captured = true; try { host.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ } } // 拖出畫面、在外背放手也收得著，毋會卡住
+          var dx = ev.clientX - drag.lx, dy = ev.clientY - drag.ly;
+          v3.rotate(-dx * 0.008, ev.pointerType === 'touch' ? 0 : dy * 0.006);
+          if (v3 && placing) v3.setGhost(null);
+        } else if (drag.moved && !three && view.z > 1) { // 放大後才做得平移；開始拖曳正捕捉指標，拖出畫面也繼續跟
           if (!drag.captured) { drag.captured = true; try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ } }
           var m = svg.getScreenCTM();
           if (m) { view.x = drag.vx - (ev.clientX - drag.sx) / m.a; view.y = drag.vy - (ev.clientY - drag.sy) / m.d; applyView(svg); }
         }
+        drag.lx = ev.clientX; drag.ly = ev.clientY;
         if (drag.moved) justDragged = true;
       }
     };
     function endPointer(ev) {
-      var svg = svgEl();
+      var host = el.querySelector('canvas.hg-ov, svg.hg-svg'), three = is3(host), svg = three ? null : host;
       var wasTap = drag && !drag.moved && !pinch && ptrs[ev.pointerId];
       delete ptrs[ev.pointerId];
       if (Object.keys(ptrs).length < 2) pinch = null;
       if (Object.keys(ptrs).length === 0) {
         var d = drag; drag = null;
-        if (wasTap && d && !placing && svg && ev.type === 'pointerup') { // 點一下：選樹
+        if (!(wasTap && d && host && ev.type === 'pointerup')) return;
+        if (three) {
+          if (!placing) { if (tapSelect3(ev)) draw(false); }
+          else {
+            var sp = plantSpot3(ev);
+            if (!sp.ok) { msg = sp.why; draw(false); }
+            else if (plant(placing, { x: sp.x, y: sp.y })) { var k3 = placing; placing = null; msg = '種下去矣！第 ' + state.plots.length + ' 塊地（' + SEEDS[k3].name + '）'; draw(true); }
+            else { msg = '毋做得種'; placing = null; draw(false); }
+          }
+        } else if (!placing && svg) { // 點一下：選樹
           var vb0 = toVB(svg, ev.clientX, ev.clientY);
           if (vb0 && tapSelect(vb0, ev.clientX, ev.clientY)) draw(false);
-        } else if (wasTap && d && placing && svg && ev.type === 'pointerup') { // 點一下：種在該位
+        } else if (placing && svg) { // 點一下：種在該位
           var vb = toVB(svg, ev.clientX, ev.clientY), gr = vb && groundFromVB(vb);
           if (!gr) { msg = '這位毋做得種（愛種佇前景个坡地，毋好種佇小溪）'; draw(false); }
           else if (!canPlaceAt(gr.x, gr.y)) { msg = '忒近別欉樹矣，挑較遠个位'; draw(false); }
@@ -729,15 +860,25 @@
     }
     el.onpointerup = endPointer;
     el.onpointercancel = endPointer;
-    el.onpointerleave = function () { var svg = svgEl(); if (svg) { var g = svg.querySelector('.hg-ghost'); if (g) g.style.display = 'none'; } };
-    if (!el.__hgWheel) { // 滾輪縮放（要 passive:false 才擋得住頁面捲動）
+    el.onpointerleave = function () {
+      var svg = svgEl(); if (svg) { var g = svg.querySelector('.hg-ghost'); if (g) g.style.display = 'none'; }
+      if (v3) v3.setGhost(null);
+    };
+    if (!el.__hgWheel) { // 滾輪：簡易平面縮放、類 3D 拉遠拉近（要 passive:false 才擋得住頁面捲動）
       el.__hgWheel = true;
       el.addEventListener('wheel', function (ev) {
-        var svg = ev.target.closest && ev.target.closest('svg.hg-svg');
-        if (!svg) return;
+        var host = ev.target.closest && ev.target.closest('canvas.hg-ov, svg.hg-svg');
+        if (!host) return;
         ev.preventDefault();
-        zoomAt(svg, ev.clientX, ev.clientY, view.z * Math.pow(1.0018, -ev.deltaY));
+        if (is3(host)) { if (v3) v3.zoom(Math.exp(ev.deltaY * 0.0012)); }
+        else zoomAt(host, ev.clientX, ev.clientY, view.z * Math.pow(1.0018, -ev.deltaY));
       }, { passive: false });
+    }
+    if (!el.__hgWin) { // 保險：指標在面板外背放開、抑係被取消，也愛清掉拖曳狀態，毋會卡住後續个點選
+      el.__hgWin = true;
+      var winEnd = function (ev) { if (ptrs[ev.pointerId]) { delete ptrs[ev.pointerId]; if (Object.keys(ptrs).length < 2) pinch = null; if (!Object.keys(ptrs).length) drag = null; } };
+      window.addEventListener('pointerup', winEnd);
+      window.addEventListener('pointercancel', winEnd);
     }
     if (!el.__hgKey) { // Esc 取消種植
       el.__hgKey = true;
@@ -805,6 +946,8 @@
     getState: function () { return JSON.parse(JSON.stringify(state)); },
     getLedger: function () { return JSON.parse(JSON.stringify(G)); }, // 原始帳本（除錯、測試用）
     getDevice: function () { return local.dev; },
+    __cam: function () { return saved3 ? JSON.parse(JSON.stringify(saved3)) : null; }, // 測試、除錯用
+    __view: function () { return allViews.length ? allViews[allViews.length - 1] : null; },
     exportForSync: exportForSync, // cloud-sync.js 匯出用
     mergeIncoming: mergeIncoming, // cloud-sync.js 合併用
     // 有愛同意个版本升級：使用者按同意後呼叫（升級前自動備份原始資料）
