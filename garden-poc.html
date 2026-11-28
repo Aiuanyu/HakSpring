@@ -5,197 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>客源翠庭院 PoC：一粒種子、一棵樹</title>
 <style>
-  :root {
-    --sky-top: #d9f0ff; --sky-bot: #f3fbf0; --ground: #8a6a4a; --grass: #7cc576;
-    --ink: #1f3a2a; --ink-soft: #4b6b57; --card: #ffffffcc; --water: #3a8fd6;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --sky-top: #14243a; --sky-bot: #1d3326; --ground: #5a4430; --grass: #3f7a46;
-      --ink: #e6f3e8; --ink-soft: #a9c4b0; --card: #1b2b22cc; --water: #7cc4ff; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; font-family: 'Noto Sans TC', -apple-system, sans-serif;
-    color: var(--ink); background: linear-gradient(var(--sky-top), var(--sky-bot)); }
+  :root { --bg-top: #d9f0ff; --bg-bot: #f3fbf0; --ink: #1f3a2a; }
+  @media (prefers-color-scheme: dark) { :root { --bg-top: #14243a; --bg-bot: #1d3326; --ink: #e6f3e8; } }
+  body { margin: 0; min-height: 100vh; font-family: 'Noto Sans TC', -apple-system, sans-serif; color: var(--ink);
+    background: linear-gradient(var(--bg-top), var(--bg-bot)); }
   main { max-width: 480px; margin: 0 auto; padding: 16px; }
-  h1 { font-size: 1.2rem; margin: 4px 0 2px; }
-  .sub { color: var(--ink-soft); font-size: .85rem; margin: 0 0 12px; }
-  .yard { position: relative; background: var(--card); border-radius: 16px; padding: 8px; }
-  svg { width: 100%; height: auto; display: block; }
-  .bank { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    margin: 12px 0; padding: 10px 14px; background: var(--card); border-radius: 12px; }
-  .bank b { font-size: 1.3rem; color: var(--water); }
-  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer;
-    background: var(--water); color: #fff; }
-  button:disabled { opacity: .4; cursor: default; }
-  button.ghost { background: transparent; color: var(--ink-soft); border: 1px dashed var(--ink-soft); }
-  .msg { min-height: 1.4em; text-align: center; font-size: .95rem; }
-  .rules { font-size: .8rem; color: var(--ink-soft); background: var(--card); border-radius: 12px; padding: 10px 14px; }
-  .rules li { margin: 2px 0; }
-  #tree { transform-origin: 160px 250px; transition: transform .6s ease; }
-  #tree.pop { transform: scale(1.06); }
-  .drop { fill: var(--water); animation: fall .9s ease-in forwards; }
-  @keyframes fall { from { transform: translateY(-60px); opacity: 1; } to { transform: translateY(60px); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { #tree, .drop { transition: none; animation: none; } }
+  a { color: inherit; }
 </style>
 </head>
 <body>
 <main>
-  <h1>🌱 客源翠庭院（PoC）</h1>
-  <p class="sub">一粒種子、一棵樹、只有水滴。聽、查、復習，樹就會長大。</p>
-
-  <div class="yard">
-    <svg viewBox="0 0 320 280" role="img" aria-label="庭院裡的一棵樹" id="scene">
-      <rect x="0" y="238" width="320" height="42" fill="var(--grass)"/>
-      <ellipse cx="160" cy="250" rx="70" ry="12" fill="var(--ground)"/>
-      <g id="tree"></g>
-      <g id="drops"></g>
-    </svg>
-  </div>
-
-  <p class="msg" id="msg" aria-live="polite"></p>
-
-  <div class="bank">
-    <div>💧 水滴 <b id="bank">0</b>　<small id="stage"></small></div>
-    <button id="pour">澆水</button>
-  </div>
-
-  <div class="bank">
-    <small id="today"></small>
-    <button class="ghost" id="demo" title="PoC 測試用：加一滴水">＋1 測試水滴</button>
-  </div>
-
-  <ul class="rules">
-    <li>水滴來自今天的學習：每 3 題到期復習 1 滴、每 5 題新詞 1 滴，一天最多 <span id="cap"></span> 滴。</li>
-    <li>沒有肥料：記住這件事，沒辦法用肥料加速。</li>
-    <li>幾天沒來樹也不會枯，回來澆水就好。</li>
-  </ul>
+  <div id="garden"></div>
+  <p><a href="./">← 轉去客源翠，答題、復習就會有水滴</a></p>
 </main>
-
-<script>
-(function () {
-  'use strict';
-  // ---- 設定 ----
-  var KEY = 'hakfaGarden';
-  var DAILY_CAP = 8;
-  var REVIEW_PER_DROP = 3;  // 到期復習：獎勵最高
-  var NEW_PER_DROP = 5;
-  // 澆水累積滴數 → 階段
-  var STAGES = [
-    { at: 0,  name: '🌰 落泥' },
-    { at: 1,  name: '🌱 發芽' },
-    { at: 4,  name: '🌿 大欉' },
-    { at: 9,  name: '🌳 成樹' },
-    { at: 15, name: '🌸 開花' }
-  ];
-
-  function todayStr() {
-    var d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
-  function load() {
-    var s = null;
-    try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-    s = s || {};
-    return { bank: s.bank | 0, poured: s.poured | 0, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0 };
-  }
-  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
-
-  // 讀既有的每日統計（[總題數, 答對, 復習, 新詞, ...]），只讀不寫
-  function earnedFromStats() {
-    try {
-      var all = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
-      var a = all[todayStr()] || [];
-      var n = Math.floor((a[2] | 0) / REVIEW_PER_DROP) + Math.floor((a[3] | 0) / NEW_PER_DROP);
-      return Math.min(DAILY_CAP, n);
-    } catch (e) { return 0; }
-  }
-  function stageOf(poured) {
-    var idx = 0;
-    for (var i = 0; i < STAGES.length; i++) if (poured >= STAGES[i].at) idx = i;
-    return idx;
-  }
-
-  // ---- 樹的 SVG（依階段 0~4） ----
-  function treeSvg(idx) {
-    var g = '';
-    if (idx === 0) {
-      g += '<ellipse cx="160" cy="236" rx="9" ry="6" fill="#8a5a2b"/>';
-    } else if (idx === 1) {
-      g += '<path d="M160 244 V218" stroke="#5a8f3e" stroke-width="4" stroke-linecap="round"/>' +
-           '<ellipse cx="150" cy="214" rx="12" ry="7" fill="#6cc26a" transform="rotate(-25 150 214)"/>' +
-           '<ellipse cx="171" cy="212" rx="12" ry="7" fill="#7ed07a" transform="rotate(25 171 212)"/>';
-    } else {
-      var h = idx === 2 ? 70 : 110;
-      var r = idx === 2 ? 30 : 46;
-      var top = 244 - h;
-      g += '<path d="M160 246 V' + top + '" stroke="#7a5230" stroke-width="' + (idx === 2 ? 7 : 11) + '" stroke-linecap="round"/>';
-      g += '<circle cx="160" cy="' + (top - 4) + '" r="' + r + '" fill="#4fae5a"/>';
-      g += '<circle cx="' + (160 - r * .6) + '" cy="' + (top + r * .2) + '" r="' + (r * .7) + '" fill="#5fc068"/>';
-      g += '<circle cx="' + (160 + r * .6) + '" cy="' + (top + r * .15) + '" r="' + (r * .72) + '" fill="#45a051"/>';
-      if (idx === 4) {
-        var pts = [[-.7,-.5],[.3,-.9],[.75,-.1],[-.2,.1],[.1,-.35],[-.8,.25],[.55,.45]];
-        pts.forEach(function (p) {
-          g += '<circle cx="' + (160 + p[0] * r) + '" cy="' + (top - 4 + p[1] * r) + '" r="4.5" fill="#ffd1e0"/>' +
-               '<circle cx="' + (160 + p[0] * r) + '" cy="' + (top - 4 + p[1] * r) + '" r="1.8" fill="#ffb02e"/>';
-        });
-      }
-    }
-    return g;
-  }
-
-  // ---- 畫面 ----
-  var $ = function (id) { return document.getElementById(id); };
-  var state = load();
-
-  function sync() {
-    // 換日重置「今日已入帳」；PoC 測試水滴也每日上限內計
-    var t = todayStr();
-    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; }
-    var earned = Math.min(DAILY_CAP, earnedFromStats() + state.demo);
-    if (earned > state.credited) {
-      state.bank += earned - state.credited;
-      state.credited = earned;
-      save(state);
-    }
-  }
-  function render(popped) {
-    var idx = stageOf(state.poured);
-    $('tree').innerHTML = treeSvg(idx);
-    $('bank').textContent = state.bank;
-    $('stage').textContent = STAGES[idx].name + '（已澆 ' + state.poured + ' 滴）';
-    $('pour').disabled = state.bank < 1;
-    $('today').textContent = '今天入帳 ' + state.credited + '／' + DAILY_CAP + ' 滴';
-    $('demo').disabled = state.credited >= DAILY_CAP;
-    $('cap').textContent = DAILY_CAP;
-    if (popped) { var t = $('tree'); t.classList.add('pop'); setTimeout(function () { t.classList.remove('pop'); }, 500); }
-  }
-  function say(s) { $('msg').textContent = s; }
-
-  $('pour').addEventListener('click', function () {
-    if (state.bank < 1) return;
-    var before = stageOf(state.poured);
-    state.bank--; state.poured++;
-    save(state);
-    var ns = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    ns.setAttribute('d', 'M160 150 q-8 14 0 18 q8 -4 0 -18z');
-    ns.setAttribute('class', 'drop');
-    $('drops').appendChild(ns);
-    setTimeout(function () { ns.remove(); }, 1000);
-    var after = stageOf(state.poured);
-    say(after > before ? '長大了！' + STAGES[after].name : '咕嚕咕嚕～');
-    render(after > before);
-  });
-
-  $('demo').addEventListener('click', function () {
-    state.demo++;
-    sync(); render();
-    say('（測試）多一滴水');
-  });
-
-  sync();
-  render();
-  say(state.poured === 0 ? '種子在等第一滴水。' : '回來啦，樹一直都在。');
-})();
-</script>
+<script src="js/garden/garden.js"></script>
+<script>hakfaGarden.mount(document.getElementById('garden'), { demo: true });</script>
 </body>
 </html>
