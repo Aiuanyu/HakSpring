@@ -9,6 +9,7 @@
   var DAILY_CAP = 8;
   var REVIEW_PER_DROP = 3; // 到期復習：全站最有學習效果，獎勵最高
   var NEW_PER_DROP = 5;
+  var AUDIO_PER_DROP = 10; // 任何音檔播放（主表、日日一詞、遊戲）每 10 次 1 滴
   var STAGES = [
     { at: 0, name: '🌰 落泥' },
     { at: 1, name: '🌱 發芽' },
@@ -26,7 +27,9 @@
     var s = null;
     try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { /* 壞掉就當空个 */ }
     s = s || {};
-    return { bank: s.bank | 0, poured: s.poured | 0, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0 };
+    // baseR／baseN：開發者「重設今日入帳」時記下个復習／新詞題數基準，今日淨計基準後背个新增量
+    return { bank: s.bank | 0, poured: s.poured | 0, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0,
+      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0 };
   }
   function save(s) {
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ }
@@ -36,19 +39,24 @@
   var state = load();
 
   // 今日由學習換來个滴數（hakkaDailyStats 格式：[總題數, 答對, 復習, 新詞, ...]）
-  function earnedFromStats() {
+  function statsCounts() {
     try {
       var all = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
       var a = all[todayStr()] || [];
-      return Math.floor((a[2] | 0) / REVIEW_PER_DROP) + Math.floor((a[3] | 0) / NEW_PER_DROP);
-    } catch (e) { return 0; }
+      return [a[2] | 0, a[3] | 0];
+    } catch (e) { return [0, 0]; }
+  }
+  function earnedFromStats() {
+    var c = statsCounts();
+    return Math.floor(Math.max(0, c[0] - state.baseR) / REVIEW_PER_DROP) +
+           Math.floor(Math.max(0, c[1] - state.baseN) / NEW_PER_DROP);
   }
 
   // 重算今日入帳，回傳這次新增个滴數（冪等：重複呼叫毋會重複給）
   function sync() {
     var t = todayStr();
-    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; }
-    var earned = Math.min(DAILY_CAP, earnedFromStats() + state.demo);
+    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; }
+    var earned = Math.min(DAILY_CAP, earnedFromStats() + Math.floor(state.audio / AUDIO_PER_DROP) + state.demo);
     var gained = 0;
     if (earned > state.credited) {
       gained = earned - state.credited;
@@ -92,9 +100,19 @@
   var dev = {
     addBank: function (n) { state.bank += n; save(state); },
     clearBank: function () { state.bank = 0; save(state); },
-    resetToday: function () { state.credited = 0; state.demo = 0; save(state); sync(); }, // 今日入帳歸零後重算
+    // 今日入帳歸零，並以「現在」為新基準：今日已答个題數、已播个音檔毋再算，淨計往後新增个
+    resetToday: function () {
+      var c = statsCounts();
+      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1];
+      state.day = todayStr();
+      save(state);
+    },
     setStage: function (i) { state.poured = STAGES[i].at; save(state); },
-    resetAll: function () { state = { bank: 0, poured: 0, day: '', credited: 0, demo: 0 }; save(state); sync(); }
+    resetAll: function () {
+      var c = statsCounts();
+      state = { bank: 0, poured: 0, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1] };
+      save(state);
+    }
   };
 
   // 庭院標題：「<名>个客源翠丹墀坪／庭院」；無設定名仔就淨「客源翠丹墀坪／庭院」
@@ -198,7 +216,7 @@
         '<div class="hg-dev-row"><button class="hg-btn ghost" data-hg="dev-add" data-n="1">＋1 💧</button>' +
         '<button class="hg-btn ghost" data-hg="dev-add" data-n="5">＋5 💧</button>' +
         '<button class="hg-btn ghost" data-hg="dev-clear">水滴歸零</button>' +
-        '<button class="hg-btn ghost" data-hg="dev-today">重算今日入帳</button></div>' +
+        '<button class="hg-btn ghost" data-hg="dev-today">重設今日入帳（從現在起算）</button></div>' +
         '<div class="hg-dev-row">跳到：' + stageBtns + '</div>' +
         '<div class="hg-dev-row"><button class="hg-btn ghost" data-hg="dev-all">全部重置（樹＋水滴＋今日入帳）</button>' +
         '<button class="hg-btn ghost" data-hg="dev-off">關閉面板</button></div>' +
@@ -218,9 +236,9 @@
           '<div class="hg-msg" aria-live="polite">' + msg + '</div>' +
           '<div class="hg-row"><div>💧 <b>' + state.bank + '</b>　<small>' + STAGES[idx].name + '（已澆 ' + state.poured + ' 滴）</small></div>' +
             '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 ? ' disabled' : '') + '>澆水</button></div>' +
-          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + '／' + DAILY_CAP + ' 滴</small>' +
+          '<div class="hg-row"><small>今晡日入帳 ' + state.credited + '／' + DAILY_CAP + ' 滴（播音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo"' + (state.credited >= DAILY_CAP ? ' disabled' : '') + '>＋1 測試水滴</button>' : '') + '</div>' +
-          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴，一日上濟 ' + DAILY_CAP + ' 滴。無肥料；幾日無來樹也毋會枯。</div>' +
+          '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴、每播 ' + AUDIO_PER_DROP + ' 擺音檔 1 滴，一日上濟 ' + DAILY_CAP + ' 滴。無肥料；幾日無來樹也毋會枯。</div>' +
           (devOn ? devPanelHtml() : '') +
         '</div>';
     }
@@ -248,7 +266,7 @@
         var act = b.getAttribute('data-hg');
         if (act === 'dev-add') { dev.addBank(parseInt(b.getAttribute('data-n'), 10) || 1); msg = '（開發）加水滴'; }
         else if (act === 'dev-clear') { dev.clearBank(); msg = '（開發）水滴歸零'; }
-        else if (act === 'dev-today') { dev.resetToday(); msg = '（開發）已重算今日入帳'; }
+        else if (act === 'dev-today') { dev.resetToday(); msg = '（開發）今日入帳已重設，從現在起算'; }
         else if (act === 'dev-stage') { dev.setStage(parseInt(b.getAttribute('data-i'), 10) || 0); msg = '（開發）跳階'; }
         else if (act === 'dev-all') { dev.resetAll(); msg = '（開發）全部重置'; }
         else if (act === 'dev-off') {
@@ -260,6 +278,35 @@
     };
     draw(false);
   }
+
+  // ---- 音檔播放計滴：任何 audio（主表、日日一詞、遊戲）每 AUDIO_PER_DROP 擺 1 滴 ----
+  var AUDIO_IGNORE_RE = /(^|\/)(endOfPlay|empty_category)\.mp3(\?|$)/; // 提示音效毋算
+  function onAudioPlayed() {
+    var gained = sync(); // 先處理換日
+    state.audio++;
+    gained += sync();
+    save(state); // 計數有變，愛落地
+    var cnt = document.querySelector('.hg-audio');
+    if (cnt) cnt.textContent = state.audio;
+    if (gained > 0) {
+      if (dock.refresh) dock.refresh();
+      if (typeof window.showGardenDropHint === 'function') window.showGardenDropHint(gained);
+    }
+  }
+  // 包一層 HTMLMediaElement.prototype.play：淨有真正開始播（promise 成功）正算，毋影響原本回傳值
+  (function patchAudioPlay() {
+    if (typeof HTMLMediaElement === 'undefined' || HTMLMediaElement.prototype.__hakfaGardenPatched) return;
+    var orig = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      var src = this.currentSrc || this.src || '';
+      var ret = orig.apply(this, arguments);
+      if (!AUDIO_IGNORE_RE.test(src) && ret && typeof ret.then === 'function') {
+        ret.then(function () { try { onAudioPlayed(); } catch (e) { /* 計數失敗毋影響播放 */ } }, function () {});
+      }
+      return ret;
+    };
+    HTMLMediaElement.prototype.__hakfaGardenPatched = true;
+  })();
 
   window.hakfaGarden = {
     mount: mount,

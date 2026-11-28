@@ -1489,6 +1489,12 @@ function renderCloudKeyUI() {
     els.Display.type = 'password';
   }
   if (els.ToggleBtn) els.ToggleBtn.textContent = '顯示金鑰';
+  // 有使用者名仔就顯示「你（<名>）个金鑰」
+  const owner = document.getElementById('cloudKeyOwner');
+  if (owner) {
+    const name = (localStorage.getItem('hakkaUserName') || '').trim();
+    owner.textContent = name ? `（${name}）` : '';
+  }
   setCloudKeyStatus('');
 }
 
@@ -1608,7 +1614,7 @@ function showManualSyncModal() {
             </div>
           </div>
           <div id="cloudKeyOn" hidden>
-            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你个金鑰：</div>
+            <div class="sync-modal-muted" style="font-size: 13px; margin-bottom: 6px;">這台裝置已開啟雲端同步。你<span id="cloudKeyOwner"></span>个金鑰：</div>
             <input id="cloudKeyDisplay" type="password" readonly aria-label="你个同步金鑰" style="width: 100%; box-sizing: border-box; padding: 8px; font-size: 13px; font-family: monospace; border-radius: 6px;" />
             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
               <button id="cloudKeyToggleBtn" type="button" style="background: #546e7a; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;">顯示金鑰</button>
