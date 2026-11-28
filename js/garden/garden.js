@@ -18,12 +18,14 @@
   // 種子種類：price＝幾滴水換 1 粒。往後新種類（性質／等級）加在這，價錢無共樣
   var SEEDS = { common: { name: '🌰 樹仁', price: 10 } };
   var MAX_PLOTS = GD.MAX_PLOTS; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
+  // 階段：落泥、生筍、樹秧、大樹、開花、打子（結出種莢，預埋往後會有產物个伏筆）。at＝累積澆幾滴到這階段（暫定）
   var STAGES = [
     { at: 0, name: '🌰 落泥' },
-    { at: 1, name: '🌱 發芽' },
-    { at: 4, name: '🌿 大欉' },
-    { at: 9, name: '🌳 成樹' },
-    { at: 15, name: '🌸 開花' }
+    { at: 1, name: '🌱 生筍' },
+    { at: 4, name: '🌿 樹秧' },
+    { at: 9, name: '🌳 大樹' },
+    { at: 15, name: '🌸 開花' },
+    { at: 22, name: '🫘 打子' }
   ];
 
   function dayStr(d) {
@@ -242,28 +244,98 @@
     });
   }
 
-  function treeSvg(idx) {
-    var g = '';
-    if (idx === 0) {
-      g += '<ellipse cx="160" cy="236" rx="9" ry="6" fill="#8a5a2b"/>';
-    } else if (idx === 1) {
-      g += '<path d="M160 244 V218" stroke="#5a8f3e" stroke-width="4" stroke-linecap="round"/>' +
-           '<ellipse cx="150" cy="214" rx="12" ry="7" fill="#6cc26a" transform="rotate(-25 150 214)"/>' +
-           '<ellipse cx="171" cy="212" rx="12" ry="7" fill="#7ed07a" transform="rotate(25 171 212)"/>';
-    } else {
-      var h = idx === 2 ? 70 : 110;
-      var r = idx === 2 ? 30 : 46;
-      var top = 244 - h;
-      g += '<path d="M160 246 V' + top + '" stroke="#7a5230" stroke-width="' + (idx === 2 ? 7 : 11) + '" stroke-linecap="round"/>';
-      g += '<circle cx="160" cy="' + (top - 4) + '" r="' + r + '" fill="#4fae5a"/>';
-      g += '<circle cx="' + (160 - r * 0.6) + '" cy="' + (top + r * 0.2) + '" r="' + (r * 0.7) + '" fill="#5fc068"/>';
-      g += '<circle cx="' + (160 + r * 0.6) + '" cy="' + (top + r * 0.15) + '" r="' + (r * 0.72) + '" fill="#45a051"/>';
-      if (idx === 4) {
-        [[-0.7, -0.5], [0.3, -0.9], [0.75, -0.1], [-0.2, 0.1], [0.1, -0.35], [-0.8, 0.25], [0.55, 0.45]].forEach(function (p) {
-          var x = 160 + p[0] * r, y = top - 4 + p[1] * r;
-          g += '<circle cx="' + x + '" cy="' + y + '" r="4.5" fill="#ffd1e0"/><circle cx="' + x + '" cy="' + y + '" r="1.8" fill="#ffb02e"/>';
-        });
+  // ---- 相思樹（臺灣北部丘陵最常見个樹）手繪風 SVG：200×240 畫布，地面約 y=208 ----
+  // 顏色全部用 CSS 變數（見 injectStyle），淺色／暗色自動切換；毋用濾鏡、毋做常駐動畫（省 GPU）。
+  var V = function (n) { return 'var(--hg-' + n + ')'; };
+  function rng(seed) { var x = seed >>> 0; return function () { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
+  function blob(cx, cy, rx, ry, seed, n, j) { // 不規則形狀，手繪感由形狀本身來
+    n = n || 9; j = j == null ? 0.13 : j;
+    var r = rng(seed), pt = [], i;
+    for (i = 0; i < n; i++) { var a = (i / n) * Math.PI * 2, k = 1 + (r() - 0.5) * 2 * j; pt.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); }
+    var d = 'M' + pt[0][0].toFixed(1) + ' ' + pt[0][1].toFixed(1);
+    for (i = 0; i < n; i++) {
+      var p0 = pt[(i - 1 + n) % n], p1 = pt[i], p2 = pt[(i + 1) % n], p3 = pt[(i + 2) % n];
+      d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + ' ' + (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+    }
+    return d + 'Z';
+  }
+  function sp(d, fill, line, w, extra) {
+    return '<path d="' + d + '" fill="' + fill + '"' + (line ? ' stroke="' + line + '" stroke-width="' + (w || 1.5) + '" stroke-linejoin="round" stroke-linecap="round"' : '') + (extra || '') + '/>';
+  }
+  function limb(d, w) { // 有輪廓个枝幹
+    return '<path d="' + d + '" fill="none" stroke="' + V('line') + '" stroke-width="' + (w + 3) + '" stroke-linecap="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + V('trunk') + '" stroke-width="' + w + '" stroke-linecap="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + V('trunk-dark') + '" stroke-width="' + Math.max(1, w * 0.22) + '" stroke-linecap="round" opacity=".5" transform="translate(' + (w * 0.18) + ' 0)"/>';
+  }
+  function sickle(x, y, rot, sc, fill) { // 相思樹个葉：彎月形
+    return '<g transform="translate(' + x + ' ' + y + ') rotate(' + rot + ') scale(' + sc + ')"><path d="M0 0C5 -9 14 -11 24 -6C15 -7 6 -4 0 0Z" fill="' + fill + '" stroke="' + V('line') + '" stroke-width="1.1" stroke-linejoin="round"/></g>';
+  }
+  function pom(x, y, sc) { // 金黃絨球花
+    var g = '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')"><circle r="4.4" fill="' + V('flower') + '" stroke="' + V('line') + '" stroke-width=".8"/><circle r="2.6" cx="-.8" cy="-.8" fill="' + V('flower-hi') + '"/>';
+    for (var i = 0; i < 6; i++) g += '<circle cx="' + (Math.cos(i * 1.05) * 3.6).toFixed(1) + '" cy="' + (Math.sin(i * 1.05) * 3.6).toFixed(1) + '" r=".7" fill="' + V('flower-hi') + '"/>';
+    return g + '</g>';
+  }
+  function pod(x, y, rot, sc) { // 種莢：扁長、微彎、褐色
+    var d = 'M0 0C2 6 2 12 0 19';
+    return '<g transform="translate(' + x + ' ' + y + ') rotate(' + rot + ') scale(' + sc + ')"><path d="' + d + '" fill="none" stroke="' + V('line') + '" stroke-width="5" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="' + V('pod') + '" stroke-width="3" stroke-linecap="round"/><path d="M-.6 3C.4 8 .4 12 -.6 16" fill="none" stroke="' + V('pod-hi') + '" stroke-width=".9" stroke-linecap="round"/></g>';
+  }
+  function cluster(cx, cy, rx, ry, seed, leaves) { // 一叢疏疏个樹葉
+    var o = '', r = rng(seed + 7), i;
+    o += sp(blob(cx, cy, rx, ry, seed, 9, 0.16), V('leaf-dark'), V('line'), 1.4, ' opacity=".92"');
+    o += sp(blob(cx - rx * 0.06, cy - ry * 0.1, rx * 0.84, ry * 0.76, seed + 3, 9, 0.16), V('leaf'), null, 0, ' opacity=".95"');
+    o += sp(blob(cx - rx * 0.28, cy - ry * 0.34, rx * 0.4, ry * 0.3, seed + 5, 7, 0.18), V('leaf-light'), null, 0, ' opacity=".85"');
+    for (i = 0; i < leaves; i++) {
+      var a = r() * Math.PI * 2, d = r() * 0.8;
+      o += sickle((cx + Math.cos(a) * rx * d - 9).toFixed(1), (cy + Math.sin(a) * ry * d).toFixed(1), (r() * 360).toFixed(0), (0.5 + r() * 0.3).toFixed(2), r() > 0.5 ? V('leaf-mid') : V('leaf-light'));
+    }
+    return o;
+  }
+  function sparkle(x, y, sc) { return '<path transform="translate(' + x + ' ' + y + ') scale(' + sc + ')" d="M0 -6L1.6 -1.6L6 0L1.6 1.6L0 6L-1.6 1.6L-6 0L-1.6 -1.6Z" fill="' + V('spark') + '"/>'; }
+
+  // stage 0~5；lod＝true（地塊多、每欉畫得小）時簡化葉片與花
+  function treeSvg(idx, lod) {
+    var g = '<ellipse cx="100" cy="212" rx="60" ry="10" fill="' + V('shadow') + '"/>' +
+      sp(blob(100, 206, 44, 11, 7 + idx, 10, 0.07), V('soil'), V('line'), 1.4) +
+      sp(blob(92, 203, 22, 4.5, 11, 8, 0.1), V('soil-dark'), null, 0, ' opacity=".35"');
+    if (idx === 0) { // 落泥：種子細細粒、扁扁、深褐色
+      return g + sp(blob(100, 199, 7, 5, 3, 7, 0.1), V('seed'), V('line'), 1.2) + sp(blob(98, 197, 2.6, 1.6, 5, 6, 0.1), V('seed-hi'), null, 0, ' opacity=".8"') + sparkle(120, 178, 1) + sparkle(80, 164, 0.7);
+    }
+    if (idx === 1) { // 生筍：幼苗是羽狀複葉（像蕨）
+      g += limb('M100 204C100 192 99 180 101 168', 3);
+      [-1, 1].forEach(function (sd) {
+        for (var i = 0; i < 6; i++) {
+          var ex = 101 + sd * (6 + i * 4.5), ey = 168 - i * 1.2;
+          g += '<ellipse cx="' + ex + '" cy="' + ey + '" rx="3.2" ry="1.7" transform="rotate(' + (sd * -18) + ' ' + ex + ' ' + ey + ')" fill="' + V('leaf-mid') + '" stroke="' + V('line') + '" stroke-width=".7"/>';
+        }
+      });
+      return g + '<ellipse cx="102" cy="162" rx="3" ry="3.2" fill="' + V('leaf-light') + '" stroke="' + V('line') + '" stroke-width=".8"/>' + sparkle(130, 150, 0.8);
+    }
+    if (idx === 2) { // 樹秧：細長微彎，開始有彎月形葉
+      g += limb('M100 206C97 186 104 170 99 148', 6) + limb('M99 168C86 160 76 154 70 144', 3) + limb('M101 158C114 150 124 146 130 136', 2.6);
+      return g + cluster(72, 136, 22, 11, 41, lod ? 2 : 5) + cluster(130, 128, 22, 11, 42, lod ? 2 : 5) + cluster(100, 124, 28, 13, 43, lod ? 2 : 6);
+    }
+    // 大樹／開花／打子：彎曲个主幹、三根枝、七叢疏葉
+    g += limb('M100 206C94 180 108 160 96 134C92 120 98 112 100 100', 11) + limb('M99 156C84 146 70 138 56 124', 5) + limb('M101 140C118 132 132 122 146 108', 5) + limb('M97 120C90 108 86 100 82 88', 4);
+    var cs = [[52, 116, 28, 14], [76, 96, 30, 15], [104, 82, 32, 15], [132, 98, 30, 15], [150, 112, 26, 13], [100, 108, 34, 15], [70, 128, 22, 11]];
+    cs.forEach(function (c, i) { g += cluster(c[0], c[1], c[2], c[3], 51 + i * 5, lod ? 2 : 6); });
+    var fr = rng(9), f, c, a, d;
+    if (idx === 4) { // 開花：金黃絨球花滿樹
+      for (f = 0; f < (lod ? 10 : 26); f++) {
+        c = cs[Math.floor(fr() * cs.length)]; a = fr() * Math.PI * 2; d = 0.4 + fr() * 0.6;
+        g += pom((c[0] + Math.cos(a) * c[2] * d).toFixed(1), (c[1] + Math.sin(a) * c[3] * d - 2).toFixed(1), (0.7 + fr() * 0.5).toFixed(2));
       }
+      g += sparkle(160, 64, 0.9) + sparkle(44, 56, 0.7);
+    }
+    if (idx === 5) { // 打子：殘留幾朵花，葉叢下垂著褐色種莢
+      for (f = 0; f < (lod ? 3 : 7); f++) {
+        c = cs[Math.floor(fr() * cs.length)]; a = fr() * Math.PI * 2; d = 0.4 + fr() * 0.6;
+        g += pom((c[0] + Math.cos(a) * c[2] * d).toFixed(1), (c[1] + Math.sin(a) * c[3] * d - 2).toFixed(1), (0.65 + fr() * 0.35).toFixed(2));
+      }
+      for (f = 0; f < (lod ? 8 : 16); f++) {
+        c = cs[Math.floor(fr() * cs.length)]; d = (fr() - 0.5) * 1.5;
+        g += pod((c[0] + d * c[2] * 0.8).toFixed(1), (c[1] + c[3] * 0.55).toFixed(1), ((fr() - 0.5) * 24).toFixed(0), (0.8 + fr() * 0.35).toFixed(2));
+      }
+      g += sparkle(160, 64, 0.8);
     }
     return g;
   }
@@ -276,9 +348,15 @@
       // 色票自給：站上沒定義 --card-bg-color 等變數，毋倚靠。對比度（WCAG）實算：
       // 淺色 按鈕白字/#1f6fb5 5.25、水滴數 #1f6fb5/卡面 4.82、說明字 #3d5a47/卡面 7.00、面板字 #1e293b/#fff 14.63
       // 暗色 按鈕 #0b1b2b/#7cc4ff 9.29、水滴數 #7cc4ff/卡面 6.74、說明字 #b9d1c0/卡面 7.79、面板字 #e0e0e0/#2c2c2c 10.58
-      '.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-sky:#e3f4ff;--hg-grass:#7cc576;--hg-ground:#8a6a4a;--hg-water:#1f6fb5;' +
+      '.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-leaf-dark:#5a9a58;--hg-leaf:#7db96a;--hg-leaf-mid:#98c97a;--hg-leaf-light:#c4e39a;' +
+        '--hg-trunk:#9a6e4b;--hg-trunk-dark:#6f4d33;--hg-line:#5e432c;--hg-flower:#ffd23f;--hg-flower-hi:#fff2a8;--hg-pod:#b58a52;--hg-pod-hi:#e0c08a;' +
+        '--hg-seed:#4a3426;--hg-seed-hi:#8a6a50;--hg-soil:#c9a27a;--hg-soil-dark:#a98259;--hg-shadow:rgba(90,70,40,.16);--hg-spark:#fff3b0;' +
+        '--hg-sky:#cfe6f2;--hg-grass:#a9d392;--hg-ground:#8a6a4a;--hg-water:#1f6fb5;' +
         '--hg-on-water:#ffffff;--hg-soft:#3d5a47;--hg-pane-bg:#ffffff;--hg-pane-text:#1e293b;--hg-pane-border:#cbd5e1}' +
-      '@media (prefers-color-scheme: dark){.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-sky:#14243a;--hg-grass:#3f7a46;--hg-ground:#5a4430;' +
+      '@media (prefers-color-scheme: dark){.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-leaf-dark:#2f6f55;--hg-leaf:#46916a;--hg-leaf-mid:#5aa77b;--hg-leaf-light:#86c79a;' +
+        '--hg-trunk:#7a5a3e;--hg-trunk-dark:#523a28;--hg-line:#1d2d26;--hg-flower:#f2c94c;--hg-flower-hi:#ffe9a6;--hg-pod:#a07c4c;--hg-pod-hi:#cfae7c;' +
+        '--hg-seed:#9a7a5a;--hg-seed-hi:#d0b08a;--hg-soil:#6a5037;--hg-soil-dark:#4c3825;--hg-shadow:rgba(0,0,0,.28);--hg-spark:#ffe9a6;' +
+        '--hg-sky:#14233a;--hg-grass:#2c5a47;--hg-ground:#5a4430;' +
         '--hg-water:#7cc4ff;--hg-on-water:#0b1b2b;--hg-soft:#b9d1c0;--hg-pane-bg:#2c2c2c;--hg-pane-text:#e0e0e0;--hg-pane-border:rgba(255,255,255,.2)}}' +
       '.hg-card{margin:0 0 20px;padding:10px;border-radius:14px;background:rgba(128,128,128,.08)}' +
       '.hg-card h6{margin:0 0 6px}' +
@@ -310,7 +388,7 @@
       '@media (max-width:768px){.hg-dock-pane{left:0;right:0;top:auto;bottom:0;width:auto;max-height:60vh;border-radius:14px 14px 0 0}}' +
       '.hg-note{font-size:.78rem;color:var(--hg-soft);margin-top:6px}' +
       '.hg-msg{min-height:1.3em;font-size:.9rem;margin-top:4px}' +
-      '.hg-tree{transform-origin:160px 250px;transition:transform .5s ease}.hg-tree.pop{transform:scale(1.06)}' +
+      '.hg-tree{transform-origin:100px 208px;transition:transform .5s ease}.hg-tree.pop{transform:scale(1.06)}' +
       '.hg-drop{fill:var(--hg-water);animation:hg-fall .9s ease-in forwards}' +
       '@keyframes hg-fall{from{transform:translateY(-60px);opacity:1}to{transform:translateY(60px);opacity:0}}' +
       '@media (prefers-reduced-motion: reduce){.hg-tree{transition:none}.hg-drop{animation:none}}';
@@ -359,8 +437,8 @@
       state.plots.forEach(function (q, i) {
         var xy = plotXY(L, i), on = i === state.sel;
         out += '<g transform="translate(' + xy.x + ' ' + xy.y + ') scale(' + L.sc + ')">' +
-          '<ellipse cx="160" cy="250" rx="70" ry="12" fill="var(--hg-ground)"' + (on && L.n > 1 ? ' stroke="var(--hg-water)" stroke-width="3"' : '') + '/>' +
-          '<g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(q.n)) + '</g></g>';
+          (on && L.n > 1 ? '<ellipse cx="160" cy="248" rx="72" ry="13" fill="none" stroke="var(--hg-water)" stroke-width="3.5"/>' : '') +
+          '<g transform="translate(60 38)"><g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(q.n), L.n >= 7) + '</g></g></g>';
       });
       if (L.n > 1) {
         state.plots.forEach(function (q, i) {
