@@ -376,6 +376,7 @@
       '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}' +
       '.hg-zoom button{width:30px;height:30px;border-radius:50%;border:1px solid var(--hg-pane-border);background:var(--hg-pane-bg);color:var(--hg-pane-text);font-size:1rem;line-height:1;cursor:pointer;opacity:.9}' +
       '.hg-btn.on{outline:3px solid var(--hg-soft);outline-offset:2px}' +
+      '.hg-step{border:1px solid var(--hg-soft);background:transparent;color:inherit;border-radius:50%;width:24px;height:24px;line-height:1;cursor:pointer;font-size:1rem;padding:0}' +
       '.hg-night{display:none}@media (prefers-color-scheme: dark){.hg-day{display:none}.hg-night{display:block}}' +
       '.hg-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}' +
       '.hg-row b{color:var(--hg-water);font-size:1.15rem}' +
@@ -479,8 +480,7 @@
         var on = it.i === state.sel;
         out += '<g transform="' + it.tf + '">' +
           (on && state.plots.length > 1 ? '<ellipse cx="100" cy="210" rx="56" ry="10" fill="none" stroke="var(--hg-water)" stroke-width="4"/>' : '') +
-          '<g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(it.q.n), lod) + '</g>' +
-          (state.plots.length > 1 ? '<rect x="25" y="50" width="150" height="168" fill="transparent" style="cursor:pointer" data-hg="sel" data-i="' + it.i + '"><title>第 ' + (it.i + 1) + ' 塊地</title></rect>' : '') + '</g>';
+          '<g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(it.q.n), lod) + '</g></g>';
       });
       return out;
     }
@@ -531,6 +531,28 @@
       if (vb.y > 236 && Math.abs(vb.x - streamX(vb.y)) < 18) return null;
       return { x: Math.round(xr * 10000), y: Math.round(t * 10000) };
     }
+    // 點選樹：毋倚靠互相蓋住个矩形，改用座標挑「最貼近樹冠中心」个一欉；疊著个時節，同一位再點一下輪流切換
+    var lastPick = null;
+    function pickPlots(vb) {
+      var R3 = terrain()[3], c = [];
+      state.plots.forEach(function (q, i) {
+        var ps = plotScreen(q, R3), cx = ps.sx, cy = ps.gy - 95 * ps.sc, rx = 62 * ps.sc, ry = 100 * ps.sc;
+        var d = Math.pow((vb.x - cx) / rx, 2) + Math.pow((vb.y - cy) / ry, 2);
+        if (d <= 1) c.push({ i: i, d: d, gy: ps.gy });
+      });
+      c.sort(function (a, b) { return a.d - b.d || b.gy - a.gy; });
+      return c;
+    }
+    function tapSelect(vb, cx, cy) {
+      var c = pickPlots(vb);
+      if (!c.length) { lastPick = null; return false; }
+      var idx = 0;
+      if (c.length > 1 && lastPick && Math.hypot(cx - lastPick.cx, cy - lastPick.cy) < 10 && lastPick.n === c.length) idx = (lastPick.idx + 1) % c.length; // 同一位再點：換下一欉
+      lastPick = { cx: cx, cy: cy, idx: idx, n: c.length };
+      selectPlot(c[idx].i);
+      msg = '選著第 ' + (state.sel + 1) + ' 塊地' + (c.length > 1 ? '（這位疊著 ' + c.length + ' 欉，再點一下換下一欉）' : '');
+      return true;
+    }
     function updateGhost(svg, cx, cy) {
       var g = svg.querySelector('.hg-ghost');
       if (!g) return;
@@ -571,7 +593,7 @@
             '<g class="hg-drops"></g><g class="hg-ghost" style="display:none"></g></svg>' +
             '<div class="hg-zoom"><button type="button" data-hg="zoom-in" aria-label="放大">＋</button><button type="button" data-hg="zoom-out" aria-label="縮小">－</button><button type="button" data-hg="zoom-reset" aria-label="還原">⌂</button></div></div>' +
           '<div class="hg-msg" aria-live="polite">' + shown + '</div>' +
-          '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '第 ' + (state.sel + 1) + ' 塊：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
+          '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '<button type="button" class="hg-step" data-hg="prev" aria-label="上一欉">‹</button> 第 ' + (state.sel + 1) + '／' + state.plots.length + ' 塊 <button type="button" class="hg-step" data-hg="next" aria-label="下一欉">›</button>：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
             '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '澆水') + '</button></div>' +
           seedRows +
           '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播完音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
@@ -611,6 +633,11 @@
           if (za === 'zoom-reset') { view.z = 1; view.x = 0; view.y = 0; applyView(zs); }
           else zoomAt(zs, zr.left + zr.width / 2, zr.top + zr.height / 2, view.z * (za === 'zoom-in' ? 1.4 : 1 / 1.4));
         }
+      } else if (b.getAttribute('data-hg') === 'prev' || b.getAttribute('data-hg') === 'next') {
+        var step = b.getAttribute('data-hg') === 'next' ? 1 : -1, np = state.plots.length;
+        selectPlot(((state.sel + step) % np + np) % np);
+        msg = '選著第 ' + (state.sel + 1) + ' 塊地';
+        draw(false);
       } else if (b.getAttribute('data-hg') === 'sel') {
         if (justDragged || placing) return; // 拖曳放手、或種植模式中，毋當作選樹
         selectPlot(parseInt(b.getAttribute('data-i'), 10) || 0);
@@ -688,7 +715,10 @@
       if (Object.keys(ptrs).length < 2) pinch = null;
       if (Object.keys(ptrs).length === 0) {
         var d = drag; drag = null;
-        if (wasTap && d && placing && svg && ev.type === 'pointerup') { // 點一下：種在該位
+        if (wasTap && d && !placing && svg && ev.type === 'pointerup') { // 點一下：選樹
+          var vb0 = toVB(svg, ev.clientX, ev.clientY);
+          if (vb0 && tapSelect(vb0, ev.clientX, ev.clientY)) draw(false);
+        } else if (wasTap && d && placing && svg && ev.type === 'pointerup') { // 點一下：種在該位
           var vb = toVB(svg, ev.clientX, ev.clientY), gr = vb && groundFromVB(vb);
           if (!gr) { msg = '這位毋做得種（愛種佇前景个坡地，毋好種佇小溪）'; draw(false); }
           else if (!canPlaceAt(gr.x, gr.y)) { msg = '忒近別欉樹矣，挑較遠个位'; draw(false); }

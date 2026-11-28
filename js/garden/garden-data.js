@@ -291,15 +291,17 @@
     s.buys[kind][dev] = [cur[0] + 1, cur[1] + price];
     return true;
   }
-  // 兩塊地至少愛隔這麼遠（x 方向、y 方向淨要一邊夠遠就好）：畫面上約一欉樹个寬度
-  var TOO_CLOSE = { dx: 480, dy: 900 };
+  // 兩塊地至少愛隔這麼遠：橢圓形範圍（橫向約一欉樹个寬度，縱向較短）。毋准疊在一起，免得樹擋著、毋好點選
+  var TOO_CLOSE = { dx: 560, dy: 1100 };
   function canPlaceAt(s, x, y) {
     x = Number(x); y = Number(y);
     if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0 || x > 10000 || y > 10000) return false;
     var ids = keysOf(s.plots);
     for (var i = 0; i < ids.length; i++) {
       var q = s.plots[ids[i]];
-      if (q.x !== undefined && Math.abs(q.x - x) < TOO_CLOSE.dx && Math.abs(q.y - y) < TOO_CLOSE.dy) return false;
+      if (q.x === undefined) continue;
+      var ex = (q.x - x) / TOO_CLOSE.dx, ey = (q.y - y) / TOO_CLOSE.dy;
+      if (ex * ex + ey * ey < 1) return false;
     }
     return true;
   }
