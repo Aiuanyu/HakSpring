@@ -246,6 +246,9 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 | 雲端同步金鑰 | `hakkaSyncKey` | —（伺服器淨存雜湊） | ❌ | 不同步、毋進備份檔／手動共步網址（等於帳號密碼，淨存本機，使用者自家抄去別台輸入） |
 | 雲端版本號 | `hakkaSyncCloudRev` | — | ❌ | 不同步（本機看著个雲端 `updated_at`，樂觀鎖用；換金鑰會清掉） |
 | 腔級播放設定 | `hakkaAudioProfiles` | `audio_profiles` | ✅ | 逐 key LWW（`mergeAudioProfiles`；值 `[速度, 擺數, 時間戳ms, 刪除旗標]`，刪除用 tombstone；有設定个腔級優先於全域播放速度／擺數；使用者在播放面板改速度／擺數，摎基準無共樣就自動記入該腔級，共樣就移掉） |
+| 庭院帳本 | `hakfaGarden` | `garden` | ✅ | 專屬「帳本」合併（`js/garden/garden-data.js` 个 `merge`：同格取大／聯集，毋係 LWW；高紀元整包取代低紀元；伺服器原樣存，用戶端無送時保留雲端原本个；資料比本機認得个版本新就毋讀毋改毋推） |
+| 庭院本機私人狀態 | `hakfaGardenLocal`、`hakfaGardenDockOpen`、`hakfaGardenDev` | — | ❌ | 不同步（裝置 id、目前選著个地塊、面板開關、開發者面板） |
+| 庭院升級前備份 | `hakfaGardenBackup-v<舊版>-<時間>` | — | ❌ | 不同步（留最近 3 份，進度毋見時可由此還原） |
 | 播放速度 | `playbackSpeed` | — | ❌ | 不同步（跟裝置／使用情境有關，本機偏好） |
 | 播放重複次數 | `globalRepeatCount`、`certAdvancedRepeatCount` | — | ❌ | 不同步（本機偏好） |
 
@@ -256,6 +259,14 @@ Signed-off-by: GHSRobert Ciang <93833368+Aiuanyu@users.noreply.github.com>
 - 並在分類表補一列。
 
 - **鐵則**：絕不把「相加型」資料套 LWW/取大（會少算），也絕不把「累積型進度」套 LWW（會弄丟一邊）。合併法選錯是同步最常見、最難察覺的資料損毀來源。
+
+### 庭院資料結構改版守則（`js/garden/garden-data.js`）
+庭院是試玩中个功能，進度毋可以因為改版抑係同步前功盡棄。改庭院資料結構愛守：
+1. **加欄位／改推算規則**：盡量淨加欄位、改 `derive` 个推算，免轉存檔。欄位只增不減，合併用「同格取大」或「聯集」。
+2. **要升級舊資料**：`SCHEMA` 加一，並在 `MIGRATIONS` 加一步 `{ from, to, consent, describe, run }`；升級前 `garden.js` 會自動備份原始資料。**會改變使用者看得著个內容（大轉換）就設 `consent: true`**，愛使用者按同意正執行。
+3. **愛歸零抑係降階（減少）**：帳本做無到，用新紀元（`newEpoch`），高紀元會取代所有裝置个舊紀元資料；毋可偷偷做。
+4. **改版前先看測試**：`tests/garden_data_test.js`（升級、合併、紀元）摎 `tests/garden_sync_test.js`（兩台裝置、新版本保護、伺服器保留欄位）愛全過。
+5. 比本機認得个版本新个資料（`v` 較大）一律毋讀、毋改、毋推。
 
 ### 加新同步欄位時必查（血淚教訓）
 加一個要同步的欄位，**下面四處要一起改，缺一不可**，尤其「用戶端匯出」摎「伺服器白名單」要**對稱**：
