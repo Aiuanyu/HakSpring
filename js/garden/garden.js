@@ -62,23 +62,27 @@
       while (keys.length > 3) localStorage.removeItem(keys.shift());
     } catch (e) { /* 備份失敗毋阻擋 */ }
   }
+  function randomSeed() { return Math.floor(Math.random() * 2147483646) + 1; }
   function loadLedger(consented) {
     var raw = null;
     try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
     rawStored = raw;
-    var res = GD.normalize(raw, { dev: local.dev, day: todayStr() }, { consented: !!consented });
+    var res = GD.normalize(raw, { dev: local.dev, day: todayStr(), seed: randomSeed() }, { consented: !!consented });
     if (res.newer) { newerFlag = true; G = GD.emptyState(todayStr()); return; }
     if (res.pendingConsent) { pending = res.pendingConsent; G = GD.emptyState(todayStr()); return; }
     pending = null;
     G = res.state;
+    var seeded = false;
+    if (!G.seed) { G.seed = randomSeed(); seeded = true; } // 地圖種子：新存檔隨機一個，之後同步會收斂到同一座山
     if (res.steps.length) { backupRaw(raw, res.from); persist(false); } // 升級前先備份，再寫新格式
+    else if (seeded) { persist(false); }
   }
 
   // 讀取模型：畫面用个唯讀推算結果（每次帳本有變就重算）
   var state = { bank: 0, plots: [], sel: 0, seeds: {}, credited: 0, audio: 0 };
   function rebuild() {
     var d = GD.derive(G), t = todayStr();
-    var plots = d.plots.map(function (q) { return { id: q.id, k: q.k, n: q.n }; });
+    var plots = d.plots.map(function (q) { return { id: q.id, k: q.k, n: q.n, x: q.x, y: q.y }; });
     var sel = 0;
     for (var i = 0; i < plots.length; i++) if (plots[i].id === local.sel) sel = i;
     state = { bank: d.bank, plots: plots, sel: sel, seeds: d.seeds, credited: G.earned[t] | 0, audio: GD.audioTotal(G, t) };
@@ -140,6 +144,7 @@
     sync(); // 先處理換日
     var q = selPlot();
     if (!q) return null;
+    if (stageIndex(q.n) >= STAGES.length - 1) return null; // 打子矣，毋使再過淋水
     var before = stageIndex(q.n);
     if (!GD.pour(G, q.id, local.dev)) return null; // 澆水無日限：一日就看著一欉樹開花也做得
     persist(true);
@@ -224,7 +229,7 @@
     addSeed: function (kind) { if (SEEDS[kind]) { GD.addSeed(G, kind, local.dev); persist(true); } },
     resetAll: function () {
       var t = todayStr(), c = statsCounts(t), ep = Math.max(Date.now(), G.ep + 1);
-      G = GD.emptyState(t); G.ep = ep; G.base[t] = [c[0], c[1]];
+      G = GD.emptyState(t, G.seed); G.ep = ep; G.base[t] = [c[0], c[1]]; // 保留同一座山
       local.sel = GD.STARTER; saveLocal();
       persist(true);
     }
@@ -351,17 +356,20 @@
       '.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-leaf-dark:#5a9a58;--hg-leaf:#7db96a;--hg-leaf-mid:#98c97a;--hg-leaf-light:#c4e39a;' +
         '--hg-trunk:#9a6e4b;--hg-trunk-dark:#6f4d33;--hg-line:#5e432c;--hg-flower:#ffd23f;--hg-flower-hi:#fff2a8;--hg-pod:#b58a52;--hg-pod-hi:#e0c08a;' +
         '--hg-seed:#4a3426;--hg-seed-hi:#8a6a50;--hg-soil:#c9a27a;--hg-soil-dark:#a98259;--hg-shadow:rgba(90,70,40,.16);--hg-spark:#fff3b0;' +
-        '--hg-sky:#cfe6f2;--hg-grass:#a9d392;--hg-ground:#8a6a4a;--hg-water:#1f6fb5;' +
+        '--hg-sky-top:#cfe6f2;--hg-sky-bot:#fbf1d9;--hg-sun:#fff3bf;--hg-cloud:#ffffff;--hg-ridge-1:#d7e6d5;--hg-ridge-2:#bfd9bf;--hg-ridge-3:#a8cfa8;--hg-ridge-4:#92c28f;\n' +
+        '--hg-mist:rgba(251,241,217,.35);--hg-stream:#9fd3ea;--hg-terrace:rgba(80,120,60,.35);--hg-grass:#a9d392;--hg-ground:#8a6a4a;--hg-water:#1f6fb5;' +
         '--hg-on-water:#ffffff;--hg-soft:#3d5a47;--hg-pane-bg:#ffffff;--hg-pane-text:#1e293b;--hg-pane-border:#cbd5e1}' +
       '@media (prefers-color-scheme: dark){.hg-card,.hg-dock-pane,.hg-dock-btn{--hg-leaf-dark:#2f6f55;--hg-leaf:#46916a;--hg-leaf-mid:#5aa77b;--hg-leaf-light:#86c79a;' +
         '--hg-trunk:#7a5a3e;--hg-trunk-dark:#523a28;--hg-line:#1d2d26;--hg-flower:#f2c94c;--hg-flower-hi:#ffe9a6;--hg-pod:#a07c4c;--hg-pod-hi:#cfae7c;' +
         '--hg-seed:#9a7a5a;--hg-seed-hi:#d0b08a;--hg-soil:#6a5037;--hg-soil-dark:#4c3825;--hg-shadow:rgba(0,0,0,.28);--hg-spark:#ffe9a6;' +
-        '--hg-sky:#14233a;--hg-grass:#2c5a47;--hg-ground:#5a4430;' +
+        '--hg-sky-top:#14223a;--hg-sky-bot:#27425a;--hg-sun:#e9eefb;--hg-cloud:#3a526c;--hg-ridge-1:#2a4258;--hg-ridge-2:#25483f;--hg-ridge-3:#22503f;--hg-ridge-4:#1f5242;' +
+        '--hg-mist:rgba(39,66,90,.12);--hg-stream:#3d6f8a;--hg-terrace:rgba(150,200,150,.18);--hg-grass:#2c5a47;--hg-ground:#5a4430;' +
         '--hg-water:#7cc4ff;--hg-on-water:#0b1b2b;--hg-soft:#b9d1c0;--hg-pane-bg:#2c2c2c;--hg-pane-text:#e0e0e0;--hg-pane-border:rgba(255,255,255,.2)}}' +
       '.hg-card{margin:0 0 20px;padding:10px;border-radius:14px;background:rgba(128,128,128,.08)}' +
       '.hg-card h6{margin:0 0 6px}' +
-      '.hg-yard{border-radius:12px;overflow:hidden;background:var(--hg-sky)}' +
-      '.hg-yard svg{display:block;width:100%;height:auto}' +
+      '.hg-yard{border-radius:12px;overflow:hidden;background:linear-gradient(var(--hg-sky-top),var(--hg-sky-bot))}' +
+      '.hg-yard svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-height:50vh}' +
+      '.hg-night{display:none}@media (prefers-color-scheme: dark){.hg-day{display:none}.hg-night{display:block}}' +
       '.hg-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}' +
       '.hg-row b{color:var(--hg-water);font-size:1.15rem}' +
       '.hg-btn{border:0;border-radius:10px;padding:8px 14px;background:var(--hg-water);color:var(--hg-on-water);cursor:pointer;font:inherit}' +
@@ -378,14 +386,15 @@
       '.hg-dock-btn:hover{transform:translateY(calc(-50% - 120px)) scale(1.1)}' +
       '.hg-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;' +
         'background:#c62828;color:#fff;font-size:.75rem;line-height:20px;text-align:center;font-weight:700}' +
-      '.hg-dock-pane{position:fixed;right:80px;top:80px;width:min(340px,calc(100vw - 100px));max-height:calc(100vh - 100px);' +
+      '.hg-dock-pane{position:fixed;right:80px;top:80px;width:340px;max-width:calc(100vw - 100px);max-height:calc(100vh - 100px);transition:width .8s ease;' +
         'overflow-y:auto;overscroll-behavior:contain;z-index:1100;border-radius:14px;padding:6px;' +
         'background:var(--hg-pane-bg);color:var(--hg-pane-text);border:1px solid var(--hg-pane-border);' +
         'box-shadow:0 8px 24px rgba(0,0,0,.25)}' +
       '.hg-dock-pane[hidden]{display:none}' +
       '.hg-dock-pane .hg-card{margin:0}' +
       '.hg-dock-close{position:absolute;top:6px;right:8px;border:0;background:transparent;color:inherit;font-size:1rem;cursor:pointer;z-index:1}' +
-      '@media (max-width:768px){.hg-dock-pane{left:0;right:0;top:auto;bottom:0;width:auto;max-height:60vh;border-radius:14px 14px 0 0}}' +
+      '@media (max-width:768px){.hg-dock-pane{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:60vh;border-radius:14px 14px 0 0}}' +
+      '@media (prefers-reduced-motion: reduce){.hg-dock-pane{transition:none}}' +
       '.hg-note{font-size:.78rem;color:var(--hg-soft);margin-top:6px}' +
       '.hg-msg{min-height:1.3em;font-size:.9rem;margin-top:4px}' +
       '.hg-tree{transform-origin:100px 208px;transition:transform .5s ease}.hg-tree.pop{transform:scale(1.06)}' +
@@ -420,38 +429,53 @@
         '<div class="hg-note">只改 hakfaGarden，毋會動學習進度摎統計。</div></details>';
     }
 
-    // 地多就排格狀：欄數隨塊數增加，每塊地等比縮小；選著个地底下有框，點著就切換
-    function layout() {
-      var n = state.plots.length;
-      var cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 9 ? 3 : 4;
-      var sc = 1 / cols;
-      var rows = Math.ceil(n / cols);
-      return { n: n, cols: cols, rows: rows, sc: sc, cw: 320 * sc, ch: 280 * sc, H: rows * 280 * sc };
+    var W = 640, H = 400;
+    // 一塊地个畫面位置：x（0~1）橫跨全景；y（0~1）由遠到近，沿著前景坡地个高低走
+    function plotScreen(q, ridgeNear) {
+      var n = state.plots.length, t = (q.y === undefined ? 5000 : q.y) / 10000, xr = (q.x === undefined ? 5000 : q.x) / 10000;
+      var base = Math.max(0.34, Math.min(0.62, 0.66 - 0.03 * n));
+      var sx = 30 + xr * (W - 60), gy = Math.min(H - 8, ridgeNear.f(sx) + 10 + t * 112);
+      var sc = base * (0.78 + 0.5 * t);
+      return { sx: sx, gy: gy, sc: sc, tf: 'translate(' + (sx - 100 * sc).toFixed(1) + ' ' + (gy - 207 * sc).toFixed(1) + ') scale(' + sc.toFixed(3) + ')' };
     }
-    function plotXY(L, i) { return { x: (i % L.cols) * L.cw, y: Math.floor(i / L.cols) * L.ch }; }
-    function plotsSvg(L, popped) {
-      var out = '';
-      for (var r = 0; r < L.rows; r++) { // 每列一條草地
-        out += '<rect x="0" y="' + (r * L.ch + 238 * L.sc) + '" width="320" height="' + (42 * L.sc) + '" fill="var(--hg-grass)"/>';
-      }
-      state.plots.forEach(function (q, i) {
-        var xy = plotXY(L, i), on = i === state.sel;
-        out += '<g transform="translate(' + xy.x + ' ' + xy.y + ') scale(' + L.sc + ')">' +
-          (on && L.n > 1 ? '<ellipse cx="160" cy="248" rx="72" ry="13" fill="none" stroke="var(--hg-water)" stroke-width="3.5"/>' : '') +
-          '<g transform="translate(60 38)"><g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(q.n), L.n >= 7) + '</g></g></g>';
+    function ridge(base, amp, seed, freq) {
+      var r = rng(seed), ph = [r() * 6, r() * 6, r() * 6];
+      function f(px) { return base + Math.sin(px * freq + ph[0]) * amp + Math.sin(px * freq * 2.3 + ph[1]) * amp * 0.45 + Math.sin(px * freq * 4.1 + ph[2]) * amp * 0.18; }
+      var d = 'M-10 ' + (H + 20), x;
+      for (x = -10; x <= W + 10; x += 16) d += 'L' + x + ' ' + f(x).toFixed(1);
+      return { d: d + 'L' + (W + 10) + ' ' + (H + 20) + 'Z', f: f };
+    }
+    // 臺灣北部丘陵：種子算出幾層遠山；一座山个高低起伏毋佔儲存
+    function terrain() {
+      var sd = G.seed || 1;
+      return [ridge(128, 24, sd * 7 + 1, 0.011), ridge(166, 26, sd * 7 + 2, 0.014), ridge(206, 28, sd * 7 + 3, 0.017), ridge(238, 30, sd * 7 + 4, 0.02)];
+    }
+    function plotsSvg(popped) {
+      var R = terrain(), sd = G.seed || 1, out = '';
+      out += '<g class="hg-day"><circle cx="100" cy="62" r="44" fill="var(--hg-sun)" opacity=".5"/><circle cx="100" cy="62" r="20" fill="var(--hg-sun)" opacity=".85"/>' +
+        '<ellipse cx="' + (300 + (sd % 120)) + '" cy="78" rx="44" ry="10" fill="var(--hg-cloud)" opacity=".8"/></g>';
+      out += '<g class="hg-night"><circle cx="540" cy="62" r="26" fill="var(--hg-sun)" opacity=".3"/><circle cx="540" cy="62" r="12" fill="var(--hg-sun)"/>' +
+        sparkle(120, 40, 1) + sparkle(300, 72, 0.7) + sparkle(430, 36, 0.9) + sparkle(60, 100, 0.6) + sparkle(220, 30, 0.8) + '</g>';
+      R.forEach(function (r, i) { out += '<path d="' + r.d + '" fill="var(--hg-ridge-' + (i + 1) + ')"/>'; });
+      out += '<rect x="0" y="130" width="' + W + '" height="70" fill="var(--hg-mist)"/>'; // 遠山薄霧
+      var sx0 = 250 + (sd % 140); // 山谷小溪（位置隨種子）
+      out += '<path d="M' + sx0 + ' 236C' + (sx0 - 12) + ' 268 ' + (sx0 + 22) + ' 280 ' + (sx0 + 6) + ' 312C' + (sx0 - 6) + ' 338 ' + (sx0 + 20) + ' 360 ' + (sx0 + 14) + ' 420" fill="none" stroke="var(--hg-stream)" stroke-width="7" stroke-linecap="round" opacity=".9"/>';
+      for (var t = 0; t < 4; t++) out += '<path d="M' + (40 + (sd % 60)) + ' ' + (292 + t * 14) + 'C120 ' + (282 + t * 14) + ' 200 ' + (304 + t * 14) + ' 270 ' + (294 + t * 14) + '" fill="none" stroke="var(--hg-terrace)" stroke-width="2" stroke-linecap="round"/>'; // 茶園梯田
+      var items = state.plots.map(function (q, i) { var ps = plotScreen(q, R[3]); ps.i = i; ps.q = q; return ps; });
+      items.sort(function (a, b) { return a.gy - b.gy; }); // 由遠到近疊放
+      var lod = state.plots.length >= 7;
+      items.forEach(function (it) {
+        var on = it.i === state.sel;
+        out += '<g transform="' + it.tf + '">' +
+          (on && state.plots.length > 1 ? '<ellipse cx="100" cy="210" rx="56" ry="10" fill="none" stroke="var(--hg-water)" stroke-width="4"/>' : '') +
+          '<g class="hg-tree' + (on && popped ? ' pop' : '') + '">' + treeSvg(stageIndex(it.q.n), lod) + '</g>' +
+          (state.plots.length > 1 ? '<rect x="25" y="50" width="150" height="168" fill="transparent" style="cursor:pointer" data-hg="sel" data-i="' + it.i + '"><title>第 ' + (it.i + 1) + ' 塊地</title></rect>' : '') + '</g>';
       });
-      if (L.n > 1) {
-        state.plots.forEach(function (q, i) {
-          var xy = plotXY(L, i);
-          out += '<rect x="' + xy.x + '" y="' + xy.y + '" width="' + L.cw + '" height="' + L.ch + '" fill="transparent" style="cursor:pointer" data-hg="sel" data-i="' + i + '"><title>第 ' + (i + 1) + ' 塊地</title></rect>';
-        });
-      }
       return out;
     }
     // 選著个地个座標變換（水滴動畫愛對得著該欉）
     function selTransform() {
-      var L = layout(), xy = plotXY(L, state.sel);
-      return 'translate(' + xy.x + ' ' + xy.y + ') scale(' + L.sc + ')';
+      return plotScreen(selPlot(), terrain()[3]).tf;
     }
 
     function draw(popped) {
@@ -466,7 +490,8 @@
       }
       var q = selPlot();
       var idx = stageIndex(q.n);
-      var L = layout();
+      var done = idx >= STAGES.length - 1; // 打子：毋使再過淋水
+      var shown = done ? (msg ? msg + '　' : '') + '毋使再過淋水 lió' : msg;
       var seedRows = Object.keys(SEEDS).map(function (k) {
         var d = SEEDS[k], full = state.plots.length >= MAX_PLOTS;
         return '<div class="hg-row"><div>' + d.name + ' ×<b>' + state.seeds[k] + '</b></div><div>' +
@@ -476,12 +501,12 @@
       el.innerHTML =
         '<div class="hg-card">' +
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
-          '<div class="hg-yard"><svg viewBox="0 0 320 ' + L.H + '" role="img" aria-label="' + esc(gardenTitle()) + '，庭院裡的一欉樹">' +
-            plotsSvg(L, popped) +
+          '<div class="hg-yard"><svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
+            plotsSvg(popped) +
             '<g class="hg-drops"></g></svg></div>' +
-          '<div class="hg-msg" aria-live="polite">' + msg + '</div>' +
+          '<div class="hg-msg" aria-live="polite">' + shown + '</div>' +
           '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '第 ' + (state.sel + 1) + ' 塊：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
-            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 ? ' disabled' : '') + '>澆水</button></div>' +
+            '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '澆水') + '</button></div>' +
           seedRows +
           '<div class="hg-row"><small>今晡日入帳 ' + state.credited + ' 滴（播完音檔 <span class="hg-audio">' + state.audio + '</span> 擺）</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo">＋1 測試水滴</button>' : '') + '</div>' +
@@ -508,7 +533,7 @@
           var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           wrap.setAttribute('transform', selTransform());
           var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          p.setAttribute('d', 'M160 150 q-8 14 0 18 q8 -4 0 -18z');
+          p.setAttribute('d', 'M100 44 q-8 14 0 18 q8 -4 0 -18z');
           p.setAttribute('class', 'hg-drop');
           wrap.appendChild(p);
           g.appendChild(wrap);
@@ -619,6 +644,7 @@
   // 按鈕疊在「日日一詞」鈕上背；寬螢幕係右側面板，窄螢幕係底部抽屜。
   var dock = {};
   var DOCK_OPEN_KEY = 'hakfaGardenDockOpen';
+  var EXPAND_PLOTS = 12; // 種到這麼濟塊地，面板就占到視窗寬度个 80%（暫定）
 
   function initDock() {
     // 淨有主站（有浮動遊戲鈕）正掛；garden-poc.html 等獨立頁毋掛
@@ -655,8 +681,17 @@
       b.hidden = state.bank < 1;
       btn.title = '庭院：水缸有 ' + state.bank + ' 滴水';
     }
+    // 庭院愈種愈大：面板寬度由 340px 慢慢長到視窗 80%（驚喜感）；窄螢幕係底部抽屜，毋變
+    function applySize() {
+      var vw = window.innerWidth;
+      if (vw <= 768) { pane.style.width = ''; return; }
+      var t = Math.max(0, Math.min(1, (state.plots.length - 1) / (EXPAND_PLOTS - 1)));
+      var max = Math.max(340, Math.floor(vw * 0.8));
+      pane.style.width = Math.round(340 + t * (max - 340)) + 'px';
+    }
     function setOpen(open) {
       pane.hidden = !open;
+      applySize();
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (open) mount(body);
       try { localStorage.setItem(DOCK_OPEN_KEY, open ? '1' : '0'); } catch (e) { /* 無法存就算 */ }
@@ -665,12 +700,14 @@
       btn.setAttribute('aria-label', gardenTitle());
       pane.setAttribute('aria-label', gardenTitle());
       updateBadge();
+      applySize();
       if (!pane.hidden) mount(body);
     };
 
     btn.addEventListener('click', function () { setOpen(pane.hidden); });
     closeBtn.addEventListener('click', function () { setOpen(false); });
-    window.addEventListener('hakfa-garden-change', updateBadge);
+    window.addEventListener('hakfa-garden-change', function () { updateBadge(); applySize(); });
+    window.addEventListener('resize', applySize);
 
     sync();
     updateBadge();

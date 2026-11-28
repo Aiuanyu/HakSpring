@@ -10,14 +10,15 @@
 //   5. 比本機認得个版本更新（v 較大）个資料，毋讀、毋改、毋推，等使用者更新網站。
 //
 // 帳本欄位（v2）：
-//   v      版本號
+//   v      版本號（目前 3）
+//   seed   地圖種子（整數）：地形（遠山、坡地）由它算出，毋佔儲存；合併取較小者，所有裝置會收斂到同一座山
 //   ep     紀元（0 起；重設／大改版才增加）
 //   since  開始計算學習水滴个日期（YYYY-MM-DD；合併取較晚者，避免舊資料重複計算）
 //   earned { 日期: 該日入帳滴數 }                  合併：同日取大（只增）
 //   audio  { 日期: { 裝置: 完整播完个音檔擺數 } }  合併：同格取大
 //   spent  { 地塊: { 裝置: 澆在該地塊个滴數 } }    合併：同格取大
 //   buys   { 種類: { 裝置: [買幾粒, 花幾滴] } }    合併：同格逐項取大
-//   plots  { 地塊id: { k: 種子種類, o: 排序, s: 1 起始地 } }  合併：聯集
+//   plots  { 地塊id: { k: 種子種類, o: 排序, s: 1 起始地, x, y: 位置（0~10000，種下去時決定，之後毋變） } }  合併：聯集；同一塊地位置無共樣時取較小者
 //   adj    { 裝置: [加, 減] }                      開發／補償用調整，合併：逐項取大
 //   base   { 日期: [復習基準, 新詞基準] }          重設當日入帳時記下，合併：逐項取大
 (function (root, factory) {
@@ -27,7 +28,7 @@
 })(typeof window !== 'undefined' ? window : this, function () {
   'use strict';
 
-  var SCHEMA = 2;
+  var SCHEMA = 3;
   var STARTER = 'p0';
   var MAX_PLOTS = 30;
   var MAX_KEYS = 600; // 防壞資料：任何一層 key 个上限
@@ -43,16 +44,32 @@
   function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
   function keysOf(o) { return isObj(o) ? Object.keys(o).slice(0, MAX_KEYS) : []; }
 
-  function emptyState(day) {
+  var START_POS = { x: 5000, y: 5000 };
+  function frac(x) { return x - Math.floor(x); }
+  function hash01(str) { // 確定性雜湊 → 0~1
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return ((h >>> 0) % 10000) / 10000;
+  }
+  // 第 k 塊地个位置：R2 低差異序列（分佈均勻、毋會擠做伙）加一點由 id 決定个抖動，看起來係隨意種个
+  function placeAt(k, id) {
+    var x = frac(0.5 + k * 0.7548776662466927) + (hash01('x' + id) - 0.5) * 0.06;
+    var y = frac(0.5 + k * 0.5698402909980532) + (hash01('y' + id) - 0.5) * 0.06;
+    x = Math.min(0.94, Math.max(0.06, x)); y = Math.min(0.94, Math.max(0.06, y));
+    return { x: Math.round(x * 10000), y: Math.round(y * 10000) };
+  }
+
+  function emptyState(day, seed) {
     var plots = {};
-    plots[STARTER] = { k: 'common', o: 0, s: 1 };
-    return { v: SCHEMA, ep: 0, since: DAY_RE.test(day || '') ? day : '', earned: {}, audio: {}, spent: {}, buys: {}, plots: plots, adj: {}, base: {} };
+    plots[STARTER] = { k: 'common', o: 0, s: 1, x: START_POS.x, y: START_POS.y };
+    return { v: SCHEMA, ep: 0, seed: num(seed), since: DAY_RE.test(day || '') ? day : '', earned: {}, audio: {}, spent: {}, buys: {}, plots: plots, adj: {}, base: {} };
   }
 
   // ---- 清洗：把任何來源个 v2 資料變成合法个 v2（型態、範圍、key 格式） ----
   function clean(raw) {
     var s = emptyState('');
     s.ep = num(raw.ep);
+    s.seed = num(raw.seed);
     s.since = DAY_RE.test(raw.since || '') ? raw.since : '';
     keysOf(raw.earned).forEach(function (d) { if (DAY_RE.test(d)) s.earned[d] = num(raw.earned[d]); });
     keysOf(raw.audio).forEach(function (d) {
@@ -79,8 +96,11 @@
       var q = raw.plots[id];
       s.plots[id] = { k: ID_RE.test(q.k || '') ? q.k : 'common', o: num(q.o) };
       if (q.s) s.plots[id].s = 1;
+      if (isFinite(Number(q.x)) && isFinite(Number(q.y)) && q.x !== null && q.y !== null) {
+        s.plots[id].x = Math.min(10000, num(q.x)); s.plots[id].y = Math.min(10000, num(q.y));
+      }
     });
-    if (!s.plots[STARTER]) s.plots[STARTER] = { k: 'common', o: 0, s: 1 };
+    if (!s.plots[STARTER]) s.plots[STARTER] = { k: 'common', o: 0, s: 1, x: START_POS.x, y: START_POS.y };
     keysOf(raw.adj).forEach(function (dev) {
       var a = raw.adj[dev];
       if (ID_RE.test(dev) && Array.isArray(a)) s.adj[dev] = [num(a[0]), num(a[1])];
@@ -121,6 +141,26 @@
         s.adj[dev] = [num(raw.bank) + poured + count * 10, 0];
         return s;
       }
+    },
+    {
+      from: 2, to: 3, consent: false,
+      describe: '庭院改成臺灣北部丘陵地形：加地圖種子，每塊地有位置（原本个樹、水缸、種子毋變）',
+      run: function (raw, ctx) {
+        var s = JSON.parse(JSON.stringify(raw));
+        s.seed = num(s.seed) || num(ctx.seed) || 1;
+        var ids = keysOf(s.plots).sort(function (a, b) {
+          var oa = num(s.plots[a].o), ob = num(s.plots[b].o);
+          return oa - ob || (a < b ? -1 : a > b ? 1 : 0);
+        });
+        var k = 0;
+        ids.forEach(function (id) {
+          var q = s.plots[id];
+          if (id === STARTER) { q.x = START_POS.x; q.y = START_POS.y; return; }
+          k++;
+          if (q.x === undefined || q.y === undefined) { var p = placeAt(k, id); q.x = p.x; q.y = p.y; }
+        });
+        return s;
+      }
     }
   ];
 
@@ -129,7 +169,7 @@
   //   pendingConsent：有愛同意个升級步驟，淨有 opts.consented 為真正會執行。
   function normalize(raw, ctx, opts) {
     ctx = ctx || {}; opts = opts || {};
-    if (!isObj(raw)) return { state: emptyState(ctx.day), from: SCHEMA, to: SCHEMA, steps: [], pendingConsent: null, newer: false };
+    if (!isObj(raw)) return { state: emptyState(ctx.day, ctx.seed), from: SCHEMA, to: SCHEMA, steps: [], pendingConsent: null, newer: false };
     var target = opts.target || SCHEMA; // 測試用：可指定目標版本
     var v = raw.v === undefined ? 1 : num(raw.v);
     if (v > target) return { state: null, from: v, to: v, steps: [], pendingConsent: null, newer: true };
@@ -162,7 +202,8 @@
       keysOf(s.buys[k]).forEach(function (dev) { bought[k] += s.buys[k][dev][0]; buyDrops += s.buys[k][dev][1]; });
     });
     var plots = keysOf(s.plots).map(function (id) {
-      return { id: id, k: s.plots[id].k, o: s.plots[id].o, s: !!s.plots[id].s, n: spentByPlot[id] || 0 };
+      var q = s.plots[id];
+      return { id: id, k: q.k, o: q.o, s: !!q.s, n: spentByPlot[id] || 0, x: q.x, y: q.y };
     }).sort(function (a, b) { return a.o - b.o || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
     var planted = {};
     plots.forEach(function (q) { if (!q.s) planted[q.k] = (planted[q.k] || 0) + 1; });
@@ -200,6 +241,7 @@
     var s = emptyState('');
     s.ep = a.ep;
     s.since = a.since > b.since ? a.since : b.since;
+    s.seed = a.seed && b.seed ? Math.min(a.seed, b.seed) : (a.seed || b.seed); // 兩台个種子無共樣就取較小个，收斂到同一座山
     s.earned = {};
     [a.earned, b.earned].forEach(function (m) { keysOf(m).forEach(function (d) { s.earned[d] = Math.max(s.earned[d] || 0, m[d]); }); });
     s.audio = maxMap2(a.audio, b.audio);
@@ -209,7 +251,16 @@
     keysOf(a.buys).concat(keysOf(b.buys)).forEach(function (k) { kinds[k] = 1; });
     Object.keys(kinds).forEach(function (k) { s.buys[k] = maxPairs(a.buys[k], b.buys[k]); });
     s.plots = {};
-    [a.plots, b.plots].forEach(function (m) { keysOf(m).forEach(function (id) { if (!s.plots[id]) s.plots[id] = { k: m[id].k, o: m[id].o }; if (m[id].s) s.plots[id].s = 1; }); });
+    [a.plots, b.plots].forEach(function (m) {
+      keysOf(m).forEach(function (id) {
+        var q = m[id], cur = s.plots[id];
+        if (!cur) { cur = s.plots[id] = { k: q.k, o: q.o }; }
+        if (q.s) cur.s = 1;
+        if (q.x !== undefined && q.y !== undefined) { // 位置無共樣時取較小者（確定性）
+          if (cur.x === undefined || q.x < cur.x || (q.x === cur.x && q.y < cur.y)) { cur.x = q.x; cur.y = q.y; }
+        }
+      });
+    });
     s.adj = maxPairs(a.adj, b.adj);
     s.base = maxPairs(a.base, b.base);
     return s;
@@ -243,7 +294,8 @@
   function plant(s, kind, id, o, maxPlots) {
     var d = derive(s);
     if (!ID_RE.test(id) || s.plots[id] || (d.seeds[kind] || 0) < 1 || d.plots.length >= (maxPlots || MAX_PLOTS)) return false;
-    s.plots[id] = { k: kind, o: num(o) };
+    var pos = placeAt(d.plots.length, id);
+    s.plots[id] = { k: kind, o: num(o), x: pos.x, y: pos.y };
     return true;
   }
   function adjust(s, dev, plus, minus) {
@@ -271,6 +323,7 @@
 
   return {
     SCHEMA: SCHEMA, STARTER: STARTER, MAX_PLOTS: MAX_PLOTS, MIGRATIONS: MIGRATIONS,
+    placeAt: placeAt, START_POS: START_POS,
     emptyState: emptyState, normalize: normalize, clean: clean, derive: derive, merge: merge, equal: equal,
     addAudio: addAudio, audioTotal: audioTotal, setEarned: setEarned, pour: pour, buy: buy, plant: plant,
     adjust: adjust, addSeed: addSeed, newEpoch: newEpoch

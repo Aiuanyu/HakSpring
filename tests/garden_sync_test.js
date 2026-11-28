@@ -185,7 +185,7 @@ function makeDevice(label) {
   {
     const row = () => JSON.parse([...db.rows.values()][0].data);
     const before = row().garden;
-    assert.ok(before && before.v === 2);
+    assert.ok(before && before.v === 3);
     const cur = await readJson(await call(server.onRequestGet, { db, key: KEY }));
     const r = await call(server.onRequestPost, { db, key: KEY, body: { data: { familiarity: { x: [1, 1] } }, base_updated_at: cur.updated_at } });
     assert.strictEqual(r.status, 200);
@@ -227,7 +227,7 @@ function makeDevice(label) {
     const backups = [...store.keys()].filter((k) => k.indexOf('hakfaGardenBackup-v1-') === 0);
     assert.strictEqual(backups.length, 1, '升級前原始資料有備份');
     assert.strictEqual(JSON.parse(store.get(backups[0])).bank, 12);
-    assert.strictEqual(JSON.parse(store.get('hakfaGarden')).v, 2);
+    assert.strictEqual(JSON.parse(store.get('hakfaGarden')).v, 3);
     console.log('  ✅ 7. v1→v2 升級（等值、備份原始資料）PASS');
   }
 
@@ -267,6 +267,17 @@ function makeDevice(label) {
     // wrangler 預設 port 8788：照舊用同源
     assert.strictEqual(make('localhost', '8788', '?sync-api=feat-garden-poc').getSyncApiEndpoint(), '/api/sync');
     console.log('  ✅ 8. 本機測試覆寫（?sync-api=，淨官方網域、淨本機生效）PASS');
+  }
+
+  // ===== 9. 打子（最後一階段）：毋使再過淋水 =====
+  {
+    const E = makeDevice('E');
+    E.G().dev.addBank(40);
+    for (let i = 0; i < 22; i++) assert.ok(E.G().pour(), '第 ' + (i + 1) + ' 滴');
+    assert.strictEqual(E.G().getState().plots[0].n, 22);
+    assert.strictEqual(E.G().pour(), null, '打子矣，毋使再淋');
+    assert.strictEqual(E.G().getState().bank, 18, '水毋會白白浪費');
+    console.log('  ✅ 9. 打子後毋使再淋水（水留在水缸）PASS');
   }
 
   console.log('✅ garden_sync_test 全部通過');

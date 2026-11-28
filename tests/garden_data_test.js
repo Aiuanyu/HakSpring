@@ -112,23 +112,67 @@ G.setEarned(E1, '2026-11-28', 3); G.setEarned(E2, '2026-11-28', 7);
 assert.strictEqual(G.merge(E1, E2).earned['2026-11-28'], 7);
 console.log('  ✅ since／earned PASS');
 
-// 10. 往後大改版：有 consent 个升級步驟，沒同意就毋執行、原資料毋動；同意後正執行
+// 10. 往後大改版：有 consent 个升級步驟，沒同意就毋執行、原資料毋動；同意後正執行（假設往後有 v3→v4）
 let ran = 0;
-G.MIGRATIONS.push({ from: 2, to: 3, consent: true, describe: '測試用大轉換', run: (raw) => { ran++; return Object.assign(clone(raw), { v: 3 }); } });
-const v2data = clone(AB);
-const before = JSON.stringify(v2data);
-r = G.normalize(v2data, { dev: 'A', day: '2026-11-28' }, { target: 3 });
+G.MIGRATIONS.push({ from: 3, to: 4, consent: true, describe: '測試用大轉換', run: (raw) => { ran++; return Object.assign(clone(raw), { v: 4 }); } });
+const v3data = clone(AB);
+const before = JSON.stringify(v3data);
+r = G.normalize(v3data, { dev: 'A', day: '2026-11-28' }, { target: 4 });
 assert.ok(r.pendingConsent && r.pendingConsent.describe === '測試用大轉換', '要先問使用者');
 assert.strictEqual(r.state, null);
 assert.strictEqual(ran, 0, '沒同意毋執行');
-assert.strictEqual(JSON.stringify(v2data), before, '原資料毋動');
-r = G.normalize(v2data, { dev: 'A', day: '2026-11-28' }, { target: 3, consented: true });
+assert.strictEqual(JSON.stringify(v3data), before, '原資料毋動');
+r = G.normalize(v3data, { dev: 'A', day: '2026-11-28' }, { target: 4, consented: true });
 assert.strictEqual(ran, 1);
-assert.strictEqual(r.to, 3);
-assert.strictEqual(JSON.stringify(v2data), before, '升級毋會改到傳入个原物件');
+assert.strictEqual(r.to, 4);
+assert.strictEqual(JSON.stringify(v3data), before, '升級毋會改到傳入个原物件');
 G.MIGRATIONS.pop();
-// 舊程式讀著 v3 資料：newer，毋碰
-assert.strictEqual(G.normalize({ v: 3 }, {}, {}).newer, true);
+// 舊程式讀著 v4 資料：newer，毋碰
+assert.strictEqual(G.normalize({ v: G.SCHEMA + 1 }, {}, {}).newer, true);
 console.log('  ✅ 大改版需同意／原資料毋動 PASS');
+
+// 11. v3：地圖種子、每塊地个位置
+assert.strictEqual(G.SCHEMA, 3);
+s = G.emptyState('2026-11-28', 777);
+assert.strictEqual(s.seed, 777);
+assert.deepStrictEqual({ x: s.plots.p0.x, y: s.plots.p0.y }, G.START_POS, '起始地位置固定，所有裝置一致');
+// 種下去：位置在種下當下決定，之後毋變；同一組輸入結果一樣（確定性）
+G.setEarned(s, '2026-11-28', 60);
+for (let i = 0; i < 4; i++) { G.buy(s, 'common', 10, 'A'); assert.ok(G.plant(s, 'common', 'A' + i, 100 + i)); }
+const pos1 = D(s).plots.map((p) => [p.id, p.x, p.y]);
+pos1.forEach(([id, x, y]) => { assert.ok(x >= 600 && x <= 9400 && y >= 600 && y <= 9400, id + ' 位置在範圍內'); });
+assert.deepStrictEqual(G.placeAt(3, 'zz'), G.placeAt(3, 'zz'));
+// 多塊地兩兩有距離（毋會疊在一起）
+const pts = D(s).plots;
+for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) assert.ok(Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) > 800, '地塊毋疊');
+// 合併：種子取較小者；同塊地位置無共樣取較小者
+const S1 = G.emptyState('2026-11-28', 900), S2 = G.emptyState('2026-11-28', 300);
+assert.strictEqual(G.merge(S1, S2).seed, 300);
+assert.strictEqual(G.merge(S2, S1).seed, 300);
+assert.strictEqual(G.merge(G.emptyState('2026-11-28', 0), S1).seed, 900, '一邊無種子就用另一邊个');
+const Q1 = clone(S1), Q2 = clone(S1); Q1.plots.n1 = { k: 'common', o: 5, x: 3000, y: 4000 }; Q2.plots.n1 = { k: 'common', o: 5, x: 2000, y: 9000 };
+assert.deepStrictEqual([G.merge(Q1, Q2).plots.n1.x, G.merge(Q1, Q2).plots.n1.y], [2000, 9000]);
+assert.ok(G.equal(G.merge(Q1, Q2), G.merge(Q2, Q1)));
+console.log('  ✅ v3 地圖種子摎地塊位置 PASS');
+
+// 12. v2→v3 升級：樹、水缸、種子、各地塊滴數維持原樣，補上種子摎位置，原物件毋動
+const v2 = { v: 2, ep: 0, since: '2026-11-28', earned: { '2026-11-28': 40 }, audio: {}, spent: { p0: { A: 3 }, q1: { A: 2 }, q2: { B: 1 } }, buys: { common: { A: [2, 20] } },
+  plots: { p0: { k: 'common', o: 0, s: 1 }, q1: { k: 'common', o: 10 }, q2: { k: 'common', o: 20 } }, adj: {}, base: {} };
+const v2before = JSON.stringify(v2);
+r = G.normalize(v2, { dev: 'A', day: '2026-11-28', seed: 4242 });
+assert.strictEqual(r.from, 2);
+assert.strictEqual(r.to, 3);
+assert.strictEqual(r.pendingConsent, null);
+assert.strictEqual(JSON.stringify(v2), v2before, '原資料毋動');
+assert.strictEqual(r.state.seed, 4242);
+d = D(r.state);
+assert.strictEqual(d.bank, 40 - 6 - 20);
+assert.deepStrictEqual(d.plots.map((p) => [p.id, p.n]), [['p0', 3], ['q1', 2], ['q2', 1]]);
+d.plots.forEach((p) => assert.ok(p.x !== undefined && p.y !== undefined, p.id + ' 有位置'));
+// 兩台各自升級同一份 v2 資料，位置一致（確定性）、合併後毋變
+const r2 = G.normalize(v2, { dev: 'B', day: '2026-11-28', seed: 99 });
+assert.deepStrictEqual(D(r.state).plots.map((p) => [p.x, p.y]), D(r2.state).plots.map((p) => [p.x, p.y]));
+assert.strictEqual(G.merge(r.state, r2.state).seed, 99);
+console.log('  ✅ v2→v3 升級（等值、補種子摎位置、確定性）PASS');
 
 console.log('✅ garden_data_test 全部通過');
