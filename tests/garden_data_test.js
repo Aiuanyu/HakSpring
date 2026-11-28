@@ -175,4 +175,24 @@ assert.deepStrictEqual(D(r.state).plots.map((p) => [p.x, p.y]), D(r2.state).plot
 assert.strictEqual(G.merge(r.state, r2.state).seed, 99);
 console.log('  ✅ v2→v3 升級（等值、補種子摎位置、確定性）PASS');
 
+// 13. 使用者點選位置種樹：檢查範圍摎距離，毋准疊在一起
+{
+  const T = G.emptyState('2026-11-28', 5);
+  G.setEarned(T, '2026-11-28', 100);
+  for (let i = 0; i < 4; i++) G.buy(T, 'common', 10, 'A');
+  assert.ok(G.plant(T, 'common', 'U1', 1, 30, { x: 2000, y: 3000 }), '空位做得種');
+  assert.deepStrictEqual([T.plots.U1.x, T.plots.U1.y], [2000, 3000], '位置照使用者點个');
+  assert.strictEqual(G.plant(T, 'common', 'U2', 2, 30, { x: 2100, y: 3100 }), false, '忒近');
+  assert.strictEqual(G.plant(T, 'common', 'U2', 2, 30, { x: 5000, y: 5200 }), false, '離起始地忒近');
+  assert.strictEqual(G.plant(T, 'common', 'U2', 2, 30, { x: -1, y: 3000 }), false, '超出範圍');
+  assert.strictEqual(G.plant(T, 'common', 'U2', 2, 30, { x: 3000, y: 10001 }), false, '超出範圍');
+  assert.strictEqual(G.plant(T, 'common', 'U2', 2, 30, { x: NaN, y: 3000 }), false, '壞資料');
+  assert.ok(G.plant(T, 'common', 'U2', 2, 30, { x: 2000, y: 4200 }), 'y 方向夠遠就做得');
+  assert.ok(G.plant(T, 'common', 'U3', 3, 30, { x: 2600, y: 3000 }), 'x 方向夠遠就做得');
+  assert.strictEqual(D(T).seeds.common, 1, '失敗个毋會扣種子');
+  assert.ok(G.canPlaceAt(T, 8000, 8000));
+  assert.ok(!G.canPlaceAt(T, 2000, 3000));
+  console.log('  ✅ 點選位置種樹（範圍、距離、失敗毋扣種子）PASS');
+}
+
 console.log('✅ garden_data_test 全部通過');

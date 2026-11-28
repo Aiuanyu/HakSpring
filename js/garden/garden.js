@@ -46,6 +46,7 @@
   function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(local)); } catch (e) { /* 無法存就算 */ } }
   var local = loadLocal();
   saveLocal();
+  var view = { z: 1, x: 0, y: 0 }; // 地形畫面个縮放摎平移（淨在本機、毋同步、毋存）
 
   // ---- 載入帳本（含升級、備份、新版本保護） ----
   var G = null;           // 帳本
@@ -159,15 +160,16 @@
     return true;
   }
   // 種下一粒種子：多一塊地（地滿就毋得）
-  function plant(kind) {
+  function plant(kind, pos) {
     if (newerFlag || pending || !SEEDS[kind]) return false;
     local.seq++;
     var id = local.dev + '_' + local.seq;
-    if (!GD.plant(G, kind, id, Math.floor(Date.now() / 1000), MAX_PLOTS)) { local.seq--; return false; }
+    if (!GD.plant(G, kind, id, Math.floor(Date.now() / 1000), MAX_PLOTS, pos)) { local.seq--; return false; }
     local.sel = id; saveLocal();
     persist(true);
     return true;
   }
+  function canPlaceAt(x, y) { return !newerFlag && !pending && GD.canPlaceAt(G, x, y); }
   function selectPlot(i) {
     if (i < 0 || i >= state.plots.length) return;
     local.sel = state.plots[i].id; saveLocal();
@@ -369,6 +371,10 @@
       '.hg-card h6{margin:0 0 6px}' +
       '.hg-yard{border-radius:12px;overflow:hidden;background:linear-gradient(var(--hg-sky-top),var(--hg-sky-bot))}' +
       '.hg-yard svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-height:50vh}' +
+      '.hg-yard{position:relative}.hg-yard svg{touch-action:none;cursor:grab}.hg-yard.hg-placing svg{cursor:crosshair}' +
+      '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}' +
+      '.hg-zoom button{width:30px;height:30px;border-radius:50%;border:1px solid var(--hg-pane-border);background:var(--hg-pane-bg);color:var(--hg-pane-text);font-size:1rem;line-height:1;cursor:pointer;opacity:.9}' +
+      '.hg-btn.on{outline:3px solid var(--hg-soft);outline-offset:2px}' +
       '.hg-night{display:none}@media (prefers-color-scheme: dark){.hg-day{display:none}.hg-night{display:block}}' +
       '.hg-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}' +
       '.hg-row b{color:var(--hg-water);font-size:1.15rem}' +
@@ -412,6 +418,8 @@
     injectStyle();
     sync();
     var msg = totalPoured() === 0 ? '種子在等第一滴水。' : '轉來啦，樹一直都在。';
+    var placing = null;       // 種植模式：目前愛種哪一種種子（null＝無）
+    var justDragged = false;  // 剛剛有拖曳（放手後个 click 毋當作選樹）
 
     function devPanelHtml() {
       var stageBtns = STAGES.map(function (st, i) {
@@ -478,6 +486,59 @@
       return plotScreen(selPlot(), terrain()[3]).tf;
     }
 
+    // ---- 縮放、平移、點選位置種樹 ----
+    function viewBoxAttr() {
+      var vw = W / view.z, vh = H / view.z;
+      return view.x.toFixed(1) + ' ' + view.y.toFixed(1) + ' ' + vw.toFixed(1) + ' ' + vh.toFixed(1);
+    }
+    function svgEl() { return el.querySelector('svg.hg-svg'); }
+    function applyView(svg) {
+      var vw = W / view.z, vh = H / view.z;
+      view.x = Math.max(0, Math.min(W - vw, view.x));
+      view.y = Math.max(0, Math.min(H - vh, view.y));
+      svg.setAttribute('viewBox', viewBoxAttr());
+    }
+    function toVB(svg, cx, cy) { // 螢幕座標 → 地形座標（含 slice 裁切、縮放）
+      var m = svg.getScreenCTM();
+      if (!m) return null;
+      var pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy;
+      var q = pt.matrixTransform(m.inverse());
+      return { x: q.x, y: q.y };
+    }
+    function zoomAt(svg, cx, cy, nz) { // 以 (cx, cy) 為中心縮放，該點愛留在手指／滑鼠下背
+      nz = Math.max(1, Math.min(4, nz));
+      var p = toVB(svg, cx, cy);
+      view.z = nz;
+      if (nz === 1) { view.x = 0; view.y = 0; }
+      applyView(svg);
+      var p2 = toVB(svg, cx, cy);
+      if (p && p2 && nz > 1) { view.x += p.x - p2.x; view.y += p.y - p2.y; applyView(svg); }
+    }
+    function streamX(gy) { // 小溪个中心線（近似），種樹愛閃開
+      var sx0 = 250 + ((G.seed || 1) % 140);
+      var pts = [[236, sx0], [312, sx0 + 6], [420, sx0 + 14]];
+      for (var i = 0; i < pts.length - 1; i++) if (gy <= pts[i + 1][0]) return pts[i][1] + (pts[i + 1][1] - pts[i][1]) * Math.max(0, (gy - pts[i][0]) / (pts[i + 1][0] - pts[i][0]));
+      return pts[pts.length - 1][1];
+    }
+    // 地形座標 (sx, gy) → 地塊座標 { x, y }（0~10000）；毋在前景坡地、抑係在小溪裡就回 null
+    function groundFromVB(vb) {
+      var R3 = terrain()[3], xr = (vb.x - 30) / (W - 60), t = (vb.y - R3.f(vb.x) - 10) / 112;
+      if (xr < 0.02 || xr > 0.98 || t < 0.02 || t > 0.98) return null;
+      if (vb.y > 236 && Math.abs(vb.x - streamX(vb.y)) < 18) return null;
+      return { x: Math.round(xr * 10000), y: Math.round(t * 10000) };
+    }
+    function updateGhost(svg, cx, cy) {
+      var g = svg.querySelector('.hg-ghost');
+      if (!g) return;
+      var vb = toVB(svg, cx, cy), gr = vb && groundFromVB(vb);
+      if (!placing || !vb) { g.style.display = 'none'; return; }
+      var ok = !!gr && canPlaceAt(gr.x, gr.y);
+      var n = state.plots.length + 1, base = Math.max(0.34, Math.min(0.62, 0.66 - 0.03 * n)), t = gr ? gr.y / 10000 : 0.5, sc = base * (0.78 + 0.5 * t);
+      g.setAttribute('transform', 'translate(' + (vb.x - 100 * sc).toFixed(1) + ' ' + (vb.y - 207 * sc).toFixed(1) + ') scale(' + sc.toFixed(3) + ')');
+      g.innerHTML = '<g opacity="' + (ok ? 0.8 : 0.45) + '">' + treeSvg(1, true) + '</g><ellipse cx="100" cy="210" rx="58" ry="10" fill="none" stroke="' + (ok ? 'var(--hg-water)' : '#c62828') + '" stroke-width="4" stroke-dasharray="' + (ok ? '0' : '8 6') + '"/>';
+      g.style.display = '';
+    }
+
     function draw(popped) {
       if (newerFlag) {
         el.innerHTML = '<div class="hg-card"><h6>🌱 ' + esc(gardenTitle()) + '</h6><div class="hg-note">庭院資料來自比這個網頁更新个版本，為著毋弄壞你个進度，這個版本先毋讀、毋改、毋同步。請重新整理網頁（抑係等網站更新）再試。</div></div>';
@@ -496,14 +557,15 @@
         var d = SEEDS[k], full = state.plots.length >= MAX_PLOTS;
         return '<div class="hg-row"><div>' + d.name + ' ×<b>' + state.seeds[k] + '</b></div><div>' +
           '<button class="hg-btn ghost" data-hg="buy" data-k="' + k + '"' + (state.bank < d.price ? ' disabled' : '') + '>' + d.price + ' 💧 換 1 粒</button> ' +
-          '<button class="hg-btn" data-hg="plant" data-k="' + k + '"' + (state.seeds[k] < 1 || full ? ' disabled' : '') + '>' + (full ? '地滿矣' : '種下去') + '</button></div></div>';
+          '<button class="hg-btn' + (placing === k ? ' on' : '') + '" data-hg="plant" data-k="' + k + '"' + ((state.seeds[k] < 1 || full) && placing !== k ? ' disabled' : '') + '>' + (placing === k ? '取消種植' : full ? '地滿矣' : '種下去') + '</button></div></div>';
       }).join('');
       el.innerHTML =
         '<div class="hg-card">' +
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
-          '<div class="hg-yard"><svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
+          '<div class="hg-yard' + (placing ? ' hg-placing' : '') + '"><svg class="hg-svg" viewBox="' + viewBoxAttr() + '" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
             plotsSvg(popped) +
-            '<g class="hg-drops"></g></svg></div>' +
+            '<g class="hg-drops"></g><g class="hg-ghost" style="display:none"></g></svg>' +
+            '<div class="hg-zoom"><button type="button" data-hg="zoom-in" aria-label="放大">＋</button><button type="button" data-hg="zoom-out" aria-label="縮小">－</button><button type="button" data-hg="zoom-reset" aria-label="還原">⌂</button></div></div>' +
           '<div class="hg-msg" aria-live="polite">' + shown + '</div>' +
           '<div class="hg-row"><div>💧 水缸 <b>' + state.bank + '</b>　<small>' + (state.plots.length > 1 ? '第 ' + (state.sel + 1) + ' 塊：' : '') + STAGES[idx].name + '（已澆 ' + q.n + ' 滴）</small></div>' +
             '<button class="hg-btn" data-hg="pour"' + (state.bank < 1 || done ? ' disabled' : '') + '>' + (done ? '毋使再淋水 lió' : '澆水') + '</button></div>' +
@@ -538,7 +600,15 @@
           wrap.appendChild(p);
           g.appendChild(wrap);
         }
+      } else if (b.getAttribute('data-hg') === 'zoom-in' || b.getAttribute('data-hg') === 'zoom-out' || b.getAttribute('data-hg') === 'zoom-reset') {
+        var zs = svgEl();
+        if (zs) {
+          var zr = zs.getBoundingClientRect(), za = b.getAttribute('data-hg');
+          if (za === 'zoom-reset') { view.z = 1; view.x = 0; view.y = 0; applyView(zs); }
+          else zoomAt(zs, zr.left + zr.width / 2, zr.top + zr.height / 2, view.z * (za === 'zoom-in' ? 1.4 : 1 / 1.4));
+        }
       } else if (b.getAttribute('data-hg') === 'sel') {
+        if (justDragged || placing) return; // 拖曳放手、或種植模式中，毋當作選樹
         selectPlot(parseInt(b.getAttribute('data-i'), 10) || 0);
         msg = '選著第 ' + (state.sel + 1) + ' 塊地';
         draw(false);
@@ -548,7 +618,8 @@
         draw(false);
       } else if (b.getAttribute('data-hg') === 'plant') {
         var pk = b.getAttribute('data-k');
-        msg = plant(pk) ? '種下去矣！第 ' + state.plots.length + ' 塊地' : '毋做得種';
+        if (placing === pk) { placing = null; msg = '取消矣'; }
+        else { placing = pk; msg = '點地形上背，挑一位種' + SEEDS[pk].name + '（拖曳移動・滾輪或兩指縮放）'; }
         draw(false);
       } else if (b.getAttribute('data-hg') === 'demo') {
         dev.addBank(1);
@@ -569,6 +640,76 @@
         draw(act === 'dev-stage');
       }
     };
+    // 指標事件：拖曳平移、兩指縮放、點選位置種樹。用屬性指派（el.onxxx），重複 mount 毋會疊加
+    var ptrs = {}, drag = null, pinch = null;
+    el.onpointerdown = function (ev) {
+      var svg = ev.target.closest && ev.target.closest('svg.hg-svg');
+      if (!svg) return;
+      ptrs[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+      justDragged = false;
+      try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ }
+      var ids = Object.keys(ptrs);
+      if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, vx: view.x, vy: view.y, moved: false };
+      else if (ids.length === 2) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z };
+        if (drag) drag.moved = true;
+      }
+    };
+    el.onpointermove = function (ev) {
+      var svg = svgEl();
+      if (!svg) return;
+      if (placing && !ptrs[ev.pointerId] && !(drag && drag.moved)) updateGhost(svg, ev.clientX, ev.clientY);
+      if (!ptrs[ev.pointerId]) return;
+      ptrs[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+      var ids = Object.keys(ptrs);
+      if (ids.length === 2 && pinch) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        zoomAt(svg, (a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z0 * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0));
+        justDragged = true;
+      } else if (ids.length === 1 && drag) {
+        if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 6) drag.moved = true;
+        if (drag.moved && view.z > 1) { // 放大後才做得平移
+          var m = svg.getScreenCTM();
+          if (m) { view.x = drag.vx - (ev.clientX - drag.sx) / m.a; view.y = drag.vy - (ev.clientY - drag.sy) / m.d; applyView(svg); }
+        }
+        if (drag.moved) justDragged = true;
+      }
+    };
+    function endPointer(ev) {
+      var svg = svgEl();
+      var wasTap = drag && !drag.moved && !pinch && ptrs[ev.pointerId];
+      delete ptrs[ev.pointerId];
+      if (Object.keys(ptrs).length < 2) pinch = null;
+      if (Object.keys(ptrs).length === 0) {
+        var d = drag; drag = null;
+        if (wasTap && d && placing && svg && ev.type === 'pointerup') { // 點一下：種在該位
+          var vb = toVB(svg, ev.clientX, ev.clientY), gr = vb && groundFromVB(vb);
+          if (!gr) { msg = '這位毋做得種（愛種佇前景个坡地，毋好種佇小溪）'; draw(false); }
+          else if (!canPlaceAt(gr.x, gr.y)) { msg = '忒近別欉樹矣，挑較遠个位'; draw(false); }
+          else if (plant(placing, gr)) { var kk = placing; placing = null; msg = '種下去矣！第 ' + state.plots.length + ' 塊地（' + SEEDS[kk].name + '）'; draw(true); }
+          else { msg = '毋做得種'; placing = null; draw(false); }
+        }
+      }
+    }
+    el.onpointerup = endPointer;
+    el.onpointercancel = endPointer;
+    el.onpointerleave = function () { var svg = svgEl(); if (svg) { var g = svg.querySelector('.hg-ghost'); if (g) g.style.display = 'none'; } };
+    if (!el.__hgWheel) { // 滾輪縮放（要 passive:false 才擋得住頁面捲動）
+      el.__hgWheel = true;
+      el.addEventListener('wheel', function (ev) {
+        var svg = ev.target.closest && ev.target.closest('svg.hg-svg');
+        if (!svg) return;
+        ev.preventDefault();
+        zoomAt(svg, ev.clientX, ev.clientY, view.z * Math.pow(1.0018, -ev.deltaY));
+      }, { passive: false });
+    }
+    if (!el.__hgKey) { // Esc 取消種植
+      el.__hgKey = true;
+      document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' && placing) { placing = null; msg = '取消矣'; draw(false); }
+      });
+    }
     draw(false);
   }
 
@@ -625,6 +766,7 @@
     pour: pour,
     buySeed: buySeed,
     plant: plant,
+    canPlaceAt: canPlaceAt,
     getState: function () { return JSON.parse(JSON.stringify(state)); },
     getLedger: function () { return JSON.parse(JSON.stringify(G)); }, // 原始帳本（除錯、測試用）
     getDevice: function () { return local.dev; },

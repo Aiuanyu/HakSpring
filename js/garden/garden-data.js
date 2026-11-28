@@ -291,11 +291,30 @@
     s.buys[kind][dev] = [cur[0] + 1, cur[1] + price];
     return true;
   }
-  function plant(s, kind, id, o, maxPlots) {
+  // 兩塊地至少愛隔這麼遠（x 方向、y 方向淨要一邊夠遠就好）：畫面上約一欉樹个寬度
+  var TOO_CLOSE = { dx: 480, dy: 900 };
+  function canPlaceAt(s, x, y) {
+    x = Number(x); y = Number(y);
+    if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0 || x > 10000 || y > 10000) return false;
+    var ids = keysOf(s.plots);
+    for (var i = 0; i < ids.length; i++) {
+      var q = s.plots[ids[i]];
+      if (q.x !== undefined && Math.abs(q.x - x) < TOO_CLOSE.dx && Math.abs(q.y - y) < TOO_CLOSE.dy) return false;
+    }
+    return true;
+  }
+  // pos 無指定就自動分配（均勻、隨意个位置）；有指定（使用者點選）就檢查範圍摎距離
+  function plant(s, kind, id, o, maxPlots, pos) {
     var d = derive(s);
     if (!ID_RE.test(id) || s.plots[id] || (d.seeds[kind] || 0) < 1 || d.plots.length >= (maxPlots || MAX_PLOTS)) return false;
-    var pos = placeAt(d.plots.length, id);
-    s.plots[id] = { k: kind, o: num(o), x: pos.x, y: pos.y };
+    var p;
+    if (pos) {
+      if (!canPlaceAt(s, pos.x, pos.y)) return false;
+      p = { x: Math.round(pos.x), y: Math.round(pos.y) };
+    } else {
+      p = placeAt(d.plots.length, id);
+    }
+    s.plots[id] = { k: kind, o: num(o), x: p.x, y: p.y };
     return true;
   }
   function adjust(s, dev, plus, minus) {
@@ -323,7 +342,7 @@
 
   return {
     SCHEMA: SCHEMA, STARTER: STARTER, MAX_PLOTS: MAX_PLOTS, MIGRATIONS: MIGRATIONS,
-    placeAt: placeAt, START_POS: START_POS,
+    placeAt: placeAt, canPlaceAt: canPlaceAt, TOO_CLOSE: TOO_CLOSE, START_POS: START_POS,
     emptyState: emptyState, normalize: normalize, clean: clean, derive: derive, merge: merge, equal: equal,
     addAudio: addAudio, audioTotal: audioTotal, setEarned: setEarned, pour: pour, buy: buy, plant: plant,
     adjust: adjust, addSeed: addSeed, newEpoch: newEpoch
