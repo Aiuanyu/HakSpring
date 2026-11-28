@@ -76,6 +76,24 @@
     return sync();
   }
 
+  // ---- 開發者面板：淨開發測試用，預設毋顯示 ----
+  // 開啟：網址加 ?garden-dev=1（會記在 localStorage.hakfaGardenDev）；關閉：?garden-dev=0
+  function devEnabled(opts) {
+    if (opts && opts.dev) return true;
+    try {
+      var m = /[?&]garden-dev=([01])/.exec(location.search);
+      if (m) { localStorage.setItem('hakfaGardenDev', m[1]); }
+      return localStorage.getItem('hakfaGardenDev') === '1';
+    } catch (e) { return false; }
+  }
+  var dev = {
+    addBank: function (n) { state.bank += n; save(state); },
+    clearBank: function () { state.bank = 0; save(state); },
+    resetToday: function () { state.credited = 0; state.demo = 0; save(state); sync(); }, // 今日入帳歸零後重算
+    setStage: function (i) { state.poured = STAGES[i].at; save(state); },
+    resetAll: function () { state = { bank: 0, poured: 0, day: '', credited: 0, demo: 0 }; save(state); sync(); }
+  };
+
   function treeSvg(idx) {
     var g = '';
     if (idx === 0) {
@@ -118,6 +136,9 @@
       '.hg-btn{border:0;border-radius:10px;padding:8px 14px;background:var(--hg-water);color:#fff;cursor:pointer;font:inherit}' +
       '.hg-btn:disabled{opacity:.4;cursor:default}' +
       '.hg-btn.ghost{background:transparent;color:var(--hg-soft);border:1px dashed var(--hg-soft)}' +
+      '.hg-dev{margin-top:10px;padding:8px;border:1px dashed var(--hg-soft);border-radius:10px;font-size:.85rem}' +
+      '.hg-dev summary{cursor:pointer}.hg-dev-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}' +
+      '.hg-dev .hg-btn{padding:5px 10px;font-size:.8rem}' +
       '.hg-note{font-size:.78rem;color:var(--hg-soft);margin-top:6px}' +
       '.hg-msg{min-height:1.3em;font-size:.9rem;margin-top:4px}' +
       '.hg-tree{transform-origin:160px 250px;transition:transform .5s ease}.hg-tree.pop{transform:scale(1.06)}' +
@@ -131,9 +152,25 @@
   function mount(el, opts) {
     if (!el) return;
     opts = opts || {};
+    var devOn = devEnabled(opts);
     injectStyle();
     sync();
     var msg = state.poured === 0 ? '種子在等第一滴水。' : '轉來啦，樹一直都在。';
+
+    function devPanelHtml() {
+      var stageBtns = STAGES.map(function (st, i) {
+        return '<button class="hg-btn ghost" data-hg="dev-stage" data-i="' + i + '">' + st.name + '</button>';
+      }).join('');
+      return '<details class="hg-dev" open><summary>🛠 開發者面板</summary>' +
+        '<div class="hg-dev-row"><button class="hg-btn ghost" data-hg="dev-add" data-n="1">＋1 💧</button>' +
+        '<button class="hg-btn ghost" data-hg="dev-add" data-n="5">＋5 💧</button>' +
+        '<button class="hg-btn ghost" data-hg="dev-clear">水滴歸零</button>' +
+        '<button class="hg-btn ghost" data-hg="dev-today">重算今日入帳</button></div>' +
+        '<div class="hg-dev-row">跳到：' + stageBtns + '</div>' +
+        '<div class="hg-dev-row"><button class="hg-btn ghost" data-hg="dev-all">全部重置（樹＋水滴＋今日入帳）</button>' +
+        '<button class="hg-btn ghost" data-hg="dev-off">關閉面板</button></div>' +
+        '<div class="hg-note">只改 hakfaGarden，毋會動學習進度摎統計。</div></details>';
+    }
 
     function draw(popped) {
       var idx = stageIndex(state.poured);
@@ -151,6 +188,7 @@
           '<div class="hg-row"><small>今晡日入帳 ' + state.credited + '／' + DAILY_CAP + ' 滴</small>' +
             (opts.demo ? '<button class="hg-btn ghost" data-hg="demo"' + (state.credited >= DAILY_CAP ? ' disabled' : '') + '>＋1 測試水滴</button>' : '') + '</div>' +
           '<div class="hg-note">每 ' + REVIEW_PER_DROP + ' 題到期復習 1 滴、每 ' + NEW_PER_DROP + ' 題新詞 1 滴，一日上濟 ' + DAILY_CAP + ' 滴。無肥料；幾日無來樹也毋會枯。</div>' +
+          (devOn ? devPanelHtml() : '') +
         '</div>';
     }
 
@@ -173,6 +211,18 @@
         addDemoDrop();
         msg = '（測試）加一滴水';
         draw(false);
+      } else if (b.getAttribute('data-hg').indexOf('dev-') === 0 && devOn) {
+        var act = b.getAttribute('data-hg');
+        if (act === 'dev-add') { dev.addBank(parseInt(b.getAttribute('data-n'), 10) || 1); msg = '（開發）加水滴'; }
+        else if (act === 'dev-clear') { dev.clearBank(); msg = '（開發）水滴歸零'; }
+        else if (act === 'dev-today') { dev.resetToday(); msg = '（開發）已重算今日入帳'; }
+        else if (act === 'dev-stage') { dev.setStage(parseInt(b.getAttribute('data-i'), 10) || 0); msg = '（開發）跳階'; }
+        else if (act === 'dev-all') { dev.resetAll(); msg = '（開發）全部重置'; }
+        else if (act === 'dev-off') {
+          try { localStorage.setItem('hakfaGardenDev', '0'); } catch (e) { /* 無法存就算 */ }
+          devOn = false; opts.dev = false; msg = '開發者面板已關閉（網址加 ?garden-dev=1 再開）';
+        }
+        draw(act === 'dev-stage');
       }
     };
     draw(false);
@@ -181,6 +231,7 @@
   window.hakfaGarden = {
     mount: mount,
     sync: sync,
+    dev: dev, // 開發者面板用，亦可在 Console 直接呼叫（例：hakfaGarden.dev.addBank(3)）
     pour: pour,
     getState: function () { return JSON.parse(JSON.stringify(state)); },
     // 答題後呼叫：入帳新水滴，有新增就回傳滴數，供畫面提示
