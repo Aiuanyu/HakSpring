@@ -127,6 +127,10 @@ function makeDevice(label) {
     assert.ok(/\.\.\.\(gardenExport \? \{ garden: gardenExport \} : \{\}\)/.test(cs), '用戶端愛匯出 garden');
     assert.ok(/mergeIncoming\(data\.garden\)/.test(cs), '用戶端愛合併雲端 garden');
     assert.ok(/'garden',\n\];/.test(cs), '手動匯入欄位白名單愛有 garden');
+    // 回歸：按下指標个當下毋可捕捉指標（會把後續 click 改送給 svg，樹个選取就失效；Zen／Firefox 重現）
+    const gj = fs.readFileSync(path.join(root, 'js/garden/garden.js'), 'utf8');
+    const down = gj.slice(gj.indexOf('el.onpointerdown = function'), gj.indexOf('el.onpointermove = function'));
+    assert.ok(down.length > 100 && !/setPointerCapture\(/.test(down), 'pointerdown 毋准呼叫 setPointerCapture');
     console.log('  ✅ 1. 接線（匯出、合併、伺服器白名單、手動匯入欄位）PASS');
   }
 

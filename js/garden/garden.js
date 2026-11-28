@@ -647,7 +647,7 @@
       if (!svg) return;
       ptrs[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
       justDragged = false;
-      try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ }
+      // 毋在按下去个當下捕捉指標：捕捉會把後續个 click 改送給 svg，樹上个選取就失效（Zen／Firefox 會中）
       var ids = Object.keys(ptrs);
       if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, vx: view.x, vy: view.y, moved: false };
       else if (ids.length === 2) {
@@ -669,7 +669,8 @@
         justDragged = true;
       } else if (ids.length === 1 && drag) {
         if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 6) drag.moved = true;
-        if (drag.moved && view.z > 1) { // 放大後才做得平移
+        if (drag.moved && view.z > 1) { // 放大後才做得平移；開始拖曳正捕捉指標，拖出畫面也繼續跟
+          if (!drag.captured) { drag.captured = true; try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ } }
           var m = svg.getScreenCTM();
           if (m) { view.x = drag.vx - (ev.clientX - drag.sx) / m.a; view.y = drag.vy - (ev.clientY - drag.sy) / m.d; applyView(svg); }
         }
