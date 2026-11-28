@@ -368,10 +368,11 @@
         '--hg-mist:rgba(39,66,90,.12);--hg-stream:#3d6f8a;--hg-terrace:rgba(150,200,150,.18);--hg-grass:#2c5a47;--hg-ground:#5a4430;' +
         '--hg-water:#7cc4ff;--hg-on-water:#0b1b2b;--hg-soft:#b9d1c0;--hg-pane-bg:#2c2c2c;--hg-pane-text:#e0e0e0;--hg-pane-border:rgba(255,255,255,.2)}}' +
       '.hg-card{margin:0 0 20px;padding:10px;border-radius:14px;background:rgba(128,128,128,.08)}' +
-      '.hg-card h6{margin:0 0 6px}' +
+      '.hg-card h6{margin:0 0 6px;padding-right:38px}' +
       '.hg-yard{border-radius:12px;overflow:hidden;background:linear-gradient(var(--hg-sky-top),var(--hg-sky-bot))}' +
       '.hg-yard svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-height:50vh}' +
       '.hg-yard{position:relative}.hg-yard svg{touch-action:none;cursor:grab}.hg-yard.hg-placing svg{cursor:crosshair}' +
+      '@media (max-width:768px){.hg-yard svg{touch-action:pan-y}.hg-yard.hg-zoomed svg,.hg-yard.hg-placing svg{touch-action:none}}' +
       '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}' +
       '.hg-zoom button{width:30px;height:30px;border-radius:50%;border:1px solid var(--hg-pane-border);background:var(--hg-pane-bg);color:var(--hg-pane-text);font-size:1rem;line-height:1;cursor:pointer;opacity:.9}' +
       '.hg-btn.on{outline:3px solid var(--hg-soft);outline-offset:2px}' +
@@ -396,9 +397,11 @@
         'overflow-y:auto;overscroll-behavior:contain;z-index:1100;border-radius:14px;padding:6px;' +
         'background:var(--hg-pane-bg);color:var(--hg-pane-text);border:1px solid var(--hg-pane-border);' +
         'box-shadow:0 8px 24px rgba(0,0,0,.25)}' +
-      '.hg-dock-pane[hidden]{display:none}' +
+      '.hg-dock-pane[hidden]{display:none}.hg-dock-pane:not([hidden]){display:flex;flex-direction:column;overflow:hidden}' +
+      '.hg-dock-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}' +
       '.hg-dock-pane .hg-card{margin:0}' +
-      '.hg-dock-close{position:absolute;top:6px;right:8px;border:0;background:transparent;color:inherit;font-size:1rem;cursor:pointer;z-index:1}' +
+      // 關閉鈕釘在外框右上角（外框毋捲動，內容區捲動），永遠看得著、毋會被捲走；給够大个點擊範圍
+      '.hg-dock-close{position:absolute;top:6px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:var(--hg-pane-bg);color:inherit;font-size:1.05rem;line-height:1;cursor:pointer;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.25)}' +
       '@media (max-width:768px){.hg-dock-pane{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:60vh;border-radius:14px 14px 0 0}}' +
       '@media (prefers-reduced-motion: reduce){.hg-dock-pane{transition:none}}' +
       '.hg-note{font-size:.78rem;color:var(--hg-soft);margin-top:6px}' +
@@ -497,6 +500,7 @@
       view.x = Math.max(0, Math.min(W - vw, view.x));
       view.y = Math.max(0, Math.min(H - vh, view.y));
       svg.setAttribute('viewBox', viewBoxAttr());
+      if (svg.parentNode && svg.parentNode.classList) svg.parentNode.classList.toggle('hg-zoomed', view.z > 1); // 放大中才完全接管手勢，否則窄螢幕做得上下滑
     }
     function toVB(svg, cx, cy) { // 螢幕座標 → 地形座標（含 slice 裁切、縮放）
       var m = svg.getScreenCTM();
@@ -562,7 +566,7 @@
       el.innerHTML =
         '<div class="hg-card">' +
           '<h6>🌱 ' + esc(gardenTitle()) + '</h6>' +
-          '<div class="hg-yard' + (placing ? ' hg-placing' : '') + '"><svg class="hg-svg" viewBox="' + viewBoxAttr() + '" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
+          '<div class="hg-yard' + (placing ? ' hg-placing' : '') + (view.z > 1 ? ' hg-zoomed' : '') + '"><svg class="hg-svg" viewBox="' + viewBoxAttr() + '" preserveAspectRatio="xMidYMax slice" role="img" aria-label="' + esc(gardenTitle()) + '，臺灣北部丘陵上的相思樹">' +
             plotsSvg(popped) +
             '<g class="hg-drops"></g><g class="hg-ghost" style="display:none"></g></svg>' +
             '<div class="hg-zoom"><button type="button" data-hg="zoom-in" aria-label="放大">＋</button><button type="button" data-hg="zoom-out" aria-label="縮小">－</button><button type="button" data-hg="zoom-reset" aria-label="還原">⌂</button></div></div>' +
@@ -812,6 +816,7 @@
     closeBtn.setAttribute('aria-label', '關閉庭院');
     closeBtn.textContent = '✕';
     var body = document.createElement('div');
+    body.className = 'hg-dock-body';
     pane.appendChild(closeBtn);
     pane.appendChild(body);
     document.body.appendChild(btn);
@@ -836,7 +841,7 @@
       pane.hidden = !open;
       applySize();
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (open) mount(body);
+      if (open) { mount(body); body.scrollTop = 0; } // 打開當下一律由頂端開始，標題摎關閉鈕看得著
       try { localStorage.setItem(DOCK_OPEN_KEY, open ? '1' : '0'); } catch (e) { /* 無法存就算 */ }
     }
     dock.refresh = function () {
