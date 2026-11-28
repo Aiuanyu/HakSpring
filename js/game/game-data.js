@@ -20,6 +20,23 @@ function generateProgressKey(source, dataVarName, id, mode = QUESTION_MODE_DEFAU
 }
 
 /**
+ * Check whether a dictionary row is a valid, playable game word
+ * (excludes placeholder rows like "此腔無此詞條", "本腔無此詞條", "此級無此單元", or empty entries).
+ * @param {object} item
+ * @returns {boolean}
+ */
+function isValidGameWord(item) {
+  if (!item || typeof item !== 'object') return false;
+  const han = (item['客家語'] || '').trim();
+  const defn = (item['華語詞義'] || '').trim();
+  const id = (item['編號'] || item['序號'] || '').toString().trim();
+  if (!han || han.includes('無此詞條')) return false;
+  if (!defn || defn.includes('無此詞條')) return false;
+  if (id.includes('無此單元')) return false;
+  return true;
+}
+
+/**
  * Normalizes item data to a standard format for the game
  */
 function normalizeGameData(item, dialect, level, source) {
@@ -103,8 +120,20 @@ function getWordsForDialectAndLevel(dialect, dataVarName) {
     return [];
   }
 
-  return levelData.map(item => {
-    const newItem = { ...item, dataVarName: dataVarName };
-    return normalizeGameData(newItem, dialect, fullLevelName, 'cert');
-  });
+  return levelData
+    .filter(isValidGameWord)
+    .map(item => {
+      const newItem = { ...item, dataVarName: dataVarName };
+      return normalizeGameData(newItem, dialect, fullLevelName, 'cert');
+    });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    QUESTION_MODE_DEFAULT,
+    generateProgressKey,
+    isValidGameWord,
+    normalizeGameData,
+    getWordsForDialectAndLevel
+  };
 }
