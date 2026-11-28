@@ -534,6 +534,21 @@
 
     return {
       cam: cam3, HOME: HOME, focusPlot: focusPlot, stopTween: stopTween,
+      // 平移：螢幕拖曳量（像素）換算成地面上个移動（拖著地面跟手走）
+      pan: function (dxPx, dyPx) {
+        stopTween();
+        var upp = cam3.dist / (lastCam ? lastCam.fpx : 435), sy = Math.sin(cam3.yaw), cy = Math.cos(cam3.yaw), sp = Math.max(0.35, Math.sin(cam3.pitch));
+        cam3.tx += -dxPx * upp * cy + dyPx * upp / sp * sy;
+        cam3.ty += dxPx * upp * sy + dyPx * upp / sp * cy;
+        schedule(true);
+      },
+      // 雙擊地面：鏡頭移到該點（距離維持）
+      focusPoint: function (wx, wy) {
+        stopTween();
+        var to = { tx: wx, ty: wy, dist: cam3.dist };
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { cam3.tx = wx; cam3.ty = wy; schedule(false); return; }
+        tween = { t0: performance.now(), dur: 480, from: { tx: cam3.tx, ty: cam3.ty, dist: cam3.dist }, to: to }; stepTween();
+      },
       resize: function () { resize(); schedule(false); },
       render: function (coarse) { schedule(!!coarse); },
       rotate: function (dyaw, dpitch) { stopTween(); cam3.yaw += dyaw; cam3.pitch = Math.max(0.22, Math.min(1.38, cam3.pitch + dpitch)); schedule(true); },

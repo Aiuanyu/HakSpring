@@ -375,7 +375,7 @@
       '@media (max-width:768px){.hg-yard svg{touch-action:pan-y}.hg-yard.hg-zoomed svg,.hg-yard.hg-placing svg{touch-action:none}}' +
       '.hg-yard.hg-3d{aspect-ratio:16/10;max-height:52vh;background:var(--hg-sky-bot)}' +
       '.hg-3d canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}' +
-      '.hg-3d canvas.hg-base{pointer-events:none}.hg-3d.hg-placing canvas.hg-ov{cursor:crosshair}' +
+      '.hg-3d canvas:focus-visible{outline:3px solid var(--hg-water);outline-offset:-3px}.hg-3d canvas.hg-base{pointer-events:none}.hg-3d.hg-placing canvas.hg-ov{cursor:crosshair}' +
       '@media (max-width:768px){.hg-3d:not(.hg-placing) canvas.hg-ov{touch-action:pan-y}}' +
       '.hg-zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 16px)}' +
       '.hg-zoom button[data-hg=mode-toggle]{width:auto;padding:0 10px;border-radius:15px;font-size:.78rem;white-space:nowrap}' +
@@ -612,7 +612,7 @@
     function yardHtml(popped) {
       var tog = '<button type="button" data-hg="mode-toggle" title="切換簡易平面／類 3D" aria-label="切換簡易平面／類 3D">' + (use3d ? '簡易' : '立體') + '</button>';
       if (use3d) {
-        return '<div class="hg-yard hg-3d' + (placing ? ' hg-placing' : '') + '"><canvas class="hg-base" aria-hidden="true"></canvas><canvas class="hg-ov" role="img" aria-label="' + esc(gardenTitle()) + '，立體个臺灣北部丘陵，拖曳可旋轉"></canvas>' +
+        return '<div class="hg-yard hg-3d' + (placing ? ' hg-placing' : '') + '"><canvas class="hg-base" aria-hidden="true"></canvas><canvas class="hg-ov" tabindex="0" role="img" aria-label="' + esc(gardenTitle()) + '，立體个臺灣北部丘陵。拖曳旋轉、Shift 加拖曳或右鍵拖曳平移、滾輪縮放、雙擊移到該點；鍵盤方向鍵旋轉與俯仰、加減號縮放"></canvas>' +
           '<div class="hg-zoom"><button type="button" data-hg="rot-l" aria-label="向左轉">↺</button><button type="button" data-hg="rot-r" aria-label="向右轉">↻</button>' +
           '<button type="button" data-hg="tilt-up" aria-label="抬高視角">▲</button><button type="button" data-hg="tilt-down" aria-label="壓低視角">▼</button>' +
           '<button type="button" data-hg="zoom-in" aria-label="拉近">＋</button><button type="button" data-hg="zoom-out" aria-label="拉遠">－</button><button type="button" data-hg="view-reset" aria-label="還原視角">⌂</button>' + tog + '</div></div>';
@@ -765,7 +765,7 @@
     };
     // 指標事件：簡易平面（SVG）係拖曳平移、兩指縮放；類 3D 係拖曳旋轉、兩指拉遠拉近。兩種都做得點選樹、點地形種樹。
     // 用屬性指派（el.onxxx），重複 mount 毋會疊加
-    var ptrs = {}, drag = null, pinch = null, lastPick3 = null;
+    var ptrs = {}, drag = null, pinch = null, lastPick3 = null, lastTap3 = null;
     function hostOf(ev) { return ev.target.closest && ev.target.closest('canvas.hg-ov, svg.hg-svg'); }
     function is3(host) { return host && host.tagName && host.tagName.toLowerCase() === 'canvas'; }
     // 3D：點到个位置係毋係做得種（水裡、出界、離別欉太近）
@@ -795,10 +795,10 @@
       justDragged = false;
       // 毋在按下去个當下捕捉指標：捕捉會把後續个 click 改送給 svg，樹上个選取就失效（Zen／Firefox 會中）
       var ids = Object.keys(ptrs);
-      if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, lx: ev.clientX, ly: ev.clientY, vx: view.x, vy: view.y, moved: false };
+      if (ids.length === 1) drag = { sx: ev.clientX, sy: ev.clientY, lx: ev.clientX, ly: ev.clientY, vx: view.x, vy: view.y, moved: false, pan: ev.pointerType !== 'touch' && (ev.button === 2 || ev.button === 1 || ev.shiftKey), btn: ev.button };
       else if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]];
-        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z, last: Math.hypot(a.x - b.x, a.y - b.y) || 1 };
+        pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z, last: Math.hypot(a.x - b.x, a.y - b.y) || 1, ang: Math.atan2(b.y - a.y, b.x - a.x), cy: (a.y + b.y) / 2 };
         if (drag) drag.moved = true;
       }
     };
@@ -815,7 +815,16 @@
       var ids = Object.keys(ptrs);
       if (ids.length === 2 && pinch) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], dd = Math.hypot(a.x - b.x, a.y - b.y);
-        if (three) { if (v3) v3.zoom(pinch.last / (dd || 1)); pinch.last = dd || 1; }
+        if (three) { // 兩指：拉開／捏合＝拉遠拉近；轉動兩指＝水平旋轉；兩指一齊上下＝俯仰
+          if (v3) {
+            var ang = Math.atan2(b.y - a.y, b.x - a.x), dAng = ang - pinch.ang; if (dAng > Math.PI) dAng -= 2 * Math.PI; if (dAng < -Math.PI) dAng += 2 * Math.PI;
+            var cyc = (a.y + b.y) / 2;
+            v3.zoom(pinch.last / (dd || 1));
+            v3.rotate(-dAng, (cyc - pinch.cy) * 0.005);
+            pinch.ang = ang; pinch.cy = cyc;
+          }
+          pinch.last = dd || 1;
+        }
         else zoomAt(svg, (a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z0 * (dd / pinch.d0));
         justDragged = true;
       } else if (ids.length === 1 && drag) {
@@ -823,7 +832,8 @@
         if (drag.moved && three && v3) { // 旋轉：左右拖＝水平轉；上下拖＝俯仰（觸控淨轉水平，上下留給捲動）
           if (!drag.captured) { drag.captured = true; try { host.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ } } // 拖出畫面、在外背放手也收得著，毋會卡住
           var dx = ev.clientX - drag.lx, dy = ev.clientY - drag.ly;
-          v3.rotate(-dx * 0.008, ev.pointerType === 'touch' ? 0 : dy * 0.006);
+          if (drag.pan) v3.pan(dx, dy); // 右鍵／中鍵／Shift＋拖曳：平移
+          else v3.rotate(-dx * 0.008, ev.pointerType === 'touch' ? 0 : dy * 0.006);
           if (v3 && placing) v3.setGhost(null);
         } else if (drag.moved && !three && view.z > 1) { // 放大後才做得平移；開始拖曳正捕捉指標，拖出畫面也繼續跟
           if (!drag.captured) { drag.captured = true; try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* 無法捕捉就算 */ } }
@@ -843,6 +853,10 @@
         var d = drag; drag = null;
         if (!(wasTap && d && host && ev.type === 'pointerup')) return;
         if (three) {
+          if (d.pan || d.btn === 2 || d.btn === 1) return; // 右鍵、中鍵單擊毋當作點選
+          var nowT = Date.now(), dbl = lastTap3 && nowT - lastTap3.t < 350 && Math.hypot(ev.clientX - lastTap3.x, ev.clientY - lastTap3.y) < 24;
+          lastTap3 = { t: nowT, x: ev.clientX, y: ev.clientY };
+          if (!placing && dbl && v3) { var gg = v3.groundAt(ev.clientX, ev.clientY); if (gg) { v3.focusPoint(gg.wx, gg.wy); return; } }
           if (!placing) { if (tapSelect3(ev)) { draw(false); focusSel(); } }
           else {
             var sp = plantSpot3(ev);
@@ -877,6 +891,21 @@
         if (is3(host)) { if (v3) v3.zoom(Math.exp(ev.deltaY * 0.0012)); }
         else zoomAt(host, ev.clientX, ev.clientY, view.z * Math.pow(1.0018, -ev.deltaY));
       }, { passive: false });
+    }
+    el.oncontextmenu = function (ev) { if (ev.target.closest && ev.target.closest('canvas.hg-ov')) ev.preventDefault(); }; // 右鍵拖曳平移，毋出選單
+    if (!el.__hgKeys) { // 鍵盤：點一下地形取得焦點後，←→ 旋轉、↑↓ 俯仰、＋－ 縮放、Shift＋方向鍵平移、Home 還原
+      el.__hgKeys = true;
+      el.addEventListener('keydown', function (ev) {
+        var cv = ev.target.closest && ev.target.closest('canvas.hg-ov');
+        if (!cv || !v3 || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+        var k = ev.key, handled = true;
+        if (ev.shiftKey && /^Arrow/.test(k)) v3.pan(k === 'ArrowLeft' ? 60 : k === 'ArrowRight' ? -60 : 0, k === 'ArrowUp' ? 60 : k === 'ArrowDown' ? -60 : 0);
+        else if (k === 'ArrowLeft') v3.rotate(0.12, 0); else if (k === 'ArrowRight') v3.rotate(-0.12, 0);
+        else if (k === 'ArrowUp') v3.rotate(0, 0.07); else if (k === 'ArrowDown') v3.rotate(0, -0.07);
+        else if (k === '+' || k === '=') v3.zoom(1 / 1.15); else if (k === '-' || k === '_') v3.zoom(1.15);
+        else if (k === 'Home') v3.reset(); else handled = false;
+        if (handled) ev.preventDefault();
+      });
     }
     if (!el.__hgWin) { // 保險：指標在面板外背放開、抑係被取消，也愛清掉拖曳狀態，毋會卡住後續个點選
       el.__hgWin = true;
