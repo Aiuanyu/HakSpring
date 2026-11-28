@@ -1,18 +1,23 @@
-// 客源翠庭院：一粒種子、一欉樹、淨有水滴。
-// 水滴「推算」自既有的 hakkaDailyStats（唯讀）：今日到期復習／新詞題數 → 滴數，入帳無上限；澆水一日有上限，賸个存水缸。
-// 本模組淨存 localStorage['hakfaGarden']：{ bank, plots:[{k,n}], sel, seeds:{種類:數量}, day, credited, ... }。
-// 水缸个水滴做得 10 滴買 1 顆普通種子（往後種子有不同種類摎等級，價錢無共樣），種下去多一塊地、多一欉樹。
-// 無肥料；幾日無來樹毋會枯。尚未接雲端同步（Phase 2）。
+// 客源翠庭院：樹、水缸、樹仁（種子）。
+// 資料結構見 js/garden/garden-data.js（版本化、只增不減个帳本，跨裝置合併毋會互相蓋掉，改版有升級路徑摎備份）。
+// 本檔：把帳本接到畫面、答題摎音檔入帳、雲端同步介面（mergeIncoming／exportForSync）、開發者面板。
+// 水滴「推算」自既有个 hakkaDailyStats（唯讀）摎完整播完个音檔擺數；入帳無上限、澆水無日限；無肥料；幾日無來樹毋會枯。
 (function () {
   'use strict';
 
-  var KEY = 'hakfaGarden';
+  var GD = window.hakfaGardenData;
+  if (!GD) { console.warn('[garden] 缺 garden-data.js，庭院毋啟動'); return; }
+
+  var KEY = 'hakfaGarden';            // 帳本（v2，會同步）
+  var LOCAL_KEY = 'hakfaGardenLocal'; // 這台裝置个私人狀態：{ dev, sel, seq }（毋同步）
+  var BACKUP_PREFIX = 'hakfaGardenBackup-'; // 升級前个原始資料備份，留最近 3 份
   var REVIEW_PER_DROP = 3; // 到期復習：全站最有學習效果，獎勵最高
   var NEW_PER_DROP = 5;
   var AUDIO_PER_DROP = 10; // 任何音檔（主表、日日一詞）完整播完，每 10 擺 1 滴
-  // 種子種類：price＝幾滴水換 1 顆。往後新種類（性質／等級）加在這，價錢無共樣
+  var RECALC_DAYS = 14;    // 每次入帳重算最近幾日（雲端同步晚到个答題統計也會補入帳，淨增毋減）
+  // 種子種類：price＝幾滴水換 1 粒。往後新種類（性質／等級）加在這，價錢無共樣
   var SEEDS = { common: { name: '🌰 樹仁', price: 10 } };
-  var MAX_PLOTS = 30; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
+  var MAX_PLOTS = GD.MAX_PLOTS; // 庭院最多幾塊地（暫定；地愛濟，排版自動變格狀）
   var STAGES = [
     { at: 0, name: '🌰 落泥' },
     { at: 1, name: '🌱 發芽' },
@@ -21,59 +26,102 @@
     { at: 15, name: '🌸 開花' }
   ];
 
-  function todayStr() {
-    var d = new Date();
+  function dayStr(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
+  function todayStr() { return dayStr(new Date()); }
 
-  function load() {
-    var s = null;
-    try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { /* 壞掉就當空个 */ }
-    s = s || {};
-    // baseR／baseN：開發者「重設今日入帳」時記下个復習／新詞題數基準，今日淨計基準後背个新增量
-    // plots：每塊地一欉樹 { k: 種子種類, n: 已澆滴數 }；舊版淨有 poured，就當第一塊地
-    var plots = Array.isArray(s.plots) && s.plots.length
-      ? s.plots.map(function (q) { return { k: (q && SEEDS[q.k]) ? q.k : 'common', n: (q && q.n) | 0 }; })
-      : [{ k: 'common', n: s.poured | 0 }];
-    var seeds = {};
-    Object.keys(SEEDS).forEach(function (k) { seeds[k] = (s.seeds && s.seeds[k]) | 0; });
-    return { bank: s.bank | 0, plots: plots.slice(0, MAX_PLOTS), sel: Math.min(s.sel | 0, plots.length - 1), seeds: seeds, day: s.day || '', credited: s.credited | 0, demo: s.demo | 0,
-      audio: s.audio | 0, baseR: s.baseR | 0, baseN: s.baseN | 0 };
+  // ---- 這台裝置个私人狀態 ----
+  function loadLocal() {
+    var l = null;
+    try { l = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null'); } catch (e) { /* 壞掉就重生 */ }
+    l = l || {};
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(l.dev || '')) l.dev = 'd' + Math.random().toString(36).slice(2, 8);
+    l.seq = l.seq | 0;
+    l.sel = typeof l.sel === 'string' ? l.sel : GD.STARTER;
+    return l;
   }
-  function save(s) {
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* 無法存就算 */ }
-    try { window.dispatchEvent(new CustomEvent('hakfa-garden-change')); } catch (e) { /* 舊瀏覽器就算 */ }
+  function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(local)); } catch (e) { /* 無法存就算 */ } }
+  var local = loadLocal();
+  saveLocal();
+
+  // ---- 載入帳本（含升級、備份、新版本保護） ----
+  var G = null;           // 帳本
+  var newerFlag = false;  // 資料來自較新个版本：毋讀、毋改、毋推
+  var pending = null;     // 有愛使用者同意个升級步驟
+  var rawStored = null;
+
+  function backupRaw(raw, from) {
+    try {
+      localStorage.setItem(BACKUP_PREFIX + 'v' + from + '-' + Date.now(), JSON.stringify(raw));
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(BACKUP_PREFIX) === 0) keys.push(k); }
+      keys.sort(); // 時間戳記由小到大
+      while (keys.length > 3) localStorage.removeItem(keys.shift());
+    } catch (e) { /* 備份失敗毋阻擋 */ }
+  }
+  function loadLedger(consented) {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
+    rawStored = raw;
+    var res = GD.normalize(raw, { dev: local.dev, day: todayStr() }, { consented: !!consented });
+    if (res.newer) { newerFlag = true; G = GD.emptyState(todayStr()); return; }
+    if (res.pendingConsent) { pending = res.pendingConsent; G = GD.emptyState(todayStr()); return; }
+    pending = null;
+    G = res.state;
+    if (res.steps.length) { backupRaw(raw, res.from); persist(false); } // 升級前先備份，再寫新格式
   }
 
-  var state = load();
+  // 讀取模型：畫面用个唯讀推算結果（每次帳本有變就重算）
+  var state = { bank: 0, plots: [], sel: 0, seeds: {}, credited: 0, audio: 0 };
+  function rebuild() {
+    var d = GD.derive(G), t = todayStr();
+    var plots = d.plots.map(function (q) { return { id: q.id, k: q.k, n: q.n }; });
+    var sel = 0;
+    for (var i = 0; i < plots.length; i++) if (plots[i].id === local.sel) sel = i;
+    state = { bank: d.bank, plots: plots, sel: sel, seeds: d.seeds, credited: G.earned[t] | 0, audio: GD.audioTotal(G, t) };
+    Object.keys(SEEDS).forEach(function (k) { if (!(k in state.seeds)) state.seeds[k] = 0; });
+    return d;
+  }
+  function persist(notify) {
+    if (newerFlag || pending) return; // 讀毋懂个版本，毋寫
+    try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) { /* 無法存就算 */ }
+    rebuild();
+    if (notify !== false) {
+      try { window.dispatchEvent(new CustomEvent('hakfa-garden-change')); } catch (e) { /* 舊瀏覽器就算 */ }
+      if (typeof window.triggerCloudSync === 'function') { try { window.triggerCloudSync(); } catch (e) { /* 同步失敗毋影響遊戲 */ } }
+    }
+  }
+  loadLedger(false);
+  rebuild();
 
-  // 今日由學習換來个滴數（hakkaDailyStats 格式：[總題數, 答對, 復習, 新詞, ...]）
-  function statsCounts() {
+  // ---- 入帳：由學習統計、完整播完个音檔推算，淨增毋減 ----
+  function statsCounts(day) {
     try {
       var all = JSON.parse(localStorage.getItem('hakkaDailyStats') || '{}');
-      var a = all[todayStr()] || [];
+      var a = all[day] || [];
       return [a[2] | 0, a[3] | 0];
     } catch (e) { return [0, 0]; }
   }
-  function earnedFromStats() {
-    var c = statsCounts();
-    return Math.floor(Math.max(0, c[0] - state.baseR) / REVIEW_PER_DROP) +
-           Math.floor(Math.max(0, c[1] - state.baseN) / NEW_PER_DROP);
+  function earnedForDay(day) {
+    var c = statsCounts(day), b = G.base[day] || [0, 0];
+    return Math.floor(Math.max(0, c[0] - b[0]) / REVIEW_PER_DROP) +
+           Math.floor(Math.max(0, c[1] - b[1]) / NEW_PER_DROP) +
+           Math.floor(GD.audioTotal(G, day) / AUDIO_PER_DROP);
   }
-
-  // 重算今日入帳，回傳這次新增个滴數（冪等：重複呼叫毋會重複給）
+  // 重算入帳，回傳這次新增个滴數（冪等：重複呼叫毋會重複給）
   function sync() {
-    var t = todayStr();
-    if (state.day !== t) { state.day = t; state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = 0; state.baseN = 0; }
-    var earned = earnedFromStats() + Math.floor(state.audio / AUDIO_PER_DROP) + state.demo; // 入帳無上限
-    var gained = 0;
-    if (earned > state.credited) {
-      gained = earned - state.credited;
-      state.bank += gained;
-      state.credited = earned;
-      save(state);
+    if (newerFlag || pending) return 0;
+    var t = todayStr(), before = GD.derive(G).earnedTotal, changed = false;
+    if (!G.since) { G.since = t; changed = true; }
+    var d = new Date();
+    for (var i = RECALC_DAYS - 1; i >= 0; i--) {
+      var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i), ds = dayStr(dd);
+      if (ds < G.since) continue; // 開始日前背个毋算（舊資料升級前已經算過）
+      if (GD.setEarned(G, ds, earnedForDay(ds))) changed = true;
     }
-    return gained;
+    if (changed) persist(true); else rebuild();
+    return Math.max(0, GD.derive(G).earnedTotal - before);
   }
 
   function stageIndex(poured) {
@@ -86,39 +134,61 @@
   function totalPoured() { return state.plots.reduce(function (a, q) { return a + q.n; }, 0); }
 
   function pour() {
+    if (newerFlag || pending) return null;
     sync(); // 先處理換日
-    if (state.bank < 1) return null; // 澆水無日限：一日就看著一欉樹開花也做得
     var q = selPlot();
+    if (!q) return null;
     var before = stageIndex(q.n);
-    state.bank--; q.n++;
-    save(state);
-    var after = stageIndex(q.n);
-    return { grew: after > before, stage: after };
+    if (!GD.pour(G, q.id, local.dev)) return null; // 澆水無日限：一日就看著一欉樹開花也做得
+    persist(true);
+    return { grew: stageIndex(selPlot().n) > before, stage: stageIndex(selPlot().n) };
   }
 
   // 水缸換種子：回傳 true／false（水毋夠、毋識這種種子）
   function buySeed(kind) {
     var d = SEEDS[kind];
-    if (!d || state.bank < d.price) return false;
-    state.bank -= d.price; state.seeds[kind]++;
-    save(state);
+    if (newerFlag || pending || !d || !GD.buy(G, kind, d.price, local.dev)) return false;
+    persist(true);
     return true;
   }
-  // 種下一顆種子：多一塊地（地滿就毋得）
+  // 種下一粒種子：多一塊地（地滿就毋得）
   function plant(kind) {
-    if (!SEEDS[kind] || state.seeds[kind] < 1 || state.plots.length >= MAX_PLOTS) return false;
-    state.seeds[kind]--; state.plots.push({ k: kind, n: 0 }); state.sel = state.plots.length - 1;
-    save(state);
+    if (newerFlag || pending || !SEEDS[kind]) return false;
+    local.seq++;
+    var id = local.dev + '_' + local.seq;
+    if (!GD.plant(G, kind, id, Math.floor(Date.now() / 1000), MAX_PLOTS)) { local.seq--; return false; }
+    local.sel = id; saveLocal();
+    persist(true);
     return true;
   }
   function selectPlot(i) {
     if (i < 0 || i >= state.plots.length) return;
-    state.sel = i; save(state);
+    local.sel = state.plots[i].id; saveLocal();
+    rebuild();
   }
 
-  function addDemoDrop() {
-    state.demo++;
-    return sync();
+  // ---- 雲端同步介面（由 js/cloud-sync.js 呼叫） ----
+  // 匯出：新版本抑係待同意時毋推（回傳 null），免得蓋掉別台較新个資料
+  function exportForSync() {
+    if (newerFlag || pending) return null;
+    return JSON.parse(JSON.stringify(G));
+  }
+  // 合併雲端／備份資料進來；回傳 { skipped, pushNeeded }。冪等，合併順序毋影響結果。
+  function mergeIncoming(raw) {
+    if (!raw || typeof raw !== 'object') return { skipped: true, pushNeeded: false };
+    if (newerFlag || pending) return { skipped: true, pushNeeded: false };
+    var res = GD.normalize(raw, { dev: local.dev, day: todayStr() });
+    if (res.newer) { newerFlag = true; return { skipped: true, pushNeeded: false }; } // 雲端係較新版本，這台毋碰
+    if (res.pendingConsent) return { skipped: true, pushNeeded: false };
+    var merged = GD.merge(G, res.state);
+    var localChanged = !GD.equal(merged, G);
+    G = merged;
+    if (!G.since) G.since = todayStr();
+    sync(); // 同步下來个答題統計，馬上補入帳
+    if (localChanged) persist(false);
+    rebuild();
+    if (dock.refresh) dock.refresh();
+    return { skipped: false, pushNeeded: !GD.equal(G, res.state) };
   }
 
   // ---- 開發者面板：淨開發測試用，預設毋顯示 ----
@@ -131,22 +201,30 @@
       return localStorage.getItem('hakfaGardenDev') === '1';
     } catch (e) { return false; }
   }
+  // 歸零、降階這類「減少」个操作，帳本做無到（只增不減），愛用「新紀元」：高紀元會取代所有裝置个舊紀元資料
+  function rewrite(fn) {
+    G = GD.newEpoch(G, Date.now(), fn);
+    persist(true);
+  }
   var dev = {
-    addBank: function (n) { state.bank += n; save(state); },
-    clearBank: function () { state.bank = 0; save(state); },
+    addBank: function (n) { GD.adjust(G, local.dev, n, 0); persist(true); },
+    clearBank: function () { GD.adjust(G, local.dev, 0, GD.derive(G).bank); persist(true); },
     // 今日入帳歸零，並以「現在」為新基準：今日已答个題數、已播个音檔毋再算，淨計往後新增个
     resetToday: function () {
-      var c = statsCounts();
-      state.credited = 0; state.demo = 0; state.audio = 0; state.baseR = c[0]; state.baseN = c[1];
-      state.day = todayStr();
-      save(state);
+      var t = todayStr(), c = statsCounts(t);
+      rewrite(function (g) { delete g.earned[t]; delete g.audio[t]; g.base[t] = [c[0], c[1]]; });
     },
-    setStage: function (i) { selPlot().n = STAGES[i].at; save(state); },
-    addSeed: function (kind) { if (SEEDS[kind]) { state.seeds[kind]++; save(state); } },
+    setStage: function (i) {
+      var q = selPlot(), target = STAGES[i].at;
+      if (target > q.n) { G.spent[q.id] = G.spent[q.id] || {}; G.spent[q.id][local.dev] = (G.spent[q.id][local.dev] | 0) + (target - q.n); persist(true); }
+      else rewrite(function (g) { g.spent[q.id] = {}; g.spent[q.id][local.dev] = target; });
+    },
+    addSeed: function (kind) { if (SEEDS[kind]) { GD.addSeed(G, kind, local.dev); persist(true); } },
     resetAll: function () {
-      var c = statsCounts();
-      state = { bank: 0, plots: [{ k: 'common', n: 0 }], sel: 0, seeds: { common: 0 }, day: todayStr(), credited: 0, demo: 0, audio: 0, baseR: c[0], baseN: c[1] };
-      save(state);
+      var t = todayStr(), c = statsCounts(t), ep = Math.max(Date.now(), G.ep + 1);
+      G = GD.emptyState(t); G.ep = ep; G.base[t] = [c[0], c[1]];
+      local.sel = GD.STARTER; saveLocal();
+      persist(true);
     }
   };
 
@@ -299,6 +377,15 @@
     }
 
     function draw(popped) {
+      if (newerFlag) {
+        el.innerHTML = '<div class="hg-card"><h6>🌱 ' + esc(gardenTitle()) + '</h6><div class="hg-note">庭院資料來自比這個網頁更新个版本，為著毋弄壞你个進度，這個版本先毋讀、毋改、毋同步。請重新整理網頁（抑係等網站更新）再試。</div></div>';
+        return;
+      }
+      if (pending) {
+        el.innerHTML = '<div class="hg-card"><h6>🌱 ' + esc(gardenTitle()) + '</h6><div class="hg-note">庭院資料愛升級：' + esc(pending.describe) + '。升級前會先備份原本个資料。</div>' +
+          '<div class="hg-row"><button class="hg-btn" data-hg="consent-yes">同意升級</button><small>毋同意就維持原樣，庭院先暫停。</small></div></div>';
+        return;
+      }
       var q = selPlot();
       var idx = stageIndex(q.n);
       var L = layout();
@@ -328,6 +415,10 @@
     el.onclick = function (ev) {
       var b = ev.target.closest && ev.target.closest('[data-hg]');
       if (!b || b.disabled) return;
+      if (b.getAttribute('data-hg') === 'consent-yes') {
+        loadLedger(true); rebuild(); msg = '升級好矣'; draw(false);
+        return;
+      }
       if (b.getAttribute('data-hg') === 'pour') {
         var r = pour();
         if (!r) return;
@@ -357,7 +448,7 @@
         msg = plant(pk) ? '種下去矣！第 ' + state.plots.length + ' 塊地' : '毋做得種';
         draw(false);
       } else if (b.getAttribute('data-hg') === 'demo') {
-        addDemoDrop();
+        dev.addBank(1);
         msg = '（測試）加一滴水';
         draw(false);
       } else if (b.getAttribute('data-hg').indexOf('dev-') === 0 && devOn) {
@@ -386,10 +477,12 @@
     return !!gm && window.getComputedStyle(gm).display !== 'none';
   }
   function onAudioPlayed() {
-    var gained = sync(); // 先處理換日
-    state.audio++;
-    gained += sync();
-    save(state); // 計數有變，愛落地
+    if (newerFlag || pending) return;
+    sync(); // 先處理換日
+    var before = GD.derive(G).earnedTotal;
+    GD.addAudio(G, todayStr(), local.dev);
+    var gained = Math.max(0, (sync(), GD.derive(G).earnedTotal - before));
+    persist(true); // 計數有變，愛落地
     var cnt = document.querySelector('.hg-audio');
     if (cnt) cnt.textContent = state.audio;
     if (gained > 0) {
@@ -430,6 +523,12 @@
     buySeed: buySeed,
     plant: plant,
     getState: function () { return JSON.parse(JSON.stringify(state)); },
+    getLedger: function () { return JSON.parse(JSON.stringify(G)); }, // 原始帳本（除錯、測試用）
+    getDevice: function () { return local.dev; },
+    exportForSync: exportForSync, // cloud-sync.js 匯出用
+    mergeIncoming: mergeIncoming, // cloud-sync.js 合併用
+    // 有愛同意个版本升級：使用者按同意後呼叫（升級前自動備份原始資料）
+    approveMigration: function () { loadLedger(true); rebuild(); if (dock.refresh) dock.refresh(); },
     // 答題後呼叫：入帳新水滴，有新增就回傳滴數，供畫面提示
     onStatsChanged: function () {
       var gained = sync();

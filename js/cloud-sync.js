@@ -467,6 +467,19 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
   localStorage.setItem('hakkaFamiliarity', JSON.stringify(mergedFamiliarity));
   localStorage.setItem('hakkaAudioProfiles', JSON.stringify(mergedAudioProfiles));
 
+  // 庭院帳本：只增不減个帳本，合併＝聯集／同格取大，毋會互相蓋掉；較新版本个資料會被略過、毋覆蓋
+  let gardenPushNeeded = false;
+  if (data.garden && window.hakfaGarden && typeof window.hakfaGarden.mergeIncoming === 'function') {
+    try {
+      gardenPushNeeded = window.hakfaGarden.mergeIncoming(data.garden).pushNeeded === true;
+    } catch (e) {
+      console.warn('[CloudSync] 庭院資料合併失敗，已略過：', e);
+    }
+  } else if (!data.garden && window.hakfaGarden && typeof window.hakfaGarden.exportForSync === 'function') {
+    // 雲端還無庭院資料：本機有就推上去
+    gardenPushNeeded = window.hakfaGarden.exportForSync() !== null;
+  }
+
   // 合併偏好設定
   let finalRomanizerJoiningMode = localPrefs.romanizerJoiningMode;
   if (localPrefs.romanizerJoiningMode === (syncedPrefs.romanizerJoiningMode || 'none')) {
@@ -584,7 +597,7 @@ async function applyIncomingSyncData(data, isFromManual = false, options = {}) {
 
     if (options.skipPush) {
       // 衝突重試：由呼叫端（syncToCloud）自家再推，這裡毋重複推
-    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged || audioProfilesChanged) {
+    } else if (bookmarksChanged || prefsChanged || progressChanged || statsChanged || favsChanged || familiarityChanged || audioProfilesChanged || gardenPushNeeded) {
       console.log('[CloudSync] 資料有變更，執行上傳 (Smart Push)');
       await syncToCloud();
     } else {
@@ -643,6 +656,7 @@ const SYNC_PACKAGE_OBJECT_FIELDS = [
   'daily_favs',
   'familiarity',
   'audio_profiles',
+  'garden',
 ];
 
 function decodeBase64Utf8(base64) {
@@ -807,6 +821,11 @@ function exportCurrentSyncData() {
   const audioProfiles = JSON.parse(
     localStorage.getItem('hakkaAudioProfiles') || '{}'
   );
+  // 庭院帳本（js/garden）；模組無載入、抑係資料來自較新版本（毋碰）就毋放，伺服器會保留雲端原本个
+  const gardenExport =
+    window.hakfaGarden && typeof window.hakfaGarden.exportForSync === 'function'
+      ? window.hakfaGarden.exportForSync()
+      : null;
 
   return {
     version: 1,
@@ -819,6 +838,7 @@ function exportCurrentSyncData() {
     daily_favs: dailyFavs,
     familiarity,
     audio_profiles: audioProfiles,
+    ...(gardenExport ? { garden: gardenExport } : {}),
   };
 }
 
